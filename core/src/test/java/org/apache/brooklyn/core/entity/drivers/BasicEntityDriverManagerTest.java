@@ -26,10 +26,10 @@ import org.apache.brooklyn.core.entity.drivers.ReflectiveEntityDriverFactoryTest
 import org.apache.brooklyn.core.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriverDependentEntity;
 import org.apache.brooklyn.core.entity.drivers.ReflectiveEntityDriverFactoryTest.MySshDriver;
 import org.apache.brooklyn.core.entity.drivers.RegistryEntityDriverFactoryTest.MyOtherSshDriver;
+import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 

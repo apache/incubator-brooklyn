@@ -19,6 +19,7 @@
 package org.apache.brooklyn.core.entity.drivers;
 
 import org.apache.brooklyn.location.paas.PaasLocation;
+import org.apache.brooklyn.location.paas.TestPaasLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.api.entity.Entity;
@@ -28,7 +29,6 @@ import org.apache.brooklyn.api.entity.drivers.EntityDriver;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.drivers.ReflectiveEntityDriverFactory;
-import org.apache.brooklyn.core.test.location.TestPaasLocation;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

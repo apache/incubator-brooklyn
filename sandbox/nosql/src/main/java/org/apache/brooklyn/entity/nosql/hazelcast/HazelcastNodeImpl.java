@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.sensor.feed.http.HttpFeed;
 import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
 import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
-import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Functions;

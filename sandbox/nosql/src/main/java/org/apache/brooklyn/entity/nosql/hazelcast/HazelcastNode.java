@@ -21,10 +21,9 @@ package org.apache.brooklyn.entity.nosql.hazelcast;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
-import org.apache.brooklyn.location.core.PortRanges;
-
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.java.UsesJava;
 import org.apache.brooklyn.entity.java.UsesJmx;

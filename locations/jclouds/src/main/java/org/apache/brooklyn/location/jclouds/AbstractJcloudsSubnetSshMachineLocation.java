@@ -20,8 +20,8 @@ package org.apache.brooklyn.location.jclouds;
 
 import java.util.Map;
 
+import org.apache.brooklyn.core.location.SupportsPortForwarding.RequiresPortForwarding;
 import org.jclouds.compute.domain.NodeMetadata;
-import org.apache.brooklyn.location.core.SupportsPortForwarding.RequiresPortForwarding;
 
 public abstract class AbstractJcloudsSubnetSshMachineLocation extends JcloudsSshMachineLocation implements RequiresPortForwarding {
 

@@ -26,7 +26,7 @@ import org.apache.brooklyn.core.test.entity.TestApplication
 import org.apache.brooklyn.core.test.entity.TestEntity
 import org.apache.brooklyn.core.entity.Entities
 import org.apache.brooklyn.entity.group.BasicGroup
-import org.apache.brooklyn.location.core.SimulatedLocation
+import org.apache.brooklyn.core.location.SimulatedLocation
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor
 import org.apache.brooklyn.test.TestUtils
 import org.slf4j.Logger

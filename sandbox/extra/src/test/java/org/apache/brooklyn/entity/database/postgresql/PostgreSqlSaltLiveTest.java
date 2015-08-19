@@ -23,11 +23,11 @@ import java.util.Random;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNodeSaltImpl;
 import org.apache.brooklyn.entity.salt.SaltConfig;
 import org.apache.brooklyn.entity.salt.SaltLiveTestSupport;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 import org.slf4j.Logger;

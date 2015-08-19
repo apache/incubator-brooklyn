@@ -20,9 +20,9 @@ package org.apache.brooklyn.launcher.config;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.core.mgmt.internal.BrooklynGarbageCollector;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
-import org.apache.brooklyn.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.util.internal.BrooklynSystemProperties;
 import org.apache.brooklyn.util.internal.StringSystemProperty;

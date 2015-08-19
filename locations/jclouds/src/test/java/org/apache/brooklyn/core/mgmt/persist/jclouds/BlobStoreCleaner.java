@@ -27,9 +27,9 @@ import org.jclouds.blobstore.domain.StorageMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.location.LocationConfigKeys;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-import org.apache.brooklyn.location.core.LocationConfigKeys;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 
 /** Utility for cleaning up after test leaks. Most should not leak of course, but if they do... */

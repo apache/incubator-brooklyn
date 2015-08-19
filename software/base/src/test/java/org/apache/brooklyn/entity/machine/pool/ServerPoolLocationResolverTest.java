@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.location.dynamic.DynamicLocation;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
@@ -43,7 +44,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.brooklyn.location.dynamic.DynamicLocation;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 public class ServerPoolLocationResolverTest {

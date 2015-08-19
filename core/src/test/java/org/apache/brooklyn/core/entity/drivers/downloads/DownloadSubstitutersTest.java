@@ -29,11 +29,11 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.entity.drivers.downloads.BasicDownloadRequirement;
 import org.apache.brooklyn.core.entity.drivers.downloads.DownloadSubstituters;
+import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.SimulatedLocation;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;

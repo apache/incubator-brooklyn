@@ -32,6 +32,10 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.LocationResolver.EnableableLocationResolver;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.location.BasicLocationRegistry;
+import org.apache.brooklyn.core.location.LocationPropertiesFromBrooklynProperties;
+import org.apache.brooklyn.core.location.dynamic.DynamicLocation;
+import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +43,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
-import org.apache.brooklyn.location.core.BasicLocationRegistry;
-import org.apache.brooklyn.location.core.LocationPropertiesFromBrooklynProperties;
-import org.apache.brooklyn.location.core.internal.LocationInternal;
-import org.apache.brooklyn.location.dynamic.DynamicLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.text.KeyValueParser;
 import org.apache.brooklyn.util.text.Strings;

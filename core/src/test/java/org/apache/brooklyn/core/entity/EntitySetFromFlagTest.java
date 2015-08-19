@@ -25,8 +25,8 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 

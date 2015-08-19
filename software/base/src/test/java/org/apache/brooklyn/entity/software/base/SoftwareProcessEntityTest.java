@@ -51,6 +51,8 @@ import org.apache.brooklyn.core.entity.drivers.ReflectiveEntityDriverFactory;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.location.Locations;
+import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.effector.core.Effectors;
@@ -92,8 +94,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
-import org.apache.brooklyn.location.core.Locations;
-import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 

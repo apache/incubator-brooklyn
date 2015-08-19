@@ -19,7 +19,7 @@
 package org.apache.brooklyn.core.entity;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.location.core.Machines;
+import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 import com.google.common.base.Supplier;

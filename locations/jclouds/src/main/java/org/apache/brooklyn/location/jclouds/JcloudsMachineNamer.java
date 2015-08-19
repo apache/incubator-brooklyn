@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
-import org.apache.brooklyn.location.cloud.names.BasicCloudMachineNamer;
+import org.apache.brooklyn.core.location.cloud.names.BasicCloudMachineNamer;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
 public class JcloudsMachineNamer extends BasicCloudMachineNamer {

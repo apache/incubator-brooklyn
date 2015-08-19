@@ -26,9 +26,9 @@ import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.WebAppService;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import com.google.common.collect.ImmutableList;

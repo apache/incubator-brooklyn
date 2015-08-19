@@ -19,8 +19,8 @@
 package org.apache.brooklyn.entity.nosql.couchbase;
 
 import org.apache.brooklyn.core.config.render.RendererHints;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.sensor.feed.http.HttpFeed;
 import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
 import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;

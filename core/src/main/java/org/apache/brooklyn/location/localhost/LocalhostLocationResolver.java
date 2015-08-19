@@ -23,8 +23,8 @@ import java.util.Map;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
-import org.apache.brooklyn.location.core.AbstractLocationResolver;
-import org.apache.brooklyn.location.core.LocationConfigUtils;
+import org.apache.brooklyn.core.location.AbstractLocationResolver;
+import org.apache.brooklyn.core.location.LocationConfigUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
 /**

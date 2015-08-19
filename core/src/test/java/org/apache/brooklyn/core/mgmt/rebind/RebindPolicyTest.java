@@ -36,6 +36,7 @@ import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.core.mgmt.rebind.RebindEnricherTest.MyEnricher;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
@@ -47,7 +48,6 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.Locations;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;

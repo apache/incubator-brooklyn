@@ -21,6 +21,7 @@ package org.apache.brooklyn.core.mgmt.rebind;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
@@ -37,7 +38,6 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.PolicyMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
-import org.apache.brooklyn.location.core.internal.LocationInternal;
 
 import com.google.common.collect.Maps;
 

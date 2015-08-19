@@ -40,7 +40,7 @@ import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.location.core.BasicOsDetails.OsVersions;
+import org.apache.brooklyn.core.location.BasicOsDetails.OsVersions;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;

@@ -38,8 +38,8 @@ import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.MultiLocation;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.multi.MultiLocation;
 import org.apache.brooklyn.test.Asserts;
 
 import com.google.common.base.Predicate;

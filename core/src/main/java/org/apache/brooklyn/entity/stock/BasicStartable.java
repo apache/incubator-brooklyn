@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.trait.Startable;
-import org.apache.brooklyn.location.core.Locations;
+import org.apache.brooklyn.core.location.Locations;
 
 import com.google.common.collect.ImmutableList;
 

@@ -59,6 +59,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityPredicates;
 import org.apache.brooklyn.core.entity.trait.Resizable;
 import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.location.LocationConfigTest.MyLocation;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.rebind.BasicEntityRebindSupport;
 import org.apache.brooklyn.core.test.entity.TestApplication;
@@ -78,7 +79,6 @@ import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 import org.apache.brooklyn.util.time.Durations;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.LocationConfigTest.MyLocation;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
