@@ -21,8 +21,8 @@ package org.apache.brooklyn.effector.core;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.mgmt.HasTaskChildren;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;

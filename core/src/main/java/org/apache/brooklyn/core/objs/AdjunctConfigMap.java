@@ -23,7 +23,7 @@ import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;

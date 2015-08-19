@@ -60,7 +60,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.entity.java.JmxSupport;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.util.core.crypto.SecureKeys;

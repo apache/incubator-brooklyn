@@ -16,12 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.api.internal;
+package org.apache.brooklyn.api.entity;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.SubscriptionManager;

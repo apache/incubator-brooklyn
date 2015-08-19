@@ -20,7 +20,7 @@ package org.apache.brooklyn.sensor.feed;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;

@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.EnricherMemento;
 import org.apache.brooklyn.api.sensor.AttributeSensor;

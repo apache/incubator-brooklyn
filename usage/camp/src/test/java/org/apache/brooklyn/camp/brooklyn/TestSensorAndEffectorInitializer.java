@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.EntityInitializer;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.effector.core.EffectorBody;
 import org.apache.brooklyn.effector.core.Effectors;

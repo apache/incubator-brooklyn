@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.core.Entities;
 import org.slf4j.Logger;

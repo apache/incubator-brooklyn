@@ -20,8 +20,8 @@ package org.apache.brooklyn.entity.core;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;

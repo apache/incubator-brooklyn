@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.core;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 
 import com.google.common.base.Objects;

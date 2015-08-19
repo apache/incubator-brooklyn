@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.effector.core.Effectors;

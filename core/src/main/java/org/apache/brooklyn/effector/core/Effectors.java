@@ -29,7 +29,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.effector.ParameterType;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;

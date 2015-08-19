@@ -29,9 +29,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;

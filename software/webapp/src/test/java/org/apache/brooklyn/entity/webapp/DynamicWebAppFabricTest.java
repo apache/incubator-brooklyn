@@ -21,8 +21,8 @@ package org.apache.brooklyn.entity.webapp;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.EntityInternal;

@@ -25,7 +25,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;

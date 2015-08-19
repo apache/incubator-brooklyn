@@ -33,8 +33,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.objs.proxy.EntityProxyImpl;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;

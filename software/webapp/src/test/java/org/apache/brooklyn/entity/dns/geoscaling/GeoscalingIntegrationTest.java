@@ -22,8 +22,8 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.InetAddress;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.test.entity.TestApplication;

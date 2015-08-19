@@ -19,8 +19,8 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.ImplementedBy;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.entity.core.EntityInternal;

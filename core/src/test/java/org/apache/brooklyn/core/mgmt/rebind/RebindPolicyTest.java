@@ -25,9 +25,9 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.api.policy.Policy;

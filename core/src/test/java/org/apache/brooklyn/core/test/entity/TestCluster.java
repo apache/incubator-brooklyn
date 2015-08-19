@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.core.test.entity;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.ImplementedBy;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 
 /**

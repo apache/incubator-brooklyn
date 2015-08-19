@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.sensor.feed;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;

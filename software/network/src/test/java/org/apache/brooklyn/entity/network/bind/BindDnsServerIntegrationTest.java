@@ -21,8 +21,8 @@ package org.apache.brooklyn.entity.network.bind;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixture;

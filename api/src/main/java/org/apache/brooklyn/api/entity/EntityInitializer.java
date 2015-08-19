@@ -20,8 +20,6 @@ package org.apache.brooklyn.api.entity;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
-
 /** 
  * Instances of this class supply logic which can be used to initialize entities. 
  * These can be added to an {@link EntitySpec} programmatically, or declared as part

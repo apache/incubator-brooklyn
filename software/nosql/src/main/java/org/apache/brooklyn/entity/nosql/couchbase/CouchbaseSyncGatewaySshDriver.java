@@ -27,8 +27,8 @@ import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.EntityPredicates;

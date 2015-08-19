@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.core;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.EntityInitializer;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 
 import com.google.common.collect.ImmutableList;
 

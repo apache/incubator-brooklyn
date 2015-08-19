@@ -41,7 +41,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 
 import org.apache.brooklyn.api.entity.Application;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.entitlement.EntitlementContext;

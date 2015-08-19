@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.effector.core.EffectorTasks;

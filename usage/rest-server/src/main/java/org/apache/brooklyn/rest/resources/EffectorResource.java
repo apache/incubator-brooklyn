@@ -34,7 +34,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 
 import org.apache.brooklyn.api.effector.Effector;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;

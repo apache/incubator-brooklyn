@@ -22,7 +22,7 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.policy.core.Policies;

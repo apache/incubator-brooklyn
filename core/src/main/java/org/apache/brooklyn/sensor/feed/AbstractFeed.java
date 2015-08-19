@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.FeedMemento;
 import org.apache.brooklyn.api.sensor.Feed;

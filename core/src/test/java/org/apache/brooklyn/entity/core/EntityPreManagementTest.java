@@ -21,8 +21,8 @@ package org.apache.brooklyn.entity.core;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.mgmt.EntityManager;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.sensor.SensorEvent;

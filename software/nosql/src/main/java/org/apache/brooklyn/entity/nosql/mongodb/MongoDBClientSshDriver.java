@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouter;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBRouterCluster;
 import org.apache.brooklyn.entity.nosql.mongodb.sharding.MongoDBShardedDeployment;

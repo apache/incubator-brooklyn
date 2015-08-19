@@ -22,8 +22,8 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.drivers.RegistryEntityDriverFactory;
 import org.apache.brooklyn.entity.drivers.ReflectiveEntityDriverFactoryTest.MyDriver;

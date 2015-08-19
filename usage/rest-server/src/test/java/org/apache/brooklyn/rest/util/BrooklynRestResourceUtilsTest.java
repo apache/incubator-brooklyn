@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
 import org.apache.brooklyn.core.catalog.internal.CatalogTemplateItemDto;

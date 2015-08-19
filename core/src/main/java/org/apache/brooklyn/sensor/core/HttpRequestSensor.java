@@ -22,7 +22,7 @@ import java.net.URI;
 
 import net.minidev.json.JSONObject;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.effector.core.AddSensor;

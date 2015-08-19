@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.domain.EntitySummary;
