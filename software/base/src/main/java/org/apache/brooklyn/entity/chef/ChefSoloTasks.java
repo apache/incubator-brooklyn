@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.chef;
 import java.util.Map;
 
 import org.apache.brooklyn.api.mgmt.TaskFactory;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.annotations.Beta;

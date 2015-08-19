@@ -32,10 +32,10 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.text.TemplateProcessor;
 
 import org.apache.brooklyn.effector.core.EffectorTasks;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.ssh.BashCommands;

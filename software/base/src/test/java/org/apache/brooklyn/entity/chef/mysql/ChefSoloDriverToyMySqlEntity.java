@@ -28,8 +28,8 @@ import org.apache.brooklyn.entity.chef.ChefSoloDriver;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
 import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.time.Duration;
 
 @Deprecated /** @deprecated since 0.7.0 use see examples {Dynamic,Typed}ToyMySqlEntityChef */

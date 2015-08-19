@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.sensor.ssh;
+package org.apache.brooklyn.util.core.task.ssh;
 
 import java.util.List;
 import java.util.Map;
@@ -37,18 +37,12 @@ import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.effector.core.EffectorBody;
 import org.apache.brooklyn.effector.core.EffectorTasks;
 import org.apache.brooklyn.effector.core.EffectorTasks.EffectorTaskFactory;
-import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.core.task.Tasks;
-import org.apache.brooklyn.util.core.task.ssh.SshFetchTaskFactory;
-import org.apache.brooklyn.util.core.task.ssh.SshFetchTaskWrapper;
-import org.apache.brooklyn.util.core.task.ssh.SshPutTaskFactory;
-import org.apache.brooklyn.util.core.task.ssh.SshPutTaskWrapper;
-import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.core.task.ssh.internal.AbstractSshExecTaskFactory;
 import org.apache.brooklyn.util.core.task.ssh.internal.PlainSshExecTaskFactory;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskFactory;
@@ -78,8 +72,9 @@ public class SshEffectorTasks {
         "Whether to ignore any ssh flags (behaviour constraints) set on the entity or location " +
         "where this is running, using only flags explicitly specified", false);
     
-    /** like {@link EffectorBody} but providing conveniences when in a {@link SoftwareProcess}
-     * (or other entity with a single machine location) */
+    /**
+     * Like {@link EffectorBody} but providing conveniences when in an entity with a single machine location.
+     */
     public abstract static class SshEffectorBody<T> extends EffectorBody<T> {
         
         /** convenience for accessing the machine */

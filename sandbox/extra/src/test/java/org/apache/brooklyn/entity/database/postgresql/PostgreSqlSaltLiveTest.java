@@ -24,6 +24,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.PortRanges;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNodeSaltImpl;
 import org.apache.brooklyn.entity.salt.SaltConfig;
@@ -39,7 +40,6 @@ import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
 import org.apache.brooklyn.effector.core.EffectorTasks;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
