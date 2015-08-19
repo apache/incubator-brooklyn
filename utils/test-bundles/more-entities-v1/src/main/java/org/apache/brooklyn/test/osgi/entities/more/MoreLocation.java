@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.test.osgi.entities.more;
 
-import org.apache.brooklyn.location.core.AbstractLocation;
+import org.apache.brooklyn.core.location.AbstractLocation;
 
 public class MoreLocation extends AbstractLocation {
 }
