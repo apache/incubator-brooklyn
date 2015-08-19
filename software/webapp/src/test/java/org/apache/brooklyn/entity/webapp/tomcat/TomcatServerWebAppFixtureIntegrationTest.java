@@ -34,7 +34,7 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.slf4j.Logger;

@@ -32,7 +32,6 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -62,6 +61,7 @@ import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.test;
+package org.apache.brooklyn.test.support;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

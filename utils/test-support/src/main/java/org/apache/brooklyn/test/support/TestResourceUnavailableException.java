@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.test;
+package org.apache.brooklyn.test.support;
 
 import com.google.common.base.Throwables;
 import org.testng.SkipException;

@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.webapp;
 
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;

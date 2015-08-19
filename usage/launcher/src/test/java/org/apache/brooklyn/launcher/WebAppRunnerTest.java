@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;

@@ -43,7 +43,7 @@ import org.apache.brooklyn.core.entity.StartableApplication;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.sensor.core.Sensors;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.core.javalang.UrlClassLoader;
 
 import com.google.common.base.Function;
