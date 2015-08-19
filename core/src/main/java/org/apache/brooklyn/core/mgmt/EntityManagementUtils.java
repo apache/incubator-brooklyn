@@ -95,11 +95,12 @@ public class EntityManagementUtils {
         throw new PlanNotRecognizedException("Invalid plan, tried parsing with " + types);
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(ManagementContext mgmt, CatalogItem<?, ?> item) {
         Collection<String> types = new ArrayList<String>();
         for (PlanToSpecTransformer c : PlanToSpecFactory.all(mgmt)) {
             try {
-                return c.createCatalogSpec(item);
+                return c.createCatalogSpec((CatalogItem)item);
             } catch (PlanNotRecognizedException e) {
                 types.add(c.getName());
             }

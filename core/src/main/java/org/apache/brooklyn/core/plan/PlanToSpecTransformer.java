@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.core.plan;
 
+import java.util.ServiceLoader;
+
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -26,10 +28,22 @@ import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 
 import com.google.common.annotations.Beta;
 
+/** Pluggable {@link ServiceLoader} interface for defferent plan-interpreters.
+ * Implementations should take a plan and return an {@link EntitySpec}.
+ */
+@Beta
 public interface PlanToSpecTransformer extends ManagementContextInjectable {
+    
+    /** Human-readable name for this transformer */
     String getName();
-    @Beta
+    
+    /** whether this accepts the given MIME format */
     boolean accepts(String mime);
+    
+    /** creates an {@link EntitySpec} given a plan, according to the transformation rules this understands */
     <T extends Application> EntitySpec<T> createApplicationSpec(String plan);
-    AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(CatalogItem<?, ?> item);
+    
+    /** creates an object spec given a catalog item, according to the transformation rules this understands */
+    <T,SpecT extends AbstractBrooklynObjectSpec<T, SpecT>> AbstractBrooklynObjectSpec<T, SpecT> createCatalogSpec(CatalogItem<T, SpecT> item);
+    
 }

@@ -19,11 +19,8 @@
 package org.apache.brooklyn.core.plan;
 
 public class PlanNotRecognizedException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
 
-    public PlanNotRecognizedException() {
-        super();
-    }
+    private static final long serialVersionUID = -5590108442839125317L;
 
     public PlanNotRecognizedException(String message, Throwable cause) {
         super(message, cause);

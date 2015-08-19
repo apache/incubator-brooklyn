@@ -78,9 +78,10 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
       }
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(CatalogItem<?, ?> item) {
-        return CampCatalogUtils.createSpec(mgmt, item);
+    public <T, SpecT extends AbstractBrooklynObjectSpec<T, SpecT>> AbstractBrooklynObjectSpec<T, SpecT> createCatalogSpec(CatalogItem<T, SpecT> item) {
+        return (AbstractBrooklynObjectSpec<T, SpecT>) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item);
     }
 
     @Override

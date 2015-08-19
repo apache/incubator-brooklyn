@@ -39,7 +39,6 @@ import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
-import org.apache.brooklyn.camp.util.yaml.Yamls;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
@@ -49,6 +48,7 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.yaml.Yamls;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
