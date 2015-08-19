@@ -14,17 +14,16 @@ brooklyn.catalog:
       Provision a server, with customizable provisioning.properties and credentials installed, 
       but no other special software process or scripts executed.
     item:
-      type: brooklyn.entity.basic.EmptySoftwareProcess
+      type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
       name: Server
 
   - id: vanilla-bash-server
     description: |
       Provision a server, with customizable provisioning.properties and credentials installed, 
       but no other special software process or scripts executed.
-      The script should be supplied in "launch.command" as per docs on
-      brooklyn.entity.basic.VanillaSoftwareProcess.
+      The script should be supplied in "launch.command" as per docs on VanillaSoftwareProcess.
     item:
-      type: brooklyn.entity.basic.VanillaSoftwareProcess
+      type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
       name: Server with Launch Script (bash)
 
   - id: load-balancer
@@ -42,7 +41,7 @@ brooklyn.catalog:
       Create a cluster of entities, resizable, with starting size "initialSize",
       and using a spec supplied in the "memberSpec" key.
     item:
-      type: brooklyn.entity.group.DynamicCluster
+      type: org.apache.brooklyn.entity.group.DynamicCluster
 
   - id: 1-server-template
     itemType: template
@@ -142,12 +141,12 @@ brooklyn.catalog:
         
         brooklyn.enrichers:
         # publish the URL as a sensor; the GUI will pick this up (main.uri)
-        - type: brooklyn.enricher.basic.Transformer
+        - type: org.apache.brooklyn.sensor.enricher.Transformer
           brooklyn.config:
             uniqueTag: url-generator
             enricher.sourceSensor: host.subnet.hostname
             # use the definition from Attributes class, as it has a RendererHint so GUI makes it a link
-            enricher.targetSensor: $brooklyn:sensor("brooklyn.entity.basic.Attributes", "main.uri")
+            enricher.targetSensor: $brooklyn:sensor("org.apache.brooklyn.entity.core.Attributes", "main.uri")
             enricher.targetValue: 
               $brooklyn:formatString:
               - "http://%s:%s/" 
@@ -246,14 +245,14 @@ brooklyn.catalog:
               
               brooklyn.initializers:
               # make a simple request-count sensor, by counting the number of 200 responses in output.txt
-              - type: brooklyn.entity.software.ssh.SshCommandSensor
+              - type: org.apache.brooklyn.sensor.ssh.SshCommandSensor
                 brooklyn.config:
                   name: reqs.count
                   targetType: int
                   period: 5s
                   command: "cat output.txt | grep HTTP | grep 200 | wc | awk '{print $1}'"
               # and publish the port as a sensor so the load-balancer can pick it up
-              - type:           brooklyn.entity.software.StaticSensor
+              - type:           org.apache.brooklyn.sensor.StaticSensor
                 brooklyn.config:
                   name:         app.port
                   targetType:   int
@@ -261,13 +260,13 @@ brooklyn.catalog:
               
               brooklyn.enrichers:
               # derive reqs.per_sec from reqs.count
-              - type: brooklyn.enricher.basic.YamlTimeWeightedDeltaEnricher
+              - type: org.apache.brooklyn.sensor.enricher.YamlTimeWeightedDeltaEnricher
                 brooklyn.config:
                   enricher.sourceSensor: reqs.count
                   enricher.targetSensor: reqs.per_sec
                   enricher.delta.period: 1s
               # and take an average over 30s for reqs.per_sec into reqs.per_sec.windowed_30s
-              - type: brooklyn.enricher.basic.YamlRollingTimeWindowMeanEnricher
+              - type: org.apache.brooklyn.sensor.enricher.YamlRollingTimeWindowMeanEnricher
                 brooklyn.config:
                   enricher.sourceSensor: reqs.per_sec
                   enricher.targetSensor: reqs.per_sec.windowed_30s
@@ -286,17 +285,17 @@ brooklyn.catalog:
         
         # back at the cluster, create a total per-sec and some per-node average
         brooklyn.enrichers:
-        - type: brooklyn.enricher.basic.Aggregator
+        - type: org.apache.brooklyn.sensor.enricher.Aggregator
           brooklyn.config:
             enricher.sourceSensor: reqs.per_sec
             enricher.targetSensor: reqs.per_sec
             transformation: sum
-        - type: brooklyn.enricher.basic.Aggregator
+        - type: org.apache.brooklyn.sensor.enricher.Aggregator
           brooklyn.config:
             enricher.sourceSensor: reqs.per_sec
             enricher.targetSensor: reqs.per_sec.per_node
             transformation: average
-        - type: brooklyn.enricher.basic.Aggregator
+        - type: org.apache.brooklyn.sensor.enricher.Aggregator
           brooklyn.config:
             enricher.sourceSensor: reqs.per_sec.windowed_30s
             enricher.targetSensor: reqs.per_sec.windowed_30s.per_node
@@ -335,13 +334,13 @@ brooklyn.catalog:
       
       brooklyn.enrichers:
       # publish a few useful info sensors and KPI's to the root of the app
-      - type: brooklyn.enricher.basic.Propagator
+      - type: org.apache.brooklyn.sensor.enricher.Propagator
         brooklyn.config:
           uniqueTag:    propagate-load-balancer-url
           producer:     $brooklyn:entity("load-bal")
           propagating:
           - main.uri
-      - type: brooklyn.enricher.basic.Propagator
+      - type: org.apache.brooklyn.sensor.enricher.Propagator
         brooklyn.config:
           uniqueTag:    propagate-reqs-per-sec
           producer:     $brooklyn:entity("my-web-cluster")
