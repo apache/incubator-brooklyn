@@ -28,15 +28,14 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 import org.apache.brooklyn.api.entity.Entity;
 
-import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
-import brooklyn.entity.group.DynamicClusterImpl;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.entity.group.AbstractMembershipTrackingPolicy;
+import org.apache.brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.EntityInternal;
-
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 public class HazelcastClusterImpl extends DynamicClusterImpl implements HazelcastCluster {
     private static final Logger LOG = LoggerFactory.getLogger(HazelcastClusterImpl.class);

@@ -26,19 +26,19 @@ import java.util.concurrent.TimeUnit;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.core.entity.AbstractEntity;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.entity.database.Schema;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import brooklyn.entity.java.UsesJmx;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.feed.jmx.JmxAttributePollConfig;
-import brooklyn.event.feed.jmx.JmxFeed;
-import brooklyn.event.feed.jmx.JmxHelper;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.api.entity.EntityLocal;
+import org.apache.brooklyn.entity.java.UsesJmx;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
+import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
+import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects.ToStringHelper;
 

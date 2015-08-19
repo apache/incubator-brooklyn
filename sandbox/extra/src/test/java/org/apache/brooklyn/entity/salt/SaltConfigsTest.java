@@ -28,7 +28,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestApplication;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

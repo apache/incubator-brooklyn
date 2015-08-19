@@ -32,12 +32,12 @@ import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import org.apache.brooklyn.api.entity.Application
-import org.apache.brooklyn.entity.core.Entities
-import org.apache.brooklyn.location.basic.LocalhostMachineProvisioningLocation
-import org.apache.brooklyn.test.entity.TestApplicationImpl
-import brooklyn.util.internal.TimeExtras
-import brooklyn.util.net.Networking
-import brooklyn.util.repeat.Repeater
+import org.apache.brooklyn.core.entity.Entities
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation
+import org.apache.brooklyn.core.test.entity.TestApplicationImpl
+import org.apache.brooklyn.util.internal.TimeExtras
+import org.apache.brooklyn.util.net.Networking
+import org.apache.brooklyn.util.repeat.Repeater
 
 class Infinispan5ServerIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(Infinispan5ServerIntegrationTest.class)

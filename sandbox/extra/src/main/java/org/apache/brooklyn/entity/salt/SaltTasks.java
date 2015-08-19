@@ -18,27 +18,27 @@
  */
 package org.apache.brooklyn.entity.salt;
 
-import static brooklyn.util.ssh.BashCommands.INSTALL_CURL;
-import static brooklyn.util.ssh.BashCommands.INSTALL_TAR;
-import static brooklyn.util.ssh.BashCommands.INSTALL_UNZIP;
-import static brooklyn.util.ssh.BashCommands.downloadToStdout;
-import static brooklyn.util.ssh.BashCommands.sudo;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_CURL;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_TAR;
+import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_UNZIP;
+import static org.apache.brooklyn.util.ssh.BashCommands.downloadToStdout;
+import static org.apache.brooklyn.util.ssh.BashCommands.sudo;
 
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.api.mgmt.TaskFactory;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.task.DynamicTasks;
-import org.apache.brooklyn.core.util.task.Tasks;
-import org.apache.brooklyn.core.util.text.TemplateProcessor;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.text.TemplateProcessor;
 
-import brooklyn.entity.effector.EffectorTasks;
-import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.util.collections.MutableMap;
-import brooklyn.util.net.Urls;
-import brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.effector.core.EffectorTasks;
+import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.annotations.Beta;
 

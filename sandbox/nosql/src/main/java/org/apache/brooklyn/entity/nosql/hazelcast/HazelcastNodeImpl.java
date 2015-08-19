@@ -25,11 +25,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import brooklyn.event.feed.http.HttpFeed;
-import brooklyn.event.feed.http.HttpPollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.sensor.feed.http.HttpFeed;
+import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Functions;
 import com.google.common.net.HostAndPort;

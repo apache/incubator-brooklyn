@@ -23,15 +23,15 @@ import java.util.List;
 import com.google.common.reflect.TypeToken;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
-import brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.core.Sensors;
 
 /**
  * A cluster of {@link HazelcastNode}s based on {@link DynamicCluster}.
