@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.core.test.entity;
 
-import org.apache.brooklyn.core.entity.lifecycle.QuorumCheck.QuorumChecks;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
 
 /**
 * Mock cluster entity for testing.
@@ -41,7 +41,7 @@ public class TestClusterImpl extends DynamicClusterImpl implements TestCluster {
     @Override
     protected void initEnrichers() {
         // say this is up if it has no children 
-        setConfig(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
+        config().set(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
         
         super.initEnrichers();
     }
