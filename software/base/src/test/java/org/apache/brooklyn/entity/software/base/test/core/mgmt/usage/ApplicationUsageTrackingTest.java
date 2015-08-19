@@ -31,7 +31,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.mgmt.internal.UsageListener.ApplicationMetadata;
+import org.apache.brooklyn.core.mgmt.usage.UsageListener.ApplicationMetadata;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage.ApplicationEvent;
 import org.apache.brooklyn.core.objs.proxy.EntityProxy;

@@ -27,7 +27,7 @@ import org.apache.brooklyn.util.collections.MutableList;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class RecordingUsageListener implements org.apache.brooklyn.core.mgmt.internal.UsageListener {
+public class RecordingUsageListener implements org.apache.brooklyn.core.mgmt.usage.UsageListener {
 
     private final List<List<?>> events = Lists.newCopyOnWriteArrayList();
     

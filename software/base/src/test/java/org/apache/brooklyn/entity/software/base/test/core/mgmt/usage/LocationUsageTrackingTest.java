@@ -31,7 +31,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.core.mgmt.internal.UsageListener.LocationMetadata;
+import org.apache.brooklyn.core.mgmt.usage.UsageListener.LocationMetadata;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage.LocationEvent;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;

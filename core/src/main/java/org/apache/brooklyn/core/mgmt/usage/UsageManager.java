@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.mgmt.internal;
+package org.apache.brooklyn.core.mgmt.usage;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -45,10 +45,10 @@ import com.google.common.reflect.TypeToken;
 public interface UsageManager {
 
     @SuppressWarnings("serial")
-    public static final ConfigKey<List<org.apache.brooklyn.core.mgmt.internal.UsageListener>> USAGE_LISTENERS = ConfigKeys.newConfigKey(
-            new TypeToken<List<org.apache.brooklyn.core.mgmt.internal.UsageListener>>() {},
+    public static final ConfigKey<List<org.apache.brooklyn.core.mgmt.usage.UsageListener>> USAGE_LISTENERS = ConfigKeys.newConfigKey(
+            new TypeToken<List<org.apache.brooklyn.core.mgmt.usage.UsageListener>>() {},
             "brooklyn.usageManager.listeners", "Optional usage listeners (i.e. for metering)",
-            ImmutableList.<org.apache.brooklyn.core.mgmt.internal.UsageListener>of());
+            ImmutableList.<org.apache.brooklyn.core.mgmt.usage.UsageListener>of());
     
     public static final ConfigKey<Duration> USAGE_LISTENER_TERMINATION_TIMEOUT = ConfigKeys.newConfigKey(
             Duration.class,
@@ -67,7 +67,7 @@ public interface UsageManager {
             @Override public void onLocationEvent(String locationId, Map<String, String> metadata, LocationEvent event) {}
         };
         
-        public static class UsageListenerAdapter implements org.apache.brooklyn.core.mgmt.internal.UsageListener {
+        public static class UsageListenerAdapter implements org.apache.brooklyn.core.mgmt.usage.UsageListener {
             private final UsageListener listener;
 
             public UsageListenerAdapter(UsageListener listener) {
@@ -140,14 +140,14 @@ public interface UsageManager {
      * @deprecated since 0.7.0; use {@link #removeUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageListener)};
      *             see {@link org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener.UsageListenerAdapter} 
      */
-    void addUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener listener);
+    void addUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener listener);
 
     /**
      * @since 0.7.0
      * @deprecated since 0.7.0; use {@link #removeUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageListener)}
      */
     @Deprecated
-    void removeUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener listener);
+    void removeUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener listener);
     
     /**
      * Adds the given listener, to be notified on recording of application/location events.
@@ -156,10 +156,10 @@ public interface UsageManager {
      * As of 0.7.0, the listener is not persisted so will be lost on restart/rebind. This
      * behaviour may change in a subsequent release. 
      */
-    void addUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageListener listener);
+    void addUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageListener listener);
 
     /**
      * Removes the given listener.
      */
-    void removeUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageListener listener);
+    void removeUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageListener listener);
 }
