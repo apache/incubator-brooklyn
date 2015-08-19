@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import org.apache.brooklyn.api.entity.Entity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.EntityInternal;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.EntityInternal;
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;

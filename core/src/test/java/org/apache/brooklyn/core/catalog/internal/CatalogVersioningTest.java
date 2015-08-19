@@ -143,7 +143,7 @@ public class CatalogVersioningTest {
     @SuppressWarnings("deprecation")
     private void createCatalogItem(String symbolicName, String version) {
         catalog.addItem(CatalogItemBuilder.newEntity(symbolicName, version).
-                plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
     }
 

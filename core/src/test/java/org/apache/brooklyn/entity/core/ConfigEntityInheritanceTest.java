@@ -24,8 +24,6 @@ import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.core.internal.ConfigMapTest.MyOtherEntity;
 import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey.IntegerAttributeSensorAndConfigKey;

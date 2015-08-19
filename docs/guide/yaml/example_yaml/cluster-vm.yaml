@@ -4,7 +4,7 @@ services:
   initialSize: 5
   memberSpec:
     $brooklyn:entitySpec:
-      type: brooklyn.entity.basic.EmptySoftwareProcess
+      type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
       name: VM
       provisioning.properties:
         minRam: 8g

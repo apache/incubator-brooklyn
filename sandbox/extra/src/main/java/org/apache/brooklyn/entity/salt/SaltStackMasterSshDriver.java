@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.salt;
 import org.apache.brooklyn.location.basic.SshMachineLocation;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 
-import brooklyn.entity.basic.Entities;
+import org.apache.brooklyn.entity.core.Entities;
 import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import brooklyn.util.ssh.BashCommands;
 

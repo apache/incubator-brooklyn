@@ -24,8 +24,8 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.SoftwareProcessImpl;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import brooklyn.event.feed.http.HttpFeed;
 import brooklyn.event.feed.http.HttpPollConfig;
 import brooklyn.event.feed.http.HttpValueFunctions;

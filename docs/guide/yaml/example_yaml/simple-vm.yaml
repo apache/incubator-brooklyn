@@ -1,6 +1,6 @@
 name: simple-vm
 services:
-- type: brooklyn.entity.basic.EmptySoftwareProcess
+- type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
   name: VM
   provisioning.properties:
     minRam: 8192mb

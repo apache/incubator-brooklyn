@@ -21,7 +21,8 @@ brooklyn.catalog:
     description: |
       Provision a server, with customizable provisioning.properties and credentials installed, 
       but no other special software process or scripts executed.
-      The script should be supplied in "launch.command" as per docs on VanillaSoftwareProcess.
+      The script should be supplied in "launch.command" as per docs on
+      org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess.
     item:
       type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
       name: Server with Launch Script (bash)

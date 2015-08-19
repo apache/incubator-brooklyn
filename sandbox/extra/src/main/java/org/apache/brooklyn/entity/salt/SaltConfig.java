@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.management.TaskFactory;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import brooklyn.event.basic.BasicAttributeSensor;
 import brooklyn.event.basic.BasicConfigKey;
 import brooklyn.event.basic.MapConfigKey;

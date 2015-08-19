@@ -84,7 +84,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
         String version = "0.1.0";
         addCatalogEntity(symbolicName, version);
         forceCatalogUpdate();
-        String expectedType = "brooklyn.entity.basic.BasicApplication";
+        String expectedType = "org.apache.brooklyn.entity.stock.BasicApplication";
         addCatalogEntity(symbolicName, version, expectedType);
         CatalogItem<?, ?> item = catalog.getCatalogItem(symbolicName, version);
         assertTrue(item.getPlanYaml().contains(expectedType), "Version not updated");

@@ -231,7 +231,7 @@ For example, here is a complete blueprint that sets some AWS EC2 specific option
 
     location: AWS_eu-west-1
     services:
-    - type: brooklyn.entity.basic.EmptySoftwareProcess
+    - type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
       provisioningProperties:
         templateOptions:
           subnetId: subnet-041c8373

@@ -52,4 +52,4 @@ services:
                 java.sysprops:
                   brooklyn.example.mongodb.port: $brooklyn:component("parent", "").attributeWhenReady("mongodb.server.port")
           - $brooklyn:entitySpec:
-              type: brooklyn.entity.basic.EmptySoftwareProcess
+              type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess

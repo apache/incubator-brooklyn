@@ -33,9 +33,9 @@ public class CatalogXmlVersionTest extends AbstractCatalogXmlTest {
     @DataProvider(name = "types")
     public Object[][] createTypes() {
         return new Object[][] {
-                {"brooklyn.entity.basic.BasicApplication"},
-                {"brooklyn.entity.basic.BasicApplication:0.0.0.SNAPSHOT"},
-                {"brooklyn.entity.basic.BasicApplication:2.0"},
+                {"org.apache.brooklyn.entity.stock.BasicApplication"},
+                {"org.apache.brooklyn.entity.stock.BasicApplication:0.0.0.SNAPSHOT"},
+                {"org.apache.brooklyn.entity.stock.BasicApplication:2.0"},
                 {"BasicApp"}, // test that items with symbolicName not matching the type work
                 {"BasicApp:0.0.0.SNAPSHOT"},
                 {"BasicApp:2.0"},

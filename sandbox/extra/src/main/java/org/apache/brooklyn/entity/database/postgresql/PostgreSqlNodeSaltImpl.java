@@ -32,10 +32,10 @@ import org.slf4j.LoggerFactory;
 
 import brooklyn.config.ConfigKey;
 import org.apache.brooklyn.api.entity.Effector;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.EffectorStartableImpl;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SoftwareProcess;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.stock.EffectorStartableImpl;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
 import brooklyn.entity.effector.EffectorBody;
 import brooklyn.entity.effector.Effectors;

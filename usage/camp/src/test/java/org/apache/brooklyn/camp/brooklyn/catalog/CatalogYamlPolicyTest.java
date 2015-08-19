@@ -72,7 +72,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "name: simple-app-yaml",
             "location: localhost",
             "services: ",
-            "  - type: brooklyn.entity.basic.BasicEntity\n" +
+            "  - type: org.apache.brooklyn.entity.stock.BasicEntity\n" +
             "    brooklyn.policies:\n" +
             "    - type: " + ver(symbolicName),
             "      brooklyn.config:",
@@ -97,7 +97,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "name: simple-app-yaml",
             "location: localhost",
             "services: ",
-            "  - type: brooklyn.entity.basic.BasicEntity\n" +
+            "  - type: org.apache.brooklyn.entity.stock.BasicEntity\n" +
             "    brooklyn.policies:\n" +
             "    - type: " + ver(symbolicName),
             "      brooklyn.config:",

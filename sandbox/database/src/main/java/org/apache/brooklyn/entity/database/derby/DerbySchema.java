@@ -29,7 +29,7 @@ import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.entity.database.Schema;
 
 import org.apache.brooklyn.api.entity.Entity;
-import brooklyn.entity.basic.AbstractEntity;
+import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.api.event.AttributeSensor;

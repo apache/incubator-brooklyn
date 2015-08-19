@@ -1,6 +1,6 @@
 name: Simple Netcat Example From File
 location: localhost
 services:
-- type: brooklyn.entity.basic.VanillaSoftwareProcess
+- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
   name: Simple Netcat Server
   download.url: file:///tmp/netcat-server.tgz

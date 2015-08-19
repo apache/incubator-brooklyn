@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 
 import brooklyn.config.ConfigKey;
-import brooklyn.entity.basic.ConfigKeys;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import brooklyn.entity.group.DynamicCluster;
 import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 import brooklyn.event.basic.Sensors;

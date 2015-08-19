@@ -105,7 +105,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
     @Test
     public void testStopAppThenShutdownAndStopAppsWaitsForFirstStop() throws InterruptedException {
         ReflectiveEntityDriverFactory f = ((BasicEntityDriverManager)getManagementContext().getEntityDriverManager()).getReflectiveDriverFactory();
-        f.addClassFullNameMapping("brooklyn.entity.basic.EmptySoftwareProcessDriver", "org.apache.brooklyn.rest.resources.ServerResourceTest$EmptySoftwareProcessTestDriver");
+        f.addClassFullNameMapping("org.apache.brooklyn.entity.software.base.EmptySoftwareProcessDriver", "org.apache.brooklyn.rest.resources.ServerResourceTest$EmptySoftwareProcessTestDriver");
 
         // Second stop on SoftwareProcess could return early, while the first stop is still in progress
         // This causes the app to shutdown prematurely, leaking machines.

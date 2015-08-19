@@ -68,7 +68,7 @@ Alternatively, in your YAML blueprint:
 A Sample Blueprint
 ------------------
 
-Creating a Windows VM is done using the `brooklyn.entity.basic.VanillaWindowsProcess` entity type. This is very similar
+Creating a Windows VM is done using the `org.apache.brooklyn.entity.software.base.VanillaWindowsProcess` entity type. This is very similar
 to `VanillaSoftwareProcess`, but adapted to work for Windows and WinRM instead of Linux. We suggest you read the
 [documentation for VanillaSoftwareProcess](../custom-entities.html#vanilla-software-using-bash) to find out what you
 can do with this entity.
@@ -88,7 +88,7 @@ For example - here is a blueprint:
         templateOptions: {mapNewVolumeToDeviceName: ["/dev/sda1", 100, true]}
 
     services:
-    - type: brooklyn.entity.basic.VanillaWindowsProcess
+    - type: org.apache.brooklyn.entity.software.base.VanillaWindowsProcess
       brooklyn.config:
         templates.install:
           file:///Users/richard/install7zip.ps1: "C:\\install7zip.ps1"
