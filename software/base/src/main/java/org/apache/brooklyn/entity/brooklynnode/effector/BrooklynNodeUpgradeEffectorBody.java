@@ -34,6 +34,7 @@ import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.entity.EntityTasks;
 import org.apache.brooklyn.effector.core.EffectorBody;
 import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynCluster;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNodeDriver;
@@ -43,7 +44,6 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwarePara
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.Tasks;
-import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;

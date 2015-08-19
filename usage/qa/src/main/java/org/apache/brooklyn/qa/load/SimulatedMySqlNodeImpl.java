@@ -23,6 +23,7 @@ import static java.lang.String.format;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.entity.database.mysql.MySqlNodeImpl;
 import org.apache.brooklyn.entity.database.mysql.MySqlSshDriver;
@@ -32,7 +33,6 @@ import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
 import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
-import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;

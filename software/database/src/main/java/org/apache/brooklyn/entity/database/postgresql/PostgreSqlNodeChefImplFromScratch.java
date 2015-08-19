@@ -25,6 +25,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.effector.core.EffectorBody;
 import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.chef.ChefConfig;
 import org.apache.brooklyn.entity.chef.ChefLifecycleEffectorTasks;
 import org.apache.brooklyn.entity.chef.ChefServerTasks;
@@ -38,7 +39,6 @@ import org.apache.brooklyn.util.collections.Jsonya;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
-import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.ssh.BashCommands;
 
