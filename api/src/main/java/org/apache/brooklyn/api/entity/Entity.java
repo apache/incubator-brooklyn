@@ -40,15 +40,15 @@ import org.apache.brooklyn.util.guava.Maybe;
 /**
  * The basic interface for a Brooklyn entity.
  * <p>
- * Implementors of entities are strongly encouraged to extend {@link org.apache.brooklyn.entity.core.AbstractEntity}.
+ * Implementors of entities are strongly encouraged to extend {@link org.apache.brooklyn.core.entity.AbstractEntity}.
  * <p>
  * To instantiate an entity, see {@code managementContext.getEntityManager().createEntity(entitySpec)}.
- * Also see {@link org.apache.brooklyn.entity.factory.ApplicationBuilder}, 
- * {@link org.apache.brooklyn.entity.core.AbstractEntity#addChild(EntitySpec)}, and
+ * Also see {@link org.apache.brooklyn.core.entity.factory.ApplicationBuilder}, 
+ * {@link org.apache.brooklyn.core.entity.AbstractEntity#addChild(EntitySpec)}, and
  * {@link org.apache.brooklyn.api.entity.EntitySpec}.
  * <p>
  * 
- * @see org.apache.brooklyn.entity.core.AbstractEntity
+ * @see org.apache.brooklyn.core.entity.AbstractEntity
  */
 public interface Entity extends BrooklynObject {
     /**

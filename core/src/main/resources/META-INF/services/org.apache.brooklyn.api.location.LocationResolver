@@ -16,12 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-org.apache.brooklyn.location.core.DefinedLocationByIdResolver
-org.apache.brooklyn.location.core.NamedLocationResolver
-org.apache.brooklyn.location.core.CatalogLocationResolver
-org.apache.brooklyn.location.localhost.LocalhostLocationResolver
+org.apache.brooklyn.core.location.DefinedLocationByIdResolver
+org.apache.brooklyn.core.location.NamedLocationResolver
+org.apache.brooklyn.core.location.CatalogLocationResolver
+org.apache.brooklyn.core.location.access.PortForwardManagerLocationResolver
 org.apache.brooklyn.location.byon.ByonLocationResolver
 org.apache.brooklyn.location.byon.SingleMachineLocationResolver
 org.apache.brooklyn.location.byon.HostLocationResolver
-org.apache.brooklyn.location.core.MultiLocationResolver
-org.apache.brooklyn.location.access.PortForwardManagerLocationResolver
+org.apache.brooklyn.location.localhost.LocalhostLocationResolver
+org.apache.brooklyn.location.multi.MultiLocationResolver

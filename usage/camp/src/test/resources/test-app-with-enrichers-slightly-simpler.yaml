@@ -43,7 +43,7 @@ services:
         # instead of (or in addition to) this map 
         brooklyn.config:
           sensorMapping:
-            $brooklyn:sensor("url"): $brooklyn:sensor("org.apache.brooklyn.entity.core.Attributes", "main.uri")
+            $brooklyn:sensor("url"): $brooklyn:sensor("org.apache.brooklyn.core.entity.Attributes", "main.uri")
   brooklyn.enrichers:
   - type: org.apache.brooklyn.sensor.enricher.Aggregator
     # aggregate `url` sensors from children into a list
@@ -63,7 +63,7 @@ services:
     # pick one uri as the main one to use
     brooklyn.config:
       enricher.sourceSensor: $brooklyn:sensor("urls.list")
-      enricher.targetSensor: $brooklyn:sensor("org.apache.brooklyn.entity.core.Attributes", "main.uri")
+      enricher.targetSensor: $brooklyn:sensor("org.apache.brooklyn.core.entity.Attributes", "main.uri")
       quote: false
       maximum: 1
 brooklyn.enrichers:
