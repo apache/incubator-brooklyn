@@ -400,7 +400,7 @@ public class BasicLocationRegistry implements LocationRegistry {
         return null;
     }
 
-    /** providers default impl for RegistryLocationResolver.accepts */
+    /** providers default impl for {@link LocationResolver#accepts(String, LocationRegistry)} */
     public static boolean isResolverPrefixForSpec(LocationResolver resolver, String spec, boolean argumentRequired) {
         if (spec==null) return false;
         if (spec.startsWith(resolver.getPrefix()+":")) return true;
