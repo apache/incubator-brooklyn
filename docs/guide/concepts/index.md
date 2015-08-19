@@ -11,6 +11,7 @@ children:
 - location.md
 - policies.md
 - execution.md
+- stop-start-restart-behaviour.md
 ---
 
 This introduces brooklyn and describes how it simplifies the deployment and management of big applications. It is
