@@ -21,9 +21,9 @@ package org.apache.brooklyn.entity.monitoring.zabbix;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.sensor.feed.PollConfig;
-import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
-import org.apache.brooklyn.sensor.feed.http.JsonFunctions;
+import org.apache.brooklyn.core.feed.PollConfig;
+import org.apache.brooklyn.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.feed.http.JsonFunctions;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.http.HttpToolResponse;
 

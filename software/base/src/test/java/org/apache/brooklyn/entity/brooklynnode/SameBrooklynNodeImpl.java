@@ -26,9 +26,9 @@ import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.brooklynnode.EntityHttpClient;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNodeImpl.DeployBlueprintEffectorBody;
-import org.apache.brooklyn.sensor.feed.http.HttpFeed;
-import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
-import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.feed.http.HttpFeed;
+import org.apache.brooklyn.feed.http.HttpPollConfig;
+import org.apache.brooklyn.feed.http.HttpValueFunctions;
 
 /** Implementation of BrooklynNode which just presents the node where this is running, for convenience;
  * 

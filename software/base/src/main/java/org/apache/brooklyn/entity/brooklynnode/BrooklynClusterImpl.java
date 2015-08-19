@@ -30,9 +30,9 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceProble
 import org.apache.brooklyn.entity.brooklynnode.effector.BrooklynClusterUpgradeEffectorBody;
 import org.apache.brooklyn.entity.brooklynnode.effector.SelectMasterEffectorBody;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.feed.function.FunctionFeed;
+import org.apache.brooklyn.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
-import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
-import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

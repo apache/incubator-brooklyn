@@ -46,7 +46,7 @@ import mx4j.tools.naming.NamingServiceMBean;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.java.UsesJmx;
-import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
+import org.apache.brooklyn.feed.jmx.JmxHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

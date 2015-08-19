@@ -20,9 +20,8 @@ package org.apache.brooklyn.entity.salt;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.apache.brooklyn.core.feed.ConfigToAttributes;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 
 public class SaltStackMasterImpl extends SoftwareProcessImpl implements SaltStackMaster {
 

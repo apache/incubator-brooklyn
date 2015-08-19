@@ -33,9 +33,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.entity.java.JmxSupport;
 import org.apache.brooklyn.entity.messaging.jms.JMSBrokerImpl;
-import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
-import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
-import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
+import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.feed.jmx.JmxFeed;
+import org.apache.brooklyn.feed.jmx.JmxHelper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Function;

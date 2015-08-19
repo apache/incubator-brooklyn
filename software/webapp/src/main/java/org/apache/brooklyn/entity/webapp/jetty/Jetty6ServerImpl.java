@@ -24,9 +24,9 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.java.JavaAppUtils;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
+import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.feed.jmx.JmxFeed;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
-import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
-import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

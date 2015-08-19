@@ -24,9 +24,9 @@ import javax.management.ObjectName;
 
 import org.apache.brooklyn.entity.java.JavaSoftwareProcessDriver;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
-import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
-import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
+import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.feed.jmx.JmxFeed;
+import org.apache.brooklyn.feed.jmx.JmxHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

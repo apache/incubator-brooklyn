@@ -51,7 +51,7 @@ import org.apache.brooklyn.entity.java.JavaAppUtils;
 import org.apache.brooklyn.entity.java.UsesJava;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.java.VanillaJavaApp;
-import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
+import org.apache.brooklyn.feed.jmx.JmxHelper;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;

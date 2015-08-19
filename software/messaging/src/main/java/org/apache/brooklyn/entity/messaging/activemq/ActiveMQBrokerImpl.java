@@ -27,8 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.messaging.jms.JMSBrokerImpl;
-import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
-import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
+import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.feed.jmx.JmxFeed;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;

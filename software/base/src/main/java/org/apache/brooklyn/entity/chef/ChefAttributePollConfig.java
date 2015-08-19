@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.chef;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.sensor.feed.PollConfig;
+import org.apache.brooklyn.core.feed.PollConfig;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

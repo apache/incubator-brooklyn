@@ -27,12 +27,12 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.feed.ConfigToAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
-import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
 

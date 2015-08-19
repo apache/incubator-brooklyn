@@ -36,10 +36,10 @@ import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
+import org.apache.brooklyn.feed.jmx.JmxHelper;
 import org.apache.brooklyn.entity.java.UsesJava;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.core.config.BasicConfigKey;
-import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
 import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Objects.ToStringHelper;

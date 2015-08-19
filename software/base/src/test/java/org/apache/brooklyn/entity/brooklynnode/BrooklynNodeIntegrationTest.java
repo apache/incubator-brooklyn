@@ -52,7 +52,7 @@ import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.StopNodeAndKillAppsE
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwareParameters.StopMode;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.entity.stock.BasicApplicationImpl;
-import org.apache.brooklyn.sensor.feed.http.JsonFunctions;
+import org.apache.brooklyn.feed.http.JsonFunctions;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;

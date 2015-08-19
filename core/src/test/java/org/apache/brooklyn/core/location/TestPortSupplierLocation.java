@@ -21,11 +21,11 @@ package org.apache.brooklyn.core.location;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.feed.ConfigToAttributes;
 import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.sensor.feed.ConfigToAttributes;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

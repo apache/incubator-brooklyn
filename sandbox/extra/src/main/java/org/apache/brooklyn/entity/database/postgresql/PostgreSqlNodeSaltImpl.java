@@ -39,10 +39,10 @@ import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.entity.stock.EffectorStartableImpl;
+import org.apache.brooklyn.feed.ssh.SshFeed;
+import org.apache.brooklyn.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
-import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
-import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.util.ssh.BashCommands;
 
 import com.google.common.collect.ImmutableMap;
