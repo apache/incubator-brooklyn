@@ -27,7 +27,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.util.groovy.internal.TimeExtras;
+import org.apache.brooklyn.util.groovy.TimeExtras;
 
 /**
  * CouchDB test framework for integration and live tests.

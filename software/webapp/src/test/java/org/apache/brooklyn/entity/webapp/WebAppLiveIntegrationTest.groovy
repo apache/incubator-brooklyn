@@ -37,7 +37,7 @@ import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl
 import org.apache.brooklyn.test.TestUtils
-import org.apache.brooklyn.util.groovy.internal.TimeExtras
+import org.apache.brooklyn.util.groovy.TimeExtras;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
