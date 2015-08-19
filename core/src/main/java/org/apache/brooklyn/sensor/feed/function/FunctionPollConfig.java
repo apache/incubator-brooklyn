@@ -26,7 +26,7 @@ import java.util.concurrent.Callable;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.sensor.feed.FeedConfig;
 import org.apache.brooklyn.sensor.feed.PollConfig;
-import org.apache.brooklyn.util.GroovyJavaMethods;
+import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 

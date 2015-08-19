@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.entity.nosql.couchdb;
 
-import org.apache.brooklyn.util.internal.TimeExtras;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -28,6 +27,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.util.groovy.internal.TimeExtras;
 
 /**
  * CouchDB test framework for integration and live tests.

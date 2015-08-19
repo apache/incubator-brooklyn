@@ -16,16 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.util.internal;
+package org.apache.brooklyn.util.groovy.internal;
 
 import static org.testng.Assert.*
 
-import org.apache.brooklyn.util.internal.LanguageUtils;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.Test
-
-import org.apache.brooklyn.util.internal.LanguageUtils.FieldVisitor
+import org.apache.brooklyn.util.groovy.internal.LanguageUtils;
+import org.apache.brooklyn.util.groovy.internal.LanguageUtils.FieldVisitor
 
 
 /**

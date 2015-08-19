@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.util;
+package org.apache.brooklyn.util.groovy;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.util.concurrent.Callable
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.util.internal;
+package org.apache.brooklyn.util.groovy.internal;
 
 public class PojoTestingFields {
     private final int privateInt;

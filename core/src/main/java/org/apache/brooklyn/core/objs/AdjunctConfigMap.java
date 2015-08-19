@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.objs;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
 
 import java.util.Collections;
 import java.util.Map;

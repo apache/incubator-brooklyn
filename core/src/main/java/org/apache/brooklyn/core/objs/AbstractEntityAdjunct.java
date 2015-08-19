@@ -19,7 +19,7 @@
 package org.apache.brooklyn.core.objs;
 
 import static com.google.common.base.Preconditions.checkState;
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.util.Collection;
 import java.util.Collections;

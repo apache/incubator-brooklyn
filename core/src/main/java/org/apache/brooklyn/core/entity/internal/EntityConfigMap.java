@@ -19,7 +19,7 @@
 package org.apache.brooklyn.core.entity.internal;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

@@ -35,7 +35,7 @@ import org.apache.brooklyn.api.entity.Application
 import org.apache.brooklyn.core.entity.Entities
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation
 import org.apache.brooklyn.core.test.entity.TestApplicationImpl
-import org.apache.brooklyn.util.internal.TimeExtras
+import org.apache.brooklyn.util.groovy.internal.TimeExtras
 import org.apache.brooklyn.util.net.Networking
 import org.apache.brooklyn.util.repeat.Repeater
 

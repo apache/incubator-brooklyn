@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.entity.group;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,9 +42,9 @@ import org.apache.brooklyn.core.entity.trait.Changeable;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.effector.core.Effectors;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
-import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

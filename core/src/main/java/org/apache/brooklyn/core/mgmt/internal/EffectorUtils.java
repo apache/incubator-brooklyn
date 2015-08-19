@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.mgmt.internal;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
