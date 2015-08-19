@@ -21,8 +21,8 @@ package org.apache.brooklyn.entity.nosql.elasticsearch;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.sensor.feed.http.HttpFeed;
 import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
 import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;

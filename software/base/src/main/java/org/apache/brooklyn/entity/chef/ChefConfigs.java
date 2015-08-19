@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.MapConfigKey.MapModifications;
 import org.apache.brooklyn.core.config.SetConfigKey.SetModifications;
-import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.util.git.GithubUrls;
 
 import com.google.common.annotations.Beta;

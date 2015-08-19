@@ -26,10 +26,10 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.annotation.Effector;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.effector.core.MethodEffector;
-import org.apache.brooklyn.entity.annotation.Effector;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 

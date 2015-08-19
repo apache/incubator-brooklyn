@@ -24,8 +24,8 @@ import java.util.Set;
 
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.entity.EntityDynamicType;
 import org.apache.brooklyn.core.objs.BrooklynTypes;
-import org.apache.brooklyn.entity.core.EntityDynamicType;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.effector.Effector;

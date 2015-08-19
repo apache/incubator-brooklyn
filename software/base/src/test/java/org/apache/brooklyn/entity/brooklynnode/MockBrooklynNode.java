@@ -24,12 +24,12 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.brooklynnode.EntityHttpClient;
 import org.apache.brooklyn.entity.brooklynnode.CallbackEntityHttpClient.Request;
 import org.apache.brooklyn.entity.brooklynnode.effector.SetHighAvailabilityModeEffectorBody;
 import org.apache.brooklyn.entity.brooklynnode.effector.SetHighAvailabilityPriorityEffectorBody;
-import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 
 import com.google.common.base.Function;

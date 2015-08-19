@@ -28,15 +28,15 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.policy.loadbalancing.MockContainerEntity;
 import org.apache.brooklyn.policy.loadbalancing.MockItemEntity;
 import org.apache.brooklyn.policy.loadbalancing.Movable;

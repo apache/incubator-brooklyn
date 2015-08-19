@@ -31,9 +31,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineLocation;
@@ -42,17 +42,20 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.entity.drivers.BasicEntityDriverManager;
+import org.apache.brooklyn.core.entity.drivers.ReflectiveEntityDriverFactory;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.location.Locations;
+import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.effector.core.Effectors;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.EntityInternal;
-import org.apache.brooklyn.entity.drivers.BasicEntityDriverManager;
-import org.apache.brooklyn.entity.drivers.ReflectiveEntityDriverFactory;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcessDriver;
@@ -65,7 +68,6 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwarePara
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwareParameters.StopMode;
 import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasksTest;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -92,8 +94,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
-import org.apache.brooklyn.location.core.Locations;
-import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 

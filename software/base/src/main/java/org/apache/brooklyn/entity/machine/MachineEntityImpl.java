@@ -23,16 +23,16 @@ import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcessDriver;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcessImpl;
-import org.apache.brooklyn.location.core.Machines;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
 import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.sensor.feed.ssh.SshPollValue;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Strings;

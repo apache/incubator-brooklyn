@@ -24,11 +24,11 @@ import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.effector.core.MethodEffector;
-import org.apache.brooklyn.entity.annotation.EffectorParam;
 import org.apache.brooklyn.entity.group.AbstractGroup;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 @ImplementedBy(MockContainerEntityImpl.class)

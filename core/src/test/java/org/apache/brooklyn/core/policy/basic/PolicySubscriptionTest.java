@@ -22,11 +22,11 @@ import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
+import org.apache.brooklyn.core.entity.RecordingSensorEventListener;
+import org.apache.brooklyn.core.location.SimulatedLocation;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.RecordingSensorEventListener;
-import org.apache.brooklyn.location.core.SimulatedLocation;
-import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.apache.brooklyn.sensor.core.BasicSensorEvent;
 import org.apache.brooklyn.test.Asserts;
 import org.testng.annotations.BeforeMethod;

@@ -27,9 +27,9 @@ import java.util.Iterator;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.machine.pool.ServerPoolImpl;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;

@@ -22,11 +22,11 @@ import java.util.Arrays;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.net.Protocol;
 import org.apache.brooklyn.util.ssh.IptablesCommands;

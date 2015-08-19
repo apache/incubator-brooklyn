@@ -26,7 +26,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.geo.HostGeoInfo;
+import org.apache.brooklyn.core.location.geo.HostGeoInfo;
 import org.apache.brooklyn.util.core.ResourceUtils;
 
 

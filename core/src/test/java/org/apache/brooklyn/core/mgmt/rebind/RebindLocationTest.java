@@ -35,6 +35,7 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.mgmt.rebind.BasicLocationRebindSupport;
 import org.apache.brooklyn.core.mgmt.rebind.RebindEntityTest.MyEntity;
 import org.apache.brooklyn.core.test.entity.TestApplication;
@@ -44,7 +45,6 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.AbstractLocation;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;

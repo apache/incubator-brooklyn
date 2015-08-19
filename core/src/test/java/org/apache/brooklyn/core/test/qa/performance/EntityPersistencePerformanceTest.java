@@ -26,6 +26,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
@@ -33,7 +34,6 @@ import org.apache.brooklyn.test.PerformanceTestUtils;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.SimulatedLocation;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

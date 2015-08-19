@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.entity.group;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,23 +28,23 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.entity.factory.EntityFactory;
+import org.apache.brooklyn.core.entity.factory.EntityFactoryForLocation;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.core.entity.trait.Changeable;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.effector.core.Effectors;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.EntityInternal;
-import org.apache.brooklyn.entity.factory.EntityFactory;
-import org.apache.brooklyn.entity.factory.EntityFactoryForLocation;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
-import org.apache.brooklyn.entity.trait.Changeable;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
-import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

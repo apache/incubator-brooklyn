@@ -29,9 +29,10 @@ import org.apache.brooklyn.effector.core.EffectorBody;
 import org.apache.brooklyn.effector.core.Effectors;
 import org.apache.brooklyn.effector.core.Effectors.EffectorBuilder;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks.SshEffectorTaskFactory;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks.SshEffectorTaskFactory;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Preconditions;

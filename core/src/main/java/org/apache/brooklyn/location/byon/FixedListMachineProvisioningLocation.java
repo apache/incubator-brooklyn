@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.byon;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.io.Closeable;
 import java.io.File;
@@ -37,6 +37,8 @@ import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.mgmt.LocationManager;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.location.AbstractLocation;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +52,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 
-import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-import org.apache.brooklyn.location.core.AbstractLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.collections.MutableMap;

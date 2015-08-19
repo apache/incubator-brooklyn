@@ -24,12 +24,12 @@ import java.util.Map;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.effector.ParameterType;
 import org.apache.brooklyn.api.entity.EntityInitializer;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.MapConfigKey;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.effector.core.Effectors.EffectorBuilder;
-import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.text.Strings;
 

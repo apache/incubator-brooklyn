@@ -31,14 +31,14 @@ import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.annotation.Effector;
+import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.core.location.dynamic.LocationOwner;
 import org.apache.brooklyn.effector.core.MethodEffector;
-import org.apache.brooklyn.entity.annotation.Effector;
-import org.apache.brooklyn.entity.annotation.EffectorParam;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.machine.MachineEntity;
-import org.apache.brooklyn.location.cloud.CloudLocationConfig;
-import org.apache.brooklyn.location.dynamic.LocationOwner;
 import org.apache.brooklyn.sensor.core.Sensors;
 
 /**

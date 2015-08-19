@@ -24,10 +24,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
-import org.apache.brooklyn.entity.factory.AbstractConfigurableEntityFactory;
-import org.apache.brooklyn.entity.factory.ConfigurableEntityFactory;
-import org.apache.brooklyn.entity.factory.EntityFactoryForLocation;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.factory.AbstractConfigurableEntityFactory;
+import org.apache.brooklyn.core.entity.factory.ConfigurableEntityFactory;
+import org.apache.brooklyn.core.entity.factory.EntityFactoryForLocation;
+import org.apache.brooklyn.core.entity.trait.Startable;
 
 public interface ElasticJavaWebAppService extends JavaWebAppService, Startable {
 

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.test.entity;
 
-import org.apache.brooklyn.entity.core.internal.EntityTransientCopyInternal;
+import org.apache.brooklyn.core.entity.internal.EntityTransientCopyInternal;
 
 /**
  * Entity to give compilation errors if {@link EntityTransientCopyInternal} methods are not aligned

@@ -20,7 +20,7 @@ package org.apache.brooklyn.camp.brooklyn;
 
 import java.io.StringReader;
 
-import org.apache.brooklyn.entity.core.StartableApplication;
+import org.apache.brooklyn.core.entity.StartableApplication;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

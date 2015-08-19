@@ -29,14 +29,14 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.annotation.EffectorParam;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.internal.EffectorUtils;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.effector.core.BasicParameterType;
 import org.apache.brooklyn.effector.core.Effectors;
 import org.apache.brooklyn.effector.core.MethodEffector;
-import org.apache.brooklyn.entity.annotation.EffectorParam;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -120,11 +120,11 @@ public class EffectorMetadataTest extends BrooklynAppUnitTestSupport {
     public interface MyAnnotatedEntity extends Entity {
         static MethodEffector<String> EFF_WITH_NEW_ANNOTATION = new MethodEffector<String>(MyAnnotatedEntity.class, "effWithNewAnnotation");
 
-        @org.apache.brooklyn.entity.annotation.Effector(description="my effector description")
+        @org.apache.brooklyn.core.annotation.Effector(description="my effector description")
         public String effWithNewAnnotation(
                 @EffectorParam(name="param1", defaultValue="my default val", description="my param description") String param1);
         
-        @org.apache.brooklyn.entity.annotation.Effector(description="my effector description")
+        @org.apache.brooklyn.core.annotation.Effector(description="my effector description")
         public String effWithAnnotationButNoConstant(
                 @EffectorParam(name="param1", defaultValue="my default val", description="my param description") String param1);
     }

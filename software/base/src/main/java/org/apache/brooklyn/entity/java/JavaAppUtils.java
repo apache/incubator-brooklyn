@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
 import javax.management.openmbean.CompositeData;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher;
 import org.apache.brooklyn.policy.enricher.TimeFractionDeltaEnricher;

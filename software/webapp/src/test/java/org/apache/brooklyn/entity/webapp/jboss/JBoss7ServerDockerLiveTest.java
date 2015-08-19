@@ -23,7 +23,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.software.base.AbstractDockerLiveTest;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 
 import com.google.common.collect.ImmutableList;
 

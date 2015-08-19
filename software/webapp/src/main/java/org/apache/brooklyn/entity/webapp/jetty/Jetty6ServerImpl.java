@@ -20,9 +20,9 @@ package org.apache.brooklyn.entity.webapp.jetty;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.java.JavaAppUtils;
 import org.apache.brooklyn.entity.java.UsesJmx;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;

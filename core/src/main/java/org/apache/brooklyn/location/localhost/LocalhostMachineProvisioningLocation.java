@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.location.localhost;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.io.File;
 import java.net.InetAddress;
@@ -35,14 +35,14 @@ import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.location.BasicOsDetails;
+import org.apache.brooklyn.core.location.HasSubnetHostname;
+import org.apache.brooklyn.core.location.geo.HostGeoInfo;
 import org.apache.brooklyn.core.mgmt.persist.FileBasedObjectStore;
 import org.apache.brooklyn.core.mgmt.persist.LocationWithObjectStore;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
-import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
 import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
-import org.apache.brooklyn.location.core.BasicOsDetails;
-import org.apache.brooklyn.location.core.HasSubnetHostname;
-import org.apache.brooklyn.location.geo.HostGeoInfo;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.BrooklynNetworkUtils;

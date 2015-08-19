@@ -24,8 +24,8 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.rebind.RebindEntityTest.MyEntity;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.group.DynamicGroup;
 import org.apache.brooklyn.test.Asserts;
 import org.testng.annotations.Test;

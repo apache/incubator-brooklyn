@@ -23,8 +23,8 @@ import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWh
 import static org.apache.brooklyn.sensor.core.DependentConfiguration.formatString
 
 import org.apache.brooklyn.api.entity.EntitySpec
-import org.apache.brooklyn.entity.core.AbstractApplication
-import org.apache.brooklyn.entity.core.Entities
+import org.apache.brooklyn.core.entity.AbstractApplication
+import org.apache.brooklyn.core.entity.Entities
 import org.apache.brooklyn.entity.database.mysql.MySqlNode
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster

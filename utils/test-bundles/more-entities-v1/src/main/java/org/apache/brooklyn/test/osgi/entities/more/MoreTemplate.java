@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.test.osgi.entities.more;
 
-import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.core.entity.AbstractApplication;
 
 public class MoreTemplate extends AbstractApplication {
 }

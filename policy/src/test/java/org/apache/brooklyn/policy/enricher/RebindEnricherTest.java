@@ -24,9 +24,9 @@ import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.policy.enricher.DeltaEnricher;
 import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
 import org.apache.brooklyn.policy.enricher.RollingMeanEnricher;

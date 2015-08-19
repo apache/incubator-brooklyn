@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
-import org.apache.brooklyn.policy.core.AbstractPolicy;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

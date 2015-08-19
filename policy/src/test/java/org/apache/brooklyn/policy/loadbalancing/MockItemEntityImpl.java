@@ -26,7 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -31,8 +31,8 @@ import org.apache.brooklyn.core.config.MapConfigKey.MapModifications
 import org.apache.brooklyn.core.config.SetConfigKey.SetModifications
 import org.apache.brooklyn.core.test.entity.TestApplication
 import org.apache.brooklyn.core.test.entity.TestEntity
-import org.apache.brooklyn.entity.core.Entities
-import org.apache.brooklyn.location.core.SimulatedLocation
+import org.apache.brooklyn.core.entity.Entities
+import org.apache.brooklyn.core.location.SimulatedLocation
 import org.apache.brooklyn.sensor.core.DependentConfiguration
 import org.apache.brooklyn.util.collections.MutableMap
 import org.apache.brooklyn.util.core.task.DeferredSupplier

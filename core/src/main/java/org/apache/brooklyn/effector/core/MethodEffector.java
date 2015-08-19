@@ -27,12 +27,12 @@ import java.util.Map;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.effector.ParameterType;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.annotation.EffectorParam;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.mgmt.internal.EffectorUtils;
-import org.apache.brooklyn.entity.annotation.EffectorParam;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.codehaus.groovy.runtime.MethodClosure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +72,7 @@ public class MethodEffector<T> extends AbstractEffector<T> {
             this.returnType = method.getReturnType();
 
             // Get the description
-            org.apache.brooklyn.entity.annotation.Effector effectorAnnotation = method.getAnnotation(org.apache.brooklyn.entity.annotation.Effector.class);
+            org.apache.brooklyn.core.annotation.Effector effectorAnnotation = method.getAnnotation(org.apache.brooklyn.core.annotation.Effector.class);
             description = (effectorAnnotation != null) ? effectorAnnotation.description() : null;
 
             // Get the parameters

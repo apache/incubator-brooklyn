@@ -21,7 +21,7 @@ package org.apache.brooklyn.util.core;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
-import org.apache.brooklyn.util.internal.TimeExtras;
+import org.apache.brooklyn.util.groovy.internal.TimeExtras;
 
 /** @deprecated since 0.7.0 use {@link BrooklynInitialization} */
 public class BrooklynLanguageExtensions {

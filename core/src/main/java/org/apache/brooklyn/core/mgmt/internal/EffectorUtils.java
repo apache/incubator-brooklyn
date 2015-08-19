@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.mgmt.internal;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -33,9 +33,9 @@ import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.effector.ParameterType;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.effector.core.BasicParameterType;
-import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;

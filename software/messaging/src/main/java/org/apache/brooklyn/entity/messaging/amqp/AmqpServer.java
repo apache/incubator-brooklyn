@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.messaging.amqp;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 

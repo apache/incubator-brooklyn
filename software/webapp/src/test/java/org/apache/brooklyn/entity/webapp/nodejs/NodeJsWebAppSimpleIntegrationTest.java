@@ -26,11 +26,11 @@ import java.util.Iterator;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.jclouds.util.Throwables2;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.util.net.Networking;
 

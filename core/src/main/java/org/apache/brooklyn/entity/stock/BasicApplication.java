@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.stock;
 
 import org.apache.brooklyn.api.entity.ImplementedBy;
-import org.apache.brooklyn.entity.core.StartableApplication;
+import org.apache.brooklyn.core.entity.StartableApplication;
 
 /**
  * The most basic implementation of an application possible.

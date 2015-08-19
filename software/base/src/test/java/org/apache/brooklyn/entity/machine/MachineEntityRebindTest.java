@@ -20,9 +20,9 @@ package org.apache.brooklyn.entity.machine;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;

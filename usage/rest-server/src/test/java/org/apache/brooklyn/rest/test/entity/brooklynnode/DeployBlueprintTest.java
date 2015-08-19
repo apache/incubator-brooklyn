@@ -24,8 +24,8 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.mgmt.EntityManager;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;

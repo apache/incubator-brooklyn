@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

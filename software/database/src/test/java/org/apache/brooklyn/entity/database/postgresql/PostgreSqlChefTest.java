@@ -26,13 +26,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.effector.core.EffectorTasks;
 import org.apache.brooklyn.entity.chef.ChefLiveTestSupport;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.api.location.PortRange;
-import org.apache.brooklyn.location.core.PortRanges;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.time.Duration;
 

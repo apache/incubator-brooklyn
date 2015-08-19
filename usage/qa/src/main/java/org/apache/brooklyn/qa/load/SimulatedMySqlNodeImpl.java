@@ -30,9 +30,9 @@ import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
 import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;

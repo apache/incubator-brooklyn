@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 
 public class DoNothingSoftwareProcessImpl extends SoftwareProcessImpl implements DoNothingSoftwareProcess {

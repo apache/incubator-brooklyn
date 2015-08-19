@@ -35,10 +35,9 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 
 import com.google.common.collect.Lists;
 

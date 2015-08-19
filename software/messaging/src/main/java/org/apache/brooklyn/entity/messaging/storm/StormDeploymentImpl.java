@@ -24,9 +24,9 @@ import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.SUPERVISOR;
 import static org.apache.brooklyn.entity.messaging.storm.Storm.Role.UI;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.stock.BasicStartableImpl;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperEnsemble;

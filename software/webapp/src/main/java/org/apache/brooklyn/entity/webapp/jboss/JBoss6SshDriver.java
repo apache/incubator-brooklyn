@@ -27,8 +27,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSshDriver;

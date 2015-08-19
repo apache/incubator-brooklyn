@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.location.core.LocationConfigKeys;
+import org.apache.brooklyn.core.location.LocationConfigKeys;
 
 public class EntityLocationUtils {
 

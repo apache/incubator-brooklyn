@@ -21,8 +21,8 @@ package org.apache.brooklyn.core.catalog.internal;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 
 import com.google.common.annotations.Beta;
 

@@ -22,14 +22,18 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.InetAddress;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.geo.HostGeoInfo;
+import org.apache.brooklyn.core.location.geo.HostGeoLookup;
+import org.apache.brooklyn.core.location.geo.MaxMind2HostGeoLookup;
+import org.apache.brooklyn.core.location.geo.UtraceHostGeoLookup;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingScriptGenerator;
 import org.apache.brooklyn.entity.group.DynamicGroup;
@@ -43,10 +47,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.geo.HostGeoInfo;
-import org.apache.brooklyn.location.geo.HostGeoLookup;
-import org.apache.brooklyn.location.geo.MaxMind2HostGeoLookup;
-import org.apache.brooklyn.location.geo.UtraceHostGeoLookup;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 import com.google.common.base.Predicates;

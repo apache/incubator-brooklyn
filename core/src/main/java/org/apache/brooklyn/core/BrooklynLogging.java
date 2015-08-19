@@ -19,7 +19,7 @@
 package org.apache.brooklyn.core;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.slf4j.Logger;
 
 /** contains common logging categories */

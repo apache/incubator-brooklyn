@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.messaging.kafka;
 import java.util.Map;
 
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 

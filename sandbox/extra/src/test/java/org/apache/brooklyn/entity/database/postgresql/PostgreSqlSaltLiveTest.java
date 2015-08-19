@@ -20,28 +20,27 @@ package org.apache.brooklyn.entity.database.postgresql;
 
 import java.util.Random;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.PortRange;
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.PortRanges;
+import org.apache.brooklyn.util.core.task.ssh.SshEffectorTasks;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNodeSaltImpl;
 import org.apache.brooklyn.entity.salt.SaltConfig;
 import org.apache.brooklyn.entity.salt.SaltLiveTestSupport;
-import org.apache.brooklyn.location.basic.PortRanges;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
-
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;
-import brooklyn.entity.effector.EffectorTasks;
-import brooklyn.entity.software.SshEffectorTasks;
-import brooklyn.util.time.Duration;
+import org.apache.brooklyn.effector.core.EffectorTasks;
+import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableList;
 

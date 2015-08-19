@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @Deprecated
-public class RecordingLegacyUsageListener implements org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener {
+public class RecordingLegacyUsageListener implements org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener {
 
     private final List<List<?>> events = Lists.newCopyOnWriteArrayList();
     

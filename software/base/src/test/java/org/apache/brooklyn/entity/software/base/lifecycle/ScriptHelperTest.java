@@ -22,15 +22,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessEntityTest;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessEntityTest.MyService;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessEntityTest.MyServiceImpl;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
 import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.test.EntityTestUtils;

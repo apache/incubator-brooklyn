@@ -25,9 +25,9 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoManifest;
 import org.apache.brooklyn.api.policy.Policy;
@@ -35,19 +35,19 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.core.mgmt.rebind.RebindEnricherTest.MyEnricher;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.group.BasicGroup;
-import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.Locations;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;

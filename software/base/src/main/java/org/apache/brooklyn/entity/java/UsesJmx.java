@@ -27,7 +27,7 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.location.core.PortRanges;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;

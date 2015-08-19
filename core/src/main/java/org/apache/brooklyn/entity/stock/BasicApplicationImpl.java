@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.stock;
 
-import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.core.entity.AbstractApplication;
 
 
 

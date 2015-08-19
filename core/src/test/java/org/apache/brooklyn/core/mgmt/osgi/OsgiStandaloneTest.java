@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.jar.JarInputStream;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.osgi.Osgis;

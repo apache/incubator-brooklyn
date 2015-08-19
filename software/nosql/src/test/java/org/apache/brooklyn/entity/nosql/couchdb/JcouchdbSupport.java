@@ -24,7 +24,7 @@ import static org.testng.Assert.assertTrue;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.nosql.couchdb.CouchDBNode;
 import org.jcouchdb.db.Database;
 import org.jcouchdb.db.Server;

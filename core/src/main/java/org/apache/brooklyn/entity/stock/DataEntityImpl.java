@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
 import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
 

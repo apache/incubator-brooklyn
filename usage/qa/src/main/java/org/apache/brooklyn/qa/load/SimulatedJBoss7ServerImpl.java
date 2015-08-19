@@ -23,10 +23,10 @@ import static java.lang.String.format;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl;
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7SshDriver;
-import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.sensor.feed.function.FunctionFeed;

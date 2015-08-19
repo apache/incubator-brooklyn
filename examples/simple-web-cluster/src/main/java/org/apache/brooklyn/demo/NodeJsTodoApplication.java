@@ -22,12 +22,12 @@ import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWh
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.entity.core.AbstractApplication;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.StartableApplication;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.StartableApplication;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.nosql.redis.RedisStore;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppService;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;
 

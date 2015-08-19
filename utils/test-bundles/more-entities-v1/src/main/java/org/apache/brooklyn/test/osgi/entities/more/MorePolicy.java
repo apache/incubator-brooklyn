@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.test.osgi.entities.more;
 
-import org.apache.brooklyn.policy.core.AbstractPolicy;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 
 public class MorePolicy extends AbstractPolicy {
 

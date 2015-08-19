@@ -24,10 +24,10 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.factory.BasicConfigurableEntityFactory;
+import org.apache.brooklyn.core.entity.factory.EntityFactory;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.factory.BasicConfigurableEntityFactory;
-import org.apache.brooklyn.entity.factory.EntityFactory;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.proxy.StubAppServer;
 import org.testng.annotations.Test;

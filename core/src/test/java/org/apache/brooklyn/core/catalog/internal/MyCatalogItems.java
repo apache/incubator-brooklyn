@@ -19,8 +19,8 @@
 package org.apache.brooklyn.core.catalog.internal;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.entity.core.AbstractApplication;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 
 public class MyCatalogItems {
 

@@ -23,13 +23,13 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.location.core.BasicLocationDefinition;
-import org.apache.brooklyn.location.core.LocationConfigKeys;
-import org.apache.brooklyn.location.core.internal.LocationInternal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationDefinition;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.config.Sanitizer;
+import org.apache.brooklyn.core.location.BasicLocationDefinition;
+import org.apache.brooklyn.core.location.LocationConfigKeys;
+import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.util.collections.MutableMap;

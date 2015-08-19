@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.core.test.entity;
 
+import org.apache.brooklyn.core.entity.lifecycle.QuorumCheck.QuorumChecks;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
-import org.apache.brooklyn.entity.lifecycle.QuorumCheck.QuorumChecks;
-import org.apache.brooklyn.entity.trait.Startable;
 
 /**
 * Mock cluster entity for testing.

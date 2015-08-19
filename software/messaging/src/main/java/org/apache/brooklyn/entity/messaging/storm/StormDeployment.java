@@ -23,7 +23,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 @Catalog(name="Storm Deployment", description="A Storm cluster. Apache Storm is a distributed realtime computation system. "

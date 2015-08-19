@@ -24,8 +24,8 @@ import org.apache.brooklyn.api.entity.EntitySpec
 import org.apache.brooklyn.api.sensor.AttributeSensor
 import org.apache.brooklyn.core.test.entity.TestApplication
 import org.apache.brooklyn.core.test.entity.TestEntity
-import org.apache.brooklyn.entity.core.Entities
-import org.apache.brooklyn.location.core.SimulatedLocation
+import org.apache.brooklyn.core.entity.Entities
+import org.apache.brooklyn.core.location.SimulatedLocation
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor
 import org.apache.brooklyn.test.TestUtils
 import org.apache.brooklyn.util.collections.MutableMap

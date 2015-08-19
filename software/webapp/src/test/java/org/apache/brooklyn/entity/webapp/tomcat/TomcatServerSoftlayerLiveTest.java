@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.entity.AbstractSoftlayerLiveTest;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;

@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Iterator;
 
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.bson.types.BasicBSONList;
@@ -31,8 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.net.HostAndPort;
-
-import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 
 /**
  * Simplifies the creation of configuration objects for Mongo DB replica sets.

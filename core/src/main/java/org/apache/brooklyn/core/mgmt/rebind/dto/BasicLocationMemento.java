@@ -25,7 +25,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.TreeNode;
 import org.apache.brooklyn.core.config.Sanitizer;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import com.google.common.base.Objects.ToStringHelper;

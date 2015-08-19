@@ -20,10 +20,10 @@ package org.apache.brooklyn.policy.loadbalancing;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.annotation.Effector;
+import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.effector.core.MethodEffector;
-import org.apache.brooklyn.entity.annotation.Effector;
-import org.apache.brooklyn.entity.annotation.EffectorParam;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
