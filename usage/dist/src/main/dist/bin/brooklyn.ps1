@@ -81,14 +81,14 @@ if ( $javabin -eq $null ) {
 # set up the classpath
 $cp = Get-ChildItem ${BROOKLYN_HOME}\conf | Select-Object -ExpandProperty FullName
 
-if ( Test-Path ${BROOKLYN_HOME}\patch ) {
-    $cp += Get-ChildItem ${BROOKLYN_HOME}\patch | Select-Object -ExpandProperty FullName
+if ( Test-Path ${BROOKLYN_HOME}\lib\patch ) {
+    $cp += Get-ChildItem ${BROOKLYN_HOME}\lib\patch | Select-Object -ExpandProperty FullName
 }
 
 $cp += Get-ChildItem ${BROOKLYN_HOME}\lib\brooklyn | Select-Object -ExpandProperty FullName
 
-if ( Test-Path ${BROOKLYN_HOME}\dropins ) {
-    $cp += Get-ChildItem ${BROOKLYN_HOME}\dropins | Select-Object -ExpandProperty FullName
+if ( Test-Path ${BROOKLYN_HOME}\lib\dropins ) {
+    $cp += Get-ChildItem ${BROOKLYN_HOME}\lib\dropins | Select-Object -ExpandProperty FullName
 }
 
 $INITIAL_CLASSPATH = $cp -join ';'
