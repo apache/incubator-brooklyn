@@ -87,13 +87,13 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "  id: " + symbolicName + "\n"+
                 "  name: My Catalog App\n"+
                 "  description: My description\n"+
-                "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n"+
+                "  icon_url: classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif\n"+
                 "  version: " + TEST_VERSION + "\n"+
                 "  libraries:\n"+
                 "  - url: " + bundleUrl + "\n"+
                 "\n"+
                 "services:\n"+
-                "- type: org.apache.brooklyn.test.entity.TestEntity\n";
+                "- type: org.apache.brooklyn.core.test.entity.TestEntity\n";
 
         ClientResponse response = client().resource("/v1/catalog")
                 .post(ClientResponse.class, yaml);
@@ -104,7 +104,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 .get(CatalogEntitySummary.class);
 
         Assert.assertNotNull(entityItem.getPlanYaml());
-        Assert.assertTrue(entityItem.getPlanYaml().contains("org.apache.brooklyn.test.entity.TestEntity"));
+        Assert.assertTrue(entityItem.getPlanYaml().contains("org.apache.brooklyn.core.test.entity.TestEntity"));
 
         assertEquals(entityItem.getId(), ver(symbolicName));
         assertEquals(entityItem.getSymbolicName(), symbolicName);
@@ -121,7 +121,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         assertEquals(entityItem.getName(), "My Catalog App");
         assertEquals(entityItem.getDescription(), "My description");
         assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/" + symbolicName + "/" + entityItem.getVersion());
-        assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
+        assertEquals(item.getIconUrl(), "classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif");
 
         byte[] iconData = client().resource("/v1/catalog/icon/" + symbolicName + "/" + TEST_VERSION).get(byte[].class);
         assertEquals(iconData.length, 43);
@@ -132,7 +132,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
         String symbolicName = "my.catalog.policy.id";
-        String policyType = "brooklyn.osgi.tests.SimplePolicy";
+        String policyType = "org.apache.brooklyn.test.osgi.entities.SimplePolicy";
         String bundleUrl = OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL;
 
         String yaml =
@@ -335,7 +335,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "  version: " + TEST_VERSION + "\n"+
                 "\n"+
                 "services:\n"+
-                "- type: org.apache.brooklyn.test.entity.TestEntity\n";
+                "- type: org.apache.brooklyn.core.test.entity.TestEntity\n";
 
         client().resource("/v1/catalog")
                 .post(ClientResponse.class, yaml);
@@ -353,7 +353,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testSetDeprecated() {
         String itemId = "my.catalog.item.id.for.deprecation";
-        String serviceType = "brooklyn.entity.basic.BasicApplication";
+        String serviceType = "org.apache.brooklyn.entity.stock.BasicApplication";
         addTestCatalogItem(itemId, "template", TEST_VERSION, serviceType);
         addTestCatalogItem(itemId, "template", "2.0", serviceType);
         List<CatalogEntitySummary> applications = client().resource("/v1/catalog/applications")
@@ -411,13 +411,13 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "  id: " + symbolicName + "\n"+
                 "  name: My Catalog App\n"+
                 "  description: My description\n"+
-                "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n"+
+                "  icon_url: classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif\n"+
                 "  version: " + TEST_VERSION + "\n"+
                 "  libraries:\n"+
                 "  - url: " + bundleUrl + "\n"+
                 "\n"+
                 "services:\n"+
-                "- type: org.apache.brooklyn.test.entity.TestEntity\n";
+                "- type: org.apache.brooklyn.core.test.entity.TestEntity\n";
 
         ClientResponse response = client().resource("/v1/catalog")
                 .post(ClientResponse.class, yaml);

@@ -257,21 +257,8 @@ public class JmxFeed extends AbstractFeed {
     protected void preStart() {
         /*
          * All actions on the JmxHelper are done async (through the poller's threading) so we don't 
-         * block on start for a long time (e.g. if the entity is not contactable and doing a rebind 
-         * on restart of brooklyn). Without that, one gets a 120 second pause with it stuck in a 
-         * stack trace like:
-         * 
-         *      at brooklyn.event.feed.jmx.JmxHelper.sleep(JmxHelper.java:640)
-         *      at brooklyn.event.feed.jmx.JmxHelper.connect(JmxHelper.java:320)
-         *      at brooklyn.event.feed.jmx.JmxFeed.preStart(JmxFeed.java:172)
-         *      at brooklyn.event.feed.AbstractFeed.start(AbstractFeed.java:68)
-         *      at brooklyn.event.feed.jmx.JmxFeed$Builder.build(JmxFeed.java:119)
-         *      at brooklyn.entity.java.JavaAppUtils.connectMXBeanSensors(JavaAppUtils.java:109)
-         *      at brooklyn.entity.java.VanillaJavaApp.connectSensors(VanillaJavaApp.java:97)
-         *      at brooklyn.entity.basic.SoftwareProcessImpl.callRebindHooks(SoftwareProcessImpl.java:189)
-         *      at brooklyn.entity.basic.SoftwareProcessImpl.rebind(SoftwareProcessImpl.java:235)
-         *      ...
-         *      at brooklyn.entity.rebind.RebindManagerImpl.rebind(RebindManagerImpl.java:184)
+         * block on start/rebind if the entity is unreachable 
+         * (without this we get a 120s pause in JmxHelper.connect restarting)
          */
         final SetMultimap<NotificationFilter, JmxNotificationSubscriptionConfig<?>> notificationSubscriptions = getConfig(NOTIFICATION_SUBSCRIPTIONS);
         final SetMultimap<List<?>, JmxOperationPollConfig<?>> operationPolls = getConfig(OPERATION_POLLS);

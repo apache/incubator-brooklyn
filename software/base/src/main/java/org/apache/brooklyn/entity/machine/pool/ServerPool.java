@@ -56,7 +56,7 @@ import org.apache.brooklyn.sensor.core.Sensors;
  *         {@link org.apache.brooklyn.entity.software.base.SoftwareProcess#PROVISIONING_PROPERTIES PROVISIONING_PROPERTIES}.
  *         For example, in YAML:
  *         <pre>
- *     - type: brooklyn.entity.pool.ServerPool
+ *     - type: org.apache.brooklyn.entity.machine.pool.ServerPool
  *       brooklyn.config:
  *         # Suitable for TomcatServers
  *         provisioning.properties:

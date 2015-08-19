@@ -161,7 +161,7 @@ public class BrooklynLauncherTest {
     public void testStartsAppFromYAML() throws Exception {
         String yaml = "name: example-app\n" +
                 "services:\n" +
-                "- serviceType: org.apache.brooklyn.test.entity.TestEntity\n" +
+                "- serviceType: org.apache.brooklyn.core.test.entity.TestEntity\n" +
                 "  name: test-app";
         launcher = newLauncherForTests(true)
                 .webconsole(false)

@@ -38,7 +38,7 @@ import java.util.concurrent.TimeoutException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import brooklyn.entity.basic.ApplicationBuilder;
+import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 
 import com.google.common.collect.Lists;
 

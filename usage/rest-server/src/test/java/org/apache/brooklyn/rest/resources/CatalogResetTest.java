@@ -105,8 +105,8 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
     
     private void assertItems() {
         BrooklynCatalog catalog = getManagementContext().getCatalog();
-        assertNotNull(catalog.getCatalogItem("brooklyn.entity.basic.BasicApplication", BrooklynCatalog.DEFAULT_VERSION));
-        assertNotNull(catalog.getCatalogItem("brooklyn.osgi.tests.SimpleApplication", BrooklynCatalog.DEFAULT_VERSION));
+        assertNotNull(catalog.getCatalogItem("org.apache.brooklyn.entity.stock.BasicApplication", BrooklynCatalog.DEFAULT_VERSION));
+        assertNotNull(catalog.getCatalogItem("org.apache.brooklyn.test.osgi.entities.SimpleApplication", BrooklynCatalog.DEFAULT_VERSION));
     }
 
 }

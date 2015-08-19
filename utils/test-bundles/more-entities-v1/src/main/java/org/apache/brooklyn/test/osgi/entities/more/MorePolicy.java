@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.test.osgi.entities.more;
 
-
-import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.policy.core.AbstractPolicy;
 
 public class MorePolicy extends AbstractPolicy {

@@ -19,7 +19,7 @@
 package org.apache.brooklyn.test.osgi.entities.more;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.policy.core.AbstractPolicy;
 
 @Catalog(name="More Policy", description="Cataliog item OSGi test policy")
 public class MorePolicy extends AbstractPolicy {

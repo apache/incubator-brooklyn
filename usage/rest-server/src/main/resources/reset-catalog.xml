@@ -20,15 +20,15 @@
 <catalog>
     <name>Brooklyn Demos</name>
 
-    <template type="org.apache.brooklyn.entity.software.base.BasicApplication" name="Basic application" />
-    <template type="brooklyn.osgi.tests.SimpleApplication" name="Simple OSGi application">
+    <template type="org.apache.brooklyn.entity.stock.BasicApplication" name="Basic application" />
+    <template type="org.apache.brooklyn.test.osgi.entities.SimpleApplication" name="Simple OSGi application">
         <libraries>
             <bundle>${bundle-location}</bundle>
         </libraries>
     </template>
     <catalog>
         <name>Nested catalog</name>
-        <template type="brooklyn.osgi.tests.SimpleApplication" name="Simple OSGi application">
+        <template type="org.apache.brooklyn.test.osgi.entities.SimpleApplication" name="Simple OSGi application">
             <libraries>
                 <bundle>${bundle-location}</bundle>
             </libraries>

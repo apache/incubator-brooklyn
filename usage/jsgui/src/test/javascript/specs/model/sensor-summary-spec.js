@@ -32,7 +32,7 @@ define(['model/sensor-summary'], function (SensorSummary) {
             expect(filteredSensors.length).toBe(1)
             var ourSensor = filteredSensors.pop()
             expect(ourSensor.get("name")).toBe('service.state')
-            expect(ourSensor.get("type")).toBe('org.apache.brooklyn.entity.software.base.Lifecycle')
+            expect(ourSensor.get("type")).toBe('org.apache.brooklyn.entity.lifecycle.Lifecycle')
             expect(ourSensor.get("description")).toBe('Service lifecycle state')
             expect(ourSensor.getLinkByName('self')).toBe('fixtures/service-state.json')
             expect(ourSensor.getLinkByName()).toBe(undefined)

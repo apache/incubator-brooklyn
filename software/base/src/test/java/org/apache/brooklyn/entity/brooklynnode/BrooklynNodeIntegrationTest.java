@@ -155,7 +155,7 @@ public class BrooklynNodeIntegrationTest extends BrooklynAppUnitTestSupport {
 
 location: localhost
 services:
-- type: brooklyn.entity.brooklynnode.BrooklynNode
+- type: org.apache.brooklyn.entity.brooklynnode.BrooklynNode
   bindAddress: 127.0.0.1
   onExistingProperties: do_not_use
 
@@ -368,7 +368,7 @@ services:
     protected void waitForApps(final URI webConsoleUri, final int num) {
         waitForApps(webConsoleUri.toString());
         
-        // e.g. [{"id":"UnBqPcqg","spec":{"name":"Application (UnBqPcqg)","type":"brooklyn.entity.basic.BasicApplication","locations":["pOL4NtiW"]},"status":"RUNNING","links":{"self":"/v1/applications/UnBqPcqg","entities":"/v1/applications/UnBqPcqg/entities"}}]
+        // e.g. [{"id":"UnBqPcqg","spec":{"name":"Application (UnBqPcqg)","type":"org.apache.brooklyn.entity.stock.BasicApplication","locations":["pOL4NtiW"]},"status":"RUNNING","links":{"self":"/v1/applications/UnBqPcqg","entities":"/v1/applications/UnBqPcqg/entities"}}]
         Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
