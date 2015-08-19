@@ -22,12 +22,13 @@ import java.util.List;
 
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage.ApplicationEvent;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage.LocationEvent;
+import org.apache.brooklyn.core.mgmt.usage.UsageListener;
 import org.apache.brooklyn.util.collections.MutableList;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-public class RecordingUsageListener implements org.apache.brooklyn.core.mgmt.usage.UsageListener {
+public class RecordingUsageListener implements UsageListener {
 
     private final List<List<?>> events = Lists.newCopyOnWriteArrayList();
     

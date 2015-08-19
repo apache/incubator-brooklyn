@@ -25,6 +25,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
+import org.apache.brooklyn.core.mgmt.usage.UsageListener;
 import org.apache.brooklyn.core.mgmt.usage.UsageManager;
 
 import com.google.common.base.Predicate;
@@ -101,19 +102,7 @@ public class NonDeploymentUsageManager implements UsageManager {
     }
 
     @Override
-    @Deprecated
-    public void addUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener listener) {
-        addUsageListener(new org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener.UsageListenerAdapter(listener));
-    }
-
-    @Override
-    @Deprecated
-    public void removeUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener listener) {
-        removeUsageListener(new org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener.UsageListenerAdapter(listener));
-    }
-    
-    @Override
-    public void addUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageListener listener) {
+    public void addUsageListener(UsageListener listener) {
         if (isInitialManagementContextReal()) {
             initialManagementContext.getUsageManager().addUsageListener(listener);
         } else {
@@ -122,7 +111,7 @@ public class NonDeploymentUsageManager implements UsageManager {
     }
 
     @Override
-    public void removeUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageListener listener) {
+    public void removeUsageListener(UsageListener listener) {
         if (isInitialManagementContextReal()) {
             initialManagementContext.getUsageManager().removeUsageListener(listener);
         } else {

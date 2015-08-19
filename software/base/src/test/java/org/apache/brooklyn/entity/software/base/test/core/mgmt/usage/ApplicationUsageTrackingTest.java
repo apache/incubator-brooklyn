@@ -25,7 +25,6 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
@@ -83,49 +82,6 @@ public class ApplicationUsageTrackingTest {
     public void testUsageInitiallyEmpty() {
         Set<ApplicationUsage> usage = mgmt.getUsageManager().getApplicationUsage(Predicates.alwaysTrue());
         assertEquals(usage, ImmutableSet.of());
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void testAddAndRemoveLegacyUsageListener() throws Exception {
-        final RecordingLegacyUsageListener listener = new RecordingLegacyUsageListener();
-        mgmt.getUsageManager().addUsageListener(listener);
-        
-        app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
-        app.setCatalogItemId("testCatalogItem");
-        app.start(ImmutableList.<Location>of());
-
-        Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
-                List<List<?>> events = listener.getApplicationEvents();
-                assertEquals(events.size(), 2, "events="+events); // expect STARTING and RUNNING
-                
-                String appId = (String) events.get(0).get(1);
-                String appName = (String) events.get(0).get(2);
-                String entityType = (String) events.get(0).get(3);
-                String catalogItemId = (String) events.get(0).get(4);
-                Map<?,?> metadata = (Map<?, ?>) events.get(0).get(5);
-                ApplicationEvent appEvent = (ApplicationEvent) events.get(0).get(6);
-                
-                assertEquals(appId, app.getId(), "events="+events);
-                assertNotNull(appName, "events="+events);
-                assertEquals(catalogItemId, app.getCatalogItemId(), "events="+events);
-                assertNotNull(entityType, "events="+events);
-                assertNotNull(metadata, "events="+events);
-                assertEquals(appEvent.getState(), Lifecycle.STARTING, "events="+events);
-            }});
-
-
-        // Remove the listener; will get no more notifications
-        listener.clearEvents();
-        mgmt.getUsageManager().removeUsageListener(listener);
-        
-        app.start(ImmutableList.<Location>of());
-        Asserts.succeedsContinually(new Runnable() {
-            @Override public void run() {
-                List<List<?>> events = listener.getLocationEvents();
-                assertEquals(events.size(), 0, "events="+events);
-            }});
     }
 
     @Test
