@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import net.schmizz.sshj.connection.channel.direct.Session;
 
-import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.core.internal.ssh.SshException;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;

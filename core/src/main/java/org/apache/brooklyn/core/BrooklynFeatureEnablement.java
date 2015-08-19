@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.internal;
+package org.apache.brooklyn.core;
 
 import java.util.Map;
 
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.util.core.internal.ssh.ShellTool;
 import org.slf4j.Logger;

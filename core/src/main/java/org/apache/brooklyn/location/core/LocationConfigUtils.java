@@ -32,8 +32,8 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
