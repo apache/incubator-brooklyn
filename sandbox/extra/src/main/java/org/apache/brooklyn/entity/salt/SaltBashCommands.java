@@ -18,16 +18,15 @@
  */
 package org.apache.brooklyn.entity.salt;
 
-import static brooklyn.util.ssh.BashCommands.downloadToStdout;
+import static org.apache.brooklyn.util.ssh.BashCommands.downloadToStdout;
 
 import javax.annotation.Nullable;
 
 import org.apache.commons.io.FilenameUtils;
 
-import brooklyn.entity.chef.ChefBashCommands;
-import brooklyn.util.ssh.BashCommands;
-import brooklyn.util.text.Identifiers;
-import brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.io.Files;

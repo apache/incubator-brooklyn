@@ -19,8 +19,9 @@
 package org.apache.brooklyn.util.core.flags;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
+
 import groovy.lang.Closure;
 import groovy.lang.GroovyObject;
 
@@ -37,9 +38,9 @@ import java.util.Set;
 import org.apache.brooklyn.api.objs.Configurable;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
-import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

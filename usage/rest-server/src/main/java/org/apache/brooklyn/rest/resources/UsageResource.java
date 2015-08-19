@@ -29,11 +29,11 @@ import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage.ApplicationEvent;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.rest.api.UsageApi;
 import org.apache.brooklyn.rest.domain.UsageStatistic;
 import org.apache.brooklyn.rest.domain.UsageStatistics;

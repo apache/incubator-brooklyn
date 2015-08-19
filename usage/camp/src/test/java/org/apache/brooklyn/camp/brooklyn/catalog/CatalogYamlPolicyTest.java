@@ -28,7 +28,7 @@ import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 
 import com.google.common.collect.Iterables;
 

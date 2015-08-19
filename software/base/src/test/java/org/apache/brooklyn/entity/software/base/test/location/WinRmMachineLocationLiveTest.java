@@ -20,12 +20,12 @@ package org.apache.brooklyn.entity.software.base.test.location;
 
 import static org.testng.Assert.assertEquals;
 
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;

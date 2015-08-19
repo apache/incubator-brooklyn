@@ -44,8 +44,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.api.mgmt.HasTaskChildren;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;

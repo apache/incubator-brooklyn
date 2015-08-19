@@ -49,7 +49,7 @@ import net.schmizz.sshj.sftp.SFTPClient;
 import net.schmizz.sshj.transport.TransportException;
 import net.schmizz.sshj.xfer.InMemorySourceFile;
 
-import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.util.core.internal.ssh.BackoffLimitedRetryHandler;
 import org.apache.brooklyn.util.core.internal.ssh.ShellTool;
 import org.apache.brooklyn.util.core.internal.ssh.SshAbstractTool;

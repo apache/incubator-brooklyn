@@ -19,12 +19,12 @@
 package org.apache.brooklyn.demo;
 
 import static org.apache.brooklyn.entity.java.JavaEntityMethods.javaSysProp
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.formatString
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.formatString
 
 import org.apache.brooklyn.api.entity.EntitySpec
-import org.apache.brooklyn.entity.core.AbstractApplication
-import org.apache.brooklyn.entity.core.Entities
+import org.apache.brooklyn.core.entity.AbstractApplication
+import org.apache.brooklyn.core.entity.Entities
 import org.apache.brooklyn.entity.database.mysql.MySqlNode
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster

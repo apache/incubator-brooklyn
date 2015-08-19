@@ -32,9 +32,9 @@ import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.BrooklynLogging.LoggingLevel;
 import org.apache.brooklyn.core.mgmt.internal.CollectionChangeListener;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

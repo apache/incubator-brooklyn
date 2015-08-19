@@ -23,7 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.core.sensor.Sensors;
 
 import com.google.common.reflect.TypeToken;
 

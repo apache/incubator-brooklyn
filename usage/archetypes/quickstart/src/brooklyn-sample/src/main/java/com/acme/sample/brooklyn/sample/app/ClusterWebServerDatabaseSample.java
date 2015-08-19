@@ -8,8 +8,12 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.core.AbstractApplication;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.PortRanges;
+import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.enricher.stock.SensorPropagatingEnricher;
+import org.apache.brooklyn.enricher.stock.SensorTransformingEnricher;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.entity.group.DynamicCluster;
@@ -19,12 +23,8 @@ import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
-import org.apache.brooklyn.sensor.core.Sensors;
-import org.apache.brooklyn.sensor.enricher.SensorPropagatingEnricher;
-import org.apache.brooklyn.sensor.enricher.SensorTransformingEnricher;
 import org.apache.brooklyn.util.maven.MavenArtifact;
 import org.apache.brooklyn.util.maven.MavenRetriever;
 import org.slf4j.Logger;
@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Functions;
 
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.formatString;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.formatString;
 
 
 /** This sample builds a 3-tier application with an elastic app-server cluster,

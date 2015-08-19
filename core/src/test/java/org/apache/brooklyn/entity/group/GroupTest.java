@@ -24,11 +24,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.RecordingSensorEventListener;
+import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.RecordingSensorEventListener;
 import org.apache.brooklyn.entity.group.BasicGroup;
 import org.apache.brooklyn.test.Asserts;
 import org.testng.annotations.BeforeMethod;
@@ -36,8 +37,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.apache.brooklyn.location.core.SimulatedLocation;
 
 public class GroupTest extends BrooklynAppUnitTestSupport {
 

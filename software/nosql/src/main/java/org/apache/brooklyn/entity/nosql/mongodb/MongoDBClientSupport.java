@@ -20,6 +20,7 @@ package org.apache.brooklyn.entity.nosql.mongodb;
 
 import java.net.UnknownHostException;
 
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.slf4j.Logger;
@@ -35,8 +36,6 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
-
-import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 
 /**
  * Manages connections to standalone MongoDB servers.

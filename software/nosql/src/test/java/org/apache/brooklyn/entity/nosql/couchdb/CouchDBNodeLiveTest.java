@@ -21,8 +21,8 @@ package org.apache.brooklyn.entity.nosql.couchdb;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.nosql.couchdb.CouchDBNode;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.text.Strings;

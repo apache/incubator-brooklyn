@@ -35,19 +35,20 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.entitlement.EntitlementContext;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
+import org.apache.brooklyn.core.location.AbstractLocation;
+import org.apache.brooklyn.core.location.LocationConfigKeys;
+import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.EntityInternal;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.mgmt.usage.UsageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.location.core.AbstractLocation;
-import org.apache.brooklyn.location.core.LocationConfigKeys;
-import org.apache.brooklyn.location.core.internal.LocationInternal;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.Reflections;
@@ -76,7 +77,7 @@ public class LocalUsageManager implements UsageManager {
     
     private static final Logger log = LoggerFactory.getLogger(LocalUsageManager.class);
 
-    private static class ApplicationMetadataImpl implements org.apache.brooklyn.core.mgmt.internal.UsageListener.ApplicationMetadata {
+    private static class ApplicationMetadataImpl implements org.apache.brooklyn.core.mgmt.usage.UsageListener.ApplicationMetadata {
         private final Application app;
         private String applicationId;
         private String applicationName;
@@ -112,7 +113,7 @@ public class LocalUsageManager implements UsageManager {
         }
     }
     
-    private static class LocationMetadataImpl implements org.apache.brooklyn.core.mgmt.internal.UsageListener.LocationMetadata {
+    private static class LocationMetadataImpl implements org.apache.brooklyn.core.mgmt.usage.UsageListener.LocationMetadata {
         private final Location loc;
         private String locationId;
         private Map<String, String> metadata;
@@ -136,16 +137,16 @@ public class LocalUsageManager implements UsageManager {
     // Register a coercion from String->UsageListener, so that USAGE_LISTENERS defined in brooklyn.properties
     // will be instantiated, given their class names.
     static {
-        TypeCoercions.registerAdapter(String.class, org.apache.brooklyn.core.mgmt.internal.UsageListener.class, new Function<String, org.apache.brooklyn.core.mgmt.internal.UsageListener>() {
-            @Override public org.apache.brooklyn.core.mgmt.internal.UsageListener apply(String input) {
+        TypeCoercions.registerAdapter(String.class, org.apache.brooklyn.core.mgmt.usage.UsageListener.class, new Function<String, org.apache.brooklyn.core.mgmt.usage.UsageListener>() {
+            @Override public org.apache.brooklyn.core.mgmt.usage.UsageListener apply(String input) {
                 // TODO Want to use classLoader = mgmt.getCatalog().getRootClassLoader();
                 ClassLoader classLoader = LocalUsageManager.class.getClassLoader();
                 Optional<Object> result = Reflections.invokeConstructorWithArgs(classLoader, input);
                 if (result.isPresent()) {
-                    if (result.get() instanceof org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener) {
-                        return new org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener.UsageListenerAdapter((org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener) result.get());
+                    if (result.get() instanceof org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener) {
+                        return new org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener.UsageListenerAdapter((org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener) result.get());
                     } else {
-                        return (org.apache.brooklyn.core.mgmt.internal.UsageListener) result.get();
+                        return (org.apache.brooklyn.core.mgmt.usage.UsageListener) result.get();
                     }
                 } else {
                     throw new IllegalStateException("Failed to create UsageListener from class name '"+input+"' using no-arg constructor");
@@ -164,7 +165,7 @@ public class LocalUsageManager implements UsageManager {
     
     private final Object mutex = new Object();
 
-    private final List<org.apache.brooklyn.core.mgmt.internal.UsageListener> listeners = Lists.newCopyOnWriteArrayList();
+    private final List<org.apache.brooklyn.core.mgmt.usage.UsageListener> listeners = Lists.newCopyOnWriteArrayList();
     
     private final AtomicInteger listenerQueueSize = new AtomicInteger();
     
@@ -183,14 +184,14 @@ public class LocalUsageManager implements UsageManager {
                 if (listener instanceof ManagementContextInjectable) {
                     ((ManagementContextInjectable)listener).injectManagementContext(managementContext);
                 }
-                if (listener instanceof org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener) {
-                    addUsageListener((org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener)listener);
-                } else if (listener instanceof org.apache.brooklyn.core.mgmt.internal.UsageListener) {
-                    addUsageListener((org.apache.brooklyn.core.mgmt.internal.UsageListener)listener);
+                if (listener instanceof org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener) {
+                    addUsageListener((org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener)listener);
+                } else if (listener instanceof org.apache.brooklyn.core.mgmt.usage.UsageListener) {
+                    addUsageListener((org.apache.brooklyn.core.mgmt.usage.UsageListener)listener);
                 } else if (listener == null) {
                     throw new NullPointerException("null listener in config "+UsageManager.USAGE_LISTENERS);
                 } else {
-                    throw new ClassCastException("listener "+listener+" of type "+listener.getClass()+" is not of type "+org.apache.brooklyn.core.mgmt.internal.UsageListener.class.getName());
+                    throw new ClassCastException("listener "+listener+" of type "+listener.getClass()+" is not of type "+org.apache.brooklyn.core.mgmt.usage.UsageListener.class.getName());
                 }
             }
         }
@@ -203,7 +204,7 @@ public class LocalUsageManager implements UsageManager {
             log.info("Usage manager waiting for "+listenerQueueSize+" listener events for up to "+timeout);
         }
         List<ListenableFuture<?>> futures = Lists.newArrayList();
-        for (final org.apache.brooklyn.core.mgmt.internal.UsageListener listener : listeners) {
+        for (final org.apache.brooklyn.core.mgmt.usage.UsageListener listener : listeners) {
             ListenableFuture<?> future = listenerExecutor.submit(new Runnable() {
                 public void run() {
                     if (listener instanceof Closeable) {
@@ -226,8 +227,8 @@ public class LocalUsageManager implements UsageManager {
         }
     }
 
-    private void execOnListeners(final Function<org.apache.brooklyn.core.mgmt.internal.UsageListener, Void> job) {
-        for (final org.apache.brooklyn.core.mgmt.internal.UsageListener listener : listeners) {
+    private void execOnListeners(final Function<org.apache.brooklyn.core.mgmt.usage.UsageListener, Void> job) {
+        for (final org.apache.brooklyn.core.mgmt.usage.UsageListener listener : listeners) {
             listenerQueueSize.incrementAndGet();
             listenerExecutor.execute(new Runnable() {
                 public void run() {
@@ -256,8 +257,8 @@ public class LocalUsageManager implements UsageManager {
             usage.addEvent(event);        
             eventMap.put(app.getId(), usage);
 
-            execOnListeners(new Function<org.apache.brooklyn.core.mgmt.internal.UsageListener, Void>() {
-                    public Void apply(org.apache.brooklyn.core.mgmt.internal.UsageListener listener) {
+            execOnListeners(new Function<org.apache.brooklyn.core.mgmt.usage.UsageListener, Void>() {
+                    public Void apply(org.apache.brooklyn.core.mgmt.usage.UsageListener listener) {
                         listener.onApplicationEvent(new ApplicationMetadataImpl(Entities.proxy(app)), event);
                         return null;
                     }
@@ -318,8 +319,8 @@ public class LocalUsageManager implements UsageManager {
                 usage.addEvent(event);
                 usageMap.put(loc.getId(), usage);
                 
-                execOnListeners(new Function<org.apache.brooklyn.core.mgmt.internal.UsageListener, Void>() {
-                        public Void apply(org.apache.brooklyn.core.mgmt.internal.UsageListener listener) {
+                execOnListeners(new Function<org.apache.brooklyn.core.mgmt.usage.UsageListener, Void>() {
+                        public Void apply(org.apache.brooklyn.core.mgmt.usage.UsageListener listener) {
                             listener.onLocationEvent(new LocationMetadataImpl(loc), event);
                             return null;
                         }
@@ -397,23 +398,23 @@ public class LocalUsageManager implements UsageManager {
 
     @Override
     @Deprecated
-    public void addUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener listener) {
-        addUsageListener(new org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener.UsageListenerAdapter(listener));
+    public void addUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener listener) {
+        addUsageListener(new org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener.UsageListenerAdapter(listener));
     }
 
     @Override
     @Deprecated
-    public void removeUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener listener) {
-        removeUsageListener(new org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener.UsageListenerAdapter(listener));
+    public void removeUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener listener) {
+        removeUsageListener(new org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener.UsageListenerAdapter(listener));
     }
     
     @Override
-    public void addUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageListener listener) {
+    public void addUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageListener listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void removeUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageListener listener) {
+    public void removeUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageListener listener) {
         listeners.remove(listener);
     }
 

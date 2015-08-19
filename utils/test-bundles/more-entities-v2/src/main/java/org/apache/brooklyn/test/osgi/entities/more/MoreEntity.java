@@ -22,7 +22,7 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
-import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.core.effector.Effectors;
 
 @Catalog(name="More Entity v2")
 @ImplementedBy(MoreEntityImpl.class)

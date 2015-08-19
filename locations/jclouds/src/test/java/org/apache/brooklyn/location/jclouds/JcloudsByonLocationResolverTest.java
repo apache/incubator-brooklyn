@@ -22,9 +22,9 @@ import static org.testng.Assert.fail;
 
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

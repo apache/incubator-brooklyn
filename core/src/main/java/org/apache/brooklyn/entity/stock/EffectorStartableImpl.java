@@ -22,11 +22,11 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.annotation.Effector;
+import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.annotation.Effector;
-import org.apache.brooklyn.entity.annotation.EffectorParam;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

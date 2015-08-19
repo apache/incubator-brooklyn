@@ -33,8 +33,8 @@ import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.location.core.AbstractLocation;
-import org.apache.brooklyn.location.dynamic.DynamicLocation;
+import org.apache.brooklyn.core.location.AbstractLocation;
+import org.apache.brooklyn.core.location.dynamic.DynamicLocation;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 public class ServerPoolLocation extends AbstractLocation implements MachineProvisioningLocation<MachineLocation>,

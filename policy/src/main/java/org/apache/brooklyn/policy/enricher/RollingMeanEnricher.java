@@ -24,7 +24,7 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
-import org.apache.brooklyn.sensor.enricher.AbstractTypeTransformingEnricher;
+import org.apache.brooklyn.enricher.stock.AbstractTypeTransformingEnricher;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 

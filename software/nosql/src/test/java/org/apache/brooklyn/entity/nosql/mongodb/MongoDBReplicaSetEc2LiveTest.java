@@ -26,8 +26,8 @@ import groovy.time.TimeDuration;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.AbstractEc2LiveTest;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.test.Asserts;
 import org.slf4j.Logger;

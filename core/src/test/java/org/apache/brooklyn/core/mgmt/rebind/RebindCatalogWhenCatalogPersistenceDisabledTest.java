@@ -24,7 +24,7 @@ import java.io.File;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;

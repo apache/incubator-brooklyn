@@ -28,13 +28,13 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.policy.loadbalancing.BalanceableContainer;
 import org.apache.brooklyn.policy.loadbalancing.MockContainerEntity;
 import org.apache.brooklyn.policy.loadbalancing.MockItemEntity;

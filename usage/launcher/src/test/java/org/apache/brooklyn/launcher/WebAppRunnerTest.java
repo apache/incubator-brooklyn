@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.launcher;
 
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.launcher.BrooklynWebServer;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.launcher.BrooklynServerDetails;
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;

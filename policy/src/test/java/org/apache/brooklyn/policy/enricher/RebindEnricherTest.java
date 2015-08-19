@@ -24,16 +24,16 @@ import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.policy.enricher.DeltaEnricher;
 import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
 import org.apache.brooklyn.policy.enricher.RollingMeanEnricher;
 import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher;
 import org.apache.brooklyn.policy.enricher.TimeFractionDeltaEnricher;
 import org.apache.brooklyn.policy.enricher.TimeWeightedDeltaEnricher;
-import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.core.http.BetterMockWebServer;

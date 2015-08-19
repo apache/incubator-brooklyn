@@ -20,7 +20,7 @@ package org.apache.brooklyn.core.mgmt.rebind;
 
 import org.apache.brooklyn.api.mgmt.rebind.RebindContext;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.FeedMemento;
-import org.apache.brooklyn.sensor.feed.AbstractFeed;
+import org.apache.brooklyn.core.feed.AbstractFeed;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 

@@ -21,8 +21,8 @@ package org.apache.brooklyn.entity.nosql.redis;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.entity.trait.Startable;
 
 /**
  * A cluster of {@link RedisStore}s with one master and a group of slaves.

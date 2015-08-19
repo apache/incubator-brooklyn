@@ -23,14 +23,14 @@ import static java.lang.String.format;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.entity.database.mysql.MySqlNodeImpl;
 import org.apache.brooklyn.entity.database.mysql.MySqlSshDriver;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
+import org.apache.brooklyn.feed.function.FunctionFeed;
+import org.apache.brooklyn.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
-import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;

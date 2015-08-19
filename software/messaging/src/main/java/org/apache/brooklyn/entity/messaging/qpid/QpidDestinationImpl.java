@@ -23,14 +23,14 @@ import static java.lang.String.format;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.messaging.amqp.AmqpServer;
 import org.apache.brooklyn.entity.messaging.jms.JMSDestinationImpl;
-import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
-import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
+import org.apache.brooklyn.feed.jmx.JmxFeed;
+import org.apache.brooklyn.feed.jmx.JmxHelper;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 

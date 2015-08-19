@@ -29,8 +29,8 @@ import net.schmizz.sshj.transport.verification.PromiscuousVerifier;
 import net.schmizz.sshj.userauth.keyprovider.OpenSSHKeyFile;
 import net.schmizz.sshj.userauth.password.PasswordUtils;
 
-import org.apache.brooklyn.util.GroovyJavaMethods;
 import org.apache.brooklyn.util.core.internal.ssh.SshAbstractTool.SshAction;
+import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

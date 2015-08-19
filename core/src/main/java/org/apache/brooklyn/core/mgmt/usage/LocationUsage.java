@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;

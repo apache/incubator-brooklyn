@@ -25,12 +25,12 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.render.RendererHints;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperEnsemble;
-import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
-import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
-import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 /**

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
-import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.core.entity.AbstractApplication;
 
 public class ReferencingYamlTestEntityImpl extends AbstractApplication implements ReferencingYamlTestEntity {
    

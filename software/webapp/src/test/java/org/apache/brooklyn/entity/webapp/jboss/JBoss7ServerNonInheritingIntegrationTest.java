@@ -29,13 +29,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.webapp.AbstractWebAppFixtureIntegrationTest;
 import org.apache.brooklyn.entity.webapp.HttpsSslConfig;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

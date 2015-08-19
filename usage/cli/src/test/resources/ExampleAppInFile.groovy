@@ -1,4 +1,4 @@
-import org.apache.brooklyn.entity.core.AbstractApplication
+import org.apache.brooklyn.core.entity.AbstractApplication
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

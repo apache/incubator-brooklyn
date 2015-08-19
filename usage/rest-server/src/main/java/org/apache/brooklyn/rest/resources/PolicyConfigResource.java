@@ -24,7 +24,7 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;

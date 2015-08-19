@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.effector.ParameterType;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.EffectorSummary.ParameterSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
 
 import java.util.Collection;
 import java.util.List;
@@ -28,16 +28,16 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.PolicySpec;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceNotUpLogic;
+import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic.ServiceNotUpLogic;
-import org.apache.brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -22,10 +22,10 @@ import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.sensor.core.DependentConfiguration;
 import org.apache.brooklyn.test.FixedLocaleTest;
 import org.apache.brooklyn.util.core.text.TemplateProcessor;
 import org.testng.Assert;

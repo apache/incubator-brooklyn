@@ -29,12 +29,12 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.mgmt.internal.UsageManager;
+import org.apache.brooklyn.core.mgmt.usage.UsageManager;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Entities;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -104,7 +104,7 @@ public class UsageListenerTest {
             }});
     }
     
-    public static class RecordingStaticLegacyUsageListener extends RecordingLegacyUsageListener implements org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener {
+    public static class RecordingStaticLegacyUsageListener extends RecordingLegacyUsageListener implements org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener {
         private static final List<RecordingStaticLegacyUsageListener> STATIC_INSTANCES = Lists.newCopyOnWriteArrayList();
         
         public static RecordingStaticLegacyUsageListener getInstance() {
@@ -122,7 +122,7 @@ public class UsageListenerTest {
         }
     }
     
-    public static class RecordingStaticUsageListener extends RecordingUsageListener implements org.apache.brooklyn.core.mgmt.internal.UsageListener {
+    public static class RecordingStaticUsageListener extends RecordingUsageListener implements org.apache.brooklyn.core.mgmt.usage.UsageListener {
         private static final List<RecordingStaticUsageListener> STATIC_INSTANCES = Lists.newCopyOnWriteArrayList();
         
         public static RecordingStaticUsageListener getInstance() {

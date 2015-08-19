@@ -18,19 +18,19 @@
  */
 package org.apache.brooklyn.core.objs;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.elvis;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
 
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.core.config.StructuredConfigKey;
 import org.apache.brooklyn.core.config.internal.AbstractConfigMapImpl;
-import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.internal.ConfigKeySelfExtracting;
 import org.apache.brooklyn.util.guava.Maybe;

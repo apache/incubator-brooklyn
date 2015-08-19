@@ -24,10 +24,10 @@ import java.math.BigInteger;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
 import org.apache.brooklyn.entity.proxy.nginx.NginxController;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -38,6 +38,7 @@ import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mgmt.ha.ManagementPlaneSyncRecordPersister;
 import org.apache.brooklyn.api.sensor.Feed;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.ha.HighAvailabilityManagerImpl;
 import org.apache.brooklyn.core.mgmt.ha.ManagementPlaneSyncRecordPersisterToObjectStore;
 import org.apache.brooklyn.core.mgmt.internal.AbstractManagementContext;
@@ -55,7 +56,6 @@ import org.apache.brooklyn.core.mgmt.rebind.RebindFeedTest.MyEntityWithNewFeedsE
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;

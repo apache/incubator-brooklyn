@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.ClassCoercionException;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;

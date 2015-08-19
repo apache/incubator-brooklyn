@@ -19,8 +19,8 @@
 package org.apache.brooklyn.entity.stock;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.sensor.enricher.Enrichers;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.enricher.stock.Enrichers;
 
 import com.google.common.base.Preconditions;
 

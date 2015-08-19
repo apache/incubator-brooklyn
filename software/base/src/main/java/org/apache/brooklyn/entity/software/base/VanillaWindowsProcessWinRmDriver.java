@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.api.entity.EntityLocal;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.net.UserAndHostAndPort;
 

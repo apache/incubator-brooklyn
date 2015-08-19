@@ -24,7 +24,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.entity.stock.BasicEntity;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 

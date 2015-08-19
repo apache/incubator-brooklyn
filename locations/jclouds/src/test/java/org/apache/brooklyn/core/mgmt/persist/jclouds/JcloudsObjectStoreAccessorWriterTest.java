@@ -21,6 +21,7 @@ package org.apache.brooklyn.core.mgmt.persist.jclouds;
 import java.io.IOException;
 
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.persist.PersistMode;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceStoreObjectAccessorWriterTestFixture;
@@ -28,7 +29,6 @@ import org.apache.brooklyn.core.mgmt.persist.StoreObjectAccessorLocking;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import org.apache.brooklyn.core.mgmt.persist.jclouds.JcloudsBlobStoreBasedObjectStore;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Identifiers;

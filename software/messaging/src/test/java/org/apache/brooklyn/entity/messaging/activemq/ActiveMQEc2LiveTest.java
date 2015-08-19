@@ -30,8 +30,8 @@ import javax.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.AbstractEc2LiveTest;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
 

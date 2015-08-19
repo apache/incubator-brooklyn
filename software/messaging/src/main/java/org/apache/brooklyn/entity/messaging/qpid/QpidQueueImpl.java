@@ -24,8 +24,8 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.entity.messaging.amqp.AmqpExchange;
-import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
-import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
+import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.feed.jmx.JmxFeed;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 
 public class QpidQueueImpl extends QpidDestinationImpl implements QpidQueue {

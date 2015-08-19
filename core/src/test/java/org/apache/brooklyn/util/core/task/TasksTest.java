@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.util.core.task;
 
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -28,10 +28,10 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.EntityFunctions;
 import org.apache.brooklyn.util.core.task.TaskInternal;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.core.task.ValueResolver;

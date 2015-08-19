@@ -23,7 +23,7 @@ import static java.lang.String.format;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

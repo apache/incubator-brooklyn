@@ -22,8 +22,8 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.sensor.core.Sensors;
 
 @ImplementedBy(MongoDBRouterClusterImpl.class)
 public interface MongoDBRouterCluster extends DynamicCluster {

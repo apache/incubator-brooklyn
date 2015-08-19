@@ -29,9 +29,9 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
-import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.feed.function.FunctionFeed;
+import org.apache.brooklyn.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.base.Function;

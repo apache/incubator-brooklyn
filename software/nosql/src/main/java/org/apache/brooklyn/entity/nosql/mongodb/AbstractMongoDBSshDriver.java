@@ -22,9 +22,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.OsDetails;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper;
 import org.slf4j.Logger;

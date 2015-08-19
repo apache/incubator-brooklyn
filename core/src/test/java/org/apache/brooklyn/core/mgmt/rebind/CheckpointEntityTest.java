@@ -27,9 +27,9 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.rebind.RebindEntityTest.MyEntity;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.EntityInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;

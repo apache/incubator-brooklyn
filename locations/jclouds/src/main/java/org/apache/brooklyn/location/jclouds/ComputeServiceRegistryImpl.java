@@ -28,7 +28,7 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.brooklyn.core.config.Sanitizer;
-import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.time.Duration;

@@ -20,7 +20,7 @@ package org.apache.brooklyn.entity.nosql.solr;
 
 import java.util.Map;
 
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.nosql.solr.SolrServer;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;

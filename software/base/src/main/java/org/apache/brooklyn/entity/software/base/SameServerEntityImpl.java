@@ -24,10 +24,10 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
 import org.apache.brooklyn.util.collections.QuorumCheck;
 import org.apache.brooklyn.util.core.config.ConfigBag;

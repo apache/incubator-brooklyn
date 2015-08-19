@@ -19,19 +19,19 @@
 package org.apache.brooklyn.entity.group;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.entity.group.BasicGroup;
-import org.apache.brooklyn.entity.trait.Startable;
-import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.javalang.Boxing;

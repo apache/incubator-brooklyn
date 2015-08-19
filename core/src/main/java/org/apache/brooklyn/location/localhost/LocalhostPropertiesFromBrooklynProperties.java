@@ -20,7 +20,7 @@ package org.apache.brooklyn.location.localhost;
 
 import java.util.Map;
 
-import org.apache.brooklyn.location.core.LocationPropertiesFromBrooklynProperties;
+import org.apache.brooklyn.core.location.LocationPropertiesFromBrooklynProperties;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

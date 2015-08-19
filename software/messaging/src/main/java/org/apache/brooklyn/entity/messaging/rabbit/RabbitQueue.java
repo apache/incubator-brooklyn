@@ -19,9 +19,9 @@
 package org.apache.brooklyn.entity.messaging.rabbit;
 
 import org.apache.brooklyn.entity.messaging.Queue;
-import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
-import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
-import org.apache.brooklyn.sensor.feed.ssh.SshPollValue;
+import org.apache.brooklyn.feed.ssh.SshFeed;
+import org.apache.brooklyn.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.feed.ssh.SshPollValue;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;

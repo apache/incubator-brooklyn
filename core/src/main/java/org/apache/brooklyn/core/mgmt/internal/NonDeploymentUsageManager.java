@@ -22,9 +22,10 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.mgmt.usage.UsageManager;
 
 import com.google.common.base.Predicate;
 
@@ -101,18 +102,18 @@ public class NonDeploymentUsageManager implements UsageManager {
 
     @Override
     @Deprecated
-    public void addUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener listener) {
-        addUsageListener(new org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener.UsageListenerAdapter(listener));
+    public void addUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener listener) {
+        addUsageListener(new org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener.UsageListenerAdapter(listener));
     }
 
     @Override
     @Deprecated
-    public void removeUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener listener) {
-        removeUsageListener(new org.apache.brooklyn.core.mgmt.internal.UsageManager.UsageListener.UsageListenerAdapter(listener));
+    public void removeUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener listener) {
+        removeUsageListener(new org.apache.brooklyn.core.mgmt.usage.UsageManager.UsageListener.UsageListenerAdapter(listener));
     }
     
     @Override
-    public void addUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageListener listener) {
+    public void addUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageListener listener) {
         if (isInitialManagementContextReal()) {
             initialManagementContext.getUsageManager().addUsageListener(listener);
         } else {
@@ -121,7 +122,7 @@ public class NonDeploymentUsageManager implements UsageManager {
     }
 
     @Override
-    public void removeUsageListener(org.apache.brooklyn.core.mgmt.internal.UsageListener listener) {
+    public void removeUsageListener(org.apache.brooklyn.core.mgmt.usage.UsageListener listener) {
         if (isInitialManagementContextReal()) {
             initialManagementContext.getUsageManager().removeUsageListener(listener);
         } else {

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.messaging.jms;
 
-import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 
 import com.google.common.base.Preconditions;
 

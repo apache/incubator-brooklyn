@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.sensor.feed.http.HttpPollValue;
+import org.apache.brooklyn.feed.http.HttpPollValue;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.time.Duration;

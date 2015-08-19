@@ -20,13 +20,13 @@ package org.apache.brooklyn.entity.database.mariadb;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.core.effector.EffectorBody;
+import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import org.apache.brooklyn.location.core.Locations;
+import org.apache.brooklyn.feed.ssh.SshFeed;
+import org.apache.brooklyn.feed.ssh.SshPollConfig;
+import org.apache.brooklyn.feed.ssh.SshPollValue;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
-import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
-import org.apache.brooklyn.sensor.feed.ssh.SshPollValue;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Identifiers;

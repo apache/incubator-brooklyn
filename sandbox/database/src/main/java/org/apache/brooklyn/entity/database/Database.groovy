@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.database
 
-import brooklyn.event.basic.BasicConfigKey
+import org.apache.brooklyn.core.config.BasicConfigKey
 
 /**
  * Intended to represent a SQL relational database service.

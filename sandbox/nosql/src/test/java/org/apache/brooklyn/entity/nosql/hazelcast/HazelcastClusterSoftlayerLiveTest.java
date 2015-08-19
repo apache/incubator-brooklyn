@@ -25,10 +25,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
-import brooklyn.entity.AbstractSoftlayerLiveTest;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.entity.AbstractSoftlayerLiveTest;
+
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Attributes;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

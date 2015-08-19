@@ -22,13 +22,13 @@ import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.chef.ChefConfig;
 import org.apache.brooklyn.entity.chef.ChefConfigs;
 import org.apache.brooklyn.entity.chef.ChefSoloDriver;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import org.apache.brooklyn.sensor.feed.ssh.SshFeed;
-import org.apache.brooklyn.sensor.feed.ssh.SshPollConfig;
-import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
+import org.apache.brooklyn.feed.ssh.SshFeed;
+import org.apache.brooklyn.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.time.Duration;
 

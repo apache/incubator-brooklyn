@@ -26,10 +26,10 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.location.cloud.AbstractAvailabilityZoneExtension;
+import org.apache.brooklyn.core.location.cloud.AbstractAvailabilityZoneExtension;
+import org.apache.brooklyn.core.location.cloud.AvailabilityZoneExtension;
 import org.jclouds.aws.ec2.AWSEC2Api;
 import org.jclouds.ec2.domain.AvailabilityZoneInfo;
-import org.apache.brooklyn.location.cloud.AvailabilityZoneExtension;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 
 import com.google.common.base.Predicate;

@@ -38,7 +38,7 @@ import org.apache.brooklyn.core.mgmt.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.entity.stock.BasicEntity;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;

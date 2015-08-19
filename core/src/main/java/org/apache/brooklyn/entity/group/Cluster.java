@@ -20,8 +20,8 @@ package org.apache.brooklyn.entity.group;
 
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.core.config.BasicConfigKey;
-import org.apache.brooklyn.entity.trait.Resizable;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.trait.Resizable;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 /**

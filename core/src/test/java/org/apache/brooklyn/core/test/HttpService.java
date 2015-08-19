@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.core.test;
 
-import org.apache.brooklyn.test.TestResourceUnavailableException;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.crypto.SecureKeys;
 import org.apache.brooklyn.util.javalang.Threads;
@@ -45,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 
 import com.google.common.base.Optional;
 

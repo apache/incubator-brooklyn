@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBClientSupport;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
-import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
-import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;
+import org.apache.brooklyn.feed.function.FunctionFeed;
+import org.apache.brooklyn.feed.function.FunctionPollConfig;
 
 import com.google.common.base.Functions;
 

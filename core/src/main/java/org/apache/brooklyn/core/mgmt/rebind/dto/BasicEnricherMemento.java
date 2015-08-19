@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.mgmt.rebind.mementos.EnricherMemento;
 import org.apache.brooklyn.core.config.Sanitizer;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.collect.Maps;

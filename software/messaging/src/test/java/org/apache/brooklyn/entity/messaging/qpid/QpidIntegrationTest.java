@@ -35,12 +35,12 @@ import javax.jms.TextMessage;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;

@@ -21,10 +21,10 @@ package org.apache.brooklyn.entity.database.postgresql;
 import java.util.Arrays;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.net.Protocol;

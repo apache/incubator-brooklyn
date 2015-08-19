@@ -20,8 +20,8 @@ package org.apache.brooklyn.entity.nosql.elasticsearch;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 /**

@@ -22,11 +22,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
+import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

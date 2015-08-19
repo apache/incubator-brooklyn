@@ -23,8 +23,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.group.DynamicFabricImpl;
-import org.apache.brooklyn.sensor.enricher.Enrichers;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

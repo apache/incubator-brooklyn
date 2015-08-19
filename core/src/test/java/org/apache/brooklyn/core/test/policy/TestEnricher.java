@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
+import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import com.google.common.reflect.TypeToken;

@@ -34,8 +34,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.util.core.task.BasicExecutionContext;
 import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;

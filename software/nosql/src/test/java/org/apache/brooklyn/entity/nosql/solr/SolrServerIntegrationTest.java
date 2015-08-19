@@ -22,9 +22,9 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.nosql.solr.SolrServer;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.solr.common.SolrDocument;

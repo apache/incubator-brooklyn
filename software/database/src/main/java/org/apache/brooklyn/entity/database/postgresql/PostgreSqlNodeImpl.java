@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.database.postgresql;
 
-import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;

@@ -37,7 +37,7 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
 import org.apache.brooklyn.core.objs.BrooklynTypes;
-import org.apache.brooklyn.test.TestResourceUnavailableException;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.text.Strings;
 

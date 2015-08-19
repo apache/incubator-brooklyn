@@ -38,11 +38,11 @@ import org.apache.brooklyn.core.catalog.internal.CatalogItemDo;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.catalog.internal.CatalogXmlSerializer;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.util.core.BrooklynMavenArtifacts;
 import org.apache.brooklyn.util.maven.MavenRetriever;
 

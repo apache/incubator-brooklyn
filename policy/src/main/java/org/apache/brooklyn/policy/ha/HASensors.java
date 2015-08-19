@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.policy.ha;
 
-import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
+import org.apache.brooklyn.core.sensor.BasicNotificationSensor;
 
 import com.google.common.base.Objects;
 

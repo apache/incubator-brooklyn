@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
  * the top-level entity under which the application's entities are all places.
  * 
  * The recommended ways to write a new application are to either extend {@link org.apache.brooklyn.entity.factory.ApplicationBuilder} 
- * or to extend {@link org.apache.brooklyn.entity.core.AbstractApplication}.
+ * or to extend {@link org.apache.brooklyn.core.entity.AbstractApplication}.
  */
 public interface Application extends Entity {
     

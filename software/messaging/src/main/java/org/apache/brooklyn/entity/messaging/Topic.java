@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.messaging;
 
-import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
 
 /**
  * An interface that describes a messaging topic.

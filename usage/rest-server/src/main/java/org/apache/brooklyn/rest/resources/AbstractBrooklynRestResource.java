@@ -24,7 +24,7 @@ import javax.ws.rs.core.Context;
 
 import org.codehaus.jackson.map.ObjectMapper;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.core.config.render.RendererHints;

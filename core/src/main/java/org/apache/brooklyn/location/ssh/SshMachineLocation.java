@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.location.ssh;
 
-import static org.apache.brooklyn.util.GroovyJavaMethods.truth;
+import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.io.Closeable;
 import java.io.File;
@@ -58,8 +58,14 @@ import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.config.MapConfigKey;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.location.AbstractLocation;
+import org.apache.brooklyn.core.location.BasicHardwareDetails;
+import org.apache.brooklyn.core.location.BasicMachineDetails;
+import org.apache.brooklyn.core.location.BasicOsDetails;
+import org.apache.brooklyn.core.location.PortRanges;
+import org.apache.brooklyn.core.location.access.PortForwardManager;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,12 +90,6 @@ import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
 
-import org.apache.brooklyn.location.access.PortForwardManager;
-import org.apache.brooklyn.location.core.AbstractLocation;
-import org.apache.brooklyn.location.core.BasicHardwareDetails;
-import org.apache.brooklyn.location.core.BasicMachineDetails;
-import org.apache.brooklyn.location.core.BasicOsDetails;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;

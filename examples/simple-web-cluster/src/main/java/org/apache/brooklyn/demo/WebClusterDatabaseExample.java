@@ -18,32 +18,32 @@
  */
 package org.apache.brooklyn.demo;
 
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.attributeWhenReady;
+import static org.apache.brooklyn.core.sensor.DependentConfiguration.formatString;
 import static org.apache.brooklyn.entity.java.JavaEntityMethods.javaSysProp;
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.attributeWhenReady;
-import static org.apache.brooklyn.sensor.core.DependentConfiguration.formatString;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.entity.core.AbstractApplication;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.StartableApplication;
+import org.apache.brooklyn.core.location.PortRanges;
+import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.location.core.PortRanges;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import org.apache.brooklyn.policy.enricher.HttpLatencyDetector;
-import org.apache.brooklyn.sensor.core.Sensors;
-import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.util.CommandLineUtil;
 
 import com.google.common.collect.ImmutableMap;

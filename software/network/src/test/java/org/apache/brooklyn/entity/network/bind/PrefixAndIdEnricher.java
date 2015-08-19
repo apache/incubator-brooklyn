@@ -18,14 +18,14 @@
  */
 package org.apache.brooklyn.entity.network.bind;
 
-import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.sensor.core.Sensors;
-import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
+import org.apache.brooklyn.core.enricher.AbstractEnricher;
+import org.apache.brooklyn.core.sensor.Sensors;
 
 import com.google.common.reflect.TypeToken;
 

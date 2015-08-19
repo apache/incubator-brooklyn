@@ -24,12 +24,12 @@ import static org.testng.Assert.assertFalse;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlRebindTest;
+import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.StartableApplication;
 import org.apache.brooklyn.core.test.policy.TestEnricher;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.testng.annotations.Test;
 

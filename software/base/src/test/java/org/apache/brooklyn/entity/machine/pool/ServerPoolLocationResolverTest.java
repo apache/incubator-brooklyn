@@ -26,12 +26,13 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.location.dynamic.DynamicLocation;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.entity.machine.pool.ServerPool;
 import org.apache.brooklyn.entity.machine.pool.ServerPoolLocation;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
@@ -43,7 +44,6 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.brooklyn.location.dynamic.DynamicLocation;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 public class ServerPoolLocationResolverTest {

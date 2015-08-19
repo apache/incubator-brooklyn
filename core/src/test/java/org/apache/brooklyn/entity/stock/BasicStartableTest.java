@@ -30,14 +30,16 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.RecordingSensorEventListener;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.location.SimulatedLocation;
+import org.apache.brooklyn.core.location.Locations.LocationsFilter;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.RecordingSensorEventListener;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.entity.stock.BasicStartable;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -49,9 +51,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-
-import org.apache.brooklyn.location.core.SimulatedLocation;
-import org.apache.brooklyn.location.core.Locations.LocationsFilter;
 
 public class BasicStartableTest {
 

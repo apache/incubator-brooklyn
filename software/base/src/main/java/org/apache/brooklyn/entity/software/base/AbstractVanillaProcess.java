@@ -20,7 +20,7 @@ package org.apache.brooklyn.entity.software.base;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.sensor.core.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
 
 public interface AbstractVanillaProcess extends SoftwareProcess {
     AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;

@@ -24,15 +24,15 @@ import java.io.File;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.java.VanillaJavaApp;
 import org.apache.brooklyn.entity.java.VanillaJavaAppImpl;
 import org.apache.brooklyn.entity.java.JavaOptsTest.TestingJavaOptsVanillaJavaAppImpl;
 import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher;
-import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;

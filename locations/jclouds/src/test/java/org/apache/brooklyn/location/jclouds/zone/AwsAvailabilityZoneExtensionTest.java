@@ -24,8 +24,8 @@ import static org.testng.Assert.assertTrue;
 import java.util.List;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.jclouds.AbstractJcloudsLiveTest;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.jclouds.domain.LocationScope;

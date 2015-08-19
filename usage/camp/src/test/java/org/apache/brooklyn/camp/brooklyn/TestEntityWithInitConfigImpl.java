@@ -22,7 +22,7 @@ import java.util.Collection;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

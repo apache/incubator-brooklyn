@@ -24,15 +24,15 @@ import java.util.concurrent.TimeUnit;
 import javax.management.ObjectName;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Entities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.messaging.MessageBroker;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
-import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
-import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
-import org.apache.brooklyn.sensor.feed.jmx.JmxHelper;
+import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.feed.jmx.JmxFeed;
+import org.apache.brooklyn.feed.jmx.JmxHelper;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;

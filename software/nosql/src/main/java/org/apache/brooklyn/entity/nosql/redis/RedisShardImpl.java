@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.redis;
 
-import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 
 public class RedisShardImpl extends AbstractEntity implements RedisShard {
     public RedisShardImpl() {
