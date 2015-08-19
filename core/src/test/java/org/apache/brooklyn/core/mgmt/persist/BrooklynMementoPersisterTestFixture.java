@@ -46,7 +46,7 @@ import org.apache.brooklyn.core.mgmt.rebind.RecordingRebindExceptionHandler;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
-import org.apache.brooklyn.sensor.enricher.Enrichers;
+import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

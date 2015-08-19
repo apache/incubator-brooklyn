@@ -30,7 +30,7 @@ import org.apache.brooklyn.core.entity.EntityAdjuncts;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.policy.TestEnricher;
-import org.apache.brooklyn.sensor.enricher.Propagator;
+import org.apache.brooklyn.enricher.stock.Propagator;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;

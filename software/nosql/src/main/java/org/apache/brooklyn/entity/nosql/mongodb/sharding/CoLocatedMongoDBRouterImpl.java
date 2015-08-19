@@ -25,8 +25,8 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.software.base.SameServerEntityImpl;
-import org.apache.brooklyn.sensor.enricher.Enrichers;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;

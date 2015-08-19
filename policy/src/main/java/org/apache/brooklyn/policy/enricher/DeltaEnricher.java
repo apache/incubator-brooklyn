@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
-import org.apache.brooklyn.sensor.enricher.AbstractTransformingEnricher;
+import org.apache.brooklyn.enricher.stock.AbstractTransformingEnricher;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 
 /**

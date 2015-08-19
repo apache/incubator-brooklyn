@@ -24,10 +24,10 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
 import org.apache.brooklyn.feed.jmx.JmxFeed;
-import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
