@@ -22,11 +22,10 @@ import java.io.File;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.util.os.Os;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.event.basic.BasicConfigKey;
 
 @Deprecated /** @deprecated since 0.7.0; see BrooklynVersion;
 * and anyway this was not really used, and if it were, it would be needed in core; autodetection is pretty good */

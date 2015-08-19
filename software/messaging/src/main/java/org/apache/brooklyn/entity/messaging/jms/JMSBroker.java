@@ -21,10 +21,10 @@ package org.apache.brooklyn.entity.messaging.jms;
 import java.util.Collection;
 import java.util.Map;
 
-import brooklyn.entity.basic.SoftwareProcess;
 import org.apache.brooklyn.entity.messaging.MessageBroker;
 import org.apache.brooklyn.entity.messaging.Queue;
 import org.apache.brooklyn.entity.messaging.Topic;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 
 import com.google.common.annotations.VisibleForTesting;
 

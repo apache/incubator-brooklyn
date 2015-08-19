@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.brooklyn.core.util.http.HttpTool;
+import org.apache.brooklyn.util.core.http.HttpTool;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpEntity;

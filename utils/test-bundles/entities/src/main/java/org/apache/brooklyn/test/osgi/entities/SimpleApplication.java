@@ -19,9 +19,8 @@
 package org.apache.brooklyn.test.osgi.entities;
 
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
-import brooklyn.entity.basic.StartableApplication;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.entity.core.StartableApplication;
 
 @ImplementedBy(SimpleApplicationImpl.class)
 public interface SimpleApplication extends StartableApplication {

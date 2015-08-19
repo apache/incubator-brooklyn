@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.messaging.storm;
 
-import brooklyn.entity.java.JavaSoftwareProcessDriver;
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessDriver;
 
 public interface StormDriver extends JavaSoftwareProcessDriver {
 

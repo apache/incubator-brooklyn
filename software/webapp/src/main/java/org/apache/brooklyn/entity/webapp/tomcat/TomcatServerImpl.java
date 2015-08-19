@@ -22,13 +22,12 @@ import static java.lang.String.format;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.entity.java.JavaAppUtils;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
+import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;
+import org.apache.brooklyn.sensor.feed.jmx.JmxFeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.java.JavaAppUtils;
-import brooklyn.event.feed.jmx.JmxAttributePollConfig;
-import brooklyn.event.feed.jmx.JmxFeed;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;

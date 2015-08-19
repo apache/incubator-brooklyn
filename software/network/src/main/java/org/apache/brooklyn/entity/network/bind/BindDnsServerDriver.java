@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.entity.network.bind;
 
-import com.google.common.annotations.VisibleForTesting;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import com.google.common.annotations.VisibleForTesting;
 
 public interface BindDnsServerDriver extends SoftwareProcessDriver {
 

@@ -25,11 +25,9 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.entity.Entity;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.java.JavaSoftwareProcessSshDriver;
-
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.os.Os;

@@ -20,8 +20,8 @@ package org.apache.brooklyn.rest.resources;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.core.management.internal.AccessManager;
-import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.internal.AccessManager;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.rest.api.AccessApi;
 import org.apache.brooklyn.rest.domain.AccessSummary;
 import org.apache.brooklyn.rest.transform.AccessTransformer;

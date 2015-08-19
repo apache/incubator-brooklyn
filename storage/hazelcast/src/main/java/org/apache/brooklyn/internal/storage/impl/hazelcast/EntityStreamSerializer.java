@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.internal.storage.impl.hazelcast;
 
-import brooklyn.entity.proxying.EntityProxyImpl;
-
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.StreamSerializer;
@@ -27,6 +25,7 @@ import com.hazelcast.nio.serialization.StreamSerializer;
 import java.io.IOException;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.objs.proxy.EntityProxyImpl;
 
 import static java.lang.String.format;
 

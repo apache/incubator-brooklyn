@@ -21,11 +21,10 @@ package org.apache.brooklyn.location.dynamic;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import com.google.common.annotations.Beta;
-
-import brooklyn.entity.basic.ConfigKeys;
 
 /**
  * A location that is created and owned by an entity at runtime.

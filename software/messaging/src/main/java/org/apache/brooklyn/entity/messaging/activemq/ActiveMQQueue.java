@@ -18,8 +18,7 @@
  */
 package org.apache.brooklyn.entity.messaging.activemq;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.entity.messaging.Queue;
 
 @ImplementedBy(ActiveMQQueueImpl.class)

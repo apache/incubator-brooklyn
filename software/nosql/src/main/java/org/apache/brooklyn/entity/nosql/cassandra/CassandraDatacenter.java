@@ -24,23 +24,20 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.effector.core.MethodEffector;
 import org.apache.brooklyn.entity.nosql.cassandra.TokenGenerators.PosNeg63TokenGenerator;
-
-import brooklyn.entity.annotation.Effector;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.MethodEffector;
-
+import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.time.Duration;
-
-import brooklyn.entity.effector.Effectors;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
-import brooklyn.event.basic.Sensors;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.Multimap;
@@ -157,7 +154,7 @@ public interface CassandraDatacenter extends DynamicCluster, DatastoreMixins.Has
 
     MethodEffector<Void> UPDATE = new MethodEffector<Void>(CassandraDatacenter.class, "update");
 
-    org.apache.brooklyn.api.entity.Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
+    org.apache.brooklyn.api.effector.Effector<String> EXECUTE_SCRIPT = Effectors.effector(DatastoreMixins.EXECUTE_SCRIPT)
         .description("executes the given script contents using cassandra-cli")
         .buildAbstract();
 

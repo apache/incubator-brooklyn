@@ -19,10 +19,8 @@
 package org.apache.brooklyn.entity.nosql.solr;
 
 import org.testng.annotations.BeforeMethod;
-
-import brooklyn.entity.BrooklynAppLiveTestSupport;
-
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 
 /**
  * Solr test framework for integration and live tests.

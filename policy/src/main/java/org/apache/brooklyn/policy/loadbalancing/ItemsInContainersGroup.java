@@ -20,12 +20,11 @@ package org.apache.brooklyn.policy.loadbalancing;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
-
-import brooklyn.entity.basic.DynamicGroup;
-import brooklyn.event.basic.BasicConfigKey;
+import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.entity.group.DynamicGroup;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

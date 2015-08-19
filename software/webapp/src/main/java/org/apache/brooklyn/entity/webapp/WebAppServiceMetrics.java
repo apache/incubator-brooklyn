@@ -18,19 +18,18 @@
  */
 package org.apache.brooklyn.entity.webapp;
 
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.config.render.RendererHints;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
+import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.math.MathFunctions;
 import org.apache.brooklyn.util.text.ByteSizeStrings;
 import org.apache.brooklyn.util.time.Duration;
 
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.Sensors;
-
 public interface WebAppServiceMetrics {
     
-    public static final brooklyn.event.basic.BasicAttributeSensor<Integer> ERROR_COUNT =
-            new brooklyn.event.basic.BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.errors", "Request errors");
+    public static final org.apache.brooklyn.sensor.core.BasicAttributeSensor<Integer> ERROR_COUNT =
+            new org.apache.brooklyn.sensor.core.BasicAttributeSensor<Integer>(Integer.class, "webapp.reqs.errors", "Request errors");
     public static final AttributeSensor<Integer> TOTAL_PROCESSING_TIME = Sensors.newIntegerSensor(
             "webapp.reqs.processingTime.total", "Total processing time, reported by webserver (millis)");
     public static final AttributeSensor<Integer> MAX_PROCESSING_TIME =

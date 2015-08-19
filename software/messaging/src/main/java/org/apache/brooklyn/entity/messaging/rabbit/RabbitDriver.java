@@ -20,7 +20,7 @@ package org.apache.brooklyn.entity.messaging.rabbit;
 
 import java.util.Map;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface RabbitDriver extends SoftwareProcessDriver {
     

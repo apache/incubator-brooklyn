@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.test.osgi.entities;
 
-import brooklyn.entity.basic.AbstractEntity;
+import org.apache.brooklyn.entity.core.AbstractEntity;
 
 
 public class SimpleEntityImpl extends AbstractEntity implements SimpleEntity {

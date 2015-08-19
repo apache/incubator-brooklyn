@@ -1,7 +1,7 @@
 [
     {
         "name":"service.state",
-        "type":"brooklyn.entity.basic.Lifecycle",
+        "type":"org.apache.brooklyn.entity.lifecycle.Lifecycle",
         "description":"Service lifecycle state",
         "links":{
             "self":"fixtures/service-state.json",

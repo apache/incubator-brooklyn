@@ -18,10 +18,9 @@
  */
 package org.apache.brooklyn.entity.messaging.kafka;
 
-import brooklyn.entity.annotation.EffectorParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.apache.brooklyn.entity.annotation.EffectorParam;
 import org.apache.brooklyn.entity.zookeeper.AbstractZooKeeperImpl;
 
 /**

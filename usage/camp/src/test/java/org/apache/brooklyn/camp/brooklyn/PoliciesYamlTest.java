@@ -24,17 +24,16 @@ import java.util.concurrent.Callable;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.core.test.policy.TestPolicy;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.entity.TestEntity;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.test.policy.TestPolicy;
 
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
@@ -94,13 +93,13 @@ public class PoliciesYamlTest extends AbstractYamlTest {
                     "  brooklyn.config:",
                     "    test.confName: parent entity",
                     "  brooklyn.children:",
-                    "  - serviceType: org.apache.brooklyn.test.entity.TestEntity",
+                    "  - serviceType: org.apache.brooklyn.core.test.entity.TestEntity",
                     "    name: Child Entity",
                     "    brooklyn.policies:",
                     "    - policyType: brooklyn.test.policy.TestPolicy",
                     "      brooklyn.config:",
                     "        test.confName: Name from YAML",
-                    "        test.attributeSensor: $brooklyn:sensor(\"org.apache.brooklyn.test.entity.TestEntity\", \"test.name\")"));
+                    "        test.attributeSensor: $brooklyn:sensor(\"org.apache.brooklyn.core.test.entity.TestEntity\", \"test.name\")"));
         waitForApplicationTasks(app);
 
         Assert.assertEquals(app.getChildren().size(), 1);

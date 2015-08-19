@@ -21,8 +21,7 @@ package org.apache.brooklyn.entity.proxy;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-
-import brooklyn.entity.group.DynamicClusterImpl;
+import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 
 /**
  * A cluster of load balancers, where configuring the cluster (through the LoadBalancer interface)

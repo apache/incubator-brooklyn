@@ -19,8 +19,7 @@
 package org.apache.brooklyn.entity.nosql.couchbase;
 
 import org.apache.brooklyn.api.entity.Entity;
-
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface CouchbaseNodeDriver extends SoftwareProcessDriver {
     public String getOsTag();

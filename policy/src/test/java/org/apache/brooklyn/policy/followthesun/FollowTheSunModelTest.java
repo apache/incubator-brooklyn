@@ -26,8 +26,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
-
+import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.policy.loadbalancing.MockContainerEntity;
 import org.apache.brooklyn.policy.loadbalancing.MockContainerEntityImpl;
 import org.apache.brooklyn.policy.loadbalancing.MockItemEntity;

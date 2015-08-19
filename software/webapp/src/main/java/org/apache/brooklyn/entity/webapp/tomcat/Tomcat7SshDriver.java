@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.webapp.tomcat;
 
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 @Deprecated
 public class Tomcat7SshDriver extends TomcatSshDriver implements Tomcat7Driver {

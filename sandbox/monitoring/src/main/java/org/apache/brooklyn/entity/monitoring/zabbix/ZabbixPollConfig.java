@@ -20,17 +20,16 @@ package org.apache.brooklyn.entity.monitoring.zabbix;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.core.util.http.HttpToolResponse;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.sensor.feed.PollConfig;
+import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.sensor.feed.http.JsonFunctions;
 import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.core.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.gson.JsonElement;
-
-import brooklyn.event.feed.PollConfig;
-import brooklyn.event.feed.http.HttpValueFunctions;
-import brooklyn.event.feed.http.JsonFunctions;
 
 public class ZabbixPollConfig<T> extends PollConfig<HttpToolResponse, T, ZabbixPollConfig<T>> {
 

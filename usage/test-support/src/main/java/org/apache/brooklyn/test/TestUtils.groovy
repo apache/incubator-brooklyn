@@ -25,15 +25,11 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 
+import org.apache.brooklyn.api.entity.Entity
+import org.apache.brooklyn.util.time.Duration
 import org.codehaus.groovy.runtime.InvokerInvocationException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.apache.brooklyn.api.entity.Entity
-import org.apache.brooklyn.api.event.AttributeSensor
-import org.apache.brooklyn.test.Asserts;
-
-import org.apache.brooklyn.util.text.StringFunctions;
-import org.apache.brooklyn.util.time.Duration
 
 import com.google.common.base.Predicate
 import com.google.common.base.Supplier
@@ -420,25 +416,26 @@ public class TestUtils {
         }
     }
 
-    /**
-     * @deprecated since 0.5; use {@link EntityTestUtils#assertAttributeEqualsEventually(Entity, AttributeSensor, Object)}
-     */
-    @Deprecated
-    public static <T> void assertAttributeEventually(Entity entity, AttributeSensor<T> attribute, T expected) {
-        executeUntilSucceeds() {
-            assertEquals(entity.getAttribute(attribute), expected);
-        }
-    }
-    
-    /**
-     * @deprecated since 0.5; use {@link EntityTestUtils#assertAttributeEqualsContinually(Entity, AttributeSensor, Object)}
-     */
-    @Deprecated
-    public static <T> void assertAttributeContinually(Entity entity, AttributeSensor<T> attribute, T expected) {
-        assertSucceedsContinually() {
-            assertEquals(entity.getAttribute(attribute), expected);
-        }
-    }
+    // causes compilation errors??
+//    /**
+//     * @deprecated since 0.5; use {@link EntityTestUtils#assertAttributeEqualsEventually(Entity, AttributeSensor, Object)}
+//     */
+//    @Deprecated
+//    public static <T> void assertAttributeEventually(Entity entity, AttributeSensor<T> attribute, T expected) {
+//        executeUntilSucceeds() {
+//            assertEquals(entity.getAttribute(attribute), expected);
+//        }
+//    }
+//    
+//    /**
+//     * @deprecated since 0.5; use {@link EntityTestUtils#assertAttributeEqualsContinually(Entity, AttributeSensor, Object)}
+//     */
+//    @Deprecated
+//    public static <T> void assertAttributeContinually(Entity entity, AttributeSensor<T> attribute, T expected) {
+//        assertSucceedsContinually() {
+//            assertEquals(entity.getAttribute(attribute), expected);
+//        }
+//    }
     
     /**
      * @deprecated since 0.5; use {@link HttpTestUtils#assertHttpStatusCodeEquals(String, int)}

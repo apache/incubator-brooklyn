@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
-import brooklyn.entity.basic.SoftwareProcessImpl;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 
 public class MongoDBConfigServerImpl extends SoftwareProcessImpl implements MongoDBConfigServer {
 

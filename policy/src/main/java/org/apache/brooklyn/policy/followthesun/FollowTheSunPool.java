@@ -24,10 +24,9 @@ import java.io.Serializable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-
-import brooklyn.entity.trait.Resizable;
-import brooklyn.event.basic.BasicNotificationSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.entity.trait.Resizable;
+import org.apache.brooklyn.sensor.core.BasicNotificationSensor;
 
 @ImplementedBy(FollowTheSunPoolImpl.class)
 public interface FollowTheSunPool extends Entity, Resizable {

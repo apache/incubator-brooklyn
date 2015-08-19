@@ -40,7 +40,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 
-import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.util.core.crypto.SecureKeys;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 

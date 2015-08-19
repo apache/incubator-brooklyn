@@ -22,7 +22,7 @@ import java.util.Comparator;
 
 import javax.annotation.Nonnull;
 
-import org.apache.brooklyn.api.basic.BrooklynObject;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.util.text.NaturalOrderComparator;
 import org.apache.brooklyn.util.text.Strings;
 

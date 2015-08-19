@@ -21,7 +21,7 @@ package org.apache.brooklyn.entity.proxy;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.entity.proxy.AbstractController;
 
 @ImplementedBy(TrackingAbstractControllerImpl.class)

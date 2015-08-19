@@ -25,8 +25,8 @@ brooklyn.catalog:
 
   - id: three
     item:
-      type: brooklyn.entity.basic.EmptySoftwareProcess
+      type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
 
   - id: four
     item:
-      type: brooklyn.entity.basic.VanillaSoftwareProcess
+      type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess

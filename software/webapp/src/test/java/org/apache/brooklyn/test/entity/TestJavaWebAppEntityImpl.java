@@ -21,10 +21,9 @@ package org.apache.brooklyn.test.entity;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
+import org.apache.brooklyn.entity.java.VanillaJavaAppImpl;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
-
-import brooklyn.entity.java.VanillaJavaAppImpl;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 public class TestJavaWebAppEntityImpl extends VanillaJavaAppImpl implements TestJavaWebAppEntity {
 

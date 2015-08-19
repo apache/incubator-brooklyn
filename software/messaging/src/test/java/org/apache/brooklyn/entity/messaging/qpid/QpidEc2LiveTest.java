@@ -18,12 +18,11 @@
  */
 package org.apache.brooklyn.entity.messaging.qpid;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractEc2LiveTest;
 
 import com.google.common.collect.ImmutableList;
 

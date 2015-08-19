@@ -26,20 +26,19 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.SensorEvent;
-import org.apache.brooklyn.api.event.SensorEventListener;
-import org.apache.brooklyn.api.management.SubscriptionHandle;
+import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
+import org.apache.brooklyn.api.sensor.SensorEvent;
+import org.apache.brooklyn.api.sensor.SensorEventListener;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.entity.group.AbstractGroupImpl;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
+import org.apache.brooklyn.entity.trait.Changeable;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.AbstractGroupImpl;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.EntityPredicates;
-import brooklyn.entity.trait.Changeable;
-import brooklyn.entity.trait.Startable;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;

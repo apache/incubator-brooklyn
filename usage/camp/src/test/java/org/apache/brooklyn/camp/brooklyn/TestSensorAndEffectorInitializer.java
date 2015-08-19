@@ -20,19 +20,18 @@ package org.apache.brooklyn.camp.brooklyn;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.Effector;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-import org.apache.brooklyn.api.entity.proxying.EntityInitializer;
-import org.apache.brooklyn.api.event.AttributeSensor;
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.api.effector.Effector;
+import org.apache.brooklyn.api.entity.EntityInitializer;
+import org.apache.brooklyn.api.internal.EntityLocal;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.sensor.core.Sensors;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.testng.Assert;
 
 import com.google.common.base.Preconditions;
-
-import brooklyn.entity.basic.EntityInternal;
-import brooklyn.entity.effector.EffectorBody;
-import brooklyn.entity.effector.Effectors;
-import brooklyn.event.basic.Sensors;
 
 public class TestSensorAndEffectorInitializer implements EntityInitializer {
 

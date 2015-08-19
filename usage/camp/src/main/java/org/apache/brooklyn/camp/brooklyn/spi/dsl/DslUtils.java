@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.dsl;
 
-import org.apache.brooklyn.core.util.task.DeferredSupplier;
+import org.apache.brooklyn.util.core.task.DeferredSupplier;
 
 import com.google.common.collect.Iterables;
 

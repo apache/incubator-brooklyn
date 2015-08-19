@@ -26,13 +26,12 @@ import java.util.concurrent.Future;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
-import org.apache.brooklyn.core.util.flags.TypeCoercions;
-import org.apache.brooklyn.core.util.task.DeferredSupplier;
+import org.apache.brooklyn.core.config.StructuredConfigKey;
+import org.apache.brooklyn.entity.core.internal.ConfigMapViewWithStringKeys;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.task.DeferredSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.ConfigMapViewWithStringKeys;
-import brooklyn.event.basic.StructuredConfigKey;
 
 public abstract class AbstractConfigMapImpl implements ConfigMap {
 

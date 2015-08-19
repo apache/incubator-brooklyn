@@ -19,7 +19,7 @@
 package org.apache.brooklyn.rest.testing.mocks;
 
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 
 @ImplementedBy(EverythingGroupImpl.class)
 public interface EverythingGroup extends Group {

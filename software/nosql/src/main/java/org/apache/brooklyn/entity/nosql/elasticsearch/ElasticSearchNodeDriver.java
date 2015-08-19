@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.elasticsearch;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface ElasticSearchNodeDriver extends SoftwareProcessDriver {
 

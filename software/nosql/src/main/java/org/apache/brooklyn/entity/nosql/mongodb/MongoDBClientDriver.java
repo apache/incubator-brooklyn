@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface MongoDBClientDriver extends SoftwareProcessDriver {
     void runScript(String preStart, String scriptName);

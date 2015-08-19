@@ -30,7 +30,7 @@ define([
             expect(catalogApplication.get('name')).toEqual('My example application')
             expect(catalogApplication.get('version')).toEqual('1.1')
             expect(catalogApplication.get('description')).toEqual('My awesome example application, as a catalog item')
-            expect(catalogApplication.get('planYaml')).toEqual('services:\n- type: brooklyn.entity.basic.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"')
+            expect(catalogApplication.get('planYaml')).toEqual('services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"')
             expect(catalogApplication.get('iconUrl')).toEqual('http://my.example.com/icon.png')
         })
     })
@@ -54,7 +54,7 @@ define([
             expect(catalogApplication1.get('name')).toEqual('My example application')
             expect(catalogApplication1.get('version')).toEqual('1.1')
             expect(catalogApplication1.get('description')).toEqual('My awesome example application, as a catalog item')
-            expect(catalogApplication1.get('planYaml')).toEqual('services:\n- type: brooklyn.entity.basic.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"')
+            expect(catalogApplication1.get('planYaml')).toEqual('services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"')
             expect(catalogApplication1.get('iconUrl')).toEqual('http://my.example.com/icon.png')
 
             var catalogApplication2 = catalogApplicationFixture.at(1)
@@ -63,7 +63,7 @@ define([
             expect(catalogApplication2.get('name')).toEqual('My example application')
             expect(catalogApplication2.get('version')).toEqual('2.0')
             expect(catalogApplication2.get('description')).toEqual('My awesome example application, as a catalog item')
-            expect(catalogApplication2.get('planYaml')).toEqual('services:\n- type: brooklyn.entity.basic.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"')
+            expect(catalogApplication2.get('planYaml')).toEqual('services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"')
             expect(catalogApplication2.get('iconUrl')).toEqual('http://my.example.com/icon.png')
 
             var catalogApplication3 = catalogApplicationFixture.at(2)
@@ -72,7 +72,7 @@ define([
             expect(catalogApplication3.get('name')).toEqual('Another example application')
             expect(catalogApplication3.get('version')).toEqual('1.0')
             expect(catalogApplication3.get('description')).toEqual('Another awesome example application, as a catalog item')
-            expect(catalogApplication3.get('planYaml')).toEqual('services:\n- type: brooklyn.entity.basic.VanillaSoftwareProcess\n  launch.command: echo \"Launch other application\"\n  checkRunning.command: echo \"Check running other application\"')
+            expect(catalogApplication3.get('planYaml')).toEqual('services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch other application\"\n  checkRunning.command: echo \"Check running other application\"')
             expect(catalogApplication3.get('iconUrl')).toEqual('http://my.other.example.com/icon.png')
         })
 

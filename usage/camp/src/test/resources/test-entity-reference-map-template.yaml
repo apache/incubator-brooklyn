@@ -23,6 +23,6 @@ services:
   id: one
 - serviceType: brooklyn.entity.basic.BasicEntity
   id: two
-- serviceType: org.apache.brooklyn.test.entity.TestEntity
+- serviceType: org.apache.brooklyn.core.test.entity.TestEntity
   name: testentity
 # should have nothing below here as the test appends things underneath

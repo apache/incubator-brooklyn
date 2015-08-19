@@ -21,10 +21,9 @@ package org.apache.brooklyn.policy.loadbalancing;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
-
-import brooklyn.event.basic.Sensors;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.sensor.core.Sensors;
 
 import com.google.common.reflect.TypeToken;
 

@@ -21,12 +21,12 @@ description: Cluster of TestEntitys with member spec
 origin: https://github.com/apache/incubator-brooklyn
 location: localhost
 services:
-- serviceType: brooklyn.entity.group.DynamicCluster
+- type: org.apache.brooklyn.entity.group.DynamicCluster
   id: test-entity-cluster
   name: TestEntityCluster
   initialSize: 2
   memberSpec:
     $brooklyn:entitySpec:
-      type: org.apache.brooklyn.test.entity.TestEntity
+      type: org.apache.brooklyn.core.test.entity.TestEntity
       brooklyn.config:
         test.confName: yamlTest

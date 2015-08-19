@@ -18,10 +18,9 @@
  */
 package org.apache.brooklyn.rest.testing.mocks;
 
+import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.entity.group.DynamicGroupImpl;
 import org.apache.brooklyn.util.text.StringPredicates;
-
-import brooklyn.entity.basic.DynamicGroupImpl;
-import brooklyn.entity.basic.EntityPredicates;
 
 public class NameMatcherGroupImpl extends DynamicGroupImpl implements NameMatcherGroup {
 

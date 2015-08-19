@@ -19,8 +19,8 @@
 package org.apache.brooklyn.test.osgi.entities;
 
 
-import brooklyn.entity.basic.AbstractApplication;
-import brooklyn.entity.basic.StartableApplication;
+import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.entity.core.StartableApplication;
 
 public class SimpleApplicationImpl extends AbstractApplication implements StartableApplication, SimpleApplication {
 

@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.entity.nosql.riak;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
-
 import java.util.List;
+
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface RiakNodeDriver extends SoftwareProcessDriver {
 

@@ -24,21 +24,19 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.internal.ssh.SshTool;
+import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.location.jclouds.networking.JcloudsPortForwarderExtension;
 import org.jclouds.Constants;
 import org.jclouds.compute.domain.Image;
 import org.jclouds.compute.domain.OsFamily;
 import org.jclouds.compute.domain.TemplateBuilder;
 import org.jclouds.domain.LoginCredentials;
-
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.event.basic.BasicConfigKey;
-
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.location.access.PortForwardManager;
-import org.apache.brooklyn.location.basic.LocationConfigKeys;
 import org.apache.brooklyn.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.location.core.LocationConfigKeys;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
@@ -206,7 +204,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
 
     /**
      * CUSTOM_MACHINE_SETUP_SCRIPT_URL accepts a URL location that points to a shell script. 
-     * Please have a look at locations/jclouds/src/main/resources/sample/script/setup-server.sh as an example
+     * Please have a look at locations/jclouds/src/main/resources/org/apache/brooklyn/location/jclouds/sample/setup-server.sh as an example
      */
     public static final ConfigKey<String> CUSTOM_MACHINE_SETUP_SCRIPT_URL = ConfigKeys.newStringConfigKey(
             "setup.script", "Custom script to customize a node");

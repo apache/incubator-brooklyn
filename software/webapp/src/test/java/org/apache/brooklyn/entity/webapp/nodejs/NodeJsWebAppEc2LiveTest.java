@@ -22,12 +22,11 @@ import static org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegr
 import static org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegrationTest.APP_NAME;
 import static org.apache.brooklyn.entity.webapp.nodejs.NodeJsWebAppFixtureIntegrationTest.GIT_REPO_URL;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.test.HttpTestUtils;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.AbstractEc2LiveTest;
 
 import com.google.common.collect.ImmutableList;
 

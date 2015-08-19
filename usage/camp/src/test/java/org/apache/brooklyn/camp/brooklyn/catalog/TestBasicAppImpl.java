@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.camp.brooklyn.catalog;
 
-import brooklyn.entity.basic.BasicApplicationImpl;
+import org.apache.brooklyn.entity.stock.BasicApplicationImpl;
 
 public class TestBasicAppImpl extends BasicApplicationImpl implements TestBasicApp {
 }

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.couchbase;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface CouchbaseSyncGatewayDriver extends SoftwareProcessDriver {
 

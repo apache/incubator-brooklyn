@@ -5,7 +5,7 @@
         "name": "My example application",
         "version": "1.1",
         "description": "My awesome example application, as a catalog item",
-        "planYaml": "services:\n- type: brooklyn.entity.basic.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"",
+        "planYaml": "services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"",
         "iconUrl": "http://my.example.com/icon.png"
     },
     {
@@ -14,7 +14,7 @@
         "name": "My example application",
         "version": "2.0",
         "description": "My awesome example application, as a catalog item",
-        "planYaml": "services:\n- type: brooklyn.entity.basic.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"",
+        "planYaml": "services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"",
         "iconUrl": "http://my.example.com/icon.png"
     },
     {
@@ -23,7 +23,7 @@
         "name": "Another example application",
         "version": "1.0",
         "description": "Another awesome example application, as a catalog item",
-        "planYaml": "services:\n- type: brooklyn.entity.basic.VanillaSoftwareProcess\n  launch.command: echo \"Launch other application\"\n  checkRunning.command: echo \"Check running other application\"",
+        "planYaml": "services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch other application\"\n  checkRunning.command: echo \"Check running other application\"",
         "iconUrl": "http://my.other.example.com/icon.png"
     }
 ]

@@ -20,25 +20,22 @@ package org.apache.brooklyn.entity.messaging.kafka;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.util.flags.SetFromFlag;
-
-import brooklyn.entity.basic.BrooklynConfigKeys;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.group.Cluster;
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.entity.trait.Resizable;
-import brooklyn.entity.trait.Startable;
-
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
+import org.apache.brooklyn.entity.group.Cluster;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.trait.Resizable;
+import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
+import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.time.Duration;
-
-import brooklyn.event.basic.BasicAttributeSensor;
-import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
 
 /**
  * Provides Kafka cluster functionality through a group of {@link KafkaBroker brokers} controlled
@@ -50,7 +47,7 @@ import brooklyn.event.basic.BasicAttributeSensorAndConfigKey;
  * <p>
  * The contents of this entity are:
  * <ul>
- * <li>a {@link brooklyn.entity.group.DynamicCluster} of {@link KafkaBroker}s
+ * <li>a {@link org.apache.brooklyn.entity.group.DynamicCluster} of {@link KafkaBroker}s
  * <li>a {@link KafkaZookeeper} or {@link Zookeeper}
  * <li>a {@link org.apache.brooklyn.api.policy.Policy} to resize the broker cluster
  * </ul>

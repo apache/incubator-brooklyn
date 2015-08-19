@@ -26,12 +26,10 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
-
-import brooklyn.entity.basic.BasicEntity;
-import brooklyn.entity.basic.BasicStartable;
-import brooklyn.entity.basic.ConfigKeys;
-import brooklyn.entity.basic.Entities;
-
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.entity.stock.BasicStartable;
 import org.apache.brooklyn.policy.ha.ServiceRestarter;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 

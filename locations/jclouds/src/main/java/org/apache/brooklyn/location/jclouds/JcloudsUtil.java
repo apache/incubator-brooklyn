@@ -36,8 +36,9 @@ import java.util.concurrent.TimeoutException;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.core.util.config.ConfigBag;
+import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Protocol;
 import org.apache.brooklyn.util.ssh.BashCommands;
@@ -85,8 +86,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.google.inject.Module;
-
-import brooklyn.entity.basic.Sanitizer;
 
 public class JcloudsUtil implements JcloudsLocationConfig {
 

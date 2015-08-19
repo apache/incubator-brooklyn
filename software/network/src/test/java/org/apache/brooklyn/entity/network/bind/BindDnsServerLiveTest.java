@@ -21,10 +21,15 @@ package org.apache.brooklyn.entity.network.bind;
 import static org.apache.brooklyn.test.EntityTestUtils.assertAttributeEqualsEventually;
 import static org.testng.Assert.assertEquals;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.policy.EnricherSpec;
-import org.apache.brooklyn.test.entity.TestApplication;
+import org.apache.brooklyn.api.sensor.EnricherSpec;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
+import org.apache.brooklyn.entity.software.base.SameServerEntity;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
@@ -34,12 +39,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
-
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.basic.EmptySoftwareProcess;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.SameServerEntity;
-import brooklyn.entity.group.DynamicCluster;
 
 public class BindDnsServerLiveTest {
 

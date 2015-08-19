@@ -18,11 +18,10 @@
  */
 package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
-import org.apache.brooklyn.api.event.AttributeSensor;
-
-import brooklyn.entity.group.DynamicCluster;
-import brooklyn.event.basic.Sensors;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.sensor.core.Sensors;
 
 import com.google.common.reflect.TypeToken;
 

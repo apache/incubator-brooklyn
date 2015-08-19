@@ -20,39 +20,38 @@ package org.apache.brooklyn.camp.brooklyn;
 
 import java.io.StringReader;
 
+import org.apache.brooklyn.entity.core.StartableApplication;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.StartableApplication;
 
 public class WrapAppTest extends AbstractYamlTest {
     private static final String NO_WRAP_APP_IMPLICIT =
             "name: Empty App\n" +
             "services:\n" +
-            "   - type: org.apache.brooklyn.test.entity.TestApplication";
+            "   - type: org.apache.brooklyn.core.test.entity.TestApplication";
         
     private static final String NO_WRAP_APP_EXPLICIT =
             "name: Empty App\n" +
             "wrappedApp: false\n" +
             "services:\n" +
-            "   - type: org.apache.brooklyn.test.entity.TestApplication";
+            "   - type: org.apache.brooklyn.core.test.entity.TestApplication";
         
     private static final String WRAP_APP_IMPLICIT =
             "name: Empty App\n" +
             "services:\n" +
-            "   - type: org.apache.brooklyn.test.entity.TestApplication\n" +
-            "   - type: org.apache.brooklyn.test.entity.TestApplication";
+            "   - type: org.apache.brooklyn.core.test.entity.TestApplication\n" +
+            "   - type: org.apache.brooklyn.core.test.entity.TestApplication";
         
     private static final String WRAP_APP_EXPLICIT =
             "name: Empty App\n" +
             "wrappedApp: true\n" +
             "services:\n" +
-            "   - type: org.apache.brooklyn.test.entity.TestApplication";
+            "   - type: org.apache.brooklyn.core.test.entity.TestApplication";
     
     private static final String WRAP_ENTITY =
             "name: Empty App\n" +
             "services:\n" +
-            "   - type: org.apache.brooklyn.test.entity.TestEntity";
+            "   - type: org.apache.brooklyn.core.test.entity.TestEntity";
     
     @Test
     public void testNoWrapAppImplicit() throws Exception {

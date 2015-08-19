@@ -22,7 +22,6 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-import org.apache.brooklyn.core.config.BrooklynProperties;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

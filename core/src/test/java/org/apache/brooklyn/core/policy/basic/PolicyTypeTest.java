@@ -21,12 +21,11 @@ package org.apache.brooklyn.core.policy.basic;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.policy.PolicyType;
-import org.apache.brooklyn.core.policy.basic.AbstractPolicy;
+import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.policy.core.AbstractPolicy;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import brooklyn.event.basic.BasicConfigKey;
 
 import com.google.common.collect.ImmutableSet;
 

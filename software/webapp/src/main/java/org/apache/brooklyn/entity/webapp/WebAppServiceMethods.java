@@ -24,13 +24,11 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.basic.EntityLocal;
-
-import brooklyn.enricher.RollingTimeWindowMeanEnricher;
-import brooklyn.enricher.TimeFractionDeltaEnricher;
-import brooklyn.enricher.TimeWeightedDeltaEnricher;
-
+import org.apache.brooklyn.api.internal.EntityLocal;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher;
+import org.apache.brooklyn.policy.enricher.TimeFractionDeltaEnricher;
+import org.apache.brooklyn.policy.enricher.TimeWeightedDeltaEnricher;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.net.HostAndPort;

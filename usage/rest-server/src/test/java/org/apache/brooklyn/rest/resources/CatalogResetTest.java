@@ -27,11 +27,10 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
-import org.apache.brooklyn.core.util.ResourceUtils;
+import org.apache.brooklyn.core.test.TestHttpRequestHandler;
+import org.apache.brooklyn.core.test.TestHttpServer;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
-
-import brooklyn.test.TestHttpRequestHandler;
-import brooklyn.test.TestHttpServer;
+import org.apache.brooklyn.util.core.ResourceUtils;
 
 import com.sun.jersey.api.client.UniformInterfaceException;
 
@@ -106,8 +105,8 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
     
     private void assertItems() {
         BrooklynCatalog catalog = getManagementContext().getCatalog();
-        assertNotNull(catalog.getCatalogItem("brooklyn.entity.basic.BasicApplication", BrooklynCatalog.DEFAULT_VERSION));
-        assertNotNull(catalog.getCatalogItem("brooklyn.osgi.tests.SimpleApplication", BrooklynCatalog.DEFAULT_VERSION));
+        assertNotNull(catalog.getCatalogItem("org.apache.brooklyn.entity.stock.BasicApplication", BrooklynCatalog.DEFAULT_VERSION));
+        assertNotNull(catalog.getCatalogItem("org.apache.brooklyn.test.osgi.entities.SimpleApplication", BrooklynCatalog.DEFAULT_VERSION));
     }
 
 }

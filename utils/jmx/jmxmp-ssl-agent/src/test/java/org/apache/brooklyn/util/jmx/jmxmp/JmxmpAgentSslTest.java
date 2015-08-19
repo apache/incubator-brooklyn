@@ -34,8 +34,8 @@ import java.util.Properties;
 
 import javax.management.remote.JMXConnectorServer;
 
-import org.apache.brooklyn.core.util.crypto.FluentKeySigner;
-import org.apache.brooklyn.core.util.crypto.SecureKeys;
+import org.apache.brooklyn.util.core.crypto.FluentKeySigner;
+import org.apache.brooklyn.util.core.crypto.SecureKeys;
 import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.extension.AuthorityKeyIdentifierStructure;

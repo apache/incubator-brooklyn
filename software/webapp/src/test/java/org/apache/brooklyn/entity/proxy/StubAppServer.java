@@ -23,17 +23,16 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.event.AttributeSensor;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.entity.core.AbstractEntity;
+import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.collections.MutableMap;
-
-import brooklyn.entity.basic.AbstractEntity;
-import brooklyn.entity.basic.Attributes;
-import brooklyn.entity.trait.Startable;
-import brooklyn.event.basic.PortAttributeSensorAndConfigKey;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;

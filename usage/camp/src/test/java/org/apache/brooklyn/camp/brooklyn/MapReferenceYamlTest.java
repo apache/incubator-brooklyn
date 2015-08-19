@@ -22,16 +22,15 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.core.util.task.Tasks;
+import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.proxy.ProxySslConfig;
-import org.apache.brooklyn.test.entity.TestEntity;
+import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.BasicEntity;
-import brooklyn.entity.basic.Entities;
 
 import com.google.common.collect.Iterables;
 

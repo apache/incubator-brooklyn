@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.webapp.nodejs;
 
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
 public interface NodeJsWebAppDriver extends SoftwareProcessDriver {
 

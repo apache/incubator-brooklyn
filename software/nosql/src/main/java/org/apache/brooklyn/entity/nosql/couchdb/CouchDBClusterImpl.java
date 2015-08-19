@@ -18,11 +18,10 @@
  */
 package org.apache.brooklyn.entity.nosql.couchdb;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.group.DynamicClusterImpl;
 
 /**
  * Implementation of {@link CouchDBCluster}.

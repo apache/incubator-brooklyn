@@ -19,10 +19,9 @@
 package org.apache.brooklyn.rest.testing.mocks;
 
 import org.apache.brooklyn.api.entity.Group;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
-
-import brooklyn.entity.basic.ConfigKeys;
+import org.apache.brooklyn.core.config.ConfigKeys;
 
 @ImplementedBy(NameMatcherGroupImpl.class)
 public interface NameMatcherGroup extends Group {

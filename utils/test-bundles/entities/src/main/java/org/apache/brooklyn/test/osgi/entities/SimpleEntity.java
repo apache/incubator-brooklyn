@@ -20,7 +20,7 @@ package org.apache.brooklyn.test.osgi.entities;
 
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 
 @ImplementedBy(SimpleEntityImpl.class)
 public interface SimpleEntity extends Entity {

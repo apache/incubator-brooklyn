@@ -22,9 +22,9 @@ import java.io.StringReader;
 import java.util.Map;
 
 import org.testng.annotations.Test;
-import org.apache.brooklyn.core.util.ResourceUtils;
-import org.apache.brooklyn.core.util.text.TemplateProcessor;
 import org.apache.brooklyn.launcher.blueprints.AbstractBlueprintTest;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.text.TemplateProcessor;
 
 import com.google.common.collect.ImmutableMap;
 

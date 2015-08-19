@@ -19,10 +19,10 @@
 package org.apache.brooklyn.test.osgi.entities.more;
 
 import org.apache.brooklyn.api.catalog.Catalog;
-import org.apache.brooklyn.api.entity.Effector;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
-import brooklyn.entity.effector.Effectors;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.effector.core.Effectors;
 
 @Catalog(name="More Entity v2")
 @ImplementedBy(MoreEntityImpl.class)

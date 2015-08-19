@@ -22,10 +22,9 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.entity.basic.AbstractEntity;
+import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.entity.messaging.amqp.AmqpExchange;
-import org.apache.brooklyn.location.basic.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Predicates;

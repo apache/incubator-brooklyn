@@ -18,13 +18,13 @@
  */
 package org.apache.brooklyn.core.internal.storage;
 
-import org.apache.brooklyn.core.management.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 
 /**
  * A factory for creating a {@link DataGrid}.
  *
  * Implementations of this interface should have a public no arg constructor; this constructor will be
- * called through reflection in the {@link org.apache.brooklyn.core.management.internal.LocalManagementContext}.
+ * called through reflection in the {@link org.apache.brooklyn.core.mgmt.internal.LocalManagementContext}.
  */
 public interface DataGridFactory {
 

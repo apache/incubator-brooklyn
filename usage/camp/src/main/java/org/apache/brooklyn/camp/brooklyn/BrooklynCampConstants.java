@@ -23,9 +23,8 @@ import java.util.Set;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.config.BrooklynServerConfig;
-
-import brooklyn.entity.basic.ConfigKeys;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 
 import com.google.common.collect.ImmutableSet;
 

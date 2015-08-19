@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.proxy;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.proxying.ImplementedBy;
+import org.apache.brooklyn.api.entity.ImplementedBy;
 
 @ImplementedBy(AbstractNonProvisionedControllerImpl.class)
 public interface AbstractNonProvisionedController extends LoadBalancer, Entity {

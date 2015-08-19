@@ -22,7 +22,7 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.location.basic.SimulatedLocation;
+import org.apache.brooklyn.location.core.SimulatedLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.Test;
 

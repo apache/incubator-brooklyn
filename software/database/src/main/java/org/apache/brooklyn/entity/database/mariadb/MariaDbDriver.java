@@ -18,11 +18,8 @@
  */
 package org.apache.brooklyn.entity.database.mariadb;
 
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
-
-import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
-
-import brooklyn.entity.basic.SoftwareProcessDriver;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 
 /**
  * The {@link SoftwareProcessDriver} for MariaDB.

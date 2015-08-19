@@ -32,7 +32,7 @@ services:
       type: org.apache.brooklyn.entity.webapp.DynamicWebAppCluster
       id: cluster
       brooklyn.enrichers:
-      - type: brooklyn.enricher.basic.Aggregator
+      - type: org.apache.brooklyn.sensor.enricher.Aggregator
         brooklyn.config:
           enricher.sourceSensor: $brooklyn:sensor("my.load")
           enricher.targetSensor: $brooklyn:sensor("my.load.averaged")
@@ -40,7 +40,7 @@ services:
           transformation: average
             
   brooklyn.enrichers:
-  - type: brooklyn.enricher.basic.Propagator
+  - type: org.apache.brooklyn.sensor.enricher.Propagator
     brooklyn.config:
       producer: $brooklyn:entity("cluster")
       propagating:

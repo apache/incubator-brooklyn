@@ -20,8 +20,6 @@ package org.apache.brooklyn.api.entity;
 
 import java.util.Collection;
 
-import org.apache.brooklyn.api.entity.proxying.EntitySpec;
-
 /**
  * An {@link Entity} that groups together other entities.
  * 

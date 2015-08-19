@@ -23,8 +23,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.util.Collections;
 import java.util.Map;
 
-import org.apache.brooklyn.api.basic.AbstractBrooklynObjectSpec;
-import org.apache.brooklyn.api.management.Task;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.slf4j.Logger;

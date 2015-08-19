@@ -29,11 +29,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.ConfigKeys;
-
 import org.apache.brooklyn.api.location.MachineLocation;
-import org.apache.brooklyn.location.basic.SingleMachineProvisioningLocation;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.location.byon.SingleMachineProvisioningLocation;
 
 public class SingleMachineProvisioningLocationJcloudsLiveTest extends AbstractJcloudsLiveTest {
 private static final Logger log = LoggerFactory.getLogger(SingleMachineProvisioningLocation.class);

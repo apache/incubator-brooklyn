@@ -21,18 +21,17 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
-import org.apache.brooklyn.api.policy.Enricher;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlRebindTest;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.internal.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.test.policy.TestEnricher;
+import org.apache.brooklyn.core.test.policy.TestPolicy;
+import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.entity.core.StartableApplication;
+import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.BasicEntity;
-import brooklyn.entity.basic.Entities;
-import brooklyn.entity.basic.StartableApplication;
-import brooklyn.test.policy.TestEnricher;
-import brooklyn.test.policy.TestPolicy;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;

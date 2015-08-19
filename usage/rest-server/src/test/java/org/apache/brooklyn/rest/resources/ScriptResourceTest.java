@@ -22,11 +22,9 @@ import java.util.Collections;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.entity.basic.Entities;
-
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.management.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.rest.domain.ScriptExecutionSummary;
 import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
 
