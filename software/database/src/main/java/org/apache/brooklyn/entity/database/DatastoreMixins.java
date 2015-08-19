@@ -27,7 +27,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.effector.core.ssh;
+package org.apache.brooklyn.core.effector.ssh;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,9 +26,10 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasksTest;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.ssh.SshFetchTaskWrapper;
 import org.apache.brooklyn.util.core.task.ssh.SshPutTaskWrapper;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;

@@ -19,8 +19,8 @@
 package org.apache.brooklyn.entity.brooklynnode.effector;
 
 import org.apache.brooklyn.api.effector.Effector;
-import org.apache.brooklyn.effector.core.EffectorBody;
-import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.core.effector.EffectorBody;
+import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.brooklynnode.EntityHttpClient;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityPriorityEffector;

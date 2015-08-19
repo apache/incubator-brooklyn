@@ -29,9 +29,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.drivers.downloads.DownloadSubstituters;
-import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.ExistingFileBehaviour;
 import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;

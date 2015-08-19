@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.effector.core;
+package org.apache.brooklyn.core.effector;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,11 +33,11 @@ import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.effector.EffectorTasks.EffectorBodyTaskFactory;
+import org.apache.brooklyn.core.effector.EffectorTasks.EffectorMarkingTaskFactory;
+import org.apache.brooklyn.core.effector.EffectorTasks.EffectorTaskFactory;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
-import org.apache.brooklyn.effector.core.EffectorTasks.EffectorBodyTaskFactory;
-import org.apache.brooklyn.effector.core.EffectorTasks.EffectorMarkingTaskFactory;
-import org.apache.brooklyn.effector.core.EffectorTasks.EffectorTaskFactory;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.Tasks;

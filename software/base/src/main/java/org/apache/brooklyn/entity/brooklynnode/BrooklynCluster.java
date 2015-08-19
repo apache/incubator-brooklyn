@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.effector.core.Effectors;
+import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.entity.brooklynnode.effector.BrooklynNodeUpgradeEffectorBody;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.sensor.core.Sensors;

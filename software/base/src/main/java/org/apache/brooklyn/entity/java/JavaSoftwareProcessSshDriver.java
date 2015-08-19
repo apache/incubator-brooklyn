@@ -28,11 +28,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntityLocal;
+import org.apache.brooklyn.core.effector.EffectorTasks;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
-import org.apache.brooklyn.effector.core.EffectorTasks;
-import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

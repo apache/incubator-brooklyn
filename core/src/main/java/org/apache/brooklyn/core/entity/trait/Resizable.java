@@ -21,7 +21,7 @@ package org.apache.brooklyn.core.entity.trait;
 
 import org.apache.brooklyn.core.annotation.Effector;
 import org.apache.brooklyn.core.annotation.EffectorParam;
-import org.apache.brooklyn.effector.core.MethodEffector;
+import org.apache.brooklyn.core.effector.MethodEffector;
 
 /**
  * Defines an entity group that can be re-sized dynamically.

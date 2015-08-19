@@ -29,7 +29,7 @@ import com.google.common.base.Strings;
 import com.google.common.net.HostAndPort;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.effector.core.EffectorTasks;
+import org.apache.brooklyn.core.effector.EffectorTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;

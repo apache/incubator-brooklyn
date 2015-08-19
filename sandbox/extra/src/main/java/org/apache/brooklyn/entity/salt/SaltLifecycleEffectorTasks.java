@@ -20,10 +20,10 @@ package org.apache.brooklyn.entity.salt;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
-import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.Tasks;

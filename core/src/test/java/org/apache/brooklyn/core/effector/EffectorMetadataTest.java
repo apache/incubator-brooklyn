@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.effector.core;
+package org.apache.brooklyn.core.effector;
 
 import static org.testng.Assert.assertEquals;
 
@@ -30,13 +30,13 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.annotation.EffectorParam;
+import org.apache.brooklyn.core.effector.BasicParameterType;
+import org.apache.brooklyn.core.effector.Effectors;
+import org.apache.brooklyn.core.effector.MethodEffector;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.internal.EffectorUtils;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
-import org.apache.brooklyn.effector.core.BasicParameterType;
-import org.apache.brooklyn.effector.core.Effectors;
-import org.apache.brooklyn.effector.core.MethodEffector;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

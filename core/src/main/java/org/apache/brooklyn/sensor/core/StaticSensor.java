@@ -22,7 +22,7 @@ import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.effector.core.AddSensor;
+import org.apache.brooklyn.core.effector.AddSensor;
 import org.apache.brooklyn.sensor.enricher.Propagator;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.Tasks;

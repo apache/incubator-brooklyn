@@ -21,8 +21,8 @@ package org.apache.brooklyn.entity.database.mysql;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.core.location.Locations;
-import org.apache.brooklyn.effector.core.EffectorBody;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

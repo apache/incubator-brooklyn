@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.effector.core;
+package org.apache.brooklyn.core.effector;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -26,6 +26,11 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.HasTaskChildren;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.effector.EffectorBody;
+import org.apache.brooklyn.core.effector.EffectorTasks;
+import org.apache.brooklyn.core.effector.EffectorWithBody;
+import org.apache.brooklyn.core.effector.Effectors;
+import org.apache.brooklyn.core.effector.EffectorTasks.EffectorTaskFactory;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
@@ -33,11 +38,6 @@ import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.effector.core.EffectorBody;
-import org.apache.brooklyn.effector.core.EffectorTasks;
-import org.apache.brooklyn.effector.core.EffectorWithBody;
-import org.apache.brooklyn.effector.core.Effectors;
-import org.apache.brooklyn.effector.core.EffectorTasks.EffectorTaskFactory;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.DynamicSequentialTask;

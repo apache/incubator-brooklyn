@@ -16,14 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.effector.core;
+package org.apache.brooklyn.core.effector;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.effector.ParameterType;
-import org.apache.brooklyn.effector.core.EffectorTasks.EffectorTaskFactory;
+import org.apache.brooklyn.core.effector.EffectorTasks.EffectorTaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

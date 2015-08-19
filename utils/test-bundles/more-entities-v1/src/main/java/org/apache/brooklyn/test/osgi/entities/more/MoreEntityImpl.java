@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.test.osgi.entities.more;
 
-import org.apache.brooklyn.effector.core.EffectorBody;
+import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 

@@ -25,7 +25,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.annotation.Effector;
 import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.effector.core.MethodEffector;
+import org.apache.brooklyn.core.effector.MethodEffector;
 import org.apache.brooklyn.entity.group.AbstractGroup;
 import org.apache.brooklyn.sensor.core.BasicSensor;
 import org.apache.brooklyn.sensor.core.Sensors;

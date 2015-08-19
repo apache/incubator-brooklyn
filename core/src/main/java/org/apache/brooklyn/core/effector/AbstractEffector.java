@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.effector.core;
+package org.apache.brooklyn.core.effector;
 
 import java.util.List;
 import java.util.Map;
@@ -26,8 +26,8 @@ import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.effector.ParameterType;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.effector.EffectorTasks.EffectorTaskFactory;
 import org.apache.brooklyn.core.mgmt.internal.EffectorUtils;
-import org.apache.brooklyn.effector.core.EffectorTasks.EffectorTaskFactory;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.DynamicSequentialTask;
 import org.slf4j.Logger;

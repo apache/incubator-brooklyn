@@ -22,7 +22,7 @@ import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.entity.chef.ChefConfig;
 import org.apache.brooklyn.entity.chef.ChefConfigs;
 import org.apache.brooklyn.entity.chef.ChefSoloDriver;

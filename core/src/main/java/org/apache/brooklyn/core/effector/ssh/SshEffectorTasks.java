@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.effector.core.ssh;
+package org.apache.brooklyn.core.effector.ssh;
 
 import java.util.List;
 import java.util.Map;
@@ -31,12 +31,13 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.ConfigUtils;
+import org.apache.brooklyn.core.effector.EffectorBody;
+import org.apache.brooklyn.core.effector.EffectorTasks;
+import org.apache.brooklyn.core.effector.EffectorTasks.EffectorTaskFactory;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.effector.core.EffectorBody;
-import org.apache.brooklyn.effector.core.EffectorTasks;
-import org.apache.brooklyn.effector.core.EffectorTasks.EffectorTaskFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;

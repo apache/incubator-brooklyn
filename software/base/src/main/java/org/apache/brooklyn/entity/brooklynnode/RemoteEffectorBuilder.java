@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.api.effector.Effector;
-import org.apache.brooklyn.effector.core.Effectors;
-import org.apache.brooklyn.effector.core.Effectors.EffectorBuilder;
+import org.apache.brooklyn.core.effector.Effectors;
+import org.apache.brooklyn.core.effector.Effectors.EffectorBuilder;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynEntityMirrorImpl.RemoteEffector;
 import org.apache.brooklyn.util.core.http.HttpToolResponse;
 

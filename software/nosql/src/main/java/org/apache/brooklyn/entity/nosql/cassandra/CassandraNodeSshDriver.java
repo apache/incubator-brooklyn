@@ -31,11 +31,11 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.TaskWrapper;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
-import org.apache.brooklyn.effector.core.ssh.SshEffectorTasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

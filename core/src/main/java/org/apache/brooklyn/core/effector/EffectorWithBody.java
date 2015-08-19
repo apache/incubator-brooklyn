@@ -16,10 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.effector.core;
+package org.apache.brooklyn.core.effector;
 
 import org.apache.brooklyn.api.effector.Effector;
-import org.apache.brooklyn.effector.core.EffectorTasks.EffectorTaskFactory;
+import org.apache.brooklyn.core.effector.EffectorTasks.EffectorTaskFactory;
 
 import com.google.common.annotations.Beta;
 
