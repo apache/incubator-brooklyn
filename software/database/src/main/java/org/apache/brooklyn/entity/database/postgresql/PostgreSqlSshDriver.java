@@ -39,6 +39,7 @@ import java.io.InputStream;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
@@ -58,7 +59,6 @@ import org.apache.brooklyn.util.text.StringFunctions;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.entity.core.Attributes;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;

@@ -27,12 +27,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.entity.core.AbstractApplication;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.StartableApplication;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.DynamicWebAppCluster;
 import org.apache.brooklyn.entity.webapp.JavaWebAppService;

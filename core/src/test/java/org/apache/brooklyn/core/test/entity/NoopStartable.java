@@ -20,7 +20,7 @@ package org.apache.brooklyn.core.test.entity;
 
 import java.util.Collection;
 
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.trait.Startable;
 
 public class NoopStartable implements Startable {
    public void start(Collection loc) {}

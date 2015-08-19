@@ -23,8 +23,8 @@ import javax.management.ObjectName;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.java.VanillaJavaAppImpl;
 import org.apache.brooklyn.entity.java.VanillaJavaAppSshDriver;

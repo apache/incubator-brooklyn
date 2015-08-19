@@ -26,9 +26,9 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.annotation.Effector;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.effector.core.MethodEffector;
-import org.apache.brooklyn.entity.annotation.Effector;
 import org.apache.brooklyn.entity.group.DynamicFabric;
 
 import com.google.common.base.Function;

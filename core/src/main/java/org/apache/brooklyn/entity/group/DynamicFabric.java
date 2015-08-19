@@ -24,10 +24,10 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.MapConfigKey;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.factory.EntityFactory;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.factory.EntityFactory;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 

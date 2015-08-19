@@ -23,8 +23,8 @@ import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
-import org.apache.brooklyn.entity.core.EntityInternal;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.entity.trait.Startable;
 
 @ImplementedBy(TestEntityWithInitConfigImpl.class)
 public interface TestEntityWithInitConfig extends Entity, Startable, EntityLocal, EntityInternal {

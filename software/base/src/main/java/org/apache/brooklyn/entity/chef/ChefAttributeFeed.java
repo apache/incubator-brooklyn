@@ -33,7 +33,7 @@ import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.sensor.feed.AbstractFeed;
 import org.apache.brooklyn.sensor.feed.PollHandler;
 import org.apache.brooklyn.sensor.feed.Poller;

@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor;

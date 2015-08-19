@@ -27,8 +27,8 @@ import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.config.render.RendererHints;
-import org.apache.brooklyn.entity.core.EntityInternal;
-import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityPredicates;
 import org.apache.brooklyn.rest.api.SensorApi;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;

@@ -22,11 +22,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.chef.ChefConfig;
 import org.apache.brooklyn.entity.chef.ChefServerTasks;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.stream.StreamGobbler;
 import org.apache.brooklyn.util.time.Duration;

@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
-import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;

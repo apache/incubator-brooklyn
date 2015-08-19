@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.core.Machines;

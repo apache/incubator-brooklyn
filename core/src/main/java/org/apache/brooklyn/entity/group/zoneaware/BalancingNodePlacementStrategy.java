@@ -26,8 +26,8 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.group.DynamicCluster.NodePlacementStrategy;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

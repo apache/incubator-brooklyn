@@ -24,11 +24,11 @@ import static org.testng.Assert.*
 
 import org.apache.brooklyn.api.entity.Application
 import org.apache.brooklyn.api.location.Location
+import org.apache.brooklyn.core.entity.Entities
+import org.apache.brooklyn.core.entity.trait.Startable
 import org.apache.brooklyn.core.internal.BrooklynProperties
 import org.apache.brooklyn.core.test.entity.TestApplicationImpl
-import org.apache.brooklyn.entity.core.Entities
 import org.apache.brooklyn.entity.software.base.SoftwareProcess
-import org.apache.brooklyn.entity.trait.Startable
 import org.apache.brooklyn.entity.webapp.jboss.JBoss6Server
 import org.apache.brooklyn.entity.webapp.jboss.JBoss6ServerImpl
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server

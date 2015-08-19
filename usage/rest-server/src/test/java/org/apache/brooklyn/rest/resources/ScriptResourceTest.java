@@ -24,7 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.rest.domain.ScriptExecutionSummary;
 import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
 

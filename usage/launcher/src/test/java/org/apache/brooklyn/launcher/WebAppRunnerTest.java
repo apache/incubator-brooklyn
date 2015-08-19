@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.launcher;
 
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.launcher.BrooklynWebServer;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.launcher.BrooklynServerDetails;

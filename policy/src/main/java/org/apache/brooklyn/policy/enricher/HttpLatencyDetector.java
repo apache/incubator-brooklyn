@@ -34,7 +34,7 @@ import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.sensor.enricher.AbstractEnricher;
 import org.apache.brooklyn.sensor.feed.http.HttpFeed;

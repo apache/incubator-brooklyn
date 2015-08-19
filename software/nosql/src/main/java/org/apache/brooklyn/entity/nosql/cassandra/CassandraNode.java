@@ -29,7 +29,7 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.core.BrooklynConfigKeys;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.entity.java.UsesJavaMXBeans;
 import org.apache.brooklyn.entity.java.UsesJmx;

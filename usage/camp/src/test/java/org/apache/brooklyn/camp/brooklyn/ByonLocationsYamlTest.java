@@ -28,7 +28,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.DoNothingSoftwareProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

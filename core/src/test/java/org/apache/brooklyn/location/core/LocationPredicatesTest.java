@@ -23,10 +23,10 @@ import static org.testng.Assert.assertTrue;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.core.LocationPredicates;
 import org.apache.brooklyn.location.core.Locations;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;

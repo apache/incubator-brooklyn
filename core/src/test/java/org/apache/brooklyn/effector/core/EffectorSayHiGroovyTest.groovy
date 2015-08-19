@@ -29,10 +29,10 @@ import org.apache.brooklyn.api.mgmt.Task
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.internal.EffectorUtils
 import org.apache.brooklyn.core.test.entity.TestApplication
-import org.apache.brooklyn.entity.annotation.EffectorParam
-import org.apache.brooklyn.entity.core.AbstractEntity
-import org.apache.brooklyn.entity.core.Entities
-import org.apache.brooklyn.entity.trait.Startable
+import org.apache.brooklyn.core.annotation.EffectorParam
+import org.apache.brooklyn.core.entity.AbstractEntity
+import org.apache.brooklyn.core.entity.Entities
+import org.apache.brooklyn.core.entity.trait.Startable
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -137,7 +137,7 @@ public interface CanSayHi {
 	//slightly longer-winded pojo also supported
 	static Effector<String> SAY_HI_1_ALT = new MethodEffector<String>(CanSayHi.class, "sayHi1");
 
-	@org.apache.brooklyn.entity.annotation.Effector(description="says hello")
+	@org.apache.brooklyn.core.annotation.Effector(description="says hello")
 	public String sayHi1(
 		@EffectorParam(name="name") String name,
 		@EffectorParam(name="greeting", defaultValue="hello", description="what to say") String greeting);

@@ -28,12 +28,12 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.management.TaskFactory;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.util.ResourceUtils;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.apache.brooklyn.core.util.text.TemplateProcessor;
 
-import org.apache.brooklyn.entity.core.Entities;
 import brooklyn.entity.effector.EffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.util.collections.MutableMap;

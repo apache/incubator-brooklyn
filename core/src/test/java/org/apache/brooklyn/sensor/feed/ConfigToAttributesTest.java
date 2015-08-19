@@ -21,11 +21,11 @@ package org.apache.brooklyn.sensor.feed;
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.TemplatedStringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.feed.ConfigToAttributes;

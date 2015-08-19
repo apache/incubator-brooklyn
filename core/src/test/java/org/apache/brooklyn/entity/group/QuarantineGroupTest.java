@@ -23,9 +23,9 @@ import static org.testng.Assert.assertFalse;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.group.QuarantineGroup;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;

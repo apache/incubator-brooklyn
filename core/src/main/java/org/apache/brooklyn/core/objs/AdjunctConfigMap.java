@@ -30,7 +30,7 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.core.config.StructuredConfigKey;
 import org.apache.brooklyn.core.config.internal.AbstractConfigMapImpl;
-import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.internal.ConfigKeySelfExtracting;
 import org.apache.brooklyn.util.guava.Maybe;

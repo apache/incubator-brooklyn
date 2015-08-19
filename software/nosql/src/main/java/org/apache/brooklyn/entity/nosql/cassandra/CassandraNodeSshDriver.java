@@ -31,6 +31,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.TaskWrapper;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,8 +40,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import org.apache.brooklyn.entity.java.UsesJmx;

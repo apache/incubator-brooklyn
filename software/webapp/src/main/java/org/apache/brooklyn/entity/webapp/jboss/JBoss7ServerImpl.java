@@ -22,7 +22,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.config.render.RendererHints;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

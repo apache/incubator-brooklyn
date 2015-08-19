@@ -20,14 +20,14 @@ package org.apache.brooklyn.entity.salt;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.util.task.DynamicTasks;
 import org.apache.brooklyn.core.util.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import brooklyn.config.BrooklynServerConfig;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import brooklyn.entity.software.MachineLifecycleEffectorTasks;
 import brooklyn.entity.software.SshEffectorTasks;
 import brooklyn.util.net.Urls;

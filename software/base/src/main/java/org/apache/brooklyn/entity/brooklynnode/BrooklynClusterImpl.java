@@ -23,13 +23,13 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
+import org.apache.brooklyn.core.entity.EntityFunctions;
+import org.apache.brooklyn.core.entity.EntityPredicates;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceProblemsLogic;
 import org.apache.brooklyn.entity.brooklynnode.effector.BrooklynClusterUpgradeEffectorBody;
 import org.apache.brooklyn.entity.brooklynnode.effector.SelectMasterEffectorBody;
-import org.apache.brooklyn.entity.core.EntityFunctions;
-import org.apache.brooklyn.entity.core.EntityPredicates;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic.ServiceProblemsLogic;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.sensor.feed.function.FunctionFeed;
 import org.apache.brooklyn.sensor.feed.function.FunctionPollConfig;

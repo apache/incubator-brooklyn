@@ -45,11 +45,11 @@ import javax.annotation.concurrent.GuardedBy;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.core.entity.factory.ClosureEntityFactory;
+import org.apache.brooklyn.core.entity.factory.ConfigurableEntityFactory;
+import org.apache.brooklyn.core.entity.factory.ConfigurableEntityFactoryFromEntityFactory;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.entity.factory.ClosureEntityFactory;
-import org.apache.brooklyn.entity.factory.ConfigurableEntityFactory;
-import org.apache.brooklyn.entity.factory.ConfigurableEntityFactoryFromEntityFactory;
 import org.apache.brooklyn.sensor.core.Sensors;
 import org.apache.brooklyn.util.JavaGroovyEquivalents;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -600,19 +600,19 @@ public class TypeCoercions {
             }
         });
         @SuppressWarnings({"unused", "deprecation"})
-        Function<?,?> ignoredVarHereToAllowSuppressDeprecationWarning1 = registerAdapter(org.apache.brooklyn.entity.factory.EntityFactory.class, ConfigurableEntityFactory.class, new Function<org.apache.brooklyn.entity.factory.EntityFactory,ConfigurableEntityFactory>() {
+        Function<?,?> ignoredVarHereToAllowSuppressDeprecationWarning1 = registerAdapter(org.apache.brooklyn.core.entity.factory.EntityFactory.class, ConfigurableEntityFactory.class, new Function<org.apache.brooklyn.core.entity.factory.EntityFactory,ConfigurableEntityFactory>() {
             @SuppressWarnings("unchecked")
             @Override
-            public ConfigurableEntityFactory apply(org.apache.brooklyn.entity.factory.EntityFactory input) {
+            public ConfigurableEntityFactory apply(org.apache.brooklyn.core.entity.factory.EntityFactory input) {
                 if (input instanceof ConfigurableEntityFactory) return (ConfigurableEntityFactory)input;
                 return new ConfigurableEntityFactoryFromEntityFactory(input);
             }
         });
         @SuppressWarnings({"unused", "deprecation"})
-        Function<?,?> ignoredVarHereToAllowSuppressDeprecationWarning2 = registerAdapter(Closure.class, org.apache.brooklyn.entity.factory.EntityFactory.class, new Function<Closure,org.apache.brooklyn.entity.factory.EntityFactory>() {
+        Function<?,?> ignoredVarHereToAllowSuppressDeprecationWarning2 = registerAdapter(Closure.class, org.apache.brooklyn.core.entity.factory.EntityFactory.class, new Function<Closure,org.apache.brooklyn.core.entity.factory.EntityFactory>() {
             @SuppressWarnings("unchecked")
             @Override
-            public org.apache.brooklyn.entity.factory.EntityFactory apply(Closure input) {
+            public org.apache.brooklyn.core.entity.factory.EntityFactory apply(Closure input) {
                 return new ClosureEntityFactory(input);
             }
         });

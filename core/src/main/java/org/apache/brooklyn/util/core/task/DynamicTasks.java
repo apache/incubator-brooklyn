@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
 import org.apache.brooklyn.api.mgmt.TaskQueueingContext;
 import org.apache.brooklyn.api.mgmt.TaskWrapper;
-import org.apache.brooklyn.entity.core.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;

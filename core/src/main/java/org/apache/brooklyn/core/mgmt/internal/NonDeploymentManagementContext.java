@@ -61,6 +61,7 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
@@ -69,7 +70,6 @@ import org.apache.brooklyn.core.mgmt.usage.UsageManager;
 import org.apache.brooklyn.core.objs.proxy.InternalEntityFactory;
 import org.apache.brooklyn.core.objs.proxy.InternalLocationFactory;
 import org.apache.brooklyn.core.objs.proxy.InternalPolicyFactory;
-import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Duration;
 

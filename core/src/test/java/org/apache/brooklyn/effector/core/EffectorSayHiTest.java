@@ -33,13 +33,13 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.annotation.EffectorParam;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.effector.core.MethodEffector;
-import org.apache.brooklyn.entity.annotation.EffectorParam;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.BasicTask;
 import org.slf4j.Logger;
@@ -133,12 +133,12 @@ public class EffectorSayHiTest extends BrooklynAppUnitTestSupport {
         static MethodEffector<String> SAY_HI_1 = new MethodEffector<String>(CanSayHi.class, "sayHi1");
         static MethodEffector<String> DELEGATE_SAY_HI_1 = new MethodEffector<String>(CanSayHi.class, "delegateSayHi1");
     
-        @org.apache.brooklyn.entity.annotation.Effector(description="says hello")
+        @org.apache.brooklyn.core.annotation.Effector(description="says hello")
         public String sayHi1(
             @EffectorParam(name="name") String name,
             @EffectorParam(name="greeting", defaultValue="hello", description="what to say") String greeting);
         
-        @org.apache.brooklyn.entity.annotation.Effector(description="delegate says hello")
+        @org.apache.brooklyn.core.annotation.Effector(description="delegate says hello")
         public String delegateSayHi1(
             @EffectorParam(name="name") String name,
             @EffectorParam(name="greeting") String greeting);

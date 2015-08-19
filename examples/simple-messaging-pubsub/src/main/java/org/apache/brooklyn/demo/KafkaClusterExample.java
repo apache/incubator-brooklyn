@@ -20,10 +20,10 @@ package org.apache.brooklyn.demo;
 
 import java.util.List;
 
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.entity.messaging.kafka.KafkaCluster;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.util.CommandLineUtil;
 

@@ -22,9 +22,9 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.location.core.BasicOsDetails;
 import org.apache.brooklyn.location.core.BasicOsDetails.OsArchs;
 

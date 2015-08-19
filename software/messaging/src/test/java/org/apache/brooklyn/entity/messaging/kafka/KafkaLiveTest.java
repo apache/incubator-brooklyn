@@ -25,9 +25,9 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.AbstractEc2LiveTest;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 

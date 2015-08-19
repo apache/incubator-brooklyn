@@ -22,8 +22,9 @@ import java.util.Map;
 
 import brooklyn.config.ConfigKey;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
+import org.apache.brooklyn.core.entity.EntityInternal;
+
 import brooklyn.event.basic.MapConfigKey.MapModifications;
 import brooklyn.event.basic.SetConfigKey.SetModifications;
 

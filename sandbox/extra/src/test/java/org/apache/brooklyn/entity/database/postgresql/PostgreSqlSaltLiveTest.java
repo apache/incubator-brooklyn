@@ -22,6 +22,7 @@ import java.util.Random;
 
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.PortRange;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.util.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNodeSaltImpl;
 import org.apache.brooklyn.entity.salt.SaltConfig;
@@ -34,8 +35,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
-
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlIntegrationTest;
 import org.apache.brooklyn.entity.database.postgresql.PostgreSqlNode;

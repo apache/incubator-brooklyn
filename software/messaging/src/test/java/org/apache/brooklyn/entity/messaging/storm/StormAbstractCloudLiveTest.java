@@ -30,6 +30,9 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -54,10 +57,7 @@ import backtype.storm.generated.StormTopology;
 import backtype.storm.testing.TestWordSpout;
 import backtype.storm.topology.TopologyBuilder;
 
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.messaging.storm.topologies.ExclamationBolt;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperEnsemble;
 
 import com.google.common.base.Throwables;

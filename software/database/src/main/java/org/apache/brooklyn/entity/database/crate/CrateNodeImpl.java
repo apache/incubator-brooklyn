@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.database.crate;
 
 import org.apache.brooklyn.core.config.render.RendererHints;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.java.JavaAppUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.sensor.enricher.Enrichers;

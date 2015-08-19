@@ -20,7 +20,7 @@ package org.apache.brooklyn.entity.chef.mysql;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.sensor.ssh.SshEffectorTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;

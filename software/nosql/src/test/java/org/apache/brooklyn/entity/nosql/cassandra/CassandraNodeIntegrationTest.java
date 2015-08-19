@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.nosql.cassandra.CassandraNode;
 import org.apache.brooklyn.entity.nosql.cassandra.AstyanaxSupport.AstyanaxSample;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;

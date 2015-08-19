@@ -27,13 +27,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.EntityInternal;
+
 import brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import brooklyn.entity.group.DynamicClusterImpl;
 import org.apache.brooklyn.api.entity.proxying.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.EntityInternal;
+
 import brooklyn.util.text.Strings;
 
 public class HazelcastClusterImpl extends DynamicClusterImpl implements HazelcastCluster {

@@ -25,11 +25,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.management.ObjectName;
 
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.util.flags.SetFromFlag;
 import org.apache.brooklyn.entity.database.Schema;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.api.entity.basic.EntityLocal;
 import brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.api.event.AttributeSensor;

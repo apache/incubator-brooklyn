@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.sensor.enricher.Enrichers;
 import org.apache.brooklyn.sensor.feed.jmx.JmxAttributePollConfig;

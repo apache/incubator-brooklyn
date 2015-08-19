@@ -19,7 +19,7 @@
 package org.apache.brooklyn.demo;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.entity.nosql.couchdb.CouchDBCluster;
 
 /** CouchDB cluster. */

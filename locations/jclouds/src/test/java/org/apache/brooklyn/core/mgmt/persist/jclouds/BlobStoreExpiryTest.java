@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.http.HttpTool;
 import org.apache.brooklyn.util.core.http.HttpToolResponse;

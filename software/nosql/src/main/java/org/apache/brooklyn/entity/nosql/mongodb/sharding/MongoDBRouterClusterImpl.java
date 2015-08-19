@@ -26,10 +26,10 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
-import org.apache.brooklyn.entity.core.EntityPredicates;
+import org.apache.brooklyn.core.entity.EntityPredicates;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.group.AbstractMembershipTrackingPolicy;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
-import org.apache.brooklyn.entity.trait.Startable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

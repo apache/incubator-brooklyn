@@ -20,12 +20,12 @@ package org.apache.brooklyn.entity.nosql.mongodb.sharding;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.entity.nosql.mongodb.AbstractMongoDBServer;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBReplicaSet;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBServer;
 import org.apache.brooklyn.entity.nosql.mongodb.MongoDBTestHelper;
-import org.apache.brooklyn.entity.trait.Startable;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;

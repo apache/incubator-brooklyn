@@ -36,11 +36,11 @@ import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObjectType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.persist.BrooklynMementoPersisterToObjectStore;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceActivityMetrics;
 import org.apache.brooklyn.core.mgmt.rebind.transformer.CompoundTransformer;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
-import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableSet;
 

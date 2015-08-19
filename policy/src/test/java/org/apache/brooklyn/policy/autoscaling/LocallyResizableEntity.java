@@ -21,10 +21,10 @@ package org.apache.brooklyn.policy.autoscaling;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.trait.Resizable;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.test.entity.TestCluster;
-import org.apache.brooklyn.entity.core.AbstractEntity;
-import org.apache.brooklyn.entity.trait.Resizable;
-import org.apache.brooklyn.entity.trait.Startable;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;

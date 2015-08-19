@@ -27,7 +27,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
-import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.core.entity.AbstractApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.core.SimulatedLocation;

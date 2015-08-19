@@ -35,8 +35,8 @@ import javax.management.openmbean.TabularData;
 
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
-import org.apache.brooklyn.entity.annotation.Effector;
-import org.apache.brooklyn.entity.annotation.EffectorParam;
+import org.apache.brooklyn.core.annotation.Effector;
+import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.entity.java.JmxSupport;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.sensor.feed.ConfigToAttributes;

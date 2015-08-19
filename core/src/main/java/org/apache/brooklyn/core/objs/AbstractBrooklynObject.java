@@ -24,10 +24,10 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.internal.ApiObjectsFactory;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl;
 import org.apache.brooklyn.core.objs.proxy.InternalFactory;
-import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.text.Identifiers;

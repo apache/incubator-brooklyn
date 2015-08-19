@@ -20,7 +20,7 @@ package org.apache.brooklyn.entity.database.rubyrep;
 
 import java.net.URI;
 
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.sensor.core.DependentConfiguration;

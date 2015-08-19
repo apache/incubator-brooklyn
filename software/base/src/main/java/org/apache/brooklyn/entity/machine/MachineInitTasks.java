@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.entity.core.EntityInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

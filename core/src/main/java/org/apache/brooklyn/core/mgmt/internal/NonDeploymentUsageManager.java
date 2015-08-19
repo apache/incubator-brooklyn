@@ -22,10 +22,10 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
 import org.apache.brooklyn.core.mgmt.usage.UsageManager;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 
 import com.google.common.base.Predicate;
 

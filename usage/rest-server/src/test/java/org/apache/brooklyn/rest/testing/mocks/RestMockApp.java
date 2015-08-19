@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.testing.mocks;
 
-import org.apache.brooklyn.entity.core.AbstractApplication;
+import org.apache.brooklyn.core.entity.AbstractApplication;
 
 public class RestMockApp extends AbstractApplication {
 }

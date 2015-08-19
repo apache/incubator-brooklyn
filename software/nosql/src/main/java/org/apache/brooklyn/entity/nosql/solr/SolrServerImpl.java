@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.solr;
 
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.sensor.feed.http.HttpFeed;

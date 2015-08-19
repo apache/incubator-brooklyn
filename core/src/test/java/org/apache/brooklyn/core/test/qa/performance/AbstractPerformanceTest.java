@@ -23,9 +23,9 @@ import static org.testng.Assert.assertTrue;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.util.internal.DoubleSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

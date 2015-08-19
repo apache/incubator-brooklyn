@@ -31,10 +31,10 @@ import org.apache.brooklyn.api.sensor.EnricherType;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.rebind.BasicEnricherRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.EntityInternal;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 
 import com.google.common.base.Objects;

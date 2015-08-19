@@ -21,12 +21,12 @@ package org.apache.brooklyn.entity.webapp;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.entity.factory.BasicConfigurableEntityFactory;
+import org.apache.brooklyn.core.entity.factory.ConfigurableEntityFactory;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.factory.ApplicationBuilder;
-import org.apache.brooklyn.entity.factory.BasicConfigurableEntityFactory;
-import org.apache.brooklyn.entity.factory.ConfigurableEntityFactory;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService.ElasticJavaWebAppServiceAwareLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.Assert;

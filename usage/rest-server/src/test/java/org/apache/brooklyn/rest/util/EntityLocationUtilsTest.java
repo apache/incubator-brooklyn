@@ -32,8 +32,8 @@ import org.apache.brooklyn.location.core.internal.LocationInternal;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 

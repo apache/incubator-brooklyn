@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.config.render.RendererHints;
-import org.apache.brooklyn.entity.core.Attributes;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.sensor.core.Sensors;

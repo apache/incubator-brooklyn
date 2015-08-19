@@ -22,10 +22,10 @@ import java.net.URI;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.brooklynnode.EntityHttpClient;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNodeImpl.DeployBlueprintEffectorBody;
-import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.sensor.feed.http.HttpFeed;
 import org.apache.brooklyn.sensor.feed.http.HttpPollConfig;
 import org.apache.brooklyn.sensor.feed.http.HttpValueFunctions;

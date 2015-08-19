@@ -37,8 +37,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.Sanitizer;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.objs.BrooklynTypes;
-import org.apache.brooklyn.entity.core.AbstractEntity;
 import org.apache.brooklyn.sensor.core.Sensors;
 
 import com.google.common.base.Objects.ToStringHelper;

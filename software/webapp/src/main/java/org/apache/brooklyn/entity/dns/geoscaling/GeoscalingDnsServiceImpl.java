@@ -25,11 +25,11 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.Set;
 
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
-import org.apache.brooklyn.entity.lifecycle.ServiceStateLogic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.geo.HostGeoInfo;

@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.core.Entities;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.sensor.feed.AbstractFeed;
 import org.apache.brooklyn.sensor.feed.AttributePollHandler;
 import org.apache.brooklyn.sensor.feed.DelegatingPollHandler;

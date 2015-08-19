@@ -20,12 +20,12 @@ package org.apache.brooklyn.demo;
 
 import java.util.List;
 
-import org.apache.brooklyn.entity.core.AbstractApplication;
-import org.apache.brooklyn.entity.core.Entities;
-import org.apache.brooklyn.entity.core.StartableApplication;
 import org.apache.brooklyn.entity.messaging.amqp.AmqpServer;
 import org.apache.brooklyn.entity.messaging.qpid.QpidBroker;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.core.entity.AbstractApplication;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.StartableApplication;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.util.CommandLineUtil;
 

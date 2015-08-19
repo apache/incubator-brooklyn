@@ -28,11 +28,11 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
 import org.apache.brooklyn.core.mgmt.usage.ApplicationUsage.ApplicationEvent;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage.LocationEvent;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;

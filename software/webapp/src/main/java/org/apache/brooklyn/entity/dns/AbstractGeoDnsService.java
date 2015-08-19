@@ -25,9 +25,9 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
-import org.apache.brooklyn.entity.trait.Startable;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.location.geo.HostGeoInfo;
 import org.apache.brooklyn.sensor.core.BasicAttributeSensor;
 

@@ -24,11 +24,11 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
-import org.apache.brooklyn.entity.core.Attributes;
-import org.apache.brooklyn.entity.core.Entities;
 import org.apache.brooklyn.entity.group.BasicGroup;
-import org.apache.brooklyn.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.entity.proxy.AbstractController;
 import org.apache.brooklyn.entity.proxy.LoadBalancer;
 import org.apache.brooklyn.entity.proxy.TrackingAbstractController;
