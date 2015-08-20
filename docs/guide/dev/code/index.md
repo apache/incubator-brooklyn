@@ -31,7 +31,7 @@ Plenty of examples are in the **examples** sub-dir,
 described [here]({{site.path.guide}}/use/examples).
 {% endcomment %}
 
-Information on using Brooklyn -- configuring locations (in `brooklyn.properties`) 
+Information on using Brooklyn -- configuring locations (in `brooklyn.properties`)
 and adding new projects to a catalog -- can be found in the [User's Guide]({{site.path.guide}}).
 This document is intended to help people become familiar with the codebase.
 
@@ -39,11 +39,11 @@ This document is intended to help people become familiar with the codebase.
 
 Brooklyn is split into the following projects and sub-projects:
 
-* **``camp``**: the components for a server which speaks the CAMP REST API and which understands the CAMP YAML plan language
+* **``camp``**: the components for a server which speaks with the CAMP REST API and understands the CAMP YAML plan language
 * **``api``**: the pure-Java interfaces for interacting with the system
-* **``core``**: the base class implementations for entities and applications, entity traits, locations, policies, sensor and effector support, tasks, and more 
+* **``core``**: the base class implementations for entities and applications, entity traits, locations, policies, sensor and effector support, tasks, and more
 * **``locations``**: specific location integrations
-    * **``jclouds``**: integration with many cloud APIs and providers, via Apache jclouds
+    * **``jclouds``**: integration with many cloud APIs and providers via Apache jclouds
 * **``policies``**: collection of useful policies for automating entity activity  
 * **``software``**: entities which are mainly launched by launched software processes on machines, and collections thereof
     * **``base``**: software process lifecycle abstract classes and drivers (e.g. SSH) 
@@ -54,16 +54,16 @@ Brooklyn is split into the following projects and sub-projects:
     * **``monitoring``**: monitoring tools, including Monit
     * **``osgi``**: OSGi servers 
     * **...**
-* **``utils``**: projects which lower level utilities
-    * **common**: Utility classes and methods developed for Brooklyn but not dependendent on Brooklyn
-    * **groovy**: Groovy extensions and utility classes and methods developed for Brooklyn but not dependendent on Brooklyn
+* **``utils``**: projects with lower level utilities
+    * **common**: Utility classes and methods developed for Brooklyn but not dependent on Brooklyn
+    * **groovy**: Groovy extensions and utility classes and methods developed for Brooklyn but not dependent on Brooklyn
     * **jmx/jmxmp-ssl-agent**: An agent implementation that can be attached to a Java process, to give expose secure JMXMP
     * **jmx/jmxrmi-agent**: An agent implementation that can be attached to a Java process, to give expose JMX-RMI without requiring all high-number ports to be open
-    * **rest-swagger**: Swagger REST API utility classes and methods developed for Brooklyn but not dependendent on Brooklyn
-    * **test-support**: Test utility classes and methods developed for Brooklyn but not dependendent on Brooklyn
+    * **rest-swagger**: Swagger REST API utility classes and methods developed for Brooklyn but not dependent on Brooklyn
+    * **test-support**: Test utility classes and methods developed for Brooklyn but not dependent on Brooklyn
 * **``usage``**: projects which make Brooklyn easier to use, either for end-users or Brooklyn developers
     * **all**: maven project to supply a shaded JAR (containing all dependencies) for convenience
-    * **archetypes**: A maven archetype, for easily generating the structure of a new downstream projects 
+    * **archetypes**: A maven archetype for easily generating the structure of new downstream projects
     * **camp**: Brooklyn bindings for the CAMP REST API
     * **cli**: backing implementation for Brooklyn's command line interface
     * **dist**: builds brooklyn as a downloadable .zip and .tar.gz
@@ -79,7 +79,7 @@ Brooklyn is split into the following projects and sub-projects:
     * **test-support**: provides Brooklyn-specific support for tests, used by nearly all projects in scope ``test``
 * **``docs``**: the markdown source code for this documentation
 * **``examples``**: some canonical examples
-* **``sandbox``**: various projects, entities, and policies which the Brooklyn Project is incubating
+* **``sandbox``**: various projects, entities and policies which the Brooklyn Project is incubating
 
  
 ## Next Steps
