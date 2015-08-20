@@ -108,8 +108,8 @@ public class VanillaSoftwareProcessStreamsIntegrationTest extends BrooklynAppUni
     protected Optional<Task<?>> findTaskOrSubTask(Iterable<? extends Task<?>> tasks, Predicate<? super Task<?>> matcher) {
         List<String> taskNames = Lists.newArrayList();
         Optional<Task<?>> result = findTaskOrSubTaskImpl(tasks, matcher, taskNames);
-        if (!result.isPresent()) {
-            log.info("Task not found matching "+matcher+"; contender names were "+taskNames);
+        if (!result.isPresent() && log.isDebugEnabled()) {
+            log.debug("Task not found matching "+matcher+"; contender names were "+taskNames);
         }
         return result;
     }

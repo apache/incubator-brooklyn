@@ -62,12 +62,14 @@ public class WinRmMachineLocationLiveTest {
     @BeforeClass(alwaysRun=true)
     public void setUpClass() throws Exception {
         mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
-        JcloudsLocation loc = (JcloudsLocation) mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-west-2", ImmutableMap.of(
-                "inboundPorts", ImmutableList.of(5985, 3389),
-                "displayName", "AWS Oregon (Windows)",
-                "imageId", "us-west-2/ami-8fd3f9bf",
-                "hardwareId", "m3.medium",
-                "useJcloudsSshInit", false));
+        JcloudsLocation loc = (JcloudsLocation) mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-west-2", ImmutableMap.<String, Object>builder()
+                .put("inboundPorts", ImmutableList.of(5985, 3389))
+                .put("displayName", "AWS Oregon (Windows)")
+                .put("imageOwner", "801119661308")
+                .put("imageNameRegex", "Windows_Server-2012-R2_RTM-English-64Bit-Base-.*")
+                .put("hardwareId", "m3.medium")
+                .put("useJcloudsSshInit", false)
+                .build());
         machine = (JcloudsWinRmMachineLocation) loc.obtain();
     }
 
