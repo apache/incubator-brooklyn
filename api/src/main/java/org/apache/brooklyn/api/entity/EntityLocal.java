@@ -26,7 +26,6 @@ import org.apache.brooklyn.api.mgmt.SubscriptionManager;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
-import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
@@ -81,31 +80,21 @@ public interface EntityLocal extends Entity {
     <T> T setConfig(HasConfigKey<T> key, Task<T> val);
 
     /**
-     * Sets the {@link AttributeSensor} data for the given attribute to the specified value.
-     * 
-     * This can be used to "enrich" the entity, such as adding aggregated information, 
-     * rolling averages, etc.
-     * 
-     * @return the old value for the attribute (possibly {@code null})
+     * @deprecated since 0.8.0; use {@link SensorSupport#set(AttributeSensor, Object)} via code like {@code sensors().set(attribute, val)}.
      */
     <T> T setAttribute(AttributeSensor<T> attribute, T val);
 
     /**
-     * Atomically modifies the {@link AttributeSensor}, ensuring that only one modification is done
-     * at a time.
-     * 
-     * If the modifier returns {@link Maybe#absent()} then the attribute will be
-     * left unmodified, and the existing value will be returned.
-     * 
-     * For details of the synchronization model used to achieve this, refer to the underlying 
-     * attribute store (e.g. AttributeMap).
-     * 
-     * @return the old value for the attribute (possibly {@code null})
-     * @since 0.7.0-M2
+     * @deprecated since 0.8.0; use {@link SensorSupport#modify(AttributeSensor, Function)} via code like {@code sensors().modify(attribute, modifier)}.
      */
     @Beta
     <T> T modifyAttribute(AttributeSensor<T> attribute, Function<? super T, Maybe<T>> modifier);
 
+    /**
+     * @deprecated since 0.8.0; use {@link SensorSupport#emit(Sensor, Object)} via code like {@code sensors().emit(sensor, val)}.
+     */
+    <T> void emit(Sensor<T> sensor, T value);
+    
     /**
      * @deprecated in 0.5; use {@link #getConfig(ConfigKey)}
      */
@@ -116,14 +105,6 @@ public interface EntityLocal extends Entity {
      */
     <T> T getConfig(HasConfigKey<T> key, T defaultValue);
 
-    /**
-     * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).
-     * <p>
-     * Note that for attribute sensors it is nearly always recommended to use setAttribute, 
-     * as this method will not update local values.
-     */
-    <T> void emit(Sensor<T> sensor, T value);
-    
     /**
      * Allow us to subscribe to data from a {@link Sensor} on another entity.
      * 
