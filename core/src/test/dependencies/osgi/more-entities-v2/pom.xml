@@ -22,7 +22,7 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>jar</packaging>
 
-    <groupId>org.apache.brooklyn.test.resources.osgi</groupId>
+    <groupId>org.apache.brooklyn.test.resources.osgi.evil_twin</groupId>
     <artifactId>brooklyn-test-osgi-more-entities</artifactId>
     <version>0.2.0</version>
 
@@ -36,7 +36,7 @@
         <groupId>org.apache.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.8.0-SNAPSHOT</version><!-- BROOKLYN_VERSION -->
-        <relativePath>../../../../../../pom.xml</relativePath>
+        <relativePath>../../../../../../parent/pom.xml</relativePath>
     </parent>
     <dependencies>
         <dependency>
@@ -69,7 +69,7 @@
                 <version>2.3.2</version>
                 <configuration>
                     <outputDirectory>../../../resources/brooklyn/osgi</outputDirectory>
-                    <finalName>brooklyn-test-osgi-more-entities_${version}</finalName>
+                    <finalName>brooklyn-test-osgi-more-entities_evil-twin_${project.version}</finalName>
                 </configuration>
             </plugin>
             <plugin>
@@ -78,6 +78,7 @@
                 <version>2.5.3</version>
                 <configuration>
                     <instructions>
+                        <Bundle-SymbolicName>org.apache.brooklyn.test.resources.osgi.brooklyn-test-osgi-more-entities</Bundle-SymbolicName>
                         <Bundle-Version>${project.version}</Bundle-Version>
                     </instructions>
                 </configuration>

@@ -7,6 +7,10 @@ are included in source control to speed up build times
 (as these projects do not change much).  These projects are
 NOT built as part of the normal brooklyn build.
 
+To rebuild all:
+
+    for x in *entities* ; do pushd $x ; mvn clean install ; popd ; done
+
 See OsgiTestResources.java for information on the bundles.
 
 ----
