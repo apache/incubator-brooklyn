@@ -257,7 +257,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
             // optimisation would either use newTaskEndCallback property on task to submit
             // or use some kind of single threaded executor for the queued tasks
             Task<List<Object>> secondaryJobMaster = Tasks.<List<Object>>builder().dynamic(false)
-                    .name("DST manager (internal)")
+                    .displayName("DST manager (internal)")
                     // TODO marking it transient helps it be GC'd sooner, 
                     // but ideally we wouldn't have this,
                     // or else it would be a child

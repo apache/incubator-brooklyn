@@ -279,7 +279,7 @@ public class InternalEntityFactory extends InternalFactory {
          * of the parent entity creating this child entity
          * (note however such subtasks are currently filtered based on parent entity so is excluded).
          */
-        ((EntityInternal)entity).getExecutionContext().submit(Tasks.builder().dynamic(false).name("Entity initialization")
+        ((EntityInternal)entity).getExecutionContext().submit(Tasks.builder().dynamic(false).displayName("Entity initialization")
                 .tag(BrooklynTaskTags.tagForContextEntity(entity))
                 .tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
                 .body(new Runnable() {

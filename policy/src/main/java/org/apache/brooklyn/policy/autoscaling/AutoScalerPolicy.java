@@ -1008,7 +1008,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
         if (LOG.isDebugEnabled()) LOG.debug("{} requesting resize to {}; current {}, min {}, max {}", 
                 new Object[] {this, desiredPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
         
-        Entities.submit(entity, Tasks.<Void>builder().name("Auto-scaler")
+        Entities.submit(entity, Tasks.<Void>builder().displayName("Auto-scaler")
             .description("Auto-scaler recommending resize from "+currentPoolSize+" to "+desiredPoolSize)
             .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
             .body(new Callable<Void>() {

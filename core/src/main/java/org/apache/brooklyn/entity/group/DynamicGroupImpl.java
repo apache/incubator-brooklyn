@@ -164,7 +164,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
         }
         setChangeListener = new MyEntitySetChangeListener();
         ((ManagementContextInternal) getManagementContext()).addEntitySetListener(setChangeListener);
-        Task<Object> rescan = Tasks.builder().name("rescan entities").body(
+        Task<Object> rescan = Tasks.builder().displayName("rescan entities").body(
             new Runnable() {
                 @Override
                 public void run() {

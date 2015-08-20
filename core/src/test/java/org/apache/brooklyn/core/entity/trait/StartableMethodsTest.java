@@ -104,7 +104,7 @@ public class StartableMethodsTest extends BrooklynAppUnitTestSupport {
             listener.events.clear();
             
             try {
-                Task<?> task = Tasks.builder().name("stopSequentially")
+                Task<?> task = Tasks.builder().displayName("stopSequentially")
                         .body(new Runnable() {
                             @Override public void run() {
                                 StartableMethods.stopSequentially(ImmutableList.of(entity, entity2));

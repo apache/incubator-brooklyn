@@ -198,7 +198,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
 
     private void queueWaitExitTask() {
         //give time to the process to die gracefully after closing the shutdown call
-        DynamicTasks.queue(Tasks.builder().name("wait for graceful stop").body(new Runnable() {
+        DynamicTasks.queue(Tasks.builder().displayName("wait for graceful stop").body(new Runnable() {
             @Override
             public void run() {
                 DynamicTasks.markInessential();

@@ -128,7 +128,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
      * If the target goes away, this task marks itself inessential
      * before failing so as not to cause a parent task to fail. */
     static <T> Task<T> whenServiceUp(final Entity target, final TaskAdaptable<T> task, String name) {
-        return Tasks.<T>builder().name(name).dynamic(true).body(new Callable<T>() {
+        return Tasks.<T>builder().displayName(name).dynamic(true).body(new Callable<T>() {
             @Override
             public T call() {
                 try {
@@ -176,7 +176,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         log.debug("Deploying "+targetName+"->"+url+" across cluster "+this+"; WARs now "+getConfig(WARS_BY_CONTEXT));
 
         Iterable<CanDeployAndUndeploy> targets = Iterables.filter(getChildren(), CanDeployAndUndeploy.class);
-        TaskBuilder<Void> tb = Tasks.<Void>builder().parallel(true).name("Deploy "+targetName+" to cluster (size "+Iterables.size(targets)+")");
+        TaskBuilder<Void> tb = Tasks.<Void>builder().parallel(true).displayName("Deploy "+targetName+" to cluster (size "+Iterables.size(targets)+")");
         for (Entity target: targets) {
             tb.add(whenServiceUp(target, Effectors.invocation(target, DEPLOY, MutableMap.of("url", url, "targetName", targetName)),
                 "Deploy "+targetName+" to "+target+" when ready"));
@@ -203,7 +203,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         log.debug("Undeploying "+targetName+" across cluster "+this+"; WARs now "+getConfig(WARS_BY_CONTEXT));
 
         Iterable<CanDeployAndUndeploy> targets = Iterables.filter(getChildren(), CanDeployAndUndeploy.class);
-        TaskBuilder<Void> tb = Tasks.<Void>builder().parallel(true).name("Undeploy "+targetName+" across cluster (size "+Iterables.size(targets)+")");
+        TaskBuilder<Void> tb = Tasks.<Void>builder().parallel(true).displayName("Undeploy "+targetName+" across cluster (size "+Iterables.size(targets)+")");
         for (Entity target: targets) {
             tb.add(whenServiceUp(target, Effectors.invocation(target, UNDEPLOY, MutableMap.of("targetName", targetName)),
                 "Undeploy "+targetName+" at "+target+" when ready"));
@@ -248,9 +248,9 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         log.debug("Redeplying all WARs across cluster "+this+": "+getConfig(WARS_BY_CONTEXT));
         
         Iterable<CanDeployAndUndeploy> targetEntities = Iterables.filter(getChildren(), CanDeployAndUndeploy.class);
-        TaskBuilder<Void> tb = Tasks.<Void>builder().parallel(true).name(redeployPrefix+" across cluster (size "+Iterables.size(targetEntities)+")");
+        TaskBuilder<Void> tb = Tasks.<Void>builder().parallel(true).displayName(redeployPrefix+" across cluster (size "+Iterables.size(targetEntities)+")");
         for (Entity targetEntity: targetEntities) {
-            TaskBuilder<Void> redeployAllToTarget = Tasks.<Void>builder().name(redeployPrefix+" at "+targetEntity+" (after ready check)");
+            TaskBuilder<Void> redeployAllToTarget = Tasks.<Void>builder().displayName(redeployPrefix+" at "+targetEntity+" (after ready check)");
             for (String warContextPath: wars.keySet()) {
                 redeployAllToTarget.add(Effectors.invocation(targetEntity, DEPLOY, MutableMap.of("url", wars.get(warContextPath), "targetName", warContextPath)));
             }

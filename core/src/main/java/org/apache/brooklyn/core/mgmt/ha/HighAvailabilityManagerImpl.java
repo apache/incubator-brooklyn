@@ -557,7 +557,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         };
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
             @Override public Task<?> call() {
-                return Tasks.builder().dynamic(false).body(job).name("HA poller task").tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
+                return Tasks.builder().dynamic(false).body(job).displayName("HA poller task").tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
                     .description("polls HA status to see whether this node should promote").build();
             }
         };

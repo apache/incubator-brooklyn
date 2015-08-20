@@ -361,7 +361,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             if (updateNeeded) return;
             updateNeeded = true;
             LOG.debug("queueing an update-needed task for "+this+"; update will occur shortly");
-            Entities.submit(this, Tasks.builder().name("update-needed").body(new Runnable() {
+            Entities.submit(this, Tasks.builder().displayName("update-needed").body(new Runnable() {
                 @Override
                 public void run() {
                     if (updateNeeded)

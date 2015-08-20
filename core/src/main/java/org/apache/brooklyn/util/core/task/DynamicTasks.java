@@ -264,12 +264,12 @@ public class DynamicTasks {
 
     /** @see #queue(org.apache.brooklyn.api.mgmt.TaskAdaptable)  */
     public static <T> Task<T> queue(String name, Callable<T> job) {
-        return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
+        return DynamicTasks.queue(Tasks.<T>builder().displayName(name).body(job).build());
     }
 
     /** @see #queue(org.apache.brooklyn.api.mgmt.TaskAdaptable)  */
     public static <T> Task<T> queue(String name, Runnable job) {
-        return DynamicTasks.queue(Tasks.<T>builder().name(name).body(job).build());
+        return DynamicTasks.queue(Tasks.<T>builder().displayName(name).body(job).build());
     }
 
     /** queues the task if needed, i.e. if it is not yet submitted (so it will run), 

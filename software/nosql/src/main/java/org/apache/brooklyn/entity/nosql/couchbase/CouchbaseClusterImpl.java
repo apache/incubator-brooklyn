@@ -525,7 +525,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     }
 
     public void createBucket(final Entity primaryNode, final String bucketName, final String bucketType, final Integer bucketPort, final Integer bucketRamSize, final Integer bucketReplica) {
-        DynamicTasks.queueIfPossible(TaskBuilder.<Void>builder().name("Creating bucket " + bucketName).body(
+        DynamicTasks.queueIfPossible(TaskBuilder.<Void>builder().displayName("Creating bucket " + bucketName).body(
                 new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {

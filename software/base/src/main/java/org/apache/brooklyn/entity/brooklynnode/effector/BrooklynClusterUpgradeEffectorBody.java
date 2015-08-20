@@ -157,7 +157,7 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
     }
 
     private TaskAdaptable<Collection<Entity>> newCreateNodesTask(int size, String name) {
-        return Tasks.<Collection<Entity>>builder().name(name).body(new CreateNodesCallable(size)).build();
+        return Tasks.<Collection<Entity>>builder().displayName(name).body(new CreateNodesCallable(size)).build();
     }
 
     protected class CreateNodesCallable implements Callable<Collection<Entity>> {

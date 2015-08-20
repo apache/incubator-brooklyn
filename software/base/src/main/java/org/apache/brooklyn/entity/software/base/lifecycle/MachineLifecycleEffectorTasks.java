@@ -355,7 +355,7 @@ public abstract class MachineLifecycleEffectorTasks {
      * and returns that machine. The task can be used as a supplier to subsequent methods.
      */
     protected Task<MachineLocation> provisionAsync(final MachineProvisioningLocation<?> location) {
-        return DynamicTasks.queue(Tasks.<MachineLocation>builder().name("provisioning (" + location.getDisplayName() + ")").body(
+        return DynamicTasks.queue(Tasks.<MachineLocation>builder().displayName("provisioning (" + location.getDisplayName() + ")").body(
                 new ProvisionMachineTask(location)).build());
     }
 

@@ -38,7 +38,7 @@ import com.google.common.collect.Iterables;
 /** Convenience for creating tasks; note that DynamicSequentialTask is the default */
 public class TaskBuilder<T> {
 
-    String name = null;
+    String displayName = null;
     String description = null;
     Callable<T> body = null;
     Boolean swallowChildrenFailures = null;
@@ -51,9 +51,17 @@ public class TaskBuilder<T> {
     public static <T> TaskBuilder<T> builder() {
         return new TaskBuilder<T>();
     }
-    
+
+    /**
+     * @deprecated since 0.8.0; use {@link #displayName(String)}
+     */
+    @Deprecated
     public TaskBuilder<T> name(String name) {
-        this.name = name;
+        return displayName(name);
+    }
+    
+    public TaskBuilder<T> displayName(String displayName) {
+        this.displayName = displayName;
         return this;
     }
     
@@ -130,7 +138,7 @@ public class TaskBuilder<T> {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Task<T> build() {
         MutableMap<String, Object> taskFlags = MutableMap.copyOf(flags);
-        if (name!=null) taskFlags.put("displayName", name);
+        if (displayName!=null) taskFlags.put("displayName", displayName);
         if (description!=null) taskFlags.put("description", description);
         if (!tags.isEmpty()) taskFlags.put("tags", tags);
         
@@ -178,6 +186,6 @@ public class TaskBuilder<T> {
     
     @Override
     public String toString() {
-        return super.toString()+"["+name+"]";
+        return super.toString()+"["+displayName+"]";
     }
 }

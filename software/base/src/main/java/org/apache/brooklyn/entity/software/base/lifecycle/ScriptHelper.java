@@ -281,7 +281,7 @@ public class ScriptHelper {
     /** creates a task which will execute this script; note this can only be run once per instance of this class */
     public synchronized Task<Integer> newTask() {
         if (task!=null) throw new IllegalStateException("task can only be generated once");
-        TaskBuilder<Integer> tb = Tasks.<Integer>builder().name("ssh: "+summary).body(
+        TaskBuilder<Integer> tb = Tasks.<Integer>builder().displayName("ssh: "+summary).body(
                 new Callable<Integer>() {
                     public Integer call() throws Exception {
                         return executeInternal();

@@ -57,7 +57,7 @@ public class SshFetchTaskWrapper implements TaskWrapper<String> {
     SshFetchTaskWrapper(SshFetchTaskFactory factory) {
         this.remoteFile = Preconditions.checkNotNull(factory.remoteFile, "remoteFile");
         this.machine = Preconditions.checkNotNull(factory.machine, "machine");
-        TaskBuilder<String> tb = TaskBuilder.<String>builder().dynamic(false).name("ssh fetch "+factory.remoteFile);
+        TaskBuilder<String> tb = TaskBuilder.<String>builder().dynamic(false).displayName("ssh fetch "+factory.remoteFile);
         task = tb.body(new SshFetchJob()).build();
         config = factory.getConfig();
     }

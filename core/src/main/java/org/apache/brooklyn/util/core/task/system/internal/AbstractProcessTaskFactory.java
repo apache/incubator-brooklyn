@@ -168,7 +168,7 @@ public abstract class AbstractProcessTaskFactory<T extends AbstractProcessTaskFa
 
     /** creates the TaskBuilder which can be further customized; typically invoked by the initial {@link #newTask()} */
     public TaskBuilder<Object> constructCustomizedTaskBuilder() {
-        TaskBuilder<Object> tb = TaskBuilder.builder().dynamic(false).name("ssh: "+getSummary());
+        TaskBuilder<Object> tb = TaskBuilder.builder().dynamic(false).displayName("ssh: "+getSummary());
         
         tb.tag(BrooklynTaskTags.tagForStream(BrooklynTaskTags.STREAM_STDIN, 
                 Streams.byteArrayOfString(Strings.join(commands, "\n"))));

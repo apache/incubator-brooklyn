@@ -302,7 +302,7 @@ public class RebindManagerImpl implements RebindManager {
         
         Callable<Task<?>> taskFactory = new Callable<Task<?>>() {
             @Override public Task<Void> call() {
-                return Tasks.<Void>builder().dynamic(false).name("rebind (periodic run").body(new Callable<Void>() {
+                return Tasks.<Void>builder().dynamic(false).displayName("rebind (periodic run").body(new Callable<Void>() {
                     public Void call() {
                         try {
                             rebind(null, null, mode);

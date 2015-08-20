@@ -856,7 +856,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     }
     
     private static <T> Task<T> newGoneTaskFor(Task<?> task) {
-        Task<T> t = Tasks.<T>builder().dynamic(false).name(task.getDisplayName())
+        Task<T> t = Tasks.<T>builder().dynamic(false).displayName(task.getDisplayName())
             .description("Details of the original task "+task+" have been forgotten.")
             .body(Callables.returning((T)null)).build();
         ((BasicTask<T>)t).ignoreIfNotRun();

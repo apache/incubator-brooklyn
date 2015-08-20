@@ -425,7 +425,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         Callable<Task<?>> cleanupTaskFactory = new Callable<Task<?>>() {
             @Override public Task<Void> call() {
                 return Tasks.<Void>builder().dynamic(false).tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
-                    .name("ssh-location cache cleaner").body(new Callable<Void>() {
+                    .displayName("ssh-location cache cleaner").body(new Callable<Void>() {
                     @Override public Void call() {
                         try {
                             if (sshPoolCacheOrNull != null) sshPoolCacheOrNull.cleanUp();

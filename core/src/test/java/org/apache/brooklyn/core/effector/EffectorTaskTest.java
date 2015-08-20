@@ -111,7 +111,7 @@ public class EffectorTaskTest extends BrooklynAppUnitTestSupport {
         return new EffectorTaskFactory<Integer>() {
             @Override
             public Task<Integer> newTask(final Entity entity, final Effector<Integer> effector, final ConfigBag parameters) {
-                return TaskBuilder.<Integer>builder().name("times").body(new Callable<Integer>() { public Integer call() { 
+                return TaskBuilder.<Integer>builder().displayName("times").body(new Callable<Integer>() { public Integer call() { 
                     return DynamicTasks.get( x.newTask(entity, effector, parameters) )*y; 
                 } }).build();
             }
@@ -200,26 +200,26 @@ public class EffectorTaskTest extends BrooklynAppUnitTestSupport {
     // ----------------- syntax for more complex -- an effector using subtasks
     
     public static Task<Integer> add(final int x, final int y) {
-        return TaskBuilder.<Integer>builder().name("add").body(new Callable<Integer>() { public Integer call() { return x+y; } }).build();
+        return TaskBuilder.<Integer>builder().displayName("add").body(new Callable<Integer>() { public Integer call() { return x+y; } }).build();
     }
 
     public static Task<Integer> add(final Task<Integer> x, final int y) {
-        return TaskBuilder.<Integer>builder().name("add").body(new Callable<Integer>() { public Integer call() { return DynamicTasks.get(x)+y; } }).build();
+        return TaskBuilder.<Integer>builder().displayName("add").body(new Callable<Integer>() { public Integer call() { return DynamicTasks.get(x)+y; } }).build();
     }
 
     public static Task<Integer> addBasic(final Task<Integer> x, final int y) {
-        return TaskBuilder.<Integer>builder().name("add (not dynamic)").dynamic(false).body(new Callable<Integer>() { public Integer call() {
+        return TaskBuilder.<Integer>builder().displayName("add (not dynamic)").dynamic(false).body(new Callable<Integer>() { public Integer call() {
             Preconditions.checkState(x.isSubmitted()); 
             return x.getUnchecked()+y; 
         } }).build();
     }
 
     public static Task<Integer> times(final int x, final int y) {
-        return TaskBuilder.<Integer>builder().name("times").body(new Callable<Integer>() { public Integer call() { return x*y; } }).build();
+        return TaskBuilder.<Integer>builder().displayName("times").body(new Callable<Integer>() { public Integer call() { return x*y; } }).build();
     }
 
     public static Task<Integer> times(final Task<Integer> x, final int y) {
-        return TaskBuilder.<Integer>builder().name("times").body(new Callable<Integer>() { public Integer call() { return DynamicTasks.get(x)*y; } }).build();
+        return TaskBuilder.<Integer>builder().displayName("times").body(new Callable<Integer>() { public Integer call() { return DynamicTasks.get(x)*y; } }).build();
     }
     
     public static final Effector<Integer> TWO_X_PLUS_ONE = Effectors.effector(Integer.class, "twoXPlusOne")
