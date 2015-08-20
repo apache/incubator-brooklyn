@@ -21,6 +21,16 @@ on the classpath.
 
 The jar contains its source code. 
 
+Assuming the `dist` is built, you can expand and rebuild it 
+(optionally making edits halfway through) with:
+
+    mkdir tmp ; cd tmp ; jar xvf ../brooklyn-AppInCatalog.jar
+    javac -cp "../../../../../../../../../../../../usage/dist/target/brooklyn-dist/brooklyn/lib/brooklyn/*" org/apache/brooklyn/core/test/rebind/sample_app_in_catalog/AppInCatalog.java 
+    jar cvf ../brooklyn-AppInCatalog.jar.new .
+    cd ..
+    mv brooklyn-AppInCatalog.jar.new brooklyn-AppInCatalog.jar
+    rm -rf tmp
+
 Under Apache conventions, binary files are not part of the source
 release. If you are using the source release, you may add this file
 by copying it from the master repository, which is accessible on the

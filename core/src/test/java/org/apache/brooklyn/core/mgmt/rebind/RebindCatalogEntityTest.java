@@ -63,8 +63,8 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
      * }
      */
 
-    private static final String JAR_PATH = "/brooklyn/entity/rebind/brooklyn-AppInCatalog.jar";
-    private static final String APP_CLASSNAME = "brooklyn.entity.rebind.AppInCatalog";
+    private static final String JAR_PATH = "/org/apache/brooklyn/core/test/rebind/sample-app-in-catalog/brooklyn-AppInCatalog.jar";
+    private static final String APP_CLASSNAME = "org.apache.brooklyn.core.test.rebind.sample_app_in_catalog.AppInCatalog";
 
     private URL url;
 
@@ -94,7 +94,7 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     //       AbstractMemento.injectTypeClass(Class)
     //
     // NB: this behaviour is generally deprecated in favour of OSGi now.
-    // @Test FIXME [BROOKLYN-162] 
+    @Test 
     public void testRestoresAppFromCatalogClassloader() throws Exception {
         @SuppressWarnings("unchecked")
         Class<? extends AbstractApplication> appClazz = (Class<? extends AbstractApplication>) new UrlClassLoader(url).loadClass(APP_CLASSNAME);
@@ -117,10 +117,9 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
     
     @Test(invocationCount=100, groups="Integration")
     public void testRestoresAppFromCatalogClassloaderManyTimes() throws Exception {
-        // FIXME [BROOKLYN-162]
-    	// Need to fix package name and rebuild brooklyn-AppInCatalog.jar
+	    // Need to fix package name and rebuild brooklyn-AppInCatalog.jar
     	//  or better add it as a new test-bundles subproject
-    	// testRestoresAppFromCatalogClassloader();
+    	testRestoresAppFromCatalogClassloader();
     }
     
     // TODO Not using RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
