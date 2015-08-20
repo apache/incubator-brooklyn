@@ -15,14 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-The file brooklyn-AppInCatalog.txt is used in RebindCatalogEntityTest, 
-to test catalog.addItem where that item is in a jar not originally
-on the classpath.
+The file brooklyn-test-osgi-entities.jar is for testing a deployment of
+an OSGi bundle containing entities.
 
-The jar contains its source code. 
+The source is in core/src/test/dependencies/osgi/more-entities-v2-evil-twin
 
 Under Apache conventions, binary files are not part of the source
 release. If you are using the source release, you may add this file
 by copying it from the master repository, which is accessible on the
 web at https://github.com/apache/incubator-brooklyn
-~

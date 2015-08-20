@@ -118,7 +118,7 @@ public class OsgiStandaloneTest {
     @Test
     public void testBootBundle() throws Exception {
         Bundle bundle = installFromClasspath(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
-        Class<?> bundleCls = bundle.loadClass("brooklyn.osgi.tests.SimpleEntity");
+        Class<?> bundleCls = bundle.loadClass("org.apache.brooklyn.test.osgi.entities.SimpleEntity");
         Assert.assertEquals(Entity.class,  bundle.loadClass(Entity.class.getName()));
         Assert.assertEquals(Entity.class, bundleCls.getClassLoader().loadClass(Entity.class.getName()));
     }
@@ -225,14 +225,14 @@ public class OsgiStandaloneTest {
         ManifestHelper helper = Osgis.ManifestHelper.forManifest(jarIn.getManifest());
         jarIn.close();
         Assert.assertEquals(helper.getVersion().toString(), "0.1.0");
-        Assert.assertTrue(helper.getExportedPackages().contains("brooklyn.osgi.tests"));
+        Assert.assertTrue(helper.getExportedPackages().contains("org.apache.brooklyn.test.osgi.entities"));
     }
     
     @Test
     public void testLoadOsgiBundleDependencies() throws Exception {
         Bundle bundle = installFromClasspath(BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         Assert.assertNotNull(bundle);
-        Class<?> aClass = bundle.loadClass("brooklyn.osgi.tests.SimpleApplicationImpl");
+        Class<?> aClass = bundle.loadClass("org.apache.brooklyn.test.osgi.entities.SimpleApplicationImpl");
         Object aInst = aClass.newInstance();
         Assert.assertNotNull(aInst);
     }

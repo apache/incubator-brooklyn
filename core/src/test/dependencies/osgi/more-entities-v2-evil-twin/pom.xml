@@ -36,14 +36,8 @@
         <groupId>org.apache.brooklyn</groupId>
         <artifactId>brooklyn-parent</artifactId>
         <version>0.8.0-SNAPSHOT</version><!-- BROOKLYN_VERSION -->
-        <relativePath>../../../parent/pom.xml</relativePath>
+        <relativePath>../../../../../../parent/pom.xml</relativePath>
     </parent>
-
-    <properties>
-        <maven.install.skip>true</maven.install.skip>
-        <maven.deploy.skip>true</maven.deploy.skip>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
@@ -69,6 +63,15 @@
     
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <outputDirectory>../../../resources/brooklyn/osgi</outputDirectory>
+                    <finalName>brooklyn-test-osgi-more-entities_evil-twin_${project.version}</finalName>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>

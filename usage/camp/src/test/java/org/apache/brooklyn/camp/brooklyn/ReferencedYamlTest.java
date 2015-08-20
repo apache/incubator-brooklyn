@@ -152,7 +152,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
         Collection<Entity> children = app.getChildren();
         Assert.assertEquals(children.size(), 1);
         Entity child = Iterables.getOnlyElement(children);
-        Assert.assertEquals(child.getEntityType().getName(), "brooklyn.osgi.tests.SimpleEntity");
+        Assert.assertEquals(child.getEntityType().getName(), "org.apache.brooklyn.test.osgi.entities.SimpleEntity");
 
         deleteCatalogEntity(parentCatalogId);
     }

@@ -20,7 +20,7 @@
 
 <catalog>
     <name>OSGi catalogue</name>
-    <template name="Osgi App" type="brooklyn.osgi.tests.SimpleApplication">
+    <template name="Osgi App" type="org.apache.brooklyn.test.osgi.entities.SimpleApplication">
         <symbolicName>OsgiApp</symbolicName>
         <libraries>
             <bundle>${osgi-entities-path}</bundle>

@@ -529,7 +529,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         Assert.assertNotNull(spec);
     }
     
-    // @Test FIXME [BROOKLYN-161]
+    @Test
     public void testLoadResourceFromBundle() throws Exception {
         String id = "resource.test";
         addCatalogOSGiEntity(id, SIMPLE_ENTITY_TYPE);
@@ -538,7 +538,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "  - serviceType: "+ver(id);
         Entity app = createAndStartApplication(yaml);
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        InputStream icon = new ResourceUtils(simpleEntity).getResourceFromUrl("classpath:/brooklyn/osgi/tests/icon.gif");
+        InputStream icon = new ResourceUtils(simpleEntity).getResourceFromUrl("classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif");
         assertTrue(icon != null);
         icon.close();
     }
@@ -594,7 +594,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         }
     }
 
-    // @Test FIXME [BROOKLYN-161]
+    @Test
     public void testOsgiNotLeakingToParent() {
         addCatalogOSGiEntity(SIMPLE_ENTITY_TYPE);
         try {
@@ -611,7 +611,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         }
     }
 
-    // @Test FIXME [BROOKLYN-161]
+    @Test
     public void testConfigAppliedToCatalogItem() throws Exception {
         addCatalogOSGiEntity("test", TestEntity.class.getName());
         String testName = "test-applies-config-on-catalog-item";
@@ -624,7 +624,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
 
-    // @Test FIXME [BROOKLYN-161]
+    @Test
     public void testFlagsAppliesToCatalogItem() throws Exception {
         addCatalogOSGiEntity("test", TestEntity.class.getName());
         String testName = "test-applies-config-on-catalog-item";
@@ -636,7 +636,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
 
-    // @Test FIXME [BROOKLYN-161]
+    @Test
     public void testExplicitFlagsAppliesToCatalogItem() throws Exception {
         addCatalogOSGiEntity("test", TestEntity.class.getName());
         String testName = "test-applies-config-on-catalog-item";
@@ -650,7 +650,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
     
 
-    // @Test FIXME [BROOKLYN-161]
+    @Test
     public void testConfigAppliedToCatalogItemImpl() throws Exception {
         addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
         String testName = "test-applies-config-on-catalog-item";
@@ -663,7 +663,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
 
-    // @Test FIXME [BROOKLYN-161]
+    @Test
     public void testFlagsAppliesToCatalogItemImpl() throws Exception {
         addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
         String testName = "test-applies-config-on-catalog-item";
@@ -675,7 +675,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
 
-    // @Test FIXME [BROOKLYN-161]
+    @Test
     public void testExplicitFlagsAppliesToCatalogItemImpl() throws Exception {
         addCatalogOSGiEntity("test", TestEntityImpl.class.getName());
         String testName = "test-applies-config-on-catalog-item";

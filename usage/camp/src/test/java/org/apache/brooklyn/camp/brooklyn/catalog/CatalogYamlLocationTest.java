@@ -47,7 +47,7 @@ import com.google.common.collect.Lists;
 public class CatalogYamlLocationTest extends AbstractYamlTest {
     private static final String LOCALHOST_LOCATION_SPEC = "localhost";
     private static final String LOCALHOST_LOCATION_TYPE = LocalhostMachineProvisioningLocation.class.getName();
-    private static final String SIMPLE_LOCATION_TYPE = "brooklyn.osgi.tests.SimpleLocation";
+    private static final String SIMPLE_LOCATION_TYPE = "org.apache.brooklyn.test.osgi.entities.SimpleLocation";
 
     @AfterMethod
     public void tearDown() {

@@ -96,7 +96,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
                     "  - serviceType: org.apache.brooklyn.core.test.entity.TestEntity",
                     "    name: Child Entity",
                     "    brooklyn.policies:",
-                    "    - policyType: brooklyn.test.policy.TestPolicy",
+                    "    - policyType: org.apache.brooklyn.core.test.policy.TestPolicy",
                     "      brooklyn.config:",
                     "        test.confName: Name from YAML",
                     "        test.attributeSensor: $brooklyn:sensor(\"org.apache.brooklyn.core.test.entity.TestEntity\", \"test.name\")"));

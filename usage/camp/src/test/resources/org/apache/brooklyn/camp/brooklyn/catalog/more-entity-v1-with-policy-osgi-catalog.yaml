@@ -17,7 +17,7 @@
 # under the License.
 #
 services:
-- type: brooklyn.osgi.tests.more.MoreEntity
+- type: org.apache.brooklyn.test.osgi.entities.more.MoreEntity
   brooklyn.policies:
   - type: simple-policy:1.0
 

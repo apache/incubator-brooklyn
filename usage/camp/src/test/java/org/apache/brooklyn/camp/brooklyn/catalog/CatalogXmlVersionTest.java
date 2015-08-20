@@ -39,7 +39,7 @@ public class CatalogXmlVersionTest extends AbstractCatalogXmlTest {
                 {"BasicApp"}, // test that items with symbolicName not matching the type work
                 {"BasicApp:0.0.0.SNAPSHOT"},
                 {"BasicApp:2.0"},
-                {"brooklyn.osgi.tests.SimpleApplication"}, //test that classpath is used
+                {"org.apache.brooklyn.test.osgi.entities.SimpleApplication"}, //test that classpath is used
         };
     }
 

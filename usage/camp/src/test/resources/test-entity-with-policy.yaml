@@ -27,7 +27,7 @@ services:
     serviceLiteralValue1: Foo
     serviceLiteralValue2: Bar
   brooklyn.policies:
-  - policyType: brooklyn.test.policy.TestPolicy
+  - policyType: org.apache.brooklyn.core.test.policy.TestPolicy
     brooklyn.config:
       policyLiteralValue1: Hello
       policyLiteralValue2: World

@@ -168,7 +168,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         OsgiVersionMoreEntityTest.assertV2MethodCall(moreEntityV2);
     }
 
-    // @Test FIXME: https://issues.apache.org/jira/browse/BROOKLYN-161
+    @Test
     public void testMoreEntityV2AutoscanWithClasspath() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.2.0.jar");
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-entities.jar");
@@ -183,7 +183,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         Assert.assertEquals(item.getCatalogItemType(), CatalogItemType.ENTITY);
         
         // this refers to the java item, where the libraries are defined
-        item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "brooklyn.osgi.tests.more.MoreEntity");
+        item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "org.apache.brooklyn.test.osgi.entities.more.MoreEntity");
         Assert.assertEquals(item.getVersion(), "2.0.test_java");
         Assert.assertEquals(item.getLibraries().size(), 2);
         
@@ -195,7 +195,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         OsgiVersionMoreEntityTest.assertV2MethodCall(moreEntity);
     }
 
-    // @Test FIXME: https://issues.apache.org/jira/browse/BROOKLYN-161
+    @Test
     public void testMorePolicyV2AutoscanWithClasspath() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.2.0.jar");
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-entities.jar");
@@ -210,7 +210,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         Assert.assertEquals(item.getCatalogItemType(), CatalogItemType.POLICY);
         
         // this refers to the java item, where the libraries are defined
-        item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "brooklyn.osgi.tests.more.MorePolicy");
+        item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "org.apache.brooklyn.test.osgi.entities.more.MorePolicy");
         Assert.assertEquals(item.getVersion(), "2.0.test_java");
         Assert.assertEquals(item.getLibraries().size(), 2);
         
@@ -226,7 +226,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         OsgiVersionMoreEntityTest.assertV2MethodCall(morePolicy);
     }
 
-    // @Test FIXME: https://issues.apache.org/jira/browse/BROOKLYN-161
+    @Test
     public void testAutoscanWithClasspathCanCreateSpecs() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.2.0.jar");
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-entities.jar");

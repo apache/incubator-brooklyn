@@ -32,14 +32,14 @@
         <symbolicName>org.apache.brooklyn.camp.brooklyn.catalog.TestBasicApp</symbolicName>
         <!-- Tests that "java:" prefix won't load an old-style catalog item with the same id -->
     </template>
-    <template name="Osgi App" type="brooklyn.osgi.tests.SimpleApplication">
+    <template name="Osgi App" type="org.apache.brooklyn.test.osgi.entities.SimpleApplication">
         <symbolicName>OsgiApp</symbolicName>
         <libraries>
             <bundle>${osgi-entities-path}</bundle>
         </libraries>
     </template>
     <catalog>
-        <template name="Simple App" type="brooklyn.osgi.tests.SimpleApplication" />
+        <template name="Simple App" type="org.apache.brooklyn.test.osgi.entities.SimpleApplication" />
         <classpath>
             <entry>${osgi-entities-path}</entry>
         </classpath>

@@ -28,5 +28,5 @@ brooklyn.catalog:
     - classpath:/brooklyn/osgi/brooklyn-test-osgi-entities.jar
   - item:
       id: more-entity
-      type: brooklyn.osgi.tests.more.MoreEntity
+      type: org.apache.brooklyn.test.osgi.entities.more.MoreEntity
       version: 2.0.test
