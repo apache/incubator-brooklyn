@@ -41,8 +41,8 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     private ManagementContext mgmt;
 
     @Override
-    public String getName() {
-        return YAML_CAMP_PLAN_TYPE;
+    public String getShortDescription() {
+        return "Brooklyn OASIS CAMP interpreter";
     }
 
     @Override
@@ -51,7 +51,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     }
 
     @Override
-    public <T extends Application> EntitySpec<T> createApplicationSpec(String plan) {
+    public EntitySpec<? extends Application> createApplicationSpec(String plan) {
       CampPlatform camp = CampCatalogUtils.getCampPlatform(mgmt);
       AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(plan) );
       AssemblyTemplateInstantiator instantiator;
@@ -62,9 +62,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
       }
       if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
           BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-          @SuppressWarnings("unchecked")
-          EntitySpec<T> createSpec = (EntitySpec<T>) ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
-          return createSpec;
+          return ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
       } else {
           // The unknown instantiator can create the app (Assembly), but not a spec.
           // Currently, all brooklyn plans should produce the above.

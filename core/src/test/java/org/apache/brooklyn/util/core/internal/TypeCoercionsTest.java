@@ -19,6 +19,7 @@
 package org.apache.brooklyn.util.core.internal;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -67,6 +68,7 @@ public class TypeCoercionsTest {
         assertEquals(TypeCoercions.coerce("true", Boolean.class), (Boolean)true);
         assertEquals(TypeCoercions.coerce("False", Boolean.class), (Boolean)false);
         assertEquals(TypeCoercions.coerce("true ", Boolean.class), (Boolean)true);
+        assertNull(TypeCoercions.coerce(null, Boolean.class), null);
 
         assertEquals(TypeCoercions.coerce("1", char.class), (Character)'1');
         assertEquals(TypeCoercions.coerce("1", short.class), (Short)((short)1));
@@ -209,30 +211,35 @@ public class TypeCoercionsTest {
 
     @Test
     public void testListEntryCoercion() {
+        @SuppressWarnings("serial")
         List<?> s = TypeCoercions.coerce(ImmutableList.of("java.lang.Integer", "java.lang.Double"), new TypeToken<List<Class<?>>>() { });
         Assert.assertEquals(s, ImmutableList.of(Integer.class, Double.class));
     }
     
     @Test
     public void testListEntryToSetCoercion() {
+        @SuppressWarnings("serial")
         Set<?> s = TypeCoercions.coerce(ImmutableList.of("java.lang.Integer", "java.lang.Double"), new TypeToken<Set<Class<?>>>() { });
         Assert.assertEquals(s, ImmutableSet.of(Integer.class, Double.class));
     }
     
     @Test
     public void testListEntryToCollectionCoercion() {
+        @SuppressWarnings("serial")
         Collection<?> s = TypeCoercions.coerce(ImmutableList.of("java.lang.Integer", "java.lang.Double"), new TypeToken<Collection<Class<?>>>() { });
         Assert.assertEquals(s, ImmutableList.of(Integer.class, Double.class));
     }
 
     @Test
     public void testMapValueCoercion() {
+        @SuppressWarnings("serial")
         Map<?,?> s = TypeCoercions.coerce(ImmutableMap.of("int", "java.lang.Integer", "double", "java.lang.Double"), new TypeToken<Map<String, Class<?>>>() { });
         Assert.assertEquals(s, ImmutableMap.of("int", Integer.class, "double", Double.class));
     }
     
     @Test
     public void testMapKeyCoercion() {
+        @SuppressWarnings("serial")
         Map<?,?> s = TypeCoercions.coerce(ImmutableMap.of("java.lang.Integer", "int", "java.lang.Double", "double"), new TypeToken<Map<Class<?>, String>>() { });
         Assert.assertEquals(s, ImmutableMap.of(Integer.class, "int", Double.class, "double"));
     }

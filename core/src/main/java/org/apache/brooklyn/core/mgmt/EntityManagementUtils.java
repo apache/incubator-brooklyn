@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.core.mgmt;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -40,9 +38,9 @@ import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.core.entity.trait.Startable;
-import org.apache.brooklyn.core.plan.PlanNotRecognizedException;
 import org.apache.brooklyn.core.plan.PlanToSpecFactory;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.TaskBuilder;
@@ -53,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -65,8 +64,13 @@ public class EntityManagementUtils {
     private static final Logger log = LoggerFactory.getLogger(EntityManagementUtils.class);
 
     /**
-     * A marker config value which indicates that an application was created automatically
-     * to allow the management of a non-app entity.
+     * A marker config value which indicates that an {@link Application} entity was created automatically,
+     * needed because a plan might give multiple top-level entities or a non-Application top-level entity,
+     * but brooklyn requires an {@link Application} at the root.
+     * <p>
+     * Typically when such a wrapper app wraps another {@link Application}
+     * (or when we are adding to an existing entity and it wraps multiple {@link Entity} instances)
+     * it will be unwrapped. See {@link #newWrapperApp()} and {@link #unwrapApplication(EntitySpec)}.
      */
     public static final ConfigKey<Boolean> WRAPPER_APP_MARKER = ConfigKeys.newBooleanConfigKey("brooklyn.wrapper_app");
 
@@ -77,35 +81,29 @@ public class EntityManagementUtils {
         return app;
     }
 
-    /** as {@link #createUnstarted(ManagementContext, EntitySpec)} but for a YAML spec */
-    public static <T extends Application> T createUnstarted(ManagementContext mgmt, String yaml) {
-        EntitySpec<T> spec = createEntitySpec(mgmt, yaml);
+    /** as {@link #createUnstarted(ManagementContext, EntitySpec)} but for a string plan (e.g. camp yaml) */
+    public static Application createUnstarted(ManagementContext mgmt, String plan) {
+        EntitySpec<? extends Application> spec = createEntitySpecForApplication(mgmt, plan);
         return createUnstarted(mgmt, spec);
     }
     
-    public static <T extends Application> EntitySpec<T> createEntitySpec(ManagementContext mgmt, String yaml) {
-        Collection<String> types = new ArrayList<String>();
-        for (PlanToSpecTransformer c : PlanToSpecFactory.all(mgmt)) {
-            try {
-                return c.createApplicationSpec(yaml);
-            } catch (PlanNotRecognizedException e) {
-                types.add(c.getName());
+    public static EntitySpec<? extends Application> createEntitySpecForApplication(ManagementContext mgmt, final String plan) {
+        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, EntitySpec<? extends Application>>() {
+            @Override
+            public EntitySpec<? extends Application> apply(PlanToSpecTransformer input) {
+                return input.createApplicationSpec(plan);
             }
-        }
-        throw new PlanNotRecognizedException("Invalid plan, tried parsing with " + types);
+        }).get();
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(ManagementContext mgmt, CatalogItem<?, ?> item) {
-        Collection<String> types = new ArrayList<String>();
-        for (PlanToSpecTransformer c : PlanToSpecFactory.all(mgmt)) {
-            try {
-                return c.createCatalogSpec((CatalogItem)item);
-            } catch (PlanNotRecognizedException e) {
-                types.add(c.getName());
+    public static AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(ManagementContext mgmt, final CatalogItem<?, ?> item) {
+        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, AbstractBrooklynObjectSpec<?, ?>>() {
+            @Override
+            public AbstractBrooklynObjectSpec<?, ?> apply(PlanToSpecTransformer input) {
+                return input.createCatalogSpec((CatalogItem)item);
             }
-        }
-        throw new PlanNotRecognizedException("Invalid plan, tried parsing with " + types);
+        }).get();
     }
 
     /** container for operation which creates something and which wants to return both
@@ -159,14 +157,14 @@ public class EntityManagementUtils {
 
         ManagementContext mgmt = parent.getApplication().getManagementContext();
 
-        EntitySpec<?> specA = createEntitySpec(mgmt, yaml);
+        EntitySpec<? extends Application> specA = createEntitySpecForApplication(mgmt, yaml);
 
         // see whether we can promote children
         List<EntitySpec<?>> specs = MutableList.of();
-        if (canPromote(specA)) {
+        if (canPromoteChildrenInWrappedApplication(specA)) {
             // we can promote
             for (EntitySpec<?> specC: specA.getChildren()) {
-                collapseSpec(specA, specC);
+                mergeWrapperParentSpecToChildEntity(specA, specC);
                 specs.add(specC);
             }
         } else {
@@ -225,26 +223,64 @@ public class EntityManagementUtils {
         return CreationResult.of(children, task);
     }
 
-    /** worker method to combine specs */
+    /** if an application should be unwrapped, it does so, returning the child; otherwise returns the argument passed in.
+     * use {@link #canPromoteWrappedApplication(EntitySpec)} to test whether it will unwrap. */
+    public static EntitySpec<? extends Application> unwrapApplication(EntitySpec<? extends Application> wrapperApplication) {
+        if (canPromoteWrappedApplication(wrapperApplication)) {
+            @SuppressWarnings("unchecked")
+            EntitySpec<? extends Application> wrappedApplication = (EntitySpec<? extends Application>) Iterables.getOnlyElement( wrapperApplication.getChildren() );
+
+            // if promoted, apply the transformations done to the app
+            // (transformations will be done by the resolveSpec call above, but we are collapsing oldApp so transfer to app=newApp)
+            EntityManagementUtils.mergeWrapperParentSpecToChildEntity(wrapperApplication, wrappedApplication);
+            return wrappedApplication;
+        }
+        return wrapperApplication;
+    }
+    
+    /** Modifies the child so it includes the inessential setup of its parent,
+     * for use when unwrapping specific children, but a name or other item may have been set on the parent.
+     * See {@link #WRAPPER_APP_MARKER}. */
     @Beta //where should this live long-term?
-    public static void collapseSpec(EntitySpec<?> sourceToBeCollapsed, EntitySpec<?> targetToBeExpanded) {
-        if (Strings.isEmpty(targetToBeExpanded.getDisplayName()))
-            targetToBeExpanded.displayName(sourceToBeCollapsed.getDisplayName());
-        if (!sourceToBeCollapsed.getLocations().isEmpty())
-            targetToBeExpanded.locations(sourceToBeCollapsed.getLocations());
+    public static void mergeWrapperParentSpecToChildEntity(EntitySpec<? extends Application> wrapperParent, EntitySpec<?> wrappedChild) {
+        if (Strings.isEmpty(wrappedChild.getDisplayName()))
+            wrappedChild.displayName(wrapperParent.getDisplayName());
+        if (!wrapperParent.getLocations().isEmpty())
+            wrappedChild.locations(wrapperParent.getLocations());
 
         // NB: this clobbers child config; might prefer to deeply merge maps etc
         // (but this should not be surprising, as unwrapping is often parameterising the nested blueprint, so outer config should dominate) 
-        Map<ConfigKey<?>, Object> configWithoutWrapperMarker = Maps.filterKeys(sourceToBeCollapsed.getConfig(), Predicates.not(Predicates.<ConfigKey<?>>equalTo(EntityManagementUtils.WRAPPER_APP_MARKER)));
-        targetToBeExpanded.configure(configWithoutWrapperMarker);
-        targetToBeExpanded.configure(sourceToBeCollapsed.getFlags());
+        Map<ConfigKey<?>, Object> configWithoutWrapperMarker = Maps.filterKeys(wrapperParent.getConfig(), Predicates.not(Predicates.<ConfigKey<?>>equalTo(EntityManagementUtils.WRAPPER_APP_MARKER)));
+        wrappedChild.configure(configWithoutWrapperMarker);
+        wrappedChild.configure(wrapperParent.getFlags());
         
         // TODO copying tags to all entities is not ideal;
         // in particular the BrooklynTags.YAML_SPEC tag will show all entities if the root has multiple
-        targetToBeExpanded.tags(sourceToBeCollapsed.getTags());
+        wrappedChild.tags(wrapperParent.getTags());
     }
 
-    public static boolean canPromote(EntitySpec<?> spec) {
+    public static EntitySpec<? extends Application> newWrapperApp() {
+        return EntitySpec.create(BasicApplication.class).configure(WRAPPER_APP_MARKER, true);
+    }
+    
+    /** returns true if the spec is for an empty-ish wrapper app contianing an application, 
+     * for use when adding from a plan specifying an application which was wrapped because it had to be.
+     * @see #WRAPPER_APP_MARKER */
+    public static boolean canPromoteWrappedApplication(EntitySpec<? extends Application> app) {
+        if (app.getChildren().size()!=1)
+            return false;
+
+        EntitySpec<?> childSpec = Iterables.getOnlyElement(app.getChildren());
+        if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
+            return false;
+
+        return canPromoteChildrenInWrappedApplication(app);
+    }
+    
+    /** returns true if the spec is for an empty-ish wrapper app, 
+     * for use when adding from a plan specifying multiple entities but nothing significant at the application level.
+     * @see #WRAPPER_APP_MARKER */
+    public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<?> spec) {
         return canPromoteBasedOnName(spec) &&
                 isWrapperApp(spec) &&
                 //equivalent to no keys starting with "brooklyn."

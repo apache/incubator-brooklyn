@@ -28,22 +28,34 @@ import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 
 import com.google.common.annotations.Beta;
 
-/** Pluggable {@link ServiceLoader} interface for defferent plan-interpreters.
- * Implementations should take a plan and return an {@link EntitySpec}.
+/** Pluggable {@link ServiceLoader} interface for different plan-interpreters,
+ * that is, different ways of taking an application plan and returning an {@link EntitySpec},
+ * and a {@link CatalogItem} and returning an {@link AbstractBrooklynObjectSpec}.
  */
 @Beta
 public interface PlanToSpecTransformer extends ManagementContextInjectable {
     
-    /** Human-readable name for this transformer */
-    String getName();
+    /** A short, human-readable name for this transformer */
+    String getShortDescription();
     
-    /** whether this accepts the given MIME format */
-    boolean accepts(String mime);
+    /** whether this accepts the given plan type */
+    // TODO determine semantics of plan type; for now, we try all using PlanToSpecFactory methods,
+    // that's okay when there's just a very few, but we'll want something better if that grows
+    @Beta
+    boolean accepts(String planType);
     
-    /** creates an {@link EntitySpec} given a plan, according to the transformation rules this understands */
-    <T extends Application> EntitySpec<T> createApplicationSpec(String plan);
+    /** creates an {@link EntitySpec} given a complete plan textual description for a top-level application, 
+     * according to the transformation rules this understands.
+     * <p>
+     * should throw {@link PlanNotRecognizedException} if not supported. */
+    EntitySpec<? extends Application> createApplicationSpec(String plan) throws PlanNotRecognizedException;
     
-    /** creates an object spec given a catalog item, according to the transformation rules this understands */
-    <T,SpecT extends AbstractBrooklynObjectSpec<T, SpecT>> AbstractBrooklynObjectSpec<T, SpecT> createCatalogSpec(CatalogItem<T, SpecT> item);
+    /** creates an object spec given a catalog item.
+     * <p>
+     * the catalog item might be known by type, or its source plan fragment text might be inspected and transformed.
+     * implementations will typically look at the {@link CatalogItem#getCatalogItemType()} first.
+     * <p>
+     * should throw {@link PlanNotRecognizedException} if this transformer does not know what to do with the plan. */
+    <T,SpecT extends AbstractBrooklynObjectSpec<T, SpecT>> AbstractBrooklynObjectSpec<T, SpecT> createCatalogSpec(CatalogItem<T, SpecT> item) throws PlanNotRecognizedException;
     
 }

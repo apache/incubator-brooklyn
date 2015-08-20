@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;
@@ -267,7 +269,7 @@ public class Exceptions {
         return create(null, exceptions);
     }
     /** creates the given exception, but without propagating it, for use when caller will be wrapping */
-    public static RuntimeException create(String prefix, Collection<? extends Throwable> exceptions) {
+    public static RuntimeException create(@Nullable String prefix, Collection<? extends Throwable> exceptions) {
         if (exceptions.size()==1) {
             Throwable e = exceptions.iterator().next();
             if (Strings.isBlank(prefix)) return new PropagatedRuntimeException(e);

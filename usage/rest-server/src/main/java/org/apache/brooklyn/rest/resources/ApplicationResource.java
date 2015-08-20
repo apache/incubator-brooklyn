@@ -272,7 +272,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         }
 
         log.debug("Creating app from yaml:\n{}", yaml);
-        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpec(mgmt(), yaml);
+        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpecForApplication(mgmt(), yaml);
         
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, spec)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
@@ -330,7 +330,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
         //TODO infer encoding from request
         String potentialYaml = new String(inputToAutodetectType);
-        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpec(mgmt(), potentialYaml);
+        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpecForApplication(mgmt(), potentialYaml);
 
         // TODO not json - try ZIP, etc
 

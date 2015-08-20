@@ -41,11 +41,11 @@ import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
-import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils.CreationResult;
+import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.entity.stock.BasicApplicationImpl;
@@ -56,7 +56,6 @@ import org.apache.brooklyn.util.net.Urls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -88,7 +87,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
     }
 
-    @SuppressWarnings("unchecked")
     public EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, boolean autoUnwrapIfPossible) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
 
@@ -106,12 +104,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
 
         if (autoUnwrapIfPossible && shouldUnwrap(template, app)) {
-            EntitySpec<? extends Application> oldApp = app;
-            app = (EntitySpec<? extends Application>) Iterables.getOnlyElement( app.getChildren() );
-
-            // if promoted, apply the transformations done to the app
-            // (transformations will be done by the resolveSpec call above, but we are collapsing oldApp so transfer to app=newApp)
-            EntityManagementUtils.collapseSpec(oldApp, app);
+            app = EntityManagementUtils.unwrapApplication(app);
         }
 
         return app;
@@ -132,20 +125,9 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     protected boolean shouldUnwrap(AssemblyTemplate template, EntitySpec<? extends Application> app) {
-        Object leaveWrapped = template.getCustomAttributes().get(NEVER_UNWRAP_APPS_PROPERTY);
-        if (leaveWrapped!=null) {
-            if (TypeCoercions.coerce(leaveWrapped, Boolean.class))
-                return false;
-        }
-
-        if (app.getChildren().size()!=1)
+        if (Boolean.TRUE.equals(TypeCoercions.coerce(template.getCustomAttributes().get(NEVER_UNWRAP_APPS_PROPERTY), Boolean.class)))
             return false;
-
-        EntitySpec<?> childSpec = Iterables.getOnlyElement(app.getChildren());
-        if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
-            return false;
-
-        return EntityManagementUtils.canPromote(app);
+        return EntityManagementUtils.canPromoteWrappedApplication(app);
     }
 
     private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform) {
