@@ -102,6 +102,9 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("postLaunchCommand")
     ConfigKey<String> POST_LAUNCH_COMMAND = BrooklynConfigKeys.POST_LAUNCH_COMMAND;
 
+    @SetFromFlag("env")
+    MapConfigKey<Object> SHELL_ENVIRONMENT = BrooklynConfigKeys.SHELL_ENVIRONMENT;
+
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
 
@@ -217,10 +220,6 @@ public interface SoftwareProcess extends Entity, Startable {
     @SetFromFlag("runtimeTemplates")
     ConfigKey<Map<String, String>> RUNTIME_TEMPLATES = ConfigKeys.newConfigKey(new TypeToken<Map<String, String>>() { },
             "templates.runtime", "Mapping of templates, to be filled in and copied before customisation, to destination name relative to runDir");
-
-    @SetFromFlag("env")
-    MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(Object.class,
-            "shell.env", "Map of environment variables to pass to the runtime shell", MutableMap.<String,Object>of());
 
     @SetFromFlag("provisioningProperties")
     MapConfigKey<Object> PROVISIONING_PROPERTIES = new MapConfigKey<Object>(Object.class,

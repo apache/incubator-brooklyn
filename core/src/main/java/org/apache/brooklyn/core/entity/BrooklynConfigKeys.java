@@ -26,15 +26,18 @@ import static org.apache.brooklyn.core.config.ConfigKeys.newStringConfigKey;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.config.MapConfigKey;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.TemplatedStringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.core.internal.ssh.ShellTool;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 
 /** Commonly used config keys, for use in entities. Similar to {@link Attributes}.
  * See also {@link BrooklynServerConfig} for config keys for controlling the server. */
@@ -102,6 +105,12 @@ public class BrooklynConfigKeys {
             "Command to be run prior to the launch method being called on the driver");
     public static final ConfigKey<String> POST_LAUNCH_COMMAND = ConfigKeys.newStringConfigKey("post.launch.command",
             "Command to be run after the launch method being called on the driver");
+
+    public static final MapConfigKey<Object> SHELL_ENVIRONMENT = new MapConfigKey<Object>(
+            Object.class,
+            "shell.env", 
+            "Map of environment variables to pass to the runtime shell", 
+            ImmutableMap.<String,Object>of());
 
     public static final AttributeSensorAndConfigKey<String, String> INSTALL_DIR = new TemplatedStringAttributeSensorAndConfigKey("install.dir", "Directory for this software to be installed in",
             "${" +

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.sensor.ssh;
+package org.apache.brooklyn.core.effector.ssh;
 
 import java.util.Map;
 
@@ -28,9 +28,8 @@ import org.apache.brooklyn.core.effector.AddEffector;
 import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.effector.Effectors.EffectorBuilder;
-import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
-import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks.SshEffectorTaskFactory;
-import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.sensor.ssh.SshCommandSensor;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.text.Strings;
@@ -82,7 +81,7 @@ public final class SshCommandEffector extends AddEffector {
             }
             
             // then set things from the entities defined shell environment, if applicable
-            env.putAll(Strings.toStringMap(entity().getConfig(SoftwareProcess.SHELL_ENVIRONMENT), ""));
+            env.putAll(Strings.toStringMap(entity().getConfig(BrooklynConfigKeys.SHELL_ENVIRONMENT), ""));
             
             // if we wanted to resolve the surrounding environment in real time -- see above
 //            Map<String,Object> paramsResolved = (Map<String, Object>) Tasks.resolveDeepValue(effectorShellEnv, Map.class, entity().getExecutionContext());
@@ -91,7 +90,7 @@ public final class SshCommandEffector extends AddEffector {
             // it may pick up additional values (could be a flag defining whether this is permitted or not)
             env.putAll(Strings.toStringMap(params.getAllConfig()));
             
-            SshEffectorTaskFactory<String> t = SshEffectorTasks.ssh(command)
+            SshEffectorTasks.SshEffectorTaskFactory<String> t = SshEffectorTasks.ssh(command)
                 .requiringZeroAndReturningStdout()
                 .summary("effector "+effector.getName())
                 .environmentVariables(env);
