@@ -45,7 +45,6 @@ import org.apache.brooklyn.core.entity.factory.EntityFactory;
 import org.apache.brooklyn.core.entity.factory.EntityFactoryForLocation;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
-import org.apache.brooklyn.core.entity.lifecycle.QuorumCheck.QuorumChecks;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceProblemsLogic;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.entity.trait.StartableMethods;
@@ -56,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.TaskTags;
@@ -801,12 +801,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (entity.getParent()==null) entity.setParent(this);
 
         return entity;
-    }
-
-    /** @deprecated since 0.6; use {@link #createNode(Location, Map)}, so can take that location into account when configuring node */
-    @Deprecated
-    protected Entity createNode(Map<?,?> flags) {
-        return createNode(getLocation(), flags);
     }
 
     protected List<Entity> pickAndRemoveMembers(int delta) {

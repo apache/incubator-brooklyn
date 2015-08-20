@@ -31,18 +31,18 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.core.mgmt.usage.UsageListener.LocationMetadata;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage;
 import org.apache.brooklyn.core.mgmt.usage.LocationUsage.LocationEvent;
+import org.apache.brooklyn.core.mgmt.usage.UsageListener.LocationMetadata;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessEntityTest;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.time.Time;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -64,42 +64,6 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
     public void testUsageInitiallyEmpty() {
         Set<LocationUsage> usage = mgmt.getUsageManager().getLocationUsage(Predicates.alwaysTrue());
         assertEquals(usage, ImmutableSet.of());
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void testAddAndRemoveLegacyUsageListener() throws Exception {
-        final RecordingLegacyUsageListener listener = new RecordingLegacyUsageListener();
-        mgmt.getUsageManager().addUsageListener(listener);
-        
-        app.createAndManageChild(EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
-        app.start(ImmutableList.of(loc));
-        final SshMachineLocation machine = Iterables.getOnlyElement(loc.getAllMachines());
-        
-        Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
-                List<List<?>> events = listener.getLocationEvents();
-                String locId = (String) events.get(0).get(1);
-                LocationEvent locEvent = (LocationEvent) events.get(0).get(3);
-                Map<?,?> metadata = (Map<?, ?>) events.get(0).get(2);
-                
-                assertEquals(events.size(), 1, "events="+events);
-                assertEquals(locId, machine.getId(), "events="+events);
-                assertNotNull(metadata, "events="+events);
-                assertEquals(locEvent.getApplicationId(), app.getId(), "events="+events);
-                assertEquals(locEvent.getState(), Lifecycle.CREATED, "events="+events);
-            }});
-
-        // Remove the listener; will get no more notifications
-        listener.clearEvents();
-        mgmt.getUsageManager().removeUsageListener(listener);
-        
-        app.stop();
-        Asserts.succeedsContinually(new Runnable() {
-            @Override public void run() {
-                List<List<?>> events = listener.getLocationEvents();
-                assertEquals(events.size(), 0, "events="+events);
-            }});
     }
 
     @Test
