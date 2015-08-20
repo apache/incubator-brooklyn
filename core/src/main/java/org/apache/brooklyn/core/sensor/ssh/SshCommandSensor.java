@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.sensor.ssh;
+package org.apache.brooklyn.core.sensor.ssh;
 
 import java.util.Map;
 
@@ -25,9 +25,8 @@ import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.effector.AddSensor;
-import org.apache.brooklyn.core.sensor.HttpRequestSensor;
-import org.apache.brooklyn.entity.java.JmxAttributeSensor;
-import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.sensor.http.HttpRequestSensor;
 import org.apache.brooklyn.feed.ssh.SshFeed;
 import org.apache.brooklyn.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.feed.ssh.SshValueFunctions;
@@ -51,7 +50,6 @@ import com.google.common.base.Supplier;
  * and always set to {@link String}.
  *
  * @see HttpRequestSensor
- * @see JmxAttributeSensor
  */
 @Beta
 public final class SshCommandSensor<T> extends AddSensor<T> {
@@ -86,7 +84,7 @@ public final class SshCommandSensor<T> extends AddSensor<T> {
         Supplier<Map<String,String>> envSupplier = new Supplier<Map<String,String>>() {
             @Override
             public Map<String, String> get() {
-                return MutableMap.copyOf(Strings.toStringMap(entity.getConfig(SoftwareProcess.SHELL_ENVIRONMENT), ""));
+                return MutableMap.copyOf(Strings.toStringMap(entity.getConfig(BrooklynConfigKeys.SHELL_ENVIRONMENT), ""));
             }
         };
 
@@ -116,19 +114,20 @@ public final class SshCommandSensor<T> extends AddSensor<T> {
                 .build();
     }
 
-    static String makeCommandExecutingInDirectory(String command, String executionDir, EntityLocal entity) {
+    @Beta
+    public static String makeCommandExecutingInDirectory(String command, String executionDir, EntityLocal entity) {
         String finalCommand = command;
         String execDir = executionDir;
         if (Strings.isBlank(execDir)) {
             // default to run dir
-            execDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
+            execDir = entity.getAttribute(BrooklynConfigKeys.RUN_DIR);
             // if no run dir, default to home
             if (Strings.isBlank(execDir)) {
                 execDir = "~";
             }
         } else if (!Os.isAbsolutish(execDir)) {
             // relative paths taken wrt run dir
-            String runDir = entity.getAttribute(SoftwareProcess.RUN_DIR);
+            String runDir = entity.getAttribute(BrooklynConfigKeys.RUN_DIR);
             if (!Strings.isBlank(runDir)) {
                 execDir = Os.mergePaths(runDir, execDir);
             }

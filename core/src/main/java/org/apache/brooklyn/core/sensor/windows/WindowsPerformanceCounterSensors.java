@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.sensor.winrm;
+package org.apache.brooklyn.core.sensor.windows;
 
 import java.util.Map;
 import java.util.Set;

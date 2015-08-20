@@ -16,10 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.camp.brooklyn.api;
+package org.apache.brooklyn.core.mgmt;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 
+/**
+ * Provides a generic way to obtain a {@link ManagementContext}, which things can implement. 
+ * The intent is to reduce coupling between components by only referring to this interface.
+ */
 public interface HasBrooklynManagementContext {
 
     public ManagementContext getBrooklynManagementContext();

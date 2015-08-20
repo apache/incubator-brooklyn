@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.sensor;
+package org.apache.brooklyn.core.sensor.http;
 
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -24,8 +24,8 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.sensor.HttpRequestSensor;
 import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.core.sensor.http.HttpRequestSensor;
 import org.apache.brooklyn.core.test.TestHttpRequestHandler;
 import org.apache.brooklyn.core.test.TestHttpServer;
 import org.apache.brooklyn.core.test.entity.TestApplication;

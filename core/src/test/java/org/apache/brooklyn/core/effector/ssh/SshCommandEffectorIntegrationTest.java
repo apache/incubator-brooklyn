@@ -16,11 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.software.base.test.ssh;
-
-import static org.testng.Assert.assertTrue;
-
-import java.io.File;
+package org.apache.brooklyn.core.effector.ssh;
 
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -28,26 +24,21 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.effector.Effectors;
-import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.sensor.ssh.SshCommandEffector;
-import org.apache.brooklyn.sensor.ssh.SshCommandSensor;
-import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
-import org.apache.brooklyn.util.time.Duration;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 import com.google.common.collect.ImmutableList;
 
-public class SshCommandIntegrationTest {
+public class SshCommandEffectorIntegrationTest {
 
     final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString", "");
     final static AttributeSensor<Integer> SENSOR_INT = Sensors.newIntegerSensor("aLong", "");
@@ -71,28 +62,7 @@ public class SshCommandIntegrationTest {
     }
     
     @Test(groups="Integration")
-    public void testSshSensor() throws Exception {
-        File tempFile = File.createTempFile("testSshCommand", "txt");
-        tempFile.deleteOnExit();
-        new SshCommandSensor<String>(ConfigBag.newInstance()
-                .configure(SshCommandSensor.SENSOR_PERIOD, Duration.millis(100))
-                .configure(SshCommandSensor.SENSOR_NAME, SENSOR_STRING.getName())
-                .configure(SshCommandSensor.SENSOR_COMMAND, "echo foo > "+tempFile.getAbsolutePath()+"\n"
-                    + "wc "+tempFile.getAbsolutePath()))
-            .apply(entity);
-        entity.setAttribute(Attributes.SERVICE_UP, true);
-
-        String val = EntityTestUtils.assertAttributeEventuallyNonNull(entity, SENSOR_STRING);
-        assertTrue(val.contains("1"), "val="+val);
-        String[] counts = val.trim().split("\\s+");
-        Assert.assertEquals(counts.length, 4, "val="+val);
-        Assert.assertEquals(counts[0], "1", "val="+val);
-    }
-
-    @Test(groups="Integration")
     public void testSshEffector() throws Exception {
-        File tempFile = File.createTempFile("testSshCommand", "txt");
-        tempFile.deleteOnExit();
         new SshCommandEffector(ConfigBag.newInstance()
                 .configure(SshCommandEffector.EFFECTOR_NAME, "sayHi")
                 .configure(SshCommandEffector.EFFECTOR_COMMAND, "echo hi"))
@@ -104,8 +74,6 @@ public class SshCommandIntegrationTest {
 
     @Test(groups="Integration")
     public void testSshEffectorWithParameters() throws Exception {
-        File tempFile = File.createTempFile("testSshCommand", "txt");
-        tempFile.deleteOnExit();
         new SshCommandEffector(ConfigBag.newInstance()
                 .configure(SshCommandEffector.EFFECTOR_NAME, "sayHi")
                 .configure(SshCommandEffector.EFFECTOR_COMMAND, "echo $foo")
