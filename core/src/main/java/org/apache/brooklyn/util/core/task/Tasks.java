@@ -195,7 +195,7 @@ public class Tasks {
         return parallelInternal(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
     }
     private static Task<List<?>> parallelInternal(String name, Task<?>[] tasks) {
-        return Tasks.<List<?>>builder().name(name).parallel(true).add(tasks).build();
+        return Tasks.<List<?>>builder().displayName(name).parallel(true).add(tasks).build();
     }
 
     public static Task<List<?>> sequential(TaskAdaptable<?> ...tasks) {
@@ -217,13 +217,13 @@ public class Tasks {
         return sequential(name, asTasks(Iterables.toArray(tasks, TaskAdaptable.class)));
     }
     private static Task<List<?>> sequentialInternal(String name, Task<?>[] tasks) {
-        return Tasks.<List<?>>builder().name(name).parallel(false).add(tasks).build();
+        return Tasks.<List<?>>builder().displayName(name).parallel(false).add(tasks).build();
     }
     private static TaskFactory<?> sequentialInternal(final String name, final TaskFactory<?> ...taskFactories) {
         return new TaskFactory<TaskAdaptable<?>>() {
             @Override
             public TaskAdaptable<?> newTask() {
-                TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().name(name).parallel(false);
+                TaskBuilder<List<?>> tb = Tasks.<List<?>>builder().displayName(name).parallel(false);
                 for (TaskFactory<?> tf: taskFactories)
                     tb.add(tf.newTask().asTask());
                 return tb.build();
@@ -334,7 +334,7 @@ public class Tasks {
         }
     }
     public static Task<Void> fail(final String name, final Throwable optionalError) {
-        return Tasks.<Void>builder().dynamic(false).name(name).body(new Runnable() { public void run() { 
+        return Tasks.<Void>builder().dynamic(false).displayName(name).body(new Runnable() { public void run() { 
             if (optionalError!=null) throw Exceptions.propagate(optionalError); else throw new RuntimeException("Failed: "+name);
         } }).build();
     }
@@ -465,7 +465,7 @@ public class Tasks {
      * returning true or false depending on whether repeater succeed */
     public static TaskBuilder<Boolean> testing(Repeater repeater) {
         return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, false))
-            .name("waiting for condition")
+            .displayName("waiting for condition")
             .description("Testing whether " + getTimeoutString(repeater) + ": "+repeater.getDescription());
     }
 
@@ -473,7 +473,7 @@ public class Tasks {
      * throwing if it does not */
     public static TaskBuilder<?> requiring(Repeater repeater) {
         return Tasks.<Boolean>builder().body(new WaitForRepeaterCallable(repeater, true))
-            .name("waiting for condition")
+            .displayName("waiting for condition")
             .description("Requiring " + getTimeoutString(repeater) + ": " + repeater.getDescription());
     }
     

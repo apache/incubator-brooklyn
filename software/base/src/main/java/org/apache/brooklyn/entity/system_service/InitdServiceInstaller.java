@@ -89,7 +89,7 @@ public class InitdServiceInstaller implements SystemServiceInstaller {
             .newTask();
 
         return Tasks.<Void>builder()
-            .name("install (init.d)")
+            .displayName("install (init.d)")
             .description("Install init.d service")
             .add(putServiceTask)
             .add(installServiceTask)

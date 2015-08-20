@@ -68,7 +68,7 @@ public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
     
     private RuntimeException fail(final String msg) {
         if (getConfig(FAIL_IN_SUB_TASK)) {
-            Task<?> task = Tasks.builder().name(msg).body(new Runnable() { public void run() { throw newException(msg); } }).build();
+            Task<?> task = Tasks.builder().displayName(msg).body(new Runnable() { public void run() { throw newException(msg); } }).build();
             Entities.submit(this, task).getUnchecked();
             Assert.fail("Should have thrown exception on task.getUnchecked");
             throw new IllegalStateException("unreachable code");

@@ -113,9 +113,9 @@ public class EntityExecutionManagerTest {
                 sema4.release();
             }
         });
-        Task<String> t1 = em.submit( Tasks.<String>builder().name("t1").dynamic(false).body(Callables.returning("foo")).build() );
+        Task<String> t1 = em.submit( Tasks.<String>builder().displayName("t1").dynamic(false).body(Callables.returning("foo")).build() );
         t1.getUnchecked();
-        Task<String> t2 = em.submit( Tasks.<String>builder().name("t2").dynamic(false).body(Callables.returning("foo")).build() );
+        Task<String> t2 = em.submit( Tasks.<String>builder().displayName("t2").dynamic(false).body(Callables.returning("foo")).build() );
         sema4.acquire();
         Assert.assertEquals(completedTasks.size(), 2, "completed tasks are: "+completedTasks);
         completedTasks.get(t1).isShorterThan(Duration.TEN_SECONDS);
@@ -135,7 +135,7 @@ public class EntityExecutionManagerTest {
     }
 
     protected static TaskBuilder<Object> newEmptyTask(String name) {
-        return Tasks.builder().name(name).dynamic(false).body(Callables.returning(null));
+        return Tasks.builder().displayName(name).dynamic(false).body(Callables.returning(null));
     }
     
     protected void assertTaskCountForEntitySoon(final Entity entity, final int expectedCount) {
@@ -247,7 +247,7 @@ public class EntityExecutionManagerTest {
             BrooklynGarbageCollector.MAX_TASKS_PER_TAG, 2);
 
         for (int count=0; count<5; count++) {
-            TaskBuilder<Object> tb = Tasks.builder().name("task-"+count).dynamic(true).body(new Runnable() { @Override public void run() {}})
+            TaskBuilder<Object> tb = Tasks.builder().displayName("task-"+count).dynamic(true).body(new Runnable() { @Override public void run() {}})
                 .tag(ManagementContextInternal.NON_TRANSIENT_TASK_TAG).tag("foo");
             ((EntityInternal)e).getExecutionContext().submit(tb.build()).getUnchecked();
         }

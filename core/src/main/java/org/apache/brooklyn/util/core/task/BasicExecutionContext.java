@@ -133,7 +133,7 @@ public class BasicExecutionContext extends AbstractExecutionContext {
                     // so wrap it in a task running in this context to keep a reference to the child
                     // (this matters when we are navigating in the GUI; without it we lose the reference to the child 
                     // when browsing in the context of the parent)
-                    return submit(Tasks.<T>builder().name("Cross-context execution: "+t.getDescription()).dynamic(true).body(new Callable<T>() {
+                    return submit(Tasks.<T>builder().displayName("Cross-context execution: "+t.getDescription()).dynamic(true).body(new Callable<T>() {
                         public T call() { 
                             return DynamicTasks.get(t); 
                         }
@@ -145,7 +145,7 @@ public class BasicExecutionContext extends AbstractExecutionContext {
             } else {
                 // as above, but here we are definitely not a child (what we are submitting isn't even a task)
                 // (will only come here if properties defines tags including a target entity, which probably never happens) 
-                submit(Tasks.<T>builder().name("Cross-context execution").dynamic(true).body(new Callable<T>() {
+                submit(Tasks.<T>builder().displayName("Cross-context execution").dynamic(true).body(new Callable<T>() {
                     public T call() {
                         if (task instanceof Callable) {
                             return DynamicTasks.queue( Tasks.<T>builder().dynamic(false).body((Callable<T>)task).build() ).getUnchecked();

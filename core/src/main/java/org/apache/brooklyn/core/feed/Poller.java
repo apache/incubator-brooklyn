@@ -134,7 +134,7 @@ public class Poller<V> {
         started = true;
         
         for (final Callable<?> oneOffJob : oneOffJobs) {
-            Task<?> task = Tasks.builder().dynamic(false).body((Callable<Object>) oneOffJob).name("Poll").description("One-time poll job "+oneOffJob).build();
+            Task<?> task = Tasks.builder().dynamic(false).body((Callable<Object>) oneOffJob).displayName("Poll").description("One-time poll job "+oneOffJob).build();
             oneOffTasks.add(((EntityInternal)entity).getExecutionContext().submit(task));
         }
         

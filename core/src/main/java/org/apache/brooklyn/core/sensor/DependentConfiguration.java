@@ -676,7 +676,7 @@ public class DependentConfiguration {
             validate();
             
             return Tasks.<V>builder().dynamic(false)
-                .name("waiting on "+sensor.getName())
+                .displayName("waiting on "+sensor.getName())
                 .description("Waiting on sensor "+sensor.getName()+" from "+source)
                 .tag("attributeWhenReady")
                 .body(new WaitInTaskForAttributeReady<T,V>(this))
@@ -795,7 +795,7 @@ public class DependentConfiguration {
                 tasks.add(builder.build());
             }
             final Task<List<V>> parallelTask = Tasks.<List<V>>builder().parallel(true).addAll(tasks)
-                .name(name)
+                .displayName(name)
                 .description(descriptionBase+
                     (builder.timeout!=null ? ", timeout "+builder.timeout : ""))
                 .build();
@@ -804,13 +804,13 @@ public class DependentConfiguration {
                 // V2 should be the right type in normal operations
                 return (Task<V2>) parallelTask;
             } else {
-                return Tasks.<V2>builder().name(name).description(descriptionBase)
+                return Tasks.<V2>builder().displayName(name).description(descriptionBase)
                     .tag("attributeWhenReady")
                     .body(new Callable<V2>() {
                         @Override public V2 call() throws Exception {
                             List<V> prePostProgress = DynamicTasks.queue(parallelTask).get();
                             return DynamicTasks.queue(
-                                Tasks.<V2>builder().name("post-processing").description("Applying "+postProcessFromMultiple)
+                                Tasks.<V2>builder().displayName("post-processing").description("Applying "+postProcessFromMultiple)
                                     .body(Functionals.callable(postProcessFromMultiple, prePostProgress))
                                     .build()).get();
                         }

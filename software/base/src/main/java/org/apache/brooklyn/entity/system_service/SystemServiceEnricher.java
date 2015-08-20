@@ -77,7 +77,7 @@ public class SystemServiceEnricher extends AbstractEnricher implements Enricher 
         final String launchScriptPath = Urls.mergePaths(getRunDir(), getStartScriptName());
 
         Task<Void> installerTask = TaskBuilder.<Void>builder()
-                .name("install (service)")
+                .displayName("install (service)")
                 .description("Install as a system service")
                 .body(new Runnable() {
                     @Override
@@ -99,14 +99,14 @@ public class SystemServiceEnricher extends AbstractEnricher implements Enricher 
                 .requiringExitCodeZero()
                 .newTask();
         Task<Void> udpateTask = TaskBuilder.<Void>builder()
-                .name("update-launch")
+                .displayName("update-launch")
                 .description("Update launch script used by the system service")
                 .add(updateLaunchScriptTask)
                 .add(makeExecutableTask)
                 .build();
 
         Task<Void> updateService = TaskBuilder.<Void>builder()
-                .name("update-system-service")
+                .displayName("update-system-service")
                 .description("Update system service")
                 .add(installerTask)
                 .add(udpateTask)

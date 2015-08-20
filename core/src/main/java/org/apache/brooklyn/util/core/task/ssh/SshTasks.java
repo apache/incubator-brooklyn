@@ -219,7 +219,7 @@ public class SshTasks {
         return new TaskFactory<TaskAdaptable<?>>() {
             @Override
             public TaskAdaptable<?> newTask() {
-                return Tasks.<Void>builder().name("installing "+Urls.getBasename(url)).description("installing "+url+" to "+destPath).body(new Runnable() {
+                return Tasks.<Void>builder().displayName("installing "+Urls.getBasename(url)).description("installing "+url+" to "+destPath).body(new Runnable() {
                     @Override
                     public void run() {
                         int result = location.installTo(utils, props, url, destPath);

@@ -49,7 +49,7 @@ public class SshPutTaskWrapper extends SshPutTaskStub implements TaskWrapper<Voi
     // package private as only AbstractSshTaskFactory should invoke
     SshPutTaskWrapper(SshPutTaskFactory constructor) {
         super(constructor);
-        TaskBuilder<Void> tb = TaskBuilder.<Void>builder().dynamic(false).name(getSummary());
+        TaskBuilder<Void> tb = TaskBuilder.<Void>builder().dynamic(false).displayName(getSummary());
         task = tb.body(new SshPutJob()).build();
     }
     

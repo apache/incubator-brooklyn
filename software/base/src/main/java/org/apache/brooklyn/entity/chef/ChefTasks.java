@@ -56,7 +56,7 @@ public class ChefTasks {
     }
 
     public static TaskFactory<?> installCookbooks(final String chefDirectory, final Map<String,String> cookbooksAndUrls, final boolean force) {
-        return Tasks.<Void>builder().name("install "+(cookbooksAndUrls==null ? "0" : cookbooksAndUrls.size())+" cookbook"+Strings.s(cookbooksAndUrls)).body(
+        return Tasks.<Void>builder().displayName("install "+(cookbooksAndUrls==null ? "0" : cookbooksAndUrls.size())+" cookbook"+Strings.s(cookbooksAndUrls)).body(
                 new Runnable() {
                     public void run() {
                         Entity e = EffectorTasks.findEntity();
@@ -72,7 +72,7 @@ public class ChefTasks {
         return new TaskFactory<TaskAdaptable<?>>() {
             @Override
             public TaskAdaptable<?> newTask() {
-                TaskBuilder<Void> tb = Tasks.<Void>builder().name("install cookbook "+cookbookName);
+                TaskBuilder<Void> tb = Tasks.<Void>builder().displayName("install cookbook "+cookbookName);
                 
                 String cookbookDir = Urls.mergePaths(chefDirectory, cookbookName);
                 String privateTmpDirContainingUnpackedCookbook = 

@@ -361,7 +361,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
         entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "waiting for completion");
         // Wait until the Couchbase node finishes the re-balancing
         Task<Boolean> reBalance = TaskBuilder.<Boolean>builder()
-                .name("Waiting until node is rebalancing")
+                .displayName("Waiting until node is rebalancing")
                 .body(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {

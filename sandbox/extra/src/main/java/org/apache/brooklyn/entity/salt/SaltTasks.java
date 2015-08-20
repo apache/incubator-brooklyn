@@ -59,7 +59,7 @@ public class SaltTasks {
     }
 
     public static TaskFactory<?> installSaltMinion(final Entity minion, final String runDir, final String installDir, final boolean force) {
-        return Tasks.<Void>builder().name("install minion").body(
+        return Tasks.<Void>builder().displayName("install minion").body(
                 new Runnable() {
                     public void run() {
                         // Setup bootstrap installation command for minion
@@ -97,7 +97,7 @@ public class SaltTasks {
     }
 
     public static TaskFactory<?> installFormulas(final String installDir, final Map<String,String> formulasAndUrls, final boolean force) {
-        return Tasks.<Void>builder().name("install formulas").body(
+        return Tasks.<Void>builder().displayName("install formulas").body(
                 new Runnable() {
                     public void run() {
                         Entity e = EffectorTasks.findEntity();

@@ -155,10 +155,10 @@ public class EffectorTasks {
         private TaskBuilder<T> builder;
         public ParameterTask(ConfigKey<T> p) {
             this.p = p;
-            this.builder = Tasks.<T>builder().name("parameter "+p);
+            this.builder = Tasks.<T>builder().displayName("parameter "+p);
         }
         public ParameterTask<T> name(String taskName) {
-            builder.name(taskName);
+            builder.displayName(taskName);
             return this;
         }
         @Override

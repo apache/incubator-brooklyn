@@ -196,7 +196,7 @@ public class EntityManagementUtils {
         int size = children.size();
         childrenCountString = size+" "+(size!=1 ? "children" : "child"); 
 
-        TaskBuilder<List<String>> taskM = Tasks.<List<String>>builder().name("add children")
+        TaskBuilder<List<String>> taskM = Tasks.<List<String>>builder().displayName("add children")
             .dynamic(true)
             .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
             .body(new Callable<List<String>>() {
@@ -205,7 +205,7 @@ public class EntityManagementUtils {
                 }})
                 .description("Add and start "+childrenCountString);
 
-        TaskBuilder<?> taskS = Tasks.builder().parallel(true).name("add (parallel)").description("Start each new entity");
+        TaskBuilder<?> taskS = Tasks.builder().parallel(true).displayName("add (parallel)").description("Start each new entity");
 
         // autostart if requested
         for (Entity child: children) {
@@ -213,7 +213,7 @@ public class EntityManagementUtils {
                 taskS.add(Effectors.invocation(child, Startable.START, ImmutableMap.of("locations", ImmutableList.of())));
             } else {
                 // include a task, just to give feedback in the GUI
-                taskS.add(Tasks.builder().name("create").description("Skipping start (not a Startable Entity)")
+                taskS.add(Tasks.builder().displayName("create").description("Skipping start (not a Startable Entity)")
                     .body(new Runnable() { public void run() {} })
                     .tag(BrooklynTaskTags.tagForTargetEntity(child))
                     .build());

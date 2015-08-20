@@ -216,7 +216,7 @@ public class BrooklynShutdownHooks {
         for (Entity entityToStop: entitiesToStop) {
             final Entity entity = entityToStop;
             if (!Entities.isManaged(entity)) continue;
-            Task<Object> t = Tasks.builder().dynamic(false).name("destroying "+entity).body(new Runnable() {
+            Task<Object> t = Tasks.builder().dynamic(false).displayName("destroying "+entity).body(new Runnable() {
                 @Override public void run() { Entities.destroy(entity); }
             }).build();
             stops.add( ((EntityInternal)entity).getExecutionContext().submit(t) );

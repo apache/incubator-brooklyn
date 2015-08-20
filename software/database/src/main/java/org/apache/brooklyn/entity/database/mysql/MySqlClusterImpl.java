@@ -381,7 +381,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                 ((EntityLocal)node).setAttribute(NODE_REPLICATION_INITIALIZED, Boolean.TRUE);
 
                 DynamicTasks.queueIfPossible(TaskBuilder.builder()
-                        .name("Configure master-slave replication on node")
+                        .displayName("Configure master-slave replication on node")
                         .body(new InitReplicationTask(cluster, node))
                         .build())
                     .orSubmitAsync(node);
@@ -400,7 +400,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
             String slaveAddress = cluster.getAttribute(SLAVE_ID_ADDRESS_MAPPING).remove(node.getId());
             if (slaveAddress != null) {
                 DynamicTasks.queueIfPossible(TaskBuilder.builder()
-                        .name("Remove slave access")
+                        .displayName("Remove slave access")
                         .body(new RemoveSlaveConfigTask(cluster, slaveAddress))
                         .build())
                     .orSubmitAsync(cluster);

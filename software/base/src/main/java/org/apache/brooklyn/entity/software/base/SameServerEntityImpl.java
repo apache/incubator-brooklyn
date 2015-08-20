@@ -57,7 +57,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         if (DynamicTasks.getTaskQueuingContext() != null) {
             doRestart(ConfigBag.EMPTY);
         } else {
-            Task<?> task = Tasks.builder().name("restart").body(new Runnable() { public void run() { doRestart(ConfigBag.EMPTY); } }).build();
+            Task<?> task = Tasks.builder().displayName("restart").body(new Runnable() { public void run() { doRestart(ConfigBag.EMPTY); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }
@@ -73,7 +73,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         if (DynamicTasks.getTaskQueuingContext() != null) {
             doStart(locations);
         } else {
-            Task<?> task = Tasks.builder().name("start").body(new Runnable() { public void run() { doStart(locations); } }).build();
+            Task<?> task = Tasks.builder().displayName("start").body(new Runnable() { public void run() { doStart(locations); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }
@@ -88,7 +88,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         if (DynamicTasks.getTaskQueuingContext() != null) {
             doStop();
         } else {
-            Task<?> task = Tasks.builder().name("stop").body(new Runnable() { public void run() { doStop(); } }).build();
+            Task<?> task = Tasks.builder().displayName("stop").body(new Runnable() { public void run() { doStop(); } }).build();
             Entities.submit(this, task).getUnchecked();
         }
     }

@@ -41,7 +41,7 @@ public class ArchiveTasks {
         return new TaskFactory<TaskAdaptable<?>>() {
             @Override
             public TaskAdaptable<?> newTask() {
-                return Tasks.<Void>builder().name("deploying "+Urls.getBasename(archiveUrl)).description("installing "+archiveUrl+" and unpacking to "+destDir).body(new Runnable() {
+                return Tasks.<Void>builder().displayName("deploying "+Urls.getBasename(archiveUrl)).description("installing "+archiveUrl+" and unpacking to "+destDir).body(new Runnable() {
                     @Override
                     public void run() {
                         boolean unpacked = ArchiveUtils.deploy(resolver, props, archiveUrl, machine, destDir, allowNonarchivesOrKeepArchiveAfterDeploy, optionalTmpDir, optionalDestFile);

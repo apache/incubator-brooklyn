@@ -117,12 +117,12 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
         }
         
         // Stop running instance
-        DynamicTasks.queue(Tasks.builder().name("shutdown node")
+        DynamicTasks.queue(Tasks.builder().displayName("shutdown node")
                 .add(Effectors.invocation(entity(), BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, ImmutableMap.of(StopSoftwareParameters.STOP_MACHINE_MODE, StopMode.NEVER)))
                 .build());
 
         // backup old files
-        DynamicTasks.queue(Tasks.builder().name("backup old version").body(new Runnable() {
+        DynamicTasks.queue(Tasks.builder().displayName("backup old version").body(new Runnable() {
             @Override
             public void run() {
                 String runDir = entity().getAttribute(SoftwareProcess.RUN_DIR);
@@ -139,7 +139,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
         }).build());
         
         // Reconfigure entity
-        DynamicTasks.queue(Tasks.builder().name("reconfigure").body(new Runnable() {
+        DynamicTasks.queue(Tasks.builder().displayName("reconfigure").body(new Runnable() {
             @Override
             public void run() {
                 DynamicTasks.waitForLast();
@@ -191,11 +191,11 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
             Predicates.equalTo(ManagementNodeState.HOT_STANDBY), Duration.FIVE_MINUTES));
 
         // 3 stop new version
-        DynamicTasks.queue(Tasks.builder().name("shutdown transient node")
+        DynamicTasks.queue(Tasks.builder().displayName("shutdown transient node")
             .add(Effectors.invocation(dryRunChild, BrooklynNode.STOP_NODE_BUT_LEAVE_APPS, ImmutableMap.of(StopSoftwareParameters.STOP_MACHINE_MODE, StopMode.NEVER)))
             .build());
 
-        DynamicTasks.queue(Tasks.<Void>builder().name("remove transient node").body(
+        DynamicTasks.queue(Tasks.<Void>builder().displayName("remove transient node").body(
             new Runnable() {
                 @Override
                 public void run() {
