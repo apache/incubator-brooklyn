@@ -17,7 +17,7 @@
 # under the License.
 #
 brooklyn.policies:
-- type: brooklyn.osgi.tests.SimplePolicy
+- type: org.apache.brooklyn.test.osgi.entities.SimplePolicy
 
 brooklyn.catalog:
   id: simple-policy

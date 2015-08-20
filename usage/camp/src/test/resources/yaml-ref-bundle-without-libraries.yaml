@@ -16,4 +16,4 @@
 # under the License.
 #
 services:
-- type: brooklyn.osgi.tests.SimpleEntity
+- type: org.apache.brooklyn.test.osgi.entities.SimpleEntity

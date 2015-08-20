@@ -216,7 +216,7 @@ public class CampYamlLiteTest {
                 "  id: " + symbolicName + "\n" +
                 "  name: My Catalog App\n" +
                 "  description: My description\n" +
-                "  icon_url: classpath:/brooklyn/osgi/tests/icon.gif\n" +
+                "  icon_url: classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif\n" +
                 "  version: " + TEST_VERSION + "\n" +
                 "  libraries:\n" +
                 "  - url: " + bundleUrl + "\n" +
@@ -244,7 +244,7 @@ public class CampYamlLiteTest {
         // now let's check other things on the item
         assertEquals(item.getDisplayName(), "My Catalog App");
         assertEquals(item.getDescription(), "My description");
-        assertEquals(item.getIconUrl(), "classpath:/brooklyn/osgi/tests/icon.gif");
+        assertEquals(item.getIconUrl(), "classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif");
 
         // and confirm we can resolve ICON
         byte[] iconData = Streams.readFully(ResourceUtils.create(CatalogUtils.newClassLoadingContext(mgmt, item)).getResourceFromUrl(item.getIconUrl()));

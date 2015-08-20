@@ -538,7 +538,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "  - serviceType: "+ver(id);
         Entity app = createAndStartApplication(yaml);
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        InputStream icon = new ResourceUtils(simpleEntity).getResourceFromUrl("classpath:/brooklyn/osgi/tests/icon.gif");
+        InputStream icon = new ResourceUtils(simpleEntity).getResourceFromUrl("classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif");
         assertTrue(icon != null);
         icon.close();
     }

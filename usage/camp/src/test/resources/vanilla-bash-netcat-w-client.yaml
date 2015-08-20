@@ -49,13 +49,13 @@ services:
   brooklyn.initializers:
   # two sensors, recording the data sent to this netcat server:
   
-  - type: brooklyn.entity.software.ssh.SshCommandSensor
+  - type: org.apache.brooklyn.core.sensor.ssh.SshCommandSensor
     brooklyn.config:
       name: output.last
       command: tail -1 server-input
       period: 100ms
       
-  - type: brooklyn.entity.software.ssh.SshCommandSensor
+  - type: org.apache.brooklyn.core.sensor.ssh.SshCommandSensor
     brooklyn.config:
       name: output.all
       command: cat server-input
@@ -77,7 +77,7 @@ services:
   brooklyn.initializers:
   # but there is a sample effector which runs nc in client mode
   
-  - type: brooklyn.entity.software.ssh.SshCommandEffector
+  - type: org.apache.brooklyn.core.effector.ssh.SshCommandEffector
     brooklyn.config:
       name: sayHiNetcat
       description: Echo a small hello string to the netcat entity
@@ -90,7 +90,7 @@ services:
 
 # and add an enricher at the root so all sensors from netcat-server are visible on the root
 brooklyn.enrichers:
-- enricherType: brooklyn.enricher.basic.Propagator
+- enricherType: org.apache.brooklyn.enricher.stock.Propagator
   brooklyn.config:
     enricher.producer: $brooklyn:component("netcat-server")
     enricher.propagating.propagatingAll: true

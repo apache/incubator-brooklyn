@@ -26,7 +26,7 @@ services:
   brooklyn.config:
     test.confName: Name from YAML
 brooklyn.enrichers:
-- enricherType: brooklyn.enricher.basic.Propagator
+- enricherType: org.apache.brooklyn.enricher.stock.Propagator
   brooklyn.config:
     enricher.producer: $brooklyn:component("te1")
     enricher.propagating.propagatingAll: true

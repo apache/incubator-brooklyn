@@ -117,9 +117,9 @@ public class OsgiVersionMoreEntityTest {
             TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_OSGI_ENTITIES_PATH);
             Bundle bundle = Osgis.install(framework, BROOKLYN_TEST_OSGI_ENTITIES_PATH);
             @SuppressWarnings("unchecked")
-            Class<? extends Entity> bundleCls = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntityImpl");
+            Class<? extends Entity> bundleCls = (Class<? extends Entity>) bundle.loadClass("org.apache.brooklyn.test.osgi.entities.SimpleEntityImpl");
             @SuppressWarnings("unchecked")
-            Class<? extends Entity> bundleInterface = (Class<? extends Entity>) bundle.loadClass("brooklyn.osgi.tests.SimpleEntity");
+            Class<? extends Entity> bundleInterface = (Class<? extends Entity>) bundle.loadClass("org.apache.brooklyn.test.osgi.entities.SimpleEntity");
 
             @SuppressWarnings("unchecked")
             EntitySpec<Entity> spec = (EntitySpec<Entity>) (((EntitySpec<Entity>)EntitySpec.create(bundleInterface))).impl(bundleCls);
@@ -286,7 +286,7 @@ public class OsgiVersionMoreEntityTest {
         } catch (Exception e) {
             Assert.assertTrue(e.toString().toLowerCase().contains("unresolved constraint"), "Missing expected text in error: "+e);
             Assert.assertTrue(e.toString().toLowerCase().contains("wiring.package"), "Missing expected text in error: "+e);
-            Assert.assertTrue(e.toString().toLowerCase().contains("brooklyn.osgi.tests"), "Missing expected text in error: "+e);
+            Assert.assertTrue(e.toString().toLowerCase().contains("org.apache.brooklyn.test.osgi.entities"), "Missing expected text in error: "+e);
         }
     }
     

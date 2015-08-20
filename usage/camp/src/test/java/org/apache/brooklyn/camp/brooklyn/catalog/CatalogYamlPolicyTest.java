@@ -33,8 +33,8 @@ import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import com.google.common.collect.Iterables;
 
 public class CatalogYamlPolicyTest extends AbstractYamlTest {
-    private static final String SIMPLE_POLICY_TYPE = "brooklyn.osgi.tests.SimplePolicy";
-    private static final String SIMPLE_ENTITY_TYPE = "brooklyn.osgi.tests.SimpleEntity";
+    private static final String SIMPLE_POLICY_TYPE = "org.apache.brooklyn.test.osgi.entities.SimplePolicy";
+    private static final String SIMPLE_ENTITY_TYPE = "org.apache.brooklyn.test.osgi.entities.SimpleEntity";
 
     @Test
     public void testAddCatalogItem() throws Exception {

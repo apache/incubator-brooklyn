@@ -27,7 +27,7 @@ services:
     serviceLiteralValue1: Foo
     serviceLiteralValue2: Bar
   brooklyn.enrichers:
-  - enricherType: brooklyn.test.policy.TestEnricher
+  - enricherType: org.apache.brooklyn.core.test.policy.TestEnricher
     brooklyn.config:
       enricherLiteralValue1: Hello
       enricherLiteralValue2: World
