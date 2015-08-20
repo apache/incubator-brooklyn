@@ -218,6 +218,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     private final BasicConfigurationSupport config = new BasicConfigurationSupport();
 
+    private final BasicSensorSupport sensors = new BasicSensorSupport();
+
     /**
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
@@ -843,10 +845,15 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     public <T> T getAttribute(AttributeSensor<T> attribute) {
-        return attributesInternal.getValue(attribute);
+        return sensors().get(attribute);
     }
 
+    /**
+     * @deprecated since 0.8.0; use {@link SensorSupport#get(AttributeSensor)}, 
+     *             which may require constructing a temporary sensor using {@link Sensors#newSensor(Class, String)}.
+     */
     @SuppressWarnings("unchecked")
+    @Deprecated
     public <T> T getAttributeByNameParts(List<String> nameParts) {
         return (T) attributesInternal.getValue(nameParts);
     }
@@ -854,88 +861,28 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     static Set<String> WARNED_READ_ONLY_ATTRIBUTES = Collections.synchronizedSet(MutableSet.<String>of());
     
     @Override
+    @Deprecated
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
-        if (LOG.isTraceEnabled())
-            LOG.trace(""+this+" setAttribute "+attribute+" "+val);
-        
-        if (Boolean.TRUE.equals(getManagementSupport().isReadOnlyRaw())) {
-            T oldVal = getAttribute(attribute);
-            if (Equals.approximately(val, oldVal)) {
-                // ignore, probably an enricher resetting values or something on init
-            } else {
-                String message = this+" setting "+attribute+" = "+val+" (was "+oldVal+") in read only mode; will have very little effect"; 
-                if (!getManagementSupport().isDeployed()) {
-                    if (getManagementSupport().wasDeployed()) message += " (no longer deployed)"; 
-                    else message += " (not yet deployed)";
-                }
-                if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
-                    LOG.warn(message + " (future messages for this sensor logged at trace)");
-                } else if (LOG.isTraceEnabled()) {
-                    LOG.trace(message);
-                }
-            }
-        }
-        T result = attributesInternal.update(attribute, val);
-        if (result == null) {
-            // could be this is a new sensor
-            entityType.addSensorIfAbsent(attribute);
-        }
-        
-        getManagementSupport().getEntityChangeListener().onAttributeChanged(attribute);
-        return result;
+        return sensors().set(attribute, val);
     }
 
     @Override
+    @Deprecated
     public <T> T setAttributeWithoutPublishing(AttributeSensor<T> attribute, T val) {
-        if (LOG.isTraceEnabled())
-            LOG.trace(""+this+" setAttributeWithoutPublishing "+attribute+" "+val);
-        
-        T result = attributesInternal.updateWithoutPublishing(attribute, val);
-        if (result == null) {
-            // could be this is a new sensor
-            entityType.addSensorIfAbsentWithoutPublishing(attribute);
-        }
-        
-        getManagementSupport().getEntityChangeListener().onAttributeChanged(attribute);
-        return result;
+        return sensors().setWithoutPublishing(attribute, val);
     }
 
     @Beta
     @Override
+    @Deprecated
     public <T> T modifyAttribute(AttributeSensor<T> attribute, Function<? super T, Maybe<T>> modifier) {
-        if (LOG.isTraceEnabled())
-            LOG.trace(""+this+" modifyAttribute "+attribute+" "+modifier);
-        
-        if (Boolean.TRUE.equals(getManagementSupport().isReadOnlyRaw())) {
-            String message = this+" modifying "+attribute+" = "+modifier+" in read only mode; will have very little effect"; 
-            if (!getManagementSupport().isDeployed()) {
-                if (getManagementSupport().wasDeployed()) message += " (no longer deployed)"; 
-                else message += " (not yet deployed)";
-            }
-            if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
-                LOG.warn(message + " (future messages for this sensor logged at trace)");
-            } else if (LOG.isTraceEnabled()) {
-                LOG.trace(message);
-            }
-        }
-        T result = attributesInternal.modify(attribute, modifier);
-        if (result == null) {
-            // could be this is a new sensor
-            entityType.addSensorIfAbsent(attribute);
-        }
-        
-        // TODO Conditionally set onAttributeChanged, only if was modified
-        getManagementSupport().getEntityChangeListener().onAttributeChanged(attribute);
-        return result;
+        return sensors().modify(attribute, modifier);
     }
 
     @Override
+    @Deprecated
     public void removeAttribute(AttributeSensor<?> attribute) {
-        if (LOG.isTraceEnabled())
-            LOG.trace(""+this+" removeAttribute "+attribute);
-        
-        attributesInternal.remove(attribute);
-        entityType.removeSensor(attribute);
+        sensors().remove(attribute);
     }
 
     /** sets the value of the given attribute sensor from the config key value herein
@@ -952,22 +899,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     @Override
+    @Deprecated
+    @SuppressWarnings("rawtypes")
     public Map<AttributeSensor, Object> getAllAttributes() {
-        Map<AttributeSensor, Object> result = Maps.newLinkedHashMap();
-        Map<String, Object> attribs = attributesInternal.asMap();
-        for (Map.Entry<String,Object> entry : attribs.entrySet()) {
-            AttributeSensor<?> attribKey = (AttributeSensor<?>) entityType.getSensor(entry.getKey());
-            if (attribKey == null) {
-                // Most likely a race: e.g. persister thread calling getAllAttributes; writer thread
-                // has written attribute value and is in process of calling entityType.addSensorIfAbsent(attribute)
-                // Just use a synthetic AttributeSensor, rather than ignoring value.
-                // TODO If it's not a race, then don't log.warn every time!
-                LOG.warn("When retrieving all attributes of {}, no AttributeSensor for attribute {} (creating synthetic)", this, entry.getKey());
-                attribKey = Sensors.newSensor(Object.class, entry.getKey());
-            }
-            result.put(attribKey, entry.getValue());
-        }
-        return result;
+        return Collections.<AttributeSensor, Object>unmodifiableMap(sensors().getAll());
     }
 
     
@@ -982,6 +917,157 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return config;
     }
 
+    @Override 
+    @Beta
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return SensorsSupport
+    // TODO revert to SensorsSupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicSensorSupport sensors() {
+        return sensors;
+    }
+
+    /**
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #sensors()} is reverted to return {@link SensorsSupport} instead of
+     * {@link BasicSensorSupport}.
+     */
+    @Beta
+    // TODO revert to private when config() is reverted to return SensorSupportInternal
+    public class BasicSensorSupport implements SensorSupportInternal {
+
+        @Override
+        public <T> T get(AttributeSensor<T> attribute) {
+            return attributesInternal.getValue(attribute);
+        }
+
+        @Override
+        public <T> T set(AttributeSensor<T> attribute, T val) {
+            if (LOG.isTraceEnabled())
+                LOG.trace(""+AbstractEntity.this+" setAttribute "+attribute+" "+val);
+            
+            if (Boolean.TRUE.equals(getManagementSupport().isReadOnlyRaw())) {
+                T oldVal = getAttribute(attribute);
+                if (Equals.approximately(val, oldVal)) {
+                    // ignore, probably an enricher resetting values or something on init
+                } else {
+                    String message = AbstractEntity.this+" setting "+attribute+" = "+val+" (was "+oldVal+") in read only mode; will have very little effect"; 
+                    if (!getManagementSupport().isDeployed()) {
+                        if (getManagementSupport().wasDeployed()) message += " (no longer deployed)"; 
+                        else message += " (not yet deployed)";
+                    }
+                    if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
+                        LOG.warn(message + " (future messages for this sensor logged at trace)");
+                    } else if (LOG.isTraceEnabled()) {
+                        LOG.trace(message);
+                    }
+                }
+            }
+            T result = attributesInternal.update(attribute, val);
+            if (result == null) {
+                // could be this is a new sensor
+                entityType.addSensorIfAbsent(attribute);
+            }
+            
+            getManagementSupport().getEntityChangeListener().onAttributeChanged(attribute);
+            return result;
+        }
+
+        @Override
+        public <T> T setWithoutPublishing(AttributeSensor<T> attribute, T val) {
+            if (LOG.isTraceEnabled())
+                LOG.trace(""+AbstractEntity.this+" setAttributeWithoutPublishing "+attribute+" "+val);
+            
+            T result = attributesInternal.updateWithoutPublishing(attribute, val);
+            if (result == null) {
+                // could be this is a new sensor
+                entityType.addSensorIfAbsentWithoutPublishing(attribute);
+            }
+            
+            getManagementSupport().getEntityChangeListener().onAttributeChanged(attribute);
+            return result;
+        }
+
+        @Beta
+        @Override
+        public <T> T modify(AttributeSensor<T> attribute, Function<? super T, Maybe<T>> modifier) {
+            if (LOG.isTraceEnabled())
+                LOG.trace(""+AbstractEntity.this+" modifyAttribute "+attribute+" "+modifier);
+            
+            if (Boolean.TRUE.equals(getManagementSupport().isReadOnlyRaw())) {
+                String message = AbstractEntity.this+" modifying "+attribute+" = "+modifier+" in read only mode; will have very little effect"; 
+                if (!getManagementSupport().isDeployed()) {
+                    if (getManagementSupport().wasDeployed()) message += " (no longer deployed)"; 
+                    else message += " (not yet deployed)";
+                }
+                if (WARNED_READ_ONLY_ATTRIBUTES.add(attribute.getName())) {
+                    LOG.warn(message + " (future messages for this sensor logged at trace)");
+                } else if (LOG.isTraceEnabled()) {
+                    LOG.trace(message);
+                }
+            }
+            T result = attributesInternal.modify(attribute, modifier);
+            if (result == null) {
+                // could be this is a new sensor
+                entityType.addSensorIfAbsent(attribute);
+            }
+            
+            // TODO Conditionally set onAttributeChanged, only if was modified
+            getManagementSupport().getEntityChangeListener().onAttributeChanged(attribute);
+            return result;
+        }
+
+        @Override
+        public void remove(AttributeSensor<?> attribute) {
+            if (LOG.isTraceEnabled())
+                LOG.trace(""+AbstractEntity.this+" removeAttribute "+attribute);
+            
+            attributesInternal.remove(attribute);
+            entityType.removeSensor(attribute);
+        }
+
+        @Override
+        public Map<AttributeSensor<?>, Object> getAll() {
+            Map<AttributeSensor<?>, Object> result = Maps.newLinkedHashMap();
+            Map<String, Object> attribs = attributesInternal.asMap();
+            for (Map.Entry<String,Object> entry : attribs.entrySet()) {
+                AttributeSensor<?> attribKey = (AttributeSensor<?>) entityType.getSensor(entry.getKey());
+                if (attribKey == null) {
+                    // Most likely a race: e.g. persister thread calling getAllAttributes; writer thread
+                    // has written attribute value and is in process of calling entityType.addSensorIfAbsent(attribute)
+                    // Just use a synthetic AttributeSensor, rather than ignoring value.
+                    // TODO If it's not a race, then don't log.warn every time!
+                    LOG.warn("When retrieving all attributes of {}, no AttributeSensor for attribute {} (creating synthetic)", AbstractEntity.this, entry.getKey());
+                    attribKey = Sensors.newSensor(Object.class, entry.getKey());
+                }
+                result.put(attribKey, entry.getValue());
+            }
+            return result;
+        }
+        
+        @Override
+        public <T> void emit(Sensor<T> sensor, T val) {
+            if (sensor instanceof AttributeSensor) {
+                LOG.warn("Strongly discouraged use of emit with attribute sensor "+sensor+" "+val+"; use setAttribute instead!",
+                    new Throwable("location of discouraged attribute "+sensor+" emit"));
+            }
+            if (val instanceof SensorEvent) {
+                LOG.warn("Strongly discouraged use of emit with sensor event as value "+sensor+" "+val+"; value should be unpacked!",
+                    new Throwable("location of discouraged event "+sensor+" emit"));
+            }
+            BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(AbstractEntity.this),
+                "Emitting sensor notification {} value {} on {}", sensor.getName(), val, AbstractEntity.this);
+            emitInternal(sensor, val);
+        }
+        
+        public <T> void emitInternal(Sensor<T> sensor, T val) {
+            if (getManagementSupport().isNoLongerManaged())
+                throw new IllegalStateException("Entity "+AbstractEntity.this+" is no longer managed, when trying to publish "+sensor+" "+val);
+
+            SubscriptionContext subsContext = getSubscriptionContext();
+            if (subsContext != null) subsContext.publish(sensor.newEvent(getProxyIfAvailable(), val));
+        }
+    }
+    
     /**
      * Direct use of this class is strongly discouraged. It will become private in a future release,
      * once {@link #config()} is reverted to return {@link ConfigurationSupportInternal} instead of
@@ -1087,7 +1173,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
                 // i (Alex) think the way to be stricter about this (if that becomes needed) 
                 // would be to introduce a 'mutable' field on config keys
                 LOG.debug("configuration being made to {} after deployment: {} = {}; change may not be visible in other contexts", 
-                        new Object[] { this, key, val });
+                        new Object[] { AbstractEntity.this, key, val });
             }
             T result = (T) configsInternal.setConfig(key, val);
             
@@ -1601,26 +1687,16 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // -------- SENSORS --------------------
 
     @Override
+    @Deprecated
     public <T> void emit(Sensor<T> sensor, T val) {
-        if (sensor instanceof AttributeSensor) {
-            LOG.warn("Strongly discouraged use of emit with attribute sensor "+sensor+" "+val+"; use setAttribute instead!",
-                new Throwable("location of discouraged attribute "+sensor+" emit"));
-        }
-        if (val instanceof SensorEvent) {
-            LOG.warn("Strongly discouraged use of emit with sensor event as value "+sensor+" "+val+"; value should be unpacked!",
-                new Throwable("location of discouraged event "+sensor+" emit"));
-        }
-        BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(this),
-            "Emitting sensor notification {} value {} on {}", sensor.getName(), val, this);
-        emitInternal(sensor, val);
+        sensors().emit(sensor, val);
     }
     
+    /**
+     * Warning: for internal purposes only; this method may be deleted without notice in future releases.
+     */
     public <T> void emitInternal(Sensor<T> sensor, T val) {
-        if (getManagementSupport().isNoLongerManaged())
-            throw new IllegalStateException("Entity "+this+" is no longer managed, when trying to publish "+sensor+" "+val);
-
-        SubscriptionContext subsContext = getSubscriptionContext();
-        if (subsContext != null) subsContext.publish(sensor.newEvent(getProxyIfAvailable(), val));
+        sensors().emitInternal(sensor, val);
     }
 
     // -------- EFFECTORS --------------
