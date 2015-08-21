@@ -70,8 +70,7 @@ public class MachineManagementMixins {
      * Implement to indicate that a location can suspend and resume machines.
      */
     @Beta
-    public interface SuspendResumeLocation extends SuspendsMachines, ResumesMachines {};
-
+    public interface SuspendResumeLocation extends SuspendsMachines, ResumesMachines {}
 
     @Beta
     public interface SuspendsMachines {
@@ -86,7 +85,7 @@ public class MachineManagementMixins {
         /**
          * Resume the indicated machine.
          */
-        void resumeMachine(MachineLocation location);
+        MachineLocation resumeMachine(Map<?, ?> flags);
     }
 
 }

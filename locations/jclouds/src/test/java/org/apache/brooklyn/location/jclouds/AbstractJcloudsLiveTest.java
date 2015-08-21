@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -154,4 +155,18 @@ public class AbstractJcloudsLiveTest {
         machines.remove(machine);
         jcloudsLocation.release(machine);
     }
+
+    protected void suspendMachine(MachineLocation machine) {
+        assertNotNull(jcloudsLocation);
+        machines.remove(machine);
+        jcloudsLocation.suspendMachine(machine);
+    }
+
+    protected MachineLocation resumeMachine(Map<?, ?> flags) {
+        assertNotNull(jcloudsLocation);
+        MachineLocation location = jcloudsLocation.resumeMachine(flags);
+        machines.add((JcloudsSshMachineLocation) location);
+        return location;
+    }
+
 }
