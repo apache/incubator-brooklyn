@@ -418,7 +418,7 @@ location:
       privateAddresses: [10.0.0.2]
       password: mypassword
       user: myuser
-      osfamily: windows
+      osFamily: windows
 {% endhighlight %}
 
 The BYON location also supports a machine chooser, using the config key `byon.machineChooser`. 

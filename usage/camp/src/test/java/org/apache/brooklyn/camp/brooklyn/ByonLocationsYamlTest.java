@@ -109,7 +109,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "      password: mypassword",
                 "      user: myuser",
                 "      mykey: myval",
-                "      osfamily: windows",
+                "      osFamily: windows",
                 "services:",
                 "- serviceType: org.apache.brooklyn.entity.stock.BasicApplication");
         
@@ -146,7 +146,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "      password: mypassword",
                 "      user: myuser",
                 "      mykey: myval3",
-                "      osfamily: windows",
+                "      osFamily: windows",
                 "services:",
                 "- serviceType: org.apache.brooklyn.entity.stock.BasicApplication");
         
@@ -194,7 +194,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
                 "      password: mypassword",
                 "      user: myuser",
                 "      mykey: myval2",
-                "      osfamily: windows",
+                "      osFamily: windows",
                 "services:",
                 "- serviceType: org.apache.brooklyn.entity.stock.BasicApplication");
 

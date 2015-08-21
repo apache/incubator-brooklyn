@@ -46,7 +46,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwareProcessDriver {
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractSoftwareProcessDriver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractSoftwareProcessWinRmDriver.class);
 
     AttributeSensor<String> WINDOWS_USERNAME = Sensors.newStringSensor("windows.username",
             "Default Windows username to be used when connecting to the Entity's VM");
