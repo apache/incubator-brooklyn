@@ -23,7 +23,7 @@ if creating a project named "autobrick" for "com.acme":
 
 {% highlight bash %}
 $ mvn archetype:generate \
-	-DarchetypeGroupId=io.brooklyn \
+	-DarchetypeGroupId=org.apache.brooklyn \
 	-DarchetypeArtifactId=brooklyn-archetype-quickstart \
 	-DarchetypeVersion={{ site.brooklyn-version }} \
 	-DgroupId=com.acme -DartifactId=autobrick \
