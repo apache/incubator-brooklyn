@@ -20,6 +20,7 @@ package org.apache.brooklyn.core.objs.proxy;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
@@ -45,6 +46,7 @@ import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl.RebindTracker;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.TaskTags;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,43 +180,48 @@ public class EntityProxyImpl implements java.lang.reflect.InvocationHandler {
         if (proxy == null) {
             throw new IllegalArgumentException("Static methods not supported via proxy on entity "+delegate);
         }
-        
-        MethodSignature sig = new MethodSignature(m);
 
         Object result;
-        if (OBJECT_METHODS.contains(sig)) {
-            result = m.invoke(delegate, args);
-        } else if (ENTITY_PERMITTED_READ_ONLY_METHODS.contains(sig)) {
-            result = m.invoke(delegate, args);
-        } else {
-            if (!isMaster()) {
-                if (isMaster==null || RebindTracker.isRebinding()) {
-                    // rebinding or caller manipulating before management; permit all access
-                    // (as of this writing, things seem to work fine without the isRebinding check;
-                    // but including in it may allow us to tighten the methods in EntityTransientCopyInternal) 
-                    result = m.invoke(delegate, args);
-                } else {
-                    throw new UnsupportedOperationException("Call to '"+sig+"' not permitted on read-only entity "+delegate);
-                }
-            } else if (ENTITY_NON_EFFECTOR_METHODS.contains(sig)) {
+        try {
+            MethodSignature sig = new MethodSignature(m);
+    
+            if (OBJECT_METHODS.contains(sig)) {
+                result = m.invoke(delegate, args);
+            } else if (ENTITY_PERMITTED_READ_ONLY_METHODS.contains(sig)) {
                 result = m.invoke(delegate, args);
             } else {
-                Object[] nonNullArgs = (args == null) ? new Object[0] : args;
-                Effector<?> eff = findEffector(m, nonNullArgs);
-                if (eff != null) {
-                    @SuppressWarnings("rawtypes")
-                    Map parameters = EffectorUtils.prepareArgsForEffectorAsMapFromArray(eff, nonNullArgs);
-                    @SuppressWarnings({ "unchecked", "rawtypes" })
-                    TaskAdaptable<?> task = ((EffectorWithBody)eff).getBody().newTask(delegate, eff, ConfigBag.newInstance(parameters));
-                    // as per LocalManagementContext.runAtEntity(Entity entity, TaskAdaptable<T> task) 
-                    TaskTags.markInessential(task);
-                    result = DynamicTasks.queueIfPossible(task.asTask()).orSubmitAsync(delegate).andWaitForSuccess();
+                if (!isMaster()) {
+                    if (isMaster==null || RebindTracker.isRebinding()) {
+                        // rebinding or caller manipulating before management; permit all access
+                        // (as of this writing, things seem to work fine without the isRebinding check;
+                        // but including in it may allow us to tighten the methods in EntityTransientCopyInternal) 
+                        result = m.invoke(delegate, args);
+                    } else {
+                        throw new UnsupportedOperationException("Call to '"+sig+"' not permitted on read-only entity "+delegate);
+                    }
+                } else if (ENTITY_NON_EFFECTOR_METHODS.contains(sig)) {
+                    result = m.invoke(delegate, args);
                 } else {
-                    result = m.invoke(delegate, nonNullArgs);
+                    Object[] nonNullArgs = (args == null) ? new Object[0] : args;
+                    Effector<?> eff = findEffector(m, nonNullArgs);
+                    if (eff != null) {
+                        @SuppressWarnings("rawtypes")
+                        Map parameters = EffectorUtils.prepareArgsForEffectorAsMapFromArray(eff, nonNullArgs);
+                        @SuppressWarnings({ "unchecked", "rawtypes" })
+                        TaskAdaptable<?> task = ((EffectorWithBody)eff).getBody().newTask(delegate, eff, ConfigBag.newInstance(parameters));
+                        // as per LocalManagementContext.runAtEntity(Entity entity, TaskAdaptable<T> task) 
+                        TaskTags.markInessential(task);
+                        result = DynamicTasks.queueIfPossible(task.asTask()).orSubmitAsync(delegate).andWaitForSuccess();
+                    } else {
+                        result = m.invoke(delegate, nonNullArgs);
+                    }
                 }
             }
+
+        } catch (InvocationTargetException e) {
+            throw Exceptions.propagate(e.getTargetException());
         }
-        
+
         return (result == delegate && delegate instanceof AbstractEntity) ? ((AbstractEntity)result).getProxy() : result;
     }
     
