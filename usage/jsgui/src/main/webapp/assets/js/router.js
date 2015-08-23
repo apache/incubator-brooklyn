@@ -18,11 +18,12 @@
 */
 define([
     "brooklyn", "underscore", "jquery", "backbone",
+    "codemirror",
     "model/application", "model/app-tree", "model/location", 
     "model/server-extended-status",
     "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy",
-    "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-caution.html"
-], function (Brooklyn, _, $, Backbone,
+    "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-caution.html",
+], function (Brooklyn, _, $, Backbone, CodeMirror,
         Application, AppTree, Location, 
         serverStatus,
         HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
