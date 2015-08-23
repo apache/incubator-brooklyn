@@ -27,15 +27,21 @@ import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.objs.Configurable.ConfigurationSupport;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.api.sensor.Feed;
+import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.util.guava.Maybe;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 
 /**
  * The basic interface for a Brooklyn entity.
@@ -185,15 +191,13 @@ public interface Entity extends BrooklynObject {
     Collection<Location> getLocations();
 
     /**
-     * Gets the value of the given attribute on this entity, or null if has not been set.
-     *
-     * Attributes can be things like workrate and status information, as well as
-     * configuration (e.g. url/jmxHost/jmxPort), etc.
+     * Convenience for calling {@link SensorSupport#get(AttributeSensor)},
+     * via code like {@code sensors().get(key)}.
      */
     <T> T getAttribute(AttributeSensor<T> sensor);
 
     /**
-     * Convenience for calling {@link ConfigurationSupport#getConfig(ConfigKey)},
+     * Convenience for calling {@link ConfigurationSupport#get(ConfigKey)},
      * via code like {@code config().get(key)}.
      */
     <T> T getConfig(ConfigKey<T> key);
@@ -262,4 +266,52 @@ public interface Entity extends BrooklynObject {
      * Adds the given feed to this entity. Also calls feed.setEntity if available.
      */
     <T extends Feed> T addFeed(T feed);
+    
+    SensorSupport sensors();
+
+    @Beta
+    public interface SensorSupport {
+
+        /**
+         * Gets the value of the given attribute on this entity, or null if has not been set.
+         *
+         * Attributes can be things like workrate and status information, as well as
+         * configuration (e.g. url/jmxHost/jmxPort), etc.
+         */
+        <T> T get(AttributeSensor<T> key);
+
+        /**
+         * Sets the {@link AttributeSensor} data for the given attribute to the specified value.
+         * 
+         * This can be used to "enrich" the entity, such as adding aggregated information, 
+         * rolling averages, etc.
+         * 
+         * @return the old value for the attribute (possibly {@code null})
+         */
+        <T> T set(AttributeSensor<T> attribute, T val);
+
+        /**
+         * Atomically modifies the {@link AttributeSensor}, ensuring that only one modification is done
+         * at a time.
+         * 
+         * If the modifier returns {@link Maybe#absent()} then the attribute will be
+         * left unmodified, and the existing value will be returned.
+         * 
+         * For details of the synchronization model used to achieve this, refer to the underlying 
+         * attribute store (e.g. AttributeMap).
+         * 
+         * @return the old value for the attribute (possibly {@code null})
+         * @since 0.7.0-M2
+         */
+        @Beta
+        <T> T modify(AttributeSensor<T> attribute, Function<? super T, Maybe<T>> modifier);
+
+        /**
+         * Emits a {@link SensorEvent} event on behalf of this entity (as though produced by this entity).
+         * <p>
+         * Note that for attribute sensors it is nearly always recommended to use setAttribute, 
+         * as this method will not update local values.
+         */
+        <T> void emit(Sensor<T> sensor, T value);
+    }
 }

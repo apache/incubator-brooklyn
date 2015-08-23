@@ -22,7 +22,9 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.api.effector.Effector;
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
+import org.apache.brooklyn.api.entity.Entity.SensorSupport;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -30,13 +32,17 @@ import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.EntityMemento;
+import org.apache.brooklyn.api.objs.Configurable;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.entity.internal.EntityConfigMap;
 import org.apache.brooklyn.core.mgmt.internal.EntityManagementSupport;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
 import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 
@@ -54,8 +60,7 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     void clearLocations();
 
     /**
-     * 
-     * Like {@link EntityLocal#setAttribute(AttributeSensor, Object)}, except does not publish an attribute-change event.
+     * @deprecated since 0.8.0; use {@link SensorSupportInternal#setWithoutPublishing(AttributeSensor, Object)} via code like {@code sensors().setWithoutPublishing(attribute, val)}.
      */
     <T> T setAttributeWithoutPublishing(AttributeSensor<T> sensor, T val);
 
@@ -93,9 +98,15 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     @Deprecated
     ConfigBag getLocalConfigBag();
 
+    /**
+     * @deprecated since 0.8.0; use {@link SensorSupportInternal#getAll()} via code like {@code sensors().getAll()}.
+     */
     @Beta
     Map<AttributeSensor, Object> getAllAttributes();
 
+    /**
+     * @deprecated since 0.8.0; use {@link SensorSupportInternal#remove(AttributeSensor)} via code like {@code sensors().remove(attribute)}.
+     */
     @Beta
     void removeAttribute(AttributeSensor<?> attribute);
 
@@ -177,6 +188,25 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
      */
     void requestPersist();
     
+    SensorSupportInternal sensors();
+
+    @Beta
+    public interface SensorSupportInternal extends Entity.SensorSupport {
+        /**
+         * 
+         * Like {@link EntityLocal#setAttribute(AttributeSensor, Object)}, except does not publish an attribute-change event.
+         */
+        <T> T setWithoutPublishing(AttributeSensor<T> sensor, T val);
+        
+        @Beta
+        Map<AttributeSensor<?>, Object> getAll();
+
+        @Beta
+        void remove(AttributeSensor<?> attribute);
+
+
+    }
+
     public interface FeedSupport {
         Collection<Feed> getFeeds();
         
