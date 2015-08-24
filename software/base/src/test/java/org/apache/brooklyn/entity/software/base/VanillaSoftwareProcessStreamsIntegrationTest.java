@@ -81,19 +81,19 @@ public class VanillaSoftwareProcessStreamsIntegrationTest extends BrooklynAppUni
         app.start(ImmutableList.of(localhost));
 
         Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt.getExecutionManager(), entity);
-        
+
         for (Map.Entry<String, String> entry : cmds.entrySet()) {
             String taskNameRegex = entry.getKey();
             String echoed = entry.getValue();
-            
+
             Task<?> subTask = findTaskOrSubTask(tasks, TaskPredicates.displayNameMatches(StringPredicates.matchesRegex(taskNameRegex))).get();
-            
+
             String stdin = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_STDIN);
             String stdout = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_STDOUT);
             String stderr = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_STDERR);
             String env = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_ENV);
             String msg = "stdin="+stdin+"; stdout="+stdout+"; stderr="+stderr+"; env="+env;
-            
+
             assertTrue(stdin.contains("echo "+echoed), msg);
             assertTrue(stdout.contains(echoed), msg);
         }
@@ -109,15 +109,15 @@ public class VanillaSoftwareProcessStreamsIntegrationTest extends BrooklynAppUni
         List<String> taskNames = Lists.newArrayList();
         Optional<Task<?>> result = findTaskOrSubTaskImpl(tasks, matcher, taskNames);
         if (!result.isPresent() && log.isDebugEnabled()) {
-            log.debug("Task not found matching "+matcher+"; contender names were "+taskNames);
+            log.debug("Task not found matching " + matcher + "; contender names were " + taskNames);
         }
         return result;
     }
-    
+
     protected Optional<Task<?>> findTaskOrSubTaskImpl(Iterable<? extends Task<?>> tasks, Predicate<? super Task<?>> matcher, List<String> taskNames) {
         for (Task<?> task : tasks) {
             if (matcher.apply(task)) return Optional.<Task<?>>of(task);
-        
+
             if (!(task instanceof HasTaskChildren)) {
                 return Optional.absent();
             } else {
@@ -125,7 +125,7 @@ public class VanillaSoftwareProcessStreamsIntegrationTest extends BrooklynAppUni
                 if (subResult.isPresent()) return subResult;
             }
         }
-        
+
         return Optional.<Task<?>>absent();
     }
 }

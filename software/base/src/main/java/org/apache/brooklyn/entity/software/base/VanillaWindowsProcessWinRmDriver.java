@@ -18,12 +18,16 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
+import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.net.UserAndHostAndPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWinRmDriver implements VanillaWindowsProcessDriver {
+    private static final Logger LOG = LoggerFactory.getLogger(VanillaWindowsProcessWinRmDriver.class);
 
     public VanillaWindowsProcessWinRmDriver(EntityLocal entity, WinRmMachineLocation location) {
         super(entity, location);
@@ -39,8 +43,7 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
     }
     
     @Override
-    public void preInstall() {
-        super.preInstall();
+    public void runPreInstallCommand(String preInstallCommand) {
         executeCommand(VanillaWindowsProcess.PRE_INSTALL_COMMAND, VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND, true);
         if (entity.getConfig(VanillaWindowsProcess.PRE_INSTALL_REBOOT_REQUIRED)) {
             rebootAndWait();
@@ -72,8 +75,12 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
 
     @Override
     public boolean isRunning() {
-        return executeCommand(VanillaWindowsProcess.CHECK_RUNNING_COMMAND,
-                VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, false).getStatusCode() == 0;
+        WinRmToolResponse runningCheck = executeCommand(VanillaWindowsProcess.CHECK_RUNNING_COMMAND,
+                VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, false);
+        if(runningCheck.getStatusCode() != 0) {
+            LOG.info(getEntity() + " isRunning check failed: exit code "  + runningCheck.getStatusCode() + "; " + runningCheck.getStdErr());
+        }
+        return runningCheck.getStatusCode() == 0;
     }
 
     @Override
