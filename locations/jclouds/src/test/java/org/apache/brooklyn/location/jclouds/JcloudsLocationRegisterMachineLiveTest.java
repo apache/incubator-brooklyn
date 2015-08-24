@@ -27,6 +27,7 @@ import java.net.InetAddress;
 import java.util.Collections;
 
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -35,12 +36,11 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTest {
+public class JcloudsLocationRegisterMachineLiveTest extends AbstractJcloudsLiveTest {
     
-    private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRebindMachineLiveTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JcloudsLocationRegisterMachineLiveTest.class);
     
-    private static final String EUWEST_IMAGE_ID = AWS_EC2_EUWEST_REGION_NAME+"/"+"ami-89def4fd";
-    private static final String IMAGE_OWNER = "411009282317";
+    private static final String EUWEST_IMAGE_ID = AWS_EC2_EUWEST_REGION_NAME+"/"+"ami-ce7b6fba";
 
     @BeforeMethod(alwaysRun=true)
     @Override
@@ -50,9 +50,9 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
     }
 
     @Test(groups = { "Live", "Live-sanity" })
-    public void testRebindWithIncorrectId() throws Exception {
+    public void testRegisterWithIncorrectId() throws Exception {
         try {
-            jcloudsLocation.rebindMachine(ImmutableMap.of("id", "incorrectid", "hostname", "myhostname", "user", "myusername"));
+            jcloudsLocation.registerMachine(ImmutableMap.of("id", "incorrectid", "hostname", "myhostname", "user", "myusername"));
         } catch (IllegalArgumentException e) {
             if (e.getMessage().contains("node not found")) {
                 // success
@@ -63,12 +63,12 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
     }
     
     @Test(groups = { "Live" })
-    public void testRebindVm() throws Exception {
+    public void testRegisterVm() throws Exception {
         // FIXME How to create a machine - go directly through jclouds instead?
         //       Going through LocationRegistry.resolve, loc and loc2 might be same instance
         
         // Create a VM through jclouds
-        JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.of("imageId", EUWEST_IMAGE_ID, "imageOwner", IMAGE_OWNER));
+        JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.of("imageId", EUWEST_IMAGE_ID));
         assertTrue(machine.isSshable());
         LOG.info("obtained "+machine);
 
@@ -79,9 +79,11 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
         
         // Create a new jclouds location, and re-bind the existing VM to that
         JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
-        SshMachineLocation machine2 = loc2.rebindMachine(ImmutableMap.of("id", id, "hostname", hostname, "user", user));
-        
-        LOG.info("rebinded to "+machine2);
+        MachineLocation machineLocation = loc2.registerMachine(ImmutableMap.of("id", id, "hostname", hostname, "user", user));
+        assertTrue(machineLocation instanceof SshMachineLocation);
+        SshMachineLocation machine2 = (SshMachineLocation) machineLocation;
+
+        LOG.info("Registered " + machine2);
         
         // Confirm the re-bound machine is wired up
         assertTrue(machine2.isSshable());
@@ -94,11 +96,11 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
     }
     
     @Test(groups = { "Live" })
-    public void testRebindVmDeprecated() throws Exception {
-        // FIXME See comments in testRebindVm
+    public void testRegisterVmDeprecated() throws Exception {
+        // FIXME See comments in testRegisterVm
 
         // Create a VM through jclouds
-        JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.of("imageId", EUWEST_IMAGE_ID, "imageOwner", IMAGE_OWNER));
+        JcloudsSshMachineLocation machine = obtainMachine(ImmutableMap.of("imageId", EUWEST_IMAGE_ID));
         assertTrue(machine.isSshable());
 
         String id = machine.getJcloudsId();
@@ -109,8 +111,10 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
         // Create a new jclouds location, and re-bind the existing VM to that
         JcloudsLocation loc2 = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_PROVIDER+":"+AWS_EC2_EUWEST_REGION_NAME);
         // pass deprecated userName
-        SshMachineLocation machine2 = loc2.rebindMachine(ImmutableMap.of("id", id, "hostname", hostname, "userName", username));
-        
+        MachineLocation machineLocation = loc2.registerMachine(ImmutableMap.of("id", id, "hostname", hostname, "userName", username));
+        assertTrue(machineLocation instanceof SshMachineLocation);
+        SshMachineLocation machine2 = (SshMachineLocation) machineLocation;
+
         // Confirm the re-bound machine is wired up
         assertTrue(machine2.isSshable());
         assertEquals(ImmutableSet.copyOf(loc2.getChildren()), ImmutableSet.of(machine2));
@@ -123,14 +127,16 @@ public class JcloudsLocationRebindMachineLiveTest extends AbstractJcloudsLiveTes
 
     // Useful for debugging; accesss a hard-coded existing instance so don't need to wait for provisioning a new one
     @Test(enabled=false, groups = { "Live" })
-    public void testRebindVmToHardcodedInstance() throws Exception {
+    public void testRegisterVmToHardcodedInstance() throws Exception {
         String id = "eu-west-1/i-5504f21d";
         InetAddress address = InetAddress.getByName("ec2-176-34-93-58.eu-west-1.compute.amazonaws.com");
         String hostname = address.getHostName();
         String username = "root";
         
-        SshMachineLocation machine = jcloudsLocation.rebindMachine(ImmutableMap.of("id", id, "hostname", hostname, "userName", username));
-        
+        MachineLocation machineLocation = jcloudsLocation.registerMachine(ImmutableMap.of("id", id, "hostname", hostname, "userName", username));
+        assertTrue(machineLocation instanceof SshMachineLocation);
+        SshMachineLocation machine = (SshMachineLocation) machineLocation;
+
         // Confirm the re-bound machine is wired up
         assertTrue(machine.isSshable());
         assertEquals(ImmutableSet.copyOf(jcloudsLocation.getChildren()), ImmutableSet.of(machine));

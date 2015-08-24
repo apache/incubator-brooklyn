@@ -153,18 +153,19 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
                 "",
                 "brooklyn.locations:",
                 "- type: "+locationSpec.getSpec());
-          if (locationSpec.getConfig().size() > 0) {
-              yaml.add("  brooklyn.config:");
-              for (Map.Entry<String, ?> entry : locationSpec.getConfig().entrySet()) {
-                  yaml.add("    "+entry.getKey()+": "+entry.getValue());
-              }
-          }
+        if (locationSpec.getConfig().size() > 0) {
+            yaml.add("  brooklyn.config:");
+            for (Map.Entry<String, ?> entry : locationSpec.getConfig().entrySet()) {
+                yaml.add("    " + entry.getKey() + ": " + entry.getValue());
+            }
+        }
 
-          brooklyn().getCatalog().addItems(Joiner.on("\n").join(yaml.build()));
-          LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocationByName(name);
-          return Response.created(URI.create(name))
-                  .entity(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET))
-                  .build();
+        String locationBlueprint = Joiner.on("\n").join(yaml.build());
+        brooklyn().getCatalog().addItems(locationBlueprint);
+        LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocationByName(name);
+        return Response.created(URI.create(name))
+                .entity(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET))
+                .build();
     }
 
     @Override

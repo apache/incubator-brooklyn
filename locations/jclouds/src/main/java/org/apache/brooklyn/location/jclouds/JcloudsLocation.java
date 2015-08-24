@@ -189,7 +189,7 @@ import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 @SuppressWarnings("serial")
 public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation implements
         JcloudsLocationConfig, MachineManagementMixins.RichMachineProvisioningLocation<MachineLocation>,
-        LocationWithObjectStore, MachineManagementMixins.SuspendsMachines {
+        LocationWithObjectStore, MachineManagementMixins.SuspendResumeLocation {
 
     // TODO After converting from Groovy to Java, this is now very bad code! It relies entirely on putting
     // things into and taking them out of maps; it's not type-safe, and it's thus very error-prone.
@@ -514,7 +514,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         ConfigBag conf = (flags==null || flags.isEmpty())
                 ? config().getBag()
                 : ConfigBag.newInstanceExtending(config().getBag(), flags);
-        return getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(conf, true);
+        return getComputeService(conf);
+    }
+
+    public ComputeService getComputeService(ConfigBag config) {
+        return getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(config, true);
     }
 
     /** @deprecated since 0.7.0 use {@link #listMachines()} */ @Deprecated
@@ -1052,6 +1056,32 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         if (toThrow != null) {
             throw Exceptions.propagate(toThrow);
         }
+    }
+
+    /**
+     * Brings an existing machine with the given details under management.
+     * <p/>
+     * Note that this method does <b>not</b> call the lifecycle methods of any
+     * {@link #getCustomizers(ConfigBag) customizers} attached to this location.
+     *
+     * @param flags See {@link #registerMachine(ConfigBag)} for a description of required fields.
+     * @see #registerMachine(ConfigBag)
+     */
+    @Override
+    public MachineLocation resumeMachine(Map<?, ?> flags) {
+        ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
+        LOG.info("{} using resuming node matching properties: {}", this, setup);
+        ComputeService computeService = getComputeService(setup);
+        NodeMetadata node = findNodeOrThrow(setup);
+        LOG.debug("{} resuming {}", this, node);
+        computeService.resumeNode(node.getId());
+        // Load the node a second time once it is resumed to get an object with
+        // hostname and addresses populated.
+        node = findNodeOrThrow(setup);
+        LOG.debug("{} resumed {}", this, node);
+        MachineLocation registered = registerMachineLocation(setup, node);
+        LOG.info("{} resumed and registered {}", this, registered);
+        return registered;
     }
 
     // ------------- constructing the template, etc ------------------------
@@ -1861,16 +1891,44 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
 
-    // ----------------- rebinding to existing machine ------------------------
+    // ----------------- registering existing machines ------------------------
 
+    /**
+     * @deprecated since 0.8.0 use {@link #registerMachine(NodeMetadata)} instead.
+     */
+    @Deprecated
     public JcloudsSshMachineLocation rebindMachine(NodeMetadata metadata) throws NoMachinesAvailableException {
-        return rebindMachine(MutableMap.of(), metadata);
+        return (JcloudsSshMachineLocation) registerMachine(metadata);
     }
+
+    protected MachineLocation registerMachine(NodeMetadata metadata) throws NoMachinesAvailableException {
+        return registerMachine(MutableMap.of(), metadata);
+    }
+
+    /**
+     * @deprecated since 0.8.0 use {@link #registerMachine(Map, NodeMetadata)} instead.
+     */
+    @Deprecated
     public JcloudsSshMachineLocation rebindMachine(Map<?,?> flags, NodeMetadata metadata) throws NoMachinesAvailableException {
+        return (JcloudsSshMachineLocation) registerMachine(flags, metadata);
+    }
+
+    protected MachineLocation registerMachine(Map<?, ?> flags, NodeMetadata metadata) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
         if (!setup.containsKey("id")) setup.putStringKey("id", metadata.getId());
         setHostnameUpdatingCredentials(setup, metadata);
-        return rebindMachine(setup);
+        return registerMachine(setup);
+    }
+
+    /**
+     * Brings an existing machine with the given details under management.
+     * <p>
+     * This method will throw an exception if used to reconnect to a Windows VM.
+     * @deprecated since 0.8.0 use {@link #registerMachine(ConfigBag)} instead.
+     */
+    @Deprecated
+    public JcloudsSshMachineLocation rebindMachine(ConfigBag setup) throws NoMachinesAvailableException {
+        return (JcloudsSshMachineLocation) registerMachine(setup);
     }
 
     /**
@@ -1878,54 +1936,79 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
      * <p>
      * Required fields are:
      * <ul>
-     *   <li>id: the jclouds VM id, e.g. "eu-west-1/i-5504f21d" (NB this is @see JcloudsSshMachineLocation#getJcloudsId() not #getId())
+     *   <li>id: the jclouds VM id, e.g. "eu-west-1/i-5504f21d" (NB this is {@see JcloudsMachineLocation#getJcloudsId()} not #getId())
      *   <li>hostname: the public hostname or IP of the machine, e.g. "ec2-176-34-93-58.eu-west-1.compute.amazonaws.com"
-     *   <li>userName: the username for ssh'ing into the machine
+     *   <li>userName: the username for sshing into the machine (for use if it is not a Windows system)
      * <ul>
      */
-    public JcloudsSshMachineLocation rebindMachine(ConfigBag setup) throws NoMachinesAvailableException {
-        try {
-            if (setup.getDescription() == null) setCreationString(setup);
-            String user = checkNotNull(getUser(setup), "user");
-            String rawId = (String) setup.getStringKey("id");
-            String rawHostname = (String) setup.getStringKey("hostname");
-            Predicate<ComputeMetadata> predicate = getRebindToMachinePredicate(setup);
-            LOG.info("Rebinding to VM {} ({}@{}), in jclouds location for provider {} matching {}", new Object[]{
-                    rawId != null ? rawId : "<lookup>",
-                    user,
-                    rawHostname != null ? rawHostname : "<unspecified>",
-                    getProvider(),
-                    predicate
-                    });
-            ComputeService computeService = getConfig(COMPUTE_SERVICE_REGISTRY).findComputeService(setup, true);
-            Set<? extends NodeMetadata> candidateNodes = computeService.listNodesDetailsMatching(predicate);
-            if (candidateNodes.isEmpty()) {
-                throw new IllegalArgumentException("Jclouds node not found for rebind with predicate " + predicate);
-            } else if (candidateNodes.size() > 1) {
-                throw new IllegalArgumentException("Jclouds node for rebind matched multiple with " + predicate + ": " + candidateNodes);
+    public MachineLocation registerMachine(ConfigBag setup) throws NoMachinesAvailableException {
+        NodeMetadata node = findNodeOrThrow(setup);
+        return registerMachineLocation(setup, node);
+    }
+
+    protected MachineLocation registerMachineLocation(ConfigBag setup, NodeMetadata node) {
+        ComputeService computeService = getComputeService(setup);
+        if (isWindows(node, setup)) {
+            return registerWinRmMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
+        } else {
+            try {
+                return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
+            } catch (IOException e) {
+                throw Exceptions.propagate(e);
             }
-
-            NodeMetadata node = Iterables.getOnlyElement(candidateNodes);
-            String pkd = LocationConfigUtils.getOsCredential(setup).checkNoErrors().logAnyWarnings().getPrivateKeyData();
-            if (Strings.isNonBlank(pkd)) {
-                LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(new Credentials(user, pkd));
-                //override credentials
-                node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
-            }
-
-            // TODO confirm we can SSH ?
-            // NB if rawHostname not set, get the hostname using getPublicHostname(node, Optional.<HostAndPort>absent(), setup);
-
-            return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
-
-        } catch (IOException e) {
-            throw Exceptions.propagate(e);
         }
     }
 
-    public JcloudsSshMachineLocation rebindMachine(Map<?,?> flags) throws NoMachinesAvailableException {
+    /**
+     * Finds a node matching the properties given in config or throws an exception.
+     * @param config
+     * @return
+     */
+    protected NodeMetadata findNodeOrThrow(ConfigBag config) {
+        if (config.getDescription() == null) {
+            setCreationString(config);
+        }
+        String user = checkNotNull(getUser(config), "user");
+        String rawId = (String) config.getStringKey("id");
+        String rawHostname = (String) config.getStringKey("hostname");
+        Predicate<ComputeMetadata> predicate = getRebindToMachinePredicate(config);
+        LOG.debug("Finding VM {} ({}@{}), in jclouds location for provider {} matching {}", new Object[]{
+                rawId != null ? rawId : "<lookup>",
+                user,
+                rawHostname != null ? rawHostname : "<unspecified>",
+                getProvider(),
+                predicate
+        });
+        ComputeService computeService = getComputeService(config);
+        Set<? extends NodeMetadata> candidateNodes = computeService.listNodesDetailsMatching(predicate);
+        if (candidateNodes.isEmpty()) {
+            throw new IllegalArgumentException("Jclouds node not found for rebind with predicate " + predicate);
+        } else if (candidateNodes.size() > 1) {
+            throw new IllegalArgumentException("Jclouds node for rebind matched multiple with " + predicate + ": " + candidateNodes);
+        }
+        NodeMetadata node = Iterables.getOnlyElement(candidateNodes);
+
+        String pkd = LocationConfigUtils.getOsCredential(config).checkNoErrors().logAnyWarnings().getPrivateKeyData();
+        if (Strings.isNonBlank(pkd)) {
+            LoginCredentials expectedCredentials = LoginCredentials.fromCredentials(new Credentials(user, pkd));
+            //override credentials
+            node = NodeMetadataBuilder.fromNodeMetadata(node).credentials(expectedCredentials).build();
+        }
+
+        return node;
+    }
+
+    /**
+     * @deprecated since 0.8.0 use {@link #registerMachine(Map)} instead.
+     */
+    @Deprecated
+    public JcloudsSshMachineLocation rebindMachine(Map<?, ?> flags) throws NoMachinesAvailableException {
+        return (JcloudsSshMachineLocation) registerMachine(flags);
+    }
+
+    public MachineLocation registerMachine(Map<?,?> flags) throws NoMachinesAvailableException {
         ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
-        return rebindMachine(setup);
+        return registerMachine(setup);
     }
 
     /**

@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
@@ -332,14 +333,19 @@ public class ByonLocationResolverTest {
         Assert.assertEquals("1.1.1.1", location1.getAddress().getHostAddress());
     }
 
-    @Test
-    public void testWindowsMachines() throws Exception {
+    @DataProvider(name = "windowsOsFamilies")
+    public Object[][] getWindowsOsFamilies() {
+        return new Object[][]{{"windows"}, {"WINDOWS"}, {"wInDoWs"}};
+    }
+
+    @Test(dataProvider = "windowsOsFamilies")
+    public void testWindowsMachines(String osFamily) throws Exception {
         brooklynProperties.put("brooklyn.location.byon.user", "myuser");
         brooklynProperties.put("brooklyn.location.byon.password", "mypassword");
         String spec = "byon";
         Map<String, ?> flags = ImmutableMap.of(
                 "hosts", ImmutableList.of("1.1.1.1", "2.2.2.2"),
-                "osfamily", "windows"
+                "osfamily", osFamily
         );
         MachineProvisioningLocation<MachineLocation> provisioner = resolve(spec, flags);
         WinRmMachineLocation location = (WinRmMachineLocation) provisioner.obtain(ImmutableMap.of());
@@ -350,7 +356,7 @@ public class ByonLocationResolverTest {
     }
 
     @Test
-    public void testNoneWindowsMachines() throws Exception {
+    public void testNonWindowsMachines() throws Exception {
         String spec = "byon";
         Map<String, ?> flags = ImmutableMap.of(
                 "hosts", ImmutableList.of("1.1.1.1", "2.2.2.2"),

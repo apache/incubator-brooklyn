@@ -334,7 +334,7 @@ public class BasicLocationRegistry implements LocationRegistry {
                 try {
                     return Maybe.of(resolver.newLocationFromString(locationFlags, spec, this));
                 } catch (RuntimeException e) {
-                    return Maybe.absent(Suppliers.ofInstance(e));
+                     return Maybe.absent(Suppliers.ofInstance(e));
                 }
             }
 
