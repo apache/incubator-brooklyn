@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config.external;
+package org.apache.brooklyn.core.config.external;
 
 import java.util.Map;
 
-import brooklyn.management.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
 
 
 /**

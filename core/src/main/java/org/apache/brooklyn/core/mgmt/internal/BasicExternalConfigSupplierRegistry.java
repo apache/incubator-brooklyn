@@ -16,21 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management.internal;
+package org.apache.brooklyn.core.mgmt.internal;
 
 import java.lang.reflect.Constructor;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.config.ConfigPredicates;
+import org.apache.brooklyn.core.config.ConfigUtils;
+import org.apache.brooklyn.core.config.external.ExternalConfigSupplier;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.config.ConfigPredicates;
-import brooklyn.config.ConfigUtils;
-import brooklyn.config.external.ExternalConfigSupplier;
-import brooklyn.management.ManagementContext;
-import brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.Maps;
 

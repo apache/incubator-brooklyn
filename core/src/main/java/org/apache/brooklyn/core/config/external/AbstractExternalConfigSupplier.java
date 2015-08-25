@@ -16,19 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config.external;
+package org.apache.brooklyn.core.config.external;
 
-import com.google.common.annotations.Beta;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+
 
 /**
- * Provider of "externalised" entity configuration that is resolved at runtime.
- *
- * @since 0.8.0
+ * Default superclass for all {@link ExternalConfigSupplier} implementations.
  */
-@Beta
-public interface ExternalConfigSupplier {
+abstract public class AbstractExternalConfigSupplier implements ExternalConfigSupplier {
 
-    String getName();
-    String get(String key);
+    private final ManagementContext managementContext;
+    private final String name;
+
+    protected AbstractExternalConfigSupplier(ManagementContext managementContext, String name) {
+        this.managementContext = managementContext;
+        this.name = name;
+    }
+
+    public ManagementContext getManagementContext() {
+        return managementContext;
+    }
+
+    public String getName() {
+        return name;
+    }
 
 }

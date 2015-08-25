@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.management.internal;
+package org.apache.brooklyn.core.mgmt.internal;
+
+import org.apache.brooklyn.core.config.external.ExternalConfigSupplier;
 
 import com.google.common.annotations.Beta;
-
-import brooklyn.config.external.ExternalConfigSupplier;
 
 
 /**

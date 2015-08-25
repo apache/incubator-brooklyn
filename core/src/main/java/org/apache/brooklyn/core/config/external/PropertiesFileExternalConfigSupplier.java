@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.config.external;
+package org.apache.brooklyn.core.config.external;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,8 +24,8 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 
-import brooklyn.management.ManagementContext;
-import brooklyn.util.stream.Streams;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.util.stream.Streams;
 
 
 /**
