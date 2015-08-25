@@ -55,8 +55,8 @@ public interface ConfigKey<T> {
      * <p> 
      * This returns a "super" of T only in the case where T is generified, 
      * and in such cases it returns the Class instance for the unadorned T ---
-     * i.e. for List<String> this returns Class<List> ---
-     * this is of course because there is no actual Class<List<String>> instance.
+     * i.e. for List&lt;String&gt; this returns Class&lt;List&gt; ---
+     * this is of course because there is no actual Class&lt;List&lt;String&gt;&gt; instance.
      */
     Class<? super T> getType();
 

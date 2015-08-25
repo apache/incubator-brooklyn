@@ -265,7 +265,7 @@ public interface Entity extends BrooklynObject {
      * @deprecated since 0.9.0; see {@link PolicySupport#add(PolicySpec)}
      */
     @Deprecated
-    <T extends Policy> T addPolicy(PolicySpec<T> enricher);
+    <T extends Policy> T addPolicy(PolicySpec<T> policy);
     
     /**
      * Removes the given policy from this entity. 

@@ -987,7 +987,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     /**
      * Direct use of this class is strongly discouraged. It will become private in a future release,
-     * once {@link #sensors()} is reverted to return {@link SensorsSupport} instead of
+     * once {@link #sensors()} is reverted to return {@link SensorSupport} instead of
      * {@link BasicSensorSupport}.
      */
     @Beta
