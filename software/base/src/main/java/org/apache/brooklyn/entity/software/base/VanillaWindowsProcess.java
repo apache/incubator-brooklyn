@@ -37,6 +37,12 @@ public interface VanillaWindowsProcess extends AbstractVanillaProcess {
             ImmutableSet.of(5985, 3389));
     ConfigKey<String> PRE_INSTALL_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("pre.install.powershell.command",
             "powershell command to run during the pre-install phase");
+    ConfigKey<String> POST_INSTALL_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("post.install.powershell.command",
+            "powershell command to run during the post-install phase");
+    ConfigKey<String> PRE_LAUNCH_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("pre.launch.powershell.command",
+            "powershell command to run during the pre-launch phase");
+    ConfigKey<String> POST_LAUNCH_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("post.launch.powershell.command",
+            "powershell command to run during the post-launch phase");
     ConfigKey<Boolean> PRE_INSTALL_REBOOT_REQUIRED = ConfigKeys.newBooleanConfigKey("pre.install.reboot.required",
             "indicates that a reboot should be performed after the pre-install command is run", false);
     ConfigKey<Boolean> INSTALL_REBOOT_REQUIRED = ConfigKeys.newBooleanConfigKey("install.reboot.required",

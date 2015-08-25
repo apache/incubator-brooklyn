@@ -705,16 +705,16 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         }
 
         @Override
-        public void runPreInstallCommand(String command) { }
+        public void runPreInstallCommand() { }
 
         @Override
-        public void runPostInstallCommand(String command) { }
+        public void runPostInstallCommand() { }
 
         @Override
-        public void runPreLaunchCommand(String command) { }
+        public void runPreLaunchCommand() { }
 
         @Override
-        public void runPostLaunchCommand(String command) { }
+        public void runPostLaunchCommand() { }
 
         @Override
         protected String getInstallLabelExtraSalt() {

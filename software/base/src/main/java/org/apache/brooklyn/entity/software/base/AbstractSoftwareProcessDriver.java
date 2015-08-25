@@ -116,11 +116,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 preInstall();
             }});
 
-            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND))) {
-                DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
-                    runPreInstallCommand(entity.getConfig(BrooklynConfigKeys.PRE_INSTALL_COMMAND));
-                }});
-            };
+            DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
+                runPreInstallCommand();
+            }});
 
             Optional<Boolean> locationInstalled = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
             Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
@@ -142,11 +140,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 }});
             }
 
-            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND))) {
-                DynamicTasks.queue("post-install-command", new Runnable() { public void run() {
-                    runPostInstallCommand(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND));
-                }});
-            }
+            DynamicTasks.queue("post-install-command", new Runnable() { public void run() {
+                runPostInstallCommand();
+            }});
 
             DynamicTasks.queue("customize", new Runnable() { public void run() {
                 waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
@@ -158,22 +154,18 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 copyRuntimeResources();
             }});
 
-            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
-                DynamicTasks.queue("pre-launch-command", new Runnable() { public void run() {
-                    runPreLaunchCommand(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND));
-                }});
-            };
+            DynamicTasks.queue("pre-launch-command", new Runnable() { public void run() {
+                runPreLaunchCommand();
+            }});
 
             DynamicTasks.queue("launch", new Runnable() { public void run() {
                 waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
                 launch();
             }});
 
-            if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
-                DynamicTasks.queue("post-launch-command", new Runnable() { public void run() {
-                    runPostLaunchCommand(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND));
-                }});
-            };
+            DynamicTasks.queue("post-launch-command", new Runnable() { public void run() {
+                runPostLaunchCommand();
+            }});
         }
 
         DynamicTasks.queue("post-launch", new Runnable() { public void run() {
@@ -189,14 +181,14 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      */
     public void preInstall() {}
 
-    public abstract void runPreInstallCommand(String command);
+    public abstract void runPreInstallCommand();
     public abstract void setup();
     public abstract void install();
-    public abstract void runPostInstallCommand(String command);
+    public abstract void runPostInstallCommand();
     public abstract void customize();
-    public abstract void runPreLaunchCommand(String command);
+    public abstract void runPreLaunchCommand();
     public abstract void launch();
-    public abstract void runPostLaunchCommand(String command);
+    public abstract void runPostLaunchCommand();
 
     @Override
     public void kill() {

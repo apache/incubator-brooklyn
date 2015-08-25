@@ -23,6 +23,7 @@ import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.net.UserAndHostAndPort;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,19 +42,13 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
 
         super.start();
     }
-    
-    @Override
-    public void runPreInstallCommand(String preInstallCommand) {
-        executeCommand(VanillaWindowsProcess.PRE_INSTALL_COMMAND, VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND, true);
-        if (entity.getConfig(VanillaWindowsProcess.PRE_INSTALL_REBOOT_REQUIRED)) {
-            rebootAndWait();
-        }
-    }
 
     @Override
     public void install() {
         // TODO: Follow install path of VanillaSoftwareProcessSshDriver
-        executeCommand(VanillaWindowsProcess.INSTALL_COMMAND, VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND, true);
+        if(Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.INSTALL_COMMAND)) || Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND))) {
+            executeCommand(VanillaWindowsProcess.INSTALL_COMMAND, VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND, true);
+        }
         if (entity.getConfig(VanillaWindowsProcess.INSTALL_REBOOT_REQUIRED)) {
             rebootAndWait();
         }
@@ -62,7 +57,9 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
     @Override
     public void customize() {
         // TODO: Follow customize path of VanillaSoftwareProcessSshDriver
-        executeCommand(VanillaWindowsProcess.CUSTOMIZE_COMMAND, VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND, true);
+        if(Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.CUSTOMIZE_COMMAND)) || Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND))) {
+            executeCommand(VanillaWindowsProcess.CUSTOMIZE_COMMAND, VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND, true);
+        }
         if (entity.getConfig(VanillaWindowsProcess.CUSTOMIZE_REBOOT_REQUIRED)) {
             rebootAndWait();
         }

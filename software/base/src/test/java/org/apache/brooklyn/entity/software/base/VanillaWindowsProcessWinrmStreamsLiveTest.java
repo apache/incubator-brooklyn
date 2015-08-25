@@ -46,7 +46,7 @@ public class VanillaWindowsProcessWinrmStreamsLiveTest extends AbstractSoftwareP
                 .put("checkRunning.command", "echo true")
                 .put("useJcloudsSshInit", false)
                 .build();
-        location = ((JcloudsLocation)mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:eu-west-1", config)).obtain();
+        location = ((JcloudsLocation)mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-west-1", config)).obtain();
     }
 
     @Test(groups = "Live")
@@ -55,9 +55,27 @@ public class VanillaWindowsProcessWinrmStreamsLiveTest extends AbstractSoftwareP
         VanillaWindowsProcess entity = app.createAndManageChild(EntitySpec.create(VanillaWindowsProcess.class)
                 .configure(VanillaSoftwareProcess.PRE_INSTALL_COMMAND, "echo " + getCommands().get("pre-install-command"))
                 .configure(VanillaSoftwareProcess.INSTALL_COMMAND, "echo " + getCommands().get("^install$"))
+                .configure(VanillaSoftwareProcess.POST_INSTALL_COMMAND, "echo " + getCommands().get("post-install-command"))
                 .configure(VanillaSoftwareProcess.CUSTOMIZE_COMMAND, "echo " + getCommands().get("^customize$"))
+                .configure(VanillaSoftwareProcess.PRE_LAUNCH_COMMAND, "echo " + getCommands().get("pre-launch-command"))
                 .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "echo " + getCommands().get("^launch$"))
+                .configure(VanillaSoftwareProcess.POST_LAUNCH_COMMAND, "echo " + getCommands().get("post-launch-command"))
                 .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "echo true"));
+        app.start(ImmutableList.of(location));
+        assertStreams(entity);
+    }
+
+    @Test(groups = "Live")
+    public void testGetsStreamsPowerShell() {
+        VanillaWindowsProcess entity = app.createAndManageChild(EntitySpec.create(VanillaWindowsProcess.class)
+                .configure(VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND, "echo " + getCommands().get("pre-install-command"))
+                .configure(VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND, "echo " + getCommands().get("^install$"))
+                .configure(VanillaWindowsProcess.POST_INSTALL_POWERSHELL_COMMAND, "echo " + getCommands().get("post-install-command"))
+                .configure(VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND, "echo " + getCommands().get("^customize$"))
+                .configure(VanillaWindowsProcess.PRE_LAUNCH_POWERSHELL_COMMAND, "echo " + getCommands().get("pre-launch-command"))
+                .configure(VanillaWindowsProcess.LAUNCH_POWERSHELL_COMMAND, "echo " + getCommands().get("^launch$"))
+                .configure(VanillaWindowsProcess.POST_LAUNCH_POWERSHELL_COMMAND, "echo " + getCommands().get("post-launch-command"))
+                .configure(VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, "echo true"));
         app.start(ImmutableList.of(location));
         assertStreams(entity);
     }
@@ -67,8 +85,11 @@ public class VanillaWindowsProcessWinrmStreamsLiveTest extends AbstractSoftwareP
         return ImmutableMap.<String, String>builder()
                 .put("pre-install-command", "myPreInstall")
                 .put("^install$", "myInstall")
+                .put("post-install-command", "pre install command output")
                 .put("^customize$", "myCustomizing")
+                .put("pre-launch-command", "pre launch command output")
                 .put("^launch$", "myLaunch")
+                .put("post-launch-command", "post launch command output")
                 .build();
     }
 }
