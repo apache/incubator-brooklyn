@@ -179,7 +179,7 @@ public class CatalogClasspathDo {
                 try {
                     ((ManagementContextInternal)catalog.mgmt).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
                     log.debug("Catalog scan of default classloader returned nothing; reverting to java.class.path");
-                    baseCP = ((ManagementContextInternal)catalog.mgmt).getBaseClassPathForScanning();
+                    baseCP = sanitizeCP(((ManagementContextInternal) catalog.mgmt).getBaseClassPathForScanning());
                     scanner = new ReflectionScanner(baseCP, prefix, baseCL, catalog.getRootClassLoader());
                 } catch (Exception e) {
                     log.info("Catalog scan is empty, and unable to use java.class.path (base classpath is "+baseCP+"): "+e);
@@ -240,6 +240,25 @@ public class CatalogClasspathDo {
         }
         
         isLoaded = true;
+    }
+
+    private Iterable<URL> sanitizeCP(Iterable<URL> baseClassPathForScanning) {
+        /*
+        If Brooklyn is being run via apache daemon[1], and the classpath contains the contents of an empty folder,
+        (e.g. xxx:lib/patch/*:xxx) the classpath will be incorrectly expanded to include a zero-length string
+        (e.g. xxx::xxx), which is then interpreted by {@link org.reflections.Reflections#scan} as the root of the
+        file system. See [2], line 90+. This needs to be removed, lest we attempt to scan the entire filesystem
+
+        [1]: http://commons.apache.org/proper/commons-daemon/
+        [2]: http://svn.apache.org/viewvc/commons/proper/daemon/trunk/src/native/unix/native/arguments.c?view=markup&pathrev=1196468
+         */
+        Iterables.removeIf(baseClassPathForScanning, new Predicate<URL>() {
+            @Override
+            public boolean apply(@Nullable URL url) {
+                return Strings.isEmpty(url.getFile()) || "/".equals(url.getFile());
+            }
+        });
+        return baseClassPathForScanning;
     }
 
     /** removes inner classes (non-static nesteds) and others; 
