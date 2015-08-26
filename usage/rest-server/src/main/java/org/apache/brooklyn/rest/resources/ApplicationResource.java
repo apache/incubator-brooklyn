@@ -272,7 +272,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         }
 
         log.debug("Creating app from yaml:\n{}", yaml);
-        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpecForApplication(mgmt(), yaml);
+        EntitySpec<? extends Application> spec = createEntitySpecForApplication(yaml);
         
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, spec)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
@@ -330,7 +330,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
         //TODO infer encoding from request
         String potentialYaml = new String(inputToAutodetectType);
-        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpecForApplication(mgmt(), potentialYaml);
+        EntitySpec<? extends Application> spec = createEntitySpecForApplication(potentialYaml);
 
         // TODO not json - try ZIP, etc
 
@@ -362,6 +362,21 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         return status(ACCEPTED).entity(ts).build();
     }
 
+    private EntitySpec<? extends Application> createEntitySpecForApplication(String potentialYaml) {
+        try {
+            return EntityManagementUtils.createEntitySpecForApplication(mgmt(), potentialYaml);
+        } catch (IllegalStateException e) {
+            // An IllegalArgumentException for creating the entity spec gets wrapped in a ISE.
+            // But we want to return a 400 rather than 500, so ensure we throw IAE.
+            if (e.getCause() != null && Exceptions.getFirstInteresting(e.getCause()) instanceof IllegalArgumentException) {
+                IllegalArgumentException iae = (IllegalArgumentException) Exceptions.getFirstInteresting(e.getCause());
+                throw new IllegalArgumentException("Cannot create spec for app: "+iae.getMessage(), e);
+            } else {
+                throw e;
+            }
+        }
+    }
+    
     private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {
         String appType = applicationSpec.getType();
         if (appType != null) {

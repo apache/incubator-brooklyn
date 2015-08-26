@@ -100,8 +100,15 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
 
     public void setDeprecated(boolean deprecated);
 
+    public void setDisabled(boolean disabled);
+
     /**
-     * @return True if the item has been deprecated and should not be shown in the catalog
+     * @return True if the item has been deprecated (i.e. its use is discouraged)
      */
     boolean isDeprecated();
+    
+    /**
+     * @return True if the item has been disabled (i.e. its use is forbidden, except for pre-existing apps)
+     */
+    boolean isDisabled();
 }

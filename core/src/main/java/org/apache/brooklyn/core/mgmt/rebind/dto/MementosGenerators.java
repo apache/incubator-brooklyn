@@ -424,7 +424,8 @@ public class MementosGenerators {
             .specType(catalogItem.getSpecType())
             .version(catalogItem.getVersion())
             .planYaml(catalogItem.getPlanYaml())
-            .deprecated(catalogItem.isDeprecated());
+            .deprecated(catalogItem.isDeprecated())
+            .disabled(catalogItem.isDisabled());
         return builder.build();
     }
     

@@ -39,21 +39,77 @@ import com.google.common.base.Predicate;
 public class CatalogPredicates {
 
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> isCatalogItemType(final CatalogItemType ciType) {
-        return new Predicate<CatalogItem<T,SpecT>>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
                 return (item != null) && item.getCatalogItemType()==ciType;
             }
         };
+        return new CatalogItemTypeEqualTo<T, SpecT>(ciType);
+    }
+
+    /**
+     * @since 0.8.0
+     */
+    private static class CatalogItemTypeEqualTo<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final CatalogItemType ciType;
+        
+        public CatalogItemTypeEqualTo(final CatalogItemType ciType) {
+            this.ciType = ciType;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && item.getCatalogItemType()==ciType;
+        }
     }
 
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> deprecated(final boolean deprecated) {
-        return new Predicate<CatalogItem<T,SpecT>>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
                 return (item != null) && item.isDeprecated() == deprecated;
             }
         };
+        return new DeprecatedEqualTo<T, SpecT>(deprecated);
+    }
+
+    /**
+     * @since 0.8.0
+     */
+    private static class DeprecatedEqualTo<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final boolean deprecated;
+        
+        public DeprecatedEqualTo(boolean deprecated) {
+            this.deprecated = deprecated;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && item.isDeprecated() == deprecated;
+        }
+    }
+
+    /**
+     * @since 0.8.0
+     */
+    public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> disabled(boolean disabled) {
+        return new DisabledEqualTo<T, SpecT>(disabled);
+    }
+
+    /**
+     * @since 0.8.0
+     */
+    private static class DisabledEqualTo<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final boolean disabled;
+        
+        public DisabledEqualTo(boolean disabled) {
+            this.disabled = disabled;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && item.isDisabled() == disabled;
+        }
     }
 
     public static final Predicate<CatalogItem<Application,EntitySpec<? extends Application>>> IS_TEMPLATE = 
@@ -65,7 +121,23 @@ public class CatalogPredicates {
     public static final Predicate<CatalogItem<Location,LocationSpec<?>>> IS_LOCATION = 
             CatalogPredicates.<Location,LocationSpec<?>>isCatalogItemType(CatalogItemType.LOCATION);
     
-    public static final Function<CatalogItem<?,?>,String> ID_OF_ITEM_TRANSFORMER = new Function<CatalogItem<?,?>, String>() {
+    // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+    @SuppressWarnings("unused")
+    private static final Function<CatalogItem<?,?>,String> ID_OF_ITEM_TRANSFORMER_ANONYMOUS = new Function<CatalogItem<?,?>, String>() {
+        @Override @Nullable
+        public String apply(@Nullable CatalogItem<?,?> input) {
+            if (input==null) return null;
+            return input.getId();
+        }
+    };
+
+    // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+    public static final Function<CatalogItem<?,?>,String> ID_OF_ITEM_TRANSFORMER = new IdOfItemTransformer();
+    
+    /**
+     * @since 0.8.0
+     */
+    private static class IdOfItemTransformer implements Function<CatalogItem<?,?>,String> {
         @Override @Nullable
         public String apply(@Nullable CatalogItem<?,?> input) {
             if (input==null) return null;
@@ -79,13 +151,33 @@ public class CatalogPredicates {
         return displayName(filter);
     }
 
+    /**
+     * @since 0.7.0
+     */
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> displayName(final Predicate<? super String> filter) {
-        return new Predicate<CatalogItem<T,SpecT>>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
                 return (item != null) && filter.apply(item.getDisplayName());
             }
         };
+        return new DisplayNameMatches<T,SpecT>(filter);
+    }
+
+    /**
+     * @since 0.8.0
+     */
+    private static class DisplayNameMatches<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final Predicate<? super String> filter;
+        
+        public DisplayNameMatches(Predicate<? super String> filter) {
+            this.filter = filter;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && filter.apply(item.getDisplayName());
+        }
     }
 
     @Deprecated
@@ -94,49 +186,134 @@ public class CatalogPredicates {
     }
 
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> symbolicName(final Predicate<? super String> filter) {
-        return new Predicate<CatalogItem<T,SpecT>>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
                 return (item != null) && filter.apply(item.getSymbolicName());
             }
         };
+        return new SymbolicNameMatches<T,SpecT>(filter);
+    }
+    
+    /**
+     * @since 0.8.0
+     */
+    private static class SymbolicNameMatches<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final Predicate<? super String> filter;
+        
+        public SymbolicNameMatches(Predicate<? super String> filter) {
+            this.filter = filter;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && filter.apply(item.getSymbolicName());
+        }
     }
 
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> javaType(final Predicate<? super String> filter) {
-        return new Predicate<CatalogItem<T,SpecT>>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
                 return (item != null) && filter.apply(item.getJavaType());
             }
         };
+        return new JavaTypeMatches<T, SpecT>(filter);
+    }
+    
+    /**
+     * @since 0.8.0
+     */
+    private static class JavaTypeMatches<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final Predicate<? super String> filter;
+        
+        public JavaTypeMatches(Predicate<? super String> filter) {
+            this.filter = filter;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && filter.apply(item.getJavaType());
+        }
     }
 
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> xml(final Predicate<? super String> filter) {
-        return new Predicate<CatalogItem<T,SpecT>>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
                 return (item != null) && filter.apply(item.toXmlString());
             }
         };
+        return new XmlMatches<T,SpecT>(filter);
+    }
+    
+    /**
+     * @since 0.8.0
+     */
+    private static class XmlMatches<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final Predicate<? super String> filter;
+        
+        public XmlMatches(Predicate<? super String> filter) {
+            this.filter = filter;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && filter.apply(item.toXmlString());
+        }
     }
 
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> entitledToSee(final ManagementContext mgmt) {
-        return new Predicate<CatalogItem<T,SpecT>>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
                 return (item != null) && 
                     Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, item.getCatalogItemId());
             }
         };
+        return new EntitledToSee<T, SpecT>(mgmt);
+    }
+    
+    /**
+     * @since 0.8.0
+     */
+    private static class EntitledToSee<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final ManagementContext mgmt;
+        
+        public EntitledToSee(ManagementContext mgmt) {
+            this.mgmt = mgmt;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return (item != null) && 
+                    Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, item.getCatalogItemId());
+        }
     }
  
     public static <T,SpecT> Predicate<CatalogItem<T,SpecT>> isBestVersion(final ManagementContext mgmt) {
-        return new Predicate<CatalogItem<T,SpecT>>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
+        new Predicate<CatalogItem<T,SpecT>>() {
             @Override
             public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
                 return CatalogUtils.isBestVersion(mgmt, item);
             }
         };
+        return new IsBestVersion<T, SpecT>(mgmt);
     }
-
+    
+    /**
+     * @since 0.8.0
+     */
+    private static class IsBestVersion<T,SpecT> implements Predicate<CatalogItem<T,SpecT>> {
+        private final ManagementContext mgmt;
+        
+        public IsBestVersion(ManagementContext mgmt) {
+            this.mgmt = mgmt;
+        }
+        @Override
+        public boolean apply(@Nullable CatalogItem<T,SpecT> item) {
+            return CatalogUtils.isBestVersion(mgmt, item);
+        }
+    }
 }

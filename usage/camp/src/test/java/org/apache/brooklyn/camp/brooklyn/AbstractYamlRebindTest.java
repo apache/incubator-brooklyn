@@ -22,6 +22,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Set;
 
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -111,7 +112,7 @@ public class AbstractYamlRebindTest extends RebindTestFixture<StartableApplicati
     ///////////////////////////////////////////////////
     
     protected void waitForApplicationTasks(Entity app) {
-        Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(origManagementContext.getExecutionManager(), app);
+        Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt().getExecutionManager(), app);
         getLogger().info("Waiting on " + tasks.size() + " task(s)");
         for (Task<?> t : tasks) {
             t.blockUntilEnded();
@@ -144,11 +145,11 @@ public class AbstractYamlRebindTest extends RebindTestFixture<StartableApplicati
             throw e;
         }
         getLogger().info("Test - created " + assembly);
-        final Entity app = origManagementContext.getEntityManager().getEntity(assembly.getId());
+        final Entity app = mgmt().getEntityManager().getEntity(assembly.getId());
         getLogger().info("App - " + app);
         
         // wait for app to have started
-        Set<Task<?>> tasks = origManagementContext.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
+        Set<Task<?>> tasks = mgmt().getExecutionManager().getTasksWithAllTags(ImmutableList.of(
                 BrooklynTaskTags.EFFECTOR_TAG, 
                 BrooklynTaskTags.tagForContextEntity(app), 
                 BrooklynTaskTags.tagForEffectorCall(app, "start", ConfigBag.newInstance(ImmutableMap.of("locations", ImmutableMap.of())))));
@@ -175,8 +176,8 @@ public class AbstractYamlRebindTest extends RebindTestFixture<StartableApplicati
         addCatalogItems(joinLines(catalogYaml));
     }
 
-    protected void addCatalogItems(String catalogYaml) {
-        mgmt().getCatalog().addItems(catalogYaml, forceUpdate);
+    protected Iterable<? extends CatalogItem<?,?>> addCatalogItems(String catalogYaml) {
+        return mgmt().getCatalog().addItems(catalogYaml, forceUpdate);
     }
 
     protected void deleteCatalogEntity(String catalogItem) {

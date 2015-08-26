@@ -33,13 +33,6 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.eclipse.jetty.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
-import org.testng.reporters.Files;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
@@ -51,6 +44,15 @@ import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.domain.CatalogPolicySummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.apache.http.HttpHeaders;
+import org.apache.http.entity.ContentType;
+import org.eclipse.jetty.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+import org.testng.reporters.Files;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
@@ -254,7 +256,31 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         client().resource("/v1/catalog").post(yaml);
     }
 
+    private enum DeprecateStyle {
+        NEW_STYLE,
+        LEGACY_STYLE
+    }
+    private void deprecateCatalogItem(DeprecateStyle style, String symbolicName, String version, boolean deprecated) {
+        String id = String.format("%s:%s", symbolicName, version);
+        ClientResponse response;
+        if (style == DeprecateStyle.NEW_STYLE) {
+            response = client().resource(String.format("/v1/catalog/entities/%s/deprecated", id))
+                    .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                    .post(ClientResponse.class, deprecated);
+        } else {
+            response = client().resource(String.format("/v1/catalog/entities/%s/deprecated/%s", id, deprecated))
+                    .post(ClientResponse.class);
+        }
+        assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+    }
 
+    private void disableCatalogItem(String symbolicName, String version, boolean disabled) {
+        String id = String.format("%s:%s", symbolicName, version);
+        ClientResponse getDisableResponse = client().resource(String.format("/v1/catalog/entities/%s/disabled", id))
+                .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                .post(ClientResponse.class, disabled);
+        assertEquals(getDisableResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+    }
 
     @Test
     public void testListPolicies() {
@@ -352,39 +378,87 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testSetDeprecated() {
-        String itemId = "my.catalog.item.id.for.deprecation";
+        runSetDeprecated(DeprecateStyle.NEW_STYLE);
+    }
+    
+    // Uses old-style "/v1/catalog/{itemId}/deprecated/true", rather than the "true" in the request body.
+    @Test
+    @Deprecated
+    public void testSetDeprecatedLegacy() {
+        runSetDeprecated(DeprecateStyle.LEGACY_STYLE);
+    }
+
+    protected void runSetDeprecated(DeprecateStyle style) {
+        String symbolicName = "my.catalog.item.id.for.deprecation";
         String serviceType = "org.apache.brooklyn.entity.stock.BasicApplication";
-        addTestCatalogItem(itemId, "template", TEST_VERSION, serviceType);
-        addTestCatalogItem(itemId, "template", "2.0", serviceType);
-        List<CatalogEntitySummary> applications = client().resource("/v1/catalog/applications")
-                .queryParam("fragment", itemId).queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
-        assertEquals(applications.size(), 2);
-        CatalogItemSummary summary0 = applications.get(0);
-        CatalogItemSummary summary1 = applications.get(1);
+        addTestCatalogItem(symbolicName, "template", TEST_VERSION, serviceType);
+        addTestCatalogItem(symbolicName, "template", "2.0", serviceType);
+        try {
+            List<CatalogEntitySummary> applications = client().resource("/v1/catalog/applications")
+                    .queryParam("fragment", symbolicName).queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
+            assertEquals(applications.size(), 2);
+            CatalogItemSummary summary0 = applications.get(0);
+            CatalogItemSummary summary1 = applications.get(1);
+    
+            // Deprecate: that app should be excluded
+            deprecateCatalogItem(style, summary0.getSymbolicName(), summary0.getVersion(), true);
+    
+            List<CatalogEntitySummary> applicationsAfterDeprecation = client().resource("/v1/catalog/applications")
+                    .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
+    
+            assertEquals(applicationsAfterDeprecation.size(), 1);
+            assertTrue(applicationsAfterDeprecation.contains(summary1));
+    
+            // Un-deprecate: that app should be included again
+            deprecateCatalogItem(style, summary0.getSymbolicName(), summary0.getVersion(), false);
+    
+            List<CatalogEntitySummary> applicationsAfterUnDeprecation = client().resource("/v1/catalog/applications")
+                    .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
+    
+            assertEquals(applications, applicationsAfterUnDeprecation);
+        } finally {
+            client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
+                    .delete(ClientResponse.class);
+            client().resource("/v1/catalog/entities/"+symbolicName+"/"+"2.0")
+                    .delete(ClientResponse.class);
+        }
+    }
 
-        // Ensure that the ID required by the API is in the 'usual' format of name:id
-        String id = String.format("%s:%s", summary0.getSymbolicName(), summary0.getVersion());
-        assertEquals(summary0.getId(), id);
-        ClientResponse getDeprecationResponse = client().resource(String.format("/v1/catalog/entities/%s/deprecated/true", id))
-                .post(ClientResponse.class);
-
-        assertEquals(getDeprecationResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
-
-        List<CatalogEntitySummary> applicationsAfterDeprecation = client().resource("/v1/catalog/applications")
-                .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
-
-        assertEquals(applicationsAfterDeprecation.size(), 1);
-        assertTrue(applicationsAfterDeprecation.contains(summary1));
-
-        ClientResponse getUnDeprecationResponse = client().resource(String.format("/v1/catalog/entities/%s/deprecated/false", summary0.getId()))
-                .post(ClientResponse.class);
-
-        assertEquals(getUnDeprecationResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
-
-        List<CatalogEntitySummary> applicationsAfterUnDeprecation = client().resource("/v1/catalog/applications")
-                .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
-
-        assertEquals(applications, applicationsAfterUnDeprecation);
+    @Test
+    public void testSetDisabled() {
+        String symbolicName = "my.catalog.item.id.for.disabling";
+        String serviceType = "org.apache.brooklyn.entity.stock.BasicApplication";
+        addTestCatalogItem(symbolicName, "template", TEST_VERSION, serviceType);
+        addTestCatalogItem(symbolicName, "template", "2.0", serviceType);
+        try {
+            List<CatalogEntitySummary> applications = client().resource("/v1/catalog/applications")
+                    .queryParam("fragment", symbolicName).queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
+            assertEquals(applications.size(), 2);
+            CatalogItemSummary summary0 = applications.get(0);
+            CatalogItemSummary summary1 = applications.get(1);
+    
+            // Disable: that app should be excluded
+            disableCatalogItem(summary0.getSymbolicName(), summary0.getVersion(), true);
+    
+            List<CatalogEntitySummary> applicationsAfterDisabled = client().resource("/v1/catalog/applications")
+                    .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
+    
+            assertEquals(applicationsAfterDisabled.size(), 1);
+            assertTrue(applicationsAfterDisabled.contains(summary1));
+    
+            // Un-disable: that app should be included again
+            disableCatalogItem(summary0.getSymbolicName(), summary0.getVersion(), false);
+    
+            List<CatalogEntitySummary> applicationsAfterUnDisabled = client().resource("/v1/catalog/applications")
+                    .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
+    
+            assertEquals(applications, applicationsAfterUnDisabled);
+        } finally {
+            client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
+                    .delete(ClientResponse.class);
+            client().resource("/v1/catalog/entities/"+symbolicName+"/"+"2.0")
+                    .delete(ClientResponse.class);
+        }
     }
 
     @Test

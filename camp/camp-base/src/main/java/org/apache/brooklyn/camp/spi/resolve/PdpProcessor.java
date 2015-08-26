@@ -163,7 +163,7 @@ public class PdpProcessor {
                     return;
             }
         }
-        throw new UnsupportedOperationException("Deployment plan item "+deploymentPlanItem+" cannot be matched");
+        throw new IllegalArgumentException("Deployment plan item "+deploymentPlanItem+" cannot be matched");
     }
 
     // ----------------------------

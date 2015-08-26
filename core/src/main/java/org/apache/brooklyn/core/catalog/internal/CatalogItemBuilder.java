@@ -99,6 +99,11 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
         return this;
     }
 
+    public CatalogItemBuilder<CatalogItemType> disabled(boolean disabled) {
+        dto.setDisabled(disabled);
+        return this;
+    }
+
     public CatalogItemBuilder<CatalogItemType> libraries(Collection<CatalogBundle> libraries) {
         dto.setLibraries(libraries);
         return this;

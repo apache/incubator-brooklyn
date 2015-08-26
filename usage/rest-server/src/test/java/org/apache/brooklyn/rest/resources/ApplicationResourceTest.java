@@ -26,6 +26,7 @@ import static org.testng.Assert.assertTrue;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -33,28 +34,6 @@ import java.util.concurrent.TimeoutException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
-
-import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.util.collections.CollectionFunctionals;
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -72,6 +51,8 @@ import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
+import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
+import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
 import org.apache.brooklyn.rest.domain.EntitySpec;
@@ -86,6 +67,29 @@ import org.apache.brooklyn.rest.testing.mocks.NameMatcherGroup;
 import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
 import org.apache.brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.http.HttpHeaders;
+import org.apache.http.entity.ContentType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.core.util.MultivaluedMapImpl;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceTest extends BrooklynRestResourceTest {
@@ -594,5 +598,98 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         Asserts.eventually(
                 EntityFunctions.applications(getManagementContext()),
                 Predicates.compose(Predicates.equalTo(size-1), CollectionFunctionals.sizeFunction()) );
+    }
+
+    @Test
+    public void testDisabledApplicationCatalog() throws TimeoutException, InterruptedException {
+        String itemSymbolicName = "my.catalog.item.id.for.disabling";
+        String itemVersion = "1.0";
+        String serviceType = "org.apache.brooklyn.entity.stock.BasicApplication";
+        
+        // Deploy the catalog item
+        addTestCatalogItem(itemSymbolicName, "template", itemVersion, serviceType);
+        List<CatalogEntitySummary> itemSummaries = client().resource("/v1/catalog/applications")
+                .queryParam("fragment", itemSymbolicName).queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
+        CatalogItemSummary itemSummary = Iterables.getOnlyElement(itemSummaries);
+        String itemVersionedId = String.format("%s:%s", itemSummary.getSymbolicName(), itemSummary.getVersion());
+        assertEquals(itemSummary.getId(), itemVersionedId);
+
+        try {
+            // Create an app before disabling: this should work
+            String yaml = "{ name: my-app, location: localhost, services: [ { type: \""+itemVersionedId+"\" } ] }";
+            ClientResponse response = client().resource("/v1/applications")
+                    .entity(yaml, "application/x-yaml")
+                    .post(ClientResponse.class);
+            assertTrue(response.getStatus()/100 == 2, "response is "+response);
+            waitForPageFoundResponse("/v1/applications/my-app", ApplicationSummary.class);
+    
+            // Deprecate
+            deprecateCatalogItem(itemSymbolicName, itemVersion, true);
+
+            // Create an app when deprecated: this should work
+            String yaml2 = "{ name: my-app2, location: localhost, services: [ { type: \""+itemVersionedId+"\" } ] }";
+            ClientResponse response2 = client().resource("/v1/applications")
+                    .entity(yaml2, "application/x-yaml")
+                    .post(ClientResponse.class);
+            assertTrue(response2.getStatus()/100 == 2, "response is "+response2);
+            waitForPageFoundResponse("/v1/applications/my-app2", ApplicationSummary.class);
+    
+            // Disable
+            disableCatalogItem(itemSymbolicName, itemVersion, true);
+
+            // Now try creating an app; this should fail because app is disabled
+            String yaml3 = "{ name: my-app3, location: localhost, services: [ { type: \""+itemVersionedId+"\" } ] }";
+            ClientResponse response3 = client().resource("/v1/applications")
+                    .entity(yaml3, "application/x-yaml")
+                    .post(ClientResponse.class);
+            assertTrue(response3.getStatus()/100 == 4, "response is "+response3);
+            assertTrue(response3.getEntity(String.class).contains("cannot be matched"));
+            waitForPageNotFoundResponse("/v1/applications/my-app3", ApplicationSummary.class);
+            
+        } finally {
+            client().resource("/v1/applications/my-app")
+                    .delete(ClientResponse.class);
+
+            client().resource("/v1/applications/my-app2")
+                    .delete(ClientResponse.class);
+
+            client().resource("/v1/applications/my-app3")
+                    .delete(ClientResponse.class);
+
+            client().resource("/v1/catalog/entities/"+itemVersionedId+"/"+itemVersion)
+                    .delete(ClientResponse.class);
+        }
+    }
+
+    private void deprecateCatalogItem(String symbolicName, String version, boolean deprecated) {
+        String id = String.format("%s:%s", symbolicName, version);
+        ClientResponse response = client().resource(String.format("/v1/catalog/entities/%s/deprecated", id))
+                    .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                    .post(ClientResponse.class, deprecated);
+        assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+    }
+    
+    private void disableCatalogItem(String symbolicName, String version, boolean disabled) {
+        String id = String.format("%s:%s", symbolicName, version);
+        ClientResponse response = client().resource(String.format("/v1/catalog/entities/%s/disabled", id))
+                .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)
+                .post(ClientResponse.class, disabled);
+        assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    private void addTestCatalogItem(String catalogItemId, String itemType, String version, String service) {
+        String yaml =
+                "brooklyn.catalog:\n"+
+                "  id: " + catalogItemId + "\n"+
+                "  name: My Catalog App\n"+
+                (itemType!=null ? "  item_type: "+itemType+"\n" : "")+
+                "  description: My description\n"+
+                "  icon_url: classpath:///redis-logo.png\n"+
+                "  version: " + version + "\n"+
+                "\n"+
+                "services:\n"+
+                "- type: " + service + "\n";
+
+        client().resource("/v1/catalog").post(yaml);
     }
 }
