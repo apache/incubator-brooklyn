@@ -44,6 +44,7 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.core.BrooklynLogging;
+import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
@@ -268,6 +269,8 @@ public class LocalEntityManager implements EntityManagerInternal {
                     new Exception("source of duplicate management of "+e));
             return;
         }
+        ConfigConstraints.assertValid(e);
+
         manageRecursive(e, ManagementTransitionMode.guessing(BrooklynObjectManagementMode.NONEXISTENT, BrooklynObjectManagementMode.MANAGED_PRIMARY));
     }
 

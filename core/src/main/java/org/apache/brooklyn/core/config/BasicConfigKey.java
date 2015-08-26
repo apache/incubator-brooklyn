@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
@@ -40,6 +41,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -75,7 +78,8 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
             .description(key.getDescription())
             .defaultValue(key.getDefaultValue())
             .reconfigurable(key.isReconfigurable())
-            .inheritance(key.getInheritance());
+            .inheritance(key.getInheritance())
+            .constraint(key.getConstraint());
     }
 
     public static class Builder<T> {
@@ -84,6 +88,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         private String description;
         private T defaultValue;
         private boolean reconfigurable;
+        private Predicate<? super T> constraint;
         private ConfigInheritance inheritance;
         
         public Builder<T> name(String val) {
@@ -107,6 +112,9 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         public Builder<T> inheritance(ConfigInheritance val) {
             this.inheritance = val; return this;
         }
+        public Builder<T> constraint(Predicate<? super T> constraint) {
+            this.constraint = checkNotNull(constraint, "constraint"); return this;
+        }
         public BasicConfigKey<T> build() {
             return new BasicConfigKey<T>(this);
         }
@@ -119,6 +127,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     private T defaultValue;
     private boolean reconfigurable;
     private ConfigInheritance inheritance;
+    private Predicate<? super T> constraint;
 
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicConfigKey() { /* for gson */ }
@@ -152,6 +161,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         
         this.defaultValue = defaultValue;
         this.reconfigurable = false;
+        this.constraint = Predicates.alwaysTrue();
     }
 
     protected BasicConfigKey(Builder<T> builder) {
@@ -162,6 +172,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.defaultValue = builder.defaultValue;
         this.reconfigurable = builder.reconfigurable;
         this.inheritance = builder.inheritance;
+        this.constraint = builder.constraint;
     }
     
     /** @see ConfigKey#getName() */
@@ -196,7 +207,12 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     public ConfigInheritance getInheritance() {
         return inheritance;
     }
-    
+
+    @Override @Nonnull
+    public Predicate<? super T> getConstraint() {
+        return constraint;
+    }
+
     /** @see ConfigKey#getNameParts() */
     @Override public Collection<String> getNameParts() {
         return Lists.newArrayList(dots.split(name));
