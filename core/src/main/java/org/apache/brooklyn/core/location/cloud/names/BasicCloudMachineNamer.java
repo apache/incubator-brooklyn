@@ -41,9 +41,15 @@ public class BasicCloudMachineNamer extends AbstractCloudMachineNamer {
         StringShortener shortener = Strings.shortener().separator("-");
         shortener.append("system", "brooklyn");
         
-        // randId often not necessary, as an 8-char hex identifier is added later (in jclouds? can we override?)
-        // however it can be useful to have this early in the string, to prevent collisions in places where it is abbreviated 
-        shortener.append("randId", Identifiers.makeRandomId(4));
+        /* timeStamp replaces the previously used randId. 
+         * 
+         * timeStamp uses the standard unix timestamp represented as a 8-char hex string.
+         * 
+         * It represents the moment in time when the name is constructed. 
+         * It gives the possibility to search easily for instances, security groups, keypairs, etc
+         * based on timestamp without complicated enumeration        
+         */ 
+        shortener.append("timeStamp", Long.toString(System.currentTimeMillis() / 1000L, 16));
         
         String user = System.getProperty("user.name");
         if (!"brooklyn".equals(user))
@@ -79,7 +85,7 @@ public class BasicCloudMachineNamer extends AbstractCloudMachineNamer {
                 .canTruncate("user", 4)
                 .canRemove("entity")
                 .canTruncate("context", 4)
-                .canTruncate("randId", 2)
+                .canTruncate("timeStamp", 8)
                 .canRemove("user")
                 .canTruncate("appId", 2)
                 .canRemove("appId");
