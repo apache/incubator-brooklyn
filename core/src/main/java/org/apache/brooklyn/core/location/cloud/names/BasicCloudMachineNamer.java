@@ -22,7 +22,6 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.util.core.config.ConfigBag;
-import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.StringShortener;
 import org.apache.brooklyn.util.text.Strings;
 
@@ -49,7 +48,7 @@ public class BasicCloudMachineNamer extends AbstractCloudMachineNamer {
          * It gives the possibility to search easily for instances, security groups, keypairs, etc
          * based on timestamp without complicated enumeration        
          */ 
-        shortener.append("timeStamp", Long.toString(System.currentTimeMillis() / 1000L, 16));
+        shortener.append("timeStamp", Long.toString(System.currentTimeMillis() / 1000L, Character.MAX_RADIX));
         
         String user = System.getProperty("user.name");
         if (!"brooklyn".equals(user))
@@ -85,7 +84,7 @@ public class BasicCloudMachineNamer extends AbstractCloudMachineNamer {
                 .canTruncate("user", 4)
                 .canRemove("entity")
                 .canTruncate("context", 4)
-                .canTruncate("timeStamp", 8)
+                .canTruncate("timeStamp", 6)
                 .canRemove("user")
                 .canTruncate("appId", 2)
                 .canRemove("appId");
