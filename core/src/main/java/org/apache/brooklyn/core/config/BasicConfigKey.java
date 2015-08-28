@@ -112,6 +112,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         public Builder<T> inheritance(ConfigInheritance val) {
             this.inheritance = val; return this;
         }
+        @Beta
         public Builder<T> constraint(Predicate<? super T> constraint) {
             this.constraint = checkNotNull(constraint, "constraint"); return this;
         }

@@ -24,17 +24,22 @@ import static org.testng.Assert.fail;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.enricher.AbstractEnricher;
+import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.net.Networking;
 import org.testng.annotations.Test;
+import org.apache.brooklyn.core.config.ConfigConstraints.ConstraintViolationException;
 
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 
 public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
@@ -46,7 +51,6 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                 .description("Configuration key that must not be null")
                 .constraint(Predicates.notNull())
                 .build();
-
     }
 
     @ImplementedBy(EntityWithNonNullConstraintWithNonNullDefaultImpl.class)
@@ -86,13 +90,30 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
     public static class EntityProvidingDefaultValueForConfigKeyInRangeImpl extends TestEntityImpl implements EntityProvidingDefaultValueForConfigKeyInRange {
     }
 
+    public static class PolicyWithConfigConstraint extends AbstractPolicy{
+        public static final ConfigKey<Object> NON_NULL_CONFIG = ConfigKeys.builder(Object.class)
+                .name("test.policy.non-null")
+                .description("Configuration key that must not be null")
+                .constraint(Predicates.notNull())
+                .build();
+    }
+
+    public static class EnricherWithConfigConstraint extends AbstractEnricher {
+        public static final ConfigKey<String> PATTERN = ConfigKeys.builder(String.class)
+                .name("test.enricher.regex")
+                .description("Must match a valid IPv4 address")
+                .constraint(Predicates.containsPattern(Networking.VALID_IP_ADDRESS_REGEX))
+                .build();
+    }
+
+
     @Test
     public void testExceptionWhenEntityHasNullConfig() {
         try {
             app.createAndManageChild(EntitySpec.create(EntityWithNonNullConstraint.class));
             fail("Expected exception when managing entity with missing config");
         } catch (Exception e) {
-            Throwable t = Exceptions.getFirstThrowableOfType(e, AssertionError.class);
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
             assertNotNull(t);
         }
     }
@@ -114,7 +135,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             app.createAndManageChild(EntitySpec.create(EntityProvidingDefaultValueForConfigKeyInRange.class));
             fail("Expected exception when managing entity setting invalid default value");
         } catch (Exception e) {
-            Throwable t = Exceptions.getFirstThrowableOfType(e, AssertionError.class);
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
             assertNotNull(t);
         }
     }
@@ -126,22 +147,46 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                     .configure(EntityWithNonNullConstraintWithNonNullDefault.NON_NULL_WITH_DEFAULT, (Object) null));
             fail("Expected exception when config key set to null");
         } catch (Exception e) {
-            Throwable t = Exceptions.getFirstThrowableOfType(e, AssertionError.class);
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
             assertNotNull(t);
         }
     }
 
+    // Test fails because config keys that are not on an object's interfaces cannot be checked automatically.
     @Test(enabled = false)
-    public void testExceptionWhenPolicyHasNullConfig() {
-        app.createAndManageChild(EntitySpec.create(TestEntity.class)
-                .policy(PolicySpec.create(TestPolicy.class)
-                        .configure(EntityWithNonNullConstraint.NON_NULL_CONFIG, (Object) null)));
+    public void testExceptionWhenPolicyHasNullForeignConfig() {
+        Policy p = mgmt.getEntityManager().createPolicy(PolicySpec.create(TestPolicy.class)
+                .configure(EntityWithNonNullConstraint.NON_NULL_CONFIG, (Object) null));
         try {
-            app.start(ImmutableList.of(app.newSimulatedLocation()));
-            fail("Expected exception when starting entity with policy with missing config");
+            ConfigConstraints.assertValid(p);
+            fail("Expected exception when validating policy with missing config");
         } catch (Exception e) {
-            Throwable t = Exceptions.getFirstThrowableOfType(e, AssertionError.class);
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
             assertNotNull(t);
+        }
+    }
+
+    @Test
+    public void testExceptionWhenPolicyHasNullConfig() {
+        try {
+            mgmt.getEntityManager().createPolicy(PolicySpec.create(PolicyWithConfigConstraint.class)
+                    .configure(PolicyWithConfigConstraint.NON_NULL_CONFIG, (Object) null));
+            fail("Expected exception when creating policy with missing config");
+        } catch (Exception e) {
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
+            assertNotNull(t);
+        }
+    }
+
+    @Test
+    public void testExceptionWhenEnricherHasInvalidConfig() {
+        try {
+            mgmt.getEntityManager().createEnricher(EnricherSpec.create(EnricherWithConfigConstraint.class)
+                    .configure(EnricherWithConfigConstraint.PATTERN, "123.123.256.10"));
+            fail("Expected exception when creating enricher with invalid config");
+        } catch (Exception e) {
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
+            assertNotNull(t, "Exception was: " + Exceptions.collapseText(e));
         }
     }
 

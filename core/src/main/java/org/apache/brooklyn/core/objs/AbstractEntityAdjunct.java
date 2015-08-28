@@ -426,7 +426,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     
     protected abstract void onChanged();
     
-    protected AdjunctType getAdjunctType() {
+    public AdjunctType getAdjunctType() {
         return adjunctType;
     }
     

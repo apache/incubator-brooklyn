@@ -1551,8 +1551,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
      */
     protected ToStringHelper toStringHelper() {
         return Objects.toStringHelper(this).omitNullValues().add("id", getId());
-//            make output more concise by suppressing display name
-//            .add("name", getDisplayName());
     }
     
     // -------- INITIALIZATION --------------

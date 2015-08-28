@@ -22,8 +22,11 @@ package org.apache.brooklyn.core.config;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.objs.AbstractEntityAdjunct;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,24 +34,34 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-public class ConfigConstraints {
+public abstract class ConfigConstraints<T extends BrooklynObject> {
 
     public static final Logger LOG = LoggerFactory.getLogger(ConfigConstraints.class);
-    private final Entity entity;
 
-    public ConfigConstraints(Entity e) {
-        this.entity = e;
-    }
+    private final T brooklynObject;
 
     /**
      * Checks all constraints of all config keys available to an entity.
      */
-    public static void assertValid(Entity e) {
-        Iterable<ConfigKey<?>> violations = new ConfigConstraints(e).getViolations();
+    public static void assertValid(Entity entity) {
+        Iterable<ConfigKey<?>> violations = new EntityConfigConstraints(entity).getViolations();
         if (!Iterables.isEmpty(violations)) {
-            throw new AssertionError("ConfigKeys violate constraints: " + violations);
+            throw new ConstraintViolationException("ConfigKeys violate constraints: " + violations);
         }
     }
+
+    public static void assertValid(EntityAdjunct adjunct) {
+        Iterable<ConfigKey<?>> violations = new EntityAdjunctConstraints(adjunct).getViolations();
+        if (!Iterables.isEmpty(violations)) {
+            throw new ConstraintViolationException("ConfigKeys violate constraints: " + violations);
+        }
+    }
+
+    public ConfigConstraints(T brooklynObject) {
+        this.brooklynObject = brooklynObject;
+    }
+
+    abstract Iterable<ConfigKey<?>> getBrooklynObjectTypeConfigKeys();
 
     public boolean isValid() {
         return Iterables.isEmpty(getViolations());
@@ -60,12 +73,14 @@ public class ConfigConstraints {
 
     @SuppressWarnings("unchecked")
     private Iterable<ConfigKey<?>> validateAll() {
-        EntityInternal ei = (EntityInternal) entity;
         List<ConfigKey<?>> violating = Lists.newArrayList();
+        BrooklynObjectInternal.ConfigurationSupportInternal configInternal = getConfigurationSupportInternal();
 
-        for (ConfigKey<?> configKey : getEntityConfigKeys(entity)) {
+        Iterable<ConfigKey<?>> configKeys = getBrooklynObjectTypeConfigKeys();
+        LOG.trace("Checking config keys on {}: {}", getBrooklynObject(), configKeys);
+        for (ConfigKey<?> configKey : configKeys) {
             // getRaw returns null if explicitly set and absent if config key was unset.
-            Object value = ei.config().getRaw(configKey).or(configKey.getDefaultValue());
+            Object value = configInternal.getRaw(configKey).or(configKey.getDefaultValue());
 
             if (value == null || value.getClass().isAssignableFrom(configKey.getType())) {
                 // Cast should be safe because the author of the constraint on the config key had to
@@ -83,8 +98,40 @@ public class ConfigConstraints {
         return violating;
     }
 
-    private static Iterable<ConfigKey<?>> getEntityConfigKeys(Entity entity) {
-        return entity.getEntityType().getConfigKeys();
+    private BrooklynObjectInternal.ConfigurationSupportInternal getConfigurationSupportInternal() {
+        return ((BrooklynObjectInternal) brooklynObject).config();
+    }
+
+    protected T getBrooklynObject() {
+        return brooklynObject;
+    }
+
+    private static class EntityConfigConstraints extends ConfigConstraints<Entity> {
+        public EntityConfigConstraints(Entity brooklynObject) {
+            super(brooklynObject);
+        }
+
+        @Override
+        Iterable<ConfigKey<?>> getBrooklynObjectTypeConfigKeys() {
+            return getBrooklynObject().getEntityType().getConfigKeys();
+        }
+    }
+
+    private static class EntityAdjunctConstraints extends ConfigConstraints<EntityAdjunct> {
+        public EntityAdjunctConstraints(EntityAdjunct brooklynObject) {
+            super(brooklynObject);
+        }
+
+        @Override
+        Iterable<ConfigKey<?>> getBrooklynObjectTypeConfigKeys() {
+            return ((AbstractEntityAdjunct) getBrooklynObject()).getAdjunctType().getConfigKeys();
+        }
+    }
+
+    public static class ConstraintViolationException extends RuntimeException {
+        public ConstraintViolationException(String message) {
+            super(message);
+        }
     }
 
 }
