@@ -113,9 +113,13 @@ public class CloudMachineNamerTest {
         ConfigBag cfg = new ConfigBag()
             .configure(CloudLocationConfig.CALLER_CONTEXT, child);
         BasicCloudMachineNamer namer = new BasicCloudMachineNamer();
-        namer.setDefaultMachineNameMaxLength(10);
+        // name max length is set to 9, because the constructed name will look like "br-ntsb50"
+        // br - 2 chars
+        // dash (-) - 1 char
+        // timeStamp - 6 chars
+        namer.setDefaultMachineNameMaxLength(2 + 1 + 6);
         String result = namer.generateNewMachineUniqueName(cfg);
-        Assert.assertEquals(result.length(), 10);
+        Assert.assertEquals(result.length(), 2 + 1 + 6);
     }
     
     @Test
