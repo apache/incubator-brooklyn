@@ -33,6 +33,7 @@ import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.effector.EffectorTasks;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.feed.ConfigToAttributes;
@@ -295,23 +296,31 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
     }
 
     @Override
-    public void runPreInstallCommand(String command) {
-        execute(ImmutableList.of(command), "running pre-install commands");
+    public void runPreInstallCommand() {
+        if(Strings.isNonBlank(getEntity().getConfig(VanillaSoftwareProcess.PRE_INSTALL_COMMAND))) {
+            execute(getEntity().getConfig(VanillaSoftwareProcess.PRE_INSTALL_COMMAND), "running pre-install commands");
+        }
     }
 
     @Override
-    public void runPostInstallCommand(String command) {
-        execute(ImmutableList.of(command), "running post-install commands");
+    public void runPostInstallCommand() {
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND))) {
+            execute(ImmutableList.of(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND)), "running post-install commands");
+        }
     }
 
     @Override
-    public void runPreLaunchCommand(String command) {
-        execute(ImmutableList.of(command), "running pre-launch commands");
+    public void runPreLaunchCommand() {
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND))) {
+            execute(ImmutableList.of(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND)), "running pre-launch commands");
+        }
     }
 
     @Override
-    public void runPostLaunchCommand(String command) {
-        execute(ImmutableList.of(command), "running post-launch commands");
+    public void runPostLaunchCommand() {
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND))) {
+            execute(ImmutableList.of(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND)), "running post-launch commands");
+        }
     }
 
     /**

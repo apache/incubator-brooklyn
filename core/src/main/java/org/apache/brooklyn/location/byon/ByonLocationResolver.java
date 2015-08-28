@@ -70,7 +70,7 @@ public class ByonLocationResolver extends AbstractLocationResolver {
     
     public static final String BYON = "byon";
 
-    public static final ConfigKey<String> OS_FAMILY = ConfigKeys.newStringConfigKey("osfamily", "OS Family of the machine, either windows or linux", "linux");
+    public static final ConfigKey<String> OS_FAMILY = ConfigKeys.newStringConfigKey("osFamily", "OS Family of the machine, either windows or linux", "linux");
 
     public static final Map<String, Class<? extends MachineLocation>> OS_TO_MACHINE_LOCATION_TYPE = ImmutableMap.<String, Class<? extends MachineLocation>>of(
             "windows", WinRmMachineLocation.class,
@@ -147,7 +147,7 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         Map<String, Object> valSanitized = Sanitizer.sanitize(vals);
         Map<String, Object> machineConfig = MutableMap.copyOf(vals);
         
-        String osfamily = (String) machineConfig.remove(OS_FAMILY.getName());
+        String osFamily = (String) machineConfig.remove(OS_FAMILY.getName());
         String ssh = (String) machineConfig.remove("ssh");
         String winrm = (String) machineConfig.remove("winrm");
         Map<Integer, String> tcpPortMappings = (Map<Integer, String>) machineConfig.get("tcpPortMappings");
@@ -199,8 +199,8 @@ public class ByonLocationResolver extends AbstractLocationResolver {
         }
         
         Class<? extends MachineLocation> locationClassHere = locationClass;
-        if (osfamily != null) {
-            locationClassHere = getLocationClass(osfamily);
+        if (osFamily != null) {
+            locationClassHere = getLocationClass(osFamily);
         }
 
         return LocationSpec.create(locationClassHere).configure(machineConfig);

@@ -18,29 +18,36 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
+import com.google.common.collect.ImmutableList;
+import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
+import org.apache.brooklyn.api.entity.EntityLocal;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.exceptions.ReferenceWithError;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
+import org.python.core.PyException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.brooklyn.api.entity.EntityLocal;
-import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.sensor.Sensors;
-import org.python.core.PyException;
-import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
-import org.apache.brooklyn.util.exceptions.ReferenceWithError;
-import org.apache.brooklyn.util.repeat.Repeater;
-import org.apache.brooklyn.util.time.Duration;
-
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
-
-import com.google.api.client.util.Strings;
-import com.google.common.collect.ImmutableList;
-
 public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwareProcessDriver {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractSoftwareProcessWinRmDriver.class);
 
     AttributeSensor<String> WINDOWS_USERNAME = Sensors.newStringSensor("windows.username",
             "Default Windows username to be used when connecting to the Entity's VM");
@@ -54,8 +61,13 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     }
 
     @Override
-    public void runPreInstallCommand(String command) {
-        execute(ImmutableList.of(command));
+    public void runPreInstallCommand() {
+        if (Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.PRE_INSTALL_COMMAND)) || Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND))) {
+            executeCommand(VanillaWindowsProcess.PRE_INSTALL_COMMAND, VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND, true);
+        }
+        if (entity.getConfig(VanillaWindowsProcess.PRE_INSTALL_REBOOT_REQUIRED)) {
+            rebootAndWait();
+        }
     }
 
     @Override
@@ -64,18 +76,24 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     }
 
     @Override
-    public void runPostInstallCommand(String command) {
-        execute(ImmutableList.of(command));
+    public void runPostInstallCommand() {
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND)) || Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.POST_INSTALL_POWERSHELL_COMMAND))) {
+            executeCommand(BrooklynConfigKeys.POST_INSTALL_COMMAND, VanillaWindowsProcess.POST_INSTALL_POWERSHELL_COMMAND, true);
+        }
     }
 
     @Override
-    public void runPreLaunchCommand(String command) {
-        execute(ImmutableList.of(command));
+    public void runPreLaunchCommand() {
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND)) || Strings.isNonBlank(entity.getConfig(VanillaWindowsProcess.PRE_LAUNCH_POWERSHELL_COMMAND))) {
+            executeCommand(BrooklynConfigKeys.PRE_LAUNCH_COMMAND, VanillaWindowsProcess.PRE_LAUNCH_POWERSHELL_COMMAND, true);
+        }
     }
 
     @Override
-    public void runPostLaunchCommand(String command) {
-        execute(ImmutableList.of(command));
+    public void runPostLaunchCommand() {
+        if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND)) || Strings.isNonBlank(entity.getConfig(VanillaWindowsProcess.POST_LAUNCH_POWERSHELL_COMMAND))) {
+            executeCommand(BrooklynConfigKeys.POST_LAUNCH_COMMAND, VanillaWindowsProcess.POST_LAUNCH_POWERSHELL_COMMAND, true);
+        }
     }
 
     @Override
@@ -119,20 +137,53 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     protected WinRmToolResponse executeCommand(ConfigKey<String> regularCommandKey, ConfigKey<String> powershellCommandKey, boolean allowNoOp) {
         String regularCommand = getEntity().getConfig(regularCommandKey);
         String powershellCommand = getEntity().getConfig(powershellCommandKey);
-        if (Strings.isNullOrEmpty(regularCommand) && Strings.isNullOrEmpty(powershellCommand)) {
+        if (Strings.isBlank(regularCommand) && Strings.isBlank(powershellCommand)) {
             if (allowNoOp) {
                 return new WinRmToolResponse("", "", 0);
             } else {
                 throw new IllegalStateException(String.format("Exactly one of %s or %s must be set", regularCommandKey.getName(), powershellCommandKey.getName()));
             }
-        } else if (!Strings.isNullOrEmpty(regularCommand) && !Strings.isNullOrEmpty(powershellCommand)) {
+        } else if (!Strings.isBlank(regularCommand) && !Strings.isBlank(powershellCommand)) {
             throw new IllegalStateException(String.format("%s and %s cannot both be set", regularCommandKey.getName(), powershellCommandKey.getName()));
         }
 
-        if (Strings.isNullOrEmpty(regularCommand)) {
-            return getLocation().executePsScript(ImmutableList.of(powershellCommand));
+        ByteArrayOutputStream stdIn = new ByteArrayOutputStream();
+        ByteArrayOutputStream stdOut = new ByteArrayOutputStream();
+        ByteArrayOutputStream stdErr = new ByteArrayOutputStream();
+
+        Task<?> currentTask = Tasks.current();
+        if (currentTask != null) {
+            writeToStream(stdIn, Strings.isBlank(regularCommand) ? powershellCommand : regularCommand);
+            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, stdIn));
+
+            if (BrooklynTaskTags.stream(currentTask, BrooklynTaskTags.STREAM_STDOUT)==null) {
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, stdOut));
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, stdErr));
+            }
+        }
+
+        WinRmToolResponse response;
+        if (Strings.isBlank(regularCommand)) {
+            response = getLocation().executePsScript(ImmutableList.of(powershellCommand));
         } else {
-            return getLocation().executeScript(ImmutableList.of(regularCommand));
+            response = getLocation().executeScript(ImmutableList.of(regularCommand));
+        }
+
+        if (currentTask != null) {
+            if (BrooklynTaskTags.stream(currentTask, BrooklynTaskTags.STREAM_STDOUT)==null) {
+                writeToStream(stdOut, response.getStdOut());
+                writeToStream(stdErr, response.getStdErr());
+            }
+        }
+
+        return response;
+    }
+
+    private void writeToStream(ByteArrayOutputStream stream, String string)  {
+        try {
+            stream.write(string.getBytes());
+        } catch (IOException e) {
+            LOG.warn("Problem populating one of the std streams for task of entity " + getEntity(), e);
         }
     }
 
