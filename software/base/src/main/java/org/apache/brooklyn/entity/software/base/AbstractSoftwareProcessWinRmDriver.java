@@ -170,10 +170,8 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         }
 
         if (currentTask != null) {
-            if (BrooklynTaskTags.stream(currentTask, BrooklynTaskTags.STREAM_STDOUT)==null) {
-                writeToStream(stdOut, response.getStdOut());
-                writeToStream(stdErr, response.getStdErr());
-            }
+            writeToStream(stdOut, response.getStdOut());
+            writeToStream(stdErr, response.getStdErr());
         }
 
         return response;
