@@ -42,9 +42,14 @@ public class JcloudsMachineNamerTest {
         // br-<code>-<user>-myco-1234
         Assert.assertTrue(result.length() <= 24-4-1, "result: "+result);
         
-        String user = Strings.maxlen(System.getProperty("user.name"), 2).toLowerCase();
-        // (length 2 will happen if user is brooklyn, to avoid brooklyn-brooklyn at start!)
-        Assert.assertTrue(result.indexOf(user) >= 0);
+        String user = System.getProperty("user.name");
+        String userExt = Strings.maxlen(user, 2).toLowerCase();
+        
+        // Username can be omitted if it is longer than the rules defined in BasicCloudMachineNamer()
+        if (user.length() <= 4) { 
+            // (length 2 will happen if user is brooklyn, to avoid brooklyn-brooklyn at start!)
+            Assert.assertTrue(result.indexOf(userExt) >= 0);
+        }
         Assert.assertTrue(result.indexOf("-myc") >= 0);
     }
     
