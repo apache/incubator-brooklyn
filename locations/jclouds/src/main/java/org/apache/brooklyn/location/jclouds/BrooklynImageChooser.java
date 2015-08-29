@@ -175,6 +175,8 @@ public class BrooklynImageChooser implements Cloneable {
         if (deprecated!=null) {
             if ("deprecated".equalsIgnoreCase(deprecated))
                 return -30;
+            if ("obsolete".equalsIgnoreCase(deprecated))
+                return -40;
             log.warn("Unrecognised 'deprecatedState' value '"+deprecated+"' when scoring "+img+"; ignoring that metadata");
         }
         

@@ -1250,6 +1250,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(EXTRA_PUBLIC_KEY_DATA_TO_AUTH, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
+                        if (t instanceof GoogleComputeEngineTemplateOptions) {
+                            // see email to jclouds list, 29 Aug 2015; 
+                            // GCE takes this to be the only login public key, 
+                            // and setting this only works if you also overrideLoginPrivateKey
+                            LOG.warn("Ignoring "+EXTRA_PUBLIC_KEY_DATA_TO_AUTH+"; not supported in jclouds-gce implementation.");
+                        }
                         t.authorizePublicKey(((CharSequence)v).toString());
                     }})
             .put(RUN_AS_ROOT, new CustomizeTemplateOptions() {
