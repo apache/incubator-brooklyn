@@ -32,15 +32,22 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.mapper.MapperWrapper;
 
 public class XmlSerializer<T> {
 
+    private final Map<String, String> deserializingClassRenames;
     protected final XStream xstream;
-    
+
     public XmlSerializer() {
-        xstream = new XStream() {
+        this(ImmutableMap.<String, String>of());
+    }
+    
+    public XmlSerializer(Map<String, String> deserializingClassRenames) {
+        this.deserializingClassRenames = deserializingClassRenames;
+        this.xstream = new XStream() {
             @Override
             protected MapperWrapper wrapMapper(MapperWrapper next) {
                 MapperWrapper result = super.wrapMapper(next);
@@ -72,7 +79,8 @@ public class XmlSerializer<T> {
     }
     
     protected MapperWrapper wrapMapper(MapperWrapper next) {
-        return new CompilerIndependentOuterClassFieldMapper(next);
+        MapperWrapper result = new CompilerIndependentOuterClassFieldMapper(next);
+        return new ClassRenamingMapper(result, deserializingClassRenames);
     }
 
     public void serialize(Object object, Writer writer) {

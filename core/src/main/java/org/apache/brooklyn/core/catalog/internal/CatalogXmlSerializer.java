@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
+import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
 import org.apache.brooklyn.util.core.xstream.EnumCaseForgivingSingleValueConverter;
 import org.apache.brooklyn.util.core.xstream.XmlSerializer;
@@ -32,6 +33,8 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
 
     @SuppressWarnings("deprecation")
     public CatalogXmlSerializer() {
+        super(DeserializingClassRenamesProvider.loadDeserializingClassRenames());
+        
         xstream.addDefaultImplementation(ArrayList.class, Collection.class);
         
         xstream.aliasType("list", List.class);
