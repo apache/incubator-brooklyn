@@ -48,14 +48,7 @@ public class BrooklynServiceTypeResolver implements ServiceTypeResolver {
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
     
-    private final Map<String, String> deserializingClassRenames;
-
     public BrooklynServiceTypeResolver() {
-        this(DeserializingClassRenamesProvider.loadDeserializingClassRenames());
-    }
-    
-    public BrooklynServiceTypeResolver(Map<String, String> deserializingClassRenames) {
-        this.deserializingClassRenames = checkNotNull(deserializingClassRenames, "deserializingClassRenames");
     }
     
     @Override
@@ -87,20 +80,7 @@ public class BrooklynServiceTypeResolver implements ServiceTypeResolver {
     }
 
     protected CatalogItem<Entity,EntitySpec<?>> getCatalogItemImpl(ManagementContext mgmt, String brooklynType) {
-        try {
-            return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  brooklynType);
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            Optional<String> alternativeType = DeserializingClassRenamesProvider.tryFindMappedName(deserializingClassRenames, brooklynType);
-            if (alternativeType.isPresent()) {
-                LOG.debug("Transforming entity "+brooklynType+" to "+alternativeType.get());
-                try {
-                    return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  alternativeType.get());
-                } catch (Exception e2) {
-                    LOG.debug("Problem getting catalog for transformed type "+alternativeType.get()+"; throwing of untransformed type "+brooklynType, e);
-                }
-            }
-            throw Exceptions.propagate(e);
-        }
+        brooklynType = DeserializingClassRenamesProvider.findMappedName(brooklynType);
+        return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  brooklynType);
     }
 }

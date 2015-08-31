@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
@@ -45,7 +46,7 @@ public class BasicConfigurableEntityFactory<T extends Entity> extends AbstractCo
     public BasicConfigurableEntityFactory(Map flags, Class<? extends T> clazz) {
         super(flags);
         this.clazz = checkNotNull(clazz, "clazz");
-        this.clazzName = clazz.getName();
+        this.clazzName = DeserializingClassRenamesProvider.findMappedName(clazz.getName());
     }
 
     public T newEntity2(Map flags, Entity parent) {

@@ -72,12 +72,14 @@ import org.apache.brooklyn.core.feed.AbstractFeed;
 import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.internal.BrooklynObjectManagementMode;
 import org.apache.brooklyn.core.mgmt.internal.BrooklynObjectManagerInternal;
 import org.apache.brooklyn.core.mgmt.internal.EntityManagerInternal;
 import org.apache.brooklyn.core.mgmt.internal.LocationManagerInternal;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.internal.ManagementTransitionMode;
+import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceActivityMetrics;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl.RebindTracker;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
@@ -211,7 +213,7 @@ public abstract class RebindIteration {
         
         managementContext = rebindManager.getManagementContext();
         rebindContext = new RebindContextImpl(managementContext, exceptionHandler, classLoader);
-        reflections = new Reflections(classLoader);
+        reflections = new Reflections(classLoader).applyClassRenames(DeserializingClassRenamesProvider.loadDeserializingClassRenames());
         instantiator = new BrooklynObjectInstantiator(classLoader, rebindContext, reflections);
         
         if (mode==ManagementNodeState.HOT_STANDBY || mode==ManagementNodeState.HOT_BACKUP) {
@@ -822,17 +824,14 @@ public abstract class RebindIteration {
 
             //As a last resort go through all catalog items trying to load the type and use the first that succeeds.
             //But first check if can be loaded from the default classpath
-            try {
-                cl.loadClass(entityManifest.getType());
+            if (JavaBrooklynClassLoadingContext.create(managementContext).tryLoadClass(entityManifest.getType()).isPresent())
                 return null;
-            } catch (ClassNotFoundException e) {
-            }
 
             for (CatalogItem<?, ?> item : catalog.getCatalogItems()) {
                 BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(managementContext, item);
                 boolean canLoadClass = loader.tryLoadClass(entityManifest.getType()).isPresent();
                 if (canLoadClass) {
-                    LOG.warn("Missing catalog item for "+entityManifest.getId()+", inferring as "+item.getId()+" because that is able to load the item");
+                    LOG.warn("Missing catalog item for "+entityManifest.getId()+" ("+entityManifest.getType()+"), inferring as "+item.getId()+" because that is able to load the item");
                     return item.getId();
                 }
             }

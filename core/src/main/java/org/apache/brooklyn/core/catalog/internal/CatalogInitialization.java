@@ -434,14 +434,15 @@ public class CatalogInitialization implements ManagementContextInjectable {
         if (throwable instanceof RuntimeInterruptedException)
             throw (RuntimeInterruptedException) throwable;
 
-        log.error("Error loading catalog item '"+details+"': "+throwable);
-        log.debug("Trace for error loading catalog item '"+details+"': "+throwable, throwable);
+        String throwableText = Exceptions.collapseText(throwable);
+        log.error("Error loading catalog item '"+details+"': "+throwableText);
+        log.debug("Trace for error loading catalog item '"+details+"': "+throwableText, throwable);
 
         // TODO give more detail when adding
         ((ManagementContextInternal)getManagementContext()).errors().add(throwable);
         
         if (isStartingUp && failOnStartupErrors) {
-            throw new FatalRuntimeException("Unable to load catalog item '"+details+"': "+throwable, throwable);
+            throw new FatalRuntimeException("Unable to load catalog item '"+details+"': "+throwableText, throwable);
         }
     }
     

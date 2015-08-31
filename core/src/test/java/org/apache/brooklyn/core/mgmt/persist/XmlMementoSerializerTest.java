@@ -71,7 +71,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.net.HostAndPort;
+import com.thoughtworks.xstream.converters.Converter;
 
 public class XmlMementoSerializerTest {
 
@@ -263,7 +263,6 @@ public class XmlMementoSerializerTest {
         final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ManagementContext managementContext = app.getManagementContext();
         try {
-            @SuppressWarnings("deprecation")
             final Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.<Entity>of(), ImmutableList.of(loc), ImmutableList.<Policy>of(),
@@ -401,6 +400,8 @@ public class XmlMementoSerializerTest {
 
     @SuppressWarnings("unchecked")
     private <T> T assertSerializeAndDeserialize(T obj) throws Exception {
+Converter x = serializer.xstream.getConverterLookup().lookupConverterForType(Class.class);
+System.out.println("XXX: "+x);
         String serializedForm = serializer.toString(obj);
         LOG.info("serializedForm=" + serializedForm);
         Object deserialized = serializer.fromString(serializedForm);

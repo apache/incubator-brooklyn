@@ -24,22 +24,34 @@ import java.util.Enumeration;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.stream.Streams;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 @Beta
 public class DeserializingClassRenamesProvider {
 
-    public static final String DESERIALIZING_CLASS_RENAMES_PROPERTIES_PATH = "classpath://org/apache/brooklyn/deserializingClassRenames.properties";
+    public static final String DESERIALIZING_CLASS_RENAMES_PROPERTIES_PATH = "classpath://org/apache/brooklyn/core/mgmt/persist/deserializingClassRenames.properties";
+    
+    private static Map<String, String> cache = null;
     
     @Beta
     public static Map<String, String> loadDeserializingClassRenames() {
-        InputStream resource = XmlMementoSerializer.class.getClassLoader().getResourceAsStream(DESERIALIZING_CLASS_RENAMES_PROPERTIES_PATH);
+        if (cache!=null) return cache;
+        synchronized (DeserializingClassRenamesProvider.class) {
+            cache = loadDeserializingClassRenamesCache();
+            return cache;
+        }
+    }
+    
+    private synchronized static Map<String, String> loadDeserializingClassRenamesCache() {
+        if (cache!=null) return cache;
+        InputStream resource = new ResourceUtils(DeserializingClassRenamesProvider.class).getResourceFromUrl(DESERIALIZING_CLASS_RENAMES_PROPERTIES_PATH);
         if (resource != null) {
             try {
                 Properties props = new Properties();
@@ -63,16 +75,7 @@ public class DeserializingClassRenamesProvider {
     }
 
     @Beta
-    public static Optional<String> tryFindMappedName(Map<String, String> renames, String name) {
-        String mappedName = (String) renames.get(name);
-        if (mappedName != null) {
-            return Optional.of(mappedName);
-        }
-        for (Map.Entry<String, String> entry : renames.entrySet()) {
-            if (name.startsWith(entry.getKey())) {
-                return Optional.of(entry.getValue()+ name.substring(entry.getKey().length()));
-            }
-        }
-        return Optional.<String>absent();
+    public static String findMappedName(String name) {
+        return Reflections.findMappedNameAndLog(loadDeserializingClassRenames(), name);
     }
 }

@@ -27,16 +27,19 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -137,17 +140,18 @@ public class Exceptions {
     /** as {@link #collapse(Throwable)} but includes causal messages in the message as per {@link #collapseTextIncludingAllCausalMessages(Throwable)};
      * use with care (limit once) as repeated usage can result in multiple copies of the same message */ 
     public static Throwable collapseIncludingAllCausalMessages(Throwable source) {
-        return collapse(source, true, true);
+        return collapse(source, true, true, ImmutableSet.<Throwable>of());
     }
     
     /** creates (but does not throw) a new {@link PropagatedRuntimeException} whose 
      * message is taken from the first _interesting_ element in the source,
      * and optionally also the causal chain */
     public static Throwable collapse(Throwable source, boolean collapseCausalChain) {
-        return collapse(source, collapseCausalChain, false);
+        return collapse(source, collapseCausalChain, false, ImmutableSet.<Throwable>of());
     }
     
-    private static Throwable collapse(Throwable source, boolean collapseCausalChain, boolean includeAllCausalMessages) {
+    private static Throwable collapse(Throwable source, boolean collapseCausalChain, boolean includeAllCausalMessages, Set<Throwable> visited) {
+        visited = MutableSet.copyOf(visited);
         String message = "";
         Throwable collapsed = source;
         int collapseCount = 0;
@@ -156,9 +160,14 @@ public class Exceptions {
         while (isBoring(collapsed)  && !messageIsFinal) {
             collapseCount++;
             Throwable cause = collapsed.getCause();
-            if (cause==null)
+            if (cause==null) {
                 // everything in the tree is boring...
                 return source;
+            }
+            if (visited.add(collapsed)) {
+                // there is a recursive loop
+                break;
+            }
             String collapsedS = collapsed.getMessage();
             if (collapsed instanceof PropagatedRuntimeException && ((PropagatedRuntimeException)collapsed).isCauseEmbeddedInMessage()) {
                 message = collapsed.getMessage();
@@ -180,7 +189,7 @@ public class Exceptions {
                 messagesCause = messagesCause.getCause();
                 break;
             }
-            messagesCause = messagesCause.getCause();
+            visited.add(messagesCause); messagesCause = messagesCause.getCause();
         }
         
         if (collapseCount==0 && !includeAllCausalMessages)
@@ -191,15 +200,12 @@ public class Exceptions {
             messagesCause = messagesCause.getCause();
         }
         
-        if (Strings.isBlank(message)) {
-            return new PropagatedRuntimeException(collapseCausalChain ? collapsed : source);
-        } else {
-            if (messagesCause!=null && !messageIsFinal) {
-                String extraMessage = collapseText(messagesCause, includeAllCausalMessages);
-                message = appendSeparator(message, extraMessage);
-            }
-            return new PropagatedRuntimeException(message, collapseCausalChain ? collapsed : source, true);
+        if (messagesCause!=null && !messageIsFinal) {
+            String extraMessage = collapseText(messagesCause, includeAllCausalMessages, ImmutableSet.copyOf(visited));
+            message = appendSeparator(message, extraMessage);
         }
+        if (message==null) message = "";
+        return new PropagatedRuntimeException(message, collapseCausalChain ? collapsed : source, true);
     }
     
     static String appendSeparator(String message, String next) {
@@ -233,14 +239,25 @@ public class Exceptions {
     }
     
     private static String collapseText(Throwable t, boolean includeAllCausalMessages) {
+        return collapseText(t, includeAllCausalMessages, ImmutableSet.<Throwable>of());
+    }
+    private static String collapseText(Throwable t, boolean includeAllCausalMessages, Set<Throwable> visited) {
         if (t == null) return null;
-        Throwable t2 = collapse(t, true, includeAllCausalMessages);
+        if (visited.contains(t)) {
+            // IllegalStateException sometimes refers to itself; guard against stack overflows
+            if (Strings.isNonBlank(t.getMessage())) return t.getMessage();
+            else return "("+t.getClass().getName()+", recursive cause)";
+        }
+        Throwable t2 = collapse(t, true, includeAllCausalMessages, visited);
+        visited = MutableSet.copyOf(visited);
+        visited.add(t);
+        visited.add(t2);
         if (t2 instanceof PropagatedRuntimeException) {
             if (((PropagatedRuntimeException)t2).isCauseEmbeddedInMessage())
                 // normally
                 return t2.getMessage();
             else if (t2.getCause()!=null)
-                return ""+t2.getCause();
+                return collapseText(t2.getCause(), includeAllCausalMessages, ImmutableSet.copyOf(visited));
             return ""+t2.getClass();
         }
         String result = t2.toString();

@@ -139,8 +139,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     
     // Warning: this is called in the super-class constuctor, so before this constructor!
     @Override
-    protected MapperWrapper wrapMapper(MapperWrapper next) {
-        MapperWrapper mapper = super.wrapMapper(next);
+    protected MapperWrapper wrapMapperForNormalUsage(Mapper next) {
+        MapperWrapper mapper = super.wrapMapperForNormalUsage(next);
         mapper = new CustomMapper(mapper, Entity.class, "entityProxy");
         mapper = new CustomMapper(mapper, Location.class, "locationProxy");
         return mapper;

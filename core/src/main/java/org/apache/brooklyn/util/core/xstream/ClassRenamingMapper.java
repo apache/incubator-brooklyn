@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,32 +41,13 @@ public class ClassRenamingMapper extends MapperWrapper {
     }
     
     @Override
-    public Class realClass(String elementName) {
-        String nameToUse;
-        Optional<String> mappedName = DeserializingClassRenamesProvider.tryFindMappedName(nameToType, elementName);
-        if (mappedName.isPresent()) {
-            LOG.debug("Transforming xstream "+elementName+" to "+mappedName);
-            nameToUse = mappedName.get();
-        } else {
-            nameToUse = elementName;
+    public Class<?> realClass(String elementName) {
+        Optional<String> elementNameOpt = Reflections.tryFindMappedName(nameToType, elementName);
+        if (elementNameOpt.isPresent()) {
+            LOG.debug("Mapping class '"+elementName+"' to '"+elementNameOpt.get()+"'");
+            elementName = elementNameOpt.get();
         }
-        return super.realClass(nameToUse);
+        return super.realClass(elementName);
     }
 
-//    public boolean aliasIsAttribute(String name) {
-//        return nameToType.containsKey(name);
-//    }
-//    
-//    private Object readResolve() {
-//        nameToType = new HashMap();
-//        for (final Iterator iter = classToName.keySet().iterator(); iter.hasNext();) {
-//            final Object type = iter.next();
-//            nameToType.put(classToName.get(type), type);
-//        }
-//        for (final Iterator iter = typeToName.keySet().iterator(); iter.hasNext();) {
-//            final Class type = (Class)iter.next();
-//            nameToType.put(typeToName.get(type), type.getName());
-//        }
-//        return this;
-//    }
 }
