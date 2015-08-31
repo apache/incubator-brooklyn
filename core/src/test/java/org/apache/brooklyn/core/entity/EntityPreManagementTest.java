@@ -34,7 +34,7 @@ import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.test.TestUtils;
+import org.apache.brooklyn.test.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -102,7 +102,7 @@ public class EntityPreManagementTest {
         e.setParent(app);
         Entities.manage(e);
         
-        TestUtils.assertEventually(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
                 if (events.isEmpty()) Assert.fail("no events received");
@@ -135,7 +135,7 @@ public class EntityPreManagementTest {
         
         Entities.startManagement(app, managementContext);
         
-        TestUtils.assertEventually(new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {
                 if (events.isEmpty()) Assert.fail("no events received");

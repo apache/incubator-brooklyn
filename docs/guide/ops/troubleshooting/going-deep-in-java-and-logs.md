@@ -15,35 +15,35 @@ a bash script.
 First let's take a look at the `customize()` method of the Tomcat server blueprint:
 
 {% highlight java %}
-  @Override
-  public void customize() {
-      newScript(CUSTOMIZING)
-          .body.append("mkdir -p conf logs webapps temp")
-          .failOnNonZeroResultCode()
-          .execute();
+@Override
+public void customize() {
+    newScript(CUSTOMIZING)
+        .body.append("mkdir -p conf logs webapps temp")
+        .failOnNonZeroResultCode()
+        .execute();
 
-      copyTemplate(entity.getConfig(TomcatServer.SERVER_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "server.xml"));
-      copyTemplate(entity.getConfig(TomcatServer.WEB_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "web.xml"));
+    copyTemplate(entity.getConfig(TomcatServer.SERVER_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "server.xml"));
+    copyTemplate(entity.getConfig(TomcatServer.WEB_XML_RESOURCE), Os.mergePaths(getRunDir(), "conf", "web.xml"));
 
-      if (isProtocolEnabled("HTTPS")) {
-          String keystoreUrl = Preconditions.checkNotNull(getSslKeystoreUrl(), "keystore URL must be specified if using HTTPS for " + entity);
-          String destinationSslKeystoreFile = getHttpsSslKeystoreFile();
-          InputStream keystoreStream = resource.getResourceFromUrl(keystoreUrl);
-          getMachine().copyTo(keystoreStream, destinationSslKeystoreFile);
-      }
+    if (isProtocolEnabled("HTTPS")) {
+        String keystoreUrl = Preconditions.checkNotNull(getSslKeystoreUrl(), "keystore URL must be specified if using HTTPS for " + entity);
+        String destinationSslKeystoreFile = getHttpsSslKeystoreFile();
+        InputStream keystoreStream = resource.getResourceFromUrl(keystoreUrl);
+        getMachine().copyTo(keystoreStream, destinationSslKeystoreFile);
+    }
 
-      getEntity().deployInitialWars();
-  }
+    getEntity().deployInitialWars();
+}
 {% endhighlight %}
 
 Here we can see that it's running a script to create four directories before continuing with the customization. Let's
 introduce an error by changing `mkdir` to `mkrid`:
 
 {% highlight java %}
-      newScript(CUSTOMIZING)
-          .body.append("mkrid -p conf logs webapps temp") // `mkdir` changed to `mkrid`
-          .failOnNonZeroResultCode()
-          .execute();
+newScript(CUSTOMIZING)
+    .body.append("mkrid -p conf logs webapps temp") // `mkdir` changed to `mkrid`
+    .failOnNonZeroResultCode()
+    .execute();
 {% endhighlight %}
 
 Now let's try deploying this using the following YAML:
@@ -53,7 +53,7 @@ Now let's try deploying this using the following YAML:
 name: Tomcat failure test
 location: localhost
 services:
-- type: brooklyn.entity.webapp.tomcat.TomcatServer
+- type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 
 {% endhighlight %}
 
@@ -93,16 +93,16 @@ STDOUT
 Executed /tmp/brooklyn-20150721-132251052-l4b9-customizing_TomcatServerImpl_i.sh, result 127: Execution failed, invalid result 127 for customizing TomcatServerImpl{id=e1HP2s8x}
 
 java.lang.IllegalStateException: Execution failed, invalid result 127 for customizing TomcatServerImpl{id=e1HP2s8x}
-    at brooklyn.entity.basic.lifecycle.ScriptHelper.logWithDetailsAndThrow(ScriptHelper.java:390)
-    at brooklyn.entity.basic.lifecycle.ScriptHelper.executeInternal(ScriptHelper.java:379)
-    at brooklyn.entity.basic.lifecycle.ScriptHelper$8.call(ScriptHelper.java:289)
-    at brooklyn.entity.basic.lifecycle.ScriptHelper$8.call(ScriptHelper.java:287)
-    at brooklyn.util.task.DynamicSequentialTask$DstJob.call(DynamicSequentialTask.java:343)
-    at brooklyn.util.task.BasicExecutionManager$SubmissionCallable.call(BasicExecutionManager.java:469)
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper.logWithDetailsAndThrow(ScriptHelper.java:390)
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper.executeInternal(ScriptHelper.java:379)
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper$8.call(ScriptHelper.java:289)
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper$8.call(ScriptHelper.java:287)
+    at org.apache.brooklyn.core.util.task.DynamicSequentialTask$DstJob.call(DynamicSequentialTask.java:343)
+    at org.apache.brooklyn.core.util.task.BasicExecutionManager$SubmissionCallable.call(BasicExecutionManager.java:469)
     at java.util.concurrent.FutureTask.run(FutureTask.java:262)
     at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
     at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)
-at java.lang.Thread.run(Thread.java:745)
+    at java.lang.Thread.run(Thread.java:745)
 {% endhighlight %}
 
 In order to find the exception, we'll need to look in Brooklyn's debug log file. By default, the debug log file
@@ -118,34 +118,32 @@ In this case, the `?Tomcat` search takes us directly to the full stack trace (On
 is shown here):
 
 {% highlight console %}
-
-at com.google.common.util.concurrent.ForwardingFuture.get(ForwardingFuture.java:63) ~[guava-17.0.jar:na]
-at brooklyn.util.task.BasicTask.get(BasicTask.java:343) ~[classes/:na]
-at brooklyn.util.task.BasicTask.getUnchecked(BasicTask.java:352) ~[classes/:na]
-... 9 common frames omitted
+... at com.google.common.util.concurrent.ForwardingFuture.get(ForwardingFuture.java:63) ~[guava-17.0.jar:na]
+    at org.apache.brooklyn.core.util.task.BasicTask.get(BasicTask.java:343) ~[classes/:na]
+    at org.apache.brooklyn.core.util.task.BasicTask.getUnchecked(BasicTask.java:352) ~[classes/:na]
+    ... 9 common frames omitted
 Caused by: brooklyn.util.exceptions.PropagatedRuntimeException: 
-at brooklyn.util.exceptions.Exceptions.propagate(Exceptions.java:97) ~[classes/:na]
-at brooklyn.util.task.BasicTask.getUnchecked(BasicTask.java:354) ~[classes/:na]
-at brooklyn.entity.basic.lifecycle.ScriptHelper.execute(ScriptHelper.java:339) ~[classes/:na]
-at brooklyn.entity.webapp.tomcat.TomcatSshDriver.customize(TomcatSshDriver.java:72) ~[classes/:na]
-at brooklyn.entity.basic.AbstractSoftwareProcessDriver$8.run(AbstractSoftwareProcessDriver.java:150) ~[classes/:na]
-at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471) ~[na:1.7.0_71]
-at brooklyn.util.task.DynamicSequentialTask$DstJob.call(DynamicSequentialTask.java:343) ~[classes/:na]
-... 5 common frames omitted
+    at org.apache.brooklyn.util.exceptions.Exceptions.propagate(Exceptions.java:97) ~[classes/:na]
+    at org.apache.brooklyn.core.util.task.BasicTask.getUnchecked(BasicTask.java:354) ~[classes/:na]
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper.execute(ScriptHelper.java:339) ~[classes/:na]
+    at org.apache.brooklyn.entity.webapp.tomcat.TomcatSshDriver.customize(TomcatSshDriver.java:72) ~[classes/:na]
+    at org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessDriver$8.run(AbstractSoftwareProcessDriver.java:150) ~[classes/:na]
+    at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471) ~[na:1.7.0_71]
+    at org.apache.brooklyn.core.util.task.DynamicSequentialTask$DstJob.call(DynamicSequentialTask.java:343) ~[classes/:na]
+    ... 5 common frames omitted
 Caused by: java.util.concurrent.ExecutionException: java.lang.IllegalStateException: Execution failed, invalid result 127 for customizing TomcatServerImpl{id=e1HP2s8x}
-at java.util.concurrent.FutureTask.report(FutureTask.java:122) [na:1.7.0_71]
-at java.util.concurrent.FutureTask.get(FutureTask.java:188) [na:1.7.0_71]
-at com.google.common.util.concurrent.ForwardingFuture.get(ForwardingFuture.java:63) ~[guava-17.0.jar:na]
-at brooklyn.util.task.BasicTask.get(BasicTask.java:343) ~[classes/:na]
-at brooklyn.util.task.BasicTask.getUnchecked(BasicTask.java:352) ~[classes/:na]
-... 10 common frames omitted
+    at java.util.concurrent.FutureTask.report(FutureTask.java:122) [na:1.7.0_71]
+    at java.util.concurrent.FutureTask.get(FutureTask.java:188) [na:1.7.0_71]
+    at com.google.common.util.concurrent.ForwardingFuture.get(ForwardingFuture.java:63) ~[guava-17.0.jar:na]
+    at org.apache.brooklyn.core.util.task.BasicTask.get(BasicTask.java:343) ~[classes/:na]
+    at org.apache.brooklyn.core.util.task.BasicTask.getUnchecked(BasicTask.java:352) ~[classes/:na]
+    ... 10 common frames omitted
 Caused by: java.lang.IllegalStateException: Execution failed, invalid result 127 for customizing TomcatServerImpl{id=e1HP2s8x}
-at brooklyn.entity.basic.lifecycle.ScriptHelper.logWithDetailsAndThrow(ScriptHelper.java:390) ~[classes/:na]
-at brooklyn.entity.basic.lifecycle.ScriptHelper.executeInternal(ScriptHelper.java:379) ~[classes/:na]
-at brooklyn.entity.basic.lifecycle.ScriptHelper$8.call(ScriptHelper.java:289) ~[classes/:na]
-at brooklyn.entity.basic.lifecycle.ScriptHelper$8.call(ScriptHelper.java:287) ~[classes/:na]
-... 6 common frames omitted
-
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper.logWithDetailsAndThrow(ScriptHelper.java:390) ~[classes/:na]
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper.executeInternal(ScriptHelper.java:379) ~[classes/:na]
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper$8.call(ScriptHelper.java:289) ~[classes/:na]
+    at org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper$8.call(ScriptHelper.java:287) ~[classes/:na]
+    ... 6 common frames omitted
 {% endhighlight %}
 
 Brooklyn's use of tasks and helper classes can make the stack trace a little harder than usual to follow, but a good
@@ -153,7 +151,7 @@ place to start is to look through the stack trace for the node's implementation 
 named `FooNodeImpl` or `FooSshDriver`). In this case we can see the following:
 
 {% highlight console %}
-at brooklyn.entity.webapp.tomcat.TomcatSshDriver.customize(TomcatSshDriver.java:72) ~[classes/:na]
+at org.apache.brooklyn.entity.webapp.tomcat.TomcatSshDriver.customize(TomcatSshDriver.java:72) ~[classes/:na]
 {% endhighlight %}
 
 Combining this with the error message of `mkrid: command not found` we can see that indeed `mkdir` has been
@@ -192,27 +190,27 @@ this case it's shown in the Detailed Status section, and we don't need to go to 
 Failed after 221ms: Error getting resource 'classpath://nonexistent.xml' for TomcatServerImpl{id=PVZxDKU1}: java.io.IOException: Error accessing classpath://nonexistent.xml: java.io.IOException: nonexistent.xml not found on classpath
 
 java.lang.RuntimeException: Error getting resource 'classpath://nonexistent.xml' for TomcatServerImpl{id=PVZxDKU1}: java.io.IOException: Error accessing classpath://nonexistent.xml: java.io.IOException: nonexistent.xml not found on classpath
-    at brooklyn.util.ResourceUtils.getResourceFromUrl(ResourceUtils.java:297)
-    at brooklyn.util.ResourceUtils.getResourceAsString(ResourceUtils.java:475)
-    at brooklyn.entity.basic.AbstractSoftwareProcessDriver.getResourceAsString(AbstractSoftwareProcessDriver.java:447)
-    at brooklyn.entity.basic.AbstractSoftwareProcessDriver.processTemplate(AbstractSoftwareProcessDriver.java:469)
-    at brooklyn.entity.basic.AbstractSoftwareProcessDriver.copyTemplate(AbstractSoftwareProcessDriver.java:390)
-    at brooklyn.entity.basic.AbstractSoftwareProcessDriver.copyTemplate(AbstractSoftwareProcessDriver.java:379)
-    at brooklyn.entity.webapp.tomcat.TomcatSshDriver.customize(TomcatSshDriver.java:79)
-    at brooklyn.entity.basic.AbstractSoftwareProcessDriver$8.run(AbstractSoftwareProcessDriver.java:150)
+    at org.apache.brooklyn.core.util.ResourceUtils.getResourceFromUrl(ResourceUtils.java:297)
+    at org.apache.brooklyn.core.util.ResourceUtils.getResourceAsString(ResourceUtils.java:475)
+    at org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessDriver.getResourceAsString(AbstractSoftwareProcessDriver.java:447)
+    at org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessDriver.processTemplate(AbstractSoftwareProcessDriver.java:469)
+    at org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessDriver.copyTemplate(AbstractSoftwareProcessDriver.java:390)
+    at org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessDriver.copyTemplate(AbstractSoftwareProcessDriver.java:379)
+    at org.apache.brooklyn.entity.webapp.tomcat.TomcatSshDriver.customize(TomcatSshDriver.java:79)
+    at org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessDriver$8.run(AbstractSoftwareProcessDriver.java:150)
     at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)
-    at brooklyn.util.task.DynamicSequentialTask$DstJob.call(DynamicSequentialTask.java:343)
-    at brooklyn.util.task.BasicExecutionManager$SubmissionCallable.call(BasicExecutionManager.java:469)
+    at org.apache.brooklyn.core.util.task.DynamicSequentialTask$DstJob.call(DynamicSequentialTask.java:343)
+    at org.apache.brooklyn.core.util.task.BasicExecutionManager$SubmissionCallable.call(BasicExecutionManager.java:469)
     at java.util.concurrent.FutureTask.run(FutureTask.java:262)
     at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
     at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)
-at java.lang.Thread.run(Thread.java:745)
-    Caused by: java.io.IOException: Error accessing classpath://nonexistent.xml: java.io.IOException: nonexistent.xml not found on classpath
-at brooklyn.util.ResourceUtils.getResourceFromUrl(ResourceUtils.java:233)
+    at java.lang.Thread.run(Thread.java:745)
+Caused by: java.io.IOException: Error accessing classpath://nonexistent.xml: java.io.IOException: nonexistent.xml not found on classpath
+    at org.apache.brooklyn.core.util.ResourceUtils.getResourceFromUrl(ResourceUtils.java:233)
     ... 14 more
-    Caused by: java.io.IOException: nonexistent.xml not found on classpath
-    at brooklyn.util.ResourceUtils.getResourceViaClasspath(ResourceUtils.java:372)
-at brooklyn.util.ResourceUtils.getResourceFromUrl(ResourceUtils.java:230)
+Caused by: java.io.IOException: nonexistent.xml not found on classpath
+    at org.apache.brooklyn.core.util.ResourceUtils.getResourceViaClasspath(ResourceUtils.java:372)
+    at org.apache.brooklyn.core.util.ResourceUtils.getResourceFromUrl(ResourceUtils.java:230)
     ... 14 more
 
 {% endhighlight %}
@@ -230,7 +228,7 @@ the entity fails to start.
 We can simulate this type of failure by launching Tomcat with an invalid configuration file. As seen in the previous
 examples, Brooklyn copies two xml configuration files to the server: `server.xml` and `web.xml`
 
-The first few non-comment lines of `server.xml` are as follows (you can see the full file [here](https://github.com/apache/incubator-brooklyn/blob/master/software/webapp/src/main/resources/brooklyn/entity/webapp/tomcat/server.xml)):
+The first few non-comment lines of `server.xml` are as follows (you can see the full file [here]({{ site.brooklyn.url.git }}/software/webapp/src/main/resources/org/apache/brooklyn/entity/webapp/tomcat/server.xml)):
 
 {% highlight xml %}
 
@@ -275,14 +273,14 @@ The task that failed was the `post-start` task, and the stack trace from the Det
 Failed after 5m 1s: Timeout waiting for SERVICE_UP from TomcatServerImpl{id=BUHgQeOs}
 
 java.lang.IllegalStateException: Timeout waiting for SERVICE_UP from TomcatServerImpl{id=BUHgQeOs}
-    at brooklyn.entity.basic.Entities.waitForServiceUp(Entities.java:1073)
-    at brooklyn.entity.basic.SoftwareProcessImpl.waitForServiceUp(SoftwareProcessImpl.java:388)
-    at brooklyn.entity.basic.SoftwareProcessImpl.waitForServiceUp(SoftwareProcessImpl.java:385)
-    at brooklyn.entity.basic.SoftwareProcessDriverLifecycleEffectorTasks.postStartCustom(SoftwareProcessDriverLifecycleEffectorTasks.java:164)
-    at brooklyn.entity.software.MachineLifecycleEffectorTasks$7.run(MachineLifecycleEffectorTasks.java:433)
+    at org.apache.brooklyn.core.entity.Entities.waitForServiceUp(Entities.java:1073)
+    at org.apache.brooklyn.entity.software.base.SoftwareProcessImpl.waitForServiceUp(SoftwareProcessImpl.java:388)
+    at org.apache.brooklyn.entity.software.base.SoftwareProcessImpl.waitForServiceUp(SoftwareProcessImpl.java:385)
+    at org.apache.brooklyn.entity.software.base.SoftwareProcessDriverLifecycleEffectorTasks.postStartCustom(SoftwareProcessDriverLifecycleEffectorTasks.java:164)
+    at org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks$7.run(MachineLifecycleEffectorTasks.java:433)
     at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:471)
-    at brooklyn.util.task.DynamicSequentialTask$DstJob.call(DynamicSequentialTask.java:343)
-    at brooklyn.util.task.BasicExecutionManager$SubmissionCallable.call(BasicExecutionManager.java:469)
+    at org.apache.brooklyn.core.util.task.DynamicSequentialTask$DstJob.call(DynamicSequentialTask.java:343)
+    at org.apache.brooklyn.core.util.task.BasicExecutionManager$SubmissionCallable.call(BasicExecutionManager.java:469)
     at java.util.concurrent.FutureTask.run(FutureTask.java:262)
     at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1145)
     at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:615)
@@ -418,7 +416,7 @@ Let's go back to the Brooklyn debug console and look for the `webapp.tomcat.conn
 [![Sensors view in the Brooklyn debug console.](images/jmx-sensors.png)](images/jmx-sensors-large.png)
 
 As the sensor is not shown, it's likely that it's simply null or not set. We can check this by clicking
-the `Show/hide empty records` icon (highlighted in yellow above):
+the "Show/hide empty records" icon (highlighted in yellow above):
 
 [![All sensors view in the Brooklyn debug console.](images/jmx-sensors-all.png)](images/jmx-sensors-all-large.png)
 
@@ -448,7 +446,7 @@ Let's take a look in the log file:
 
 {% highlight console %}
 
-less /tmp/brooklyn-martin/apps/c3bmrlC3/entities/TomcatServer_C1TAjYia/logs/catalina.out
+$ less /tmp/brooklyn-martin/apps/c3bmrlC3/entities/TomcatServer_C1TAjYia/logs/catalina.out
 
 Jul 21, 2015 4:12:12 PM org.apache.tomcat.util.digester.Digester fatalError
 SEVERE: Parse Fatal Error at line 143 column 3: The element type "unmatched-element" must be terminated by the matching end-tag "</unmatched-element>".
@@ -475,12 +473,11 @@ SEVERE: Parse Fatal Error at line 143 column 3: The element type "unmatched-elem
     at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
     at java.lang.reflect.Method.invoke(Method.java:497)
     at org.apache.catalina.startup.Bootstrap.start(Bootstrap.java:321)
-at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:455)
-
-    Jul 21, 2015 4:12:12 PM org.apache.catalina.startup.Catalina load
-    WARNING: Catalina.start using conf/server.xml: The element type "unmatched-element" must be terminated by the matching end-tag "</unmatched-element>".
-    Jul 21, 2015 4:12:12 PM org.apache.catalina.startup.Catalina start
-    SEVERE: Cannot start server. Server instance is not configured.
+    at org.apache.catalina.startup.Bootstrap.main(Bootstrap.java:455)
+Jul 21, 2015 4:12:12 PM org.apache.catalina.startup.Catalina load
+WARNING: Catalina.start using conf/server.xml: The element type "unmatched-element" must be terminated by the matching end-tag "</unmatched-element>".
+Jul 21, 2015 4:12:12 PM org.apache.catalina.startup.Catalina start
+SEVERE: Cannot start server. Server instance is not configured.
 
 {% endhighlight %}
 

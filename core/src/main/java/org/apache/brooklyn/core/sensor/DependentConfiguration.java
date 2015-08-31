@@ -90,7 +90,7 @@ import com.google.common.collect.Lists;
  * If using a lot it may be useful to:
  * <pre>
  * {@code
- *   import static brooklyn.event.basic.DependentConfiguration.*;
+ *   import static org.apache.brooklyn.core.sensor.DependentConfiguration.*;
  * }
  * </pre>
  */

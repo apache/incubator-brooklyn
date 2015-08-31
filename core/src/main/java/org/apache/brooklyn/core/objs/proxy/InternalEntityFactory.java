@@ -112,7 +112,7 @@ public class InternalEntityFactory extends InternalFactory {
         // TODO OSGi strangeness! The classloader obtained from the type should be enough.
         // If an OSGi class loader, it should delegate to find things like Entity.class etc.
         // However, we get errors such as:
-        //    NoClassDefFoundError: brooklyn.event.AttributeSensor not found by io.brooklyn.brooklyn-test-osgi-entities
+        //    NoClassDefFoundError: org.apache.brooklyn.api.sensor.AttributeSensor not found by ....brooklyn-test-osgi-entities
         // Building our own aggregating class loader gets around this.
         // But we really should not have to do this! What are the consequences?
         //

@@ -170,7 +170,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
     }
 
     /**
-     * @deprecated since 0.7; {@see #installJavaAndCurl(OperatingSystem)}
+     * @deprecated since 0.7; see {@link #installJavaAndCurl(OperatingSystem)}
      */
     @Deprecated
     public static final Statement APT_RUN_SCRIPT = newStatementList(//
@@ -185,7 +185,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 .toString()));
 
     /**
-     * @deprecated since 0.7; {@see #installJavaAndCurl(OperatingSystem)}
+     * @deprecated since 0.7; see {@link #installJavaAndCurl(OperatingSystem)}
      */
     @Deprecated
     public static final Statement YUM_RUN_SCRIPT = newStatementList(
@@ -198,7 +198,7 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 .toString()));
 
     /**
-     * @deprecated since 0.7; {@see #installJavaAndCurl(OperatingSystem)}
+     * @deprecated since 0.7; {@link #installJavaAndCurl(OperatingSystem)}
      */
     @Deprecated
     public static final Statement ZYPPER_RUN_SCRIPT = exec(new StringBuilder()//

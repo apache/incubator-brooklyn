@@ -25,7 +25,7 @@ To run these from the command line, use something like the following:
 
 To run a single test, use something like the following:
 
-*     run a single test class: `mvn -Dtest=brooklyn.enricher.EnrichersTest -DfailIfNoTests=false test`
-*     run a single test method: `mvn -Dtest=brooklyn.enricher.EnrichersTest#testAdding -DfailIfNoTests=false test`
+*     run a single test class: `mvn -Dtest=org.apache.brooklyn.enricher.stock.EnrichersTest -DfailIfNoTests=false test`
+*     run a single test method: `mvn -Dtest=org.apache.brooklyn.enricher.stock.EnrichersTest#testAdding -DfailIfNoTests=false test`
 
 <!-- TODO describe how to run each of these, as a group, and individually; and profiles -->

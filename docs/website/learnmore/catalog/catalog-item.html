@@ -73,7 +73,7 @@ under the License.
         return;
       }
 
-      // entities/brooklyn.entity.brooklynnode.BrooklynNode
+      // e.g. entities/org.apache.brooklyn.entity.brooklynnode.BrooklynNode
       var item = brooklyn.findItemOfType(items[args[0]], args[1]);
 
       $("#summary").html(brooklyn.typeSummary(item));

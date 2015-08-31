@@ -26,25 +26,25 @@ import com.google.common.base.Predicate;
 public interface BrooklynCatalog {
     static String DEFAULT_VERSION = "0.0.0_DEFAULT_VERSION";
 
-    /** @return The item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+    /** @return The item with the given {@link CatalogItem#getSymbolicName()
      * symbolicName}, or null if not found.
      * @deprecated since 0.7.0 use {@link #getCatalogItem(String, String)};
      * or see also CatalogUtils getCatalogItemOptionalVersion */
     @Deprecated
     CatalogItem<?,?> getCatalogItem(String symbolicName);
 
-    /** @return The item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+    /** @return The item with the given {@link CatalogItem#getSymbolicName()
      * symbolicName}, or null if not found. */
     CatalogItem<?,?> getCatalogItem(String symbolicName, String version);
 
     /** @return Deletes the item with the given
-     *  {@link brooklyn.catalog.CatalogItem#getSymbolicName() symbolicName}
+     *  {@link CatalogItem#getSymbolicName() symbolicName}
      * @throws NoSuchElementException if not found
      * @deprecated since 0.7.0 use {@link #deleteCatalogItem(String, String)} */
     @Deprecated
     void deleteCatalogItem(String symbolicName);
 
-    /** @return Deletes the item with the given {@link brooklyn.catalog.CatalogItem#getSymbolicName()
+    /** @return Deletes the item with the given {@link CatalogItem#getSymbolicName()
      * symbolicName} and version
      * @throws NoSuchElementException if not found */
     void deleteCatalogItem(String symbolicName, String version);

@@ -46,9 +46,9 @@ public class BrooklynLauncherRebindToCloudObjectStoreTest extends BrooklynLaunch
     //     apps=[Application[mDNfOA7w]] expected [true] but found [false]
     // Should it really delete everything in the bucket?! Only if we can back up first!
 
-    // FIXME brooklyn.util.exceptions.FatalRuntimeException: Error rebinding to persisted state: Writes not allowed in brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore@7d2f7563
-    //     at brooklyn.launcher.BrooklynLauncher.persistState(BrooklynLauncher.java:502)
-    //     at brooklyn.launcher.BrooklynLauncherRebindToCloudObjectStoreTest.testCopyPersistedState(BrooklynLauncherRebindToCloudObjectStoreTest.java:144)
+    // FIXME FatalRuntimeException: Error rebinding to persisted state: Writes not allowed in brooklyn.entity.rebind.persister.BrooklynMementoPersisterToObjectStore@7d2f7563
+    //     at BrooklynLauncher.persistState(BrooklynLauncher.java:502)
+    //     at BrooklynLauncherRebindToCloudObjectStoreTest.testCopyPersistedState(BrooklynLauncherRebindToCloudObjectStoreTest.java:144)
     // Presumably a previous run wasn't tearing down properly, so it joined as a standby rather than being master?! 
     
     { persistenceLocationSpec = BlobStoreTest.PERSIST_TO_OBJECT_STORE_FOR_TEST_SPEC; }

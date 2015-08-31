@@ -197,8 +197,7 @@ public class SimulatedJBoss7ServerImpl extends JBoss7ServerImpl {
                 return;
             }
             
-            // We wait for evidence of JBoss running because, using
-            // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
+            // We wait for evidence of JBoss running because, using SshCliTool,
             // we saw the ssh session return before the JBoss process was fully running
             // so the process failed to start.
             String pidFile = Os.mergePathsUnix(getRunDir(), PID_FILENAME);

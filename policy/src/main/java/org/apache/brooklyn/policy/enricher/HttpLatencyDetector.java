@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
@@ -65,7 +66,7 @@ import com.google.common.reflect.TypeToken;
  * and has limited support for https.
  */
 //@Catalog(name="HTTP Latency Detector", description="An Enricher which computes latency in accessing a URL, normally by periodically polling that URL")
-public class HttpLatencyDetector extends AbstractEnricher {
+public class HttpLatencyDetector extends AbstractEnricher implements Enricher {
 
     private static final Logger log = LoggerFactory.getLogger(HttpLatencyDetector.class);
     
@@ -304,7 +305,7 @@ public class HttpLatencyDetector extends AbstractEnricher {
         }
 
         /** returns the detector. note that callers should then add this to the entity,
-         * typically using {@link Entity#addEnricher(brooklyn.policy.Enricher)} */
+         * typically using {@link Entity#addEnricher(Enricher)} */
         public HttpLatencyDetector build() {
             return new HttpLatencyDetector(MutableMap.builder()
                     .putIfNotNull(PERIOD, period)

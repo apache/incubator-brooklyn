@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.feed.jmx;
 
-import static org.apache.brooklyn.test.TestUtils.executeUntilSucceeds;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -64,22 +63,14 @@ import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import org.apache.brooklyn.entity.software.base.test.jmx.GeneralisedDynamicMBean;
 import org.apache.brooklyn.entity.software.base.test.jmx.JmxService;
-import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
-import org.apache.brooklyn.feed.jmx.JmxFeed;
-import org.apache.brooklyn.feed.jmx.JmxHelper;
-import org.apache.brooklyn.feed.jmx.JmxNotificationFilters;
-import org.apache.brooklyn.feed.jmx.JmxNotificationSubscriptionConfig;
-import org.apache.brooklyn.feed.jmx.JmxOperationPollConfig;
-import org.apache.brooklyn.feed.jmx.JmxValueFunctions;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.TestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
-import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -236,7 +227,7 @@ public class JmxFeedTest {
                         .operationName(opName))
                 .build();
         
-        TestUtils.executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertTrue(invocationCount.get() > 0, "invocationCount="+invocationCount);
                 assertEquals(entity.getAttribute(intAttribute), (Integer)opReturnVal);
@@ -413,7 +404,7 @@ public class JmxFeedTest {
     }
     
     private <T> void assertSensorEventually(final AttributeSensor<T> sensor, final T expectedVal, long timeout) {
-        executeUntilSucceeds(ImmutableMap.of("timeout", timeout), new Callable<Void>() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", timeout), new Callable<Void>() {
             public Void call() {
                 assertEquals(entity.getAttribute(sensor), expectedVal);
                 return null;

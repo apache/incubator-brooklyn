@@ -140,9 +140,20 @@ public class HostGeoInfo implements Serializable {
         }
         return result;
     }
+
+    @Deprecated
+    private static boolean warnedLegacy = false;
     
     private static HostGeoLookup findHostGeoLookupImpl() throws InstantiationException, IllegalAccessException, ClassNotFoundException {
         String type = BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getValue();
+        if (type==null) {
+            type = BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL_LEGACY.getValue();
+            if (type!=null && !warnedLegacy) {
+                warnedLegacy = true;
+                log.warn("Using deprecated host-geo-lookup property "+BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL_LEGACY+"; "
+                    + "set "+BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL+" instead");
+            }
+        }
         /* utrace seems more accurate than geobytes, and it gives a report of how many tokens are left;
          * but maxmind if it's installed locally is even better (does not require remote lookup),
          * so use it if available */

@@ -171,7 +171,7 @@ with a `default` set (and if not specified `default` defaults to `minimal`);
 so the above can equivalently be written:
 
 {% highlight properties %}
-brooklyn.entitlements.global=brooklyn.management.entitlement.PerUserEntitlementManager
+brooklyn.entitlements.global=org.apache.brooklyn.core.mgmt.entitlement.PerUserEntitlementManager
 brooklyn.entitlements.perUser.default=readonly
 brooklyn.entitlements.perUser.admin=root
 brooklyn.entitlements.perUser.support=readonly
@@ -181,7 +181,7 @@ brooklyn.entitlements.perUser.metrics=minimal
 For more information, see 
 [Java: Entitlements]({{ site.path.guide }}/java/entitlements.html).
 or
-{% include java_link.html class_name="EntitlementManager" package_path="brooklyn/management/entitlement" project_subpath="api" %}.
+{% include java_link.html class_name="EntitlementManager" package_path="org/apache/brooklyn/api/mgmt/entitlement" project_subpath="api" %}.
 
 
 

@@ -326,8 +326,7 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
         getEntity().doExtraConfigurationDuringStart();
 
-        // We wait for evidence of running because, using
-        // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
+        // We wait for evidence of running because, using SshCliTool,
         // we saw the ssh session return before the tomcat process was fully running
         // so the process failed to start.
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)

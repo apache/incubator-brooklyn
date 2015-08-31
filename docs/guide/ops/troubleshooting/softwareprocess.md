@@ -20,7 +20,8 @@ or `~/.ssh/id_dsa` on the Brooklyn host (uploading the associated `~/.ssh/id_rsa
 authorised_keys). However, this can be overridden (e.g. with specific passwords etc) in the 
 location's configuration.
 
-For Windows, there is a similar sensor with the name `host.winrmAddress`. (TODO sensor for password?) 
+For Windows, there is a similar sensor with the name `host.winrmAddress`. 
+<!-- TODO similar sensor for password? --> 
 
 
 ## Install and Run Directories

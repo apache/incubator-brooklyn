@@ -198,8 +198,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
     public void launch() {
         entity.setAttribute(JBoss7Server.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
 
-        // We wait for evidence of JBoss running because, using
-        // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
+        // We wait for evidence of JBoss running because, using SshCliTool,
         // we saw the ssh session return before the JBoss process was fully running
         // so the process failed to start.
         newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)

@@ -113,7 +113,7 @@ Try deploying a simple app, such as the YAML:
 {% highlight yaml %}
 location: localhost
 services:
-- type: brooklyn.entity.webapp.jboss.JBoss7Server
+- type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
 {% endhighlight %}
 
 

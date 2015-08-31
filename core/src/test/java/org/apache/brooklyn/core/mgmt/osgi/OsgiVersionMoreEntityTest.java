@@ -99,7 +99,8 @@ public class OsgiVersionMoreEntityTest {
     
     /**
      * Test fix for
-     * java.lang.NoClassDefFoundError: brooklyn.event.AttributeSensor not found by io.brooklyn.brooklyn-test-osgi-entities [41]
+     * NoClassDefFoundError: org.apache.brooklyn.api.sensor.AttributeSensor not found by ....brooklyn-test-osgi-entities
+     * (see comments in InternalEntityFactory)
      */
     @Test
     public void testEntityProxy() throws Exception {

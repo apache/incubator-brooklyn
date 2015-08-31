@@ -36,6 +36,7 @@ import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynEntityMirror;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.DeployBlueprintEffector;
+import org.apache.brooklyn.entity.machine.MachineEntity;
 import org.apache.brooklyn.launcher.BrooklynLauncher;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -212,7 +213,7 @@ public class SoftlayerObtainPrivateLiveTest {
         return Joiner.on('\n').join(ImmutableList.of(
                 "location: " + getTestLocation(hasPublicNetwork),
                 "services:",
-                "- type: brooklyn.entity.machine.MachineEntity",
+                "- type: "+MachineEntity.class.getName(),
                 "  name: " + (hasPublicNetwork ? "Public" : "Private")
                 ));
     }

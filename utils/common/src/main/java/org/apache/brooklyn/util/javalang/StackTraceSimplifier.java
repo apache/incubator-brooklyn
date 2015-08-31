@@ -41,10 +41,10 @@ public class StackTraceSimplifier {
     private static final Logger log = LoggerFactory.getLogger(StackTraceSimplifier.class);
     
     /** comma-separated prefixes (not regexes) */
-    public static final String DEFAULT_BLACKLIST_SYSTEM_PROPERTY_NAME = "brooklyn.util.javalang.StackTraceSimplifier.blacklist";
+    public static final String DEFAULT_BLACKLIST_SYSTEM_PROPERTY_NAME = "org.apache.brooklyn.util.javalang.StackTraceSimplifier.blacklist";
     
-    /** @deprecated since 0.6.0 use {@link #DEFAULT_BLACKLIST_SYSTEM_PROPERTY_NAME} */ @Deprecated
-    public static final String LEGACY_DEFAULT_BLACKLIST_SYSTEM_PROPERTY_NAME = "groovy.sanitized.stacktraces";
+    /** @deprecated since 0.8.0 use {@link #DEFAULT_BLACKLIST_SYSTEM_PROPERTY_NAME} */ @Deprecated
+    public static final String LEGACY_DEFAULT_BLACKLIST_SYSTEM_PROPERTY_NAME = "brooklyn.util.javalang.StackTraceSimplifier.blacklist";
     
     private static final Collection<String> DEFAULT_BLACKLIST;
     

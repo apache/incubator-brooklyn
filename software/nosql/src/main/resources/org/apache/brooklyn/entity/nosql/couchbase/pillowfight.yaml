@@ -34,7 +34,7 @@ services:
     base_url: http://127.0.0.1:8091/
     
   brooklyn.initializers:
-  - type: brooklyn.entity.software.ssh.SshCommandEffector
+  - type: org.apache.brooklyn.core.effector.ssh.SshCommandEffector
     brooklyn.config:
       name: pillow_fight
       description: runs cbc pillowfight

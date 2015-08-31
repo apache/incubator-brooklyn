@@ -5,7 +5,7 @@
         "entities":[
             {
                 "name":"Vanilla Java App",
-                "type":"brooklyn.entity.java.VanillaJavaApp",
+                "type":"org.apache.brooklyn.entity.java.VanillaJavaApp",
                 "config":{
                     "initialSize":"1",
                     "creationScriptUrl":"http://my.brooklyn.io/storage/foo.sql"

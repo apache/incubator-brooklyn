@@ -118,8 +118,8 @@ public class CliIntegrationTest extends BaseCliIntegrationTest {
         BrooklynCliTest test = new BrooklynCliTest(brooklyn) {
             @Override
             public void checkConsole() {
-                assertConsoleOutput("ERROR Execution error: brooklyn.util.ResourceUtils.getResourceFromUrl");
-                assertConsoleError("Execution error: Error getting resource '"+app+"' for LaunchCommand");
+                assertConsoleOutput(app, "not found");
+                assertConsoleError("ERROR", "Fatal", "getting resource", app);
             }
         };
 

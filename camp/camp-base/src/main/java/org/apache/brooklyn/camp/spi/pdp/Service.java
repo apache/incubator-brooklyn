@@ -25,6 +25,7 @@ import java.util.Map;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.yaml.Yamls;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,7 +88,7 @@ public class Service {
     
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
     }
 
 }

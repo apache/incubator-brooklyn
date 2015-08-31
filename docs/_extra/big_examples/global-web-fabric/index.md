@@ -73,7 +73,7 @@ unpack it, and copy it to `~/.brooklyn/GeoLite2-City.mmdb`.
 This will be picked up automatically if it is installed.
 You can instead specify to use an online lookup service, such as 
 [utrace.de](http://www.utrace.de) by specifying
-`-Dbrooklyn.location.geo.HostGeoLookup=UtraceHostGeoLookup`;
+`-Dorg.apache.brooklyn.core.location.geo.HostGeoLookup=UtraceHostGeoLookup`;
 but note this has a cap of 100 per day.
 
 This information is also used to display locations on the map
@@ -202,13 +202,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.entity.AbstractApplication;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import org.apache.brooklyn.entity.group.DynamicFabric;
 import org.apache.brooklyn.entity.proxy.AbstractController;
-import org.apache.brooklyn.entity.proxying.EntitySpec;
 import org.apache.brooklyn.entity.webapp.ElasticJavaWebAppService;
 import PortRanges;
 {% endhighlight %}
@@ -228,8 +228,8 @@ The following static constants are assumed (most of these as in the [Simple Web 
 The code (which can safely be omitted) is as follows:
 
 {% highlight java %}
-import brooklyn.launcher.BrooklynLauncher;
-import brooklyn.util.CommandLineUtil;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.util.CommandLineUtil;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;

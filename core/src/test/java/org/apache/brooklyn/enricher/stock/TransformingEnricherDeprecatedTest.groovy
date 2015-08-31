@@ -28,7 +28,7 @@ import org.apache.brooklyn.enricher.stock.SensorTransformingEnricher;
 import org.apache.brooklyn.core.entity.Entities
 import org.apache.brooklyn.core.location.SimulatedLocation
 import org.apache.brooklyn.core.sensor.BasicAttributeSensor
-import org.apache.brooklyn.test.TestUtils
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -73,7 +73,7 @@ public class TransformingEnricherDeprecatedTest {
         //ensure previous values get picked up
         producer.addEnricher(e1);
 
-        TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), 
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), 
                 new Callable<Object>() { public Object call() {
                     Assert.assertEquals(producer.getAttribute(target), (Long)((long)6));
                     return null;

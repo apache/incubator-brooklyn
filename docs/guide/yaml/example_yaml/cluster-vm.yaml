@@ -1,6 +1,6 @@
 name: cluster-vm
 services:
-- type: brooklyn.entity.group.DynamicCluster
+- type: org.apache.brooklyn.entity.group.DynamicCluster
   initialSize: 5
   memberSpec:
     $brooklyn:entitySpec:

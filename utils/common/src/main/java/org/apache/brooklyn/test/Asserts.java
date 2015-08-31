@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
@@ -60,8 +59,8 @@ import com.google.common.collect.Sets;
 public class Asserts {
 
     /**
-     * The default timeout for assertions. Alter in individual tests by giving a
-     * "timeout" entry in method flags.
+     * The default timeout for assertions - 30s.
+     * Alter in individual tests by giving a "timeout" entry in method flags.
      */
     public static final Duration DEFAULT_TIMEOUT = Duration.THIRTY_SECONDS;
 
@@ -178,20 +177,21 @@ public class Asserts {
 
     
     /**
-     * Asserts given runnable succeeds in default duration.
-     * @see #DEFAULT_TIMEOUT
+     * @see #succeedsContinually(Map, Callable)
      */
     public static void succeedsEventually(Runnable r) {
         succeedsEventually(ImmutableMap.<String,Object>of(), r);
     }
 
+    /**
+     * @see #succeedsContinually(Map, Callable)
+     */
     public static void succeedsEventually(Map<String,?> flags, Runnable r) {
         succeedsEventually(flags, toCallable(r));
     }
     
     /**
-     * Asserts given callable succeeds (runs without failure) in default duration.
-     * @see #DEFAULT_TIMEOUT
+     * @see #succeedsContinually(Map, Callable)
      */
     public static <T> T succeedsEventually(Callable<T> c) {
         return succeedsEventually(ImmutableMap.<String,Object>of(), c);
@@ -220,7 +220,7 @@ public class Asserts {
      * <ul>
      * <li>abortOnError (boolean, default true)
      * <li>abortOnException - (boolean, default false)
-     * <li>timeout - (a Duration or an integer in millis, defaults to 30*SECONDS)
+     * <li>timeout - (a Duration or an integer in millis, defaults to {@link Asserts#DEFAULT_TIMEOUT})
      * <li>period - (a Duration or an integer in millis, for fixed retry time; if not set, defaults to exponentially increasing from 1 to 500ms)
      * <li>minPeriod - (a Duration or an integer in millis; only used if period not explicitly set; the minimum period when exponentially increasing; defaults to 1ms)
      * <li>maxPeriod - (a Duration or an integer in millis; only used if period not explicitly set; the maximum period when exponentially increasing; defaults to 500ms)
@@ -357,6 +357,7 @@ public class Asserts {
         });
     }
     
+    @SafeVarargs
     public static void assertFailsWith(Runnable c, final Class<? extends Throwable> validException, final Class<? extends Throwable> ...otherValidExceptions) {
         final List<Class<?>> validExceptions = ImmutableList.<Class<?>>builder()
                 .add(validException)

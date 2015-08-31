@@ -20,6 +20,7 @@ package org.apache.brooklyn.core.catalog;
 
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.mgmt.persist.PersistMode;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.slf4j.LoggerFactory;
 
 /** @deprecated since 0.7.0 replaced by {@link CatalogInitialization} */
@@ -27,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public enum CatalogLoadMode {
     /**
      * The server will load its initial catalog from the URL configured in
-     * {@link brooklyn.config.BrooklynServerConfig#BROOKLYN_CATALOG_URL} and will
+     * {@link BrooklynServerConfig#BROOKLYN_CATALOG_URL} and will
      * disregard existing persisted state.
      */
     LOAD_BROOKLYN_CATALOG_URL,

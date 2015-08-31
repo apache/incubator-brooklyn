@@ -31,7 +31,7 @@ define([
             expect(entityFixture.length).toEqual(1)
             var entity = entityFixture.at(0)
             expect(entity.get("name")).toEqual('Vanilla Java App')
-            expect(entity.get("type")).toEqual('brooklyn.entity.java.VanillaJavaApp')
+            expect(entity.get("type")).toEqual('org.apache.brooklyn.entity.java.VanillaJavaApp')
             expect(entity.get("config")).toEqual({})
         })
     })

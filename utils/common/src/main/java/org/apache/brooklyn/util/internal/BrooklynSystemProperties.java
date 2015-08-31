@@ -33,7 +33,8 @@ public class BrooklynSystemProperties {
     public static IntegerSystemProperty JSCH_EXEC_DELAY = new IntegerSystemProperty("brooklyn.jsch.exec.delay");
 
     /** allows specifying a particular geo lookup service (to lookup IP addresses), as the class FQN to use */
-    // -Dbrooklyn.location.geo.HostGeoLookup=brooklyn.location.geo.UtraceHostGeoLookup
-    public static StringSystemProperty HOST_GEO_LOOKUP_IMPL = new StringSystemProperty("brooklyn.location.geo.HostGeoLookup");
+    // -Dorg.apache.brooklyn.core.brooklyn.location.geo.HostGeoLookup=org.apache.brooklyn.core.brooklyn.location.geo.UtraceHostGeoLookup
+    public static StringSystemProperty HOST_GEO_LOOKUP_IMPL_LEGACY = new StringSystemProperty("brooklyn.location.geo.HostGeoLookup");
+    public static StringSystemProperty HOST_GEO_LOOKUP_IMPL = new StringSystemProperty("org.apache.brooklyn.core.location.geo.HostGeoLookup");
 
 }

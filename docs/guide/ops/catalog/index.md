@@ -134,7 +134,7 @@ The following optional catalog metadata is supported:
 The following example installs the `RiakNode` entity, making it also available as an application template,
 with a nice display name, description, and icon.
 It can be referred in other blueprints to as `datastore:1.0`,
-and its implementation will be the Java class `brooklyn.entity.nosql.riak.RiakNode` included with Brooklyn.
+and its implementation will be the Java class `org.apache.brooklyn.entity.nosql.riak.RiakNode` included with Brooklyn.
 
 ~~~ yaml
 brooklyn.catalog:
@@ -145,7 +145,7 @@ brooklyn.catalog:
   name: Datastore (Riak)
   description: Riak is an open-source NoSQL key-value data store.
   item:
-    type: brooklyn.entity.nosql.riak.RiakNode
+    type: org.apache.brooklyn.entity.nosql.riak.RiakNode
     name: Riak Node
 ~~~ 
 
@@ -162,11 +162,11 @@ brooklyn.catalog:
   items:
     - id: riak-node
       item:
-        type: brooklyn.entity.nosql.riak.RiakNode
+        type: org.apache.brooklyn.entity.nosql.riak.RiakNode
         name: Riak Node
     - id: riak-cluster
       item:
-        type: brooklyn.entity.nosql.riak.RiakCluster
+        type: org.apache.brooklyn.entity.nosql.riak.RiakCluster
         name: Riak Cluster
     - id: datastore
       name: Datastore (Riak Cluster)
@@ -191,7 +191,7 @@ brooklyn.catalog:
 The items this will install are:
 
 - `riak-node`, as before, but with a different name
-- `riak-cluster` as a convenience short name for the `brooklyn.entity.nosql.riak.RiakCluster` class
+- `riak-cluster` as a convenience short name for the `org.apache.brooklyn.entity.nosql.riak.RiakCluster` class
 - `datastore`, now pointing at the `riak-cluster` blueprint, in SoftLayer and with the given size and machine spec, 
   as the default implementation for anyone
   requesting a `datastore` (and if installed atop the previous example, new references to `datastore` 

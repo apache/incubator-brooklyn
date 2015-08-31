@@ -116,7 +116,7 @@ services:</div></div>
             under the covers automatically with OSGi.
         </p></div>
       </div><div class="connector"><div>&nbsp;</div></div></div></div>
-<div>- type: <span class="ann_highlight">brooklyn.entity.webapp.ControlledDynamicWebAppCluster:1.1.0</span>
+<div>- type: <span class="ann_highlight">org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster:1.1.0</span>
   war: http://example.com/couchbase-chat/chatroom.war
   java.sysprops:
     chat.db.url: $brooklyn:entity("chat-couchbase").attributeWhenReady("couchbase.cluster.connection.url")</div></div>
@@ -135,7 +135,7 @@ services:</div></div>
 <div>  brooklyn.policies:
   - type: <span class="ann_highlight">autoscaler</span>
     brooklyn.config:
-      metric: $brooklyn:sensor(""webapp.reqs.perSec.windowed.perNode")
+      metric: $brooklyn:sensor("webapp.reqs.perSec.windowed.perNode")
       metricLowerBound: 400
       metricUpperBound: 600</div></div>
 
