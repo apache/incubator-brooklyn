@@ -47,15 +47,13 @@ import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
-import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle.Transition;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceNotUpLogic;
 import org.apache.brooklyn.core.location.LocationConfigKeys;
 import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.feed.function.FunctionFeed;
 import org.apache.brooklyn.feed.function.FunctionPollConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -68,6 +66,8 @@ import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
@@ -487,6 +487,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
      * for each {@link org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey} config key {@link PortRange}
      * plus any ports defined with a config keys ending in {@code .port}.
      */
+    @SuppressWarnings("serial")
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = MutableSet.copyOf(getConfig(REQUIRED_OPEN_LOGIN_PORTS));
         Map<ConfigKey<?>, ?> allConfig = config().getBag().getAllConfigAsConfigKeyMap();
@@ -498,24 +499,16 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
            firewall will open the initial port instead. Mostly a problem for SameServerEntity, localhost location.
          */
         for (ConfigKey<?> k: configKeys) {
-            Object value;
             if (PortRange.class.isAssignableFrom(k.getType()) || k.getName().matches(".*\\.port")) {
-                value = config().get(k);
-            } else {
-                // config().get() will cause this to block until all config has been resolved
-                // using config().getRaw(k) means that we won't be able to use e.g. 'http.port: $brooklyn:component("x").attributeWhenReady("foo")'
-                // but that's unlikely to be used
-                Maybe<Object> maybeValue = config().getRaw(k);
-                value = maybeValue.isPresent() ? maybeValue.get() : null;
+                Object value = config().get(k);
+                Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, new TypeToken<PortRange>() {});
+                if (maybePortRange.isPresentAndNonNull()) {
+                    PortRange p = maybePortRange.get();
+                    if (p != null && !p.isEmpty())
+                        ports.add(p.iterator().next());
+                }
             }
-
-            Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, new TypeToken<PortRange>() {});
-
-            if (maybePortRange.isPresentAndNonNull()) {
-                PortRange p = maybePortRange.get();
-                if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
-            }
-        }        
+        }
         
         log.debug("getRequiredOpenPorts detected default {} for {}", ports, this);
         return ports;

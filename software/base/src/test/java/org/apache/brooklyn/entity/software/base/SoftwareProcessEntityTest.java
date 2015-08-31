@@ -53,6 +53,7 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.location.Locations;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
@@ -131,6 +132,24 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         assertEquals(entity.getAttribute(SoftwareProcess.ADDRESS), machine.getAddress().getHostAddress());
         assertEquals(entity.getAttribute(Attributes.SSH_ADDRESS), UserAndHostAndPort.fromParts(machine.getUser(), machine.getAddress().getHostName(), machine.getPort()));
         assertEquals(entity.getAttribute(SoftwareProcess.PROVISIONING_LOCATION), loc);
+    }
+
+    @Test
+    public void testRequiredPortsFromConfig() throws Exception {
+        // getRequiredOpenPorts() should only consider numeric and string config whose names end in '.port'
+        MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class)
+            .configure("foo.number.port", 1111)
+            .configure("foo.string.port", "2222")
+            .configure("foo.number.somethingElse", 3333)
+            .configure("foo.string.somethingElse", "4444")
+        );
+        entity.start(ImmutableList.of(loc));
+        
+        Collection<Integer> requiredPorts = entity.getRequiredOpenPorts();
+        assertTrue(requiredPorts.contains(1111));
+        assertTrue(requiredPorts.contains(2222));
+        assertFalse(requiredPorts.contains(3333));
+        assertFalse(requiredPorts.contains(4444));
     }
 
     @Test
