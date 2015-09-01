@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 
@@ -79,6 +80,7 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Maybe<Class<?>> tryLoadClass(String className) {
         try {
+            className = DeserializingClassRenamesProvider.findMappedName(className);
             return (Maybe) Maybe.of(getClassLoader().loadClass(className));
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);

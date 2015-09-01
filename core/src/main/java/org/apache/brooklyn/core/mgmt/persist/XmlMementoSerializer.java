@@ -22,13 +22,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
@@ -63,6 +62,8 @@ import org.apache.brooklyn.core.sensor.BasicAttributeSensor;
 import org.apache.brooklyn.util.core.xstream.XmlSerializer;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.thoughtworks.xstream.converters.Converter;
 import com.thoughtworks.xstream.converters.MarshallingContext;
@@ -89,6 +90,11 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     private LookupContext lookupContext;
 
     public XmlMementoSerializer(ClassLoader classLoader) {
+        this(classLoader, DeserializingClassRenamesProvider.loadDeserializingClassRenames());
+    }
+    
+    public XmlMementoSerializer(ClassLoader classLoader, Map<String, String> deserializingClassRenames) {
+        super(deserializingClassRenames);
         this.classLoader = checkNotNull(classLoader, "classLoader");
         xstream.setClassLoader(this.classLoader);
         
@@ -133,8 +139,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     
     // Warning: this is called in the super-class constuctor, so before this constructor!
     @Override
-    protected MapperWrapper wrapMapper(MapperWrapper next) {
-        MapperWrapper mapper = super.wrapMapper(next);
+    protected MapperWrapper wrapMapperForNormalUsage(Mapper next) {
+        MapperWrapper mapper = super.wrapMapperForNormalUsage(next);
         mapper = new CustomMapper(mapper, Entity.class, "entityProxy");
         mapper = new CustomMapper(mapper, Location.class, "locationProxy");
         return mapper;

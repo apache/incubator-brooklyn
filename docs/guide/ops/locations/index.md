@@ -106,7 +106,7 @@ These steps can be skipped or customized as described below.
 The following is a subset of the most commonly used configuration keys used to customize 
 cloud provisioning.
 For more keys and more detail on the keys below, see 
-{% include java_link.html class_name="JcloudsLocationConfig" package_path="brooklyn/location/jclouds" project_subpath="locations/jclouds" %}.
+{% include java_link.html class_name="JcloudsLocationConfig" package_path="org/apache/brooklyn/location/jclouds" project_subpath="locations/jclouds" %}.
 
 ###### VM Creation
     
@@ -131,10 +131,10 @@ For more keys and more detail on the keys below, see
   including the ID of the app and of the entity.
   (As many cloud portals let you filter views, this can help find a specific entity or all machines for a given application.)
   For more sophisticated control over host naming, you can supply a custom 
-  {% include java_link.html class_name="CloudMachineNamer" package_path="brooklyn/location/cloud/names" project_subpath="core" %},
+  {% include java_link.html class_name="CloudMachineNamer" package_path="org/apache/brooklyn/core/location/cloud/names" project_subpath="core" %},
   for example
   `cloudMachineNamer: CustomMachineNamer`.
-  {% include java_link.html class_name="CustomMachineNamer" package_path="brooklyn/location/cloud/names" project_subpath="core" %}
+  {% include java_link.html class_name="CustomMachineNamer" package_path="org/apache/brooklyn/core/location/cloud/names" project_subpath="core" %}
   will use the entity's name or following a template you supply.
   On many clouds, a random suffix will be appended to help guarantee uniqueness;
   this can be removed by setting `vmNameSaltLength: 0` (selected clouds only).
@@ -154,7 +154,7 @@ For more keys and more detail on the keys below, see
   machines with `machineCreateAttempts` (jclouds only). This is useful as an efficient low-level fix
   for those occasions when cloud providers give machines that are dead on arrival.
   You can of course also resolve it at a higher level with a policy such as 
-  {% include java_link.html class_name="ServiceRestarter" package_path="brooklyn/policy/ha" project_subpath="policies" %}.
+  {% include java_link.html class_name="ServiceRestarter" package_path="org/apache/brooklyn/policy/ha" project_subpath="policy" %}.
 
 - If you want to investigate failures, set `destroyOnFailure: false`
   to keep failed VM's around. (You'll have to manually clean them up.)

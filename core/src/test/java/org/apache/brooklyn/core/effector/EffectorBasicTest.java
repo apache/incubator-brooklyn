@@ -32,7 +32,7 @@ import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.test.TestUtils;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -63,20 +63,20 @@ public class EffectorBasicTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testInvokeEffectorStart() {
         app.start(locs);
-        TestUtils.assertSetsEqual(locs, app.getLocations());
+        Asserts.assertEqualsIgnoringOrder(locs, app.getLocations());
         // TODO above does not get registered as a task
     }
 
     @Test
     public void testInvokeEffectorStartWithMap() {
         app.invoke(Startable.START, MutableMap.of("locations", locs)).getUnchecked();
-        TestUtils.assertSetsEqual(locs, app.getLocations());
+        Asserts.assertEqualsIgnoringOrder(locs, app.getLocations());
     }
 
     @Test
     public void testInvokeEffectorStartWithArgs() {
         Entities.invokeEffectorWithArgs((EntityLocal)app, app, Startable.START, locs).getUnchecked();
-        TestUtils.assertSetsEqual(locs, app.getLocations());
+        Asserts.assertEqualsIgnoringOrder(locs, app.getLocations());
     }
 
     @Test
@@ -84,9 +84,9 @@ public class EffectorBasicTest extends BrooklynAppUnitTestSupport {
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(locs);
-        TestUtils.assertSetsEqual(locs, app.getLocations());
-        TestUtils.assertSetsEqual(locs, entity.getLocations());
-        TestUtils.assertSetsEqual(locs, entity2.getLocations());
+        Asserts.assertEqualsIgnoringOrder(locs, app.getLocations());
+        Asserts.assertEqualsIgnoringOrder(locs, entity.getLocations());
+        Asserts.assertEqualsIgnoringOrder(locs, entity2.getLocations());
     }
     
     @Test

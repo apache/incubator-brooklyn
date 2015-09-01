@@ -38,12 +38,14 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,9 +85,16 @@ public class Reflections {
     }
 
     private final ClassLoader classLoader;
+    private final Map<String, String> classRenameMap = MutableMap.of();
     
     public Reflections(ClassLoader classLoader) {
         this.classLoader = checkNotNull(classLoader);
+    }
+    
+    /** supply a map of known renames, of the form "old-class -> new-class" */ 
+    public Reflections applyClassRenames(Map<String,String> newClassRenames) {
+        this.classRenameMap.putAll(newClassRenames);
+        return this;
     }
 
     public Object loadInstance(String classname, Object...argValues) throws ReflectionNotFoundException, ReflectionAccessException {
@@ -119,6 +128,7 @@ public class Reflections {
     /** instantiates the given class from its binary name */
     public Class<?> loadClass(String classname) throws ReflectionNotFoundException {
         try {
+            classname = findMappedNameAndLog(classRenameMap, classname);
             return classLoader.loadClass(classname);
         } catch (ClassNotFoundException e) {
             throw new ReflectionNotFoundException("Failed to load class '" + classname + "' using class loader " + classLoader + ": " + Exceptions.collapseText(e), e);
@@ -785,4 +795,35 @@ public class Reflections {
         if (clazz.getDeclaredFields().length>0) return false;
         return hasNoNonObjectFields(clazz.getSuperclass());
     }
+
+    /** Takes a map of old-class-names to renames classes, and returns the mapped name if matched, or absent */
+    public static Optional<String> tryFindMappedName(Map<String, String> renames, String name) {
+        if (renames==null) return Optional.absent();
+        
+        String mappedName = renames.get(name);
+        if (mappedName != null) {
+            return Optional.of(mappedName);
+        }
+        
+        // look for inner classes by mapping outer class
+        if (name.contains("$")) {
+            String outerClassName = name.substring(0, name.indexOf('$'));
+            mappedName = renames.get(outerClassName);
+            if (mappedName != null) {
+                return Optional.of(mappedName + name.substring(name.indexOf('$')));
+            }
+        }
+        
+        return Optional.absent();
+    }
+
+    public static String findMappedNameAndLog(Map<String, String> renames, String name) {
+        Optional<String> rename = Reflections.tryFindMappedName(renames, name);
+        if (rename.isPresent()) {
+            LOG.debug("Mapping class '"+name+"' to '"+rename.get()+"'");
+            return rename.get();
+        }
+        return name;
+    }
+    
 }

@@ -437,7 +437,7 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
             return null;
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            // expect: brooklyn.util.exceptions.PropagatedRuntimeException: Error invoking resize at DynamicClusterImpl{id=I9Ggxfc1}: 1 of 3 parallel child tasks failed: Simulating entity stop failure for test
+            // expect: PropagatedRuntimeException: Error invoking resize at DynamicClusterImpl{id=I9Ggxfc1}: 1 of 3 parallel child tasks failed: Simulating entity stop failure for test
             Assert.assertTrue(e.toString().contains("resize"));
             return e;
         }

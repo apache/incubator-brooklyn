@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class ApplicationTest {
 
-    final EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "brooklyn.entity.java.VanillaJavaApp",
+    final EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "org.apache.brooklyn.entity.java.VanillaJavaApp",
             ImmutableMap.<String, String>of(
                     "initialSize", "1",
                     "creationScriptUrl", "http://my.brooklyn.io/storage/foo.sql"));

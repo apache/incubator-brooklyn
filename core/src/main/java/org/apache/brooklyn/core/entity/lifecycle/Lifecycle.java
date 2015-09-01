@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.config.render.RendererHints;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.text.StringFunctions;
 
@@ -41,7 +42,7 @@ public enum Lifecycle {
      * The entity has just been created.
      *
      * This stage encompasses the contruction. Once this stage is
-     * complete, the basic set of {@link brooklyn.event.Sensor}s will be available, apart from any that require the entity to be active or
+     * complete, the basic set of sensors will be available, apart from any that require the entity to be active or
      * deployed to a {@link Location}.
      */
     CREATED,
@@ -49,7 +50,7 @@ public enum Lifecycle {
     /**
      * The entity is starting.
      * <p>
-     * This stage is typically entered when the {@link brooklyn.entity.trait.Startable#START} {@link brooklyn.entity.Effector} 
+     * This stage is typically entered when the {@link Startable#START} effector 
      * is called, to undertake the startup operations from the management plane.
      * When this completes the entity will normally transition to 
      * {@link Lifecycle#RUNNING}. 
@@ -65,7 +66,8 @@ public enum Lifecycle {
     /**
      * The entity is stopping.
      *
-     * This stage is activated when the {@link brooklyn.entity.trait.Startable#STOP} effector is called. The entity service is stopped. 
+     * This stage is activated when the 
+     * {@link Startable#STOP} effector is called. The entity service is stopped. 
      * Sensors that provide data from the running entity may be cleared and subscriptions cancelled.
      */
     STOPPING,

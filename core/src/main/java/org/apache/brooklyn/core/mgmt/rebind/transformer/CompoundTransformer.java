@@ -201,7 +201,7 @@ public class CompoundTransformer {
         }
 
         private String toXstreamClassnameFormat(String val) {
-            // xstream format for inner classes is like <brooklyn.entity.rebind.transformer.CompoundTransformerTest_-OrigType>
+            // xstream format for inner classes is like <org.apache.brooklyn.core.mgmt.rebind.transformer.CompoundTransformerTest_-OrigType>
             return (val.contains("$")) ? val.replace("$", "_-") : val;
         }
         public CompoundTransformer build() {

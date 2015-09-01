@@ -27,7 +27,7 @@ The first thing to note is the type definition:
 
     - type: chef:mysql
 
-This indicates that the Chef entity should be used (`brooklyn.entity.chef.ChefEntity`) 
+This indicates that the Chef entity should be used (`org.apache.brooklyn.entity.chef.ChefEntity`) 
 to interpret and pass the configuration,
 and that it should be parameterised with a `brooklyn.chef.cookbook.primary.name` of `mysql`.
 This is the cookbook namespace used by default for determining what to install and run.

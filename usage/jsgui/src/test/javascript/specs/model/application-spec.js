@@ -71,7 +71,7 @@ define([
         it("loads the entity from fixtures/application-spec.json", function () {
             var entity = new Entity.Model(spec.get("entities")[0])
             expect(entity.get("name")).toEqual('Vanilla Java App')
-            expect(entity.get("type")).toEqual('brooklyn.entity.java.VanillaJavaApp')
+            expect(entity.get("type")).toEqual('org.apache.brooklyn.entity.java.VanillaJavaApp')
             expect(entity.getConfigByName('initialSize')).toEqual('1')
             expect(entity.getConfigByName('creationScriptUrl')).toEqual('http://my.brooklyn.io/storage/foo.sql')
         })

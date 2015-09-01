@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
+import org.apache.brooklyn.core.catalog.CatalogLoadMode;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
@@ -434,14 +435,15 @@ public class CatalogInitialization implements ManagementContextInjectable {
         if (throwable instanceof RuntimeInterruptedException)
             throw (RuntimeInterruptedException) throwable;
 
-        log.error("Error loading catalog item '"+details+"': "+throwable);
-        log.debug("Trace for error loading catalog item '"+details+"': "+throwable, throwable);
+        String throwableText = Exceptions.collapseText(throwable);
+        log.error("Error loading catalog item '"+details+"': "+throwableText);
+        log.debug("Trace for error loading catalog item '"+details+"': "+throwableText, throwable);
 
         // TODO give more detail when adding
         ((ManagementContextInternal)getManagementContext()).errors().add(throwable);
         
         if (isStartingUp && failOnStartupErrors) {
-            throw new FatalRuntimeException("Unable to load catalog item '"+details+"': "+throwable, throwable);
+            throw new FatalRuntimeException("Unable to load catalog item '"+details+"': "+throwableText, throwable);
         }
     }
     

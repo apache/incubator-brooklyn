@@ -42,8 +42,8 @@ under the License.
 
   <ul class="nav nav-tabs">
     <li class="active"><a href="#configKeys" data-toggle="tab">Config Keys</a></li>
-    <li><a href="#sensors" data-toggle="tab">Sensors</a></li>
-    <li><a href="#effectors" data-toggle="tab">Effectors</a></li>
+    <li id="sensorsTab"><a href="#sensors" data-toggle="tab">Sensors</a></li>
+    <li id="effectorsTab"><a href="#effectors" data-toggle="tab">Effectors</a></li>
   </ul>
 
   <div class="tab-content">
@@ -73,7 +73,8 @@ under the License.
         return;
       }
 
-      // entities/brooklyn.entity.brooklynnode.BrooklynNode
+      // e.g. entities/org.apache.brooklyn.entity.brooklynnode.BrooklynNode
+      if (!brooklyn) return;
       var item = brooklyn.findItemOfType(items[args[0]], args[1]);
 
       $("#summary").html(brooklyn.typeSummary(item));
@@ -81,8 +82,8 @@ under the License.
         catalog_type = 'Entity';
       } else if(args[0] == 'policies') {
         catalog_type = 'Policy';
-      } else if(args[0] == 'enrichers') {
-        catalog_type = 'Enricher'
+      } else if(args[0] == 'locations') {
+        catalog_type = 'Location'
       }
 
       document.title = 'Brooklyn ' + catalog_type + ' - ' + item.name;
@@ -90,10 +91,17 @@ under the License.
       item.config.forEach(function (element) { $("#configKeys").append(brooklyn.configKeyCard(element)); });
 
       if(args[0] == 'entities') {
+        $("#sensorsTab").show();
+        $("#effectorsTab").show();
+        
         item.sensors.forEach(function (element) { $("#sensors").append(brooklyn.sensorCard(element)); });
         if (item.effectors != undefined) {
           item.effectors.forEach(function (element) { $("#effectors").append(brooklyn.effectorCard(element)); });
         }
+        
+      } else {
+        $("#sensorsTab").hide();
+        $("#effectorsTab").hide();
       }
     }
 

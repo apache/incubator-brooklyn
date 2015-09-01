@@ -101,7 +101,8 @@ public class PlanToSpecFactory {
                     (Strings.isNonBlank(e.getMessage()) ? " ("+e.getMessage()+")" : ""));
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                otherProblemsFromTransformers.add(new IllegalArgumentException("Transformer for "+t.getShortDescription()+" gave an error creating this plan", e));
+                otherProblemsFromTransformers.add(new IllegalArgumentException("Transformer for "+t.getShortDescription()+" gave an error creating this plan: "+
+                    Exceptions.collapseText(e), e));
             }
         }
         // failed

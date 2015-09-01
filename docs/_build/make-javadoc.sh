@@ -45,7 +45,7 @@ javadoc -sourcepath $SOURCE_PATHS \
 if ((${PIPESTATUS[0]})) ; then echo ; echo ; echo "ERROR: javadoc process exited non-zero" ; exit 1 ; fi
 echo ; echo
 
-if [ ! -f target/$JAVADOC_TARGET1_SUBPATH/brooklyn/entity/Entity.html ]; then echo "ERROR: missing expected content. Are the paths right?" ; exit 1 ; fi
+if [ ! -f target/$JAVADOC_TARGET1_SUBPATH/org/apache/brooklyn/api/entity/Entity.html ]; then echo "ERROR: missing expected content. Are the paths right?" ; exit 1 ; fi
 
 if [ ! -z "`grep warnings target/javadoc.log`" ] ; then echo "WARNINGs occurred during javadoc build. See target/javadoc.log for more information." ; fi
 

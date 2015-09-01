@@ -1,5 +1,5 @@
 ---
-title: Windows blueprints
+title: Windows Blueprints
 layout: website-normal
 children:
 - re-authentication.md
@@ -112,7 +112,7 @@ The installation script - referred to as `/Users/richard/install7zip.ps1` in the
     Start-Process "msiexec" -ArgumentList '/qn','/i',$Dl -RedirectStandardOutput ( [System.IO.Path]::Combine($Path, "stdout.txt") ) -RedirectStandardError ( [System.IO.Path]::Combine($Path, "stderr.txt") ) -Wait
 
 This is only a very simple example. A core complex example can be found in the [Microsoft SQL Server blueprint in the
-Brooklyn source code](https://github.com/apache/incubator-brooklyn/tree/master/software/database/src/main/resources/brooklyn/entity/database/mssql).
+Brooklyn source code]({{ brooklyn.url.git }}/software/database/src/main/resources/org/apache/brooklyn/entity/database/mssql).
 
 
 Known Limitations and Special Cases

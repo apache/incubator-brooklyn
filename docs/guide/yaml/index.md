@@ -9,6 +9,7 @@ children:
 - multiple-services.md
 - clusters-and-policies.md
 - custom-entities.md
+- winrm/
 - chef/
 - { path: yaml-reference.md, title: YAML Blueprint Reference }
 - { link: 'https://github.com/brooklyncentral/blueprint-library', title: 'GitHub Blueprint Library' }

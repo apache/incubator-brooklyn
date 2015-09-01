@@ -31,13 +31,12 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
-import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.lifecycle.PolicyDescriptor;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityNoEnrichersImpl;
-import org.apache.brooklyn.test.TestUtils;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -135,7 +134,7 @@ public class PolicyRegistrationTest extends BrooklynAppUnitTestSupport {
     }
     
     private <T> void assertEqualsEventually(final T actual, final T expected) {
-        TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
                 @Override public void run() {
                     assertEquals(actual, expected, "actual="+actual);
                 }});
@@ -143,7 +142,7 @@ public class PolicyRegistrationTest extends BrooklynAppUnitTestSupport {
     
     // Ignores order of vals in collection, but asserts each same size and same elements 
     private <T> void assertCollectionEqualsEventually(final Collection<? extends T> actual, final Collection<? extends T> expected) {
-        TestUtils.assertEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
                 @Override public void run() {
                     assertEquals(ImmutableSet.copyOf(actual), ImmutableSet.copyOf(expected), "actual="+actual);
                     assertEquals(actual.size(), expected.size(), "actual="+actual);

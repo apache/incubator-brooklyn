@@ -1,10 +1,10 @@
 name: appserver-w-policy
 services:
-- type: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
   initialSize: 1
   memberSpec:
     $brooklyn:entitySpec:
-      type: brooklyn.entity.webapp.jboss.JBoss7Server
+      type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
       brooklyn.config:
         wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
         http.port: 8080+

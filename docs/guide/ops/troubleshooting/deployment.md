@@ -16,7 +16,7 @@ brackets.
 The error `Unrecognized application blueprint format: no services defined` means that the `services:`
 section is missing.
 
-An error like `Deployment plan item io.brooklyn.camp.spi.pdp.Service@23c159e2[name=<null>,description=<null>,serviceType=com.acme.Foo,characteristics=[],customAttributes={}] cannot be matched` means that the given entity type (in this case com.acme.Foo) is not in the catalog or on the classpath.
+An error like `Deployment plan item Service[name=<null>,description=<null>,serviceType=com.acme.Foo,characteristics=[],customAttributes={}] cannot be matched` means that the given entity type (in this case com.acme.Foo) is not in the catalog or on the classpath.
 
 An error like `Illegal parameter for 'location' (aws-ec3); not resolvable: java.util.NoSuchElementException: Unknown location 'aws-ec3': either this location is not recognised or there is a problem with location resolver configuration` means that the given location (in this case aws-ec3) 
 was unknown. This means it does not match any of the named locations in brooklyn.properties, nor any of the

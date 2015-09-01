@@ -19,7 +19,6 @@
 package org.apache.brooklyn.entity.webapp
 
 import static java.util.concurrent.TimeUnit.*
-import static org.apache.brooklyn.test.TestUtils.*
 import static org.testng.Assert.*
 
 import org.apache.brooklyn.api.entity.Application
@@ -36,8 +35,6 @@ import org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
 import org.apache.brooklyn.entity.webapp.jboss.JBoss7ServerImpl
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServerImpl
-import org.apache.brooklyn.test.TestUtils
-import org.apache.brooklyn.util.groovy.TimeExtras;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -50,8 +47,6 @@ import org.testng.annotations.Test
  */
 public class WebAppLiveIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(WebAppLiveIntegrationTest.class)
-
-    static { TimeExtras.init() }
 
     public static final int DEFAULT_HTTP_PORT = 8080
     public static final int DEFAULT_JMX_PORT = 32199
@@ -77,10 +72,6 @@ public class WebAppLiveIntegrationTest {
         JBoss6Server jboss6 = new JBoss6ServerImpl(parent:application, portIncrement:PORT_INCREMENT, jmxPort:DEFAULT_JMX_PORT)
         JBoss7Server jboss7 = new JBoss7ServerImpl(parent:application, httpPort:DEFAULT_HTTP_PORT, jmxPort:DEFAULT_JMX_PORT)
         return [ [ tomcat ], [ jboss6 ], [ jboss7 ] ]
-    }
-
-    private File getResource(String path) {
-        return TestUtils.getResource(path, getClass().getClassLoader());
     }
 
     @BeforeMethod(alwaysRun = true)

@@ -2,7 +2,9 @@
 layout: website-normal
 title: Download
 children:
-- verify.md
+- { path: /guide/misc/download.md, title: Details }
+- { path: verify.md, title: Verify }
+- /guide/misc/release-notes.md
 - ../meta/versions.md
 ---
 
@@ -11,11 +13,14 @@ children:
 
 <div class="panel panel-default">
   <div class="panel-heading" markdown="1">
-#### **Recommended download:** Distribution
+#### **Distribution** (Recommended)
   </div>
   <div class="panel-body" markdown="1">
-A pre-built package that contains Apache Brooklyn and all of its dependencies in a single, easy-to-run package. Suitable for
-Linux and Windows servers and workstations that have Java 1.7<a href="#java-footnote">*</a>.
+<div style="height: 9em;" markdown="1">
+A pre-built package that contains Apache Brooklyn and all of its dependencies in a single, easy-to-run package. 
+*Suitable for Linux and Windows servers and workstations with Java installed
+(Java 1.7 or 1.8 are supported, including OpenJDK, Oracle, and IBM varieties).*
+</div>
 
 **Choose your preferred file format to see the list of mirrors where you can download this file.**
 
@@ -32,12 +37,14 @@ Linux and Windows servers and workstations that have Java 1.7<a href="#java-foot
 
 <div class="panel panel-default">
   <div class="panel-heading" markdown="1">
-#### Source code
+#### Source Code
   </div>
   <div class="panel-body" markdown="1">
+<div style="height: 9em;" markdown="1">
 The source code for Apache Brooklyn. Use this to build your own binaries and make private modifications. *If you want to
 contribute code changes to Apache Brooklyn, we recommend you get the source code from version control. Visit the
 [Developers pages](../developers/index.html) to find out more.*
+</div>
 
 **Choose your preferred file format to see the list of mirrors where you can download this file.**
 
@@ -52,21 +59,19 @@ contribute code changes to Apache Brooklyn, we recommend you get the source code
 </div><!-- col -->
 </div><!-- row -->
 
-We also publish Maven artifacts for Apache Brooklyn. These are available from [Maven Central](https://search.maven.org/#search%7Cga%7C1%7Corg.apache.brooklyn).
+A full list of download links including Maven coordinates are [here]({{ site.path.guide }}/misc/download.html).
+<br/><br/>
 
-<a name="java-footnote">*</a> We recommend Java 1.7 as this platform has had the most testing. Java 1.8 may also be suitable. Brooklyn is
-not compatible with Java 1.6 or earlier versions.
-
-## What next?
+## What Next?
 
 <div class="row">
 <div class="col-md-6" markdown="1">
 
 <div class="panel panel-default">
   <div class="panel-heading" markdown="1">
-#### Verify your download
+#### Verify Your Download
   </div>
-  <div class="panel-body" markdown="1">
+  <div class="panel-body" markdown="1" style="height: 7em;">
 
 [Hashes and signatures](verify.html) of all our artifacts are available, if you wish to verify that they are genuine.
 
@@ -80,7 +85,7 @@ not compatible with Java 1.6 or earlier versions.
   <div class="panel-heading" markdown="1">
 #### **Get Started!**
   </div>
-  <div class="panel-body" markdown="1">
+  <div class="panel-body" markdown="1" style="height: 7em;">
 
 Take a look at our guide to getting started.
 

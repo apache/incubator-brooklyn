@@ -36,6 +36,7 @@ import javax.management.StandardEmitterMBean;
 import org.apache.brooklyn.entity.software.base.test.jmx.GeneralisedDynamicMBean;
 import org.apache.brooklyn.entity.software.base.test.jmx.JmxService;
 import org.apache.brooklyn.feed.jmx.JmxHelper;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.TestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -249,7 +250,7 @@ public class JmxHelperTest {
 
         final Notification notif = sendNotification(mbean, "one", sequence++, "abc");
 
-        TestUtils.executeUntilSucceeds(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
                 assertEquals(received.size(), 1);
                 assertNotificationsEqual(received.get(0), notif);

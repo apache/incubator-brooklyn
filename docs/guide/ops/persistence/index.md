@@ -99,7 +99,7 @@ Object Store Persistence
 Brooklyn can persist its state to any Object Store API that jclouds supports including 
 S3, Swift and Azure. This gives access to any compatible Object Store product or cloud provider
 including AWS-S3, SoftLayer, Rackspace, HP and Microsoft Azure. For a complete list of supported
-providers, see [jclouds](http://jclouds.apache.org/guides/providers/#blobstore-providers).
+providers, see [jclouds](http://jclouds.apache.org/reference/providers/#blobstore).
 
 To configure the Object Store, add the credentials to `~/.brooklyn/brooklyn.properties` such as:
 

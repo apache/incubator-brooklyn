@@ -47,9 +47,9 @@ import org.apache.brooklyn.core.test.entity.BlockingEntity;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.TestUtils;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -325,7 +325,7 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
             fabric.start(ImmutableList.of(loc1));
             assertEquals(fabric.getChildren().size(), 1);
         } catch (Exception e) {
-            Throwable unwrapped = TestUtils.unwrapThrowable(e);
+            Throwable unwrapped = Exceptions.getFirstInteresting(e);
             if (unwrapped instanceof IllegalStateException && unwrapped.getMessage() != null && (unwrapped.getMessage().contains("is not Startable"))) {
                 // success
             } else {

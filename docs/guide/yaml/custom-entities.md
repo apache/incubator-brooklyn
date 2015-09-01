@@ -76,7 +76,7 @@ using `env` variables to inject the `netcat-server` location and
       env:
         TARGET_HOSTNAME: $brooklyn:component("netcat-server").attributeWhenReady("host.name")
       brooklyn.initializers:
-      - type: brooklyn.entity.software.ssh.SshCommandEffector
+      - type: org.apache.brooklyn.core.effector.ssh.SshCommandEffector
         brooklyn.config:
           name: sayHiNetcat
           description: Echo a small hello string to the netcat entity
@@ -94,7 +94,7 @@ so that the `$message` we passed above gets logged and reported back:
         echo hello | nc -l 4321 >> server-input &
         echo $! > $PID_FILE
       brooklyn.initializers:
-      - type: brooklyn.entity.software.ssh.SshCommandSensor
+      - type: org.apache.brooklyn.core.sensor.ssh.SshCommandSensor
         brooklyn.config:
           name: output.last
           command: tail -1 server-input

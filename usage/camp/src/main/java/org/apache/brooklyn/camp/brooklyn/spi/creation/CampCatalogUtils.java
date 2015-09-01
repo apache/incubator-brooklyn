@@ -122,7 +122,7 @@ public class CampCatalogUtils {
     }
 
     private static PolicySpec<?> createPolicySpec(DeploymentPlan plan, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
-        //Would ideally re-use io.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver.PolicySpecResolver
+        //Would ideally re-use the PolicySpecResolver
         //but it is CAMP specific and there is no easy way to get hold of it.
         Object policies = checkNotNull(plan.getCustomAttributes().get(BasicBrooklynCatalog.POLICIES_KEY), "policy config");
         if (!(policies instanceof Iterable<?>)) {

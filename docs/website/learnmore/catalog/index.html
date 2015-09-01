@@ -44,7 +44,7 @@ under the License.
   <ul class="nav nav-tabs">
     <li class="active"><a href="#entities" data-toggle="tab">Entities</a></li>
     <li><a href="#policies" data-toggle="tab">Policies</a></li>
-    <li><a href="#enrichers" data-toggle="tab">Enrichers</a></li>
+    <li><a href="#locations" data-toggle="tab">Locations</a></li>
   </ul>
 
   <div class="tab-content">
@@ -55,9 +55,12 @@ under the License.
       <input class="filter form-control" type="text" placeholder="Filter by type, e.g. ha">
     </div>
     <div class="tab-pane" id="enrichers">
+      <!-- TODO, and above -->
       <input class="filter form-control" type="text" placeholder="Filter by type, e.g. http">
     </div>
-    <div class="tab-pane" id="locations"></div>
+    <div class="tab-pane" id="locations">
+      <input class="filter form-control" type="text" placeholder="Filter by type, e.g. http">
+    </div>
     <div class="tab-pane" id="locationResolvers"></div>
   </div>
 </div>
@@ -145,7 +148,9 @@ under the License.
 
       card(items.entities, brooklyn.entityCard, "#entities");
       card(items.policies, brooklyn.policyCard, "#policies");
-      card(items.enrichers, brooklyn.enricherCard, "#enrichers");
+      //card(items.enrichers, brooklyn.enricherCard, "#enrichers");
+      card(items.locations, brooklyn.locationCard, "#locations");
+      
       //transformItemAndAddToElement(items.locations, brooklyn.locationCard, "#locations");
       //items.locationResolvers.forEach(function (element) { $("#locationResolvers").append("<tr><td>" + element + "</td></tr>"); });
       $("input.filter").each(function (index, element) {

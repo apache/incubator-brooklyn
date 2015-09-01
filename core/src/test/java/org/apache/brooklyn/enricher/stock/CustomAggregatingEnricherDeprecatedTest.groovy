@@ -27,9 +27,9 @@ import org.apache.brooklyn.core.test.entity.TestEntity
 import org.apache.brooklyn.enricher.stock.CustomAggregatingEnricher;
 import org.apache.brooklyn.core.entity.Entities
 import org.apache.brooklyn.entity.group.BasicGroup
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.core.location.SimulatedLocation
 import org.apache.brooklyn.core.sensor.BasicAttributeSensor
-import org.apache.brooklyn.test.TestUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -271,18 +271,18 @@ class CustomAggregatingEnricherDeprecatedTest {
 
             group.addMember(p1)
             p1.setAttribute(intSensor, 1)
-            TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            Asserts.succeedsEventually(timeout:TIMEOUT_MS) {
                 assertEquals cae.getAggregate(), 1
             }
 
             group.addMember(p2)
             p2.setAttribute(intSensor, 2)
-            TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            Asserts.succeedsEventually(timeout:TIMEOUT_MS) {
                 assertEquals cae.getAggregate(), 3
             }
 
             group.removeMember(p2)
-            TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+            Asserts.succeedsEventually(timeout:TIMEOUT_MS) {
                 assertEquals cae.getAggregate(), 1
             }
         } catch (Exception e) {
@@ -315,12 +315,12 @@ class CustomAggregatingEnricherDeprecatedTest {
         assertEquals cae.getAggregate(), 1
 
         p2.setAttribute(intSensor, 2)
-        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+        Asserts.succeedsEventually(timeout:TIMEOUT_MS) {
             assertEquals cae.getAggregate(), 3
         }
         
         group.removeMember(p2)
-        TestUtils.executeUntilSucceeds(timeout:TIMEOUT_MS) {
+        Asserts.succeedsEventually(timeout:TIMEOUT_MS) {
             assertEquals cae.getAggregate(), 1
         }
     }
@@ -343,7 +343,7 @@ class CustomAggregatingEnricherDeprecatedTest {
         assertEquals cae.getAggregate(), 1
         
         group.addMember(p3)
-        TestUtils.assertSucceedsContinually(timeout:SHORT_WAIT_MS) {
+        Asserts.succeedsContinually(timeout:SHORT_WAIT_MS) {
             assertEquals cae.getAggregate(), 1
         }
     }

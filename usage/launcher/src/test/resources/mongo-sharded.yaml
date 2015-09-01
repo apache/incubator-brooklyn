@@ -36,7 +36,7 @@ services:
       $brooklyn:entitySpec:
         type: org.apache.brooklyn.entity.nosql.mongodb.sharding.CoLocatedMongoDBRouter
         brooklyn.enrichers:
-          - type: brooklyn.enricher.basic.Propagator
+          - type: org.apache.brooklyn.enricher.stock.Propagator
             brooklyn.config:
               enricher.propagating.sensorMapping:
                 $brooklyn:sensor("org.apache.brooklyn.entity.webapp.jboss.JBoss7Server", "http.port"): $brooklyn:sensor("org.apache.brooklyn.entity.webapp.jboss.JBoss7Server", "http.port") 

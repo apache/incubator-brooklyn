@@ -31,10 +31,11 @@ import org.apache.brooklyn.api.mgmt.entitlement.EntitlementContext;
 import org.apache.brooklyn.api.mgmt.entitlement.EntitlementManager;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.Reflections;
@@ -278,7 +279,7 @@ public class Entitlements {
                 @Override
                 public boolean apply(EntityAndItem<String> input) {
                     if (input == null) return false;
-                    return !Entities.isSecret(input.getItem());
+                    return !Sanitizer.IS_SECRET_PREDICATE.apply(input.getItem());
                 }
                 @Override
                 public String toString() {
@@ -390,7 +391,7 @@ public class Entitlements {
             try {
                 ClassLoader cl = mgmt==null ? null : ((ManagementContextInternal)mgmt).getCatalogClassLoader();
                 if (cl==null) cl = Entitlements.class.getClassLoader();
-                Class<?> clazz = cl.loadClass(type);
+                Class<?> clazz = cl.loadClass(DeserializingClassRenamesProvider.findMappedName(type));
                 return (EntitlementManager) instantiate(clazz, ImmutableList.of(
                         new Object[] {mgmt, brooklynProperties},
                         new Object[] {mgmt},

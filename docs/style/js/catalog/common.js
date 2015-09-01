@@ -54,11 +54,20 @@ var brooklyn = (function ($, _) {
             "</div>" +
             "</a>"
         ),
+        locationCard: _.template(
+            "<a class='plain' data-type='<%= type %>' href='catalog-item.html#!locations/<%= type %>'>" +
+            "<div class='card'>" +
+            "<span class='glyphicon glyphicon-chevron-right'/>" +
+            "<div class='name'><%=name%></div>" +
+            "<div class='type'><%=type%></div>" +
+            "</div>" +
+            "</a>"
+        ),
 
         typeSummary: _.template(
             "<div class='summaryLabel'><%=name%></div>" +
             "<div class='summaryType'><%=type%></div>" +
-            "<div class='description'><%=description%></div>"
+            "<% if (typeof description !== 'undefined') { %><div class='description'><%=description%></div><% } %>"
         ),
 
         configKeyCard: _.template(

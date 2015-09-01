@@ -20,6 +20,7 @@ package org.apache.brooklyn.core.mgmt.persist;
 
 import static org.testng.Assert.assertEquals;
 
+import java.net.InetAddress;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -30,18 +31,11 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.collections.MutableSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
@@ -56,18 +50,28 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
-import org.apache.brooklyn.core.mgmt.persist.XmlMementoSerializer;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.net.UserAndHostAndPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
+import com.google.api.client.repackaged.com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.thoughtworks.xstream.converters.Converter;
 
 public class XmlMementoSerializerTest {
 
@@ -78,6 +82,90 @@ public class XmlMementoSerializerTest {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         serializer = new XmlMementoSerializer<Object>(XmlMementoSerializerTest.class.getClassLoader());
+    }
+
+    @Test
+    public void testRenamedClass() throws Exception {
+        serializer = new XmlMementoSerializer<Object>(XmlMementoSerializerTest.class.getClassLoader(),
+                ImmutableMap.of("old.package.name.UserAndHostAndPort", UserAndHostAndPort.class.getName()));
+        
+        String serializedForm = Joiner.on("\n").join(
+                "<org.apache.brooklyn.util.net.UserAndHostAndPort>",
+                "<user>myuser</user>",
+                "<hostAndPort>",
+                "<host>myhost</host>",
+                "<port>1234</port>",
+                "<hasBracketlessColons>false</hasBracketlessColons>",
+                "</hostAndPort>",
+                "</org.apache.brooklyn.util.net.UserAndHostAndPort>");
+        UserAndHostAndPort obj = UserAndHostAndPort.fromParts("myuser", "myhost", 1234);
+        runRenamed(serializedForm, obj, ImmutableMap.<String, String>of(
+                UserAndHostAndPort.class.getName(), "old.package.name.UserAndHostAndPort"));
+    }
+
+    @Test
+    public void testRenamedStaticInner() throws Exception {
+        serializer = new XmlMementoSerializer<Object>(XmlMementoSerializerTest.class.getClassLoader(),
+                ImmutableMap.of("old.package.name.XmlMementoSerializerTest", XmlMementoSerializerTest.class.getName()));
+        
+        String serializedForm = Joiner.on("\n").join(
+                "<org.apache.brooklyn.core.mgmt.persist.XmlMementoSerializerTest_-MyStaticInner>",
+                "<myStaticInnerField>myStaticInnerVal</myStaticInnerField>",
+                "</org.apache.brooklyn.core.mgmt.persist.XmlMementoSerializerTest_-MyStaticInner>");
+        MyStaticInner obj = new MyStaticInner("myStaticInnerVal");
+        runRenamed(serializedForm, obj, ImmutableMap.<String, String>of(
+                XmlMementoSerializerTest.class.getName(), "old.package.name.XmlMementoSerializerTest"));
+    }
+
+    @Test
+    public void testRenamedNonStaticInner() throws Exception {
+        serializer = new XmlMementoSerializer<Object>(XmlMementoSerializerTest.class.getClassLoader(),
+                ImmutableMap.of("old.package.name.XmlMementoSerializerTest", XmlMementoSerializerTest.class.getName()));
+        
+        String serializedForm = Joiner.on("\n").join(
+                "<org.apache.brooklyn.core.mgmt.persist.XmlMementoSerializerTest_-MyStaticInner_-MyNonStaticInner>",
+                "<myNonStaticInnerField>myNonStaticInnerVal</myNonStaticInnerField>",
+                "<this_-1>",
+                "<myStaticInnerField>myStaticInnerVal</myStaticInnerField>",
+                "</this_-1>",
+                "</org.apache.brooklyn.core.mgmt.persist.XmlMementoSerializerTest_-MyStaticInner_-MyNonStaticInner>");
+        MyStaticInner outer = new MyStaticInner("myStaticInnerVal");
+        MyStaticInner.MyNonStaticInner obj = outer.new MyNonStaticInner("myNonStaticInnerVal");
+        runRenamed(serializedForm, obj, ImmutableMap.<String, String>of(
+                XmlMementoSerializerTest.class.getName(), "old.package.name.XmlMementoSerializerTest"));
+    }
+
+    @Test
+    public void testRenamedAnonymousInner() throws Exception {
+        serializer = new XmlMementoSerializer<Object>(XmlMementoSerializerTest.class.getClassLoader(),
+                ImmutableMap.of("old.package.name.XmlMementoSerializerTest", XmlMementoSerializerTest.class.getName()));
+        
+        String serializedForm = Joiner.on("\n").join(
+                "<org.apache.brooklyn.core.mgmt.persist.XmlMementoSerializerTest_-MySuper_-1>",
+                "<mySuperField>mySuperVal</mySuperField>",
+                "<myAnonymousInnerField>mySubVal</myAnonymousInnerField>",
+                "</org.apache.brooklyn.core.mgmt.persist.XmlMementoSerializerTest_-MySuper_-1>");
+        MySuper obj = MySuper.newAnonymousInner("mySuperVal", "mySubVal");
+        runRenamed(serializedForm, obj, ImmutableMap.<String, String>of(
+                XmlMementoSerializerTest.class.getName(), "old.package.name.XmlMementoSerializerTest"));
+    }
+
+    protected void runRenamed(String serializedForm, Object obj, Map<String, String> transforms) throws Exception {
+        assertSerializeAndDeserialize(obj);
+        
+        assertEquals(serializer.fromString(serializedForm), obj, "serializedForm="+serializedForm);
+        
+        String transformedForm = serializedForm;
+        for (Map.Entry<String, String> entry : transforms.entrySet()) {
+            transformedForm = transformedForm.replaceAll(entry.getKey(), entry.getValue());
+        }
+        assertEquals(serializer.fromString(transformedForm), obj, "serializedForm="+transformedForm);
+    }
+
+    @Test
+    public void testInetAddress() throws Exception {
+        InetAddress obj = Networking.getInetAddressWithFixedName("1.2.3.4");
+        assertSerializeAndDeserialize(obj);
     }
 
     @Test
@@ -175,7 +263,6 @@ public class XmlMementoSerializerTest {
         final TestApplication app = TestApplication.Factory.newManagedInstanceForTests();
         ManagementContext managementContext = app.getManagementContext();
         try {
-            @SuppressWarnings("deprecation")
             final Location loc = managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
             serializer.setLookupContext(new LookupContextImpl(managementContext,
                     ImmutableList.<Entity>of(), ImmutableList.of(loc), ImmutableList.<Policy>of(),
@@ -313,6 +400,8 @@ public class XmlMementoSerializerTest {
 
     @SuppressWarnings("unchecked")
     private <T> T assertSerializeAndDeserialize(T obj) throws Exception {
+Converter x = serializer.xstream.getConverterLookup().lookupConverterForType(Class.class);
+System.out.println("XXX: "+x);
         String serializedForm = serializer.toString(obj);
         LOG.info("serializedForm=" + serializedForm);
         Object deserialized = serializer.fromString(serializedForm);
@@ -452,4 +541,60 @@ public class XmlMementoSerializerTest {
             throw new IllegalStateException("Unexpected type "+type+" / id "+id);
         }
     };
+
+    public static class MySuper {
+        public String mySuperField;
+        
+        public static MySuper newAnonymousInner(final String superVal, final String subVal) {
+            MySuper result = new MySuper() {
+                public String myAnonymousInnerField = subVal;
+                
+                @Override public boolean equals(Object obj) {
+                    return (obj != null) && (obj.getClass() == getClass()) && super.equals(obj);
+                }
+                @Override public int hashCode() {
+                    return Objects.hashCode(super.hashCode(), myAnonymousInnerField);
+                }
+            };
+            result.mySuperField = superVal;
+            return result;
+        }
+        @Override public boolean equals(Object obj) {
+            return (obj instanceof MySuper) 
+                    && mySuperField.equals(((MySuper)obj).mySuperField);
+        }
+        @Override public int hashCode() {
+            return Objects.hashCode(mySuperField);
+        }
+    }
+    
+    public static class MyStaticInner {
+        public class MyNonStaticInner {
+            public String myNonStaticInnerField;
+            
+            public MyNonStaticInner(String val) {
+                this.myNonStaticInnerField = val;
+            }
+            @Override public boolean equals(Object obj) {
+                return (obj instanceof MyNonStaticInner) 
+                        && myNonStaticInnerField.equals(((MyNonStaticInner)obj).myNonStaticInnerField);
+            }
+            @Override public int hashCode() {
+                return Objects.hashCode(myNonStaticInnerField);
+            }
+        }
+
+        public String myStaticInnerField;
+        
+        public MyStaticInner(String val) {
+            this.myStaticInnerField = val;
+        }
+        @Override public boolean equals(Object obj) {
+            return (obj instanceof MyStaticInner) 
+                    && myStaticInnerField.equals(((MyStaticInner)obj).myStaticInnerField);
+        }
+        @Override public int hashCode() {
+            return Objects.hashCode(myStaticInnerField);
+        }
+    }
 }

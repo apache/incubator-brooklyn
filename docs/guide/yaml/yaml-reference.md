@@ -18,9 +18,9 @@ service `type` (synonyms `serviceType` and `service_type`), indicating what type
 service is being specified there.  The following formats are supported for
 defining types:
 
-* `io.brooklyn.package.JavaEntityClass`
-* `java:io.brooklyn.package.JavaEntityClass`
-* *OSGi and YAML references are coming soon!* <!-- TODO -->
+* `com.acme.brooklyn.package.JavaEntityClass`
+* `java:com.acme.brooklyn.package.JavaEntityClass`
+* `java-entity-class` (where this has been added to the [catalog](../ops/catalog/))
 
 A reference of some of the common service `type` instances used is included in a section below.
 
@@ -49,12 +49,12 @@ the entity being defined, with these being the most common:
   a single `Map` where the `brooklyn.config` is passed in.
   Some common initializers are:
   
-  * `brooklyn.entity.software.ssh.SshCommandEffector`: takes a `name` and `command`,
+  * `org.apache.brooklyn.core.effector.ssh.SshCommandEffector`: takes a `name` and `command`,
     and optionally a map of named `parameters` to their `description` and `defaultValue`,
     to define an effector with the given name implemented by the given SSH command
     (on an entity which as an ssh-able machine)
 
-  * `brooklyn.entity.software.ssh.SshCommandSensor`: takes a `name` and `command`,
+  * `org.apache.brooklyn.core.sensor.ssh.SshCommandSensor`: takes a `name` and `command`,
     and optionally a `period`, to create a sensor feed which populates the sensor with
     the given name by running the given command (on an entity which as an ssh-able machine) 
 
@@ -151,7 +151,7 @@ concise DSL defined here:
 * `$brooklyn:config("key")` will insert the value set against the given key at this entity (or nearest ancestor);
   can be used to supply config at the root which is used in multiple places in the plan
 * `$brooklyn:sensor("sensor.name")` returns the given sensor on the current entity if found, or an untyped (Object) sensor;
-  `$brooklyn:sensor("io.brooklyn.ContainingEntityClass", "sensor.name")` returns the strongly typed sensor defined in the given class
+  `$brooklyn:sensor("com.acme.brooklyn.ContainingEntityClass", "sensor.name")` returns the strongly typed sensor defined in the given class
 * `$brooklyn:component("ID")` refers to a Brooklyn component with the given ID; you can then access the following subfields,
   using the same syntax as defined above but with a different reference entity,
   e.g. `$brooklyn:component("ID").attributeWhenReady("sensor")`:

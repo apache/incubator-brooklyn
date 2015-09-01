@@ -1,4 +1,4 @@
 name: simple-appserver
 location: localhost
 services:
-- type: brooklyn.entity.webapp.jboss.JBoss7Server
+- type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server

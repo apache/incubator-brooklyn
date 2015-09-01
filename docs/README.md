@@ -63,7 +63,7 @@ Some issues we've encountered are:
 Seeing the Website and Docs
 ---------------------------
 
-To build and see the documentation, run this command in your `docs` folder:
+To build and most of see the documentation, run this command in your `docs` folder:
 
     jekyll serve
     
@@ -72,6 +72,9 @@ e.g. http://localhost:4000/ . The server will continue to run until you press Ct
 Modified files will be detected and regenerated (but that might take up to 1m).
 Add `--no-watch` argument to turn off regeneration, or use `jekyll build` instead
 to generate a site in `_site` without a server.
+
+This does <i>not</i> generate API docs and certain other material;
+see the notes on `_build/build.sh` below for that.
 
 
 Project Structure
@@ -141,8 +144,8 @@ Building the Website and Guide
 ------------------------------
 
 For most users, the `jekyll serve` command described above is sufficient to test changes locally.
-The main reason to use the build scripts (and to read this section) is to push changes to the server.
-This power is reserved to Brooklyn committers.
+The main reason to use the build scripts (and to read this section) is to push changes to the server
+(requires Apache Brooklyn commit rights), or to test generated content such as API docs.
 
 The build is controlled by config files in `_build/` and accessed through `_build/build.sh`.
 There are a number of different builds possible; to list these, run:

@@ -142,8 +142,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
         // run.sh must be backgrounded otherwise the script will never return.
 
         // Don't automatically create pid; instead set JBOSS_PIDFILE to create the pid file we need
-        // We wait for evidence of tomcat running because, using 
-        // brooklyn.ssh.config.tool.class=brooklyn.util.internal.ssh.cli.SshCliTool,
+        // We wait for evidence of tomcat running because, using SshCliTool,
         // we saw the ssh session return before the tomcat process was fully running 
         // so the process failed to start.
         newScript(MutableMap.of(USE_PID_FILE, false), LAUNCHING)

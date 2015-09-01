@@ -9,8 +9,8 @@ children:
 - common-usage.md
 - entity.md
 - entities.md
-- policy.md
 - policies.md
+- policy.md
 - service-state.md
 - entitlements.md
 ---

@@ -5,4 +5,4 @@ location:
     identity: AKA_YOUR_ACCESS_KEY_ID
     credential: <access-key-hex-digits>
 services:
-- type: brooklyn.entity.webapp.jboss.JBoss7Server
+- type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server

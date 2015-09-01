@@ -55,7 +55,7 @@ public class CatalogPredicatesTest {
     @Test
     public void testDisplayName() {
         CatalogItem<Entity, EntitySpec<?>> item = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .displayName("myname")
                 .build());
 
@@ -66,7 +66,7 @@ public class CatalogPredicatesTest {
     @Test
     public void testDeprecated() {
         CatalogItem<Entity, EntitySpec<?>> item = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
 
         assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>deprecated(false).apply(item));
@@ -81,7 +81,7 @@ public class CatalogPredicatesTest {
     @Test
     public void testDisabled() {
         CatalogItem<Entity, EntitySpec<?>> item = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
 
         assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>disabled(false).apply(item));
@@ -96,7 +96,7 @@ public class CatalogPredicatesTest {
     @Test
     public void testIsCatalogItemType() {
         CatalogItem<Entity, EntitySpec<?>> item = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
 
         assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>isCatalogItemType(CatalogItemType.ENTITY).apply(item));
@@ -106,7 +106,7 @@ public class CatalogPredicatesTest {
     @Test
     public void testSymbolicName() {
         CatalogItem<Entity, EntitySpec<?>> item = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
 
         assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>symbolicName(Predicates.equalTo("foo")).apply(item));
@@ -116,14 +116,14 @@ public class CatalogPredicatesTest {
     @Test
     public void testIsBestVersion() {
         CatalogItem<Entity, EntitySpec<?>> itemV1 = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
         CatalogItem<Entity, EntitySpec<?>> itemV2 = createItem(CatalogItemBuilder.newEntity("foo", "2.0")
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
         CatalogItem<Entity, EntitySpec<?>> itemV3Disabled = createItem(CatalogItemBuilder.newEntity("foo", "3.0")
                 .disabled(true)
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
 
         assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>isBestVersion(mgmt).apply(itemV2));
@@ -135,7 +135,7 @@ public class CatalogPredicatesTest {
     public void testEntitledToSee() {
         // TODO No entitlements configured, so everything allowed - therefore test not thorough enough!
         CatalogItem<Entity, EntitySpec<?>> item = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
-                .plan("services:\n- type: brooklyn.entity.basic.BasicEntity")
+                .plan("services:\n- type: org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
 
         assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>entitledToSee(mgmt).apply(item));
@@ -145,10 +145,10 @@ public class CatalogPredicatesTest {
     @Test
     public void testJavaType() {
         CatalogItem<Entity, EntitySpec<?>> item = createItem(CatalogItemBuilder.newEntity("foo", "1.0")
-                .javaType("brooklyn.entity.basic.BasicEntity")
+                .javaType("org.apache.brooklyn.entity.stock.BasicEntity")
                 .build());
 
-        assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>javaType(Predicates.equalTo("brooklyn.entity.basic.BasicEntity")).apply(item));
+        assertTrue(CatalogPredicates.<Entity,EntitySpec<?>>javaType(Predicates.equalTo("org.apache.brooklyn.entity.stock.BasicEntity")).apply(item));
         assertFalse(CatalogPredicates.<Entity,EntitySpec<?>>javaType(Predicates.equalTo("wrongtype")).apply(item));
     }
 

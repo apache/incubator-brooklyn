@@ -1,6 +1,6 @@
 name: appserver-w-db-other-flavor
 services:
-- type: brooklyn.entity.webapp.tomcat.TomcatServer
+- type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
   name: AppServer HelloWorld 
   brooklyn.config:
     wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war

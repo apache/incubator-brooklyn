@@ -19,6 +19,7 @@
 package org.apache.brooklyn.location.jclouds.networking;
 
 import org.jclouds.compute.domain.NodeMetadata;
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.core.location.access.PortForwardManager;
 import org.apache.brooklyn.util.net.Cidr;
@@ -35,7 +36,7 @@ public interface JcloudsPortForwarderExtension {
      * 
      * This should also register the port with the {@link PortForwardManager}, via 
      * {@code portForwardManager.associate(node.getId(), result, targetPort)} so that
-     * subsequent calls to {@link BrooklynAccessUtils#getBrooklynAccessibleAddress(brooklyn.entity.Entity, int)}
+     * subsequent calls to {@link BrooklynAccessUtils#getBrooklynAccessibleAddress(Entity, int)}
      * will know about the mapped port.
      */
     public HostAndPort openPortForwarding(NodeMetadata node, int targetPort, Optional<Integer> optionalPublicPort, Protocol protocol, Cidr accessingCidr);

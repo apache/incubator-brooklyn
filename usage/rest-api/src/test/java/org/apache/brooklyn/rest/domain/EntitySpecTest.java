@@ -29,7 +29,7 @@ import org.testng.annotations.Test;
 
 public class EntitySpecTest {
 
-    final EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "brooklyn.entity.java.VanillaJavaApp");
+    final EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "org.apache.brooklyn.entity.java.VanillaJavaApp");
 
     @Test
     public void testSerializeToJSON() throws IOException {
