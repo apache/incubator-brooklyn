@@ -6,7 +6,7 @@ title: Release Notes
 ## Version {{ site.brooklyn-version }}
 
 {% if SNAPSHOT %}
-**You are viewing a SNAPSHOT release (master branch), so this list is incomplete.**
+**You are viewing a SNAPSHOT release (master branch), so this list is in progress!**
 {% endif %}
 
 * Introduction
@@ -18,7 +18,8 @@ title: Release Notes
 
 Version 0.8.0 is a rapid, clean-up and hardening release, as we prepare for graduation.
 The biggest change is the package refactoring, discussed in the Backwards Compatibility section.
-Other new features include more machine management (suspend/resume and windows enhandements),
+Other new features include more externalized configuration,
+machine management (suspend/resume and windows enhandements),
 MySQL cluster, entitlements enhancements, and pluggable blueprint languages. 
 
 Thanks go to our community for their improvements, feedback and guidance, and
@@ -31,6 +32,9 @@ New features include:
 
 * All classes are in the `org.apache.brooklyn` namespace
 
+* Externalized configuration, using `$brooklyn:external` to access data which is
+  retrieved from a remote store or injected via an extensible mechanism
+   
 * Port mappings supported for BYON locations:  fixed-IP machines can now be configured 
   within subnets
 
