@@ -164,9 +164,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     private final BrooklynStorage storage;
 
+    protected final ExternalConfigSupplierRegistry configSupplierRegistry;
+
     private volatile boolean running = true;
     protected boolean startupComplete = false;
-    protected final List<Throwable> errors = Collections.synchronizedList(MutableList.<Throwable>of()); 
+    protected final List<Throwable> errors = Collections.synchronizedList(MutableList.<Throwable>of());
 
     protected Maybe<URI> uri = Maybe.absent();
     protected CatalogInitialization catalogInitialization;
@@ -191,6 +193,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         this.highAvailabilityManager = new HighAvailabilityManagerImpl(this); // TODO leaking "this" reference; yuck
         
         this.entitlementManager = Entitlements.newManager(this, brooklynProperties);
+        this.configSupplierRegistry = new BasicExternalConfigSupplierRegistry(this); // TODO leaking "this" reference; yuck
     }
 
     @Override
@@ -478,5 +481,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public List<Throwable> errors() {
         return errors;
     }
-    
+
+    /** @since 0.8.0 */
+    @Override
+    public ExternalConfigSupplierRegistry getExternalConfigProviderRegistry() {
+        return configSupplierRegistry;
+    }
+
 }

@@ -465,6 +465,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         initialManagementContext.setCatalogInitialization(catalogInitialization);
     }
 
+    @Override
+    public ExternalConfigSupplierRegistry getExternalConfigProviderRegistry() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getExternalConfigProviderRegistry();
+    }
+
     /**
      * For when the initial management context is not "real"; the changeListener is a no-op, but everything else forbidden.
      * 

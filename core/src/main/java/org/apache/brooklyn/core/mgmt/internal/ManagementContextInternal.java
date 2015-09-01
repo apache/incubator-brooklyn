@@ -119,4 +119,7 @@ public interface ManagementContextInternal extends ManagementContext {
     @Beta
     void setCatalogInitialization(CatalogInitialization catalogInitialization);
 
+    @Beta
+    ExternalConfigSupplierRegistry getExternalConfigProviderRegistry();
+
 }
