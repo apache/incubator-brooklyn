@@ -72,7 +72,7 @@ public interface JcloudsLocationConfig extends CloudLocationConfig {
     public static final ConfigKey<String> LOGIN_USER_PRIVATE_KEY_FILE = ConfigKeys.newStringConfigKey("loginUser.privateKeyFile",
             "Custom private key for the user who logs in initially", null); 
     public static final ConfigKey<String> EXTRA_PUBLIC_KEY_DATA_TO_AUTH = ConfigKeys.newStringConfigKey("extraSshPublicKeyData",
-        "Additional public key data to add to authorized_keys", null);
+        "Additional public key data to add to authorized_keys, on supported clouds (not GCE)", null);
     @SuppressWarnings("serial")
     public static final ConfigKey<List<String>> EXTRA_PUBLIC_KEY_URLS_TO_AUTH = ConfigKeys.newConfigKey(new TypeToken<List<String>>() {}, 
         "extraSshPublicKeyUrls", "Additional public keys (files or URLs, in SSH2/RFC4716/id_rsa.pub format) to add to authorized_keys", null);
