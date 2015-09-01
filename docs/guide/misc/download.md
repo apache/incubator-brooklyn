@@ -16,21 +16,20 @@ For more information, see the [main download page]({{ site.path.website }}/downl
   <tr>
 	<th style='text-align:left'>Download</th>
 	<th style='text-align:left'>File/Format</th>
-	<th>checksums <small><a href="{{ site.path.website }}/download/verify.html" title='Instructions on verifying the integrity of your downloads.'>(?)</a></small></th>
+	<th>checksums <small><a href="{{ site.path.website }}/download/verify.html" title='Instructions on verifying the integrity of your downloads.{% if site.brooklyn.is_snapshot %} May not be available for SNAPSHOT artifacts.{% endif %}'>(?)</a></small></th>
   </tr>
   <tr>
 	<td style='text-align:left;vertical-align:top' rowspan='2'>Distro</td>
 	<td style='text-align:left'><a href='{{ this_dist_url_zip }}' title='Download ZIP archive'>brooklyn-dist-{{ site.brooklyn-version }}-dist.zip</a></td>
-	<td><small><a href='{{ this_dist_url_zip }}.asc'>PGP</a>, <a href='{{ this_dist_url_zip }}.sha1'>SHA1</a></small></td>
+	<td><small>
+	  {% if site.brooklyn.is_release %}<a href='{{ this_dist_url_zip }}.asc'>PGP</a>, {% endif %}
+	  <a href='{{ this_dist_url_zip }}.sha1'>SHA1</a></small></td>
   </tr>
   <tr>
 	<td style='text-align:left'><a href='{{ this_dist_url_tgz }}' title='Download TGZ archive'>brooklyn-dist-{{ site.brooklyn-version }}-dist.tar.gz</a></td>
-	<td ><small><a href='{{ this_dist_url_tgz }}.asc'>PGP</a>, <a href='{{ this_dist_url_tgz }}.sha1'>SHA1</a></small></td>
-  </tr>
-  <tr>
-	<td style='text-align:left'>All Jar</td>
-	<td style='text-align:left'><a href='{{ this_alljar_url_jar }}' title='Download the ALL JAR'>brooklyn-all-{{ site.brooklyn-version }}-with-dependencies.jar</a></td>
-	<td><small><a href='{{ this_alljar_url_jar }}.asc'>PGP</a>, <a href='{{ this_alljar_url_jar }}.sha1'>SHA1</a></small></td>
+	<td ><small>
+	  {% if site.brooklyn.is_release %}<a href='{{ this_dist_url_tgz }}.asc'>PGP</a>, {% endif %}
+	  <a href='{{ this_dist_url_tgz }}.sha1'>SHA1</a></small></td>
   </tr>
   <tr>
     <td style='text-align:left'>Apache Repo</td>
@@ -51,40 +50,24 @@ For more information, see the [main download page]({{ site.path.website }}/downl
 
 <a name="distro"></a>
 
-## The Distro
+## The Dist
 
-The distribution archive contains Brooklyn as a standalone executable package.
+The binary distribution archive contains Brooklyn as a standalone executable package.
 
 * [This version ZIP]({{ this_dist_url_zip }})
 * [This version TGZ]({{ this_dist_url_tgz }})
 * [Apache stable versions]({{ apache_releases_repo_groupid_url }}/brooklyn-dist/)
 * [Apache snapshot versions]({{ apache_snapshots_repo_groupid_url }}/brooklyn-dist/)
 
-Very old versions are available at [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-dist/) for stable releases
-and [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-dist/) for snapshot versions.
+Released versions are also available at 
+[Maven Central](https://search.maven.org/#search%7Cga%7C1%7Corg.apache.brooklyn).
 
 {% if site.brooklyn-version contains 'SNAPSHOT' %} 
 **Please note**: You are reading the documentation for a snapshot version of Brooklyn.
-You should always confirm that the source and date for snapshot artifacts.
+You should always confirm that the source repository and datestamp for downloaded snapshot artifacts
+match the intended dependencies, as snapshot artifacts change as code is written.
 {% endif %}
 
-
-<a name="alljar"></a>
-
-## The All Jar
-
-This is a single JAR containing all of Brooklyn and its dependencies, for developing Brooklyn into your own applications. If not using maven, just add it to your classpath.
-
-* [This version]({{ this_alljar_url_jar }})
-* [All Apache stable versions]({{ apache_releases_repo_groupid_url }}/brooklyn-all/)
-* [All Apache snapshot versions]({{ apache_snapshots_repo_groupid_url }}/brooklyn-all/)
-
-Very old versions are available at [Maven Central]({{ mavencentral_repo_groupid_url }}brooklyn-all/) for stable releases
-and [Sonatype]({{ sonatype_repo_groupid_url }}brooklyn-all/) for snapshot versions.
-
-{% if site.brooklyn-version contains 'SNAPSHOT' %} 
-**Again**, check the source and date for SNAPSHOT JARs.
-{% endif %}
 
 ## Release Notes
 
@@ -122,7 +105,7 @@ If you use Maven, you can add Brooklyn with the following in your pom:
     </dependencies>
 {% endhighlight %}
 
-`brooklyn-all` (used above) brings in all dependencies, including jclouds.
+`brooklyn-all` brings in all dependencies, including jclouds.
 If you prefer a smaller repo you might want just ``brooklyn-core``,  ``brooklyn-policies``, 
 and some of ``brooklyn-software-webapp``,  ``brooklyn-software-database``, ``brooklyn-software-messaging``, or others
 (browse the full list [here]({{ this_anything_url_search }})).
@@ -157,8 +140,8 @@ you can add some of the following sections:
 {% endhighlight %}
 
 {% if SNAPSHOT %}
-**Please note**: to use a snapshot version of Brooklyn, you must either have Brooklyn built locally
-or one of the additional snapshot repositories above.
+**Please note**: to add a snapshot version of Brooklyn as a dependency to your project, 
+you must either have Brooklyn built locally or one of these snapshot repositories in your POM.
 {% endif %}
 
 
@@ -166,11 +149,27 @@ or one of the additional snapshot repositories above.
 
 ## Source Code
 
-Full source is at [github.com/apache/incubator-brooklyn](http://github.com/apache/incubator-brooklyn).
+Source code is hosted at [github.com/apache/incubator-brooklyn](http://github.com/apache/incubator-brooklyn),
+with this version in branch [{{ site.brooklyn.git_branch }}]({{ site.brooklyn.url.git }}).
 Information on working with the source is [here]({{ site.path.guide }}/dev/code).
 
-Alternatively you can download archives of the source directly:
+You can download archives of the source directly:
 
+<table class="table">
+  <tr>
+    <td style="vertical-align: middle;"><center>{{ site.brooklyn.git_branch }}</center></td>
+    <td>
+<a href="https://github.com/apache/incubator-brooklyn/tarball/{{ site.brooklyn.git_branch }}"><img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
+<a href="https://github.com/apache/incubator-brooklyn/zipball/{{ site.brooklyn.git_branch }}"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
+    </td>
+  </tr>
+{% if site.brooklyn.git_branch != 'master' %}
+  <tr>
+    <td style="vertical-align: middle;"><center>master</center></td>
+    <td>
 <a href="https://github.com/apache/incubator-brooklyn/tarball/master"><img border="0" width="90" src="https://github.com/images/modules/download/tar.png"></a>
 <a href="https://github.com/apache/incubator-brooklyn/zipball/master"><img border="0" width="90" src="https://github.com/images/modules/download/zip.png"></a>
-
+    </td>
+  </tr>
+{% endif %}
+</table>

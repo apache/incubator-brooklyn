@@ -4,14 +4,14 @@ title: Documentation
 children:
 - /guide/
 - /guide/dev/
+- ../meta/versions.md
 - other-docs.md
 ---
 
 {% comment %}
-TODO This is redundant with versions page.  Link to versions page?  List more things including other docs?
-Basically make this page pretty...
+TODO is this page used?
 
-TODO also add FAQ
+TODO add FAQ
 {% endcomment %}
 
 ## Official User Guide

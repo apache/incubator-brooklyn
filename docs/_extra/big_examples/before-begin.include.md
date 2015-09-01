@@ -11,7 +11,7 @@ To use the examples, you'll need ``curl``, ``git``, ``java`` (1.6+), and ``maven
 {% if SNAPSHOT %}
 
 First, grab a copy of the Brooklyn snapshot distribution you wish to use from 
-[the Sonatype snapshot repo]({{ sonatype_repo_groupid_url }}brooklyn-dist/)
+[the maven repository]({{ this_dist_url_list }})
 (or build it yourself following instructions [here]({{ site.path.guide }}/dev/build/)),
 unpack it to your favourite location (e.g. `$(pwd)`), 
 and export `BROOKLYN_HOME`:

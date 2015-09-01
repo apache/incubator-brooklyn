@@ -29,11 +29,29 @@ Apache Brooklyn has made the following releases:
   * [User guide](/v/0.7.0-M2-incubating/), download via mirrors
     &laquo;<a href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/0.7.0-M2-incubating/apache-brooklyn-0.7.0-M2-incubating.tar.gz">src.tar.gz</a>&raquo;
 
-Note: To prevent accidentally referring to out-of-date information,
-a banner is displayed when accessing content from specific versions in the archive.
-You may
+
+Note: These "Version History" links are to permanent versions in the archive,
+different to the "Current Version" links.
+To prevent accidentally referring to out-of-date information,
+a banner is displayed when accessing content from these.
+If you wish you can
 <a href="javascript:void(0);" onclick="set_user_versions_all();">disable all warnings</a> or
 <a href="javascript:void(0);" onclick="clear_user_versions();">re-enable all warnings</a>.
+
+
+## Snapshot Versions
+
+Current work on Apache Brooklyn is done with SNAPSHOT version labels,
+in the `master` branch or in a branch with the version label.
+This code has not been voted on and are not endorsed by The Apache Software Foundation.
+Documentation for these versions are uploaded from time to time,
+and are provided here for reference:
+
+* **[0.8.0-SNAPSHOT](/v/0.8.0-SNAPSHOT/)**: latest unreleased version
+(although docs may not be up-to-date with the latest code)
+
+* **[0.7.0-SNAPSHOT](/v/0.7.0-SNAPSHOT/)**: any changes since 0.7.0-incubating which would go into 0.7.1
+(mainly things from 0.8.0-SNAPSHOT which warranted being backported)
 
 
 ## Ancient Versions
