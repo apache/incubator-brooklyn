@@ -51,6 +51,8 @@ Update the version on master
 The `master` branch will now need updating to refer to the next planned version. (This step is not required if making
 a "milestone" release or similar.)
 
+The release notes should be cleared out and the version history augmented with the new version.
+
 Example:
 
 {% highlight bash %}
@@ -58,6 +60,15 @@ git checkout master
 ./release/change-version.sh BROOKLYN $OLD_MASTER_VERSION $NEW_MASTER_VERSION
 git add .
 # Now inspect the staged changes and ensure there are no surprises
+{% endhighlight %}
+
+Open `docs/guide/misc/release-notes.md` and `docs/website/meta/versions.md` in your favourite editor and amend.
+For release notes this means bumping the reference to the previous version in the "Backwards Compatibility" section
+and putting some placeholder text elsewhere.
+
+Then:
+
+{% highlight bash %}
 git commit -m "Change version to $NEW_MASTER_VERSION"
 git push
 {% endhighlight %}
