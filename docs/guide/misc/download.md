@@ -4,10 +4,10 @@ title: Downloads
 ---
 {% include fields.md %}
 
-**Brooklyn in Apache has not yet made an official clean binary release. 
-The downloads on this page have not been voted on and should be used at your own risk.
-Additionally some links on this page may not work until those builds have been officially released.
-For more information, see the [main download page]({{ site.path.website }}/download/).**
+{% if site.brooklyn.is_snapshot %}
+**The downloads on this page have not been voted on and should be used at your own risk.
+The latest stable release can be accessed on the [main download page]({{ site.path.website }}/download/).**
+{% endif %}
 
 
 ## Download Version {{ site.brooklyn-version }}

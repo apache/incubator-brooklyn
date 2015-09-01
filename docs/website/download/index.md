@@ -2,7 +2,9 @@
 layout: website-normal
 title: Download
 children:
-- verify.md
+- { path: /guide/misc/download.md, title: Details }
+- { path: verify.md, title: Verify }
+- /guide/misc/release-notes.md
 - ../meta/versions.md
 ---
 
@@ -57,17 +59,17 @@ contribute code changes to Apache Brooklyn, we recommend you get the source code
 </div><!-- col -->
 </div><!-- row -->
 
-We also publish Maven artifacts for Apache Brooklyn. These are available from [Maven Central](https://search.maven.org/#search%7Cga%7C1%7Corg.apache.brooklyn).
+A full list of download links including Maven coordinates are [here]({{ site.path.guide }}/misc/download.html).
+<br/><br/>
 
-
-## What next?
+## What Next?
 
 <div class="row">
 <div class="col-md-6" markdown="1">
 
 <div class="panel panel-default">
   <div class="panel-heading" markdown="1">
-#### Verify your download
+#### Verify Your Download
   </div>
   <div class="panel-body" markdown="1" style="height: 7em;">
 

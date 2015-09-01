@@ -13,7 +13,7 @@ children:
 
 Further documentation specific to this version of Brooklyn includes:
 
-{% for item in page.menu reversed offset:1 reversed %}
+{% for item in page.menu %}
 * [{{ item.title_in_menu }}]({{ item.url }})
 {% endfor %}
 
