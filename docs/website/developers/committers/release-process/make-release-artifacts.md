@@ -5,11 +5,11 @@ navgroup: developers
 ---
 
 A release script is provided in `release/make-release-artifacts.sh`. This script will prepare all the release artifacts.
-It is written to account for several Apache requirements, so you are advised to use it rather than "rolling your own".
+It is written to account for several Apache requirements, so you are strongly advised to use it rather than "rolling your own".
 
 The release script will:
 
-- **Create source code and binary distribution artifacts** and place them in a directory on your workstation.
+- **Create source code and binary distribution artifacts** and place them in a temporary staging directory on your workstation, usually `releases/`.
 - **Create Maven artifacts and upload them to a staging repository** located on the Apache Nexus server.
 
 The script has a single required parameter `-r` which is given the release candidate number - so `-r1` will create
@@ -23,6 +23,8 @@ To run the script:
 
 It will show you the release information it has deduced, and ask yes-or-no if it can proceed. Please note that the
 script will thoroughly clean the Git workspace of all uncommited and unadded files.
+
+**You really probably want to run this against a secondary checkout.** It will wipe `.project` files and other IDE metadata, and bad things can happen if an IDE tries to write while the script is running. Also as it takes a long time, this means your workspace is not tied up. One quick and easy way to do this is to `git clone` the local directory of your primary checkout to a secondary location.
 
 A few minutes into the script you will be prompted for the passphrase to your GnuPG private key. You should only be
 asked this question once; the GnuPG agent will cache the password for the remainder of the build.

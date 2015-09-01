@@ -32,16 +32,24 @@ pre-release software to the global release mirror network!
 GPG keys
 --------
 
-The release manager must have a GPG key to be used to sign the release.
+The release manager must have a GPG key to be used to sign the release. See below to install `gpg2`
+(with a `gpg` alias).  The steps here also assume you have the following set
+(not using `whoami` if that's not appropriate):
+
+{% highlight bash %}
+GPG_KEY=`whoami`@apache.org
+SVN_USERNAME=`whoami`
+{% endhighlight %}
 
 If you have an existing GPG key, but it does not include your Apache email address, you can add your email address as
 described [in this Superuser.com posting](https://superuser.com/a/293283). Otherwise, create a new GPG key giving your
-Apache email address.
+Apache email address, using `gpg2 --gen-key` then `gpg2 --export-key $GPG_KEY > my-apache.key` and 
+`gpg2 --export-secret-key -a $GPG_KEY > my-apache.private.key` in the right directory (`~/.ssh` is a good one).
 
 Upload your GPG public key (complete with your Apache email address on it) to a public keyserver - e.g. run
-`gpg2 --export --armor richard@apache.org` and paste it into the “submit” box on http://pgp.mit.edu/
+`gpg2 --export --armor $GPG_KEY` and paste it into the “submit” box on http://pgp.mit.edu/
 
-Look up your key fingerprint with `gpg2 --fingerprint richard@apache.org` - it’s the long sequence of hex numbers
+Look up your key fingerprint with `gpg2 --fingerprint $GPG_KEY` - it’s the long sequence of hex numbers
 separated by spaces. Log in to [https://id.apache.org/](https://id.apache.org/) then copy-and-paste the fingerprint into
 “OpenPGP Public Key Primary Fingerprint”. Submit.
 
@@ -50,10 +58,12 @@ Now add your key to the `apache-dist-release-brooklyn/KEYS` file:
 {% highlight bash %}
 cd apache-dist-release-brooklyn
 (gpg2 --list-sigs richard@apache.org && gpg2 --armor --export richard@apache.org) >> KEYS
-svn commit -m 'Update incubator/brooklyn/KEYS'
+svn --username $SVN_USERNAME commit -m 'Update incubator/brooklyn/KEYS for $GPG_KEY'
 {% endhighlight %}
 
-References: [Post on the general@incubator list](https://mail-archives.apache.org/mod_mbox/incubator-general/201410.mbox/%3CCAOGo0VawupMYRWJKm%2Bi%2ByMBqDQQtbv-nQkfRud5%2BV9PusZ2wnQ%40mail.gmail.com%3E)
+References: 
+* [Post on the general@incubator list](https://mail-archives.apache.org/mod_mbox/incubator-general/201410.mbox/%3CCAOGo0VawupMYRWJKm%2Bi%2ByMBqDQQtbv-nQkfRud5%2BV9PusZ2wnQ%40mail.gmail.com%3E)
+* [GPG cheatsheet](http://irtfweb.ifa.hawaii.edu/~lockhart/gpg/gpg-cs.html)
 
 
 Software packages
@@ -63,14 +73,15 @@ The following software packages are required during the build. Make sure you hav
 
 - A Java Development Kit, version 1.7
 - `maven` and `git`
-- `xmlstarlet` is required by the release script to process version numbers in `pom.xml` files
+- `xmlstarlet` is required by the release script to process version numbers in `pom.xml` files;
+  on mac, `port install xmlstarlet` should do the trick.
 - `zip` and `unzip`
 - `pinentry` for secure entry of GPG passphrases. If you are building remotely on a Linux machine, `pinentry-curses` is
   recommended; building on a mac, `port install pinentry-mac` is recommended.
 - `gnupg2`, and `gnupg-agent` if it is packaged separately (it is on Ubuntu Linux)
-- `md5sum` and `sha1sum` - these are often present by default on Linux, but not on Mac. MacPorts provides these in the
-  package `md5sha1sum`.
-
+- `md5sum` and `sha1sum` - these are often present by default on Linux, but not on Mac;
+  `port install md5sha1sum` should remedy that.
+- if `gpg` does not resolve (it is needed for maven), create an alias or script pointing at `gpg2 "$@"`
 
 Maven configuration
 -------------------
