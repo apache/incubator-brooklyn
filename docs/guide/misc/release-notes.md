@@ -16,11 +16,11 @@ title: Release Notes
 
 ### Introduction
 
-Version 0.8.0 is a rapid, clean-up and hardening release, as we prepare for graduation.
+Version 0.8.0 is a clean-up and hardening release, rapidly following 0.7.0, as we prepare for graduation.
 The biggest change is the package refactoring, discussed in the Backwards Compatibility section.
-Other new features include more externalized configuration,
-machine management (suspend/resume and windows enhandements),
-MySQL cluster, entitlements enhancements, and pluggable blueprint languages. 
+Other new features include externalized configuration,
+more machine management (suspend/resume and windows enhancements),
+clustered MySQL, entitlements enhancements, and pluggable blueprint languages. 
 
 Thanks go to our community for their improvements, feedback and guidance, and
 to Brooklyn's commercial users for funding much of this development.
