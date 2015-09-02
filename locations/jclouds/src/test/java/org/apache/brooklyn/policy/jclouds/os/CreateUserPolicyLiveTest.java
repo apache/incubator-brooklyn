@@ -73,6 +73,7 @@ public class CreateUserPolicyLiveTest extends BrooklynAppLiveTestSupport {
             app.createAndManageChild(EntitySpec.create(TestEntity.class)
                     .policy(PolicySpec.create(CreateUserPolicy.class)
                             .configure(CreateUserPolicy.GRANT_SUDO, true)
+                            .configure(CreateUserPolicy.RESET_LOGIN_USER, true)
                             .configure(CreateUserPolicy.VM_USERNAME, newUsername)));
             TestEntity entity = (TestEntity) Iterables.getOnlyElement(app.getChildren());
 
