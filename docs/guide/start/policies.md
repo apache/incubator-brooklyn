@@ -6,7 +6,7 @@ layout: website-normal
 
 ### Exploring and Testing Policies
 
-The Demo Web Cluster with DB application is pre-configured with two polices.
+The Demo Web Cluster with DB application is pre-configured with two policies.
 
 The app server cluster has an `AutoScalerPolicy`, and the loadbalancer has a `targets` policy.
 
@@ -23,7 +23,7 @@ The loadbalancer's `targets` policy ensures that the loadbalancer is updated as 
 
 Sitting idle, this cluster will only contain one server, but you can use a tool like [jmeter](http://jmeter.apache.org/) pointed at the nginx endpoint to create load on the cluster. (Download a [jmeter test plan](https://github.com/apache/incubator-brooklyn/blob/master/examples/simple-web-cluster/resources/jmeter-test-plan.jmx).)
 
-As load is added, Brooklyn requests a new cloud machine, creates a new app server, and adds it to the cluster. As load is removed, servers are removed from the cluster, and the infrastructure is handed back to the cloud.
+As load is added, Apache Brooklyn requests a new cloud machine, creates a new app server, and adds it to the cluster. As load is removed, servers are removed from the cluster, and the infrastructure is handed back to the cloud.
 
 
 ### Under the Covers
