@@ -1,11 +1,11 @@
 ---
 layout: website-normal
-title: Installing Brooklyn
+title: Installing Apache Brooklyn
 ---
 
 {% include fields.md %}
 
-Here we present two *alternatives* to install Brooklyn:
+Here we present two *alternatives* to install Apache Brooklyn:
 
 - [Running the *installation script*](#script)
 - [Manual installation](#manual)
@@ -20,9 +20,9 @@ The script assumes that the server is a recent *RHEL/CentOS 6.x Linux* or *Ubunt
 
 The script will install Java 7 and other required packages if they are not present. 
 You must have root access over [passwordless SSH]({{ site.path.guide }}/ops/locations/ssh-keys.html) 
-to install brooklyn, but the service runs as an ordinary user once installed. 
+to install Brooklyn, but the service runs as an ordinary user once installed. 
 
-To manage the brooklyn service you must also be able to connect to port 8081 remotely.
+To manage the Brooklyn service you must also be able to connect to port 8081 remotely.
 
 Once the above prerequisites are satisfied, you should be able to run successfully:
 {% highlight bash %}
@@ -35,7 +35,7 @@ $ ./brooklyn-install.sh -s -r <your-server-ip>
 ## <a id="manual"></a> Manual Installation
 
 1. [Set up the prerequisites](#prerequisites)
-1. [Download Brooklyn](#download)
+1. [Download Apache Brooklyn](#download)
 1. [Configuring brooklyn.properties](#configuring-properties)
 1. [Configuring default.catalog.bom](#configuring-catalog)
 1. [Test the installation](#confirm)
@@ -43,9 +43,9 @@ $ ./brooklyn-install.sh -s -r <your-server-ip>
 
 ### <a id="prerequisites"></a>Set up the Prerequisites
 
-Before installing Apache Brooklyn, it is recommented to configure the host as follows. 
+Before installing Brooklyn, it is recommended to configure the host as follows. 
 
-* install Java JRE or SDK (version 6 or later)
+* install Java JRE or JDK (version 7 or later)
 * install an [SSH key]({{ site.path.guide }}/ops/locations/ssh-keys.html), if not available
 * enable [passwordless ssh login]({{ site.path.guide }}/ops/locations/ssh-keys.html)
 * create a `~/.brooklyn` directory on the host with `$ mkdir ~/.brooklyn`
@@ -53,7 +53,7 @@ Before installing Apache Brooklyn, it is recommented to configure the host as fo
 * check that the [linux kernel entropy]({{ site.path.website }}/documentation/increase-entropy.html) is sufficient
 
 
-### <a id="download"></a>Download Brooklyn
+### <a id="download"></a>Download Apache Brooklyn
 
 Download Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download/).
 
@@ -65,20 +65,20 @@ Expand the `tar.gz` archive:
 
 {% if brooklyn_version contains 'SNAPSHOT' %}
 {% highlight bash %}
-$ tar -zxf brooklyn-dist-{{ site.brooklyn-stable-version }}-timestamp-dist.tar.gz
+$ tar -zxf apache-brooklyn-dist-{{ site.brooklyn-stable-version }}-timestamp-dist.tar.gz
 {% endhighlight %}
 {% else %}
 {% highlight bash %}
-$ tar -zxf brooklyn-{{ site.brooklyn-stable-version }}-dist.tar.gz
+$ tar -zxf apache-brooklyn-{{ site.brooklyn-stable-version }}-dist.tar.gz
 {% endhighlight %}
 {% endif %}
 
-This will create a `brooklyn-{{ site.brooklyn-stable-version }}` folder.
+This will create a `apache-brooklyn-{{ site.brooklyn-stable-version }}` folder.
 
 Let's setup some paths for easy commands.
 
 {% highlight bash %}
-$ cd brooklyn-{{ site.brooklyn-stable-version }}
+$ cd apache-brooklyn-{{ site.brooklyn-stable-version }}
 $ BROOKLYN_DIR="$(pwd)"
 $ export PATH=$PATH:$BROOKLYN_DIR/bin/
 {% endhighlight %}
