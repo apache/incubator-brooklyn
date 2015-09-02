@@ -1,17 +1,17 @@
 ---
-title: Running Brooklyn
-title_in_menu: Running Brooklyn
+title: Running Apache Brooklyn
+title_in_menu: Running Apache Brooklyn
 layout: website-normal
 menu_parent: index.md
 ---
 
 This guide will walk you through deploying an example 3-tier web application to a public cloud. 
 
-This tutorial assumes that you are using Linux or Mac OSX.
+This tutorial assumes that you are using Linux or Mac OS X.
 
-## Install Brooklyn
+## Install Apache Brooklyn
 
-Download Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download/).
+Download Apache Brooklyn and obtain a binary build as described on [the download page]({{site.path.website}}/download/).
 
 {% if brooklyn_version contains 'SNAPSHOT' %}
 Expand the `tar.gz` archive (note: as this is a -SNAPSHOT version, your filename will be slightly different):
@@ -21,15 +21,15 @@ Expand the `tar.gz` archive:
 
 {% if brooklyn_version contains 'SNAPSHOT' %}
 {% highlight bash %}
-$ tar -zxf brooklyn-dist-{{ site.brooklyn-version }}-timestamp-dist.tar.gz
+$ tar -zxf apache-brooklyn-dist-{{ site.brooklyn-version }}-timestamp-dist.tar.gz
 {% endhighlight %}
 {% else %}
 {% highlight bash %}
-$ tar -zxf brooklyn-{{ site.brooklyn-version }}-dist.tar.gz
+$ tar -zxf apache-brooklyn-{{ site.brooklyn-version }}-dist.tar.gz
 {% endhighlight %}
 {% endif %}
 
-This will create a `brooklyn-{{ site.brooklyn-version }}` folder.
+This will create a `apache-brooklyn-{{ site.brooklyn-version }}` folder.
 
 **Note**: You'll need a Java JRE or SDK installed (version 1.7 or later), as Brooklyn is Java under the covers.
 
@@ -37,12 +37,12 @@ This will create a `brooklyn-{{ site.brooklyn-version }}` folder.
 to ensure that your Brooklyn can access your machine.
 
 
-## Launch Brooklyn
+## Launch Apache Brooklyn
 
 Now start Brooklyn with the following command:
 
 {% highlight bash %}
-$ cd brooklyn-{{ site.brooklyn.version }}
+$ cd apache-brooklyn-{{ site.brooklyn.version }}
 $ bin/brooklyn launch
 {% endhighlight %}
 
