@@ -15,6 +15,7 @@ children:
 - tips/logging.md
 - tips/debugging-remote-brooklyn.md
 - rest/rest-api-doc.md
+- { link: "http://brooklyn.incubator.apache.org/v/latest/misc/javadoc", title: "Javadoc" }
 ---
 
 {% comment %}

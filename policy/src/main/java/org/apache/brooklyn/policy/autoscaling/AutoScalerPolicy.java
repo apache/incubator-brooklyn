@@ -68,7 +68,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
  * emitted {@code POOL_COLD} and {@code POOL_HOT} events. Alternatively, the policy can be configured to
  * keep a given metric within a required range.
  * <p>
- * TThis policy does not itself determine whether the pool is hot or cold, but instead relies on these 
+ * This policy does not itself determine whether the pool is hot or cold, but instead relies on these
  * events being emitted by the monitored entity itself, or by another policy that is attached to it; see, 
  * for example, {@link LoadBalancingPolicy}.)
  */
