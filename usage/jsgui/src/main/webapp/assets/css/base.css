@@ -147,7 +147,7 @@ div#catalog-applications-empty {
 }
 
 .navbar .nav>li>a:hover {
-    background-color: #A8B8B0;
+    background-color: #6BB445;
     foreground-color: #261;
     color: #261;
     text-decoration: none;
@@ -166,7 +166,7 @@ div#catalog-applications-empty {
     text-shadow: 0 0px 0;
 }
 .navbar .nav > li > a.active {
-    background-color: #492;
+    background-color: #6BB445;
 }
 
 ul.dropdown-menu {
@@ -324,21 +324,19 @@ input[type="color"]:focus,.uneditable-input:focus {
 
 .roundedSummary {
     float: left;
-    border: 1px solid #d4d4d4;
+    border: 1px solid #6BB445;
     -webkit-border-radius: 15px;
     -moz-border-radius: 15px;
     border-radius: 15px;
-    background-color: #f7f6e8;
+    background-color: #DDDDDD !important;
     margin: 10px 15px 0px 0px;
-    padding: 20px 20px;
     width: 264px;
-    height: 160px;
+    height: 60px;
     line-height: 1.2;
-    font-size: 140%;
-    display: inline-block;
-    text-align: left;
-    background: #f9f9f9 url(../images/roundedSummary-background.png) top
-        repeat-x !important;
+    font-size: 120%;
+    display: inline;
+    text-align: center;
+
 }
 
 .roundedSummary:last-child {
@@ -362,24 +360,31 @@ input[type="color"]:focus,.uneditable-input:focus {
 }
 
 .addApplication {
-    border: 1px solid #a1cb8c !important;
-    color: #505050 !important;
-    background: url(../images/addApplication-plus.png) no-repeat !important;
-    padding: 10px 0px 0px 74px !important;
-    width: 298px !important;
-    height: 201px !important;
+    padding-top: 5px;
+    font-size: 145%;
     margin-right: 0;
+    color: white;
+    background-color: #90C858;
+  *background-color: #609040;
+  background-image: -ms-linear-gradient(top, #90C858, #609040);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#90C858), to(#609040));
+  background-image: -webkit-linear-gradient(top, #90C858, #609040);
+  background-image: -o-linear-gradient(top, #90C858, #609040);
+  background-image: -moz-linear-gradient(top, #90C858, #609040);
+  background-image: linear-gradient(top, #90C858, #609040);
+  background-repeat: repeat-x;
+  border-color: #609040 #609040 #609040;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  filter: progid:dximagetransform.microsoft.gradient(startColorstr='#90C858', endColorstr='#609040', GradientType=0);
+  filter: progid:dximagetransform.microsoft.gradient(enabled=false);
 }
 
 .addApplication:hover {
-    border: 1px solid #58a82e !important;
-    color: #58a82e !important;
-    background: url(../images/addApplication-plus-hover.png) no-repeat
-        !important;
+    border: 1px solid #505050 !important;
 }
 
 .home-summaries-row {
-    padding: 0px 0px 0px 0px !important;
+    padding: 0px 0px 0px 40px !important;
     margin: 0px !important;
 }
 
@@ -435,6 +440,11 @@ input[type="color"]:focus,.uneditable-input:focus {
     vertical-align: middle;
 }
 #applications-table-body a {
+    color: #6BB445;
+    text-decoration: underline;
+    
+}
+#applications-table-body a:hover {
     color: inherit;
 }
 .apps-summary-container {
