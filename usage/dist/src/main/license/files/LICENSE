@@ -225,10 +225,6 @@ This project includes the software: ch.qos.logback
   Developed by: QOS.ch (http://www.qos.ch)
   Used under the following license: Eclipse Public License, version 1.0 (http://www.eclipse.org/legal/epl-v10.html)
 
-This project includes the software: com.beust
-  Available at: http://beust.com/jcommander
-  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
-
 This project includes the software: com.fasterxml.jackson
   Available at: http://wiki.fasterxml.com/JacksonHome http://wiki.fasterxml.com/JacksonJAXBAnnotations
   Developed by: FasterXML (http://fasterxml.com/)
@@ -446,7 +442,7 @@ This project includes the software: org.99soft.guice
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.brooklyn
-  Available at: https://brooklyn.incubator.apache.org/brooklyn-parent/
+  Available at: https://brooklyn.incubator.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
@@ -548,6 +544,12 @@ This project includes the software: org.yaml
   Used under the following license: Apache License, version 2.0 (in-project reference: LICENSE.txt)
 
 This project includes the software: require.js
+  Available at: http://github.com/jrburke/requirejs for details
+  Developed by: The Dojo Foundation (http://dojofoundation.org/)
+  Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
+  Copyright (c) The Dojo Foundation (2010-2012)
+
+This project includes the software: require.js/r.js
   Available at: http://github.com/jrburke/requirejs for details
   Developed by: The Dojo Foundation (http://dojofoundation.org/)
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
