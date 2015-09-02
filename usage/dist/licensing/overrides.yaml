@@ -114,6 +114,16 @@
   notice: Copyright (c) The Dojo Foundation (2010-2012)
   license: MIT
 
+- id: require.js/r.js
+  # new ID because this is a different version to the above
+  name: RequireJS (r.js maven plugin)
+  files: r.js
+  version: 2.1.6 
+  url: http://github.com/jrburke/requirejs for details
+  organization: { name: "The Dojo Foundation", url: "http://dojofoundation.org/" }
+  notice: Copyright (c) The Dojo Foundation (2010-2012)
+  license: MIT
+
 - id: backbone.js
   version: 1.0.0
   url: http://backbonejs.org

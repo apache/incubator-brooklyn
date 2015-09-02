@@ -25,6 +25,7 @@
 - id: Swagger JS
 - id: Swagger UI
 - id: require.js
+- id: require.js/r.js
 - id: backbone.js
 - id: bootstrap.js
 - id: underscore.js
