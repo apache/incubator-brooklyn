@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableMap;
  */
 public class CatalogServiceTypeResolver extends BrooklynServiceTypeResolver {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
 
     // TODO currently a hardcoded list of aliases; would like that to come from mgmt somehow

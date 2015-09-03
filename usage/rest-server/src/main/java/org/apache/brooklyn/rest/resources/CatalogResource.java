@@ -226,6 +226,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     public List<CatalogItemSummary> listApplications(String regex, String fragment, boolean allVersions) {
+        @SuppressWarnings("unchecked")
         Predicate<CatalogItem<Application, EntitySpec<? extends Application>>> filter =
                 Predicates.and(
                         CatalogPredicates.IS_TEMPLATE,

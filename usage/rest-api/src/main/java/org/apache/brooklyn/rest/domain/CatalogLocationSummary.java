@@ -28,6 +28,8 @@ import com.google.common.collect.ImmutableSet;
 
 public class CatalogLocationSummary extends CatalogItemSummary {
 
+    private static final long serialVersionUID = 8420991584336514673L;
+    
     private final Set<LocationConfigSummary> config;
 
     public CatalogLocationSummary(

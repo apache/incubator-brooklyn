@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JavaServiceTypeResolver extends BrooklynServiceTypeResolver {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
 
     @Override

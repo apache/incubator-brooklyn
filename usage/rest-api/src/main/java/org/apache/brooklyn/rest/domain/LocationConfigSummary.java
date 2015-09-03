@@ -30,6 +30,8 @@ import com.google.common.collect.ImmutableMap;
 
 public class LocationConfigSummary extends ConfigSummary {
 
+    private static final long serialVersionUID = 2232321501735217002L;
+    
     @JsonSerialize(include = Inclusion.NON_NULL)
     private final Map<String, URI> links;
 
@@ -58,5 +60,5 @@ public class LocationConfigSummary extends ConfigSummary {
                 + "name='" + getName() + '\''
                 + ", type='" + getType() + '\''
                 + '}';
-  }
+    }
 }

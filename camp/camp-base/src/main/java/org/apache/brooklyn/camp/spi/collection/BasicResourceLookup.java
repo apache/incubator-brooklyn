@@ -47,7 +47,7 @@ public class BasicResourceLookup<T extends AbstractResource> extends AbstractRes
         links.put(item.getId(), newLink(item.getId(), item.getName()));
     }
     
-    public synchronized void addAll(T... items) {
+    public synchronized void addAll(@SuppressWarnings("unchecked") T... items) {
         for (T item: items) add(item);
     }
     
@@ -62,6 +62,7 @@ public class BasicResourceLookup<T extends AbstractResource> extends AbstractRes
         return links.remove(id)!=null;
     }
     
+    @SafeVarargs
     public static <T extends AbstractResource> BasicResourceLookup<T> of(T ...items) {
         BasicResourceLookup<T> result = new BasicResourceLookup<T>();
         for (T item: items) result.add(item);
