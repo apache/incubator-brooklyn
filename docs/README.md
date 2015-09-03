@@ -247,7 +247,8 @@ you've done that these commands might be useful:
 
     cd ${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
     svn add * --force
-    svn rm $( svn status | sed -e '/^!/!d' -e 's/^!//' )
+    export DELETIONS=$( svn status | sed -e '/^!/!d' -e 's/^!//' )
+    if [ ! -z "${DELETIONS}" ] ; then svn rm ${DELETIONS} ; fi
 
 Then check in the changes (probably picking a better message than shown here):
 
