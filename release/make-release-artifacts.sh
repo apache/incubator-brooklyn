@@ -43,6 +43,8 @@ release.
                              include the suffix. Therefore, turning a release
                              candidate into a release requires only renaming
                              the artifacts.
+  -y                         answers "y" to all questions automatically, to
+                             use defaults and make this suitable for batch mode
 
 Specifying the RC number is required. Specifying the version number is
 discouraged; if auto detection is not working, then this script is buggy.
@@ -53,15 +55,19 @@ END
 ###############################################################################
 confirm() {
     # call with a prompt string or use a default
-    read -r -p "${1:-Are you sure? [y/N]} " response
-    case $response in
+    if [ "${batch_confirm_y}" == "true" ] ; then
+        true
+    else
+      read -r -p "${1:-Are you sure? [y/N]} " response
+      case $response in
         [yY][eE][sS]|[yY]) 
             true
             ;;
         *)
             false
             ;;
-    esac
+      esac
+    fi
 }
 
 ###############################################################################
@@ -83,7 +89,7 @@ detect_version() {
 # Argument parsing
 rc_suffix=
 OPTIND=1
-while getopts "h?v:r:" opt; do
+while getopts "h?v:r:y?" opt; do
     case "$opt" in
         h|\?)
             show_help
@@ -94,6 +100,9 @@ while getopts "h?v:r:" opt; do
             ;;
         r)
             rc_suffix=$OPTARG
+            ;;
+        y)
+            batch_confirm_y=true
             ;;
         *)
             show_help
@@ -169,9 +178,13 @@ echo "Proceeding to build binary release"
 set -x
 
 # Set up GPG agent
-eval $(gpg-agent --daemon --no-grab --write-env-file $HOME/.gpg-agent-info)
-GPG_TTY=$(tty)
-export GPG_TTY GPG_AGENT_INFO
+if ps x | grep [g]pg-agent ; then
+  echo "gpg-agent already running; assuming it is set up and exported correctly."
+else
+  eval $(gpg-agent --daemon --no-grab --write-env-file $HOME/.gpg-agent-info)
+  GPG_TTY=$(tty)
+  export GPG_TTY GPG_AGENT_INFO
+fi
 
 # Workaround for bug BROOKLYN-1
 ( cd ${staging_dir} && mvn clean --projects :brooklyn-archetype-quickstart )
