@@ -15,6 +15,13 @@ The release script will:
 The script has a single required parameter `-r` which is given the release candidate number - so `-r1` will create
 release candidate 1 and will name the artifacts appropriately.
 
+Before running this however, it is a good idea to check the `apache-release` profile build is healthy.
+This will catch glitches such as PGP or javadoc problems without doing time-consuming uploads:
+
+{% highlight bash %}
+mvn clean install -Papache-release
+{% endhighlight %}
+
 To run the script:
 
 {% highlight bash %}
