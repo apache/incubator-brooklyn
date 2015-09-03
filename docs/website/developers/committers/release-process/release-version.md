@@ -32,9 +32,7 @@ git checkout -b $VERSION_NAME
 git push -u apache $VERSION_NAME
 {% endhighlight %}
 
-Now change the version numbers throughout the repository using the script `release/change-version.sh`.
-
-Example:
+Now change the version numbers in this branch throughout the project using the script `release/change-version.sh` and commit it:
 
 {% highlight bash %}
 ./release/change-version.sh BROOKLYN $OLD_MASTER_VERSION $VERSION_NAME
@@ -43,6 +41,7 @@ git add .
 git commit -m "Change version to $VERSION_NAME"
 git push
 {% endhighlight %}
+
 
 
 Update the version on master
