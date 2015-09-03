@@ -131,8 +131,8 @@ fi
 
 release_script_dir=$( cd $( dirname $0 ) && pwd )
 brooklyn_dir=$( pwd )
-staging_dir="${brooklyn_dir}/src-release-tmp/${release_name}-src"
-bin_staging_dir="${brooklyn_dir}/bin-release-tmp/${release_name}-bin"
+staging_dir="${release_script_dir}/tmp/working-src/${release_name}-src"
+bin_staging_dir="${release_script_dir}/tmp/working-bin/${release_name}-bin"
 artifact_dir="${release_script_dir}/${artifact_name}"
 
 echo "The version is ${current_version}"
