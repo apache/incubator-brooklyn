@@ -162,7 +162,7 @@ git clean -dxf
 echo "Creating source release folder ${release_name}"
 set -x
 mkdir -p ${staging_dir}
-rsync -rtp --exclude src-release-tmp --exclude bin-release-tmp --exclude .git\* --exclude '**/*.[ejw]ar' --exclude docs/ . ${staging_dir}
+rsync -rtp --exclude src-release-tmp --exclude bin-release-tmp --exclude .git\* --exclude '**/*.[ejw]ar' --exclude docs/ sandbox/ release/ . ${staging_dir}
 
 mkdir -p ${artifact_dir}
 set +x
