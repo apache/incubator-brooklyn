@@ -665,6 +665,7 @@
                         <author>false</author>
                         <quiet>true</quiet>
                         <aggregate>false</aggregate>
+                        <failOnError>false</failOnError>
                         <detectLinks />
                         <tags>
                             <tag>
