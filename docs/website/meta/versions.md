@@ -18,17 +18,9 @@ This documentation was generated {{ site.time | date_to_string }}.
 
 Apache Brooklyn has made the following releases:
 
-* **0.7.0-incubating**: New policies, more clouds, improved Windows support and many other improvements. Apache-endorsed binary release! (July 2015)
-  * [User guide](/v/0.7.0-incubating/), download via mirrors
-    &laquo;<a href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/apache-brooklyn-0.7.0-incubating/apache-brooklyn-0.7.0-incubating-bin.tar.gz">bin.tar.gz</a>&raquo;
-    &laquo;<a href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/apache-brooklyn-0.7.0-incubating/apache-brooklyn-0.7.0-incubating-bin.zip">bin.zip</a>&raquo;
-    &laquo;<a href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/apache-brooklyn-0.7.0-incubating/apache-brooklyn-0.7.0-incubating-src.tar.gz">src.tar.gz</a>&raquo;
-    &laquo;<a href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/apache-brooklyn-0.7.0-incubating/apache-brooklyn-0.7.0-incubating-src.zip">src.zip</a>&raquo;
+* **[0.7.0-incubating](/v/0.7.0-incubating/)**: New policies, more clouds, improved Windows support and many other improvements. Apache-endorsed binary release! (July 2015)
 
-* **0.7.0-M2-incubating**: YAML, persistence, Chef, Windows, Docker. The first Apache release! (December 2014)
-  * [User guide](/v/0.7.0-M2-incubating/), download via mirrors
-    &laquo;<a href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/0.7.0-M2-incubating/apache-brooklyn-0.7.0-M2-incubating.tar.gz">src.tar.gz</a>&raquo;
-
+* **[0.7.0-M2-incubating](/v/0.7.0-M2-incubating/)**: YAML, persistence, Chef, Windows, Docker. The first Apache release! (December 2014)
 
 Note: These "Version History" links are to permanent versions in the archive,
 different to the "Current Version" links.
