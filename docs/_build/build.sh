@@ -170,7 +170,7 @@ function test_site() {
     return
   fi
   echo "Running htmlproof on _site"
-  mkdir -p target
+  mkdir -p _build/target
   HTMLPROOF_LOG="_build/target/htmlproof.log"
   if [ "$QUICK_HTMLPROOF" == "true" ]; then
     HTMLPROOF_OPTS="$HTMLPROOF_OPTS --disable_external"
