@@ -44,6 +44,7 @@ run for example `/vagrant/make-release/artifacts.sh`.
 Pull request reporting
 ----------------------
 
-`pr_report.rb` (and associated files `Gemfile` and `Gemfile.lock`) uses the GitHub API to extract a list of open pull
+The files in `pull-request-reports`, mainly `pr_report.rb` 
+(and associated files `Gemfile` and `Gemfile.lock`) uses the GitHub API to extract a list of open pull
 requests, and writes a summary into `pr_report.tsv`. This could then be imported into Google Sheets to provide a handy
 way of classifying and managing outstanding PRs ahead of making a release.

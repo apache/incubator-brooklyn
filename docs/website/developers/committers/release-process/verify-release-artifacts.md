@@ -36,10 +36,12 @@ curl https://dist.apache.org/repos/dist/release/incubator/brooklyn/KEYS | gpg2 -
 {% endhighlight %}
 
 
-Verify the hashes and signatures of artifacts
----------------------------------------------
+Download the artifacts
+----------------------
 
-If the releases have been published to the pre-release area, download them:
+If you've just built the RC, simply go to that directory and skip this step.
+
+If you're verifying a build someone else has made, first download the files including all keys using:
 
 {% highlight bash %}
 TEMP_DIR=~/tmp/brooklyn/release/${VERSION_NAME}-rc${RC_NUMBER}
@@ -56,7 +58,14 @@ for ext in -src.tar.gz -src.zip -bin.tar.gz -bin.zip; do
 done
 {% endhighlight %}
 
-Then verify the hashes, and ensure you get a positive message from each one:
+(Alternatively if you have `apache-dist-dev-repo` checked out,
+you can do an `svn up` in there and `cd apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER}`.)
+
+
+Verify the hashes and signatures of artifacts
+---------------------------------------------
+
+Then check the hashes and signatures, ensuring you get a positive message from each one:
 
 {% highlight bash %}
 for ext in -src.tar.gz -src.zip -bin.tar.gz -bin.zip; do
