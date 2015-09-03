@@ -48,6 +48,9 @@ release.
 
 Specifying the RC number is required. Specifying the version number is
 discouraged; if auto detection is not working, then this script is buggy.
+
+Additionally if APACHE_DIST_SVN_DIR is set, this will transfer artifacts to
+that directory and svn commit them.
 END
 # ruler                      --------------------------------------------------
 }
@@ -131,15 +134,22 @@ fi
 
 release_script_dir=$( cd $( dirname $0 ) && pwd )
 brooklyn_dir=$( pwd )
-staging_dir="${release_script_dir}/tmp/working-src/${release_name}-src"
-bin_staging_dir="${release_script_dir}/tmp/working-bin/${release_name}-bin"
-artifact_dir="${release_script_dir}/${artifact_name}"
+rm -rf ${release_script_dir}/tmp
+staging_dir="${release_script_dir}/tmp/source/"
+src_staging_dir="${release_script_dir}/tmp/source/${release_name}-src"
+bin_staging_dir="${release_script_dir}/tmp/bin/"
+artifact_dir="${release_script_dir}/tmp/${artifact_name}"
 
 echo "The version is ${current_version}"
 echo "The rc suffix is rc${rc_suffix}"
 echo "The release name is ${release_name}"
 echo "The artifact name is ${artifact_name}"
 echo "The artifact directory is ${artifact_dir}"
+if [ ! -z "${APACHE_DIST_SVN_DIR}" ] ; then
+  echo "The artifacts will be copied and uploaded via ${APACHE_DIST_SVN_DIR}"
+else
+  echo "The artifacts will not be copied and uploaded to the svn repo"
+fi
 echo ""
 confirm "Is this information correct? [y/N]" || exit
 echo ""
@@ -161,15 +171,17 @@ git clean -dxf
 # Source release
 echo "Creating source release folder ${release_name}"
 set -x
-mkdir -p ${staging_dir}
-rsync -rtp --exclude src-release-tmp --exclude bin-release-tmp --exclude .git\* --exclude '**/*.[ejw]ar' --exclude docs/ sandbox/ release/ . ${staging_dir}
+mkdir -p ${src_staging_dir}
+mkdir -p ${bin_staging_dir}
+rsync -rtp --exclude .git\* --exclude docs/ --exclude sandbox/ --exclude release/ . ${staging_dir}/${release_name}-src
 
+rm -rf ${artifact_dir}
 mkdir -p ${artifact_dir}
 set +x
-echo "Creating artifact ${artifact_dir}/${artifact_name}.tar.gz and .zip"
+echo "Creating artifact ${artifact_dir}/${artifact_name}-src.tar.gz and .zip"
 set -x
-( cd src-release-tmp && tar czf ${artifact_dir}/${artifact_name}-src.tar.gz apache-brooklyn-${current_version}-src )
-( cd src-release-tmp && zip -qr ${artifact_dir}/${artifact_name}-src.zip apache-brooklyn-${current_version}-src )
+( cd ${staging_dir} && tar czf ${artifact_dir}/${artifact_name}-src.tar.gz ${release_name}-src )
+( cd ${staging_dir} && zip -qr ${artifact_dir}/${artifact_name}-src.zip ${release_name}-src )
 
 ###############################################################################
 # Binary release
@@ -187,25 +199,26 @@ else
 fi
 
 # Workaround for bug BROOKLYN-1
-( cd ${staging_dir} && mvn clean --projects :brooklyn-archetype-quickstart )
+( cd ${src_staging_dir} && mvn clean --projects :brooklyn-archetype-quickstart )
 
 # Perform the build and deploy to Nexus staging repository
-( cd ${staging_dir} && mvn deploy -Papache-release )
+( cd ${src_staging_dir} && mvn deploy -Papache-release )
+## To test the script without a big deploy, use the line below instead of above
+#( cd ${src_staging_dir} && cd usage/dist && mvn clean install )
 
 # Re-pack the archive with the correct names
-mkdir -p bin-release-tmp
-tar xzf ${staging_dir}/usage/dist/target/brooklyn-dist-${current_version}-dist.tar.gz -C bin-release-tmp
-mv bin-release-tmp/brooklyn-dist-${current_version} bin-release-tmp/apache-brooklyn-${current_version}-bin
+tar xzf ${src_staging_dir}/usage/dist/target/brooklyn-dist-${current_version}-dist.tar.gz -C ${bin_staging_dir}
+mv ${bin_staging_dir}/brooklyn-dist-${current_version} ${bin_staging_dir}/${release_name}-bin
 
-( cd bin-release-tmp && tar czf ${artifact_dir}/${artifact_name}-bin.tar.gz apache-brooklyn-${current_version}-bin )
-( cd bin-release-tmp && zip -qr ${artifact_dir}/${artifact_name}-bin.zip apache-brooklyn-${current_version}-bin )
+( cd ${bin_staging_dir} && tar czf ${artifact_dir}/${artifact_name}-bin.tar.gz ${release_name}-bin )
+( cd ${bin_staging_dir} && zip -qr ${artifact_dir}/${artifact_name}-bin.zip ${release_name}-bin )
 
 ###############################################################################
 # Signatures and checksums
 
 # OSX doesn't have sha256sum, even if MacPorts md5sha1sum package is installed.
 # Easy to fake it though.
-which sha256sum >/dev/null || alias sha256sum='shasum -a 256'
+which sha256sum >/dev/null || alias sha256sum='shasum -a 256' && shopt -s expand_aliases
 
 ( cd ${artifact_dir} &&
     for a in *.tar.gz *.zip; do
@@ -215,6 +228,18 @@ which sha256sum >/dev/null || alias sha256sum='shasum -a 256'
         gpg2 --armor --output ${a}.asc --detach-sig ${a}
     done
 )
+
+###############################################################################
+
+if [ ! -z "${APACHE_DIST_SVN_DIR}" ] ; then
+  pushd ${APACHE_DIST_SVN_DIR}
+  rm -rf ${artifact_name}
+  cp -r ${artifact_dir} ${artifact_name}
+  svn add ${artifact_name}
+  svn commit --message "Add ${artifact_name} artifacts for incubator/brooklyn"
+  artifact_dir=${APACHE_DIST_SVN_DIR}/${artifact_name}
+  popd
+fi
 
 ###############################################################################
 # Conclusion
