@@ -42,7 +42,7 @@ javadoc -sourcepath $SOURCE_PATHS \
   -footer '<b>Apache Brooklyn - Multi-Cloud Application Management</b> <br/> <a href="http://brooklyn.io/" target="_top">brooklyn.io</a>. Apache License. &copy; '$YEARSTAMP'.' \
 2>&1 1>/dev/null | tee target/javadoc.log
 
-if ((${PIPESTATUS[0]})) ; then echo ; echo ; echo "ERROR: javadoc process exited non-zero" ; exit 1 ; fi
+if ((${PIPESTATUS[0]})) ; then echo ; echo ; echo "wARNING: javadoc process exited non-zero" ; echo ; echo ; fi
 echo ; echo
 
 if [ ! -f target/$JAVADOC_TARGET1_SUBPATH/org/apache/brooklyn/api/entity/Entity.html ]; then echo "ERROR: missing expected content. Are the paths right?" ; exit 1 ; fi
