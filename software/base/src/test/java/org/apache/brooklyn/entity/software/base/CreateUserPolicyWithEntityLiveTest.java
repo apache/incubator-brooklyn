@@ -26,9 +26,6 @@ import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
 import org.apache.brooklyn.policy.jclouds.os.CreateUserPolicy;
-import org.apache.brooklyn.util.core.internal.ssh.SshException;
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -50,22 +47,18 @@ public class CreateUserPolicyWithEntityLiveTest extends BrooklynAppLiveTestSuppo
         location = (JcloudsSshMachineLocation)((JcloudsLocation)mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-east-1", config)).obtain();
     }
 
-    @Test(groups = "Live", expectedExceptions = SshException.class)
+    @Test(groups = "Live")
     public void testBlueprintWithCreateUserPolicy() throws Throwable {
-        try {
-            app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
-                    .configure(VanillaSoftwareProcess.INSTALL_COMMAND, "echo install command")
-                    .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "echo launch command")
-                    .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "echo check running")
-                    .policy(
-                            PolicySpec.create(CreateUserPolicy.class)
-                                    .configure("user", "newBrooklynUser")
-                    ));
+        app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
+                .configure(VanillaSoftwareProcess.INSTALL_COMMAND, "echo install command")
+                .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "echo launch command")
+                .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "echo check running")
+                .policy(
+                        PolicySpec.create(CreateUserPolicy.class)
+                                .configure("user", "newBrooklynUser")
+                ));
 
-            app.start(ImmutableList.of(location));
-        } catch(PropagatedRuntimeException e) {
-            throw Exceptions.getFirstInteresting(e);
-        }
+        app.start(ImmutableList.of(location));
     }
 
     @Test(groups = "Live")
