@@ -29,6 +29,24 @@ When working with these folders, **make sure you are working with the correct on
 pre-release software to the global release mirror network!
 
 
+Software packages
+-----------------
+
+The following software packages are required during the build. Make sure you have them installed.
+
+- A Java Development Kit, version 1.7
+- `maven` and `git`
+- `xmlstarlet` is required by the release script to process version numbers in `pom.xml` files;
+  on mac, `port install xmlstarlet` should do the trick.
+- `zip` and `unzip`
+- `gnupg2`, and `gnupg-agent` if it is packaged separately (it is on Ubuntu Linux)
+- `pinentry` for secure entry of GPG passphrases. If you are building remotely on a Linux machine, `pinentry-curses` is
+  recommended; building on a mac, `port install pinentry-mac` is recommended.
+- `md5sum` and `sha1sum` - these are often present by default on Linux, but not on Mac;
+  `port install md5sha1sum` should remedy that.
+- if `gpg` does not resolve (it is needed for maven), create an alias or script pointing at `gpg2 "$@"`
+
+
 GPG keys
 --------
 
@@ -65,23 +83,15 @@ References:
 * [Post on the general@incubator list](https://mail-archives.apache.org/mod_mbox/incubator-general/201410.mbox/%3CCAOGo0VawupMYRWJKm%2Bi%2ByMBqDQQtbv-nQkfRud5%2BV9PusZ2wnQ%40mail.gmail.com%3E)
 * [GPG cheatsheet](http://irtfweb.ifa.hawaii.edu/~lockhart/gpg/gpg-cs.html)
 
+If you experience trouble with PGP subsequently (when running maven):
+* On Mac make sure that `~/.gnupg/gpg-agent.conf` refers to the right file for `pinentry-program`;
+  it must point at a *binary* and preferably a pop-up which is keychain-aware,
+  such as with macports `/Applications/MacPorts/pinentry-mac.app/Contents/MacOS/pinentry-mac`
+* When the `pinentry` dialog pops up, tick to "Save to keychain", otherwise it will keep popping up
+  and may time out and fail the build
+* See [GnuPG/Pinentry Enigmail debugging](https://www.enigmail.net/support/gnupg2_issues.php) for tips on diagnosing gpg-agent communication (from the process to this agent and from this agent to the pinentry program)
+* See [GnuPG Agent Options](https://www.gnupg.org/documentation/manuals/gnupg/Agent-Options.html) for extended gpg-agent debug
 
-Software packages
------------------
-
-The following software packages are required during the build. Make sure you have them installed.
-
-- A Java Development Kit, version 1.7
-- `maven` and `git`
-- `xmlstarlet` is required by the release script to process version numbers in `pom.xml` files;
-  on mac, `port install xmlstarlet` should do the trick.
-- `zip` and `unzip`
-- `pinentry` for secure entry of GPG passphrases. If you are building remotely on a Linux machine, `pinentry-curses` is
-  recommended; building on a mac, `port install pinentry-mac` is recommended.
-- `gnupg2`, and `gnupg-agent` if it is packaged separately (it is on Ubuntu Linux)
-- `md5sum` and `sha1sum` - these are often present by default on Linux, but not on Mac;
-  `port install md5sha1sum` should remedy that.
-- if `gpg` does not resolve (it is needed for maven), create an alias or script pointing at `gpg2 "$@"`
 
 Maven configuration
 -------------------
