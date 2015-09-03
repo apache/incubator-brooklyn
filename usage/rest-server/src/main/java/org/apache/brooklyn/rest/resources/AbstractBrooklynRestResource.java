@@ -22,14 +22,11 @@ import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 
-import org.codehaus.jackson.map.ObjectMapper;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
-import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
@@ -37,6 +34,7 @@ import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Duration;
+import org.codehaus.jackson.map.ObjectMapper;
 
 public abstract class AbstractBrooklynRestResource implements ManagementContextInjectable {
 

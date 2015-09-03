@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.api.sensor;
 
-import java.util.Map;
-
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.EnricherMemento;

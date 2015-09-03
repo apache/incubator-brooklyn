@@ -35,6 +35,7 @@ import org.apache.brooklyn.util.text.Strings;
  */
 public class ChefServiceTypeResolver extends BrooklynServiceTypeResolver {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
 
     @Override

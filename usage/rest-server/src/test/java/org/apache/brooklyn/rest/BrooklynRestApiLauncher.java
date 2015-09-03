@@ -131,7 +131,7 @@ public class BrooklynRestApiLauncher {
      * Runs the server with the given set of filters. 
      * Overrides any previously supplied set (or {@link #DEFAULT_FILTERS} which is used by default).
      */
-    public BrooklynRestApiLauncher filters(Class<? extends Filter>... filters) {
+    public BrooklynRestApiLauncher filters(@SuppressWarnings("unchecked") Class<? extends Filter>... filters) {
         this.filters = Lists.newArrayList(filters);
         return this;
     }

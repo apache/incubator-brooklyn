@@ -20,8 +20,6 @@ package org.apache.brooklyn.cli;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-import io.airlift.command.Cli;
-import io.airlift.command.ParseException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -29,16 +27,17 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
 
-import org.apache.brooklyn.cli.Main;
 import org.apache.brooklyn.cli.AbstractMain.BrooklynCommand;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
-import org.apache.brooklyn.cli.AbstractMain.BrooklynCommand;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+
+import io.airlift.command.Cli;
+import io.airlift.command.ParseException;
 
 public class CloudExplorerLiveTest {
 

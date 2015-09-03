@@ -35,6 +35,6 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface Rebindable {
 
-    public RebindSupport getRebindSupport();
+    public RebindSupport<?> getRebindSupport();
     
 }
