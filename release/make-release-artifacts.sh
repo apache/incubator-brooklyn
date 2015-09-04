@@ -173,7 +173,13 @@ echo "Creating source release folder ${release_name}"
 set -x
 mkdir -p ${src_staging_dir}
 mkdir -p ${bin_staging_dir}
-rsync -rtp --exclude .git\* --exclude docs/ --exclude sandbox/ --exclude release/ . ${staging_dir}/${release_name}-src
+# exclude: 
+# * docs (which isn't part of the release, and adding license headers to js files is cumbersome)
+# * sandbox (which hasn't been vetted so thoroughly)
+# * release (where this is running, and people who *have* the release don't need to make it)
+# * jars and friends (these are sometimes included for tests, but those are marked as skippable,
+#     and apache convention does not allow them in source builds; see PR #365
+rsync -rtp --exclude .git\* --exclude docs/ --exclude sandbox/ --exclude release/ --exclude '**/*.[ejw]ar' . ${staging_dir}/${release_name}-src
 
 rm -rf ${artifact_dir}
 mkdir -p ${artifact_dir}
