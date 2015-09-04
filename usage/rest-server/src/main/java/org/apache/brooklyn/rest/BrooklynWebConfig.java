@@ -25,6 +25,7 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.ConfigPredicates;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
 import org.apache.brooklyn.rest.security.provider.ExplicitUsersSecurityProvider;
+import org.apache.brooklyn.rest.security.provider.SecurityProvider;
 
 public class BrooklynWebConfig {
 
@@ -39,6 +40,8 @@ public class BrooklynWebConfig {
     public final static ConfigKey<String> SECURITY_PROVIDER_CLASSNAME = ConfigKeys.newStringConfigKey(
             BASE_NAME_SECURITY+".provider", "class name of a Brooklyn SecurityProvider",
             ExplicitUsersSecurityProvider.class.getCanonicalName());
+    public final static ConfigKey<SecurityProvider> SECURITY_PROVIDER_INSTANCE = ConfigKeys.newConfigKey(SecurityProvider.class,
+            SECURITY_PROVIDER_CLASSNAME.getName()+".internal.instance", "instance of a pre-configured security provider");
     
     /**
      * Explicitly set the users/passwords, e.g. in brooklyn.properties:

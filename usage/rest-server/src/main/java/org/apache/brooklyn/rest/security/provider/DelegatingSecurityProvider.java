@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.StringConfigMap;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.util.text.Strings;
 
@@ -67,6 +68,12 @@ public class DelegatingSecurityProvider implements SecurityProvider {
     private synchronized SecurityProvider loadDelegate() {
         StringConfigMap brooklynProperties = mgmt.getConfig();
 
+        SecurityProvider presetDelegate = brooklynProperties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_INSTANCE);
+        if (presetDelegate!=null) {
+            log.info("REST using pre-set security provider " + presetDelegate);
+            return presetDelegate;
+        }
+        
         String className = brooklynProperties.getConfig(BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME);
 
         if (delegate != null && BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig())) {
@@ -107,6 +114,9 @@ public class DelegatingSecurityProvider implements SecurityProvider {
             log.warn("REST unable to instantiate security provider " + className + "; all logins are being disallowed", e);
             delegate = new BlackholeSecurityProvider();
         }
+        
+        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_INSTANCE, delegate);
+        
         return delegate;
     }
 
