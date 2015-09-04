@@ -25,6 +25,9 @@ svn add apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER}
 svn commit --message "Add apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER} to dist/dev/incubator/brooklyn"
 {% endhighlight %}
 
+These steps can be performed as part of the `make-release-artifacts.sh` script used earlier
+if `${APACHE_DIST_SVN_DIR}` points to the appropriate subversion directory.
+
 
 Close the staging repository on Apache's Nexus server
 -----------------------------------------------------

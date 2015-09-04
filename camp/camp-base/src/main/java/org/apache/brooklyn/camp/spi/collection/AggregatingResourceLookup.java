@@ -27,6 +27,7 @@ public class AggregatingResourceLookup<T extends AbstractResource> extends Abstr
 
     List<ResourceLookup<T>> targets = new ArrayList<ResourceLookup<T>>();
     
+    @SafeVarargs
     public static <T extends AbstractResource> AggregatingResourceLookup<T> of(ResourceLookup<T> ...targets) {
         AggregatingResourceLookup<T> result = new AggregatingResourceLookup<T>();
         for (ResourceLookup<T> item: targets) result.targets.add(item);
@@ -52,5 +53,5 @@ public class AggregatingResourceLookup<T extends AbstractResource> extends Abstr
         for (ResourceLookup<T> item: targets) result.addAll(item.links());
         return result;
     }
-    
+
 }

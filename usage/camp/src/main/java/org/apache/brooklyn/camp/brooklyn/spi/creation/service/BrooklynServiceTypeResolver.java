@@ -18,10 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Map;
-
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -33,12 +29,9 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationRe
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
-import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Optional;
 
 /**
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code brooklyn:}
@@ -46,6 +39,7 @@ import com.google.common.base.Optional;
  */
 public class BrooklynServiceTypeResolver implements ServiceTypeResolver {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
     
     public BrooklynServiceTypeResolver() {

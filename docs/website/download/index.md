@@ -25,8 +25,8 @@ A pre-built package that contains Apache Brooklyn and all of its dependencies in
 **Choose your preferred file format to see the list of mirrors where you can download this file.**
 
 <div class="text-center">
-  <a class="btn btn-default" href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/apache-brooklyn-{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}-bin.tar.gz" role="button">Tarball</a>
-  <a class="btn btn-default" href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/apache-brooklyn-{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}-bin.zip" role="button">Zip</a>
+  <a class="btn btn-default" href="https://www.apache.org/dyn/closer.lua/incubator/brooklyn/apache-brooklyn-{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}-bin.tar.gz" role="button">Tarball</a>
+  <a class="btn btn-default" href="https://www.apache.org/dyn/closer.lua/incubator/brooklyn/apache-brooklyn-{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}-bin.zip" role="button">Zip</a>
   <br /><small>These are not direct download links, sorry</small>
 </div>
   </div>
@@ -49,8 +49,8 @@ contribute code changes to Apache Brooklyn, we recommend you get the source code
 **Choose your preferred file format to see the list of mirrors where you can download this file.**
 
 <div class="text-center">
-  <a class="btn btn-default" href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/apache-brooklyn-{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}-src.tar.gz" role="button">Tarball</a>
-  <a class="btn btn-default" href="https://www.apache.org/dyn/closer.cgi/incubator/brooklyn/apache-brooklyn-{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}-src.zip" role="button">Zip</a>
+  <a class="btn btn-default" href="https://www.apache.org/dyn/closer.lua/incubator/brooklyn/apache-brooklyn-{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}-src.tar.gz" role="button">Tarball</a>
+  <a class="btn btn-default" href="https://www.apache.org/dyn/closer.lua/incubator/brooklyn/apache-brooklyn-{{ site.brooklyn-stable-version }}/apache-brooklyn-{{ site.brooklyn-stable-version }}-src.zip" role="button">Zip</a>
   <br /><small>These are not direct download links, sorry</small>
 </div>
   </div>

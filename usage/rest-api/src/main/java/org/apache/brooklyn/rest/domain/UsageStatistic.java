@@ -18,16 +18,15 @@
  */
 package org.apache.brooklyn.rest.domain;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.io.Serializable;
+import java.util.Map;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
-
-import java.io.Serializable;
-import java.net.URI;
-import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * @author Adam Lowe

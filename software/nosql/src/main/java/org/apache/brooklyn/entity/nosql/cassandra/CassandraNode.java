@@ -98,6 +98,7 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     // some of the cassandra tooing (eg nodetool) use RMI, but we want JMXMP, so do both!
     ConfigKey<JmxAgentModes> JMX_AGENT_MODE = ConfigKeys.newConfigKeyWithDefault(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.JMXMP_AND_RMI);
     
+    // TODO the multicloud-snitch has to be built manually, it is available in the brooklyn sandbox
     @SetFromFlag("customSnitchJarUrl")
     ConfigKey<String> CUSTOM_SNITCH_JAR_URL = ConfigKeys.newStringConfigKey("cassandra.config.customSnitchUrl", 
             "URL for a jar file to be uploaded (e.g. \"classpath://org/apache/brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar\"); defaults to null which means nothing to upload", 
