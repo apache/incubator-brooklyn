@@ -18,8 +18,9 @@
  */
 package org.apache.brooklyn.policy.jclouds.os;
 
-import java.util.List;
-
+import com.google.common.annotations.Beta;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
@@ -30,6 +31,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
@@ -43,9 +45,7 @@ import org.jclouds.scriptbuilder.statements.ssh.SshdConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.Beta;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.List;
 
 /**
  * When attached to an entity, this will monitor for when an {@link SshMachineLocation} is added to that entity
@@ -121,11 +121,12 @@ public class CreateUserPolicy extends AbstractPolicy implements SensorEventListe
         // Build the command to create the user
         // Note AdminAccess requires _all_ fields set, due to http://code.google.com/p/jclouds/issues/detail?id=1095
         // If jclouds grants Sudo rights, it overwrites the /etc/sudoers, which makes integration tests very dangerous! Not using it.
+        boolean resetLoginPassword = machine.getConfig(CloudLocationConfig.PASSWORD) == null;
         AdminAccess adminAccess = AdminAccess.builder()
                 .adminUsername(user)
                 .adminPassword(password)
                 .grantSudoToAdminUser(false)
-                .resetLoginPassword(true)
+                .resetLoginPassword(resetLoginPassword)
                 .loginPassword(password)
                 .authorizeAdminPublicKey(false)
                 .adminPublicKey("ignored")
