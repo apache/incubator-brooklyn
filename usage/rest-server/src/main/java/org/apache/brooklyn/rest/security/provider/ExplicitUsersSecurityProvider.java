@@ -46,6 +46,7 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
 
     public ExplicitUsersSecurityProvider(ManagementContext mgmt) {
         this.mgmt = mgmt;
+        initialize();
     }
 
     private synchronized void initialize() {
@@ -56,8 +57,6 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
         allowedUsers = new LinkedHashSet<String>();
         String users = properties.getConfig(BrooklynWebConfig.USERS);
         if (users == null) {
-            // TODO unfortunately this is only activated *when* someone tries to log in
-            // (NB it seems like this class is not even instantiated until first log in)
             LOG.warn("REST has no users configured; no one will be able to log in!");
         } else if ("*".equals(users)) {
             LOG.info("REST allowing any user (so long as valid password is set)");
@@ -70,13 +69,10 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
             LOG.info("REST allowing users: " + allowedUsers);
         }
     }
-
     
     @Override
     public boolean authenticate(HttpSession session, String user, String password) {
         if (session==null || user==null) return false;
-        
-        initialize();
         
         if (!allowAnyUserWithValidPass) {
             if (!allowedUsers.contains(user)) {
@@ -85,16 +81,35 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
             }
         }
 
+        if (checkExplicitUserPassword(mgmt, user, password)) {
+            return allow(session, user);
+        }
+        return false;
+    }
+
+    /** checks the supplied candidate user and password against the
+     * expect password (or SHA-256 + SALT thereof) defined as brooklyn properties.
+     */
+    public static boolean checkExplicitUserPassword(ManagementContext mgmt, String user, String password) {
         BrooklynProperties properties = (BrooklynProperties) mgmt.getConfig();
-        String expectedP = properties.getConfig(BrooklynWebConfig.PASSWORD_FOR_USER(user));
+        String expectedPassword = properties.getConfig(BrooklynWebConfig.PASSWORD_FOR_USER(user));
         String salt = properties.getConfig(BrooklynWebConfig.SALT_FOR_USER(user));
         String expectedSha256 = properties.getConfig(BrooklynWebConfig.SHA256_FOR_USER(user));
         
-        if (expectedP != null) {
-            return expectedP.equals(password) && allow(session, user);
-        } else if (expectedSha256 != null) {
-            String hashedPassword = PasswordHasher.sha256(salt, password);
-            return expectedSha256.equals(hashedPassword) && allow(session, user);
+        return checkPassword(password, expectedPassword, expectedSha256, salt);
+    }
+    /** 
+     * checks a candidate password against the expected credential defined for a given user.
+     * the expected credentials can be supplied as an expectedPassword OR as
+     * a combination of the SHA-256 hash of the expected password plus a defined salt.
+     * the combination of the SHA+SALT allows credentials to be supplied in a non-plaintext manner.
+     */
+    public static boolean checkPassword(String candidatePassword, String expectedPassword, String expectedPasswordSha256, String salt) {
+        if (expectedPassword != null) {
+            return expectedPassword.equals(candidatePassword);
+        } else if (expectedPasswordSha256 != null) {
+            String hashedCandidatePassword = PasswordHasher.sha256(salt, candidatePassword);
+            return expectedPasswordSha256.equals(hashedCandidatePassword);
         }
 
         return false;
