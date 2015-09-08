@@ -7,7 +7,7 @@ and you are in this directory.  Adjust to taste for other configurations.
   export BROOKLYN_CLASSPATH=$(pwd)/target/classes
   
   # Three-tier: auto-scaling app-server cluster fronted by nginx, MySql backend wired up, on localhost
-  brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
+  brooklyn launch --app org.apache.brooklyn.demo.WebClusterDatabaseExample --location localhost
 
 The above requires passwordless `ssh localhost` and requires `gcc` to build `nginx`.
 You could instead target your favourite cloud, where this has been tried and tested:
@@ -22,13 +22,13 @@ You could instead target your favourite cloud, where this has been tried and tes
 Other examples:
 
   # A very simple app: a single web-server
-  brooklyn launch --app brooklyn.demo.SingleWebServerExample --location localhost
+  brooklyn launch --app org.apache.brooklyn.demo.SingleWebServerExample --location localhost
 
   # A simple app: just load-balancer and appservers
-  brooklyn launch --app brooklyn.demo.WebClusterExample --location localhost
+  brooklyn launch --app org.apache.brooklyn.demo.WebClusterExample --location localhost
 
   # Three-tier example
-  brooklyn launch --app brooklyn.demo.WebClusterDatabaseExample --location localhost
+  brooklyn launch --app org.apache.brooklyn.demo.WebClusterDatabaseExample --location localhost
 
 
 Redistributable embedded example:
@@ -38,9 +38,7 @@ Redistributable embedded example:
   # (the redistributable will be at:  target/brooklyn-*-bin.tar.gz )
   mvn clean assembly:assembly
 
-For more information, please visit:
-
-  http://brooklyncentral.github.com/use/examples/webcluster/
+For more information please visit https://brooklyn.incubator.apache.org/.
 
 ----
 Licensed to the Apache Software Foundation (ASF) under one

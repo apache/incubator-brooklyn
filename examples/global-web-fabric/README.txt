@@ -7,7 +7,7 @@ and you are in this directory.  Adjust to taste for other configurations.
   export BROOKLYN_CLASSPATH=$(pwd)/target/classes
 
   # Launch the app in aws-ec2 regions eu-west-1 and us-east-1
-  brooklyn launch --app brooklyn.demo.GlobalWebFabricExample --location "aws-ec2:eu-west-1,aws-ec2:us-east-1"
+  brooklyn launch --app org.apache.brooklyn.demo.GlobalWebFabricExample --location "aws-ec2:eu-west-1,aws-ec2:us-east-1"
 
 ---
 
@@ -18,6 +18,10 @@ This file should contain something like:
   brooklyn.jclouds.aws-ec2.credential=aT0Ps3cr3tC0D3wh1chAW5w1llG1V3y0uTOus333
 
 Brooklyn defaults to using ~/.ssh/id_rsa and ~/.ssh/id_rsa.pub.
+
+---
+
+For more information please visit https://brooklyn.incubator.apache.org/.
 
 ----
 Licensed to the Apache Software Foundation (ASF) under one
