@@ -1,5 +1,5 @@
 ---
-title: Launching Brooklyn
+title: CLI Reference
 layout: website-normal
 ---
 

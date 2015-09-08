@@ -2,15 +2,16 @@
 title: Operations
 layout: website-normal
 children:
-- requirements.md
-- install-on-server.md
-- launch.md
+- cli-reference.md
 - brooklyn_properties.md
 - locations/
 - persistence/
 - high-availability.md
 - catalog/
+- rest.md
 - logging.md
+- requirements.md
+- production-installation.md
 - troubleshooting/
 ---
 
