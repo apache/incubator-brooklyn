@@ -56,7 +56,7 @@ public class Sensors {
         private String name;
         private TypeToken<T> type;
         private String description;
-        private SensorPersistenceMode persistence;
+        private SensorPersistenceMode persistence = SensorPersistenceMode.REQUIRED;
         
         protected Builder() { // use builder(type, name) instead
         }
