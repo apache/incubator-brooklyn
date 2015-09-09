@@ -23,15 +23,19 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceProblemsLogic;
+import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -64,11 +68,12 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
         super.init();
 
         RedisStore master = addChild(EntitySpec.create(RedisStore.class));
-        setAttribute(MASTER, master);
+        sensors().set(MASTER, master);
 
         DynamicCluster slaves = addChild(EntitySpec.create(DynamicCluster.class)
-                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(RedisSlave.class).configure(RedisSlave.MASTER, master)));
-        setAttribute(SLAVES, slaves);
+                .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(RedisSlave.class).configure(RedisSlave.MASTER, master)
+                .configure(SoftwareProcess.CUSTOMIZE_LATCH, DependentConfiguration.attributeWhenReady(master, Attributes.SERVICE_UP))));
+        sensors().set(SLAVES, slaves);
 
         addEnricher(Enrichers.builder()
                 .propagating(RedisStore.HOSTNAME, RedisStore.ADDRESS, RedisStore.SUBNET_HOSTNAME, RedisStore.SUBNET_ADDRESS, RedisStore.REDIS_PORT)
@@ -101,11 +106,13 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
     }
 
     private void doStart(Collection<? extends Location> locations) {
-        RedisStore master = getMaster();
-        master.invoke(RedisStore.START, ImmutableMap.<String, Object>of("locations", ImmutableList.copyOf(locations))).getUnchecked();
+        // Start the master and slaves asynchronously (the slave has a LAUNCH_LATCH on master to ensure it is available before the slaves are launched)
+        Task<Void> masterStartTask = getMaster().invoke(RedisStore.START, ImmutableMap.<String, Object>of("locations", ImmutableList.copyOf(locations)));
+        Task<Void> slaveStartTask = getSlaves().invoke(DynamicCluster.START, ImmutableMap.<String, Object>of("locations", ImmutableList.copyOf(locations)));
 
-        DynamicCluster slaves = getSlaves();
-        slaves.invoke(DynamicCluster.START, ImmutableMap.<String, Object>of("locations", ImmutableList.copyOf(locations))).getUnchecked();
+        // Wait for both master and slave to start before returning
+        masterStartTask.getUnchecked();
+        slaveStartTask.getUnchecked();
     }
 
     @Override
