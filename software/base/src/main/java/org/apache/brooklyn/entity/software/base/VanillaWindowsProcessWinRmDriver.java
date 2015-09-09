@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
@@ -47,7 +46,10 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
     public void install() {
         // TODO: Follow install path of VanillaSoftwareProcessSshDriver
         if(Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.INSTALL_COMMAND)) || Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND))) {
-            executeCommand(VanillaWindowsProcess.INSTALL_COMMAND, VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND, true);
+            executeCommandInTask(
+                    getEntity().getConfig(VanillaWindowsProcess.INSTALL_COMMAND),
+                    getEntity().getConfig(VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND),
+                    "install-command");
         }
         if (entity.getConfig(VanillaWindowsProcess.INSTALL_REBOOT_REQUIRED)) {
             rebootAndWait();
@@ -56,9 +58,11 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
 
     @Override
     public void customize() {
-        // TODO: Follow customize path of VanillaSoftwareProcessSshDriver
         if(Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.CUSTOMIZE_COMMAND)) || Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND))) {
-            executeCommand(VanillaWindowsProcess.CUSTOMIZE_COMMAND, VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND, true);
+            executeCommandInTask(
+                    getEntity().getConfig(VanillaWindowsProcess.CUSTOMIZE_COMMAND),
+                    getEntity().getConfig(VanillaWindowsProcess.CUSTOMIZE_POWERSHELL_COMMAND),
+                    "customize-command");
         }
         if (entity.getConfig(VanillaWindowsProcess.CUSTOMIZE_REBOOT_REQUIRED)) {
             rebootAndWait();
@@ -67,22 +71,29 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
 
     @Override
     public void launch() {
-        executeCommand(VanillaWindowsProcess.LAUNCH_COMMAND, VanillaWindowsProcess.LAUNCH_POWERSHELL_COMMAND, true);
+        executeCommandInTask(
+                getEntity().getConfig(VanillaWindowsProcess.LAUNCH_COMMAND),
+                getEntity().getConfig(VanillaWindowsProcess.LAUNCH_POWERSHELL_COMMAND),
+                "launch-command");
     }
 
     @Override
     public boolean isRunning() {
-        WinRmToolResponse runningCheck = executeCommand(VanillaWindowsProcess.CHECK_RUNNING_COMMAND,
-                VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, false);
-        if(runningCheck.getStatusCode() != 0) {
-            LOG.info(getEntity() + " isRunning check failed: exit code "  + runningCheck.getStatusCode() + "; " + runningCheck.getStdErr());
+        int exitCode = executeCommandInTask(
+                getEntity().getConfig(VanillaWindowsProcess.CHECK_RUNNING_COMMAND),
+                getEntity().getConfig(VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND), "is-running-command");
+        if(exitCode != 0) {
+            LOG.info(getEntity() + " isRunning check failed: exit code "  + exitCode);
         }
-        return runningCheck.getStatusCode() == 0;
+        return exitCode == 0;
     }
 
     @Override
     public void stop() {
-        executeCommand(VanillaWindowsProcess.STOP_COMMAND, VanillaWindowsProcess.STOP_POWERSHELL_COMMAND, true);
+        executeCommandInTask(
+                getEntity().getConfig(VanillaWindowsProcess.STOP_COMMAND),
+                getEntity().getConfig(VanillaWindowsProcess.STOP_POWERSHELL_COMMAND),
+                "stop-command");
     }
 
 }
