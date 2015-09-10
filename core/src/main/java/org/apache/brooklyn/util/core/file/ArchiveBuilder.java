@@ -36,6 +36,7 @@ import java.util.zip.ZipOutputStream;
 import org.apache.brooklyn.util.core.file.ArchiveUtils.ArchiveType;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Iterables;
@@ -179,22 +180,24 @@ public class ArchiveBuilder {
     }
 
     /**
-     * Add the file located at the {@code fileSubPath}, relative to the {@code baseDir} on the local system,
-     * to the archive.
+     * Add a file located at the {@code fileSubPath}, relative to the {@code baseDir} on the local system,
+     * as {@code fileSubPath} in the archive. For most archives directories are supported.
      * <p>
      * Uses the {@code fileSubPath} as the name of the file in the archive. Note that the
      * file is found by concatenating the two path components using {@link Os#mergePaths(String...)},
      * thus {@code fileSubPath} should not be absolute or point to a location above the current directory.
      * <p>
-     * Use {@link #entry(String, String)} directly or {@link #entries(Map)} for complete
-     * control over file locations and names in the archive.
+     * For a simpler addition mechanism, use {@link #addAt(File, String)}.
+     * <p>
+     * For complete control over file locations and names in the archive.
+     * use {@link #entry(String, String)} directly or {@link #entries(Map)} for complete
      *
      * @see #entry(String, String)
      */
     public ArchiveBuilder addFromLocalBaseDir(File baseDir, String fileSubPath) {
         checkNotNull(baseDir, "baseDir");
         checkNotNull(fileSubPath, "filePath");
-        return entry(Os.mergePaths(".", fileSubPath), Os.mergePaths(baseDir.getPath(), fileSubPath));
+        return entry(fileSubPath, Os.mergePaths(baseDir.getPath(), fileSubPath));
     }
     /** @deprecated since 0.7.0 use {@link #addFromLocalBaseDir(File, String)}, or
      * one of the other add methods if adding relative to baseDir was not intended */ @Deprecated
@@ -207,11 +210,21 @@ public class ArchiveBuilder {
         return addFromLocalBaseDir(baseDir, fileSubPath);
     }
      
-    /** adds the given file to the archive, preserving its name but putting under the given directory in the archive (may be <code>""</code> or <code>"./"</code>) */
+    /** 
+     * Adds the given file or directory to the archive, preserving its name but putting under the given directory in the archive (may be <code>""</code> or <code>"./"</code>).
+     * See also {@link #addDirContentsAt(File, String)} and {@link #addFromLocalBaseDir(File, String)}. */
     public ArchiveBuilder addAt(File file, String archiveParentDir) {
         checkNotNull(archiveParentDir, "archiveParentDir");
         checkNotNull(file, "file");
         return entry(Os.mergePaths(archiveParentDir, file.getName()), file);
+    }
+    
+    /** 
+     * Adds the given file or directory to the root of the archive, preserving its name.
+     * To add the contents of a directory without the dir name, use {@link #addDirContentsAtRoot(File)}.
+     * See also {@link #addAt(File, String)}. */
+    public ArchiveBuilder addAtRoot(File file) {
+        return addAt(file, "");
     }
 
     /**
@@ -226,9 +239,7 @@ public class ArchiveBuilder {
 
     /**
      * Add the contents of the directory {@code dir} to the archive.
-     * The directory's name is not included; use {@link #addAtRoot(File)} if you want that behaviour. 
-     * <p>
-     * Uses {@literal .} as the parent directory name for the contents.
+     * The directory's name is not included; use {@link #addAt(File, String)} with <code>""</code> as the second argument if you want that behavior. 
      *
      * @see #entry(String, File)
      */
@@ -237,6 +248,11 @@ public class ArchiveBuilder {
         if (!dir.isDirectory()) throw new IllegalArgumentException(dir+" is not a directory; cannot add contents to archive");
         return entry(archiveParentDir, dir);
     }
+    /** See {@link #addDirContentsAt(File, String)} and {@link #addAtRoot(File)}. */
+    public ArchiveBuilder addDirContentsAtRoot(File dir) {
+        return addDirContentsAt(dir, "");
+    }
+
     /**
      * As {@link #addDirContentsAt(File, String)}, 
      * using {@literal .} as the parent directory name for the contents.
@@ -389,17 +405,20 @@ public class ArchiveBuilder {
         
         String name = path.replace("\\", "/");
         if (isDirectory) {
-            name += "/";
-            JarEntry entry = new JarEntry(name);
-            
-            long lastModified=-1;
-            for (File source: sources)
-                if (source.lastModified()>lastModified)
-                    lastModified = source.lastModified();
-            
-            entry.setTime(lastModified);
-            target.putNextEntry(entry);
-            target.closeEntry();
+            name = Strings.removeAllFromEnd(name, "/");
+            if (name.length()>0) {
+                name += "/";
+                JarEntry entry = new JarEntry(name);
+
+                long lastModified=-1;
+                for (File source: sources)
+                    if (source.lastModified()>lastModified)
+                        lastModified = source.lastModified();
+
+                entry.setTime(lastModified);
+                target.putNextEntry(entry);
+                target.closeEntry();
+            }
 
             for (File source: sources) {
                 if (!source.isDirectory()) {
@@ -407,7 +426,7 @@ public class ArchiveBuilder {
                 }
                 Iterable<File> children = Files.fileTreeTraverser().children(source);
                 for (File child : children) {
-                    addToArchive(Os.mergePaths(path, child.getName()), Collections.singleton(child), target);
+                    addToArchive(Os.mergePaths(name, child.getName()), Collections.singleton(child), target);
                 }
             }
             return;
