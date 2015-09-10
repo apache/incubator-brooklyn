@@ -152,7 +152,13 @@ public class TimeTest {
         Assert.assertFalse(Time.hasElapsedSince(aFewSecondsAgo, Duration.TEN_SECONDS));
         Assert.assertTrue(Time.hasElapsedSince(-1, Duration.TEN_SECONDS));
     }
-    
+
+    @Test
+    public void testParseTime() {
+        Assert.assertEquals(Time.parseElapsedTime("1s"), 1000);
+        Assert.assertEquals(Time.parseElapsedTime("never"), -1);
+    }
+
     @Test
     public void testMakeDateString() {
         String in1 = "2015-06-15T12:34:56";

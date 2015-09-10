@@ -440,63 +440,73 @@ public class Time {
      * 
      * @throws NumberFormatException if cannot be parsed (or if null)
      */
-    public static double parseElapsedTimeAsDouble(String timeString) {
+    public static double parseElapsedTimeAsDouble(final String timeStringOrig) {
+        String timeString = timeStringOrig;
         if (timeString==null)
             throw new NumberFormatException("GeneralHelper.parseTimeString cannot parse a null string");
         try {
             double d = Double.parseDouble(timeString);
             return d;
         } catch (NumberFormatException e) {
-            //look for a type marker
-            timeString = timeString.trim();
-            String s = Strings.getLastWord(timeString).toLowerCase();
-            timeString = timeString.substring(0, timeString.length()-s.length()).trim();
-            int i=0;
-            while (s.length()>i) {
-                char c = s.charAt(i);
-                if (c=='.' || Character.isDigit(c)) i++;
-                else break;
-            }
-            String num = s.substring(0, i);
-            if (i==0) {
-                num = Strings.getLastWord(timeString).toLowerCase();
-                timeString = timeString.substring(0, timeString.length()-num.length()).trim();
-            } else {
-                s = s.substring(i);
-            }
-            long multiplier = 0;
-            if (num.length()==0) {
-                //must be never or something
-                if (s.equalsIgnoreCase("never") || s.equalsIgnoreCase("off") || s.equalsIgnoreCase("false"))
-                    return -1;
-                throw new NumberFormatException("unrecognised word  '"+s+"' in time string");
-            }
-            if (s.equalsIgnoreCase("ms") || s.equalsIgnoreCase("milli") || s.equalsIgnoreCase("millis")
+            try {
+                //look for a type marker
+                timeString = timeString.trim();
+                String s = Strings.getLastWord(timeString).toLowerCase();
+                timeString = timeString.substring(0, timeString.length()-s.length()).trim();
+                int i=0;
+                while (s.length()>i) {
+                    char c = s.charAt(i);
+                    if (c=='.' || Character.isDigit(c)) i++;
+                    else break;
+                }
+                String num = s.substring(0, i);
+                if (i==0) {
+                    if (Strings.isNonBlank(timeString)) {
+                        num = Strings.getLastWord(timeString).toLowerCase();
+                        timeString = timeString.substring(0, timeString.length()-num.length()).trim();
+                    }
+                } else {
+                    s = s.substring(i);
+                }
+                long multiplier = 0;
+                if (num.length()==0) {
+                    //must be never or something
+                    // TODO does 'never' work?
+                    if (s.equalsIgnoreCase("never") || s.equalsIgnoreCase("off") || s.equalsIgnoreCase("false"))
+                        return -1;
+                    throw new NumberFormatException("unrecognised word  '"+s+"' in time string");
+                }
+                if (s.equalsIgnoreCase("ms") || s.equalsIgnoreCase("milli") || s.equalsIgnoreCase("millis")
                     || s.equalsIgnoreCase("millisec") || s.equalsIgnoreCase("millisecs")
                     || s.equalsIgnoreCase("millisecond") || s.equalsIgnoreCase("milliseconds"))
-                multiplier = 1;
-            else if (s.equalsIgnoreCase("s") || s.equalsIgnoreCase("sec") || s.equalsIgnoreCase("secs")
+                    multiplier = 1;
+                else if (s.equalsIgnoreCase("s") || s.equalsIgnoreCase("sec") || s.equalsIgnoreCase("secs")
                     || s.equalsIgnoreCase("second") || s.equalsIgnoreCase("seconds"))
-                multiplier = 1000;
-            else if (s.equalsIgnoreCase("m") || s.equalsIgnoreCase("min") || s.equalsIgnoreCase("mins")
+                    multiplier = 1000;
+                else if (s.equalsIgnoreCase("m") || s.equalsIgnoreCase("min") || s.equalsIgnoreCase("mins")
                     || s.equalsIgnoreCase("minute") || s.equalsIgnoreCase("minutes"))
-                multiplier = 60*1000;
-            else if (s.equalsIgnoreCase("h") || s.equalsIgnoreCase("hr") || s.equalsIgnoreCase("hrs")
+                    multiplier = 60*1000;
+                else if (s.equalsIgnoreCase("h") || s.equalsIgnoreCase("hr") || s.equalsIgnoreCase("hrs")
                     || s.equalsIgnoreCase("hour") || s.equalsIgnoreCase("hours"))
-                multiplier = 60*60*1000;
-            else if (s.equalsIgnoreCase("d") || s.equalsIgnoreCase("day") || s.equalsIgnoreCase("days"))
-                multiplier = 24*60*60*1000;
-            else
-                throw new NumberFormatException("unknown unit '"+s+"' in time string");
-            double d = Double.parseDouble(num);
-            double dd = 0;
-            if (timeString.length()>0) {
-                dd = parseElapsedTimeAsDouble(timeString);
-                if (dd==-1) {
-                    throw new NumberFormatException("cannot combine '"+timeString+"' with '"+num+" "+s+"'");
+                    multiplier = 60*60*1000;
+                else if (s.equalsIgnoreCase("d") || s.equalsIgnoreCase("day") || s.equalsIgnoreCase("days"))
+                    multiplier = 24*60*60*1000;
+                else
+                    throw new NumberFormatException("Unknown unit '"+s+"' in time string '"+timeStringOrig+"'");
+                double d = Double.parseDouble(num);
+                double dd = 0;
+                if (timeString.length()>0) {
+                    dd = parseElapsedTimeAsDouble(timeString);
+                    if (dd==-1) {
+                        throw new NumberFormatException("Cannot combine '"+timeString+"' with '"+num+" "+s+"'");
+                    }
                 }
+                return d*multiplier + dd;
+            } catch (Exception ex) {
+                if (ex instanceof NumberFormatException) throw ex;
+                log.trace("Details of parse failure:", ex);
+                throw new NumberFormatException("Cannot parse time string '"+timeStringOrig+"'");
             }
-            return d*multiplier + dd;
         }
     }
 
