@@ -29,8 +29,6 @@ import org.apache.brooklyn.core.sensor.BasicNotificationSensor;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.enricher.stock.Enrichers;
-import org.apache.brooklyn.enricher.stock.Propagator;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -214,5 +212,44 @@ public class SensorPropagatingEnricherTest extends BrooklynAppUnitTestSupport {
             IllegalStateException ise = Exceptions.getFirstThrowableOfType(e, IllegalStateException.class);
             if (ise == null) throw e;
         }
+    }
+
+    @Test
+    public void testPropagateToDynamicSensor() {
+        /*
+
+        This test attempts to replicate the following YAML
+
+        location: localhost
+        services:
+        - type: org.apache.brooklyn.core.test.entity.TestApplication
+          brooklyn.children:
+          - type: org.apache.brooklyn.core.test.entity.TestEntity
+            id: childid
+
+          brooklyn.enrichers:
+          - type: org.apache.brooklyn.enricher.stock.Propagator
+            brooklyn.config:
+              producer: $brooklyn:component("child", "childid")
+              propagating:
+              - $brooklyn:sensor("test.name")
+          - type: org.apache.brooklyn.enricher.stock.Propagator
+            brooklyn.config:
+              sensorMapping:
+                $brooklyn:sensor("test.name"): $brooklyn:sensor("newSensor")
+         */
+        AttributeSensor<Object> targetSensor = Sensors.newSensor(Object.class, "newSensor");
+        AttributeSensor<Object> sourceSensorFromYaml = Sensors.newSensor(Object.class, TestEntity.NAME.getName());
+        app.addEnricher(Enrichers.builder()
+                .propagating(Sensors.newSensor(Object.class, TestEntity.NAME.getName()))
+                .from(entity)
+                .build());
+        app.addEnricher(Enrichers.builder()
+                .propagating(ImmutableMap.of(sourceSensorFromYaml, targetSensor))
+                .from(app)
+                .build());
+        EntityTestUtils.assertAttributeEqualsEventually(app, targetSensor, entity.sensors().get(TestEntity.NAME));
+        entity.sensors().set(TestEntity.NAME, "newName");
+        EntityTestUtils.assertAttributeEqualsEventually(app, targetSensor, "newName");
     }
 }
