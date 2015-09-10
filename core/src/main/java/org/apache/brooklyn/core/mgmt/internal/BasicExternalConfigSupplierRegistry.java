@@ -103,7 +103,7 @@ public class BasicExternalConfigSupplierRegistry implements ExternalConfigSuppli
             try {
                 Class<? extends ExternalConfigSupplier> providerClass = (Class<? extends ExternalConfigSupplier>) classloader.loadClass(providerClassname);
                 Constructor<? extends ExternalConfigSupplier> constructor = providerClass.getConstructor(ManagementContext.class, String.class, Map.class);
-                ExternalConfigSupplier configSupplier = constructor.newInstance(this, name, config);
+                ExternalConfigSupplier configSupplier = constructor.newInstance(mgmt, name, config);
                 addProvider(name, configSupplier);
 
             } catch (Exception e) {
