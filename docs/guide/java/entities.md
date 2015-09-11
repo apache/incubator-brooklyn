@@ -50,8 +50,21 @@ TODO: why to use config?
   Syntax is as described in the PortRange interface. For example, "8080-8099,8800+" will try port 8080, try sequentially through 8099, then try from 8800 until all ports are exhausted.
   
   This is particularly useful on a contended machine (localhost!). Like ordinary configuration, the config is done by the user, and the actual port used is reported back as a sensor on the entity.
- 
- 
+
+- Validation of config values can be applied by supplying a ``Predicate`` to the ``constraint`` of a ConfigKey builder.
+  Constraints are tested after an entity is initialised and before an entity managed.
+  Useful predicates include:
+  - ``StringPredicates.isNonBlank``: require that a String key is neither null nor empty.
+  - ``ResourcePredicates.urlExists``: require that a URL that is loadable by Brooklyn. Use this to
+    confirm that necessary resources are available to the entity.
+  - ``Predicates.in``: require one of a fixed set of values.
+  - ``Predicates.containsPattern``: require that a value match a regular expression pattern.
+
+  An important caveat is that only constraints on config keys that are on an entity's type hierarchy can be
+  tested automatically. Brooklyn has no knowledge of the true type of other keys until they are retrieved with a
+  ``config().get(key)``.
+
+
 Implementing Sensors
 --------------------
 
