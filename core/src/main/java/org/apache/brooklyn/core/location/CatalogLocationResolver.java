@@ -22,8 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationRegistry;
@@ -31,6 +29,8 @@ import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Given a location spec in the form {@code brooklyn.catalog:<symbolicName>:<version>}, 
@@ -38,7 +38,6 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
  */
 public class CatalogLocationResolver implements LocationResolver {
 
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(CatalogLocationResolver.class);
 
     public static final String NAME = "brooklyn.catalog";
@@ -61,8 +60,8 @@ public class CatalogLocationResolver implements LocationResolver {
             log.warn("Use of deprecated catalog item "+item.getSymbolicName()+":"+item.getVersion());
         }
         
-        LocationSpec<?> origLocSpec = managementContext.getCatalog().createSpec((CatalogItem<Location, LocationSpec<?>>)item);
-        LocationSpec<?> locSpec = LocationSpec.create(origLocSpec)
+        LocationSpec origLocSpec = (LocationSpec) managementContext.getCatalog().createSpec((CatalogItem)item);
+        LocationSpec locSpec = LocationSpec.create(origLocSpec)
                 .configure(locationFlags);
         return managementContext.getLocationManager().createLocation(locSpec);
     }

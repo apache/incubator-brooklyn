@@ -21,6 +21,8 @@ package org.apache.brooklyn.api.catalog;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+
 import com.google.common.base.Predicate;
 
 public interface BrooklynCatalog {
@@ -76,7 +78,7 @@ public interface BrooklynCatalog {
 
     /** creates a spec for the given catalog item, throwing exceptions if any problems */
     // TODO this should be cached on the item and renamed getSpec(...), else we re-create it too often (every time catalog is listed)
-    <T,SpecT> SpecT createSpec(CatalogItem<T,SpecT> item);
+    <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createSpec(CatalogItem<T, SpecT> item);
     
     /** throws exceptions if any problems 
      * @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */

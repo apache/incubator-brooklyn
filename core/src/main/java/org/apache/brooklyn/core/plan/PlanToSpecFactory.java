@@ -25,6 +25,7 @@ import java.util.ServiceLoader;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
@@ -106,7 +107,7 @@ public class PlanToSpecFactory {
                     (Strings.isNonBlank(e.getMessage()) ? " ("+e.getMessage()+")" : ""));
             } catch (Throwable e) {
                 Exceptions.propagateIfFatal(e);
-                otherProblemsFromTransformers.add(new IllegalArgumentException("Transformer for "+t.getShortDescription()+" gave an error creating this plan: "+
+                otherProblemsFromTransformers.add(new PropagatedRuntimeException("Transformer for "+t.getShortDescription()+" gave an error creating this plan: "+
                     Exceptions.collapseText(e), e));
             }
         }
@@ -115,7 +116,8 @@ public class PlanToSpecFactory {
         if (!otherProblemsFromTransformers.isEmpty()) {
             // at least one thought he could do it
             log.debug("Plan could not be transformed; failure will be propagated (other transformers tried = "+transformersWhoDontSupport+"): "+otherProblemsFromTransformers);
-            result = Exceptions.create(null, otherProblemsFromTransformers);
+            result = otherProblemsFromTransformers.size()==1 ? Exceptions.create(null, otherProblemsFromTransformers) :
+                Exceptions.create("Plan transformers all failed", otherProblemsFromTransformers);
         } else {
             result = new PlanNotRecognizedException("Invalid plan; format could not be recognized, trying with: "+transformersWhoDontSupport);
         }

@@ -105,8 +105,9 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
         assertEquals(Iterables.getOnlyElement(libs).getUrl(), Iterables.getOnlyElement(getOsgiLibraries()));
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void assertAdded(String symbolicName, String expectedJavaType) {
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        CatalogItem item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
         assertEquals(countCatalogLocations(), 1);
 
@@ -115,7 +116,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
         assertEquals(def.getId(), symbolicName);
         assertEquals(def.getName(), symbolicName);
         
-        LocationSpec<?> spec = (LocationSpec<?>)mgmt().getCatalog().createSpec(item);
+        LocationSpec spec = (LocationSpec) mgmt().getCatalog().createSpec(item);
         assertEquals(spec.getType().getName(), expectedJavaType);
     }
     

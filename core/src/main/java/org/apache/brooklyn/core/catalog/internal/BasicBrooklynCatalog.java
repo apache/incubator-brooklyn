@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -34,6 +33,7 @@ import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -312,7 +312,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @Override
-    public <T, SpecT> SpecT createSpec(CatalogItem<T, SpecT> item) {
+    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createSpec(CatalogItem<T, SpecT> item) {
         if (item == null) return null;
         @SuppressWarnings("unchecked")
         CatalogItemDo<T,SpecT> loadedItem = (CatalogItemDo<T, SpecT>) getCatalogItemDo(item.getSymbolicName(), item.getVersion());
@@ -321,7 +321,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (specType==null) return null;
 
         if (loadedItem.getPlanYaml() != null) {
-            SpecT yamlSpec = (SpecT) EntityManagementUtils.createCatalogSpec(mgmt, loadedItem);
+            SpecT yamlSpec = EntityManagementUtils.createCatalogSpec(mgmt, loadedItem);
             if (yamlSpec != null) {
                 return yamlSpec;
             }
@@ -348,7 +348,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         }
 
         if (spec==null) 
-            throw new IllegalStateException("Unknown how to create instance of "+this);
+            throw new IllegalStateException("No known mechanism to create instance of "+item);
 
         return spec;
     }
@@ -516,9 +516,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, libraryBundles, result).reconstruct();
         if (!planInterpreter.isResolved()) {
-            throw Exceptions.create("Could not resolve item "
-                + (Strings.isNonBlank(id) ? id : Strings.isNonBlank(symbolicName) ? symbolicName : Strings.isNonBlank(name) ? name : "<no-name>")
-                + ":\n"+sourceYaml, planInterpreter.getErrors());
+            throw Exceptions.create("Could not resolve item"
+                + (Strings.isNonBlank(id) ? " "+id : Strings.isNonBlank(symbolicName) ? " "+symbolicName : Strings.isNonBlank(name) ? name : "")
+                // better not to show yaml, takes up lots of space, and with multiple plan transformers there might be multiple errors 
+//                + ":\n"+sourceYaml
+                , planInterpreter.getErrors());
         }
         itemType = planInterpreter.getCatalogItemType();
         Map<?, ?> itemAsMap = planInterpreter.getItem();
@@ -543,6 +545,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             } else {
                 symbolicName = setFromItemIfUnset(symbolicName, itemAsMap, "id");
                 symbolicName = setFromItemIfUnset(symbolicName, itemAsMap, "name");
+                // TODO we should let the plan transformer give us this
+                symbolicName = setFromItemIfUnset(symbolicName, itemAsMap, "template_name");
                 if (Strings.isBlank(symbolicName)) {
                     log.error("Can't infer catalog item symbolicName from the following plan:\n" + sourceYaml);
                     throw new IllegalStateException("Can't infer catalog item symbolicName from catalog item metadata");
@@ -563,6 +567,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                 version = CatalogUtils.getVersionFromVersionedId(name);
             } else if (Strings.isBlank(version)) {
                 version = setFromItemIfUnset(version, itemAsMap, "version");
+                version = setFromItemIfUnset(version, itemAsMap, "template_version");
                 if (version==null) {
                     log.warn("No version specified for catalog item " + symbolicName + ". Using default value.");
                     version = null;
@@ -685,6 +690,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         String planYaml;
         boolean resolved = false;
         List<Exception> errors = MutableList.of();
+        List<Exception> entityErrors = MutableList.of();
         
         public PlanInterpreterGuessingType(@Nullable String id, Object item, String itemYaml, @Nullable CatalogItemType optionalCiType, 
                 Collection<CatalogBundle> libraryBundles, List<CatalogItemDtoAbstract<?,?>> itemsDefinedSoFar) {
@@ -731,6 +737,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         /** Returns potentially useful errors encountered while guessing types. 
          * May only be available where the type is known. */
         public List<Exception> getErrors() {
+            if (errors.isEmpty()) return entityErrors;
             return errors;
         }
         
@@ -778,10 +785,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             
             // then try parsing plan - this will use loader
             try {
-                CatalogItem<?, ?> itemToAttempt = createItemBuilder(candidateCiType, getIdWithRandomDefault(), DEFAULT_VERSION)
+                @SuppressWarnings("rawtypes")
+                CatalogItem itemToAttempt = createItemBuilder(candidateCiType, getIdWithRandomDefault(), DEFAULT_VERSION)
                     .plan(candidateYaml)
                     .libraries(libraryBundles)
                     .build();
+                @SuppressWarnings("unchecked")
                 Object spec = EntityManagementUtils.createCatalogSpec(mgmt, itemToAttempt);
                 if (spec!=null) {
                     catalogItemType = candidateCiType;
@@ -800,7 +809,11 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     // (when we're not given a key, the previous block should apply)
                     errors.add(e);
                 } else {
-                    // all other cases, the error is probably due to us not getting the type right, ignore it
+                    // all other cases, the error is probably due to us not getting the type right, probably ignore it
+                    // but cache it if we've checked entity, we'll use that as fallback errors
+                    if (candidateCiType==CatalogItemType.ENTITY) {
+                        entityErrors.add(e);
+                    }
                     if (log.isTraceEnabled())
                         log.trace("Guessing type of plan, it looks like it isn't "+candidateCiType+"/"+key+": "+e);
                 }
@@ -810,10 +823,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             if (type!=null && key!=null) {
                 try {
                     String cutDownYaml = key + ":\n" + makeAsIndentedList("type: "+type);
-                    CatalogItem<?, ?> itemToAttempt = createItemBuilder(candidateCiType, getIdWithRandomDefault(), DEFAULT_VERSION)
+                    @SuppressWarnings("rawtypes")
+                    CatalogItem itemToAttempt = createItemBuilder(candidateCiType, getIdWithRandomDefault(), DEFAULT_VERSION)
                             .plan(cutDownYaml)
                             .libraries(libraryBundles)
                             .build();
+                    @SuppressWarnings("unchecked")
                     Object cutdownSpec = EntityManagementUtils.createCatalogSpec(mgmt, itemToAttempt);
                     if (cutdownSpec!=null) {
                         catalogItemType = candidateCiType;

@@ -94,11 +94,11 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
             loader, buildWrapperAppTemplate(template));
-        EntitySpec<? extends Application> app = resolver.resolveSpec(null);
+        EntitySpec<? extends Application> app = resolver.resolveSpec(null, false);
         app.configure(EntityManagementUtils.WRAPPER_APP_MARKER, Boolean.TRUE);
 
         // first build the children into an empty shell app
-        List<EntitySpec<?>> childSpecs = buildTemplateServicesAsSpecs(loader, template, platform);
+        List<EntitySpec<?>> childSpecs = buildTemplateServicesAsSpecs(loader, template, platform, true);
         for (EntitySpec<?> childSpec : childSpecs) {
             app.child(childSpec);
         }
@@ -130,28 +130,30 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return EntityManagementUtils.canPromoteWrappedApplication(app);
     }
 
-    private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform) {
-        return buildTemplateServicesAsSpecsImpl(loader, template, platform, Sets.<String>newLinkedHashSet());
+    private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, boolean canUseOtherTransformers) {
+        return buildTemplateServicesAsSpecsImpl(loader, template, platform, Sets.<String>newLinkedHashSet(), canUseOtherTransformers);
     }
 
-    private List<EntitySpec<?>> buildTemplateServicesAsSpecsImpl(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, Set<String> encounteredCatalogTypes) {
+    private List<EntitySpec<?>> buildTemplateServicesAsSpecsImpl(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, Set<String> encounteredCatalogTypes, boolean canUseOtherTransformers) {
         List<EntitySpec<?>> result = Lists.newArrayList();
 
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
-            EntitySpec<?> spec = resolveSpec(platform, ResourceUtils.create(this), entityResolver, encounteredCatalogTypes);
-
+            EntitySpec<?> spec;
+            spec = resolveCampSpec(platform, ResourceUtils.create(this), entityResolver, encounteredCatalogTypes, canUseOtherTransformers);
             result.add(spec);
         }
         return result;
     }
 
-    static EntitySpec<?> resolveSpec(
+    static EntitySpec<?> resolveCampSpec(
             CampPlatform platform,
             ResourceUtils ru,
             BrooklynComponentTemplateResolver entityResolver,
-            Set<String> encounteredCatalogTypes) {
+            Set<String> encounteredCatalogTypes,
+            boolean canUseOtherTransformers) {
+        
         String brooklynType = entityResolver.getServiceTypeResolver().getBrooklynType(entityResolver.getDeclaredType());
         CatalogItem<Entity, EntitySpec<?>> item = entityResolver.getServiceTypeResolver().getCatalogItem(entityResolver, entityResolver.getDeclaredType());
 
@@ -177,7 +179,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
         if (spec == null) {
             // load from java or yaml
-            spec = entityResolver.resolveSpec(encounteredCatalogTypes);
+            spec = entityResolver.resolveSpec(encounteredCatalogTypes, canUseOtherTransformers);
         }
 
         return spec;
@@ -206,11 +208,12 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
     }
 
-    static EntitySpec<?> resolveCatalogYamlReferenceSpec(
+    static EntitySpec<?> resolveCatalogYamlReferenceCampSpec(
             CampPlatform platform,
             CatalogItem<Entity, EntitySpec<?>> item,
             Set<String> encounteredCatalogTypes) {
         ManagementContext mgmt = getManagementContext(platform);
+
         String yaml = item.getPlanYaml();
         Reader input = new StringReader(yaml);
         BrooklynClassLoadingContext itemLoader = CatalogUtils.newClassLoadingContext(mgmt, item);
@@ -251,7 +254,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         try {
             AssemblyTemplateInstantiator ati = template.getInstantiator().newInstance();
             if (ati instanceof BrooklynAssemblyTemplateInstantiator) {
-                List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecsImpl(itemLoader, template, platform, encounteredCatalogTypes);
+                List<EntitySpec<?>> specs = ((BrooklynAssemblyTemplateInstantiator)ati).buildTemplateServicesAsSpecsImpl(itemLoader, template, platform, encounteredCatalogTypes, false);
                 if (specs.size() > 1) {
                     throw new UnsupportedOperationException("Only supporting single service in catalog item currently: got "+specs);
                 }

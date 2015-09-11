@@ -49,6 +49,7 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
@@ -61,6 +62,7 @@ import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.text.Strings;
@@ -217,19 +219,32 @@ public class BrooklynComponentTemplateResolver {
     }
 
     /** resolves the spec, updating the loader if a catalog item is loaded */
-    protected <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredCatalogTypes) {
+    @SuppressWarnings("unchecked")
+    protected <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredCatalogTypes, boolean canUseOtherTransformers) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
 
-        EntitySpec<T> spec = createSpec(encounteredCatalogTypes);
-        populateSpec(spec);
-
-        return spec;
+        CatalogItem<Entity, EntitySpec<?>> item = getServiceTypeResolver().getCatalogItem(this, getDeclaredType());
+        try {
+            EntitySpec<T> spec = createSpec(item, encounteredCatalogTypes);
+            populateSpec(spec);
+            return spec;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            
+            // maybe it requires a different transformer? TODO better would be to know this from a transformer type on the catalog item type
+            if (item!=null && canUseOtherTransformers) {
+                log.debug("Could not resolve child "+item+" as CAMP; trying other transformers: "+e);
+                // should only be called when resolving children. and encountered types should probably be empty. 
+                return (EntitySpec<T>) EntityManagementUtils.createCatalogSpec(mgmt, (CatalogItem) item);
+            } else {
+                throw Exceptions.propagate(e);
+            }
+        }
     }
 
     @SuppressWarnings({ "unchecked" })
-    protected <T extends Entity> EntitySpec<T> createSpec(Set<String> encounteredCatalogTypes) {
-        CatalogItem<Entity, EntitySpec<?>> item = getServiceTypeResolver().getCatalogItem(this, getDeclaredType());
+    protected <T extends Entity> EntitySpec<T> createSpec(CatalogItem<Entity, EntitySpec<?>> item, Set<String> encounteredCatalogTypes) {
         if (item == null) {
             // ignore; presumably a java type or some such?
         } else if (item.isDisabled()) {
@@ -262,11 +277,12 @@ public class BrooklynComponentTemplateResolver {
             }
             return createSpecFromJavaType();
 
-        // Only case that's left is a catalog item with YAML content - try to parse it recursively
-        // including it's OSGi bundles in the loader classpath.
+        // Only case that's left is a catalog item with CAMP YAML content - try to parse it recursively
+        // including its OSGi bundles in the loader classpath.
         } else {
-            // TODO perhaps migrate to catalog.createSpec ?
-            EntitySpec<?> spec = BrooklynAssemblyTemplateInstantiator.resolveCatalogYamlReferenceSpec(getCampPlatform(), item, encounteredCatalogTypes);
+            // TODO if it isn't camp it will throw. better would be to know the transformers type for the item!
+
+            EntitySpec<?> spec = BrooklynAssemblyTemplateInstantiator.resolveCatalogYamlReferenceCampSpec(getCampPlatform(), item, encounteredCatalogTypes);
             spec.catalogItemId(item.getId());
             
             return (EntitySpec<T>)spec;
@@ -319,7 +335,7 @@ public class BrooklynComponentTemplateResolver {
             Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                EntitySpec<? extends Entity> childSpec = BrooklynAssemblyTemplateInstantiator.resolveSpec(getCampPlatform(), ResourceUtils.create(this), entityResolver, encounteredCatalogTypes);
+                EntitySpec<? extends Entity> childSpec = BrooklynAssemblyTemplateInstantiator.resolveCampSpec(getCampPlatform(), ResourceUtils.create(this), entityResolver, encounteredCatalogTypes, true);
                 spec.child(childSpec);
             }
         }
@@ -485,7 +501,7 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(null);
+                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(null, false);
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);

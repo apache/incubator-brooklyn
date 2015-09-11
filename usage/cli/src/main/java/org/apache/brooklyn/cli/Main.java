@@ -631,7 +631,8 @@ public class Main extends AbstractMain {
                         // and additionally they might contain multiple items in which case
                         // the validation below won't work anyway (you need to go via a deployment plan)
                     } else {
-                        Object spec = catalog.createSpec(item);
+                        @SuppressWarnings({ "unchecked", "rawtypes" })
+                        Object spec = catalog.createSpec((CatalogItem)item);
                         if (spec instanceof EntitySpec) {
                             BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
                         }

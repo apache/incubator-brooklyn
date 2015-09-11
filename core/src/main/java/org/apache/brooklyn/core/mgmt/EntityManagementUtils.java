@@ -96,12 +96,11 @@ public class EntityManagementUtils {
         }).get();
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static AbstractBrooklynObjectSpec<?, ?> createCatalogSpec(ManagementContext mgmt, final CatalogItem<?, ?> item) {
-        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, AbstractBrooklynObjectSpec<?, ?>>() {
+    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, final CatalogItem<T, SpecT> item) {
+        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, SpecT>() {
             @Override
-            public AbstractBrooklynObjectSpec<?, ?> apply(PlanToSpecTransformer input) {
-                return input.createCatalogSpec((CatalogItem)item);
+            public SpecT apply(PlanToSpecTransformer input) {
+                return input.createCatalogSpec(item);
             }
         }).get();
     }
