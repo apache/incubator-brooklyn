@@ -59,7 +59,7 @@ All quote characters must be plain ASCII, not fancy left-double-quotes and right
 
 There are as many ways to do dependency injection as there are developers,
 it sometimes seems; our aim in Brooklyn is not to say this has to be done one way,
-but to support the various mechanisms people might need to do, for whatever reasons.
+but to support the various mechanisms people might need, for whatever reasons.
 (We each have our opinions about what works well, of course;
 the one thing we do want to call out is that being able to dynamically update
 the injection is useful in a modern agile application -- so we are definitively **not**

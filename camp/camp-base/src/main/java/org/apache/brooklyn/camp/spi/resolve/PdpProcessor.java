@@ -163,7 +163,7 @@ public class PdpProcessor {
                     return;
             }
         }
-        throw new IllegalArgumentException("Deployment plan item "+deploymentPlanItem+" cannot be matched");
+        throw new IllegalArgumentException("Deployment plan item cannot be matched. Please check your YAML. Item: "+deploymentPlanItem);
     }
 
     // ----------------------------

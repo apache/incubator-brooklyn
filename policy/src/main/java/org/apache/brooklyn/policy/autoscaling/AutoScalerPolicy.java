@@ -266,17 +266,20 @@ public class AutoScalerPolicy extends AbstractPolicy {
     @SetFromFlag("entityWithMetric")
     public static final ConfigKey<Entity> ENTITY_WITH_METRIC = BasicConfigKey.builder(Entity.class)
             .name("autoscaler.entityWithMetric")
+            .description("The Entity with the metric that will be monitored")
             .build();
     
     @SetFromFlag("metricLowerBound")
     public static final ConfigKey<Number> METRIC_LOWER_BOUND = BasicConfigKey.builder(Number.class)
             .name("autoscaler.metricLowerBound")
+            .description("The lower bound of the monitored metric. Below this the policy will resize down")
             .reconfigurable(true)
             .build();
     
     @SetFromFlag("metricUpperBound")
     public static final ConfigKey<Number> METRIC_UPPER_BOUND = BasicConfigKey.builder(Number.class)
             .name("autoscaler.metricUpperBound")
+            .description("The upper bound of the monitored metric. Above this the policy will resize up")
             .reconfigurable(true)
             .build();
     
