@@ -210,7 +210,7 @@ define([
                         self.$(".catalog-save-error")
                             .removeClass("hide")
                             .find(".catalog-error-message")
-                            .html(Brooklyn.util.extractError(xhr, "Error adding catalog item: " + error));
+                            .html(_.escape(Brooklyn.util.extractError(xhr, "Could not add catalog item:\n'n" + error)));
                     });
             }
         });

@@ -58,7 +58,7 @@ define(["backbone", "brooklyn", "view/viewutils"], function (Backbone, Brooklyn,
             var that = this;
             // to debug:
 //            serverExtendedStatus.onLoad(function() { log("loaded server status:"); log(that.attributes); })
-            ViewUtils.fetchModelRepeatedlyWithDelay(this, { doitnow: true });
+            ViewUtils.fetchModelRepeatedlyWithDelay(this, { doitnow: true, backoffMaxPeriod: 3000 });
         },
 
         isUp: function() { return this.get("up") },

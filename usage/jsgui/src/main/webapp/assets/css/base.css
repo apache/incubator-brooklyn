@@ -1165,6 +1165,9 @@ tr.app-add-wizard-config-entry {
     padding: 7px;
     border-radius: 3px;
 }
+.catalog-error-message {
+    white-space: pre-wrap;
+}
 
 .float-right {
     float: right;
