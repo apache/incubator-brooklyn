@@ -89,11 +89,18 @@ public interface ConfigKey<T> {
     @Nullable ConfigInheritance getInheritance();
 
     /**
-     * @return the predicate constraining the key's value.
+     * @return The predicate constraining the key's value.
      */
     @Beta
     @Nonnull
     Predicate<? super T> getConstraint();
+
+    /**
+     * @param value The value to test
+     * @return True if the given value is acceptable per the {@link #getConstraint constraints} on this key.
+     */
+    @Beta
+    boolean isValueValid(T value);
 
     /** Interface for elements which want to be treated as a config key without actually being one
      * (e.g. config attribute sensors).

@@ -44,7 +44,6 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.core.BrooklynLogging;
-import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
@@ -269,8 +268,6 @@ public class LocalEntityManager implements EntityManagerInternal {
                     new Exception("source of duplicate management of "+e));
             return;
         }
-        ConfigConstraints.assertValid(e);
-
         manageRecursive(e, ManagementTransitionMode.guessing(BrooklynObjectManagementMode.NONEXISTENT, BrooklynObjectManagementMode.MANAGED_PRIMARY));
     }
 
@@ -311,7 +308,7 @@ public class LocalEntityManager implements EntityManagerInternal {
     protected void manageRecursive(Entity e, final ManagementTransitionMode initialMode) {
         checkManagementAllowed(e);
 
-        final List<EntityInternal> allEntities =  Lists.newArrayList();
+        final List<EntityInternal> allEntities = Lists.newArrayList();
         Predicate<EntityInternal> manageEntity = new Predicate<EntityInternal>() { public boolean apply(EntityInternal it) {
             ManagementTransitionMode mode = getLastManagementTransitionMode(it.getId());
             if (mode==null) {
@@ -390,7 +387,7 @@ public class LocalEntityManager implements EntityManagerInternal {
             }
         }
     }
-    
+
     @Override
     public void unmanage(final Entity e) {
         unmanage(e, ManagementTransitionMode.guessing(BrooklynObjectManagementMode.MANAGED_PRIMARY, BrooklynObjectManagementMode.NONEXISTENT));
@@ -600,7 +597,7 @@ public class LocalEntityManager implements EntityManagerInternal {
     /**
      * Should ensure that the entity is now known about, but should not be accessible from other entities yet.
      * 
-     * Records that the given entity is about to be managed (used for answering {@link isPreManaged(Entity)}.
+     * Records that the given entity is about to be managed (used for answering {@link #isPreManaged(Entity)}.
      * Note that refs to the given entity are stored in a a weak hashmap so if the subsequent management
      * attempt fails then this reference to the entity will eventually be discarded (if no-one else holds 
      * a reference).
@@ -628,7 +625,6 @@ public class LocalEntityManager implements EntityManagerInternal {
     /**
      * Should ensure that the entity is now managed somewhere, and known about in all the lists.
      * Returns true if the entity has now become managed; false if it was already managed (anything else throws exception)
-     * @param isOrWasReadOnly 
      */
     private synchronized boolean manageNonRecursive(Entity e, ManagementTransitionMode mode) {
         Entity old = entitiesById.get(e.getId());
@@ -641,8 +637,8 @@ public class LocalEntityManager implements EntityManagerInternal {
             }
             return false;
         }
-        
-        BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(e), 
+
+        BrooklynLogging.log(log, BrooklynLogging.levelDebugOrTraceIfReadOnly(e),
             "{} starting management of entity {}", this, e);
         Entity realE = toRealEntity(e);
         

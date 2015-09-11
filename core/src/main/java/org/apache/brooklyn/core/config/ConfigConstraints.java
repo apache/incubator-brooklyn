@@ -19,6 +19,7 @@
 
 package org.apache.brooklyn.core.config;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
@@ -42,19 +43,45 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
 
     /**
      * Checks all constraints of all config keys available to an entity.
+     * <p>
+     * If a constraint is a {@link BrooklynObjectAwarePredicate} then it will be
+     * informed of the entity before the predicate is tested.
      */
     public static void assertValid(Entity entity) {
         Iterable<ConfigKey<?>> violations = new EntityConfigConstraints(entity).getViolations();
         if (!Iterables.isEmpty(violations)) {
-            throw new ConstraintViolationException("ConfigKeys violate constraints: " + violations);
+            throw new ConstraintViolationException(errorMessage(entity, violations));
         }
     }
 
+    /**
+     * Checks all constraints of all config keys available to an entity adjunct.
+     * <p>
+     * If a constraint is a {@link BrooklynObjectAwarePredicate} then it will be
+     * informed of the adjunct before the predicate is tested.
+     */
     public static void assertValid(EntityAdjunct adjunct) {
         Iterable<ConfigKey<?>> violations = new EntityAdjunctConstraints(adjunct).getViolations();
         if (!Iterables.isEmpty(violations)) {
-            throw new ConstraintViolationException("ConfigKeys violate constraints: " + violations);
+            throw new ConstraintViolationException(errorMessage(adjunct, violations));
         }
+    }
+
+    private static String errorMessage(BrooklynObject object, Iterable<ConfigKey<?>> violations) {
+        StringBuilder message = new StringBuilder("Error configuring ")
+                .append(object.getDisplayName())
+                .append(": [");
+        Iterator<ConfigKey<?>> it = violations.iterator();
+        while (it.hasNext()) {
+            ConfigKey<?> config = it.next();
+            message.append(config.getName())
+                    .append(":")
+                    .append(config.getConstraint());
+            if (it.hasNext()) {
+                message.append(", ");
+            }
+        }
+        return message.append("]").toString();
     }
 
     public ConfigConstraints(T brooklynObject) {
@@ -73,7 +100,7 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
 
     @SuppressWarnings("unchecked")
     private Iterable<ConfigKey<?>> validateAll() {
-        List<ConfigKey<?>> violating = Lists.newArrayList();
+        List<ConfigKey<?>> violating = Lists.newLinkedList();
         BrooklynObjectInternal.ConfigurationSupportInternal configInternal = getConfigurationSupportInternal();
 
         Iterable<ConfigKey<?>> configKeys = getBrooklynObjectTypeConfigKeys();
@@ -125,12 +152,6 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
         @Override
         Iterable<ConfigKey<?>> getBrooklynObjectTypeConfigKeys() {
             return ((AbstractEntityAdjunct) getBrooklynObject()).getAdjunctType().getConfigKeys();
-        }
-    }
-
-    public static class ConstraintViolationException extends RuntimeException {
-        public ConstraintViolationException(String message) {
-            super(message);
         }
     }
 

@@ -19,6 +19,7 @@
 
 package org.apache.brooklyn.core.config;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
@@ -29,6 +30,7 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
@@ -37,9 +39,11 @@ import org.apache.brooklyn.core.test.policy.TestPolicy;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Networking;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.core.config.ConfigConstraints.ConstraintViolationException;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
 
 public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
@@ -90,7 +94,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
     public static class EntityProvidingDefaultValueForConfigKeyInRangeImpl extends TestEntityImpl implements EntityProvidingDefaultValueForConfigKeyInRange {
     }
 
-    public static class PolicyWithConfigConstraint extends AbstractPolicy{
+    public static class PolicyWithConfigConstraint extends AbstractPolicy {
         public static final ConfigKey<Object> NON_NULL_CONFIG = ConfigKeys.builder(Object.class)
                 .name("test.policy.non-null")
                 .description("Configuration key that must not be null")
@@ -105,7 +109,6 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                 .constraint(Predicates.containsPattern(Networking.VALID_IP_ADDRESS_REGEX))
                 .build();
     }
-
 
     @Test
     public void testExceptionWhenEntityHasNullConfig() {
@@ -141,11 +144,38 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
-    public void testExceptionIsThrownWhenUserSetsNullValueToConfigWithNonNullDefault() {
+    public void testExceptionIsThrownWhenUserNullsConfigWithNonNullDefault() {
         try {
             app.createAndManageChild(EntitySpec.create(EntityWithNonNullConstraintWithNonNullDefault.class)
                     .configure(EntityWithNonNullConstraintWithNonNullDefault.NON_NULL_WITH_DEFAULT, (Object) null));
             fail("Expected exception when config key set to null");
+        } catch (Exception e) {
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
+            assertNotNull(t);
+        }
+    }
+
+    @Test
+    public void testExceptionWhenValueSetByName() {
+        try {
+            app.createAndManageChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
+                    .configure(ImmutableMap.of("test.conf.range", -1)));
+            fail("Expected exception when managing entity with invalid config");
+        } catch (Exception e) {
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
+            assertNotNull(t);
+        }
+    }
+
+    @Test
+    public void testExceptionWhenAppGrandchildHasInvalidConfig() {
+        app.start(ImmutableList.of(app.newSimulatedLocation()));
+        TestEntity testEntity = app.addChild(EntitySpec.create(TestEntity.class));
+        testEntity.addChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
+                .configure(EntityRequiringConfigKeyInRange.RANGE, -1));
+        try {
+            Entities.manage(testEntity);
+            fail("Expected exception when managing child with invalid config");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
             assertNotNull(t);
@@ -167,7 +197,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
-    public void testExceptionWhenPolicyHasNullConfig() {
+    public void testExceptionWhenPolicyHasInvalidConfig() {
         try {
             mgmt.getEntityManager().createPolicy(PolicySpec.create(PolicyWithConfigConstraint.class)
                     .configure(PolicyWithConfigConstraint.NON_NULL_CONFIG, (Object) null));
@@ -188,6 +218,29 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
             assertNotNull(t, "Exception was: " + Exceptions.collapseText(e));
         }
+    }
+
+    @Test
+    public void testDefaultValueDoesNotNeedToObeyConstraint() {
+        ConfigKeys.builder(String.class)
+                .name("foo")
+                .defaultValue("a")
+                .constraint(Predicates.equalTo("b"))
+                .build();
+    }
+
+    @Test
+    public void testIsValidWithBadlyBehavedPredicate() {
+        ConfigKey<String> key = ConfigKeys.builder(String.class)
+                .name("foo")
+                .constraint(new Predicate<String>() {
+                    @Override
+                    public boolean apply(String input) {
+                        throw new RuntimeException("It's my day off");
+                    }
+                })
+                .build();
+        assertFalse(key.isValueValid("abc"));
     }
 
 }

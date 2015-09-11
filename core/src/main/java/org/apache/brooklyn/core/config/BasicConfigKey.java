@@ -88,7 +88,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         private String description;
         private T defaultValue;
         private boolean reconfigurable;
-        private Predicate<? super T> constraint;
+        private Predicate<? super T> constraint = Predicates.alwaysTrue();
         private ConfigInheritance inheritance;
         
         public Builder<T> name(String val) {
@@ -173,9 +173,12 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.defaultValue = builder.defaultValue;
         this.reconfigurable = builder.reconfigurable;
         this.inheritance = builder.inheritance;
-        this.constraint = builder.constraint;
+        // Note: it's intentionally possible to have default values that are not valid
+        // per the configured constraint. If validity were checked here any class that
+        // contained a weirdly-defined config key would fail to initialise.
+        this.constraint = checkNotNull(builder.constraint, "constraint");
     }
-    
+
     /** @see ConfigKey#getName() */
     @Override public String getName() { return name; }
 
@@ -199,19 +202,34 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         return defaultValue != null;
     }
 
+    /** @see ConfigKey#isReconfigurable() */
     @Override
     public boolean isReconfigurable() {
         return reconfigurable;
     }
     
+    /** @see ConfigKey#getInheritance() */
     @Override @Nullable
     public ConfigInheritance getInheritance() {
         return inheritance;
     }
 
+    /** @see ConfigKey#getConstraint() */
     @Override @Nonnull
     public Predicate<? super T> getConstraint() {
         return constraint;
+    }
+
+    /** @see ConfigKey#isValueValid(T) */
+    @Override
+    public boolean isValueValid(T value) {
+        // The likeliest source of an exception is a constraint from Guava that expects a non-null input.
+        try {
+            return getConstraint().apply(value);
+        } catch (Exception e) {
+            log.debug("Suppressing exception when testing validity of " + this, e);
+            return false;
+        }
     }
 
     /** @see ConfigKey#getNameParts() */
