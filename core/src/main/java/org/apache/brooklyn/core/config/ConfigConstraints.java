@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct;
+import org.apache.brooklyn.core.objs.BrooklynObjectPredicate;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +45,8 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
     /**
      * Checks all constraints of all config keys available to an entity.
      * <p>
-     * If a constraint is a {@link BrooklynObjectAwarePredicate} then it will be
-     * informed of the entity before the predicate is tested.
+     * If a constraint is a {@link BrooklynObjectPredicate} then
+     * {@link BrooklynObjectPredicate#apply(Object, BrooklynObject)} will be used.
      */
     public static void assertValid(Entity entity) {
         Iterable<ConfigKey<?>> violations = new EntityConfigConstraints(entity).getViolations();
@@ -57,8 +58,8 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
     /**
      * Checks all constraints of all config keys available to an entity adjunct.
      * <p>
-     * If a constraint is a {@link BrooklynObjectAwarePredicate} then it will be
-     * informed of the adjunct before the predicate is tested.
+     * If a constraint is a {@link BrooklynObjectPredicate} then
+     * {@link BrooklynObjectPredicate#apply(Object, BrooklynObject)} will be used.
      */
     public static void assertValid(EntityAdjunct adjunct) {
         Iterable<ConfigKey<?>> violations = new EntityAdjunctConstraints(adjunct).getViolations();
@@ -114,7 +115,13 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
                 // keep its type to Predicte<? super T>, where T is ConfigKey<T>.
                 try {
                     Predicate<Object> po = (Predicate<Object>) configKey.getConstraint();
-                    if (!po.apply(value)) {
+                    boolean isValid;
+                    if (po instanceof BrooklynObjectPredicate) {
+                        isValid = BrooklynObjectPredicate.class.cast(po).apply(value, brooklynObject);
+                    } else {
+                        isValid = po.apply(value);
+                    }
+                    if (!isValid) {
                         violating.add(configKey);
                     }
                 } catch (Exception e) {

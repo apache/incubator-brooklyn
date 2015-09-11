@@ -25,12 +25,14 @@ import static org.testng.Assert.fail;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.objs.BrooklynObjectPredicate;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
@@ -48,6 +50,8 @@ import com.google.common.collect.Range;
 
 public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
 
+    // ----------- Setup -----------------------------------------------------------------------------------------------
+
     @ImplementedBy(EntityWithNonNullConstraintImpl.class)
     public static interface EntityWithNonNullConstraint extends TestEntity {
         ConfigKey<Object> NON_NULL_CONFIG = ConfigKeys.builder(Object.class)
@@ -55,6 +59,8 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                 .description("Configuration key that must not be null")
                 .constraint(Predicates.notNull())
                 .build();
+    }
+    public static class EntityWithNonNullConstraintImpl extends TestEntityImpl implements EntityWithNonNullConstraint {
     }
 
     @ImplementedBy(EntityWithNonNullConstraintWithNonNullDefaultImpl.class)
@@ -66,6 +72,8 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                 .constraint(Predicates.notNull())
                 .build();
     }
+    public static class EntityWithNonNullConstraintWithNonNullDefaultImpl extends TestEntityImpl implements EntityWithNonNullConstraintWithNonNullDefault {
+    }
 
     @ImplementedBy(EntityRequiringConfigKeyInRangeImpl.class)
     public static interface EntityRequiringConfigKeyInRange extends TestEntity {
@@ -76,22 +84,25 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                 .constraint(Range.closed(0, 9))
                 .build();
     }
+    public static class EntityRequiringConfigKeyInRangeImpl extends TestEntityImpl implements EntityRequiringConfigKeyInRange {
+    }
 
     @ImplementedBy(EntityProvidingDefaultValueForConfigKeyInRangeImpl.class)
     public static interface EntityProvidingDefaultValueForConfigKeyInRange extends EntityRequiringConfigKeyInRange {
         ConfigKey<Integer> REVISED_RANGE = ConfigKeys.newConfigKeyWithDefault(RANGE, -1);
     }
-
-    public static class EntityWithNonNullConstraintImpl extends TestEntityImpl implements EntityWithNonNullConstraint {
-    }
-
-    public static class EntityWithNonNullConstraintWithNonNullDefaultImpl extends TestEntityImpl implements EntityWithNonNullConstraintWithNonNullDefault {
-    }
-
-    public static class EntityRequiringConfigKeyInRangeImpl extends TestEntityImpl implements EntityRequiringConfigKeyInRange {
-    }
-
     public static class EntityProvidingDefaultValueForConfigKeyInRangeImpl extends TestEntityImpl implements EntityProvidingDefaultValueForConfigKeyInRange {
+    }
+
+    @ImplementedBy(EntityWithContextAwareConstraintImpl.class)
+    public static interface EntityWithContextAwareConstraint extends TestEntity {
+        ConfigKey<String> MUST_BE_DISPLAY_NAME = ConfigKeys.builder(String.class)
+                .name("must-be-display-name")
+                .description("Configuration key that must not be null")
+                .constraint(new MatchesEntityDisplayNamePredicate())
+                .build();
+    }
+    public static class EntityWithContextAwareConstraintImpl extends TestEntityImpl implements EntityWithContextAwareConstraint {
     }
 
     public static class PolicyWithConfigConstraint extends AbstractPolicy {
@@ -109,6 +120,20 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                 .constraint(Predicates.containsPattern(Networking.VALID_IP_ADDRESS_REGEX))
                 .build();
     }
+
+    private static class MatchesEntityDisplayNamePredicate implements BrooklynObjectPredicate<String> {
+        @Override
+        public boolean apply(String input) {
+            return false;
+        }
+
+        @Override
+        public boolean apply(String input, BrooklynObject context) {
+            return context != null && context.getDisplayName().equals(input);
+        }
+    }
+
+    // ----------- Tests -----------------------------------------------------------------------------------------------
 
     @Test
     public void testExceptionWhenEntityHasNullConfig() {
@@ -240,7 +265,21 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                     }
                 })
                 .build();
+        // i.e. no exception.
         assertFalse(key.isValueValid("abc"));
+    }
+
+    @Test
+    public void testContextAwarePredicateInformedOfEntity() {
+        try {
+            app.createAndManageChild(EntitySpec.create(EntityWithContextAwareConstraint.class)
+                    .displayName("Mr. Big")
+                    .configure("must-be-display-name", "Mr. Bag"));
+            fail("Expected exception when managing entity with incorrect config");
+        } catch (Exception e) {
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
+            assertNotNull(t);
+        }
     }
 
 }
