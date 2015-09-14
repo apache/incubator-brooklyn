@@ -115,7 +115,7 @@ public class MongoDBTestHelper {
         try {
             HostAndPort hap = BrooklynAccessUtils.getBrooklynAccessibleAddress(server, server.getAttribute(MongoDBServer.PORT));
             return new MongoClient(hap.getHostText(), hap.getPort());
-        } catch (UnknownHostException e) {
+        } catch (Exception e) {
             // Fail whatever test called this method.
             throw Throwables.propagate(e);
         }

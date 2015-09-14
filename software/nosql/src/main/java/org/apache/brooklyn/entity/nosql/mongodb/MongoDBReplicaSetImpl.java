@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.PolicySpec;
@@ -400,10 +401,18 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             // Ignored
         }
         @Override protected void onEntityAdded(Entity member) {
-            ((MongoDBReplicaSetImpl)entity).serverAdded((MongoDBServer) member);
+            try {
+                ((MongoDBReplicaSetImpl) entity).serverAdded((MongoDBServer) member);
+            } catch (Exception e) {
+                ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator((EntityLocal)member, "Failed to update replicaset", e);
+            }
         }
         @Override protected void onEntityRemoved(Entity member) {
-            ((MongoDBReplicaSetImpl)entity).serverRemoved((MongoDBServer) member);
+            try {
+                ((MongoDBReplicaSetImpl) entity).serverRemoved((MongoDBServer) member);
+            } catch (Exception e) {
+                ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator((EntityLocal)member, "Failed to update replicaset", e);
+            }
         }
-    };
+    }
 }

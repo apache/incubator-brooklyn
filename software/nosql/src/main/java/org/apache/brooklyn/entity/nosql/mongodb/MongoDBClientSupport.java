@@ -65,7 +65,6 @@ public class MongoDBClientSupport {
 
     // Set client to automatically reconnect to servers.
     private static final MongoClientOptions connectionOptions = MongoClientOptions.builder()
-            .autoConnectRetry(true)
             .socketKeepAlive(true)
             .build();
 
@@ -112,12 +111,18 @@ public class MongoDBClientSupport {
         MongoClient client = client();
         try {
             DB db = client.getDB(database);
-            CommandResult status;
-            try {
-                status = db.command(command);
-            } catch (MongoException e) {
-                LOG.warn("Command " + command + " on " + getServerAddress() + " failed", e);
-                return Optional.absent();
+            CommandResult status = null;
+            // The mongoDB client can occasionally fail to connect. Try up to 5 times to run the command
+            for (int i = 0; i < 5; i++) {
+                try {
+                    status = db.command(command);
+                    break;
+                } catch (MongoException e) {
+                    LOG.warn("Command " + command + " on " + getServerAddress() + " failed", e);
+                    if (i == 4) {
+                        return Optional.absent();
+                    }
+                }
             }
             if (!status.ok()) {
                 LOG.debug("Unexpected result of {} on {}: {}",

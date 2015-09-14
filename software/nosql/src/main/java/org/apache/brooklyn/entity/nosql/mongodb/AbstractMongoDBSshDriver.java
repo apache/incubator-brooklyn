@@ -27,8 +27,8 @@ import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.time.Duration;
-import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
@@ -61,7 +61,7 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
     
-        List<String> commands = new LinkedList<String>();
+        List<String> commands = new LinkedList<>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
@@ -75,7 +75,7 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
     public void customize() {
         Map<?,?> ports = ImmutableMap.of("port", getServerPort());
         Networking.checkPortsValid(ports);
-        List<String> commands = new LinkedList<String>();
+        List<String> commands = new LinkedList<>();
         commands.add(String.format("mkdir -p %s", getDataDirectory()));
 
         if (MongoDBAuthenticationUtils.usesAuthentication(entity)) {
@@ -87,8 +87,8 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
                 copyResource(keyfileUrl, destinationLocation);
             } else {
                 commands.add(BashCommands.pipeTextToFile(keyfileContents, destinationLocation));
-                commands.add("chmod 600 " + destinationLocation);
             }
+            commands.add("chmod 600 " + destinationLocation);
         }
 
         newScript(CUSTOMIZING)
@@ -192,8 +192,7 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
 
     protected ImmutableList.Builder<String> getArgsBuilderWithDefaults(AbstractMongoDBServer server) {
         ImmutableList.Builder<String> builder = getArgsBuilderWithNoAuthentication(server);
-        String keyfileContents = entity.config().get(AbstractMongoDBServer.MONGODB_KEYFILE_CONTENTS);
-        if (keyfileContents != null) {
+        if (MongoDBAuthenticationUtils.usesAuthentication(entity)) {
             builder.add("--keyFile", entity.getAttribute(AbstractMongoDBServer.MONGODB_KEYFILE_DESTINATION));
         }
         return builder;
@@ -216,6 +215,7 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         commands.add(String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args));
 
         newScript(LAUNCHING)
+                .setFlag(SshTool.PROP_CONNECT_TIMEOUT, Duration.TEN_SECONDS.toMilliseconds())
                 .updateTaskAndFailOnNonZeroResultCode()
                 .body.append(commands).execute();
     }

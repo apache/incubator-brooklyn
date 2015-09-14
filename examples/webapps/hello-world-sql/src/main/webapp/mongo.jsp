@@ -55,13 +55,24 @@ if (port==null) {
 
 <%
 /* begin database-enabled block */ }
-MongoCredential credential = MongoCredential.createMongoCRCredential(username, authenticationDatabase, password.toCharArray());
+boolean authenticationEnabled = password != null && password.length() > 0;
+
 ServerAddress address = new ServerAddress("localhost", new Integer(port));
+
 MongoClientOptions connectionOptions = MongoClientOptions.builder()
     .autoConnectRetry(true)
     .socketKeepAlive(true)
     .build();
-MongoClient client = new MongoClient(address, Arrays.asList(credential),connectionOptions);
+
+MongoClient client;
+
+if (authenticationEnabled) {
+    MongoCredential credential = MongoCredential.createMongoCRCredential(username, authenticationDatabase, password.toCharArray());
+    client = new MongoClient(address, Arrays.asList(credential),connectionOptions);
+} else {
+    client = new MongoClient(address, connectionOptions);
+}
+
 DB database = client.getDB("visitors");
 DBCollection messages =  database.getCollection("messages");
 int i=0;

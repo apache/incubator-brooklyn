@@ -95,13 +95,14 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
             final MongoDBShardCluster shards = getAttribute(SHARD_CLUSTER);
             List<DynamicCluster> clusters = ImmutableList.of(getAttribute(CONFIG_SERVER_CLUSTER), routers, shards);
             Entities.invokeEffectorList(this, clusters, Startable.START, ImmutableMap.of("locations", locations))
-                .get();
+                    .get();
 
             if (getConfigRaw(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP, true).isPresent()) {
                 addPolicy(PolicySpec.create(ColocatedRouterTrackingPolicy.class)
                         .displayName("Co-located router tracker")
                         .configure("group", getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP)));
             }
+
             ServiceNotUpLogic.clearNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Exception e) {
