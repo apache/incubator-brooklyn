@@ -87,6 +87,12 @@ public class CreateUserPolicy extends AbstractPolicy implements SensorEventListe
             "createuser.vm.user.credentials",
             "The \"<user> : <password> @ <hostname>:<port>\"");
 
+    @SetFromFlag("resetLoginUser")
+    public static final ConfigKey<Boolean> RESET_LOGIN_USER = ConfigKeys.newBooleanConfigKey(
+            "createuser.vm.user.resetLoginUser",
+            "Whether to reset the password used for user login",
+            false);
+
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
         subscribe(entity, AbstractEntity.LOCATION_ADDED, this);
@@ -110,6 +116,7 @@ public class CreateUserPolicy extends AbstractPolicy implements SensorEventListe
     
     protected void addUser(Entity entity, SshMachineLocation machine) {
         boolean grantSudo = getRequiredConfig(GRANT_SUDO);
+        boolean resetPassword = getRequiredConfig(RESET_LOGIN_USER);
         String user = getRequiredConfig(VM_USERNAME);
         String password = Identifiers.makeRandomId(12);
         String hostname = machine.getAddress().getHostName();
@@ -125,7 +132,7 @@ public class CreateUserPolicy extends AbstractPolicy implements SensorEventListe
                 .adminUsername(user)
                 .adminPassword(password)
                 .grantSudoToAdminUser(false)
-                .resetLoginPassword(true)
+                .resetLoginPassword(resetPassword)
                 .loginPassword(password)
                 .authorizeAdminPublicKey(false)
                 .adminPublicKey("ignored")
