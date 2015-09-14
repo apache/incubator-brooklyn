@@ -215,6 +215,19 @@ public class SensorPropagatingEnricherTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
+    public void testSensorPropagatedWhenMappingUsedSameNameButDifferentType() throws Exception {
+        AttributeSensor<String> origSensor = Sensors.newSensor(String.class, "origSensor");
+        AttributeSensor<Object> sourceSensorFromYaml = Sensors.newSensor(Object.class, "origSensor");
+        AttributeSensor<Object> targetSensor = Sensors.newSensor(Object.class, "newSensor");
+        app.addEnricher(Enrichers.builder()
+                .propagating(ImmutableMap.of(sourceSensorFromYaml, targetSensor))
+                .from(entity)
+                .build());
+        entity.sensors().set(origSensor, "myval");
+        EntityTestUtils.assertAttributeEqualsEventually(app, targetSensor, "myval");
+    }
+    
+    @Test
     public void testPropagateToDynamicSensor() {
         /*
 
