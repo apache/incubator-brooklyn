@@ -18,6 +18,30 @@ so there is already reduced opportunity for anyone maliciously tampering with th
 </tr>
 
 <tr>
+<td>apache-brooklyn-0.8.0-incubating-bin.tar.gz</td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-bin.tar.gz.md5">md5</a></td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-bin.tar.gz.sha1">sha1</a></td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-bin.tar.gz.sha256">sha256</a></td>
+</tr>
+<tr>
+<td>apache-brooklyn-0.8.0-incubating-bin.zip</td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-bin.zip.md5">md5</a></td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-bin.zip.sha1">sha1</a></td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-bin.zip.sha256">sha256</a></td>
+</tr>
+<tr>
+<td>apache-brooklyn-0.8.0-incubating-src.tar.gz</td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-src.tar.gz.md5">md5</a></td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-src.tar.gz.sha1">sha1</a></td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-src.tar.gz.sha256">sha256</a></td>
+</tr>
+<tr>
+<td>apache-brooklyn-0.8.0-incubating-src.zip</td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-src.zip.md5">md5</a></td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-src.zip.sha1">sha1</a></td>
+<td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.8.0-incubating/apache-brooklyn-0.8.0-incubating-src.zip.sha256">sha256</a></td>
+</tr>
+<tr>
 <td>apache-brooklyn-0.7.0-incubating-bin.tar.gz</td>
 <td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.7.0-incubating/apache-brooklyn-0.7.0-incubating-bin.tar.gz.md5">md5</a></td>
 <td><a href="https://www.apache.org/dist/incubator/brooklyn/apache-brooklyn-0.7.0-incubating/apache-brooklyn-0.7.0-incubating-bin.tar.gz.sha1">sha1</a></td>
