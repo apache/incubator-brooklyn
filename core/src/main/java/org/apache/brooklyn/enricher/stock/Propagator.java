@@ -39,6 +39,7 @@ import org.apache.brooklyn.util.core.task.ValueResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -162,7 +163,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         // propagate upwards
         Sensor<?> sourceSensor = event.getSensor();
         Sensor<?> destinationSensor = getDestinationSensor(sourceSensor);
-        
+
         if (!sensorFilter.apply(sourceSensor)) {
             return; // ignoring excluded sensor
         }
@@ -195,7 +196,15 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
         }
     }
 
-    private Sensor<?> getDestinationSensor(Sensor<?> sourceSensor) {
-        return sensorMapping.containsKey(sourceSensor) ? sensorMapping.get(sourceSensor): sourceSensor;
+    private Sensor<?> getDestinationSensor(final Sensor<?> sourceSensor) {
+        Optional<? extends Sensor<?>> mappingSensor = Iterables.tryFind(sensorMapping.keySet(), new Predicate<Sensor<?>>() {
+            @Override
+            public boolean apply(Sensor<?> sensor) {
+                return sourceSensor.getName().equals(sensor.getName());
+            }
+        });
+
+        return mappingSensor.isPresent() ? sensorMapping.get(mappingSensor.get()) : sourceSensor;
     }
+
 }
