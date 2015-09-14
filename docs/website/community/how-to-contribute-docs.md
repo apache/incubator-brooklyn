@@ -38,7 +38,7 @@ While the *Edit this page* button is great for quickly editing a single page, if
 you want to do anything that involves editing multiple pages, you will need to
 fork and clone the repository and make the changes on your own workstation.
 
-For this, you should first review the general tips on [How to Contribute](../developers/how-to-contribute.md).
+For this, you should first review the general tips on [How to Contribute](../developers/how-to-contribute.html).
 
 Next, you’ll want to become familiar with the `docs/` folder in the Brooklyn codebase where the docs live.
 In particular, note that the Brooklyn documentation is split into two parts:
@@ -54,7 +54,7 @@ In particular, note that the Brooklyn documentation is split into two parts:
 
 The main user guide shown on this site is for the most recent stable version,
 currently {{ site.brooklyn-stable-version }}.
-Guides for other versions are available [here](../meta/versions.md).
+Guides for other versions are available [here](../meta/versions.html).
 
 
 For More Information
