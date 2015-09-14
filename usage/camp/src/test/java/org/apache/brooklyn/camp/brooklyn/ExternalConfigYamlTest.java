@@ -28,6 +28,7 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.external.AbstractExternalConfigSupplier;
+import org.apache.brooklyn.core.config.external.ExternalConfigSupplier;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
@@ -48,6 +49,7 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put("brooklyn.external.myprovider", MyExternalConfigSupplier.class.getName());
         props.put("brooklyn.external.myprovider.mykey", "myval");
+        props.put("brooklyn.external.myproviderWithoutMapArg", MyExternalConfigSupplierWithoutMapArg.class.getName());
         
         return LocalManagementContextForTests.builder(true)
                 .useProperties(props)
@@ -71,6 +73,22 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
     }
     
     @Test
+    public void testExternalisedConfigFromSupplierWithoutMapArg() throws Exception {
+        ConfigKey<String> MY_CONFIG_KEY = ConfigKeys.newStringConfigKey("my.config.key");
+        
+        String yaml = Joiner.on("\n").join(
+            "services:",
+            "- serviceType: org.apache.brooklyn.core.test.entity.TestApplication",
+            "  brooklyn.config:",
+            "    my.config.key: $brooklyn:external(\"myproviderWithoutMapArg\", \"mykey\")");
+        
+        TestApplication app = (TestApplication) createAndStartApplication(new StringReader(yaml));
+        waitForApplicationTasks(app);
+
+        assertEquals(app.getConfig(MY_CONFIG_KEY), "myHardcodedVal");
+    }
+
+    @Test
     public void testWhenExternalisedConfigSupplierDoesNotExist() throws Exception {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put("brooklyn.external.myprovider", "wrong.classname.DoesNotExist");
@@ -82,6 +100,24 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
             fail();
         } catch (Exception e) {
             if (Exceptions.getFirstThrowableOfType(e, ClassNotFoundException.class) == null) {
+                throw e;
+            }
+        }
+    }
+    
+    @Test
+    public void testWhenExternalisedConfigSupplierDoesNotHavingRightConstructor() throws Exception {
+        BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
+        props.put("brooklyn.external.myprovider", MyExternalConfigSupplierWithWrongConstructor.class.getName());
+        
+        try {
+            LocalManagementContext mgmt2 = LocalManagementContextForTests.builder(true)
+                    .useProperties(props)
+                    .build();
+            mgmt2.terminate();
+            fail();
+        } catch (Exception e) {
+            if (!e.toString().contains("No matching constructor")) {
                 throw e;
             }
         }
@@ -102,6 +138,29 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
         
         @Override public String get(String key) {
             return conf.get(key);
+        }
+    }
+    
+    public static class MyExternalConfigSupplierWithoutMapArg extends AbstractExternalConfigSupplier {
+        public MyExternalConfigSupplierWithoutMapArg(ManagementContext mgmt, String name) {
+            super(mgmt, name);
+        }
+        
+        @Override public String get(String key) {
+            return key.equals("mykey") ? "myHardcodedVal" : null;
+        }
+    }
+    
+    public static class MyExternalConfigSupplierWithWrongConstructor implements ExternalConfigSupplier {
+        public MyExternalConfigSupplierWithWrongConstructor(double d) {
+        }
+        
+        @Override public String getName() {
+            return "myname";
+        }
+        
+        @Override public String get(String key) {
+            return null;
         }
     }
 }
