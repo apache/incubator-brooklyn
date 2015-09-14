@@ -29,4 +29,4 @@ $ for x in `find . -type file` ; do sed -E -i .bak -f /tmp/migrate.sed $x ; done
 $ find . -name "*.bak" -delete
 {% endhighlight %}
 
-If you encounter any issues, please [contact us](/website/community/).
+If you encounter any issues, please [contact us](/community/).

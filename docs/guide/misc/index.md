@@ -6,6 +6,7 @@ children:
 - { title: Javadoc, path: javadoc/ }
 - download.md
 - release-notes.md
+- migrate-to-0.8.0.md
 - known-issues.md
 - { path: ../dev/, title_in_menu: "Developer Guide" }
 - { path: /website/documentation/, title_in_menu: "All Documentation", menu_customization: { force_inactive: true } }
