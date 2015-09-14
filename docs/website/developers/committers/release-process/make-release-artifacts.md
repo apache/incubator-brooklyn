@@ -54,5 +54,5 @@ Make a signed tag for this release, and then push the tag:
 
 {% highlight bash %}
 git tag -s -m "Tag release ${VERSION_NAME} release candidate ${RC_NUMBER}" apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER}
-git push origin apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER}
+git push apache apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER}
 {% endhighlight %}
