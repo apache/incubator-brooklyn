@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.core.mgmt.internal;
 
-import java.lang.reflect.Constructor;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -28,9 +27,11 @@ import org.apache.brooklyn.core.config.ConfigPredicates;
 import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.config.external.ExternalConfigSupplier;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Optional;
 import com.google.common.collect.Maps;
 
 /**
@@ -101,10 +102,15 @@ public class BasicExternalConfigSupplierRegistry implements ExternalConfigSuppli
             Map<String, Object> config = ConfigUtils.filterForPrefixAndStrip(externalProviderProperties, key + ".");
 
             try {
-                Class<? extends ExternalConfigSupplier> providerClass = (Class<? extends ExternalConfigSupplier>) classloader.loadClass(providerClassname);
-                Constructor<? extends ExternalConfigSupplier> constructor = providerClass.getConstructor(ManagementContext.class, String.class, Map.class);
-                ExternalConfigSupplier configSupplier = constructor.newInstance(this, name, config);
-                addProvider(name, configSupplier);
+                Optional<ExternalConfigSupplier> configSupplier = Reflections.invokeConstructorWithArgs(classloader, providerClassname, mgmt, name, config);
+                if (!configSupplier.isPresent()) {
+                    configSupplier = Reflections.invokeConstructorWithArgs(classloader, providerClassname, mgmt, name);
+                }
+                if (!configSupplier.isPresent()) {
+                    throw new IllegalStateException("No matching constructor found in "+providerClassname);
+                }
+                
+                addProvider(name, configSupplier.get());
 
             } catch (Exception e) {
                 LOG.error("Failed to instantiate external config supplier named '" + name + "': " + e, e);
