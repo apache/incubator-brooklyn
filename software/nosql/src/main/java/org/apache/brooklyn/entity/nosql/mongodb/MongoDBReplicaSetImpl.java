@@ -54,6 +54,7 @@ import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.api.client.util.Sets;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -108,7 +109,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         @Override public boolean apply(@Nullable Entity input) {
             return input != null
                     && input instanceof MongoDBServer
-                    && ReplicaSetMemberStatus.PRIMARY.equals(input.getAttribute(MongoDBServer.REPLICA_SET_MEMBER_STATUS));
+                    && ReplicaSetMemberStatus.PRIMARY.equals(input.sensors().get(MongoDBServer.REPLICA_SET_MEMBER_STATUS));
         }
     };
 
@@ -118,7 +119,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             // getSecondaries relies on instanceof check
             return input != null
                     && input instanceof MongoDBServer
-                    && ReplicaSetMemberStatus.SECONDARY.equals(input.getAttribute(MongoDBServer.REPLICA_SET_MEMBER_STATUS));
+                    && ReplicaSetMemberStatus.SECONDARY.equals(input.sensors().get(MongoDBServer.REPLICA_SET_MEMBER_STATUS));
         }
     };
 
@@ -165,7 +166,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     @Override
     public String getName() {
         // FIXME: Names must be unique if the replica sets are used in a sharded cluster
-        return getConfig(REPLICA_SET_NAME) + this.getId();
+        return config().get(REPLICA_SET_NAME) + this.getId();
     }
 
     @Override
@@ -197,7 +198,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      */
     private void serverAdded(MongoDBServer server) {
         try {
-            LOG.debug("Server added: {}. SERVICE_UP: {}", server, server.getAttribute(MongoDBServer.SERVICE_UP));
+            LOG.debug("Server added: {}. SERVICE_UP: {}", server, server.sensors().get(MongoDBServer.SERVICE_UP));
 
             // Set the primary if the replica set hasn't been initialised.
             if (mustInitialise.compareAndSet(true, false)) {
@@ -205,8 +206,8 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                     LOG.info("First server up in {} is: {}", getName(), server);
                 boolean replicaSetInitialised = server.initializeReplicaSet(getName(), nextMemberId.getAndIncrement());
                 if (replicaSetInitialised) {
-                    setAttribute(PRIMARY_ENTITY, server);
-                    setAttribute(Startable.SERVICE_UP, true);
+                    sensors().set(PRIMARY_ENTITY, server);
+                    sensors().set(Startable.SERVICE_UP, true);
                 } else {
                     ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, "initialization", "replicaset failed to initialize");
                     ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
@@ -234,7 +235,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             @Override
             public void run() {
                 // SERVICE_UP is not guaranteed when additional members are added to the set.
-                Boolean isAvailable = secondary.getAttribute(MongoDBServer.SERVICE_UP);
+                Boolean isAvailable = secondary.sensors().get(MongoDBServer.SERVICE_UP);
                 MongoDBServer primary = getPrimary();
                 boolean reschedule;
                 if (Boolean.TRUE.equals(isAvailable) && primary != null) {
@@ -278,14 +279,14 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             if (LOG.isDebugEnabled())
                 LOG.debug("Scheduling removal of member from {}: {}", getName(), member);
             // FIXME is there a chance of race here?
-            if (member.equals(getAttribute(PRIMARY_ENTITY)))
-                setAttribute(PRIMARY_ENTITY, null);
+            if (member.equals(sensors().get(PRIMARY_ENTITY)))
+                sensors().set(PRIMARY_ENTITY, null);
             executor.submit(new Runnable() {
                 @Override
                 public void run() {
                     // Wait until the server has been stopped before reconfiguring the set. Quoth the MongoDB doc:
                     // for best results always shut down the mongod instance before removing it from a replica set.
-                    Boolean isAvailable = member.getAttribute(MongoDBServer.SERVICE_UP);
+                    Boolean isAvailable = member.sensors().get(MongoDBServer.SERVICE_UP);
                     // Wait for the replica set to elect a new primary if the set is reconfiguring itself.
                     MongoDBServer primary = getPrimary();
                     boolean reschedule;
@@ -377,11 +378,34 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                             return MutableList.copyOf(endpoints);
                         }})
                 .build());
+        
+        addEnricher(Enrichers.builder()
+                .aggregating(MongoDBServer.MONGO_SERVER_ENDPOINT)
+                .publishing(DATASTORE_URL)
+                .fromMembers()
+                .valueToReportIfNoSensors(null)
+                .computing(new Function<Collection<String>, String>() {
+                        @Override
+                        public String apply(Collection<String> input) {
+                            Set<String> endpoints = Sets.newHashSet();
+                            for (String endpoint: input) {
+                                if (!Strings.isBlank(endpoint)) {
+                                    
+                                    endpoints.add(endpoint);
+                                }
+                            }
+                            String credentials = MongoDBAuthenticationUtils.usesAuthentication(MongoDBReplicaSetImpl.this) ? 
+                                    String.format("%s:%s@", 
+                                            config().get(MongoDBAuthenticationMixins.ROOT_USERNAME), 
+                                            config().get(MongoDBAuthenticationMixins.ROOT_PASSWORD)) : "";
+                            return String.format("mongodb://%s%s", credentials, Strings.join(endpoints, ","));
+                        }})
+                .build());
 
         subscribeToMembers(this, MongoDBServer.IS_PRIMARY_FOR_REPLICA_SET, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
                 if (Boolean.TRUE == event.getValue())
-                    setAttribute(PRIMARY_ENTITY, (MongoDBServer)event.getSource());
+                    sensors().set(PRIMARY_ENTITY, (MongoDBServer)event.getSource());
             }
         });
 
@@ -396,7 +420,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         // TODO Note that after this the executor will not run if the set is restarted.
         executor.shutdownNow();
         super.stop();
-        setAttribute(Startable.SERVICE_UP, false);
+        sensors().set(Startable.SERVICE_UP, false);
     }
 
     @Override

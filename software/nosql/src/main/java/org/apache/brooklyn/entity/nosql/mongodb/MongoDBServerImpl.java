@@ -62,13 +62,13 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         super.connectSensors();
         connectServiceUpIsRunning();
 
-        int port = getAttribute(MongoDBServer.PORT);
+        int port = sensors().get(MongoDBServer.PORT);
         HostAndPort accessibleAddress = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, port);
-        setAttribute(MONGO_SERVER_ENDPOINT, String.format("http://%s:%d",
+        sensors().set(MONGO_SERVER_ENDPOINT, String.format("%s:%d",
                 accessibleAddress.getHostText(), accessibleAddress.getPort()));
 
-        int httpConsolePort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getAttribute(HTTP_PORT)).getPort();
-        setAttribute(HTTP_INTERFACE_URL, String.format("http://%s:%d",
+        int httpConsolePort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, sensors().get(HTTP_PORT)).getPort();
+        sensors().set(HTTP_INTERFACE_URL, String.format("http://%s:%d",
                 accessibleAddress.getHostText(), httpConsolePort));
 
         try {
@@ -85,7 +85,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                         .callable(new Callable<BasicBSONObject>() {
                             @Override
                             public BasicBSONObject call() throws Exception {
-                                return MongoDBServerImpl.this.getAttribute(SERVICE_UP)
+                                return MongoDBServerImpl.this.sensors().get(SERVICE_UP)
                                     ? client.getServerStatus()
                                     : null;
                             }
@@ -117,8 +117,8 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                             .suppressDuplicates(true))
                     .build();
         } else {
-            setAttribute(IS_PRIMARY_FOR_REPLICA_SET, false);
-            setAttribute(IS_SECONDARY_FOR_REPLICA_SET, false);
+            sensors().set(IS_PRIMARY_FOR_REPLICA_SET, false);
+            sensors().set(IS_SECONDARY_FOR_REPLICA_SET, false);
         }
 
         // Take interesting details from STATUS.
@@ -126,29 +126,29 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
                 @Override public void onEvent(SensorEvent<BasicBSONObject> event) {
                     BasicBSONObject map = event.getValue();
                     if (map != null && !map.isEmpty()) {
-                        setAttribute(UPTIME_SECONDS, map.getDouble("uptime", 0));
+                        sensors().set(UPTIME_SECONDS, map.getDouble("uptime", 0));
 
                         // Operations
                         BasicBSONObject opcounters = (BasicBSONObject) map.get("opcounters");
-                        setAttribute(OPCOUNTERS_INSERTS, opcounters.getLong("insert", 0));
-                        setAttribute(OPCOUNTERS_QUERIES, opcounters.getLong("query", 0));
-                        setAttribute(OPCOUNTERS_UPDATES, opcounters.getLong("update", 0));
-                        setAttribute(OPCOUNTERS_DELETES, opcounters.getLong("delete", 0));
-                        setAttribute(OPCOUNTERS_GETMORE, opcounters.getLong("getmore", 0));
-                        setAttribute(OPCOUNTERS_COMMAND, opcounters.getLong("command", 0));
+                        sensors().set(OPCOUNTERS_INSERTS, opcounters.getLong("insert", 0));
+                        sensors().set(OPCOUNTERS_QUERIES, opcounters.getLong("query", 0));
+                        sensors().set(OPCOUNTERS_UPDATES, opcounters.getLong("update", 0));
+                        sensors().set(OPCOUNTERS_DELETES, opcounters.getLong("delete", 0));
+                        sensors().set(OPCOUNTERS_GETMORE, opcounters.getLong("getmore", 0));
+                        sensors().set(OPCOUNTERS_COMMAND, opcounters.getLong("command", 0));
 
                         // Network stats
                         BasicBSONObject network = (BasicBSONObject) map.get("network");
-                        setAttribute(NETWORK_BYTES_IN, network.getLong("bytesIn", 0));
-                        setAttribute(NETWORK_BYTES_OUT, network.getLong("bytesOut", 0));
-                        setAttribute(NETWORK_NUM_REQUESTS, network.getLong("numRequests", 0));
+                        sensors().set(NETWORK_BYTES_IN, network.getLong("bytesIn", 0));
+                        sensors().set(NETWORK_BYTES_OUT, network.getLong("bytesOut", 0));
+                        sensors().set(NETWORK_NUM_REQUESTS, network.getLong("numRequests", 0));
 
                         // Replica set stats
                         BasicBSONObject repl = (BasicBSONObject) map.get("repl");
                         if (isReplicaSetMember() && repl != null) {
-                            setAttribute(IS_PRIMARY_FOR_REPLICA_SET, repl.getBoolean("ismaster"));
-                            setAttribute(IS_SECONDARY_FOR_REPLICA_SET, repl.getBoolean("secondary"));
-                            setAttribute(REPLICA_SET_PRIMARY_ENDPOINT, repl.getString("primary"));
+                            sensors().set(IS_PRIMARY_FOR_REPLICA_SET, repl.getBoolean("ismaster"));
+                            sensors().set(IS_SECONDARY_FOR_REPLICA_SET, repl.getBoolean("secondary"));
+                            sensors().set(REPLICA_SET_PRIMARY_ENDPOINT, repl.getString("primary"));
                         }
                     }
                 }
@@ -165,7 +165,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     @Override
     public MongoDBReplicaSet getReplicaSet() {
-        return getConfig(MongoDBServer.REPLICA_SET);
+        return config().get(MongoDBServer.REPLICA_SET);
     }
 
     @Override
@@ -186,7 +186,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         // The ReplicaSet uses REPLICA_SET_MEMBER_STATUS to determine which node to call.
         // 
         // Relying on caller to respect the `false` result, to retry.
-        if (!getAttribute(IS_PRIMARY_FOR_REPLICA_SET)) {
+        if (!sensors().get(IS_PRIMARY_FOR_REPLICA_SET)) {
             LOG.warn("Attempted to add {} to replica set at server that is not primary: {}", secondary, this);
             return false;
         }
@@ -195,7 +195,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
 
     @Override
     public boolean removeMemberFromReplicaSet(MongoDBServer server) {
-        if (!getAttribute(IS_PRIMARY_FOR_REPLICA_SET)) {
+        if (!sensors().get(IS_PRIMARY_FOR_REPLICA_SET)) {
             LOG.warn("Attempted to remove {} from replica set at server that is not primary: {}", server, this);
             return false;
         }
@@ -206,8 +206,8 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("id", getId())
-                .add("hostname", getAttribute(HOSTNAME))
-                .add("port", getAttribute(PORT))
+                .add("hostname", sensors().get(HOSTNAME))
+                .add("port", sensors().get(PORT))
                 .toString();
     }
 }
