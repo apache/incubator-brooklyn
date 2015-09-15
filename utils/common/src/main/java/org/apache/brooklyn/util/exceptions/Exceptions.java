@@ -64,12 +64,13 @@ public class Exceptions {
     private static List<Class<? extends Throwable>> BORING_PREFIX_THROWABLE_EXACT_TYPES = ImmutableList.<Class<? extends Throwable>>of(
         IllegalStateException.class, RuntimeException.class, CompoundRuntimeException.class);
 
-    /** Returns whether this is throwable either known to be boring or to have an unuseful prefix;
-     * null is *not* boring. */
+    /** Returns whether this is throwable either known to be boring or to have an unhelpful type name (prefix)
+     * which should be suppressed. null is accepted but treated as not boring. */
     public static boolean isPrefixBoring(Throwable t) {
         if (t==null) return false;
         if (isBoring(t))
             return true;
+        if (t instanceof UserFacingException) return true;
         for (Class<? extends Throwable> type: BORING_PREFIX_THROWABLE_EXACT_TYPES)
             if (t.getClass().equals(type)) return true;
         return false;

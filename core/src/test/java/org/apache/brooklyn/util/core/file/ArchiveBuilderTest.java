@@ -24,6 +24,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
@@ -135,31 +136,32 @@ public class ArchiveBuilderTest {
         assertTrue(names.contains("./data04.txt"));
         input.close();
     }
+
     @Test
-    public void testCreateZipFromFiles() throws Exception {
+    public void testCreateZipFromFilesWithNoDir() throws Exception {
+        ArchiveBuilder builder = ArchiveBuilder.zip();
+        for (String fileName : Arrays.asList("data01.txt", "data02.txt", "data03.txt")) {
+            builder.addAt(new File(tmpDir, fileName), "");
+        }
+        buildAndValidatePrefix(builder, "data");
+    }
+
+    @Test
+    public void testCreateZipFromFilesInSlash() throws Exception {
+        ArchiveBuilder builder = ArchiveBuilder.zip();
+        for (String fileName : Arrays.asList("data01.txt", "data02.txt", "data03.txt")) {
+            builder.addAt(new File(tmpDir, fileName), "/");
+        }
+        buildAndValidatePrefix(builder, "/data");
+    }
+
+    @Test
+    public void testCreateZipFromFilesInDot() throws Exception {
         ArchiveBuilder builder = ArchiveBuilder.zip();
         for (String fileName : Arrays.asList("data01.txt", "data02.txt", "data03.txt")) {
             builder.addAt(new File(tmpDir, fileName), ".");
         }
-        File archive = builder.create();
-        archive.deleteOnExit();
-
-        List<ZipEntry> entries = Lists.newArrayList();
-        ZipInputStream input = new ZipInputStream(new FileInputStream(archive));
-        ZipEntry entry = input.getNextEntry();
-        while (entry != null) {
-            entries.add(entry);
-            entry = input.getNextEntry();
-        }
-        assertEquals(entries.size(), 3);
-        Iterable<ZipEntry> directories = Iterables.filter(entries, isDirectory);
-        Iterable<ZipEntry> files = Iterables.filter(entries, Predicates.not(isDirectory));
-        assertTrue(Iterables.isEmpty(directories));
-        assertEquals(Iterables.size(files), 3);
-        for (ZipEntry file : files) {
-            assertTrue(file.getName().startsWith(Os.mergePathsUnix(".", "data")));
-        }
-        input.close();
+        buildAndValidatePrefix(builder, Os.mergePathsUnix(".", "data"));
     }
 
     @Test
@@ -169,6 +171,10 @@ public class ArchiveBuilderTest {
         for (String fileName : Arrays.asList("data01.txt", "data02.txt", "data03.txt")) {
             builder.addFromLocalBaseDir(parentDir, Os.mergePaths(baseDir, fileName));
         }
+        buildAndValidatePrefix(builder, Os.mergePaths(baseDir, "data"));
+    }
+
+    private void buildAndValidatePrefix(ArchiveBuilder builder, String prefix) throws FileNotFoundException, IOException {
         File archive = builder.create();
         archive.deleteOnExit();
 
@@ -185,7 +191,7 @@ public class ArchiveBuilderTest {
         assertTrue(Iterables.isEmpty(directories));
         assertEquals(Iterables.size(files), 3);
         for (ZipEntry file : files) {
-            assertTrue(file.getName().startsWith(Os.mergePathsUnix(".", baseDir)));
+            assertTrue(file.getName().startsWith(prefix), "File is: "+file+"; missing "+prefix);
         }
         input.close();
     }

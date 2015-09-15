@@ -168,7 +168,8 @@ public class CampYamlLiteTest {
         Assert.assertEquals(bundle.getUrl(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL);
         Assert.assertEquals(bundle.getVersion(), "0.1.0");
 
-        EntitySpec<?> spec1 = (EntitySpec<?>) mgmt.getCatalog().createSpec(retrievedItem);
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        EntitySpec<?> spec1 = (EntitySpec<?>) mgmt.getCatalog().createSpec((CatalogItem)retrievedItem);
         assertNotNull(spec1);
         Assert.assertEquals(spec1.getConfig().get(TestEntity.CONF_NAME), "sample");
         

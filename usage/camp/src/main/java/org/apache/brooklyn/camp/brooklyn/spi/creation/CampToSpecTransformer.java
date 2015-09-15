@@ -31,13 +31,18 @@ import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
+import org.apache.brooklyn.core.plan.PlanNotRecognizedException;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CampToSpecTransformer implements PlanToSpecTransformer {
 
     public static final String YAML_CAMP_PLAN_TYPE = "org.apache.brooklyn.camp/yaml";
 
+    private static final Logger log = LoggerFactory.getLogger(CampToSpecTransformer.class);
+    
     private ManagementContext mgmt;
 
     @Override
@@ -52,34 +57,45 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
 
     @Override
     public EntitySpec<? extends Application> createApplicationSpec(String plan) {
-      CampPlatform camp = CampCatalogUtils.getCampPlatform(mgmt);
-      AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(plan) );
-      AssemblyTemplateInstantiator instantiator;
-      try {
-          instantiator = at.getInstantiator().newInstance();
-      } catch (Exception e) {
-          throw Exceptions.propagate(e);
-      }
-      if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-          BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-          return ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
-      } else {
-          // The unknown instantiator can create the app (Assembly), but not a spec.
-          // Currently, all brooklyn plans should produce the above.
-          if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
-              if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
-                  throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
-              throw new IllegalArgumentException("Unrecognized application blueprint format: no services defined");
-          }
-          // map this (expected) error to a nicer message
-          throw new IllegalArgumentException("Unrecognized application blueprint format");
-      }
+        try {
+            CampPlatform camp = CampCatalogUtils.getCampPlatform(mgmt);
+            AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(plan) );
+            AssemblyTemplateInstantiator instantiator;
+            try {
+                instantiator = at.getInstantiator().newInstance();
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+            if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
+                BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
+                return ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
+            } else {
+                // The unknown instantiator can create the app (Assembly), but not a spec.
+                // Currently, all brooklyn plans should produce the above.
+                if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
+                    if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
+                        throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
+                    throw new IllegalArgumentException("Unrecognized application blueprint format: no services defined");
+                }
+                // map this (expected) error to a nicer message
+                throw new IllegalArgumentException("Unrecognized application blueprint format");
+            }
+        } catch (Exception e) {
+            if (e instanceof PlanNotRecognizedException) {
+                if (log.isTraceEnabled())
+                    log.debug("Failed to create entity from CAMP spec:\n" + plan, e);
+            } else {
+                if (log.isDebugEnabled())
+                    log.debug("Failed to create entity from CAMP spec:\n" + plan, e);
+            }
+            throw Exceptions.propagate(e);
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T, SpecT extends AbstractBrooklynObjectSpec<T, SpecT>> AbstractBrooklynObjectSpec<T, SpecT> createCatalogSpec(CatalogItem<T, SpecT> item) {
-        return (AbstractBrooklynObjectSpec<T, SpecT>) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item);
+    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item) {
+        return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item);
     }
 
     @Override

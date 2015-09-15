@@ -525,7 +525,8 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         addCatalogOSGiEntity(id);
         BrooklynCatalog catalog = mgmt().getCatalog();
         CatalogItem<?, ?> item = catalog.getCatalogItem(id, TEST_VERSION);
-        Object spec = catalog.createSpec(item);
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        Object spec = catalog.createSpec((CatalogItem) item);
         Assert.assertNotNull(spec);
     }
     

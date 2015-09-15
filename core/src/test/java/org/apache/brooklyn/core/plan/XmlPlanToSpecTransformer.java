@@ -72,15 +72,15 @@ public class XmlPlanToSpecTransformer implements PlanToSpecTransformer {
         }
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "unchecked" })
     @Override
-    public <T, SpecT extends AbstractBrooklynObjectSpec<T, SpecT>> AbstractBrooklynObjectSpec<T, SpecT> createCatalogSpec(CatalogItem<T, SpecT> item) {
+    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item) {
         if (item.getPlanYaml()==null) throw new PlanNotRecognizedException("Plan is null");
         if (item.getCatalogItemType()==CatalogItemType.ENTITY) {
-            return (EntitySpec)toEntitySpec(parseXml(item.getPlanYaml()), 1);
+            return (SpecT)toEntitySpec(parseXml(item.getPlanYaml()), 1);
         }
         if (item.getCatalogItemType()==CatalogItemType.TEMPLATE) {
-            return (EntitySpec)toEntitySpec(parseXml(item.getPlanYaml()), 0);
+            return (SpecT)toEntitySpec(parseXml(item.getPlanYaml()), 0);
         }
         throw new PlanNotRecognizedException("Type "+item.getCatalogItemType()+" not supported");
     }

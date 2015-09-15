@@ -64,6 +64,7 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             Service service = (Service)deploymentPlanItem;
 
             String serviceType = service.getServiceType();
+            if (serviceType==null) throw new NullPointerException("Service must declare a type ("+service+")");
             BrooklynClassLoadingContext loader = BasicBrooklynCatalog.BrooklynLoaderTracker.getLoader();
             if (loader == null) loader = JavaBrooklynClassLoadingContext.create(mgmt);
             if (BrooklynComponentTemplateResolver.Factory.supportsType(loader, serviceType))

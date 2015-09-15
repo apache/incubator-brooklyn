@@ -238,7 +238,8 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         BrooklynCatalog catalog = mgmt().getCatalog();
         Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems();
         for (CatalogItem<Object, Object> item: items) {
-            Object spec = catalog.createSpec(item);
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Object spec = catalog.createSpec((CatalogItem)item);
             switch (item.getCatalogItemType()) {
                 case TEMPLATE:
                 case ENTITY:

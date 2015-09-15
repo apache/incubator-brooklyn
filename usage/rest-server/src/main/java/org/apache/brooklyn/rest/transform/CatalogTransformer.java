@@ -58,13 +58,13 @@ public class CatalogTransformer {
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(CatalogTransformer.class);
     
-    public static CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Entity,EntitySpec<?>> item) {
+    public static <T extends Entity> CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<T,EntitySpec<? extends T>> item) {
         Set<EntityConfigSummary> config = Sets.newTreeSet(SummaryComparators.nameComparator());
         Set<SensorSummary> sensors = Sets.newTreeSet(SummaryComparators.nameComparator());
         Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
 
         try {
-            EntitySpec<?> spec = b.getCatalog().createSpec(item);
+            EntitySpec<?> spec = (EntitySpec<?>) b.getCatalog().createSpec((CatalogItem) item);
             EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
             EntityType type = typeMap.getSnapshot();
 
@@ -94,17 +94,17 @@ public class CatalogTransformer {
             item.isDeprecated(), makeLinks(item));
     }
 
-    @SuppressWarnings("unchecked")
-    public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem<?,?> item) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem item) {
         try {
             switch (item.getCatalogItemType()) {
             case TEMPLATE:
             case ENTITY:
-                return catalogEntitySummary(b, (CatalogItem<? extends Entity, EntitySpec<?>>) item);
+                return catalogEntitySummary(b, item);
             case POLICY:
-                return catalogPolicySummary(b, (CatalogItem<? extends Policy, PolicySpec<?>>) item);
+                return catalogPolicySummary(b, item);
             case LOCATION:
-                return catalogLocationSummary(b, (CatalogItem<? extends Location, LocationSpec<?>>) item);
+                return catalogLocationSummary(b, item);
             default:
                 log.warn("Unexpected catalog item type when getting self link (supplying generic item): "+item.getCatalogItemType()+" "+item);
             }

@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.util.text.Strings;
+
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
@@ -138,7 +140,7 @@ public class Duration implements Comparable<Duration>, Serializable {
      * also accepts "forever" (and for those who prefer things exceedingly accurate, "practically_forever"). 
      * Also see {@link #of(Object)}. */
     public static Duration parse(String textualDescription) {
-        if (textualDescription==null) return null;
+        if (Strings.isBlank(textualDescription)) return null;
         if ("null".equalsIgnoreCase(textualDescription)) return null;
         
         if ("forever".equalsIgnoreCase(textualDescription)) return Duration.PRACTICALLY_FOREVER;

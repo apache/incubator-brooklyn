@@ -202,7 +202,8 @@ public class Os {
     }
 
     /** merges paths using forward slash as the "local OS file separator", because it is recognised on windows,
-     * making paths more consistent and avoiding problems with backslashes being escaped */
+     * making paths more consistent and avoiding problems with backslashes being escaped.
+     * empty segments are omitted. */
     public static String mergePaths(String ...items) {
         char separatorChar = '/';
         StringBuilder result = new StringBuilder();

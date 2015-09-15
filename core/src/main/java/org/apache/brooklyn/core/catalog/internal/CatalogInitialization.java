@@ -208,6 +208,9 @@ public class CatalogInitialization implements ManagementContextInjectable {
                     // once up and running the typical way to add items is via the REST API
                     hasRunFinalInitialization = true;
                 }
+            } catch (Throwable e) {
+                log.warn("Error populating catalog (rethrowing): "+e, e);
+                throw Exceptions.propagate(e);
             } finally {
                 if (!hasRunFinalInitialization) {
                     hasRunTransientOfficialInitialization = true;
