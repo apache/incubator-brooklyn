@@ -40,6 +40,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 /**
@@ -55,6 +56,7 @@ import com.google.common.collect.Iterables;
  */
 public class CassandraDatacenterIntegrationTest extends BrooklynAppLiveTestSupport {
 
+    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(CassandraDatacenterIntegrationTest.class);
 
     protected Location testLocation;
@@ -119,7 +121,7 @@ public class CassandraDatacenterIntegrationTest extends BrooklynAppLiveTestSuppo
         if (assertToken) {
             PosNeg63TokenGenerator tg = new PosNeg63TokenGenerator();
             tg.growingCluster(1);
-            EntityTestUtils.assertAttributeEqualsEventually(node, CassandraNode.TOKEN, tg.newToken().add(BigInteger.valueOf(42)));
+            EntityTestUtils.assertAttributeEqualsEventually(node, CassandraNode.TOKENS, ImmutableSet.of(tg.newToken().add(BigInteger.valueOf(42))));
         }
 
         // may take some time to be consistent (with new thrift_latency checks on the node,

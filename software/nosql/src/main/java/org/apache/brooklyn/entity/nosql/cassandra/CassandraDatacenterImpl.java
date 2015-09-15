@@ -303,16 +303,21 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         return super.grow(delta);
     }
     
-    @SuppressWarnings("deprecation")
     @Override
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
         Map<Object, Object> allflags = MutableMap.copyOf(flags);
-        
-        if ((flags.containsKey(CassandraNode.TOKEN) || flags.containsKey("token")) || (flags.containsKey(CassandraNode.TOKENS) || flags.containsKey("tokens"))) {
+
+        if (flags.containsKey("token") || flags.containsKey("cassandra.token")) {
+            // TODO Delete in future version; was deprecated in 0.7.0; deleted config key in 0.9.0
+            log.warn("Cassandra token no longer supported - use 'tokens' in "+CassandraDatacenterImpl.this);
+        }
+        if (flags.containsKey(CassandraNode.TOKENS) || flags.containsKey("tokens") || flags.containsKey("cassandra.tokens")) {
             // leave token config as-is
         } else if (!useVnodes()) {
             BigInteger token = getTokenGenerator().newToken();
-            allflags.put(CassandraNode.TOKEN, token);
+            if (token != null) {
+                allflags.put(CassandraNode.TOKENS, ImmutableSet.of(token));
+            }
         }
 
         if ((flags.containsKey(CassandraNode.NUM_TOKENS_PER_NODE) || flags.containsKey("numTokensPerNode"))) {

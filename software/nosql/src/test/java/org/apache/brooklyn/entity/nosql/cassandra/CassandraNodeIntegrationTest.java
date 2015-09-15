@@ -155,7 +155,6 @@ public class CassandraNodeIntegrationTest extends AbstractCassandraNodeTest {
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
-                assertNotNull(cassandra.getAttribute(CassandraNode.TOKEN));
                 assertNotNull(cassandra.getAttribute(CassandraNode.TOKENS));
                 assertEquals(cassandra.getAttribute(CassandraNode.TOKENS).size(), 256, "tokens="+cassandra.getAttribute(CassandraNode.TOKENS));
                 

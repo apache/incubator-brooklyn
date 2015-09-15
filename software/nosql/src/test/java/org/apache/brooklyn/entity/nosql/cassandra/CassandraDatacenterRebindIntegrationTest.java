@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.entity.nosql.cassandra;
 
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 
 import java.math.BigInteger;
@@ -44,6 +45,7 @@ import com.google.common.collect.Iterables;
  * Test the operation of the {@link NginxController} class.
  */
 public class CassandraDatacenterRebindIntegrationTest extends RebindTestFixtureWithApp {
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(CassandraDatacenterRebindIntegrationTest.class);
 
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
@@ -77,9 +79,9 @@ public class CassandraDatacenterRebindIntegrationTest extends RebindTestFixtureW
         CassandraDatacenterLiveTest.assertNodesConsistent(ImmutableList.of(origNode));
         CassandraDatacenterLiveTest.assertSingleTokenConsistent(ImmutableList.of(origNode));
         CassandraDatacenterLiveTest.checkConnectionRepeatedly(2, 5, ImmutableList.of(origNode));
-        BigInteger origToken = origNode.getAttribute(CassandraNode.TOKEN);
         Set<BigInteger> origTokens = origNode.getAttribute(CassandraNode.TOKENS);
-        assertNotNull(origToken);
+        assertNotNull(origTokens);
+        assertFalse(origTokens.contains(null), "tokens="+origTokens);
         
         newApp = rebind(RebindOptions.create().terminateOrigManagementContext(true));
         final CassandraDatacenter newDatacenter = (CassandraDatacenter) Iterables.find(newApp.getChildren(), Predicates.instanceOf(CassandraDatacenter.class));
@@ -87,7 +89,6 @@ public class CassandraDatacenterRebindIntegrationTest extends RebindTestFixtureW
         
         EntityTestUtils.assertAttributeEqualsEventually(newDatacenter, CassandraDatacenter.GROUP_SIZE, 1);
         EntityTestUtils.assertAttributeEqualsEventually(newNode, Startable.SERVICE_UP, true);
-        EntityTestUtils.assertAttributeEqualsEventually(newNode, CassandraNode.TOKEN, origToken);
         EntityTestUtils.assertAttributeEqualsEventually(newNode, CassandraNode.TOKENS, origTokens);
         CassandraDatacenterLiveTest.assertNodesConsistent(ImmutableList.of(newNode));
         CassandraDatacenterLiveTest.assertSingleTokenConsistent(ImmutableList.of(newNode));

@@ -53,8 +53,6 @@ import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
 import org.apache.brooklyn.feed.jmx.JmxFeed;
 import org.apache.brooklyn.feed.jmx.JmxHelper;
 import org.apache.brooklyn.feed.jmx.JmxOperationPollConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher;
 import org.apache.brooklyn.policy.enricher.TimeWeightedDeltaEnricher;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -65,6 +63,8 @@ import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -75,8 +75,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.HostAndPort;
@@ -207,44 +205,16 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         return getConfig(CassandraNode.NUM_TOKENS_PER_NODE);
     }
 
-    @Deprecated
-    @Override public BigInteger getToken() {
-        BigInteger token = getAttribute(CassandraNode.TOKEN);
-        if (token == null) {
-            token = getConfig(CassandraNode.TOKEN);
-        }
-        return token;
-    }
-    
     @Override public Set<BigInteger> getTokens() {
         // Prefer an already-set attribute over the config.
         // Prefer TOKENS over TOKEN.
         Set<BigInteger> tokens = getAttribute(CassandraNode.TOKENS);
         if (tokens == null) {
-            BigInteger token = getAttribute(CassandraNode.TOKEN);
-            if (token != null) {
-                tokens = ImmutableSet.of(token);
-            }
-        }
-        if (tokens == null) {
             tokens = getConfig(CassandraNode.TOKENS);
-        }
-        if (tokens == null) {
-            BigInteger token = getConfig(CassandraNode.TOKEN);
-            if (token != null) {
-                tokens = ImmutableSet.of(token);
-            }
         }
         return tokens;
     }
     
-    @Deprecated
-    @Override public String getTokenAsString() {
-        BigInteger token = getToken();
-        if (token==null) return "";
-        return ""+token;
-    }
-
     @Override public String getTokensAsString() {
         // TODO check what is required when replacing failed node.
         // with vnodes in Cassandra 2.x, don't bother supplying token
@@ -455,23 +425,6 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                                 return result;
                             }})
                         .onException(Functions.<Set<BigInteger>>constant(null))
-                        .suppressDuplicates(true))
-                .pollAttribute(new JmxAttributePollConfig<BigInteger>(TOKEN)
-                        .objectName(storageServiceMBean)
-                        .attributeName("TokenToEndpointMap")
-                        .onSuccess(new Function<Object, BigInteger>() {
-                            @Override
-                            public BigInteger apply(@Nullable Object arg) {
-                                Map input = (Map)arg;
-                                // TODO remove duplication from setting TOKENS
-                                if (input == null || input.isEmpty()) return null;
-                                // FIXME does not work on aws-ec2, uses RFC1918 address
-                                Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS), getAttribute(SUBNET_ADDRESS), getAttribute(SUBNET_HOSTNAME)));
-                                Set<String> tokens = Maps.filterValues(input, self).keySet();
-                                String token = Iterables.getFirst(tokens, null);
-                                return (token != null) ? new BigInteger(token) : null;
-                            }})
-                        .onException(Functions.<BigInteger>constant(null))
                         .suppressDuplicates(true))
                 .pollOperation(new JmxOperationPollConfig<String>(DATACENTER_NAME)
                         .period(60, TimeUnit.SECONDS)

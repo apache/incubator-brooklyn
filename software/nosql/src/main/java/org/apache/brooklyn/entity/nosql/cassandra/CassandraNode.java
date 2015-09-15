@@ -136,14 +136,6 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
             "Number of tokens per node; if using vnodes, should set this to a value like 256",
             1);
     
-    /**
-     * @deprecated since 0.7; use {@link #TOKENS}
-     */
-    @SetFromFlag("token")
-    @Deprecated
-    BasicAttributeSensorAndConfigKey<BigInteger> TOKEN = new BasicAttributeSensorAndConfigKey<BigInteger>(
-            BigInteger.class, "cassandra.token", "Cassandra Token");
-
     @SetFromFlag("tokens")
     @SuppressWarnings("serial")
     BasicAttributeSensorAndConfigKey<Set<BigInteger>> TOKENS = new BasicAttributeSensorAndConfigKey<Set<BigInteger>>(
@@ -200,24 +192,14 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     String getPrivateIp();
     String getPublicIp();
     
-    /**
-     * In range 0 to (2^127)-1; or null if not yet set or known.
-     * Returns the first token if more than one token.
-     * @deprecated since 0.7; see {@link #getTokens()}
-     */
-    @Deprecated
-    BigInteger getToken();
-
     int getNumTokensPerNode();
 
-    Set<BigInteger> getTokens();
-
     /**
-     * string value of token (with no commas, which freemarker introduces!) or blank if none
-     * @deprecated since 0.7; use {@link #getTokensAsString()}
+     * Returns the set of tokens.
+     * Each is in the range 0 to (2^127)-1.
+     * Returns null if there are no tokens.
      */
-    @Deprecated
-    String getTokenAsString();
+    Set<BigInteger> getTokens();
 
     /** string value of comma-separated tokens; or blank if none */
     String getTokensAsString();
