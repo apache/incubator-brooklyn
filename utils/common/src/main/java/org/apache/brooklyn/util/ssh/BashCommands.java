@@ -619,17 +619,15 @@ public class BashCommands {
 
     /** cats the given text to the given command, using bash << multi-line input syntax */
     public static String pipeTextTo(String text, String command) {
-        String id = Identifiers.makeRandomId(8);
-        return "cat << EOF_"+id+" | "+command+"\n"
+        return "cat << EOL_BROOKLYN | "+command+"\n"
                 +text
-                +"\n"+"EOF_"+id+"\n";
+                +"\n"+"EOL_BROOKLYN\n";
     }
 
     public static String pipeTextToFile(String text, String filepath) {
-        String id = Identifiers.makeRandomId(8);
-        return "cat > " + filepath + " << EOL_" + id + "\n"
-                + text
-                + "EOL_" + id + "\n";
+        return "cat > \"" + filepath + "\" << EOF_BROOKLYN\n"
+                + text + "\n"
+                + "EOF_BROOKLYN\n";
     }
 
     public static String prependToEtcHosts(String ip, String... hostnames) {

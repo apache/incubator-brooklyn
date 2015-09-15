@@ -82,7 +82,6 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
         // Advertise even if default are used (root password is set in MongoDBAuthenticationUtils)
         sensors().set(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE, config().get(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE));
         sensors().set(MongoDBAuthenticationMixins.ROOT_USERNAME, config().get(MongoDBAuthenticationMixins.ROOT_USERNAME));
-        sensors().set(MongoDBAuthenticationMixins.MONGODB_KEYFILE_DESTINATION, config().get(MongoDBAuthenticationMixins.MONGODB_KEYFILE_CONTENTS));
 
         ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "stopped");
     }

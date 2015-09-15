@@ -145,6 +145,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         EntitySpec<?> spec = config().get(MEMBER_SPEC);
         if (spec == null) {
             spec = EntitySpec.create(MongoDBServer.class);
+            config().set(MEMBER_SPEC, spec);
         }
         MongoDBAuthenticationUtils.setAuthenticationConfig(spec, this);
         return spec;
@@ -195,24 +196,28 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      * otherwise schedules the addition of a new secondary.
      */
     private void serverAdded(MongoDBServer server) {
-        LOG.debug("Server added: {}. SERVICE_UP: {}", server, server.getAttribute(MongoDBServer.SERVICE_UP));
+        try {
+            LOG.debug("Server added: {}. SERVICE_UP: {}", server, server.getAttribute(MongoDBServer.SERVICE_UP));
 
-        // Set the primary if the replica set hasn't been initialised.
-        if (mustInitialise.compareAndSet(true, false)) {
-            if (LOG.isInfoEnabled())
-                LOG.info("First server up in {} is: {}", getName(), server);
-            boolean replicaSetInitialised = server.initializeReplicaSet(getName(), nextMemberId.getAndIncrement());
-            if (replicaSetInitialised) {
-                setAttribute(PRIMARY_ENTITY, server);
-                setAttribute(Startable.SERVICE_UP, true);
+            // Set the primary if the replica set hasn't been initialised.
+            if (mustInitialise.compareAndSet(true, false)) {
+                if (LOG.isInfoEnabled())
+                    LOG.info("First server up in {} is: {}", getName(), server);
+                boolean replicaSetInitialised = server.initializeReplicaSet(getName(), nextMemberId.getAndIncrement());
+                if (replicaSetInitialised) {
+                    setAttribute(PRIMARY_ENTITY, server);
+                    setAttribute(Startable.SERVICE_UP, true);
+                } else {
+                    ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, "initialization", "replicaset failed to initialize");
+                    ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
+                }
             } else {
-                ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, "initialization", "replicaset failed to initialize");
-                ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Scheduling addition of member to {}: {}", getName(), server);
+                addSecondaryWhenPrimaryIsNonNull(server);
             }
-        } else {
-            if (LOG.isDebugEnabled())
-                LOG.debug("Scheduling addition of member to {}: {}", getName(), server);
-            addSecondaryWhenPrimaryIsNonNull(server);
+        } catch (Exception e) {
+            ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator((EntityLocal)server, "Failed to update replicaset", e);
         }
     }
 
@@ -269,47 +274,51 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
      * @param member The server to be removed from the replica set.
      */
     private void serverRemoved(final MongoDBServer member) {
-        if (LOG.isDebugEnabled())
-            LOG.debug("Scheduling removal of member from {}: {}", getName(), member);
-        // FIXME is there a chance of race here?
-        if (member.equals(getAttribute(PRIMARY_ENTITY)))
-            setAttribute(PRIMARY_ENTITY, null);
-        executor.submit(new Runnable() {
-            @Override
-            public void run() {
-                // Wait until the server has been stopped before reconfiguring the set. Quoth the MongoDB doc:
-                // for best results always shut down the mongod instance before removing it from a replica set.
-                Boolean isAvailable = member.getAttribute(MongoDBServer.SERVICE_UP);
-                // Wait for the replica set to elect a new primary if the set is reconfiguring itself.
-                MongoDBServer primary = getPrimary();
-                boolean reschedule;
-                
-                if (primary != null && !isAvailable) {
-                    boolean removed = primary.removeMemberFromReplicaSet(member);
-                    if (removed) {
-                        LOG.info("Removed {} from replica set {}", member, getName());
-                        reschedule = false;
+        try {
+            if (LOG.isDebugEnabled())
+                LOG.debug("Scheduling removal of member from {}: {}", getName(), member);
+            // FIXME is there a chance of race here?
+            if (member.equals(getAttribute(PRIMARY_ENTITY)))
+                setAttribute(PRIMARY_ENTITY, null);
+            executor.submit(new Runnable() {
+                @Override
+                public void run() {
+                    // Wait until the server has been stopped before reconfiguring the set. Quoth the MongoDB doc:
+                    // for best results always shut down the mongod instance before removing it from a replica set.
+                    Boolean isAvailable = member.getAttribute(MongoDBServer.SERVICE_UP);
+                    // Wait for the replica set to elect a new primary if the set is reconfiguring itself.
+                    MongoDBServer primary = getPrimary();
+                    boolean reschedule;
+
+                    if (primary != null && !isAvailable) {
+                        boolean removed = primary.removeMemberFromReplicaSet(member);
+                        if (removed) {
+                            LOG.info("Removed {} from replica set {}", member, getName());
+                            reschedule = false;
+                        } else {
+                            if (LOG.isDebugEnabled()) {
+                                LOG.debug("{} could not be removed from replica set via {}; rescheduling", member, getName());
+                            }
+                            reschedule = true;
+                        }
+
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("{} could not be removed from replica set via {}; rescheduling", member, getName());
+                        if (LOG.isTraceEnabled()) {
+                            LOG.trace("Rescheduling removal of member {} from replica set {}: service_up={}, primary={}",
+                                    new Object[]{member, getName(), isAvailable, primary});
                         }
                         reschedule = true;
                     }
 
-                } else {
-                    if (LOG.isTraceEnabled()) {
-                        LOG.trace("Rescheduling removal of member {} from replica set {}: service_up={}, primary={}",
-                            new Object[]{member, getName(), isAvailable, primary});
+                    if (reschedule) {
+                        // TODO Could limit number of retries
+                        executor.schedule(this, 3, TimeUnit.SECONDS);
                     }
-                    reschedule = true;
                 }
-                
-                if (reschedule) {
-                    // TODO Could limit number of retries
-                    executor.schedule(this, 3, TimeUnit.SECONDS);
-                }
-            }
-        });
+            });
+        } catch (Exception e) {
+            ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator((EntityLocal)member, "Failed to update replicaset", e);
+        }
     }
 
     @Override
@@ -401,18 +410,10 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             // Ignored
         }
         @Override protected void onEntityAdded(Entity member) {
-            try {
-                ((MongoDBReplicaSetImpl) entity).serverAdded((MongoDBServer) member);
-            } catch (Exception e) {
-                ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator((EntityLocal)member, "Failed to update replicaset", e);
-            }
+            ((MongoDBReplicaSetImpl) entity).serverAdded((MongoDBServer) member);
         }
         @Override protected void onEntityRemoved(Entity member) {
-            try {
-                ((MongoDBReplicaSetImpl) entity).serverRemoved((MongoDBServer) member);
-            } catch (Exception e) {
-                ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator((EntityLocal)member, "Failed to update replicaset", e);
-            }
+            ((MongoDBReplicaSetImpl) entity).serverRemoved((MongoDBServer) member);
         }
     }
 }

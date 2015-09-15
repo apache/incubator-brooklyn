@@ -48,8 +48,4 @@ public class MongoDBRouterSshDriver extends AbstractMongoDBSshDriver implements 
                 .body.append(command).execute();
     }
 
-    @Override
-    public boolean isRunning() {
-        return super.isRunning();
-    }
 }

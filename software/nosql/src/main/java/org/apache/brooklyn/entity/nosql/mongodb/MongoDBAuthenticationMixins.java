@@ -28,11 +28,11 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 public interface MongoDBAuthenticationMixins {
     @SetFromFlag("mongodbKeyfileContents")
     ConfigKey<String> MONGODB_KEYFILE_CONTENTS = ConfigKeys.newStringConfigKey(
-            "mongodb.keyfile.contents", "Contents of the keyfile used for authentication");
+            "mongodb.keyfile.contents", "Contents of the keyfile used for authentication. If mongodb.keyfile.contents and mongodb.keyfile.url are both set, mongodb.keyfile.contents will take precedence");
 
     @SetFromFlag("mongodbKeyfileUrl")
     ConfigKey<String> MONGODB_KEYFILE_URL = ConfigKeys.newStringConfigKey(
-            "mongodb.keyfile.url", "Location of the keyfile used for authentication");
+            "mongodb.keyfile.url", "Location of the keyfile used for authentication. If mongodb.keyfile.contents and mongodb.keyfile.url are both set, mongodb.keyfile.contents will take precedence");
 
     @SetFromFlag("rootUsername")
     BasicAttributeSensorAndConfigKey<String> ROOT_USERNAME =

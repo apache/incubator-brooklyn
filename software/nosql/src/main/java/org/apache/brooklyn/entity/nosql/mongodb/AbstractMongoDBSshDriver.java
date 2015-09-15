@@ -82,8 +82,11 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
             String destinationLocation = Os.mergePaths(getRunDir(), "mongodb-keyfile");
             entity.sensors().set(AbstractMongoDBServer.MONGODB_KEYFILE_DESTINATION, destinationLocation);
             String keyfileContents = entity.config().get(AbstractMongoDBServer.MONGODB_KEYFILE_CONTENTS);
-            if (keyfileContents == null) {
+            if (Strings.isNullOrEmpty(keyfileContents)) {
                 String keyfileUrl = entity.config().get(AbstractMongoDBServer.MONGODB_KEYFILE_URL);
+                if (Strings.isNullOrEmpty(keyfileUrl)) {
+                    throw new IllegalStateException("MongoDBAuthenticationUtils.usesAuthentication returned true, but neither keyfileContents nor keyfileUrl are set");
+                }
                 copyResource(keyfileUrl, destinationLocation);
             } else {
                 commands.add(BashCommands.pipeTextToFile(keyfileContents, destinationLocation));
@@ -211,13 +214,12 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
     
     protected void launch(ImmutableList.Builder<String> argsBuilder) {
         String args = Joiner.on(" ").join(argsBuilder.build());
-        List<String> commands = new LinkedList<String>();
-        commands.add(String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args));
+        String command = String.format("%s/bin/mongod %s >> out.log 2>> err.log < /dev/null", getExpandedInstallDir(), args);
 
         newScript(LAUNCHING)
                 .setFlag(SshTool.PROP_CONNECT_TIMEOUT, Duration.TEN_SECONDS.toMilliseconds())
                 .updateTaskAndFailOnNonZeroResultCode()
-                .body.append(commands).execute();
+                .body.append(command).execute();
     }
 
 }

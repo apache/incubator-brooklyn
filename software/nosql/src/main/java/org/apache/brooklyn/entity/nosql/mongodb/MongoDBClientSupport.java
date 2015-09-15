@@ -19,8 +19,12 @@
 package org.apache.brooklyn.entity.nosql.mongodb;
 
 import java.net.UnknownHostException;
+import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
+import org.apache.brooklyn.util.exceptions.ReferenceWithError;
+import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.time.Duration;
 import org.bson.BSONObject;
 import org.bson.BasicBSONObject;
 import org.slf4j.Logger;
@@ -70,10 +74,15 @@ public class MongoDBClientSupport {
 
     private static final BasicBSONObject EMPTY_RESPONSE = new BasicBSONObject();
 
-    public MongoDBClientSupport(ServerAddress standalone, boolean usesAuthentication, String username, String password, String authenticationDatabase) {
+    public MongoDBClientSupport(ServerAddress standalone) {
+        address = standalone;
+        usesAuthentication = false;
+    }
+
+    public MongoDBClientSupport(ServerAddress standalone, String username, String password, String authenticationDatabase) {
         // We could also use a MongoClient to access an entire replica set. See MongoClient(List<ServerAddress>).
         address = standalone;
-        this.usesAuthentication = usesAuthentication;
+        this.usesAuthentication = true;
         this.username = username;
         this.password = password;
         this.authenticationDatabase = authenticationDatabase;
@@ -85,8 +94,12 @@ public class MongoDBClientSupport {
     public static MongoDBClientSupport forServer(AbstractMongoDBServer standalone) throws UnknownHostException {
         HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(standalone, standalone.getAttribute(MongoDBServer.PORT));
         ServerAddress address = new ServerAddress(hostAndPort.getHostText(), hostAndPort.getPort());
-        return new MongoDBClientSupport(address, MongoDBAuthenticationUtils.usesAuthentication(standalone), standalone.sensors().get(MongoDBAuthenticationMixins.ROOT_USERNAME),
-                standalone.sensors().get(MongoDBAuthenticationMixins.ROOT_PASSWORD), standalone.sensors().get(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE));
+        if (MongoDBAuthenticationUtils.usesAuthentication(standalone)) {
+            return new MongoDBClientSupport(address, standalone.sensors().get(MongoDBAuthenticationMixins.ROOT_USERNAME),
+                    standalone.sensors().get(MongoDBAuthenticationMixins.ROOT_PASSWORD), standalone.sensors().get(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE));
+        } else {
+            return new MongoDBClientSupport(address);
+        }
     }
 
     private ServerAddress getServerAddress() {
@@ -107,28 +120,35 @@ public class MongoDBClientSupport {
         return runDBCommand(database, new BasicDBObject(command, Boolean.TRUE));
     }
 
-    private Optional<CommandResult> runDBCommand(String database, DBObject command) {
+    private Optional<CommandResult> runDBCommand(String database, final DBObject command) {
         MongoClient client = client();
         try {
-            DB db = client.getDB(database);
-            CommandResult status = null;
+            final DB db = client.getDB(database);
+            final CommandResult[] status = new CommandResult[1];
             // The mongoDB client can occasionally fail to connect. Try up to 5 times to run the command
-            for (int i = 0; i < 5; i++) {
-                try {
-                    status = db.command(command);
-                    break;
-                } catch (MongoException e) {
-                    LOG.warn("Command " + command + " on " + getServerAddress() + " failed", e);
-                    if (i == 4) {
-                        return Optional.absent();
-                    }
-                }
+            boolean commandResult = Repeater.create().backoff(Duration.ONE_SECOND, 1.5, null).limitIterationsTo(5)
+                    .until(new Callable<Boolean>() {
+                        @Override
+                        public Boolean call() throws Exception {
+                            try {
+                                status[0] = db.command(command);
+                                return true;
+                            } catch (Exception e) {
+                                LOG.warn("Command " + command + " on " + getServerAddress() + " failed", e);
+                                return false;
+                            }
+                        }
+            }).run();
+
+            if (!commandResult) {
+                return Optional.absent();
             }
-            if (!status.ok()) {
+
+            if (!status[0].ok()) {
                 LOG.debug("Unexpected result of {} on {}: {}",
-                        new Object[] { command, getServerAddress(), status.getErrorMessage() });
+                        new Object[] { command, getServerAddress(), status[0].getErrorMessage() });
             }
-            return Optional.of(status);
+            return Optional.of(status[0]);
         } finally {
             client.close();
         }

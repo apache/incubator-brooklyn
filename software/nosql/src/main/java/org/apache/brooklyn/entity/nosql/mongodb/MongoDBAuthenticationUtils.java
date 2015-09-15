@@ -39,26 +39,23 @@ public class MongoDBAuthenticationUtils {
     public static boolean usesAuthentication(Entity entity) {
         String keyfileContents = entity.config().get(MongoDBAuthenticationMixins.MONGODB_KEYFILE_CONTENTS);
         String keyfileUrl = entity.config().get(MongoDBAuthenticationMixins.MONGODB_KEYFILE_URL);
-        if (!(Strings.isEmpty(keyfileContents) || Strings.isEmpty(keyfileUrl))) {
-            throw new IllegalStateException("keyfile contents and keyfile location cannot both be set");
-        }
-        if (Strings.isEmpty(keyfileContents) && Strings.isEmpty(keyfileUrl)) {
-            return false;
-        }
-        return true;
+        return Strings.isNonBlank(keyfileContents) || Strings.isNonBlank(keyfileUrl);
     }
 
     public static String getRootPassword(Entity entity) {
         String password = entity.config().get(MongoDBAuthenticationMixins.ROOT_PASSWORD);
         if (Strings.isEmpty(password)) {
             LOG.debug(entity + " has no password specified for " + MongoDBAuthenticationMixins.ROOT_PASSWORD.getName() + "; using a random string");
-            password = Strings.makeRandomId(8);
+            password = Strings.makeRandomId(16);
             entity.sensors().set(MongoDBAuthenticationMixins.ROOT_PASSWORD, password);
             entity.config().set(MongoDBAuthenticationMixins.ROOT_PASSWORD, password);
         }
         return password;
     }
 
+    /**
+     * Configures the {@code spec} with authentication configuration from {@code source}
+     */
     public static void setAuthenticationConfig(EntitySpec<?> spec, Entity source) {
         if (MongoDBAuthenticationUtils.usesAuthentication(source)) {
             spec.configure(MongoDBAuthenticationMixins.MONGODB_KEYFILE_CONTENTS, source.config().get(MongoDBAuthenticationMixins.MONGODB_KEYFILE_CONTENTS));
@@ -68,6 +65,9 @@ public class MongoDBAuthenticationUtils {
         }
     }
 
+    /**
+     * Configures the {@code spec} with authentication configuration from {@code source}
+     */
     public static void setAuthenticationConfig(Entity entity, Entity source) {
         if (MongoDBAuthenticationUtils.usesAuthentication(source)) {
             entity.config().set(MongoDBAuthenticationMixins.MONGODB_KEYFILE_CONTENTS, source.config().get(MongoDBAuthenticationMixins.MONGODB_KEYFILE_CONTENTS));

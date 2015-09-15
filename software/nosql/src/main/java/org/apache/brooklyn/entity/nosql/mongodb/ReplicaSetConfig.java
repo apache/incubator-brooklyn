@@ -148,10 +148,6 @@ public class ReplicaSetConfig {
         BasicBSONObject member = new BasicBSONObject();
         member.put("_id", id);
         member.put("host", String.format("%s:%s", hostname, port));
-        if (members.contains(member)) {
-            LOG.warn("Ignoring attempt to add entity to a set of which it is already a member");
-            return this;
-        }
         members.add(member);
         return this;
     }
