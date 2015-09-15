@@ -20,12 +20,21 @@ package org.apache.brooklyn.api.entity;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.objs.EntityAdjunct;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.sensor.Feed;
+
 /** 
  * Instances of this class supply logic which can be used to initialize entities. 
  * These can be added to an {@link EntitySpec} programmatically, or declared as part
  * of YAML recipes in a <code>brooklyn.initializers</code> section.
  * In the case of the latter, implementing classes should define a no-arg constructor
  * or a {@link Map} constructor so that YAML parameters can be supplied.
+ * <p>
+ * Note that initializers are only invoked on first creation; they are not called 
+ * during a rebind. Instead, the typical pattern is that initializers will create
+ * {@link EntityAdjunct} instances such as {@link Policy} and {@link Feed}
+ * which will be attached during rebind.
  **/ 
 public interface EntityInitializer {
     

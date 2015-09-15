@@ -15,7 +15,7 @@ For dev/test or when there are only a handful of VMs being managed, a small VM i
 For example, an AWS m3.medium with one vCPU, 3.75GiB RAM and 4GB disk.
 
 For larger production uses, a more appropriate machine spec would be two or more cores,
-at least 8GB RAM and 20GB disk. The disk is just for logs, a small amount of persisted state, and
+at least 8GB RAM and 100GB disk. The disk is just for logs, a small amount of persisted state, and
 any binaries for custom blueprints/integrations.
 
 

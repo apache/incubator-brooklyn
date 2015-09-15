@@ -58,6 +58,7 @@ import org.apache.brooklyn.api.mgmt.TaskFactory;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Enricher;
+import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
@@ -318,7 +319,10 @@ public class Entities {
 
         out.append(currentIndentation+tab+tab+"locations = "+e.getLocations()+"\n");
 
-        Set<ConfigKey<?>> keys = Sets.newLinkedHashSet( ((EntityInternal)e).getConfigMap().getLocalConfig().keySet() );
+        Set<ConfigKey<?>> keys = Sets.newLinkedHashSet(
+            ((EntityInternal)e).config().getLocalBag().getAllConfigAsConfigKeyMap().keySet()
+            //((EntityInternal)e).getConfigMap().getLocalConfig().keySet() 
+            );
         for (ConfigKey<?> it : sortConfigKeys(keys)) {
             // use the official config key declared on the type if available
             // (since the map sometimes contains <object> keys
@@ -382,6 +386,13 @@ public class Entities {
             out.append(currentIndentation+tab+tab+"Enrichers:\n");
             for (Enricher enricher : e.getEnrichers()) {
                 dumpInfo(enricher, out, currentIndentation+tab+tab+tab, tab);
+            }
+        }
+
+        if (!((EntityInternal)e).feeds().getFeeds().isEmpty()) {
+            out.append(currentIndentation+tab+tab+"Feeds:\n");
+            for (Feed feed : ((EntityInternal)e).feeds().getFeeds()) {
+                dumpInfo(feed, out, currentIndentation+tab+tab+tab, tab);
             }
         }
 
@@ -466,6 +477,26 @@ public class Entities {
 
         for (ConfigKey<?> key : sortConfigKeys(enr.getEnricherType().getConfigKeys())) {
             Maybe<Object> val = ((BrooklynObjectInternal)enr).config().getRaw(key);
+            if (!isTrivial(val)) {
+                out.append(currentIndentation+tab+tab+key);
+                out.append(" = ");
+                if (isSecret(key.getName())) out.append("xxxxxxxx");
+                else out.append(""+val.get());
+                out.append("\n");
+            }
+        }
+
+        out.flush();
+    }
+    public static void dumpInfo(Feed feed, String currentIndentation, String tab) throws IOException {
+        dumpInfo(feed, new PrintWriter(System.out), currentIndentation, tab);
+    }
+    public static void dumpInfo(Feed feed, Writer out, String currentIndentation, String tab) throws IOException {
+        out.append(currentIndentation+feed.toString()+"\n");
+
+        // TODO create a FeedType cf EnricherType ?
+        for (ConfigKey<?> key : sortConfigKeys(((BrooklynObjectInternal)feed).config().getBag().getAllConfigAsConfigKeyMap().keySet())) {
+            Maybe<Object> val = ((BrooklynObjectInternal)feed).config().getRaw(key);
             if (!isTrivial(val)) {
                 out.append(currentIndentation+tab+tab+key);
                 out.append(" = ");
@@ -963,7 +994,7 @@ public class Entities {
     }
 
     public static <T> Supplier<T> attributeSupplier(Entity entity, AttributeSensor<T> sensor) {
-        return EntityAndAttribute.supplier(entity, sensor);
+        return EntityAndAttribute.create(entity, sensor);
     }
 
     public static <T> Supplier<T> attributeSupplier(EntityAndAttribute<T> tuple) { return tuple; }
@@ -1061,7 +1092,7 @@ public class Entities {
 
     /** Logs a warning if an entity has a value for a config key. */
     public static void warnOnIgnoringConfig(Entity entity, ConfigKey<?> key) {
-        if (entity.getConfigRaw(key, true).isPresentAndNonNull())
+        if (((EntityInternal)entity).config().getRaw(key).isPresentAndNonNull())
             log.warn("Ignoring "+key+" set on "+entity+" ("+entity.getConfig(key)+")");
     }
 

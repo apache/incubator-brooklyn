@@ -753,6 +753,8 @@ public class BrooklynLauncher {
             LOG.info("Starting Brooklyn web-console on loopback because security is explicitly disabled and no bind address specified");
             bindAddress = Networking.LOOPBACK;
         } else if (BrooklynWebConfig.hasNoSecurityOptions(brooklynProperties)) {
+            LOG.info("No security provider options specified. Define a security provider or users to prevent a random password being created and logged.");
+            
             if (bindAddress==null) {
                 LOG.info("Starting Brooklyn web-console with passwordless access on localhost and protected access from any other interfaces (no bind address specified)");
             } else {
@@ -765,8 +767,8 @@ public class BrooklynLauncher {
                 }
             }
             brooklynProperties.put(
-                    BrooklynWebConfig.SECURITY_PROVIDER_CLASSNAME,
-                    BrooklynUserWithRandomPasswordSecurityProvider.class.getName());
+                    BrooklynWebConfig.SECURITY_PROVIDER_INSTANCE,
+                    new BrooklynUserWithRandomPasswordSecurityProvider(managementContext));
         } else {
             LOG.debug("Starting Brooklyn using security properties: "+brooklynProperties.submap(ConfigPredicates.startingWith(BrooklynWebConfig.BASE_NAME_SECURITY)).asMapWithStringKeys());
         }

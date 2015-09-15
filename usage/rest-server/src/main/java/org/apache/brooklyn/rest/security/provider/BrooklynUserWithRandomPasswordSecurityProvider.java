@@ -20,12 +20,13 @@ package org.apache.brooklyn.rest.security.provider;
 
 import javax.servlet.http.HttpSession;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.text.Identifiers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BrooklynUserWithRandomPasswordSecurityProvider extends AbstractSecurityProvider implements SecurityProvider {
 
@@ -63,5 +64,10 @@ public class BrooklynUserWithRandomPasswordSecurityProvider extends AbstractSecu
             LOG.debug(this+": password required for "+session+" originating from "+remoteAddress);
             return false;
         }
+    }
+    
+    @Override
+    public String toString() {
+        return JavaClassNames.cleanSimpleClassName(this);
     }
 }
