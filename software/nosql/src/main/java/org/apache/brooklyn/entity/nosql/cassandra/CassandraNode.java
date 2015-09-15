@@ -145,6 +145,7 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
             BigInteger.class, "cassandra.token", "Cassandra Token");
 
     @SetFromFlag("tokens")
+    @SuppressWarnings("serial")
     BasicAttributeSensorAndConfigKey<Set<BigInteger>> TOKENS = new BasicAttributeSensorAndConfigKey<Set<BigInteger>>(
             new TypeToken<Set<BigInteger>>() {}, "cassandra.tokens", "Cassandra Tokens");
 

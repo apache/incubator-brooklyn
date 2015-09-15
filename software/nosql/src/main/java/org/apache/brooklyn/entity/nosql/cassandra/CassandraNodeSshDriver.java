@@ -224,10 +224,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     protected void customizeInitialSeeds() {
         if (entity.getConfig(CassandraNode.INITIAL_SEEDS)==null) {
             if (isClustered()) {
-                entity.setConfig(CassandraNode.INITIAL_SEEDS,
+                entity.config().set(CassandraNode.INITIAL_SEEDS,
                     DependentConfiguration.attributeWhenReady(entity.getParent(), CassandraDatacenter.CURRENT_SEEDS));
             } else {
-                entity.setConfig(CassandraNode.INITIAL_SEEDS, MutableSet.<Entity>of(entity));
+                entity.config().set(CassandraNode.INITIAL_SEEDS, MutableSet.<Entity>of(entity));
             }
         }
     }
@@ -273,10 +273,10 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
                 queuedStart = root.getAttribute(CassandraDatacenter.QUEUED_START_NODES);
                 if (queuedStart==null) {
                     queuedStart = new ArrayList<Entity>();
-                    ((EntityLocal)root).setAttribute(CassandraDatacenter.QUEUED_START_NODES, queuedStart);
+                    ((EntityLocal)root).sensors().set(CassandraDatacenter.QUEUED_START_NODES, queuedStart);
                 }
                 queuedStart.add(getEntity());
-                ((EntityLocal)root).setAttribute(CassandraDatacenter.QUEUED_START_NODES, queuedStart);
+                ((EntityLocal)root).sensors().set(CassandraDatacenter.QUEUED_START_NODES, queuedStart);
             }
             do {
                 // get it again in case it is backed by something external
@@ -316,7 +316,7 @@ public class CassandraNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
             }
             if (isClustered() && isFirst) {
                 for (Entity ancestor: getCassandraAncestors()) {
-                    ((EntityLocal)ancestor).setAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
+                    ((EntityLocal)ancestor).sensors().set(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, System.currentTimeMillis());
                 }
             }
         } finally {

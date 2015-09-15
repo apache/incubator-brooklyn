@@ -155,17 +155,17 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                              * (TODO internal access could be configured to improve performance / lower cost, 
                              * if we know all nodes are visible to each other) */
                             if (getConfig(LISTEN_ADDRESS_SENSOR)==null)
-                                setConfig(LISTEN_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
+                                config().set(LISTEN_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
                             if (getConfig(BROADCAST_ADDRESS_SENSOR)==null)
-                                setConfig(BROADCAST_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
+                                config().set(BROADCAST_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
                             result = "public IP for both listen and broadcast";
                         } else if (provider.contains("google-compute")) {
                             /* Google nodes cannot reach themselves/each-other on the public IP,
                              * and there is no hostname, so use private IP here */
                             if (getConfig(LISTEN_ADDRESS_SENSOR)==null)
-                                setConfig(LISTEN_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
+                                config().set(LISTEN_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
                             if (getConfig(BROADCAST_ADDRESS_SENSOR)==null)
-                                setConfig(BROADCAST_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
+                                config().set(BROADCAST_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
                             result = "private IP for both listen and broadcast";
                         }
                     }
@@ -372,7 +372,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             if (name == null) {
                 name = "UNKNOWN_DATACENTER";
             }
-            setAttribute((AttributeSensor<String>)DATACENTER_NAME, name);
+            sensors().set((AttributeSensor<String>)DATACENTER_NAME, name);
         }
         return name;
     }
@@ -391,7 +391,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             if (name == null) {
                 name = "UNKNOWN_RACK";
             }
-            setAttribute((AttributeSensor<String>)RACK_NAME, name);
+            sensors().set((AttributeSensor<String>)RACK_NAME, name);
         }
         return name;
     }
@@ -420,7 +420,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override
     protected void connectSensors() {
         // "cassandra" isn't really a protocol, but okay for now
-        setAttribute(DATASTORE_URL, "cassandra://"+getAttribute(HOSTNAME)+":"+getAttribute(THRIFT_PORT));
+        sensors().set(DATASTORE_URL, "cassandra://"+getAttribute(HOSTNAME)+":"+getAttribute(THRIFT_PORT));
         
         super.connectSensors();
 
