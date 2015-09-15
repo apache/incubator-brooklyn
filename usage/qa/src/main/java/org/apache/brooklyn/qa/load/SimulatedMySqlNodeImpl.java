@@ -24,6 +24,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode;
 import org.apache.brooklyn.entity.database.mysql.MySqlNodeImpl;
 import org.apache.brooklyn.entity.database.mysql.MySqlSshDriver;
@@ -36,6 +37,8 @@ import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
+
+import com.google.common.net.HostAndPort;
 
 /**
  * @see SimulatedJBoss7ServerImpl for description of purpose and configuration options.
@@ -57,8 +60,9 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
     protected void connectSensors() {
         boolean simulateExternalMonitoring = getConfig(SIMULATE_EXTERNAL_MONITORING);
         if (simulateExternalMonitoring) {
-            setAttribute(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MYSQL_PORT)));
-            
+            HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, sensors().get(MYSQL_PORT));
+            sensors().set(DATASTORE_URL, String.format("mysql://%s:%s/", hostAndPort.getHostText(), hostAndPort.getPort()));
+
             feed = FunctionFeed.builder()
                     .entity(this)
                     .period(Duration.FIVE_SECONDS)
@@ -66,7 +70,7 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
                             .callable(new Callable<Boolean>() {
                                 private int counter = 0;
                                 public Boolean call() {
-                                    setAttribute(QUERIES_PER_SECOND_FROM_MYSQL, (double)(counter++ % 100));
+                                    sensors().set(QUERIES_PER_SECOND_FROM_MYSQL, (double) (counter++ % 100));
                                     return true;
                                 }})
                             .setOnFailureOrException(false))
@@ -74,6 +78,14 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
         } else {
             super.connectSensors();
         }
+    }
+
+    @Override
+    protected void disconnectSensors() {
+        if (feed != null) {
+            feed.destroy();
+        }
+        super.disconnectSensors();
     }
 
     public static class SimulatedMySqlSshDriver extends MySqlSshDriver {
@@ -154,7 +166,7 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
                 return;
             }
             
-            entity.setAttribute(MySqlNode.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
+            entity.sensors().set(MySqlNode.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
             
             if (entity.getConfig(SKIP_SSH_ON_START)) {
                 // minimal ssh, so that isRunning will subsequently work

@@ -20,6 +20,7 @@ package org.apache.brooklyn.entity.database.crate;
 
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.java.JavaAppUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
@@ -28,6 +29,8 @@ import org.apache.brooklyn.feed.http.HttpPollConfig;
 import org.apache.brooklyn.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.feed.jmx.JmxFeed;
 import org.apache.brooklyn.util.guava.Functionals;
+
+import com.google.common.net.HostAndPort;
 
 public class CrateNodeImpl extends SoftwareProcessImpl implements CrateNode{
 
@@ -49,28 +52,30 @@ public class CrateNodeImpl extends SoftwareProcessImpl implements CrateNode{
         super.connectSensors();
         connectServiceUpIsRunning();
         jmxFeed = JavaAppUtils.connectMXBeanSensors(this);
-        setAttribute(DATASTORE_URL, "crate://" + getAttribute(HOSTNAME) + ":" + getPort());
-        String url = "http://" + getAttribute(HOSTNAME) + ":" + getHttpPort();
-        setAttribute(MANAGEMENT_URL, url);
+        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getPort());
+        String rawAddress = String.format("%s:%s", hostAndPort.getHostText(), hostAndPort.getPort());
+        String url = "http://" + rawAddress;
+        sensors().set(DATASTORE_URL, "crate://" + rawAddress);
+        sensors().set(MANAGEMENT_URL, url);
 
         httpFeed = HttpFeed.builder()
                 .entity(this)
                 .baseUri(url)
-                .poll(new HttpPollConfig<String>(SERVER_NAME)
+                .poll(new HttpPollConfig<>(SERVER_NAME)
                         .onSuccess(HttpValueFunctions.jsonContents("name", String.class)))
-                .poll(new HttpPollConfig<Integer>(SERVER_STATUS)
+                .poll(new HttpPollConfig<>(SERVER_STATUS)
                         .onSuccess(HttpValueFunctions.jsonContents("status", Integer.class)))
-                .poll(new HttpPollConfig<Boolean>(SERVER_OK)
+                .poll(new HttpPollConfig<>(SERVER_OK)
                         .onSuccess(HttpValueFunctions.jsonContents("ok", Boolean.class)))
-                .poll(new HttpPollConfig<String>(SERVER_BUILD_TIMESTAMP)
+                .poll(new HttpPollConfig<>(SERVER_BUILD_TIMESTAMP)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[]{"version", "build_timestamp"}, String.class)))
-                .poll(new HttpPollConfig<String>(SERVER_BUILD_HASH)
+                .poll(new HttpPollConfig<>(SERVER_BUILD_HASH)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[]{"version", "build_hash"}, String.class)))
-                .poll(new HttpPollConfig<Boolean>(SERVER_IS_BUILD_SNAPSHOT)
+                .poll(new HttpPollConfig<>(SERVER_IS_BUILD_SNAPSHOT)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] {"version", "build_snapshot"}, Boolean.class)))
-                .poll(new HttpPollConfig<String>(SERVER_LUCENE_VERSION)
+                .poll(new HttpPollConfig<>(SERVER_LUCENE_VERSION)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] {"version", "lucene_version"}, String.class)))
-                .poll(new HttpPollConfig<String>(SERVER_ES_VERSION)
+                .poll(new HttpPollConfig<>(SERVER_ES_VERSION)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] {"version", "es_version"}, String.class)))
                 .build();
 

@@ -26,6 +26,7 @@ import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.Locations;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.chef.ChefConfig;
 import org.apache.brooklyn.entity.chef.ChefLifecycleEffectorTasks;
 import org.apache.brooklyn.entity.chef.ChefServerTasks;
@@ -41,6 +42,8 @@ import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.ssh.BashCommands;
+
+import com.google.common.net.HostAndPort;
 
 public class PostgreSqlNodeChefImplFromScratch extends EffectorStartableImpl implements PostgreSqlNode {
 
@@ -133,7 +136,8 @@ public class PostgreSqlNodeChefImplFromScratch extends EffectorStartableImpl imp
     }
     
     protected void connectSensors() {
-        setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
+        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, sensors().get(POSTGRESQL_PORT));
+        sensors().set(DATASTORE_URL, String.format("postgresql://%s:%s/", hostAndPort.getHostText(), hostAndPort.getPort()));
 
         Maybe<SshMachineLocation> machine = Locations.findUniqueSshMachineLocation(getLocations());
 
@@ -141,7 +145,7 @@ public class PostgreSqlNodeChefImplFromScratch extends EffectorStartableImpl imp
             feed = SshFeed.builder()
                     .entity(this)
                     .machine(machine.get())
-                    .poll(new SshPollConfig<Boolean>(SERVICE_UP)
+                    .poll(new SshPollConfig<>(SERVICE_UP)
                             .command("ps -ef | grep [p]ostgres")
                             .setOnSuccess(true)
                             .setOnFailureOrException(false))
