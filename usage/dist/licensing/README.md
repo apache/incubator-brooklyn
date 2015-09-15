@@ -39,7 +39,7 @@ If you need to generate a CSV report of license usage, e.g. for use in a spreads
         -DsuppressExcludedDependencies=true \
         -DlicensesPreferred=ASL2,ASL,EPL1,BSD-2-Clause,BSD-3-Clause,CDDL1.1,CDDL1,CDDL \
         -DoverridesFile=licensing/overrides.yaml \
-        -DextrasFile=`cat licensing/extras-files` \
+        -DextrasFiles=`cat licensing/extras-files` \
         -DoutputFile=dependencies-licenses.csv
 
 
