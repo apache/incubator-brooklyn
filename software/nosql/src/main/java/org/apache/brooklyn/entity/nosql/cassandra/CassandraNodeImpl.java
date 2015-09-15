@@ -97,17 +97,32 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     public void init() {
         super.init();
         
-        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous class in case referenced in persisted state
+        new EffectorBody<String>() {
             @Override
             public String call(ConfigBag parameters) {
                 return executeScript((String)parameters.getStringKey("commands"));
             }
-        });
+        };
+        
+        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new ExecuteScriptEffectorBody(this));
         
         Entities.checkRequiredUrl(this, getCassandraConfigTemplateUrl());
         Entities.getRequiredUrlConfig(this, CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL);
         
         connectEnrichers();
+    }
+    
+    private static class ExecuteScriptEffectorBody extends EffectorBody<String> {
+        private final CassandraNode entity;
+        
+        public ExecuteScriptEffectorBody(CassandraNode entity) {
+            this.entity = entity;
+        }
+        @Override
+        public String call(ConfigBag parameters) {
+            return entity.executeScript((String)parameters.getStringKey("commands"));
+        }
     }
     
     /**
@@ -246,6 +261,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
         return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS);
     }
+    
     @Override public String getBroadcastAddress() {
         String sensorName = getConfig(BROADCAST_ADDRESS_SENSOR);
         if (Strings.isNonBlank(sensorName))
