@@ -134,6 +134,23 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             return Iterables.tryFind(entities, Predicates.not(IS_PRIMARY)).or(Iterables.get(entities, 0));
         }
     };
+    
+    @Override
+    public void init() {
+        addEnricher(Enrichers.builder()
+                .aggregating(MongoDBAuthenticationMixins.ROOT_USERNAME)
+                .publishing(MongoDBAuthenticationMixins.ROOT_USERNAME)
+                .fromMembers()
+                .valueToReportIfNoSensors(null)
+                .computing(new Function<Collection<String>, String>() {
+                        @Override
+                        public String apply(Collection<String> input) {
+                            if (input==null || input.isEmpty()) return null;
+                            // when authentication is used all members have the same value
+                            return Iterables.getFirst(input, null);
+                        }})
+                .build());
+    };
 
     /** @return {@link #NON_PRIMARY_REMOVAL_STRATEGY} */
     @Override
