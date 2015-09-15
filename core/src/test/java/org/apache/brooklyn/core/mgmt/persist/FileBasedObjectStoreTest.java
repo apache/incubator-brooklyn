@@ -27,8 +27,6 @@ import java.io.FileNotFoundException;
 
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.mgmt.persist.FileBasedObjectStore;
-import org.apache.brooklyn.core.mgmt.persist.PersistMode;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.io.FileUtil;
 import org.apache.brooklyn.util.os.Os;

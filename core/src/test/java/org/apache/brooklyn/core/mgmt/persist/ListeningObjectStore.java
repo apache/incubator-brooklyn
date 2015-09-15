@@ -26,8 +26,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
-import org.apache.brooklyn.core.mgmt.persist.PersistMode;
-import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.CountdownTimer;
