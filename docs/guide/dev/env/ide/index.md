@@ -87,11 +87,11 @@ To develop or debug Brooklyn in IntelliJ, you will need to ensure that the Groov
 via the IntelliJ IDEA | Preferences | Plugins menu. Once installed, you can open Brooklyn from the root folder, 
 (e.g. ``~/myfiles/brooklyn``) which will automatically open the subprojects.
 
-You will need the java compiler 1.7 or higher.
-There have previously been issues where the java 6 compiler incorrectly identified the return type of functions that use
-generics. These issues have been refactored away, however may return in future. 
-If you encounter these problems, ensure that your java compiler is set to level 1.7 or higher, 
-or setup IntelliJ to use the Eclipse compiler (Settings | Compiler | Java Compiler | "Use Compiler" combobox).
+Brooklyn has informally standardized on arranging `import` statements as per Eclipse's default configuration.
+IntelliJ's default configuration is different, which can result in unwanted "noise" in commits where imports are
+shuffled backward and forward between the two types - PRs which do this will likely fail the review. To avoid this,
+reconfigure IntelliJ to organize imports similar to Eclipse. See [this StackOverflow answer](http://stackoverflow.com/a/17194980/68898)
+for a suitable configuration.
 
 
 ## Netbeans
