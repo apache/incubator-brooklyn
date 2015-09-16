@@ -32,6 +32,7 @@ import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,31 +44,15 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Callables;
 
 /**
- * Simple DSL to repeat a fragment of code periodically until a condition is satisfied.
- *
- * In its simplest case, it is passed two {@link groovy.lang.Closure}s / {@link Callable} - 
- * the first is executed, then the second. If the second closure returns false, the loop
- * is repeated; if true, it finishes. Further customization can be applied to set the period 
- * between loops and place a maximum limit on how long the loop should run for.
+ * Simple mechanism to repeat an operation periodically until a condition is satisfied.
  * <p>
- * It is configured in a <em>fluent</em> manner. For example, in Groovy:
- * <pre>
- * {@code
- * Repeater.create("Wait until the Frobnitzer is ready")
- *     .repeat {
- *         status = frobnitzer.getStatus()
- *     }
- *     .until {
- *         status == "Ready" || status == "Failed"
- *     }
- *     .limitIterationsTo(30)
- *     .run()
- * }
- * </pre>
- * 
- * Or in Java:
- * <pre>
- * {@code
+ * In its simplest case it is passed two {@link Callable} objects, the <em>operation</em>
+ * and the <em>condition</em> which are executed in that order. This execution is repeated
+ * until the <em>condition</em> returns {@code true}, when the loop finishes. Further customization
+ * can be applied to set the period between loops and place a maximum limit on how long the
+ * loop should run for, as well as other timing and delay properties.
+ * <p>
+ * <pre>{@code
  * Repeater.create("Wait until the Frobnitzer is ready")
  *     .until(new Callable<Boolean>() {
  *              public Boolean call() {
@@ -76,10 +61,11 @@ import com.google.common.util.concurrent.Callables;
  *              }})
  *     .limitIterationsTo(30)
  *     .run()
- * }
- * </pre>
+ * }</pre>
+ * <p>
+ * The 
  */
-public class Repeater {
+public class Repeater implements Callable<Boolean> {
 
     private static final Logger log = LoggerFactory.getLogger(Repeater.class);
 
@@ -389,7 +375,7 @@ public class Repeater {
             Time.sleep(delayThisIteration);
         }
     }
-    
+
     public String getDescription() {
         return description;
     }
@@ -397,5 +383,10 @@ public class Repeater {
     public Duration getTimeLimit() {
         return timeLimit;
     }
-    
+
+    @Override
+    public Boolean call() throws Exception {
+        return run();
+    }
+
 }
