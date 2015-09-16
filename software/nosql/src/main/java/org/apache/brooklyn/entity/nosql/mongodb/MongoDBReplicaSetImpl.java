@@ -54,7 +54,7 @@ import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.api.client.util.Sets;
+import com.google.common.collect.Sets;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -142,15 +142,17 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 .publishing(MongoDBAuthenticationMixins.ROOT_USERNAME)
                 .fromMembers()
                 .valueToReportIfNoSensors(null)
-                .computing(new Function<Collection<String>, String>() {
-                        @Override
-                        public String apply(Collection<String> input) {
-                            if (input==null || input.isEmpty()) return null;
-                            // when authentication is used all members have the same value
-                            return Iterables.getFirst(input, null);
-                        }})
+                .computing(new RootUsernameReducer())
                 .build());
-    };
+    }
+
+    public static class RootUsernameReducer implements Function<Collection<String>, String>{
+        @Override
+        public String apply(Collection<String> input) {
+            // when authentication is used all members have the same value
+            return (input == null || input.isEmpty()) ? null : Iterables.getFirst(input, null);
+        };
+    }
 
     /** @return {@link #NON_PRIMARY_REMOVAL_STRATEGY} */
     @Override
@@ -397,26 +399,9 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                 .build());
         
         addEnricher(Enrichers.builder()
-                .aggregating(MongoDBServer.MONGO_SERVER_ENDPOINT)
+                .transforming(REPLICA_SET_ENDPOINTS)
                 .publishing(DATASTORE_URL)
-                .fromMembers()
-                .valueToReportIfNoSensors(null)
-                .computing(new Function<Collection<String>, String>() {
-                        @Override
-                        public String apply(Collection<String> input) {
-                            Set<String> endpoints = Sets.newHashSet();
-                            for (String endpoint: input) {
-                                if (!Strings.isBlank(endpoint)) {
-                                    
-                                    endpoints.add(endpoint);
-                                }
-                            }
-                            String credentials = MongoDBAuthenticationUtils.usesAuthentication(MongoDBReplicaSetImpl.this) ? 
-                                    String.format("%s:%s@", 
-                                            config().get(MongoDBAuthenticationMixins.ROOT_USERNAME), 
-                                            config().get(MongoDBAuthenticationMixins.ROOT_PASSWORD)) : "";
-                            return String.format("mongodb://%s%s", credentials, Strings.join(endpoints, ","));
-                        }})
+                .computing(new EndpointsToDatastoreUrlMapper(this))
                 .build());
 
         subscribeToMembers(this, MongoDBServer.IS_PRIMARY_FOR_REPLICA_SET, new SensorEventListener<Boolean>() {
@@ -426,6 +411,25 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
             }
         });
 
+    }
+    
+    public static class EndpointsToDatastoreUrlMapper implements Function<Collection<String>, String> {
+        
+        private Entity entity;
+
+        public EndpointsToDatastoreUrlMapper(Entity entity) {
+            this.entity = entity;
+        }
+        
+        @Override
+        public String apply(Collection<String> input) {
+            String credentials = MongoDBAuthenticationUtils.usesAuthentication(entity) 
+                    ? String.format("%s:%s@", 
+                            entity.config().get(MongoDBAuthenticationMixins.ROOT_USERNAME), 
+                            entity.config().get(MongoDBAuthenticationMixins.ROOT_PASSWORD)) 
+                    : "";
+            return String.format("mongodb://%s%s", credentials, Strings.join(input, ","));
+        }
     }
 
     @Override
