@@ -49,6 +49,11 @@ for ext in -src.tar.gz -src.zip -bin.tar.gz -bin.zip; do
 done
 {% endhighlight %}
 
+(You may get warnings such as: `gpg: WARNING: This key is not certified with a trusted signature!` 
+and `There is no indication that the signature belongs to the owner.` This happens if you have not trusted
+the person's key. A key-signing party is a good way to extend this web of trust).
+
+
 Then, add them to Subversion and commit.
 
 {% highlight bash %}
@@ -69,12 +74,16 @@ link in the top right (the credentials are the same as your Git and Jenkins cred
 Repositories" page, and tick the repository with the name starting `orgapachebrooklyn`. Click the **Release** button.
 Provide a description which includes the version, e.g. `Apache Brooklyn 0.7.0-incubating`.
 
+Note there is only one orgapachebrooklyn staging repository at a time; this will be the one created for the release
+candidate with whatever name was used there (e.g. it might include "rc" in the name). If you really want, you can 
+double-check under the "content" that brooklyn-dist has artifacts without rc in the name.
+
 
 Update the website
 ------------------
 
-*Instructions on uploading to the website are beyond the scope of these instructions. Refer to the appropriate
-instructions.*
+*Instructions on uploading to the website are beyond the scope of these instructions. Refer to the 
+[appropriate instructions](https://github.com/apache/incubator-brooklyn/tree/master/docs).*
 
 ### Publish documentation for the new release
 
@@ -85,11 +94,19 @@ git checkout ${VERSION_NAME}
 mvn clean install -DskipTests
 {% endhighlight %}
 
+Ensure the SVN repo is up-to-date (very painful otherwise!)
+
+{% highlight bash %}
+cd ${BROOKLYN_SITE_DIR-../incubator-brooklyn-site-public}
+svn up
+cd -
+{% endhighlight %}
+
 Generate the permalink docs for the release:
 
 {% highlight bash %}
 cd docs
-./_build/build.sh guide-version
+./_build/build.sh guide-version --install
 {% endhighlight %}
 
 Now publish _site/v/*${VERSION_NAME}* to the public website.
@@ -97,10 +114,18 @@ Now publish _site/v/*${VERSION_NAME}* to the public website.
 Update the "latest" docs to this release:
 
 {% highlight bash %}
-./_build/build.sh guide-latest
+./_build/build.sh guide-latest --install
 {% endhighlight %}
 
-Now publish _site/v/latest to the public website.
+Now publish _site/v/latest to the public website:
+
+{% highlight bash %}
+cd ${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}
+svn add * --force
+export DELETIONS=$( svn status | sed -e '/^!/!d' -e 's/^!//' )
+if [ ! -z "${DELETIONS}" ] ; then svn rm ${DELETIONS} ; fi
+{% endhighlight %}
+
 
 ### Update the main website to link to the new release
 
@@ -115,7 +140,9 @@ git checkout master
 2. Edit the file `docs/website/download/verify.md` to add links to the MD5/SHA1/SHA256 hashes and PGP signatures for the
    new version.
 3. Edit the file `docs/website/meta/versions.md` to add the new version.
-4. Build the updated site with `./_build/build.sh website-root` and upload to the website.
+4. Build the updated site with `./_build/build.sh website-root --install`.
+5. Publish to the public website.
+6. Commit your changes to master, e.g. with a message like "Update latest docs to 0.8.0-incubating"
 
 
 Tag the release in git
@@ -125,5 +152,9 @@ Make a signed tag for this release, based on the tag for the release candidate, 
 
 {% highlight bash %}
 git tag -s -m "Tag release ${VERSION_NAME}" apache-brooklyn-${VERSION_NAME} apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER}
-git push origin apache-brooklyn-${VERSION_NAME}
+git push apache apache-brooklyn-${VERSION_NAME}
 {% endhighlight %}
+
+Note the tag `apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER}` should have been created as part of the
+RC creation - see [make-release-artifacts](make-release-artifacts.html).
+

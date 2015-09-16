@@ -235,6 +235,9 @@ copied to `${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}`:
     # versioned guide, relative to /v/<version>/
     _build/build.sh guide-version --install
 
+(If HTML-Proofer find failures, then fix the links etc. Unfortunately, the javadoc build 
+gives a lot of warnings. Fixing those is not part of this activity).
+
 You can then preview the public site of [localhost:4000](http://localhost:4000) with:
 
     _build/serve-public-site.sh

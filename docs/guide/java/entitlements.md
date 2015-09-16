@@ -38,5 +38,5 @@ which re-use the LDAP authorization support in Brooklyn,
 allowing permissions objects to be declared in LDAP leveraging regular expressions.
 For more information on this, ask on IRC or the mailing list,
 and see 
-{% include java_link.html class_name="EntitlementManager" package_path="org/apache/brooklyn/core/mgmt/entitlement" project_subpath="api" %}.
+{% include java_link.html class_name="EntitlementManager" package_path="org/apache/brooklyn/api/mgmt/entitlement" project_subpath="api" %}.
 
