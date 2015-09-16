@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.core.location.Locations;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.feed.ssh.SshFeed;
 import org.apache.brooklyn.feed.ssh.SshPollConfig;
@@ -38,6 +39,7 @@ import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
+import com.google.common.net.HostAndPort;
 
 public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
 
@@ -84,7 +86,8 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MYSQL_PORT)));
+        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getPort());
+        sensors().set(DATASTORE_URL, String.format("mysql://%s:%s/", hostAndPort.getHostText(), hostAndPort.getPort()));
         
         /*        
          * TODO status gives us things like:
@@ -100,7 +103,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                     .entity(this)
                     .period(Duration.FIVE_SECONDS)
                     .machine(machine.get())
-                    .poll(new SshPollConfig<Double>(QUERIES_PER_SECOND_FROM_MYSQL)
+                    .poll(new SshPollConfig<>(QUERIES_PER_SECOND_FROM_MYSQL)
                             .command(cmd)
                             .onSuccess(new Function<SshPollValue, Double>() {
                                 @Override
@@ -111,7 +114,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                                 }})
                             .setOnFailureOrException(null)
                             .enabled(retrieveUsageMetrics))
-                    .poll(new SshPollConfig<Boolean>(SERVICE_PROCESS_IS_RUNNING)
+                    .poll(new SshPollConfig<>(SERVICE_PROCESS_IS_RUNNING)
                             .command(cmd)
                             .setOnSuccess(true)
                             .setOnFailureOrException(false)
@@ -119,7 +122,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                     .build();
         } else {
             LOG.warn("Location(s) {} not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
-            setAttribute(SERVICE_UP, true);
+            sensors().set(SERVICE_UP, true);
         }
     }
     
@@ -137,7 +140,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
         String result = getAttribute(MySqlNode.SOCKET_UID);
         if (Strings.isBlank(result)) {
             result = Identifiers.makeRandomId(6);
-            setAttribute(MySqlNode.SOCKET_UID, result);
+            sensors().set(MySqlNode.SOCKET_UID, result);
         }
         return result;
     }
@@ -146,7 +149,7 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
         String result = getAttribute(MySqlNode.PASSWORD);
         if (Strings.isBlank(result)) {
             result = Identifiers.makeRandomId(6);
-            setAttribute(MySqlNode.PASSWORD, result);
+            sensors().set(MySqlNode.PASSWORD, result);
         }
         return result;
     }

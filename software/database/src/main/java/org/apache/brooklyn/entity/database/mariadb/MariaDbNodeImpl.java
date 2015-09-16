@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.entity.database.mariadb;
 
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.core.effector.EffectorBody;
@@ -34,6 +35,7 @@ import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
+import com.google.common.net.HostAndPort;
 
 public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode {
 
@@ -65,7 +67,8 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MARIADB_PORT)));
+        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getPort());
+        sensors().set(DATASTORE_URL, String.format("mysql://%s:%s/", hostAndPort.getHostText(), hostAndPort.getPort()));
 
         /*        
          * TODO status gives us things like:

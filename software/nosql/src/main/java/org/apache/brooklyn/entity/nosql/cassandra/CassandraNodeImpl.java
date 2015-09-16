@@ -40,6 +40,7 @@ import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.Machines;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.sensor.Sensors;
@@ -76,6 +77,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 /**
  * Implementation of {@link CassandraNode}.
@@ -135,18 +137,18 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             /* These clouds have 2 NICs and it has to be consistent, so use public IP here to allow external access;
                              * (TODO internal access could be configured to improve performance / lower cost, 
                              * if we know all nodes are visible to each other) */
-                            if (getConfig(LISTEN_ADDRESS_SENSOR)==null)
-                                setConfig(LISTEN_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
-                            if (getConfig(BROADCAST_ADDRESS_SENSOR)==null)
-                                setConfig(BROADCAST_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
+                            if (config().get(LISTEN_ADDRESS_SENSOR)==null)
+                                config().set(LISTEN_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
+                            if (config().get(BROADCAST_ADDRESS_SENSOR)==null)
+                                config().set(BROADCAST_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
                             result = "public IP for both listen and broadcast";
                         } else if (provider.contains("google-compute")) {
                             /* Google nodes cannot reach themselves/each-other on the public IP,
                              * and there is no hostname, so use private IP here */
-                            if (getConfig(LISTEN_ADDRESS_SENSOR)==null)
-                                setConfig(LISTEN_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
-                            if (getConfig(BROADCAST_ADDRESS_SENSOR)==null)
-                                setConfig(BROADCAST_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
+                            if (config().get(LISTEN_ADDRESS_SENSOR)==null)
+                                config().set(LISTEN_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
+                            if (config().get(BROADCAST_ADDRESS_SENSOR)==null)
+                                config().set(BROADCAST_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
                             result = "private IP for both listen and broadcast";
                         }
                     }
@@ -167,32 +169,32 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     
     // Used for freemarker
     public String getMajorMinorVersion() {
-        String version = getConfig(CassandraNode.SUGGESTED_VERSION);
+        String version = config().get(CassandraNode.SUGGESTED_VERSION);
         if (Strings.isBlank(version)) return "";
         List<String> versionParts = ImmutableList.copyOf(Splitter.on(".").split(version));
         return versionParts.get(0) + (versionParts.size() > 1 ? "."+versionParts.get(1) : "");
     }
     
     public String getCassandraConfigTemplateUrl() {
-        String templatedUrl = getConfig(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL);
+        String templatedUrl = config().get(CassandraNode.CASSANDRA_CONFIG_TEMPLATE_URL);
         return TemplateProcessor.processTemplateContents(templatedUrl, this, ImmutableMap.<String, Object>of());
     }
 
-    @Override public Integer getGossipPort() { return getAttribute(CassandraNode.GOSSIP_PORT); }
-    @Override public Integer getSslGossipPort() { return getAttribute(CassandraNode.SSL_GOSSIP_PORT); }
-    @Override public Integer getThriftPort() { return getAttribute(CassandraNode.THRIFT_PORT); }
-    @Override public Integer getNativeTransportPort() { return getAttribute(CassandraNode.NATIVE_TRANSPORT_PORT); }
-    @Override public String getClusterName() { return getAttribute(CassandraNode.CLUSTER_NAME); }
+    @Override public Integer getGossipPort() { return sensors().get(CassandraNode.GOSSIP_PORT); }
+    @Override public Integer getSslGossipPort() { return sensors().get(CassandraNode.SSL_GOSSIP_PORT); }
+    @Override public Integer getThriftPort() { return sensors().get(CassandraNode.THRIFT_PORT); }
+    @Override public Integer getNativeTransportPort() { return sensors().get(CassandraNode.NATIVE_TRANSPORT_PORT); }
+    @Override public String getClusterName() { return sensors().get(CassandraNode.CLUSTER_NAME); }
     
     @Override public int getNumTokensPerNode() {
-        return getConfig(CassandraNode.NUM_TOKENS_PER_NODE);
+        return config().get(CassandraNode.NUM_TOKENS_PER_NODE);
     }
 
     @Deprecated
     @Override public BigInteger getToken() {
-        BigInteger token = getAttribute(CassandraNode.TOKEN);
+        BigInteger token = sensors().get(CassandraNode.TOKEN);
         if (token == null) {
-            token = getConfig(CassandraNode.TOKEN);
+            token = config().get(CassandraNode.TOKEN);
         }
         return token;
     }
@@ -200,18 +202,18 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override public Set<BigInteger> getTokens() {
         // Prefer an already-set attribute over the config.
         // Prefer TOKENS over TOKEN.
-        Set<BigInteger> tokens = getAttribute(CassandraNode.TOKENS);
+        Set<BigInteger> tokens = sensors().get(CassandraNode.TOKENS);
         if (tokens == null) {
-            BigInteger token = getAttribute(CassandraNode.TOKEN);
+            BigInteger token = sensors().get(CassandraNode.TOKEN);
             if (token != null) {
                 tokens = ImmutableSet.of(token);
             }
         }
         if (tokens == null) {
-            tokens = getConfig(CassandraNode.TOKENS);
+            tokens = config().get(CassandraNode.TOKENS);
         }
         if (tokens == null) {
-            BigInteger token = getConfig(CassandraNode.TOKEN);
+            BigInteger token = config().get(CassandraNode.TOKEN);
             if (token != null) {
                 tokens = ImmutableSet.of(token);
             }
@@ -235,30 +237,30 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     }
     
     @Override public String getListenAddress() {
-        String sensorName = getConfig(LISTEN_ADDRESS_SENSOR);
+        String sensorName = config().get(LISTEN_ADDRESS_SENSOR);
         if (Strings.isNonBlank(sensorName))
             return Entities.submit(this, DependentConfiguration.attributeWhenReady(this, Sensors.newStringSensor(sensorName))).getUnchecked();
         
-        String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
-        return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS);
+        String subnetAddress = sensors().get(CassandraNode.SUBNET_ADDRESS);
+        return Strings.isNonBlank(subnetAddress) ? subnetAddress : sensors().get(CassandraNode.ADDRESS);
     }
     @Override public String getBroadcastAddress() {
-        String sensorName = getConfig(BROADCAST_ADDRESS_SENSOR);
+        String sensorName = config().get(BROADCAST_ADDRESS_SENSOR);
         if (Strings.isNonBlank(sensorName))
             return Entities.submit(this, DependentConfiguration.attributeWhenReady(this, Sensors.newStringSensor(sensorName))).getUnchecked();
         
-        String snitchName = getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
+        String snitchName = config().get(CassandraNode.ENDPOINT_SNITCH_NAME);
         if (snitchName.equals("Ec2MultiRegionSnitch") || snitchName.contains("MultiCloudSnitch")) {
             // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
             // describes that the listen_address is set to the private IP, and the broadcast_address is set to the public IP.
-            return getAttribute(CassandraNode.ADDRESS);
+            return sensors().get(CassandraNode.ADDRESS);
         } else if (!getDriver().isClustered()) {
             return getListenAddress();
         } else {
             // In other situations, prefer the hostname, so other regions can see it
             // *Unless* hostname resolves at the target to a local-only interface which is different to ADDRESS
             // (workaround for issue deploying to localhost)
-            String hostname = getAttribute(CassandraNode.HOSTNAME);
+            String hostname = sensors().get(CassandraNode.HOSTNAME);
             try {
                 String resolvedAddress = getDriver().getResolvedAddress(hostname);
                 if (resolvedAddress==null) {
@@ -280,33 +282,33 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     /** not always the private IP, if public IP has been insisted on for broadcast, e.g. setting up a rack topology */
     // have not confirmed this does the right thing in all clouds ... only used for rack topology however
     public String getPrivateIp() {
-        String sensorName = getConfig(BROADCAST_ADDRESS_SENSOR);
+        String sensorName = config().get(BROADCAST_ADDRESS_SENSOR);
         if (Strings.isNonBlank(sensorName)) {
-            return getAttribute(Sensors.newStringSensor(sensorName));
+            return sensors().get(Sensors.newStringSensor(sensorName));
         } else {
-            String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
-            return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS);
+            String subnetAddress = sensors().get(CassandraNode.SUBNET_ADDRESS);
+            return Strings.isNonBlank(subnetAddress) ? subnetAddress : sensors().get(CassandraNode.ADDRESS);
         }
     }
     public String getPublicIp() {
         // may need to be something else in google
-        return getAttribute(CassandraNode.ADDRESS);
+        return sensors().get(CassandraNode.ADDRESS);
     }
 
     @Override public String getRpcAddress() {
-        String sensorName = getConfig(RPC_ADDRESS_SENSOR);
+        String sensorName = config().get(RPC_ADDRESS_SENSOR);
         if (Strings.isNonBlank(sensorName))
             return Entities.submit(this, DependentConfiguration.attributeWhenReady(this, Sensors.newStringSensor(sensorName))).getUnchecked();
         return "0.0.0.0";
     }
     
     @Override public String getSeeds() { 
-        Set<Entity> seeds = getConfig(CassandraNode.INITIAL_SEEDS);
+        Set<Entity> seeds = config().get(CassandraNode.INITIAL_SEEDS);
         if (seeds==null) {
             log.warn("No seeds available when requested for "+this, new Throwable("source of no Cassandra seeds when requested"));
             return null;
         }
-        String snitchName = getConfig(CassandraNode.ENDPOINT_SNITCH_NAME);
+        String snitchName = config().get(CassandraNode.ENDPOINT_SNITCH_NAME);
         MutableSet<String> seedsHostnames = MutableSet.of();
         for (Entity entity : seeds) {
             // tried removing ourselves if there are other nodes, but that is a BAD idea!
@@ -315,11 +317,11 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             if (snitchName.equals("Ec2MultiRegionSnitch") || snitchName.contains("MultiCloudSnitch")) {
                 // http://www.datastax.com/documentation/cassandra/2.0/mobile/cassandra/architecture/architectureSnitchEC2MultiRegion_c.html
                 // says the seeds should be public IPs.
-                seedsHostnames.add(entity.getAttribute(CassandraNode.ADDRESS));
+                seedsHostnames.add(entity.sensors().get(CassandraNode.ADDRESS));
             } else {
-                String sensorName = getConfig(BROADCAST_ADDRESS_SENSOR);
+                String sensorName = config().get(BROADCAST_ADDRESS_SENSOR);
                 if (Strings.isNonBlank(sensorName)) {
-                    seedsHostnames.add(entity.getAttribute(Sensors.newStringSensor(sensorName)));
+                    seedsHostnames.add(entity.sensors().get(Sensors.newStringSensor(sensorName)));
                 } else {
                     Maybe<String> optionalSeedHostname = Machines.findSubnetOrPublicHostname(entity);
                     if (optionalSeedHostname.isPresent()) {
@@ -339,39 +341,39 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
 
     // referenced by cassandra-rackdc.properties, read by some of the cassandra snitches
     public String getDatacenterName() {
-        String name = getAttribute(CassandraNode.DATACENTER_NAME);
+        String name = sensors().get(CassandraNode.DATACENTER_NAME);
         if (name == null) {
             MachineLocation machine = getMachineOrNull();
             MachineProvisioningLocation<?> provisioningLocation = getProvisioningLocation();
             if (machine != null) {
-                name = machine.getConfig(CloudLocationConfig.CLOUD_REGION_ID);
+                name = machine.config().get(CloudLocationConfig.CLOUD_REGION_ID);
             }
             if (name == null && provisioningLocation != null) {
-                name = provisioningLocation.getConfig(CloudLocationConfig.CLOUD_REGION_ID);
+                name = provisioningLocation.config().get(CloudLocationConfig.CLOUD_REGION_ID);
             }
             if (name == null) {
                 name = "UNKNOWN_DATACENTER";
             }
-            setAttribute((AttributeSensor<String>)DATACENTER_NAME, name);
+            sensors().set((AttributeSensor<String>) DATACENTER_NAME, name);
         }
         return name;
     }
 
     public String getRackName() {
-        String name = getAttribute(CassandraNode.RACK_NAME);
+        String name = sensors().get(CassandraNode.RACK_NAME);
         if (name == null) {
             MachineLocation machine = getMachineOrNull();
             MachineProvisioningLocation<?> provisioningLocation = getProvisioningLocation();
             if (machine != null) {
-                name = machine.getConfig(CloudLocationConfig.CLOUD_AVAILABILITY_ZONE_ID);
+                name = machine.config().get(CloudLocationConfig.CLOUD_AVAILABILITY_ZONE_ID);
             }
             if (name == null && provisioningLocation != null) {
-                name = provisioningLocation.getConfig(CloudLocationConfig.CLOUD_AVAILABILITY_ZONE_ID);
+                name = provisioningLocation.config().get(CloudLocationConfig.CLOUD_AVAILABILITY_ZONE_ID);
             }
             if (name == null) {
                 name = "UNKNOWN_RACK";
             }
-            setAttribute((AttributeSensor<String>)RACK_NAME, name);
+            sensors().set(RACK_NAME, name);
         }
         return name;
     }
@@ -400,24 +402,25 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override
     protected void connectSensors() {
         // "cassandra" isn't really a protocol, but okay for now
-        setAttribute(DATASTORE_URL, "cassandra://"+getAttribute(HOSTNAME)+":"+getAttribute(THRIFT_PORT));
-        
+        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, sensors().get(THRIFT_PORT));
+        sensors().set(DATASTORE_URL, String.format("cassandra://%s:%s", hostAndPort.getHostText(), hostAndPort.getPort()));
+
         super.connectSensors();
 
         jmxHelper = new JmxHelper(this);
-        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+        boolean retrieveUsageMetrics = config().get(RETRIEVE_USAGE_METRICS);
         
         jmxFeed = JmxFeed.builder()
                 .entity(this)
                 .period(3000, TimeUnit.MILLISECONDS)
                 .helper(jmxHelper)
-                .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP_JMX)
+                .pollAttribute(new JmxAttributePollConfig<>(SERVICE_UP_JMX)
                         .objectName(storageServiceMBean)
                         .attributeName("Initialized")
                         .onSuccess(Functions.forPredicate(Predicates.notNull()))
                         .onException(Functions.constant(false))
                         .suppressDuplicates(true))
-                .pollAttribute(new JmxAttributePollConfig<Set<BigInteger>>(TOKENS)
+                .pollAttribute(new JmxAttributePollConfig<>(TOKENS)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")
                         .onSuccess(new Function<Object, Set<BigInteger>>() {
@@ -426,7 +429,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                                 Map input = (Map)arg;
                                 if (input == null || input.isEmpty()) return null;
                                 // FIXME does not work on aws-ec2, uses RFC1918 address
-                                Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS), getAttribute(SUBNET_ADDRESS), getAttribute(SUBNET_HOSTNAME)));
+                                Predicate<String> self = Predicates.in(ImmutableList.of(sensors().get(HOSTNAME), sensors().get(ADDRESS), sensors().get(SUBNET_ADDRESS), sensors().get(SUBNET_HOSTNAME)));
                                 Set<String> tokens = Maps.filterValues(input, self).keySet();
                                 Set<BigInteger> result = Sets.newLinkedHashSet();
                                 for (String token : tokens) {
@@ -436,7 +439,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             }})
                         .onException(Functions.<Set<BigInteger>>constant(null))
                         .suppressDuplicates(true))
-                .pollAttribute(new JmxAttributePollConfig<BigInteger>(TOKEN)
+                .pollAttribute(new JmxAttributePollConfig<>(TOKEN)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")
                         .onSuccess(new Function<Object, BigInteger>() {
@@ -446,28 +449,28 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                                 // TODO remove duplication from setting TOKENS
                                 if (input == null || input.isEmpty()) return null;
                                 // FIXME does not work on aws-ec2, uses RFC1918 address
-                                Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS), getAttribute(SUBNET_ADDRESS), getAttribute(SUBNET_HOSTNAME)));
+                                Predicate<String> self = Predicates.in(ImmutableList.of(sensors().get(HOSTNAME), sensors().get(ADDRESS), sensors().get(SUBNET_ADDRESS), sensors().get(SUBNET_HOSTNAME)));
                                 Set<String> tokens = Maps.filterValues(input, self).keySet();
                                 String token = Iterables.getFirst(tokens, null);
                                 return (token != null) ? new BigInteger(token) : null;
                             }})
                         .onException(Functions.<BigInteger>constant(null))
                         .suppressDuplicates(true))
-                .pollOperation(new JmxOperationPollConfig<String>(DATACENTER_NAME)
+                .pollOperation(new JmxOperationPollConfig<>(DATACENTER_NAME)
                         .period(60, TimeUnit.SECONDS)
                         .objectName(snitchMBean)
                         .operationName("getDatacenter")
                         .operationParams(ImmutableList.of(getBroadcastAddress()))
                         .onException(Functions.<String>constant(null))
                         .suppressDuplicates(true))
-                .pollOperation(new JmxOperationPollConfig<String>(RACK_NAME)
+                .pollOperation(new JmxOperationPollConfig<>(RACK_NAME)
                         .period(60, TimeUnit.SECONDS)
                         .objectName(snitchMBean)
                         .operationName("getRack")
                         .operationParams(ImmutableList.of(getBroadcastAddress()))
                         .onException(Functions.<String>constant(null))
                         .suppressDuplicates(true))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(PEERS)
+                .pollAttribute(new JmxAttributePollConfig<>(PEERS)
                         .objectName(storageServiceMBean)
                         .attributeName("TokenToEndpointMap")
                         .onSuccess(new Function<Object, Integer>() {
@@ -479,7 +482,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             }
                         })
                         .onException(Functions.constant(-1)))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(LIVE_NODE_COUNT)
+                .pollAttribute(new JmxAttributePollConfig<>(LIVE_NODE_COUNT)
                         .objectName(storageServiceMBean)
                         .attributeName("LiveNodes")
                         .onSuccess(new Function<Object, Integer>() {
@@ -491,32 +494,32 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             }
                         })
                         .onException(Functions.constant(-1)))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(READ_ACTIVE)
+                .pollAttribute(new JmxAttributePollConfig<>(READ_ACTIVE)
                         .objectName(readStageMBean)
                         .attributeName("ActiveCount")
                         .onException(Functions.constant((Integer)null))
                         .enabled(retrieveUsageMetrics))
-                .pollAttribute(new JmxAttributePollConfig<Long>(READ_PENDING)
+                .pollAttribute(new JmxAttributePollConfig<>(READ_PENDING)
                         .objectName(readStageMBean)
                         .attributeName("PendingTasks")
                         .onException(Functions.constant((Long)null))
                         .enabled(retrieveUsageMetrics))
-                .pollAttribute(new JmxAttributePollConfig<Long>(READ_COMPLETED)
+                .pollAttribute(new JmxAttributePollConfig<>(READ_COMPLETED)
                         .objectName(readStageMBean)
                         .attributeName("CompletedTasks")
                         .onException(Functions.constant((Long)null))
                         .enabled(retrieveUsageMetrics))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(WRITE_ACTIVE)
+                .pollAttribute(new JmxAttributePollConfig<>(WRITE_ACTIVE)
                         .objectName(mutationStageMBean)
                         .attributeName("ActiveCount")
                         .onException(Functions.constant((Integer)null))
                         .enabled(retrieveUsageMetrics))
-                .pollAttribute(new JmxAttributePollConfig<Long>(WRITE_PENDING)
+                .pollAttribute(new JmxAttributePollConfig<>(WRITE_PENDING)
                         .objectName(mutationStageMBean)
                         .attributeName("PendingTasks")
                         .onException(Functions.constant((Long)null))
                         .enabled(retrieveUsageMetrics))
-                .pollAttribute(new JmxAttributePollConfig<Long>(WRITE_COMPLETED)
+                .pollAttribute(new JmxAttributePollConfig<>(WRITE_COMPLETED)
                         .objectName(mutationStageMBean)
                         .attributeName("CompletedTasks")
                         .onException(Functions.constant((Long)null))
@@ -532,7 +535,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                             public Long call() {
                                 try {
                                     long start = System.currentTimeMillis();
-                                    Socket s = new Socket(getAttribute(Attributes.HOSTNAME), getThriftPort());
+                                    Socket s = new Socket(sensors().get(Attributes.HOSTNAME), getThriftPort());
                                     s.close();
                                     long latency = System.currentTimeMillis() - start;
                                     computeServiceUp();
@@ -540,16 +543,16 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                                 } catch (Exception e) {
                                     if (log.isDebugEnabled())
                                         log.debug("Cassandra thrift port poll failure: "+e);
-                                    setAttribute(SERVICE_UP, false);
+                                    sensors().set(SERVICE_UP, false);
                                     return null;
                                 }
                             }
                             public void computeServiceUp() {
                                 // this will wait an additional poll period after thrift port is up,
                                 // as the caller will not have set yet, but that will help ensure it is really healthy!
-                                setAttribute(SERVICE_UP,
-                                        getAttribute(THRIFT_PORT_LATENCY)!=null && getAttribute(THRIFT_PORT_LATENCY)>=0 && 
-                                        Boolean.TRUE.equals(getAttribute(SERVICE_UP_JMX)));
+                                sensors().set(SERVICE_UP,
+                                        sensors().get(THRIFT_PORT_LATENCY) != null && sensors().get(THRIFT_PORT_LATENCY) >= 0 &&
+                                                Boolean.TRUE.equals(sensors().get(SERVICE_UP_JMX)));
                             }})
                         .enabled(retrieveUsageMetrics))
                 .build();
@@ -564,15 +567,15 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     protected void connectEnrichers(Duration windowPeriod) {
         JavaAppUtils.connectJavaAppServerPolicies(this);
 
-        addEnricher(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, READ_COMPLETED, READS_PER_SECOND_LAST));
-        addEnricher(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, WRITE_COMPLETED, WRITES_PER_SECOND_LAST));
+        addEnricher(TimeWeightedDeltaEnricher.getPerSecondDeltaEnricher(this, READ_COMPLETED, READS_PER_SECOND_LAST));
+        addEnricher(TimeWeightedDeltaEnricher.getPerSecondDeltaEnricher(this, WRITE_COMPLETED, WRITES_PER_SECOND_LAST));
         
         if (windowPeriod!=null) {
-            addEnricher(new RollingTimeWindowMeanEnricher<Long>(this, THRIFT_PORT_LATENCY, 
+            addEnricher(new RollingTimeWindowMeanEnricher<>(this, THRIFT_PORT_LATENCY,
                     THRIFT_PORT_LATENCY_IN_WINDOW, windowPeriod));
-            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, READS_PER_SECOND_LAST, 
+            addEnricher(new RollingTimeWindowMeanEnricher<>(this, READS_PER_SECOND_LAST,
                     READS_PER_SECOND_IN_WINDOW, windowPeriod));
-            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, WRITES_PER_SECOND_LAST, 
+            addEnricher(new RollingTimeWindowMeanEnricher<>(this, WRITES_PER_SECOND_LAST,
                     WRITES_PER_SECOND_IN_WINDOW, windowPeriod));
         }
     }

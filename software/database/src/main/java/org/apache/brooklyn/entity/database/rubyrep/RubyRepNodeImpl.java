@@ -49,12 +49,12 @@ public class RubyRepNodeImpl extends SoftwareProcessImpl implements RubyRepNode 
 
         DatastoreCommon leftNode = getConfig(LEFT_DATABASE);
         if (leftNode != null) {
-            setAttribute(LEFT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL)).getUnchecked(getDatabaseStartupDelay()));
+            sensors().set(LEFT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(leftNode, DatastoreCommon.DATASTORE_URL)).getUnchecked(getDatabaseStartupDelay()));
         }
 
         DatastoreCommon rightNode = getConfig(RIGHT_DATABASE);
         if (rightNode != null) {
-            setAttribute(RIGHT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL)).getUnchecked(getDatabaseStartupDelay()));
+            sensors().set(RIGHT_DATASTORE_URL, Entities.submit(this, DependentConfiguration.attributeWhenReady(rightNode, DatastoreCommon.DATASTORE_URL)).getUnchecked(getDatabaseStartupDelay()));
         }
     }
 

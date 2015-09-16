@@ -19,10 +19,13 @@
 package org.apache.brooklyn.entity.database.postgresql;
 
 import org.apache.brooklyn.core.effector.EffectorBody;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.net.HostAndPort;
 
 public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSqlNode {
 
@@ -60,7 +63,8 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     protected void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
-        setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
+        HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, sensors().get(POSTGRESQL_PORT));
+        sensors().set(DATASTORE_URL, String.format("postgresql://%s:%s/", hostAndPort.getHostText(), hostAndPort.getPort()));
     }
 
     @Override
