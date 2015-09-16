@@ -265,6 +265,7 @@
                 <exclude>src/test/resources/test-mongodb.conf</exclude>
                 <exclude>src/test/resources/test-mongodb-configserver.conf</exclude>
                 <exclude>src/test/resources/test-mongodb-router.conf</exclude>
+                <exclude>src/test/resources/mongodb-keyfile</exclude>
                 <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/redis/redis.conf</exclude>
                 <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/redis/slave.conf</exclude>
                 <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/app.config</exclude>

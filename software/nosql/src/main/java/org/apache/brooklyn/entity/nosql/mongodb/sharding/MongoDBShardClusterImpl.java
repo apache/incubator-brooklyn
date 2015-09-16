@@ -141,23 +141,28 @@ public class MongoDBShardClusterImpl extends DynamicClusterImpl implements Mongo
                     } catch (UnknownHostException e) {
                         throw Exceptions.propagate(e);
                     }
-                    
-                    MongoDBServer primary = replicaSet.getAttribute(MongoDBReplicaSet.PRIMARY_ENTITY);
-                    if (primary != null) {
-                        String addr = String.format("%s:%d", primary.getAttribute(MongoDBServer.SUBNET_HOSTNAME), primary.getAttribute(MongoDBServer.PORT));
-                        String replicaSetURL = ((MongoDBReplicaSet) replicaSet).getName() + "/" + addr;
-                        boolean added = client.addShardToRouter(replicaSetURL);
-                        if (added) {
-                            LOG.info("{} added shard {} via {}", new Object[] {MongoDBShardClusterImpl.this, replicaSetURL, router});
-                            addedMembers.add(replicaSet);
-                            reschedule = false;
+
+                    try {
+                        MongoDBServer primary = replicaSet.getAttribute(MongoDBReplicaSet.PRIMARY_ENTITY);
+                        if (primary != null) {
+                            String addr = String.format("%s:%d", primary.getAttribute(MongoDBServer.SUBNET_HOSTNAME), primary.getAttribute(MongoDBServer.PORT));
+                            String replicaSetURL = ((MongoDBReplicaSet) replicaSet).getName() + "/" + addr;
+                            boolean added = client.addShardToRouter(replicaSetURL);
+                            if (added) {
+                                LOG.info("{} added shard {} via {}", new Object[]{MongoDBShardClusterImpl.this, replicaSetURL, router});
+                                addedMembers.add(replicaSet);
+                                reschedule = false;
+                            } else {
+                                LOG.debug("Rescheduling addition of shard {} because add failed via router {}", replicaSetURL, router);
+                                reschedule = true;
+                            }
                         } else {
-                            LOG.debug("Rescheduling addition of shard {} because add failed via router {}", replicaSetURL, router);
+                            LOG.debug("Rescheduling addition of shard {} because primary is null", replicaSet);
                             reschedule = true;
                         }
-                    } else {
-                        LOG.debug("Rescheduling addition of shard {} because primary is null", replicaSet);
-                        reschedule = true;
+                    } catch (Exception e) {
+                        LOG.error("Failed to add shard to router {}:  ", router,  e);
+                        throw Exceptions.propagate(e);
                     }
                 }
                 

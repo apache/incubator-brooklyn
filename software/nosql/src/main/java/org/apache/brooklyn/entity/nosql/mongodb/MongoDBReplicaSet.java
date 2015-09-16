@@ -46,7 +46,7 @@ import com.google.common.reflect.TypeToken;
  * @see <a href="http://docs.mongodb.org/manual/replication/">http://docs.mongodb.org/manual/replication/</a>
  */
 @ImplementedBy(MongoDBReplicaSetImpl.class)
-public interface MongoDBReplicaSet extends DynamicCluster {
+public interface MongoDBReplicaSet extends DynamicCluster, MongoDBAuthenticationMixins {
 
     @SetFromFlag("replicaSetName")
     ConfigKey<String> REPLICA_SET_NAME = ConfigKeys.newStringConfigKey(

@@ -27,6 +27,8 @@ import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
@@ -59,11 +61,11 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
     
-        List<String> commands = new LinkedList<String>();
+        List<String> commands = new LinkedList<>();
         commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs));
         commands.add(BashCommands.INSTALL_TAR);
         commands.add("tar xzfv " + saveAs);
-    
+
         newScript(INSTALLING)
                 .failOnNonZeroResultCode()
                 .body.append(commands).execute();
@@ -73,14 +75,43 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
     public void customize() {
         Map<?,?> ports = ImmutableMap.of("port", getServerPort());
         Networking.checkPortsValid(ports);
-        String command = String.format("mkdir -p %s", getDataDirectory());
+        List<String> commands = new LinkedList<>();
+        commands.add(String.format("mkdir -p %s", getDataDirectory()));
+
+        if (MongoDBAuthenticationUtils.usesAuthentication(entity)) {
+            String destinationLocation = Os.mergePaths(getRunDir(), "mongodb-keyfile");
+            entity.sensors().set(AbstractMongoDBServer.MONGODB_KEYFILE_DESTINATION, destinationLocation);
+            String keyfileContents = entity.config().get(AbstractMongoDBServer.MONGODB_KEYFILE_CONTENTS);
+            if (Strings.isNullOrEmpty(keyfileContents)) {
+                String keyfileUrl = entity.config().get(AbstractMongoDBServer.MONGODB_KEYFILE_URL);
+                if (Strings.isNullOrEmpty(keyfileUrl)) {
+                    throw new IllegalStateException("MongoDBAuthenticationUtils.usesAuthentication returned true, but neither keyfileContents nor keyfileUrl are set");
+                }
+                copyResource(keyfileUrl, destinationLocation);
+            } else {
+                commands.add(BashCommands.pipeTextToFile(keyfileContents, destinationLocation));
+            }
+            commands.add("chmod 600 " + destinationLocation);
+        }
+
         newScript(CUSTOMIZING)
                 .updateTaskAndFailOnNonZeroResultCode()
-                .body.append(command).execute();
+                .body.append(commands).execute();
         String templateUrl = entity.getConfig(MongoDBServer.MONGODB_CONF_TEMPLATE_URL);
         if (!Strings.isNullOrEmpty(templateUrl)) copyTemplate(templateUrl, getConfFile());
+        if (MongoDBAuthenticationUtils.usesAuthentication(entity)) {
+            launch(getArgsBuilderWithNoAuthentication((AbstractMongoDBServer) getEntity())
+                    .add("--dbpath", getDataDirectory()));
+            newScript("create-user")
+                    .body.append(String.format("%s --port %s" +
+                            " --host localhost admin --eval \"db.createUser({user: '%s',pwd: '%s',roles: [ 'root' ]})\"",
+                    Os.mergePaths(getExpandedInstallDir(), "bin/mongo"), getServerPort(), getRootUsername(), MongoDBAuthenticationUtils.getRootPassword(entity)))
+                    .updateTaskAndFailOnNonZeroResultCode()
+                    .execute();
+            stop();
+        }
     }
-    
+
     @Override
     public boolean isRunning() {
         try {
@@ -102,7 +133,14 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         
         // We could also use SIGTERM (15)
         new ScriptHelper(this, "Send SIGINT to MongoDB server")
-                .body.append("kill -2 $(cat " + getPidFile() + ")")
+                .body.append("MONGO_PID=$(cat " + getPidFile() + ")\n")
+                .body.append("kill -2 $MONGO_PID\n")
+                .body.append("for i in {1..10}\n" +
+                    "do\n" +
+                    "    kill -0 $MONGO_PID || exit \n" +
+                    "    sleep 1\n" +
+                    "done\n" +
+                    "echo \"mongoDB process still running after 10 seconds; continuing but may subsequently fail\"")
                 .execute();
     }
 
@@ -151,24 +189,37 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
         return getRunDir() + "/mongo.conf";
     }
 
-    protected ImmutableList.Builder<String> getArgsBuilderWithDefaults(AbstractMongoDBServer server) {
-        Integer port = server.getAttribute(MongoDBServer.PORT);
+    protected String getRootUsername() {
+        return entity.config().get(AbstractMongoDBServer.ROOT_USERNAME);
+    }
 
-        return ImmutableList.<String>builder()
-                .add("--config", getConfFile())
-                .add("--pidfilepath", getPidFile())
-                .add("--logpath", getLogFile())
-                .add("--port", port.toString())
-                .add("--fork");
+    protected ImmutableList.Builder<String> getArgsBuilderWithDefaults(AbstractMongoDBServer server) {
+        ImmutableList.Builder<String> builder = getArgsBuilderWithNoAuthentication(server);
+        if (MongoDBAuthenticationUtils.usesAuthentication(entity)) {
+            builder.add("--keyFile", entity.getAttribute(AbstractMongoDBServer.MONGODB_KEYFILE_DESTINATION));
+        }
+        return builder;
+    }
+
+    protected ImmutableList.Builder<String> getArgsBuilderWithNoAuthentication(AbstractMongoDBServer server) {
+        Integer port = server.getAttribute(MongoDBServer.PORT);
+        ImmutableList.Builder<String> builder = ImmutableList.builder();
+        builder.add("--config", getConfFile());
+        builder.add("--pidfilepath", getPidFile());
+        builder.add("--logpath", getLogFile());
+        builder.add("--port", port.toString());
+        builder.add("--fork");
+        return builder;
     }
     
     protected void launch(ImmutableList.Builder<String> argsBuilder) {
         String args = Joiner.on(" ").join(argsBuilder.build());
-        String command = String.format("%s/bin/mongod %s > out.log 2> err.log < /dev/null", getExpandedInstallDir(), args);
-        LOG.info(command);
+        String command = String.format("%s/bin/mongod %s >> out.log 2>> err.log < /dev/null", getExpandedInstallDir(), args);
+
         newScript(LAUNCHING)
+                .setFlag(SshTool.PROP_CONNECT_TIMEOUT, Duration.TEN_SECONDS.toMilliseconds())
                 .updateTaskAndFailOnNonZeroResultCode()
                 .body.append(command).execute();
     }
- 
+
 }
