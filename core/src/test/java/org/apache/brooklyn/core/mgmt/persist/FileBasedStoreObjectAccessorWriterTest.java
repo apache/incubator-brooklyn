@@ -23,8 +23,6 @@ import static org.testng.Assert.assertEquals;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.brooklyn.core.mgmt.persist.FileBasedStoreObjectAccessor;
-import org.apache.brooklyn.core.mgmt.persist.StoreObjectAccessorLocking;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.time.Duration;
