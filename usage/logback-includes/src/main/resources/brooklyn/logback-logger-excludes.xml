@@ -55,5 +55,10 @@
 		<!-- Wordnik logs errors in a few places which aren't errors at all; ignore them altogether (not even to a file, because it makes lots of ERROR lines).
 		     (Turn them back on if you need to see how API-doc gets generated, and also see https://github.com/wordnik/swagger-core/issues/58) -->
 	</logger>
-	
+
+    <!-- The MongoDB Java driver is much too noisy at INFO. -->
+    <logger name="org.mongodb.driver" level="WARN" additivity="false">
+        <appender-ref ref="FILE" />
+    </logger>
+
 </included>
