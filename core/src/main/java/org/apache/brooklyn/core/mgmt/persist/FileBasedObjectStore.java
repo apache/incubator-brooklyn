@@ -24,6 +24,10 @@ import static java.lang.String.format;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.DirectoryNotEmptyException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -37,9 +41,6 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
-import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.core.internal.ssh.process.ProcessTool;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import org.apache.brooklyn.util.io.FileUtil;
@@ -53,7 +54,6 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -346,53 +346,27 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         return newDir;
     }
 
-    private static boolean WARNED_ON_NON_ATOMIC_FILE_UPDATES = false; 
     /** 
      * Attempts an fs level atomic move then fall back to pure java rename.
      * Assumes files are on same mount point.
-     * <p>
-     * TODO Java 7 gives an atomic Files.move() which would be preferred.
+     * Overwriting existing destFile
      */
     static void moveFile(File srcFile, File destFile) throws IOException, InterruptedException {
-        // Try rename first - it is a *much* cheaper call than invoking a system call in Java. 
-        // However, rename is not guaranteed cross platform to succeed if the destination exists,
-        // and not guaranteed to be atomic, but it usually seems to do the right thing...
-        boolean result;
-        result = srcFile.renameTo(destFile);
-        if (result) {
-            if (log.isTraceEnabled()) log.trace("java rename of {} to {} completed", srcFile, destFile);
-            return;
+        if (destFile.isDirectory()) {
+            deleteCompletely(destFile);
+        }
+
+        try {
+            Files.move(srcFile.toPath(), destFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
         
-        if (!Os.isMicrosoftWindows()) {
-            // this command, if it succeeds, is guaranteed to be atomic, and it will usually overwrite
-            String cmd = "mv '"+srcFile.getAbsolutePath()+"' '"+destFile.getAbsolutePath()+"'";
-            
-            int exitStatus = new ProcessTool().execCommands(MutableMap.<String,String>of(), MutableList.of(cmd), null);
-            // prefer the above to the below because it wraps it in the appropriate bash
-//            Process proc = Runtime.getRuntime().exec(cmd);
-//            result = proc.waitFor();
-            
-            if (log.isTraceEnabled()) log.trace("FS move of {} to {} completed, code {}", new Object[] { srcFile, destFile, exitStatus });
-            if (exitStatus == 0) return;
+        if (log.isTraceEnabled()) {
+            log.trace("Completly moved from {} to {} completed", new Object[] { srcFile, destFile });
         }
-        
-        // finally try a delete - but explicitly warn this is not going to be atomic
-        // so if another node reads it might see no master
-        if (!WARNED_ON_NON_ATOMIC_FILE_UPDATES) {
-            WARNED_ON_NON_ATOMIC_FILE_UPDATES = true;
-            log.warn("Unable to perform atomic file update ("+srcFile+" to "+destFile+"); file system not recommended for production HA/DR");
-        }
-        destFile.delete();
-        result = srcFile.renameTo(destFile);
-        if (log.isTraceEnabled()) log.trace("java delete and rename of {} to {} completed, code {}", new Object[] { srcFile, destFile, result });
-        if (result) 
-            return;
-        Files.copy(srcFile, destFile);
-        srcFile.delete();
-        throw new IOException("Could not move "+destFile+" to "+srcFile);
     }
-    
+
     /**
      * True if directory exists, but is entirely empty, or only contains empty directories.
      */
