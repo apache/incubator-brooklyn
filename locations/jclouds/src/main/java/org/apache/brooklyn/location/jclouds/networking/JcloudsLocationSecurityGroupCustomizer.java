@@ -33,6 +33,7 @@ import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationCustomizer;
 import org.apache.brooklyn.location.jclouds.JcloudsMachineLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation;
+
 import org.jclouds.aws.AWSResponseException;
 import org.jclouds.compute.ComputeService;
 import org.jclouds.compute.domain.SecurityGroup;
@@ -43,9 +44,12 @@ import org.jclouds.net.domain.IpPermission;
 import org.jclouds.net.domain.IpProtocol;
 import org.jclouds.providers.ProviderMetadata;
 import org.jclouds.providers.Providers;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.brooklyn.location.jclouds.BasicJcloudsLocationCustomizer;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Cidr;
@@ -179,14 +183,23 @@ public class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLocation
      * Applies the given security group permissions to the given location.
      * <p>
      * Takes no action if the location's compute service does not have a security group extension.
-     * @param permissions The set of permissions to be applied to the location
+     * <p>
+     * The {@code synchronized} block is to serialize the permission changes, preventing race
+     * conditions in some clouds. If multiple customizations of the same group are done in parallel
+     * the changes may not be picked up by later customizations, meaning the same rule could possibly be
+     * added twice, which would fail. A finer grained mechanism would be preferable here, but
+     * we have no access to the information required, so this brute force serializing is required.
+     *
      * @param location Location to gain permissions
+     * @param permissions The set of permissions to be applied to the location
      */
     public JcloudsLocationSecurityGroupCustomizer addPermissionsToLocation(final JcloudsMachineLocation location, final Iterable<IpPermission> permissions) {
-        ComputeService computeService = location.getParent().getComputeService();
-        String nodeId = location.getNode().getId();
-        addPermissionsToLocation(permissions, nodeId, computeService);
-        return this;
+        synchronized (JcloudsLocationSecurityGroupCustomizer.class) {
+            ComputeService computeService = location.getParent().getComputeService();
+            String nodeId = location.getNode().getId();
+            addPermissionsToLocation(permissions, nodeId, computeService);
+            return this;
+        }
     }
 
     /**
@@ -228,7 +241,9 @@ public class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLocation
         } finally {
             Tasks.resetBlockingDetails();
         }
-        for (IpPermission permission : permissions) {
+        MutableList<IpPermission> newPermissions = MutableList.copyOf(permissions);
+        Iterables.removeAll(newPermissions, machineUniqueSecurityGroup.getIpPermissions());
+        for (IpPermission permission : newPermissions) {
             addPermission(permission, machineUniqueSecurityGroup, securityApi);
         }
     }
