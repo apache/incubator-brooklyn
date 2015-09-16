@@ -25,20 +25,27 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
-
-import com.google.common.reflect.TypeToken;
-
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.database.DatastoreMixins.HasDatastoreUrl;
 import org.apache.brooklyn.entity.group.DynamicCluster;
+
+import com.google.common.reflect.TypeToken;
 
 @ImplementedBy(MySqlClusterImpl.class)
 @Catalog(name="MySql Master-Slave cluster", description="Sets up a cluster of MySQL nodes using master-slave relation and binary logging", iconUrl="classpath:///mysql-logo-110x57.png")
 public interface MySqlCluster extends DynamicCluster, HasDatastoreUrl {
     interface MySqlMaster {
-        AttributeSensor<String> MASTER_LOG_FILE = Sensors.newStringSensor("mysql.master.log_file", "The binary log file master is writing to");
-        AttributeSensor<Integer> MASTER_LOG_POSITION = Sensors.newIntegerSensor("mysql.master.log_position", "The position in the log file to start replication");
+        AttributeSensor<String> MASTER_LOG_FILE = Sensors.newStringSensor(
+                "mysql.master.log_file", "The binary log file master is writing to");
+        AttributeSensor<Integer> MASTER_LOG_POSITION = Sensors.newIntegerSensor(
+                "mysql.master.log_position", "The position in the log file to start replication");
+
+        ConfigKey<String> MASTER_CREATION_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey(
+                "datastore.master.creation.script.contents", "Contents of creation script to initialize the master node after initializing replication");
+
+        ConfigKey<String> MASTER_CREATION_SCRIPT_URL = ConfigKeys.newStringConfigKey(
+                "datastore.master.creation.script.url", "URL of creation script to use to initialize the master node after initializing replication (ignored if creationScriptContents is specified)");
     }
     interface MySqlSlave {
         AttributeSensor<Boolean> SLAVE_HEALTHY = Sensors.newBooleanSensor("mysql.slave.healthy", "Indicates that the replication state of the slave is healthy");

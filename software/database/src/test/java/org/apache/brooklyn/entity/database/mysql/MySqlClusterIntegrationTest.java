@@ -19,18 +19,20 @@
 package org.apache.brooklyn.entity.database.mysql;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.util.os.Os;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class MySqlClusterIntegrationTest extends BrooklynAppLiveTestSupport {
 
     @Test(groups = {"Integration"})
-    public void test_localhost() throws Exception {
+    public void testAllNodesInit() throws Exception {
         try {
-            MySqlClusterTestHelper.test(app, mgmt.getLocationRegistry().resolve("localhost"));
+            MySqlClusterTestHelper.test(app, getLocation());
         } finally {
             for (Entity member : Iterables.getOnlyElement(app.getChildren()).getChildren()) {
                 String runDir = member.getAttribute(MySqlNode.RUN_DIR);
@@ -39,5 +41,23 @@ public class MySqlClusterIntegrationTest extends BrooklynAppLiveTestSupport {
                 }
             }
         }
+    }
+
+    @Test(groups = {"Integration"})
+    public void testMasterInit() throws Exception {
+        try {
+            MySqlClusterTestHelper.testMasterInit(app, getLocation());
+        } finally {
+            for (Entity member : Iterables.getOnlyElement(app.getChildren()).getChildren()) {
+                String runDir = member.getAttribute(MySqlNode.RUN_DIR);
+                if (runDir != null) {
+                    Os.deleteRecursively(runDir);
+                }
+            }
+        }
+    }
+
+    private Location getLocation() {
+        return mgmt.getLocationRegistry().resolve("localhost");
     }
 }

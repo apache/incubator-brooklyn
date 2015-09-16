@@ -24,6 +24,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -39,16 +41,19 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceNotUpL
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.enricher.stock.Enrichers;
+import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 import org.apache.brooklyn.feed.function.FunctionFeed;
 import org.apache.brooklyn.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.TaskBuilder;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.IfFunctions;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
@@ -310,8 +315,24 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
             if (position != null) {
                 ((EntityInternal)master).setAttribute(MySqlMaster.MASTER_LOG_POSITION, new Integer(position));
             }
+
+            //NOTE: Will be executed on each start, analogously to the standard CREATION_SCRIPT config
+            String creationScript = getDatabaseCreationScriptAsString(master);
+            if (creationScript != null) {
+                master.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of("commands", creationScript));
+            }
         }
 
+        @Nullable private static String getDatabaseCreationScriptAsString(Entity entity) {
+            String url = entity.getConfig(MySqlMaster.MASTER_CREATION_SCRIPT_URL);
+            if (!Strings.isBlank(url))
+                return new ResourceUtils(entity).getResourceAsString(url);
+            String contents = entity.getConfig(MySqlMaster.MASTER_CREATION_SCRIPT_CONTENTS);
+            if (!Strings.isBlank(contents))
+                return contents;
+            return null;
+        }
+        
         private void initSlave(MySqlNode slave) {
             MySqlNode master = (MySqlNode) Iterables.find(cluster.getMembers(), IS_MASTER);
             String masterLogFile = validateSqlParam(getAttributeBlocking(master, MySqlMaster.MASTER_LOG_FILE));

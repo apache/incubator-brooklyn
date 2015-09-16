@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import org.apache.brooklyn.entity.database.VogellaExampleAccess;
+import org.apache.brooklyn.entity.database.mysql.MySqlCluster.MySqlMaster;
 
 /**
  * Runs a slightly modified version of the popular Vogella MySQL tutorial,
@@ -72,11 +73,21 @@ public class MySqlClusterTestHelper {
             ));
 
     public static void test(TestApplication app, Location location) throws Exception {
-        MySqlCluster mysql = app.createAndManageChild(EntitySpec.create(MySqlCluster.class)
+        test(app, location, EntitySpec.create(MySqlCluster.class)
                 .configure(MySqlCluster.INITIAL_SIZE, 2)
                 .configure(MySqlNode.CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT)
                 .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.<String, Object>of("skip-name-resolve","")));
+    }
 
+    public static void testMasterInit(TestApplication app, Location location) throws Exception {
+        test(app, location, EntitySpec.create(MySqlCluster.class)
+                .configure(MySqlCluster.INITIAL_SIZE, 2)
+                .configure(MySqlMaster.MASTER_CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT)
+                .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.<String, Object>of("skip-name-resolve","")));
+    }
+
+    public static void test(TestApplication app, Location location, EntitySpec<MySqlCluster> clusterSpec) throws Exception {
+        MySqlCluster mysql = app.createAndManageChild(clusterSpec);
         app.start(ImmutableList.of(location));
         log.info("MySQL started");
 
