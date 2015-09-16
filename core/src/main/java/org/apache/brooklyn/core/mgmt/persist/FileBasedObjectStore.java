@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
@@ -66,6 +65,8 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
 
     private static final int SHUTDOWN_TIMEOUT_MS = 10*1000;
 
+    private static boolean WARNED_ON_NON_ATOMIC_FILE_UPDATES = false; 
+    
     private final File basedir;
     private final ListeningExecutorService executor;
     private ManagementContext mgmt;
@@ -357,8 +358,12 @@ public class FileBasedObjectStore implements PersistenceObjectStore {
         }
 
         try {
-            Files.move(srcFile.toPath(), destFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(srcFile.toPath(), destFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException e) {
+            if (!WARNED_ON_NON_ATOMIC_FILE_UPDATES) {
+                WARNED_ON_NON_ATOMIC_FILE_UPDATES = true;
+                log.warn("Unable to perform atomic file update ("+srcFile+" to "+destFile+"); file system not recommended for production HA/DR");
+            }
             Files.move(srcFile.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
         }
         

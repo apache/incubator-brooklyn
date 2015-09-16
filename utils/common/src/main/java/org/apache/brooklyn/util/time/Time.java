@@ -503,7 +503,7 @@ public class Time {
                 }
                 return d*multiplier + dd;
             } catch (Exception ex) {
-                if (ex instanceof NumberFormatException) throw ex;
+                if (ex instanceof NumberFormatException) throw (NumberFormatException)ex;
                 log.trace("Details of parse failure:", ex);
                 throw new NumberFormatException("Cannot parse time string '"+timeStringOrig+"'");
             }
