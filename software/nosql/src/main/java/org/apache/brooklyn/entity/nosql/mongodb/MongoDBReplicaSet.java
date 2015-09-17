@@ -26,6 +26,7 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.entity.database.DatastoreMixins.HasDatastoreUrl;
 import org.apache.brooklyn.entity.group.Cluster;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
@@ -46,7 +47,7 @@ import com.google.common.reflect.TypeToken;
  * @see <a href="http://docs.mongodb.org/manual/replication/">http://docs.mongodb.org/manual/replication/</a>
  */
 @ImplementedBy(MongoDBReplicaSetImpl.class)
-public interface MongoDBReplicaSet extends DynamicCluster, MongoDBAuthenticationMixins {
+public interface MongoDBReplicaSet extends DynamicCluster, MongoDBAuthenticationMixins, HasDatastoreUrl {
 
     @SetFromFlag("replicaSetName")
     ConfigKey<String> REPLICA_SET_NAME = ConfigKeys.newStringConfigKey(
@@ -60,6 +61,7 @@ public interface MongoDBReplicaSet extends DynamicCluster, MongoDBAuthentication
     @SuppressWarnings("serial")
     AttributeSensor<List<String>> REPLICA_SET_ENDPOINTS = Sensors.newSensor(new TypeToken<List<String>>() {}, 
         "mongodb.replicaSet.endpoints", "Endpoints active for this replica set");
+    
 
     /**
      * The name of the replica set.
