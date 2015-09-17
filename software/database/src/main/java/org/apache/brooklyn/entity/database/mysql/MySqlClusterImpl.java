@@ -24,6 +24,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -39,16 +41,19 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceNotUpL
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.enricher.stock.Enrichers;
+import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 import org.apache.brooklyn.feed.function.FunctionFeed;
 import org.apache.brooklyn.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.TaskBuilder;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.IfFunctions;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
@@ -63,7 +68,6 @@ import com.google.common.reflect.TypeToken;
 
 // https://dev.mysql.com/doc/refman/5.7/en/replication-howto.html
 
-// TODO CREATION_SCRIPT_CONTENTS executed before replication setup so it is not replicated to slaves
 // TODO Bootstrap slave from dump for the case where the binary log is purged
 // TODO Promote slave to master
 // TODO SSL connection between master and slave
@@ -150,7 +154,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
     protected EntitySpec<?> getFirstMemberSpec() {
         final EntitySpec<?> firstMemberSpec = super.getFirstMemberSpec();
         if (firstMemberSpec != null) {
-            return applyDefaults(firstMemberSpec, Suppliers.ofInstance(MASTER_SERVER_ID), MASTER_CONFIG_URL, false);
+            return applyDefaults(firstMemberSpec, Suppliers.ofInstance(MASTER_SERVER_ID), MASTER_CONFIG_URL);
         }
 
         final EntitySpec<?> memberSpec = super.getMemberSpec();
@@ -176,36 +180,25 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
 
         EntitySpec<?> spec = super.getMemberSpec();
         if (spec != null) {
-            return applyDefaults(spec, serverIdSupplier, SLAVE_CONFIG_URL, true);
+            return applyDefaults(spec, serverIdSupplier, SLAVE_CONFIG_URL);
         }
 
         return EntitySpec.create(MySqlNode.class)
                 .displayName("MySql Slave")
                 .configure(MySqlNode.MYSQL_SERVER_ID, serverIdSupplier.get())
-                .configure(MySqlNode.TEMPLATE_CONFIGURATION_URL, SLAVE_CONFIG_URL)
-                // block inheritance, only master should execute the creation script
-                .configure(MySqlNode.CREATION_SCRIPT_URL, (String) null)
-                .configure(MySqlNode.CREATION_SCRIPT_CONTENTS, (String) null);
+                .configure(MySqlNode.TEMPLATE_CONFIGURATION_URL, SLAVE_CONFIG_URL);
     }
 
-    private EntitySpec<?> applyDefaults(EntitySpec<?> spec, Supplier<Integer> serverId, String configUrl, boolean resetCreationScript) {
+    private EntitySpec<?> applyDefaults(EntitySpec<?> spec, Supplier<Integer> serverId, String configUrl) {
         boolean needsServerId = !isKeyConfigured(spec, MySqlNode.MYSQL_SERVER_ID);
         boolean needsConfigUrl = !isKeyConfigured(spec, MySqlNode.TEMPLATE_CONFIGURATION_URL.getConfigKey());
-        boolean needsCreationScriptUrl = resetCreationScript && !isKeyConfigured(spec, MySqlNode.CREATION_SCRIPT_URL);
-        boolean needsCreationScriptContents = resetCreationScript && !isKeyConfigured(spec, MySqlNode.CREATION_SCRIPT_CONTENTS);
-        if (needsServerId || needsConfigUrl || needsCreationScriptUrl || needsCreationScriptContents) {
+        if (needsServerId || needsConfigUrl) {
             EntitySpec<?> clonedSpec = EntitySpec.create(spec);
             if (needsServerId) {
                 clonedSpec.configure(MySqlNode.MYSQL_SERVER_ID, serverId.get());
             }
             if (needsConfigUrl) {
                 clonedSpec.configure(MySqlNode.TEMPLATE_CONFIGURATION_URL, configUrl);
-            }
-            if (needsCreationScriptUrl) {
-                clonedSpec.configure(MySqlNode.CREATION_SCRIPT_URL, (String) null);
-            }
-            if (needsCreationScriptContents) {
-                clonedSpec.configure(MySqlNode.CREATION_SCRIPT_URL, (String) null);
             }
             return clonedSpec;
         } else {
@@ -322,8 +315,24 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
             if (position != null) {
                 ((EntityInternal)master).setAttribute(MySqlMaster.MASTER_LOG_POSITION, new Integer(position));
             }
+
+            //NOTE: Will be executed on each start, analogously to the standard CREATION_SCRIPT config
+            String creationScript = getDatabaseCreationScriptAsString(master);
+            if (creationScript != null) {
+                master.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of("commands", creationScript));
+            }
         }
 
+        @Nullable private static String getDatabaseCreationScriptAsString(Entity entity) {
+            String url = entity.getConfig(MySqlMaster.MASTER_CREATION_SCRIPT_URL);
+            if (!Strings.isBlank(url))
+                return new ResourceUtils(entity).getResourceAsString(url);
+            String contents = entity.getConfig(MySqlMaster.MASTER_CREATION_SCRIPT_CONTENTS);
+            if (!Strings.isBlank(contents))
+                return contents;
+            return null;
+        }
+        
         private void initSlave(MySqlNode slave) {
             MySqlNode master = (MySqlNode) Iterables.find(cluster.getMembers(), IS_MASTER);
             String masterLogFile = validateSqlParam(getAttributeBlocking(master, MySqlMaster.MASTER_LOG_FILE));
