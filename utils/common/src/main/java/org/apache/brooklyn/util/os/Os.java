@@ -51,6 +51,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Os {
 
@@ -62,6 +63,8 @@ public class Os {
     private static final char SEPARATOR_WIN = '\\';
     
     public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
+    private static final boolean isMSWin = testForMicrosoftWindows();
 
     /** returns the best tmp dir to use; see {@link TmpDirFinder} for the logic
      * (and the explanation why this is needed!) */
@@ -514,6 +517,10 @@ public class Os {
     }
 
     public static boolean isMicrosoftWindows() {
+        return isMSWin;
+    }
+
+    private static boolean testForMicrosoftWindows() {
         String os = System.getProperty("os.name").toLowerCase();
         //see org.apache.commons.lang.SystemUtils.IS_WINDOWS
         return os.startsWith("windows");
