@@ -197,8 +197,8 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                     if (!(oldDcName.isPresent() && dcName.equals(oldDcName.get()))) {
                         mutableDatacenterUsage.values().remove(member);
                         mutableDatacenterUsage.put(dcName, member);
-                        setAttribute(DATACENTER_USAGE, mutableDatacenterUsage);
-                        setAttribute(DATACENTERS, Sets.newLinkedHashSet(mutableDatacenterUsage.keySet()));
+                        sensors().set(DATACENTER_USAGE, mutableDatacenterUsage);
+                        sensors().set(DATACENTERS, Sets.newLinkedHashSet(mutableDatacenterUsage.keySet()));
                     }
                 }
             }
@@ -218,8 +218,8 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                 if (datacenterUsage != null && datacenterUsage.containsValue(entity)) {
                     Multimap<String, Entity> mutableDatacenterUsage = LinkedHashMultimap.create(datacenterUsage);
                     mutableDatacenterUsage.values().remove(entity);
-                    setAttribute(DATACENTER_USAGE, mutableDatacenterUsage);
-                    setAttribute(DATACENTERS, Sets.newLinkedHashSet(mutableDatacenterUsage.keySet()));
+                    sensors().set(DATACENTER_USAGE, mutableDatacenterUsage);
+                    sensors().set(DATACENTERS, Sets.newLinkedHashSet(mutableDatacenterUsage.keySet()));
                 }
             }
         });
@@ -303,16 +303,21 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         return super.grow(delta);
     }
     
-    @SuppressWarnings("deprecation")
     @Override
     protected Entity createNode(@Nullable Location loc, Map<?,?> flags) {
         Map<Object, Object> allflags = MutableMap.copyOf(flags);
-        
-        if ((flags.containsKey(CassandraNode.TOKEN) || flags.containsKey("token")) || (flags.containsKey(CassandraNode.TOKENS) || flags.containsKey("tokens"))) {
+
+        if (flags.containsKey("token") || flags.containsKey("cassandra.token")) {
+            // TODO Delete in future version; was deprecated in 0.7.0; deleted config key in 0.9.0
+            log.warn("Cassandra token no longer supported - use 'tokens' in "+CassandraDatacenterImpl.this);
+        }
+        if (flags.containsKey(CassandraNode.TOKENS) || flags.containsKey("tokens") || flags.containsKey("cassandra.tokens")) {
             // leave token config as-is
         } else if (!useVnodes()) {
             BigInteger token = getTokenGenerator().newToken();
-            allflags.put(CassandraNode.TOKEN, token);
+            if (token != null) {
+                allflags.put(CassandraNode.TOKENS, ImmutableSet.of(token));
+            }
         }
 
         if ((flags.containsKey(CassandraNode.NUM_TOKENS_PER_NODE) || flags.containsKey("numTokensPerNode"))) {
@@ -340,7 +345,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                 "due to assumptions Cassandra makes about the use of the same port numbers used across the cluster.");
 
         // force this to be set - even if it is using the default
-        setAttribute(CLUSTER_NAME, getConfig(CLUSTER_NAME));
+        sensors().set(CLUSTER_NAME, getConfig(CLUSTER_NAME));
         
         super.start(locations);
 
@@ -457,8 +462,8 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
             Optional<Entity> upNode = Iterables.tryFind(getMembers(), EntityPredicates.attributeEqualTo(SERVICE_UP, Boolean.TRUE));
 
             if (upNode.isPresent()) {
-                setAttribute(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
-                setAttribute(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
+                sensors().set(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
+                sensors().set(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
 
                 List<String> currentNodes = getAttribute(CASSANDRA_CLUSTER_NODES);
                 Set<String> oldNodes = (currentNodes != null) ? ImmutableSet.copyOf(currentNodes) : ImmutableSet.<String>of();
@@ -473,12 +478,12 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                     }
                 }
                 if (Sets.symmetricDifference(oldNodes, newNodes).size() > 0) {
-                    setAttribute(CASSANDRA_CLUSTER_NODES, MutableList.copyOf(newNodes));
+                    sensors().set(CASSANDRA_CLUSTER_NODES, MutableList.copyOf(newNodes));
                 }
             } else {
-                setAttribute(HOSTNAME, null);
-                setAttribute(THRIFT_PORT, null);
-                setAttribute(CASSANDRA_CLUSTER_NODES, Collections.<String>emptyList());
+                sensors().set(HOSTNAME, null);
+                sensors().set(THRIFT_PORT, null);
+                sensors().set(CASSANDRA_CLUSTER_NODES, Collections.<String>emptyList());
             }
 
             ServiceNotUpLogic.updateNotUpIndicatorRequiringNonEmptyList(this, CASSANDRA_CLUSTER_NODES);
@@ -563,9 +568,9 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                 if (log.isTraceEnabled()) log.debug("Seed refresh no-op for cluster {}: still={}", new Object[] {CassandraDatacenterImpl.this, oldseeds});
             } else {
                 if (log.isDebugEnabled()) log.debug("Refreshing seeds of cluster {}: now={}; old={}", new Object[] {this, newseeds, oldseeds});
-                setAttribute(CURRENT_SEEDS, newseeds);
+                sensors().set(CURRENT_SEEDS, newseeds);
                 if (newseeds != null && newseeds.size() > 0) {
-                    setAttribute(HAS_PUBLISHED_SEEDS, true);
+                    sensors().set(HAS_PUBLISHED_SEEDS, true);
                 }
             }
         }

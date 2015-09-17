@@ -40,9 +40,11 @@ import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.Machines;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.java.JavaAppUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.feed.function.FunctionFeed;
@@ -51,17 +53,18 @@ import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
 import org.apache.brooklyn.feed.jmx.JmxFeed;
 import org.apache.brooklyn.feed.jmx.JmxHelper;
 import org.apache.brooklyn.feed.jmx.JmxOperationPollConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.policy.enricher.RollingTimeWindowMeanEnricher;
 import org.apache.brooklyn.policy.enricher.TimeWeightedDeltaEnricher;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.text.TemplateProcessor;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
@@ -72,10 +75,9 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
 
 /**
  * Implementation of {@link CassandraNode}.
@@ -93,17 +95,32 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     public void init() {
         super.init();
         
-        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new EffectorBody<String>() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous class in case referenced in persisted state
+        new EffectorBody<String>() {
             @Override
             public String call(ConfigBag parameters) {
                 return executeScript((String)parameters.getStringKey("commands"));
             }
-        });
+        };
+        
+        getMutableEntityType().addEffector(EXECUTE_SCRIPT, new ExecuteScriptEffectorBody(this));
         
         Entities.checkRequiredUrl(this, getCassandraConfigTemplateUrl());
         Entities.getRequiredUrlConfig(this, CASSANDRA_RACKDC_CONFIG_TEMPLATE_URL);
         
         connectEnrichers();
+    }
+    
+    private static class ExecuteScriptEffectorBody extends EffectorBody<String> {
+        private final CassandraNode entity;
+        
+        public ExecuteScriptEffectorBody(CassandraNode entity) {
+            this.entity = entity;
+        }
+        @Override
+        public String call(ConfigBag parameters) {
+            return entity.executeScript((String)parameters.getStringKey("commands"));
+        }
     }
     
     /**
@@ -136,17 +153,17 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                              * (TODO internal access could be configured to improve performance / lower cost, 
                              * if we know all nodes are visible to each other) */
                             if (getConfig(LISTEN_ADDRESS_SENSOR)==null)
-                                setConfig(LISTEN_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
+                                config().set(LISTEN_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
                             if (getConfig(BROADCAST_ADDRESS_SENSOR)==null)
-                                setConfig(BROADCAST_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
+                                config().set(BROADCAST_ADDRESS_SENSOR, CassandraNode.ADDRESS.getName());
                             result = "public IP for both listen and broadcast";
                         } else if (provider.contains("google-compute")) {
                             /* Google nodes cannot reach themselves/each-other on the public IP,
                              * and there is no hostname, so use private IP here */
                             if (getConfig(LISTEN_ADDRESS_SENSOR)==null)
-                                setConfig(LISTEN_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
+                                config().set(LISTEN_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
                             if (getConfig(BROADCAST_ADDRESS_SENSOR)==null)
-                                setConfig(BROADCAST_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
+                                config().set(BROADCAST_ADDRESS_SENSOR, CassandraNode.SUBNET_HOSTNAME.getName());
                             result = "private IP for both listen and broadcast";
                         }
                     }
@@ -188,44 +205,16 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         return getConfig(CassandraNode.NUM_TOKENS_PER_NODE);
     }
 
-    @Deprecated
-    @Override public BigInteger getToken() {
-        BigInteger token = getAttribute(CassandraNode.TOKEN);
-        if (token == null) {
-            token = getConfig(CassandraNode.TOKEN);
-        }
-        return token;
-    }
-    
     @Override public Set<BigInteger> getTokens() {
         // Prefer an already-set attribute over the config.
         // Prefer TOKENS over TOKEN.
         Set<BigInteger> tokens = getAttribute(CassandraNode.TOKENS);
         if (tokens == null) {
-            BigInteger token = getAttribute(CassandraNode.TOKEN);
-            if (token != null) {
-                tokens = ImmutableSet.of(token);
-            }
-        }
-        if (tokens == null) {
             tokens = getConfig(CassandraNode.TOKENS);
-        }
-        if (tokens == null) {
-            BigInteger token = getConfig(CassandraNode.TOKEN);
-            if (token != null) {
-                tokens = ImmutableSet.of(token);
-            }
         }
         return tokens;
     }
     
-    @Deprecated
-    @Override public String getTokenAsString() {
-        BigInteger token = getToken();
-        if (token==null) return "";
-        return ""+token;
-    }
-
     @Override public String getTokensAsString() {
         // TODO check what is required when replacing failed node.
         // with vnodes in Cassandra 2.x, don't bother supplying token
@@ -242,6 +231,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         String subnetAddress = getAttribute(CassandraNode.SUBNET_ADDRESS);
         return Strings.isNonBlank(subnetAddress) ? subnetAddress : getAttribute(CassandraNode.ADDRESS);
     }
+    
     @Override public String getBroadcastAddress() {
         String sensorName = getConfig(BROADCAST_ADDRESS_SENSOR);
         if (Strings.isNonBlank(sensorName))
@@ -352,7 +342,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             if (name == null) {
                 name = "UNKNOWN_DATACENTER";
             }
-            setAttribute((AttributeSensor<String>)DATACENTER_NAME, name);
+            sensors().set((AttributeSensor<String>)DATACENTER_NAME, name);
         }
         return name;
     }
@@ -371,7 +361,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             if (name == null) {
                 name = "UNKNOWN_RACK";
             }
-            setAttribute((AttributeSensor<String>)RACK_NAME, name);
+            sensors().set((AttributeSensor<String>)RACK_NAME, name);
         }
         return name;
     }
@@ -400,7 +390,7 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     @Override
     protected void connectSensors() {
         // "cassandra" isn't really a protocol, but okay for now
-        setAttribute(DATASTORE_URL, "cassandra://"+getAttribute(HOSTNAME)+":"+getAttribute(THRIFT_PORT));
+        sensors().set(DATASTORE_URL, "cassandra://"+getAttribute(HOSTNAME)+":"+getAttribute(THRIFT_PORT));
         
         super.connectSensors();
 
@@ -435,23 +425,6 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                                 return result;
                             }})
                         .onException(Functions.<Set<BigInteger>>constant(null))
-                        .suppressDuplicates(true))
-                .pollAttribute(new JmxAttributePollConfig<BigInteger>(TOKEN)
-                        .objectName(storageServiceMBean)
-                        .attributeName("TokenToEndpointMap")
-                        .onSuccess(new Function<Object, BigInteger>() {
-                            @Override
-                            public BigInteger apply(@Nullable Object arg) {
-                                Map input = (Map)arg;
-                                // TODO remove duplication from setting TOKENS
-                                if (input == null || input.isEmpty()) return null;
-                                // FIXME does not work on aws-ec2, uses RFC1918 address
-                                Predicate<String> self = Predicates.in(ImmutableList.of(getAttribute(HOSTNAME), getAttribute(ADDRESS), getAttribute(SUBNET_ADDRESS), getAttribute(SUBNET_HOSTNAME)));
-                                Set<String> tokens = Maps.filterValues(input, self).keySet();
-                                String token = Iterables.getFirst(tokens, null);
-                                return (token != null) ? new BigInteger(token) : null;
-                            }})
-                        .onException(Functions.<BigInteger>constant(null))
                         .suppressDuplicates(true))
                 .pollOperation(new JmxOperationPollConfig<String>(DATACENTER_NAME)
                         .period(60, TimeUnit.SECONDS)
@@ -527,34 +500,14 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
                 .entity(this)
                 .period(3000, TimeUnit.MILLISECONDS)
                 .poll(new FunctionPollConfig<Long, Long>(THRIFT_PORT_LATENCY)
-                        .onException(Functions.constant((Long)null))
-                        .callable(new Callable<Long>() {
-                            public Long call() {
-                                try {
-                                    long start = System.currentTimeMillis();
-                                    Socket s = new Socket(getAttribute(Attributes.HOSTNAME), getThriftPort());
-                                    s.close();
-                                    long latency = System.currentTimeMillis() - start;
-                                    computeServiceUp();
-                                    return latency;
-                                } catch (Exception e) {
-                                    if (log.isDebugEnabled())
-                                        log.debug("Cassandra thrift port poll failure: "+e);
-                                    setAttribute(SERVICE_UP, false);
-                                    return null;
-                                }
-                            }
-                            public void computeServiceUp() {
-                                // this will wait an additional poll period after thrift port is up,
-                                // as the caller will not have set yet, but that will help ensure it is really healthy!
-                                setAttribute(SERVICE_UP,
-                                        getAttribute(THRIFT_PORT_LATENCY)!=null && getAttribute(THRIFT_PORT_LATENCY)>=0 && 
-                                        Boolean.TRUE.equals(getAttribute(SERVICE_UP_JMX)));
-                            }})
+                        .onException(Functions.constant(-1L))
+                        .callable(new ThriftLatencyChecker(CassandraNodeImpl.this))
                         .enabled(retrieveUsageMetrics))
                 .build();
         
         jmxMxBeanFeed = JavaAppUtils.connectMXBeanSensors(this);
+        
+        connectServiceUpIsRunning();
     }
     
     protected void connectEnrichers() {
@@ -575,12 +528,24 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
             addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, WRITES_PER_SECOND_LAST, 
                     WRITES_PER_SECOND_IN_WINDOW, windowPeriod));
         }
+        
+        // service-up checks
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+                .from(THRIFT_PORT_LATENCY)
+                .computing(Functionals.ifEquals(-1L).value("Thrift latency polling failed") )
+                .build());
+        
+        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+                .from(SERVICE_UP_JMX)
+                .computing(Functionals.ifEquals(false).value("JMX reports not up") )
+                .build());
     }
     
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
-
+        
+        disconnectServiceUpIsRunning();
         if (jmxFeed != null) jmxFeed.stop();
         if (jmxMxBeanFeed != null) jmxMxBeanFeed.stop();
         if (jmxHelper != null) jmxHelper.terminate();
@@ -603,4 +568,30 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
         return getDriver().executeScriptAsync(commands).block().getStdout();
     }
     
+    private static class ThriftLatencyChecker implements Callable<Long> {
+        private final CassandraNode entity;
+        
+        public ThriftLatencyChecker(CassandraNode entity) {
+            this.entity = entity;
+        }
+        public Long call() {
+            Integer privatePort = entity.getThriftPort();
+            if (privatePort == null) return -1L;
+            
+            HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, privatePort);
+
+            try {
+                long start = System.currentTimeMillis();
+                Socket s = new Socket(hp.getHostText(), hp.getPort());
+                s.close();
+                long latency = System.currentTimeMillis() - start;
+                return latency;
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                if (log.isDebugEnabled())
+                    log.debug("Cassandra thrift port poll failure: "+e);
+                return -1L;
+            }
+        }
+    }
 }

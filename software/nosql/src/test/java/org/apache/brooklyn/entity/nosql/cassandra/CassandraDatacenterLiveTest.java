@@ -19,6 +19,7 @@
 package org.apache.brooklyn.entity.nosql.cassandra;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
@@ -51,7 +52,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -114,6 +114,10 @@ public class CassandraDatacenterLiveTest extends BrooklynAppLiveTestSupport {
      * didn't seem to be enough. I also had to set JAVA_HOME:
      *     .configure("shell.env", MutableMap.of("JAVA_HOME", "/etc/alternatives/java_sdk_1.7.0"))
      * However, that would break other deployments such as on Ubuntu where JAVA_HOME would be different.
+     * 
+     * TODO In AWS eu-west-1, with the default image choice (ami-ad2404da, ubuntu-trusty-14.04-amd64-server-20150908),
+     * `apt-get install openjdk-8-jdk` failed with the error "Unable to locate package openjdk-8-jdk".
+     * This meant Cassandra failed to start, because no Java was installed.
      */
     @Test(groups = "Live")
     public void testDatacenterWithVnodesVersion2() throws Exception {
@@ -204,12 +208,11 @@ public class CassandraDatacenterLiveTest extends BrooklynAppLiveTestSupport {
                     EntityTestUtils.assertAttributeEquals(node, Startable.SERVICE_UP, true);
                     EntityTestUtils.assertConfigEquals(node, CassandraNode.NUM_TOKENS_PER_NODE, 1);
                     EntityTestUtils.assertAttributeEquals(node, CassandraNode.PEERS, numNodes);
-                    BigInteger token = node.getAttribute(CassandraNode.TOKEN);
                     Set<BigInteger> tokens = node.getAttribute(CassandraNode.TOKENS);
-                    assertNotNull(token);
-                    assertEquals(tokens, ImmutableSet.of(token));
+                    assertNotNull(tokens);
                     alltokens.addAll(tokens);
                 }
+                assertFalse(alltokens.contains(null), "tokens="+alltokens);
                 assertEquals(alltokens.size(), numNodes);
             }});
     }
@@ -225,12 +228,12 @@ public class CassandraDatacenterLiveTest extends BrooklynAppLiveTestSupport {
                     EntityTestUtils.assertAttributeEquals(node, Startable.SERVICE_UP, true);
                     EntityTestUtils.assertAttributeEquals(node, CassandraNode.PEERS, tokensPerNode*numNodes);
                     EntityTestUtils.assertConfigEquals(node, CassandraNode.NUM_TOKENS_PER_NODE, 256);
-                    BigInteger token = node.getAttribute(CassandraNode.TOKEN);
                     Set<BigInteger> tokens = node.getAttribute(CassandraNode.TOKENS);
-                    assertNotNull(token);
+                    assertNotNull(tokens);
                     assertEquals(tokens.size(), tokensPerNode, "tokens="+tokens);
                     alltokens.addAll(tokens);
                 }
+                assertFalse(alltokens.contains(null));
                 assertEquals(alltokens.size(), tokensPerNode*numNodes);
             }});
     }

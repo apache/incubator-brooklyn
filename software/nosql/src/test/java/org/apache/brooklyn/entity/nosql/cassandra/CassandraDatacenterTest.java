@@ -28,10 +28,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.entity.Attributes;
-import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcessSshDriver;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.text.TemplateProcessor;
@@ -42,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -99,10 +98,11 @@ public class CassandraDatacenterTest extends BrooklynAppUnitTestSupport {
         
         // calling the driver stop for this entity will cause SERVICE_UP to become false, and stay false
         // (and that's all it does, incidentally); if we just set the attribute it will become true on serviceUp sensor feed
+        log.info("Simulating failure of cassandra node "+e1);
         ((EmptySoftwareProcess)e1).getDriver().stop();
         // not necessary, but speeds things up:
         if (fast)
-            ((EntityInternal)e1).setAttribute(Attributes.SERVICE_UP, false);
+            e1.sensors().set(Attributes.SERVICE_UP, false);
         
         EntityTestUtils.assertAttributeEqualsEventually(cluster, CassandraDatacenter.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2));
 
@@ -120,7 +120,7 @@ public class CassandraDatacenterTest extends BrooklynAppUnitTestSupport {
             // (not that important, and waits for 1s, so only done as part of integration)
             ((EmptySoftwareProcessSshDriver)(((EmptySoftwareProcess)e1).getDriver())).launch();
             if (fast)
-                ((EntityInternal)e1).setAttribute(Attributes.SERVICE_UP, true);
+                e1.sensors().set(Attributes.SERVICE_UP, true);
             EntityTestUtils.assertAttributeEqualsEventually(e1, CassandraNode.SERVICE_UP, true);
             EntityTestUtils.assertAttributeEqualsContinually(cluster, CassandraDatacenter.CURRENT_SEEDS, ImmutableSet.<Entity>of(e2, e3));
         }
@@ -137,15 +137,11 @@ public class CassandraDatacenterTest extends BrooklynAppUnitTestSupport {
         app.start(ImmutableList.of(loc));
 
         Set<BigInteger> tokens = Sets.newLinkedHashSet();
-        Set<BigInteger> tokens2 = Sets.newLinkedHashSet();
         for (Entity member : cluster.getMembers()) {
-            BigInteger memberToken = member.getConfig(CassandraNode.TOKEN);
             Set<BigInteger > memberTokens = member.getConfig(CassandraNode.TOKENS);
-            if (memberToken != null) tokens.add(memberToken);
-            if (memberTokens != null) tokens2.addAll(memberTokens);
+            if (memberTokens != null) tokens.addAll(memberTokens);
         }
         assertEquals(tokens, ImmutableSet.of(new BigInteger("-9223372036854775808"), BigInteger.ZERO));
-        assertEquals(tokens2, ImmutableSet.of());
     }
     
     @Test
@@ -159,15 +155,11 @@ public class CassandraDatacenterTest extends BrooklynAppUnitTestSupport {
         app.start(ImmutableList.of(loc));
 
         Set<BigInteger> tokens = Sets.newLinkedHashSet();
-        Set<BigInteger> tokens2 = Sets.newLinkedHashSet();
         for (Entity member : cluster.getMembers()) {
-            BigInteger memberToken = member.getConfig(CassandraNode.TOKEN);
             Set<BigInteger > memberTokens = member.getConfig(CassandraNode.TOKENS);
-            if (memberToken != null) tokens.add(memberToken);
-            if (memberTokens != null) tokens2.addAll(memberTokens);
+            if (memberTokens != null) tokens.addAll(memberTokens);
         }
         assertEquals(tokens, ImmutableSet.of());
-        assertEquals(tokens2, ImmutableSet.of());
     }
     
     public static class MockInputForTemplate {

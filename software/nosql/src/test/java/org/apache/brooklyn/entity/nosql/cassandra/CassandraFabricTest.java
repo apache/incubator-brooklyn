@@ -131,12 +131,12 @@ public class CassandraFabricTest extends BrooklynAppUnitTestSupport {
             final DummyCassandraNode d2a = (DummyCassandraNode) Iterables.get(d2.getMembers(), 0);
             final DummyCassandraNode d2b = (DummyCassandraNode) Iterables.get(d2.getMembers(), 1);
 
-            d1a.setAttribute(Attributes.HOSTNAME, "d1a");
-            d1b.setAttribute(Attributes.HOSTNAME, "d1b");
+            d1a.sensors().set(Attributes.HOSTNAME, "d1a");
+            d1b.sensors().set(Attributes.HOSTNAME, "d1b");
             
             Thread.sleep(1000);
-            d2a.setAttribute(Attributes.HOSTNAME, "d2a");
-            d2b.setAttribute(Attributes.HOSTNAME, "d2b");
+            d2a.sensors().set(Attributes.HOSTNAME, "d2a");
+            d2b.sensors().set(Attributes.HOSTNAME, "d2b");
             
             Predicate<Set<Entity>> predicate = new Predicate<Set<Entity>>() {
                 @Override public boolean apply(Set<Entity> input) {

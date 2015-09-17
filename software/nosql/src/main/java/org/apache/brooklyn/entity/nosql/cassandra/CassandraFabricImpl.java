@@ -133,10 +133,10 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
                 }
                 
                 if (!Objects.equal(seeds, newseeds)) {
-                    setAttribute(CURRENT_SEEDS, newseeds);
+                    sensors().set(CURRENT_SEEDS, newseeds);
                     
                     if (newseeds != null && newseeds.size() > 0) {
-                        setAttribute(HAS_PUBLISHED_SEEDS, true);
+                        sensors().set(HAS_PUBLISHED_SEEDS, true);
                         
                         // Need to tell every datacenter that seeds are ready.
                         // Otherwise a datacenter might get no more changes (e.g. to nodes' hostnames etc), 
@@ -204,8 +204,8 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
     public void init() {
         super.init();
 
-        if (!getConfigRaw(CassandraDatacenter.SEED_SUPPLIER, true).isPresentAndNonNull())
-            setConfig(CassandraDatacenter.SEED_SUPPLIER, getSeedSupplier());
+        if (!config().getRaw(CassandraDatacenter.SEED_SUPPLIER).isPresentAndNonNull())
+            config().set(CassandraDatacenter.SEED_SUPPLIER, getSeedSupplier());
         
         // track members
         addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
@@ -219,9 +219,9 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
                 Long oldval = getAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC);
                 Long newval = event.getValue();
                 if (oldval == null && newval != null) {
-                    setAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, newval);
+                    sensors().set(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, newval);
                     for (CassandraDatacenter member : Iterables.filter(getMembers(), CassandraDatacenter.class)) {
-                        ((EntityInternal)member).setAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, newval);
+                        ((EntityInternal)member).sensors().set(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, newval);
                     }
                 }
             }
@@ -232,15 +232,15 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             @Override
             public void onEvent(SensorEvent<Multimap<String,Entity>> event) {
                 Multimap<String, Entity> usage = calculateDatacenterUsage();
-                setAttribute(DATACENTER_USAGE, usage);
-                setAttribute(DATACENTERS, usage.keySet());
+                sensors().set(DATACENTER_USAGE, usage);
+                sensors().set(DATACENTERS, usage.keySet());
             }
         });
         subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 Multimap<String, Entity> usage = calculateDatacenterUsage();
-                setAttribute(DATACENTER_USAGE, usage);
-                setAttribute(DATACENTERS, usage.keySet());
+                sensors().set(DATACENTER_USAGE, usage);
+                sensors().set(DATACENTERS, usage.keySet());
             }
         });
     }
@@ -344,7 +344,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
 
         subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
-                setAttribute(SERVICE_UP, calculateServiceUp());
+                sensors().set(SERVICE_UP, calculateServiceUp());
             }
         });
     }
@@ -386,8 +386,8 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             Optional<Entity> upNode = Iterables.tryFind(getMembers(), EntityPredicates.attributeEqualTo(SERVICE_UP, Boolean.TRUE));
 
             if (upNode.isPresent()) {
-                setAttribute(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
-                setAttribute(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
+                sensors().set(HOSTNAME, upNode.get().getAttribute(Attributes.HOSTNAME));
+                sensors().set(THRIFT_PORT, upNode.get().getAttribute(CassandraNode.THRIFT_PORT));
             }
         }
     }
