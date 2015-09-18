@@ -115,7 +115,18 @@ public interface EntityLocal extends Entity {
     // FIXME remove from interface?
     @Beta
     <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
- 
+
+    /**
+     * Allow us to subscribe to data from a {@link Sensor} on another entity.
+     * 
+     * @return a subscription id which can be used to unsubscribe
+     *
+     * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
+     */
+    // FIXME remove from interface?
+    @Beta
+    <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
+
     /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
     // FIXME remove from interface?
     @Beta

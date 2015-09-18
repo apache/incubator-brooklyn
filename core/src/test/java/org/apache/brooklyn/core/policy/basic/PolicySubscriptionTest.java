@@ -33,6 +33,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
 
@@ -119,5 +120,34 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 456)));
             }});
     }
+
+    @Test
+    public void testSubscriptionReceivesInitialValueEvents() {
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        
+        policy.subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, TestEntity.SEQUENCE, listener);
+        policy.subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, TestEntity.NAME, listener);
+        
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.getEvents(), ImmutableList.of(
+                        new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, entity, 123),
+                        new BasicSensorEvent<String>(TestEntity.NAME, entity, "myname")));
+            }});
+    }
     
+    @Test
+    public void testSubscriptionNotReceivesInitialValueEventsByDefault() {
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        
+        policy.subscribe(entity, TestEntity.SEQUENCE, listener);
+        policy.subscribe(entity, TestEntity.NAME, listener);
+        
+        Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.getEvents(), ImmutableList.of());
+            }});
+    }
 }

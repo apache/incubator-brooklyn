@@ -34,12 +34,15 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class EntitySubscriptionTest {
 
     // TODO Duplication between this and PolicySubscriptionTest
     
+    private static final long SHORT_WAIT_MS = 100;
+
     private SimulatedLocation loc;
     private TestApplication app;
     private TestEntity entity;
@@ -236,5 +239,45 @@ public class EntitySubscriptionTest {
                     assertEquals(Iterables.get(listener.getEvents(), i).getValue(), i);
                 }
             }});
+    }
+
+    @Test
+    public void testSubscriptionReceivesInitialValueEvents() {
+        observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
+        observedEntity.sensors().set(TestEntity.NAME, "myname");
+        
+        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.SEQUENCE, listener);
+        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.NAME, listener);
+        
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.getEvents(), ImmutableList.of(
+                        new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedEntity, 123),
+                        new BasicSensorEvent<String>(TestEntity.NAME, observedEntity, "myname")));
+            }});
+    }
+
+    
+    @Test
+    public void testSubscriptionNotReceivesInitialValueEventsByDefault() {
+        observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
+        observedEntity.sensors().set(TestEntity.NAME, "myname");
+        
+        entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
+        entity.subscribe(observedEntity, TestEntity.NAME, listener);
+        
+        Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.getEvents(), ImmutableList.of());
+            }});
+    }
+
+    // TODO A visual inspection test that we get a log.warn telling us we can't get the initial-value
+    @Test
+    public void testSubscriptionForInitialValueWhenNotValid() {
+        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.MY_NOTIF, listener);
+        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, null, listener);
+        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), null, TestEntity.NAME, listener);
+        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), null, null, listener);
     }
 }

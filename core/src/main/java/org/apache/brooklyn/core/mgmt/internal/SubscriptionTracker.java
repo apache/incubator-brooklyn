@@ -19,6 +19,7 @@
 package org.apache.brooklyn.core.mgmt.internal;
 
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
@@ -29,6 +30,7 @@ import org.apache.brooklyn.api.sensor.SensorEventListener;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.SetMultimap;
 
 /**
@@ -57,13 +59,17 @@ public class SubscriptionTracker {
     
     /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        SubscriptionHandle handle = context.subscribe(producer, sensor, listener);
+        return subscribe(ImmutableMap.<String, Object>of(), producer, sensor, listener);
+    }
+
+    public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        SubscriptionHandle handle = context.subscribe(flags, producer, sensor, listener);
         synchronized (subscriptions) {
             subscriptions.put(producer, handle);
         }
         return handle;
     }
-    
+
     /** @see SubscriptionContext#subscribeToChildren(Entity, Sensor, SensorEventListener) */
     public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         SubscriptionHandle handle = context.subscribeToChildren(parent, sensor, listener);

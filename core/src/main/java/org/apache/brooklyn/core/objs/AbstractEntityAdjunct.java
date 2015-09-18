@@ -392,6 +392,14 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     }
 
     @VisibleForTesting //intended as protected, meant for subclasses
+    @Beta
+    /** @see SubscriptionContext#subscribe(Map, Entity, Sensor, SensorEventListener) */
+    public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        if (!checkCanSubscribe()) return null;
+        return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
+    }
+
+    @VisibleForTesting //intended as protected, meant for subclasses
     /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
     public <T> SubscriptionHandle subscribeToMembers(Group producerGroup, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         if (!checkCanSubscribe(producerGroup)) return null;

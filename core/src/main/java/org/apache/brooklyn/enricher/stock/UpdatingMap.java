@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 
@@ -102,8 +103,7 @@ public class UpdatingMap<S,TKey,TVal> extends AbstractEnricher implements Sensor
         this.computing = (Function) getRequiredConfig(COMPUTING);
         this.removingIfResultIsNull = getConfig(REMOVING_IF_RESULT_IS_NULL);
 
-        subscribe(entity, sourceSensor, this);
-        onUpdated();
+        subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, sourceSensor, this);
     }
     
     @Override
