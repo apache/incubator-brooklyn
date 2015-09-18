@@ -183,14 +183,13 @@ define([
             }
             
             // finish from config step, preview step, and from first step if yaml tab selected (and valid)
-            var finishVisible = (this.currentStep >= 1)
-            var finishEnabled = finishVisible
+            var finishVisible = (this.currentStep >= 1);
+            var finishEnabled = finishVisible;
             if (!finishEnabled && this.currentStep==0) {
                 if (this.model.mode == "yaml") {
                     // should do better validation than non-empty
                     finishVisible = true;
-                    var yaml_code = this.$("#yaml_code").val()
-                    if (yaml_code) {
+                    if (self.editor && self.editor && self.editor.getValue()) {
                         finishEnabled = true;
                     }
                 }
@@ -307,6 +306,7 @@ define([
                 this.renderCurrentStep(function callback(view) {
                     // Drop any "None" locations.
                     that.model.spec.pruneLocations();
+
                     // TODO: see if this preview has conflicts with codemirror. maybe the id="code"
                     //       has to be switched back to yaml_code
                     $("textarea#yaml_code").val(JsYaml.safeDump(oldSpecToCamp(that.model.spec.toJSON())));
@@ -350,6 +350,7 @@ define([
         },
         template:_.template(CreateHtml),
         wizard: null,
+        editor: null,
         initialize:function () {
             var self = this
             self.catalogEntityIds = []
@@ -428,15 +429,17 @@ define([
             window.location.href="#v1/catalog/new";
         },
         showYamlTab: function() {
-            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show')
-            var editor = CodeMirror.fromTextArea(document.getElementById("yaml_code"), {
-            	lineNumbers: true,
-                extraKeys: {"Ctrl-Space": "autocomplete"},
-                mode: {name: "yaml", globalVars: true}
-            });
-            $("#yaml_code").focus();
-            $("#yaml_code").setCaretToStart();
-            
+            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
+            if (self.editor == null) {
+            	self.editor = CodeMirror.fromTextArea(document.getElementById("yaml_code"), {
+                	lineNumbers: true,
+                    extraKeys: {"Ctrl-Space": "autocomplete"},
+                    mode: {name: "yaml", globalVars: true}
+                });
+            }
+            // TODO: find how (focus, setCaretToStart) can be implemented as CodeMirror events
+            // $("#yaml_code").focus();
+            // $("#yaml_code").setCaretToStart();
         },
         applyFilter: function(e) {
             var filter = $(e.currentTarget).val().toLowerCase()
@@ -576,6 +579,7 @@ define([
         },
 
         validate:function () {
+        	log ("validate");
             var that = this
             var tabName = $('#app-add-wizard-create-tab li[class="active"] a').attr('href')
             if (tabName=='#entitiesTab') {
@@ -603,10 +607,14 @@ define([
                     return true
                 }
             } else if (tabName=='#yamlTab') {
-                this.model.yaml = this.$("#yaml_code").val();
-                if (this.model.yaml) {
-                    return true;
-                }
+            	if (self.editor && self.editor) {
+            		this.model.yaml = self.editor.getValue();
+	        		if (this.model.yaml) {
+	                    return true;
+	        		}
+            	} else {
+            		console.info("No text in the editor!");
+            	}
             } else {
                 console.info("NOT IMPLEMENTED YET")
                 // TODO - other tabs not implemented yet 
@@ -807,7 +815,6 @@ define([
                 return candidate.get("id")==loc_id;
             });
             if (!locationValid) {
-                log("invalid location "+loc_id);
                 this.showFailure("Invalid location "+loc_id);
                 this.model.spec.set("locations",[]);
             } else {
