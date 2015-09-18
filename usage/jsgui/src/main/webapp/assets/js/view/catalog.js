@@ -149,23 +149,20 @@ define([
             if (this.contextView) this.contextView.close();
         },
         setupCodeEditor: function() {
-        	if (this.editor === null) {
-            	this.editor = CodeMirror.fromTextArea(document.getElementById("new-blueprint"), {
-            		height: "150px",
-                	lineNumbers: true,
+            if (this.editor === null) {
+                this.editor = CodeMirror.fromTextArea(document.getElementById("new-blueprint"), {
+                    height: "150px",
+                    lineNumbers: true,
                     extraKeys: {"Ctrl-Space": "autocomplete"},
                     textWrapping: true,
                     mode: {name: "yaml", globalVars: true}
-            	});
+                });
 
                 this.editor.setValue("# Please add your blueprint here\n");
-        	}
+            }
         },
         showContext: function(event) {
-        	log("showContext");
             var $event = $(event.currentTarget);
-            
-            // remember current 
             
             // de-select other tab menu entries
             $event.parent().find("li.btn.btn-large.show-context").removeClass("active");
@@ -183,7 +180,6 @@ define([
             // restore cursor position
             this.editor.refresh();
             this.editor.focus();        	
-        	this.editor.goDocEnd();
         }
     });
 

@@ -579,7 +579,6 @@ define([
         },
 
         validate:function () {
-        	log ("validate");
             var that = this
             var tabName = $('#app-add-wizard-create-tab li[class="active"] a').attr('href')
             if (tabName=='#entitiesTab') {
@@ -607,14 +606,14 @@ define([
                     return true
                 }
             } else if (tabName=='#yamlTab') {
-            	if (self.editor && self.editor) {
-            		this.model.yaml = self.editor.getValue();
-	        		if (this.model.yaml) {
-	                    return true;
-	        		}
-            	} else {
-            		console.info("No text in the editor!");
-            	}
+                if (self.editor !== null) {
+                    this.model.yaml = self.editor.getValue();
+                    if (this.model.yaml) {
+                        return true;
+                    }
+                } else {
+                    console.info("No text in the editor!");
+                }
             } else {
                 console.info("NOT IMPLEMENTED YET")
                 // TODO - other tabs not implemented yet 
