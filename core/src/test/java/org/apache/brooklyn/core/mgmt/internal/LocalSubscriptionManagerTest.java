@@ -128,7 +128,7 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
                 events.add(event);
                 latch.countDown();
             }});
-        member.setAttribute(TestEntity.SEQUENCE, 123);
+        member.sensors().set(TestEntity.SEQUENCE, 123);
 
         if (!latch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
             fail("Timeout waiting for Event on parent TestEntity listener");
@@ -168,7 +168,7 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
         try {
             thread.start();
             for (int i = 0; i < 10000; i++) {
-                entity.setAttribute(TestEntity.SEQUENCE, i);
+                entity.sensors().set(TestEntity.SEQUENCE, i);
             }
         } finally {
             thread.interrupt();

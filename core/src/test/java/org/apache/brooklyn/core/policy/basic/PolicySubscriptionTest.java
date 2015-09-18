@@ -65,10 +65,10 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         policy.subscribe(entity, TestEntity.NAME, listener);
         policy.subscribe(entity, TestEntity.MY_NOTIF, listener);
         
-        otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
-        entity.setAttribute(TestEntity.SEQUENCE, 123);
-        entity.setAttribute(TestEntity.NAME, "myname");
-        entity.emit(TestEntity.MY_NOTIF, 789);
+        otherEntity.sensors().set(TestEntity.SEQUENCE, 456);
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        entity.sensors().emit(TestEntity.MY_NOTIF, 789);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -87,10 +87,10 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         policy.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
         policy.unsubscribe(entity);
         
-        entity.setAttribute(TestEntity.SEQUENCE, 123);
-        entity.setAttribute(TestEntity.NAME, "myname");
-        entity.emit(TestEntity.MY_NOTIF, 456);
-        otherEntity.setAttribute(TestEntity.SEQUENCE, 789);
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        entity.sensors().emit(TestEntity.MY_NOTIF, 456);
+        otherEntity.sensors().set(TestEntity.SEQUENCE, 789);
         
         Thread.sleep(SHORT_WAIT_MS);
         Asserts.succeedsEventually(new Runnable() {
@@ -108,9 +108,9 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         
         policy.unsubscribe(entity, handle2);
         
-        entity.setAttribute(TestEntity.SEQUENCE, 123);
-        entity.setAttribute(TestEntity.NAME, "myname");
-        otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        otherEntity.sensors().set(TestEntity.SEQUENCE, 456);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
