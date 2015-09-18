@@ -45,6 +45,7 @@ public class Transformer<T,U> extends AbstractTransformer<T,U> {
     public static ConfigKey<Function<?, ?>> TRANSFORMATION_FROM_EVENT = ConfigKeys.newConfigKey(new TypeToken<Function<?, ?>>() {}, "enricher.transformation.fromevent");
     
     public Transformer() {
+        System.out.println("Creating");
     }
 
     /** returns a function for transformation, for immediate use only (not for caching, as it may change) */

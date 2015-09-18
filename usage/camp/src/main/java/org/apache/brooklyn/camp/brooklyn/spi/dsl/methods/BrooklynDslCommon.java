@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
@@ -191,6 +193,31 @@ public class BrooklynDslCommon {
         }
     }
 
+
+    public static Object regexReplacement(final Object pattern, final Object replacement) {
+        if (DslUtils.resolved(pattern, replacement)) {
+            return new RegexReplacer(String.valueOf(pattern), String.valueOf(replacement));
+        } else {
+            return new DslRegexReplacer(pattern, replacement);
+        }
+    }
+
+    public static class RegexReplacer implements Function<String, String> {
+        private final String pattern;
+        private final String replacement;
+
+        public RegexReplacer(String pattern, String replacement) {
+            this.pattern = pattern;
+            this.replacement = replacement;
+        }
+
+        @Nullable
+        @Override
+        public String apply(@Nullable String s) {
+            return Strings.replaceAllRegex(s, pattern, replacement);
+        }
+    }
+
     /**
      * Deferred execution of String formatting.
      *
@@ -218,6 +245,27 @@ public class BrooklynDslCommon {
             return "$brooklyn:formatString("+
                 JavaStringEscapes.wrapJavaString(pattern)+
                 (args==null || args.length==0 ? "" : ","+Strings.join(args, ","))+")";
+        }
+    }
+
+    protected static class DslRegexReplacer extends BrooklynDslDeferredSupplier<Function<String, String>> {
+
+        private Object pattern;
+        private Object replacement;
+
+        public DslRegexReplacer(Object pattern, Object replacement) {
+            this.pattern = pattern;
+            this.replacement = replacement;
+        }
+
+        @Override
+        public Task<Function<String, String>> newTask() {
+            return DependentConfiguration.regexReplacement(pattern, replacement);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("$brooklyn:regexReplace(%s:%s)", pattern, replacement);
         }
     }
 

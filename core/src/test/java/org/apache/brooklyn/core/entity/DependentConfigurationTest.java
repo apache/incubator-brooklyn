@@ -31,11 +31,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.test.Asserts;
@@ -107,6 +110,28 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                 DependentConfiguration.transform(new BasicTask<Integer>(Callables.returning(8080)), incrementerFunction()));
         submit(t);
         Assert.assertEquals(t.get(TIMEOUT_MS, TimeUnit.MILLISECONDS), "http://localhost:8081/");
+    }
+
+    @Test
+    public void testRegexReplacementWithStrings() throws Exception {
+        Task<Function<String, String>> task = DependentConfiguration.regexReplacement("foo", "bar");
+        submit(task);
+        Function<String, String> regexReplacer = task.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(regexReplacer.apply("somefootext"), "somebartext");
+    }
+
+    @Test
+    public void testRegexReplacementWithAttributeWhenReady() throws Exception {
+        AttributeSensor<Object> replacementSensor = Sensors.newSensor(Object.class, "test.replacement");
+        DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME);
+        Task<String> pattern = DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME);
+        Task<Object> replacement = DependentConfiguration.attributeWhenReady(entity, replacementSensor);
+        Task<Function<String, String>> task = DependentConfiguration.regexReplacement(pattern, replacement);
+        submit(task);
+        entity.sensors().set(TestEntity.NAME, "foo");
+        entity.sensors().set(replacementSensor, "bar");
+        Function<String, String> regexReplacer = task.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(regexReplacer.apply("somefootext"), "somebartext");
     }
 
     @Test

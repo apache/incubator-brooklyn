@@ -180,7 +180,7 @@ public class DependentConfiguration {
     public static <T> T waitInTaskForAttributeReady(final Entity source, final AttributeSensor<T> sensor, Predicate<? super T> ready, List<AttributeAndSensorCondition<?>> abortConditions, String blockingDetails) {
         return new WaitInTaskForAttributeReady<T,T>(source, sensor, ready, abortConditions, blockingDetails).call();
     }
-    
+
     protected static class WaitInTaskForAttributeReady<T,V> implements Callable<V> {
 
         /* This is a change since before Oct 2014. Previously it would continue to poll,
@@ -481,6 +481,75 @@ public class DependentConfiguration {
                 return String.format(spec, vv);
             }},
             taskArgs);
+    }
+
+    public static Task<Function<String, String>> regexReplacement(Object pattern, Object replacement) {
+        List<TaskAdaptable<Object>> taskArgs = getTaskAdaptable(pattern, replacement);
+        Function<List<Object>, Function<String, String>> transformer = new RegexTransformer(pattern, replacement);
+        return transformMultiple(
+                MutableMap.of("displayName", String.format("creating regex replacement function (%s:%s)", pattern, replacement)),
+                transformer,
+                taskArgs
+        );
+    }
+
+    private static List<TaskAdaptable<Object>> getTaskAdaptable(Object... args){
+        List<TaskAdaptable<Object>> taskArgs = Lists.newArrayList();
+        for (Object arg: args) {
+            if (arg instanceof TaskAdaptable) {
+                taskArgs.add((TaskAdaptable<Object>)arg);
+            } else if (arg instanceof TaskFactory) {
+                taskArgs.add(((TaskFactory<TaskAdaptable<Object>>)arg).newTask());
+            }
+        }
+        return taskArgs;
+    }
+
+    public static class RegexTransformer  implements Function<List<Object>, Function<String, String>> {
+
+        private final Object pattern;
+        private final Object replacement;
+
+        public RegexTransformer(Object pattern, Object replacement){
+            this.pattern = pattern;
+            this.replacement = replacement;
+        }
+
+        @Override
+        public Function<String, String> apply(List<Object> input) {
+            Iterator<?> taskArgsIterator = input.iterator();
+            return new RegexReplacer(resolveArgument(pattern, taskArgsIterator), resolveArgument(replacement, taskArgsIterator));
+        }
+
+        private String resolveArgument(Object argument, Iterator<?> taskArgsIterator) {
+            Object resolvedArgument;
+            if (argument instanceof TaskAdaptable || argument instanceof TaskFactory) {
+                resolvedArgument = taskArgsIterator.next();
+            } else if (argument instanceof DeferredSupplier) {
+                resolvedArgument = ((DeferredSupplier<?>) argument).get();
+            } else {
+                resolvedArgument = argument;
+            }
+            return String.valueOf(resolvedArgument);
+        }
+
+    }
+
+    public static class RegexReplacer implements Function<String, String> {
+
+        private final String pattern;
+        private final String replacement;
+
+        public RegexReplacer(String pattern, String replacement) {
+            this.pattern = pattern;
+            this.replacement = replacement;
+        }
+
+        @Nullable
+        @Override
+        public String apply(@Nullable String s) {
+            return Strings.replaceAllRegex(s, pattern, replacement);
+        }
     }
 
     /** returns a task for parallel execution returning a list of values for the given sensor for the given entity list, 
