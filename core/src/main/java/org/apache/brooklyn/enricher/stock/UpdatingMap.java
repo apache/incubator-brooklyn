@@ -87,11 +87,30 @@ public class UpdatingMap<S,TKey,TVal> extends AbstractEnricher implements Sensor
 
     public UpdatingMap(Map<Object, Object> flags) {
         super(flags);
-        // this always suppresses duplicates, but it updates the same map *in place* so the usual suppress duplicates logic should not be applied
-        // TODO clean up so that we have synchronization guarantees and can inspect the item to see whether it has changed
-        suppressDuplicates = false;
     }
 
+    @Override
+    public void init() {
+        super.init();
+        
+        // this always suppresses duplicates, but it updates the same map *in place* so the usual suppress duplicates logic should not be applied
+        // TODO clean up so that we have synchronization guarantees and can inspect the item to see whether it has changed
+        if (Boolean.TRUE.equals(getConfig(SUPPRESS_DUPLICATES))) {
+            LOG.warn("suppress-duplicates must not be set on "+this+" because map is updated in-place; unsetting config; will always implicitly suppress duplicates");
+            config().set(SUPPRESS_DUPLICATES, (Boolean)null);
+        }
+    }
+    
+    @Override
+    protected <T> void doReconfigureConfig(ConfigKey<T> key, T val) {
+        if (key.getName().equals(SUPPRESS_DUPLICATES.getName())) {
+            if (Boolean.TRUE.equals(val)) {
+                throw new UnsupportedOperationException("suppress-duplicates must not be set on "+this+" because map is updated in-place; will always implicitly suppress duplicates");
+            }
+        }
+        super.doReconfigureConfig(key, val);
+    }
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public void setEntity(EntityLocal entity) {
