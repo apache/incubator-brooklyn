@@ -194,7 +194,7 @@ public class Main extends AbstractMain {
     }
     
     @Command(name = "launch", description = "Starts a server, optionally with applications")
-    public static class LaunchCommand extends BrooklynCommandCollectingArgs {
+    public static class LaunchCommand extends BrooklynCommandWithSystemDefines {
 
         @Option(name = { "--localBrooklynProperties" }, title = "local brooklyn.properties file",
                 description = "Load the given properties file, specific to this launch (appending to and overriding global properties)")
@@ -381,6 +381,8 @@ public class Main extends AbstractMain {
         
         @Override
         public Void call() throws Exception {
+            super.call();
+            
             // Configure launcher
             BrooklynLauncher launcher;
             AppShutdownHandler shutdownHandler = new AppShutdownHandler();
