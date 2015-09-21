@@ -190,7 +190,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // then we need temp vals here. When setManagementContext is called, we'll switch these out for the read-deal;
     // i.e. for the values backed by storage
     private Reference<Entity> parent = new BasicReference<Entity>();
-    private Set<Group> groups = Sets.newLinkedHashSet();
+    private Set<Group> groupsInternal = Sets.newLinkedHashSet();
     private Set<Entity> children = Sets.newLinkedHashSet();
     private Reference<List<Location>> locations = new BasicReference<List<Location>>(ImmutableList.<Location>of()); // dups removed in addLocations
     private Reference<Long> creationTimeUtc = new BasicReference<Long>(System.currentTimeMillis());
@@ -225,6 +225,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     private final BasicPolicySupport policies = new BasicPolicySupport();
 
     private final BasicEnricherSupport enrichers = new BasicEnricherSupport();
+
+    private final BasicGroupSupport groups = new BasicGroupSupport();
 
     /**
      * The config values of this entity. Updating this map should be done
@@ -467,7 +469,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
         if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE)) {
             Entity oldParent = parent.get();
-            Set<Group> oldGroups = groups;
+            Set<Group> oldGroups = groupsInternal;
             Set<Entity> oldChildren = children;
             List<Location> oldLocations = locations.get();
             EntityConfigMap oldConfig = configsInternal;
@@ -477,7 +479,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             String oldIconUrl = iconUrl.get();
 
             parent = managementContext.getStorage().getReference(getId()+"-parent");
-            groups = SetFromLiveMap.create(managementContext.getStorage().<Group,Boolean>getMap(getId()+"-groups"));
+            groupsInternal = SetFromLiveMap.create(managementContext.getStorage().<Group,Boolean>getMap(getId()+"-groups"));
             children = SetFromLiveMap.create(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-children"));
             locations = managementContext.getStorage().getNonConcurrentList(getId()+"-locations");
             creationTimeUtc = managementContext.getStorage().getReference(getId()+"-creationTime");
@@ -491,7 +493,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             // before setting the parent etc. However, for backwards compatibility we still support some
             // things calling the entity's constructor directly.
             if (oldParent != null) parent.set(oldParent);
-            if (oldGroups.size() > 0) groups.addAll(oldGroups);
+            if (oldGroups.size() > 0) groupsInternal.addAll(oldGroups);
             if (oldChildren.size() > 0) children.addAll(oldChildren);
             if (oldLocations.size() > 0) locations.set(ImmutableList.copyOf(oldLocations));
             if (creationTimeUtc.isNull()) creationTimeUtc.set(oldCreationTimeUtc);
@@ -685,26 +687,78 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return changed;
     }
 
+    // -------- GROUPS --------------
+
+    @Override 
+    @Beta
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return EnricherSupportInternal
+    // TODO revert to EnricherSupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicGroupSupport groups() {
+        return groups;
+    }
+
+    /**
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #groups()} is reverted to return {@link {GroupSupport} instead of
+     * {@link BasicGroupSupport}.
+     */
+    @Beta
+    // TODO revert to private when groups() is reverted to return GroupSupport
+    public class BasicGroupSupport implements GroupSupport {
+        @Override
+        public void addGroup(Group group) {
+            boolean changed = groupsInternal.add(group);
+            getApplication();
+            
+            if (changed) {
+                emit(AbstractEntity.GROUP_ADDED, group);
+            }
+        }
+
+        @Override
+        public void removeGroup(Group group) {
+            boolean changed = groupsInternal.remove(group);
+            getApplication();
+            
+            if (changed) {
+                emit(AbstractEntity.GROUP_REMOVED, group);
+            }
+        }
+        
+        @Override
+        public Collection<Group> getGroups() { 
+            return ImmutableList.copyOf(groupsInternal);
+        }
+    }
+    
+    /**
+     * @deprecated since 0.9.0; see {@link #groups()} and {@link GroupSupport#addGroup(Group)}
+     */
     @Override
+    @Deprecated
     public void addGroup(Group group) {
-        boolean changed = groups.add(group);
-        getApplication();
-        
-        if (changed) {
-            emit(AbstractEntity.GROUP_ADDED, group);
-        }
+        groups().addGroup(group);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link #groups()} and {@link GroupSupport#removeGroup(Group)}
+     */
     @Override
+    @Deprecated
     public void removeGroup(Group group) {
-        boolean changed = groups.remove(group);
-        getApplication();
-        
-        if (changed) {
-            emit(AbstractEntity.GROUP_REMOVED, group);
-        }
+        groups().removeGroup(group);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link #groups()} and {@link GroupSupport#getGroups()}
+     */
+    @Override
+    @Deprecated
+    public Collection<Group> getGroups() { 
+        return groups().getGroups();
+    }
+    
     @Override
     public Entity getParent() {
         return parent.get();
@@ -715,11 +769,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return ImmutableList.copyOf(children);
     }
     
-    @Override
-    public Collection<Group> getGroups() { 
-        return ImmutableList.copyOf(groups);
-    }
-
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
      */

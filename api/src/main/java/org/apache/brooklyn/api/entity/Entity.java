@@ -178,7 +178,10 @@ public interface Entity extends BrooklynObject {
      * The {@link Collection} of {@link Group}s that this entity is a member of.
      *
      * Groupings can be used to allow easy management/monitoring of a group of entities.
+     * 
+     * @deprecated since 0.9.0; see {@link GroupSupport#getGroups()} and {@link #groups()}
      */
+    @Deprecated
     Collection<Group> getGroups();
 
     /**
@@ -187,7 +190,10 @@ public interface Entity extends BrooklynObject {
      * Users should call {@link Group#addMember(Entity)} instead; this method will then 
      * automatically be called. However, the reverse is not true (calling this method will 
      * not tell the group; this behaviour may change in a future release!)
+     * 
+     * @deprecated since 0.9.0; see {@link GroupSupport#getGroups()} and {@link #groups()}
      */
+    @Deprecated
     void addGroup(Group group);
 
     /**
@@ -196,7 +202,10 @@ public interface Entity extends BrooklynObject {
      * Users should call {@link Group#removeMember(Entity)} instead; this method will then 
      * automatically be called. However, the reverse is not true (calling this method will 
      * not tell the group; this behaviour may change in a future release!)
+     * 
+     * @deprecated since 0.9.0; see {@link GroupSupport#getGroups()} and {@link #groups()}
      */
+    @Deprecated
     void removeGroup(Group group);
 
     /**
@@ -305,6 +314,8 @@ public interface Entity extends BrooklynObject {
 
     EnricherSupport enrichers();
 
+    GroupSupport groups();
+
     @Beta
     public interface SensorSupport {
 
@@ -397,5 +408,33 @@ public interface Entity extends BrooklynObject {
          * @return True if the policy enricher at this entity; false otherwise
          */
         boolean removeEnricher(Enricher enricher);
+    }
+    
+    @Beta
+    public interface GroupSupport {
+        /**
+         * The {@link Collection} of {@link Group}s that this entity is a member of.
+         *
+         * Groupings can be used to allow easy management/monitoring of a group of entities.
+         */
+        Collection<Group> getGroups();
+
+        /**
+         * Add this entity as a member of the given {@link Group}. Called by framework.
+         * <p>
+         * Users should call {@link Group#addMember(Entity)} instead; this method will then 
+         * automatically be called. However, the reverse is not true (calling this method will 
+         * not tell the group; this behaviour may change in a future release!)
+         */
+        void addGroup(Group group);
+
+        /**
+         * Removes this entity as a member of the given {@link Group}. Called by framework.
+         * <p>
+         * Users should call {@link Group#removeMember(Entity)} instead; this method will then 
+         * automatically be called. However, the reverse is not true (calling this method will 
+         * not tell the group; this behaviour may change in a future release!)
+         */
+        void removeGroup(Group group);
     }
 }
