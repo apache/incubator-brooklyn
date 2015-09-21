@@ -60,4 +60,17 @@ public class FileBasedStoreObjectAccessorWriterTest extends PersistenceStoreObje
         
         FileBasedObjectStoreTest.assertFilePermission600(file);
     }
+
+    @Test(enabled = false)
+    public void testFilePermissionsPerformance() throws Exception {
+        long interval = 10 * 1000; // millis
+        long start = System.currentTimeMillis();
+
+        int count = 0;
+        while (System.currentTimeMillis() < start + interval) {
+            accessor.put("abc" + count);
+            ++count;
+        }
+        System.out.println("writes per second:" + (count * 1000 / interval));
+    }
 }

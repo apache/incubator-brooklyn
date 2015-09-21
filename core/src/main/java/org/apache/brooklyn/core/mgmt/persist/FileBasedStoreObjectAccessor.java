@@ -75,8 +75,6 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
         return file.exists();
     }
 
-    // Setting permissions to 600 reduces objectAccessor.put performance from about 5000 per second to 3000 per second
-    // in java 6. With Java 7's Files.setPosixFilePermissions, this might well improve.
     @Override
     public void put(String val) {
         try {
