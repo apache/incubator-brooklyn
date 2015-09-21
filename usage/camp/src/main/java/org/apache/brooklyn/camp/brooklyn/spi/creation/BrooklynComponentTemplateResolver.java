@@ -403,12 +403,12 @@ public class BrooklynComponentTemplateResolver {
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {
             if (r.getFlagMaybeValue().isPresent()) {
-                Object transformed = new SpecialFlagsTransformer(loader).transformSpecialFlags(r.getFlagMaybeValue().get());
+                Object transformed = new SpecialFlagsTransformer(loader).apply(r.getFlagMaybeValue().get());
                 spec.configure(r.getFlagName(), transformed);
                 keyNamesUsed.add(r.getFlagName());
             }
             if (r.getConfigKeyMaybeValue().isPresent()) {
-                Object transformed = new SpecialFlagsTransformer(loader).transformSpecialFlags(r.getConfigKeyMaybeValue().get());
+                Object transformed = new SpecialFlagsTransformer(loader).apply(r.getConfigKeyMaybeValue().get());
                 spec.configure((ConfigKey<Object>)r.getConfigKey(), transformed);
                 keyNamesUsed.add(r.getConfigKey().getName());
             }
@@ -421,7 +421,7 @@ public class BrooklynComponentTemplateResolver {
             // we don't let a flag with the same name as a config key override the config key
             // (that's why we check whether it is used)
             if (!keyNamesUsed.contains(key)) {
-                Object transformed = new SpecialFlagsTransformer(loader).transformSpecialFlags(bag.getStringKey(key));
+                Object transformed = new SpecialFlagsTransformer(loader).apply(bag.getStringKey(key));
                 spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), transformed);
             }
         }
