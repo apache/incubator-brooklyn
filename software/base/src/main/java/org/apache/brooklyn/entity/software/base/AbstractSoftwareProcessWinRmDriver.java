@@ -19,14 +19,17 @@
 package org.apache.brooklyn.entity.software.base;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.entity.software.base.lifecycle.NativeWindowsScriptRunner;
+import org.apache.brooklyn.entity.software.base.lifecycle.WinRmExecuteHelper;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.ReferenceWithError;
@@ -46,7 +49,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwareProcessDriver {
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
+
+public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwareProcessDriver implements NativeWindowsScriptRunner {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSoftwareProcessWinRmDriver.class);
 
     AttributeSensor<String> WINDOWS_USERNAME = Sensors.newStringSensor("windows.username",
@@ -60,10 +65,26 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         entity.setAttribute(WINDOWS_PASSWORD, location.config().get(WinRmMachineLocation.PASSWORD));
     }
 
+    /** @see #newScript(Map, String) */
+    protected WinRmExecuteHelper newScript(String phase) {
+        return newScript(Maps.<String, Object>newLinkedHashMap(), phase);
+    }
+
+    protected WinRmExecuteHelper newScript(Map<String, ?> flags, String phase) {
+        if (!Entities.isManaged(getEntity()))
+            throw new IllegalStateException(getEntity() + " is no longer managed; cannot create script to run here (" + phase + ")");
+
+        WinRmExecuteHelper s = new WinRmExecuteHelper(this, phase + " " + elvis(entity, this));
+        return s;
+    }
+
     @Override
     public void runPreInstallCommand() {
         if (Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.PRE_INSTALL_COMMAND)) || Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND))) {
-            executeCommand(VanillaWindowsProcess.PRE_INSTALL_COMMAND, VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND, true);
+            executeCommandInTask(
+                    getEntity().getConfig(VanillaWindowsProcess.PRE_INSTALL_COMMAND),
+                    getEntity().getConfig(VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND),
+                    "pre-install-command");
         }
         if (entity.getConfig(VanillaWindowsProcess.PRE_INSTALL_REBOOT_REQUIRED)) {
             rebootAndWait();
@@ -78,27 +99,59 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     @Override
     public void runPostInstallCommand() {
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_INSTALL_COMMAND)) || Strings.isNonBlank(getEntity().getConfig(VanillaWindowsProcess.POST_INSTALL_POWERSHELL_COMMAND))) {
-            executeCommand(BrooklynConfigKeys.POST_INSTALL_COMMAND, VanillaWindowsProcess.POST_INSTALL_POWERSHELL_COMMAND, true);
+            executeCommandInTask(
+                    getEntity().getConfig(VanillaWindowsProcess.POST_INSTALL_COMMAND),
+                    getEntity().getConfig(VanillaWindowsProcess.POST_INSTALL_POWERSHELL_COMMAND),
+                    "post-install-command");
         }
     }
 
     @Override
     public void runPreLaunchCommand() {
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.PRE_LAUNCH_COMMAND)) || Strings.isNonBlank(entity.getConfig(VanillaWindowsProcess.PRE_LAUNCH_POWERSHELL_COMMAND))) {
-            executeCommand(BrooklynConfigKeys.PRE_LAUNCH_COMMAND, VanillaWindowsProcess.PRE_LAUNCH_POWERSHELL_COMMAND, true);
+            executeCommandInTask(
+                    getEntity().getConfig(VanillaWindowsProcess.PRE_LAUNCH_COMMAND),
+                    getEntity().getConfig(VanillaWindowsProcess.PRE_LAUNCH_POWERSHELL_COMMAND),
+                    "pre-launch-command");
         }
     }
 
     @Override
     public void runPostLaunchCommand() {
         if (Strings.isNonBlank(entity.getConfig(BrooklynConfigKeys.POST_LAUNCH_COMMAND)) || Strings.isNonBlank(entity.getConfig(VanillaWindowsProcess.POST_LAUNCH_POWERSHELL_COMMAND))) {
-            executeCommand(BrooklynConfigKeys.POST_LAUNCH_COMMAND, VanillaWindowsProcess.POST_LAUNCH_POWERSHELL_COMMAND, true);
+            executeCommandInTask(
+                    getEntity().getConfig(VanillaWindowsProcess.POST_LAUNCH_COMMAND),
+                    getEntity().getConfig(VanillaWindowsProcess.POST_LAUNCH_POWERSHELL_COMMAND),
+                    "post-launch-command");
         }
     }
 
     @Override
     public WinRmMachineLocation getLocation() {
         return (WinRmMachineLocation)super.getLocation();
+    }
+
+    public WinRmMachineLocation getMachine() {
+        return getLocation();
+    }
+
+    protected int executeCommandInTask(String command, String psCommand, String phase) {
+        return newScript(phase)
+                .setCommand(command)
+                .setPsCommand(psCommand)
+                .failOnNonZeroResultCode()
+                .gatherOutput()
+                .execute();
+    }
+
+    @Override
+    public int executeNativeCommand(Map flags, String command, String phase) {
+        return executeNativeOrPsCommand(flags, command, null, phase, true);
+    }
+
+    @Override
+    public int executePsCommand(Map flags, String command, String phase) {
+        return executeNativeOrPsCommand(flags, null, command, phase, true);
     }
 
     @Override
@@ -134,37 +187,40 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         getLocation().executePsScript("New-Item -path \"" + directoryName + "\" -type directory -ErrorAction SilentlyContinue");
     }
 
-    protected WinRmToolResponse executeCommand(ConfigKey<String> regularCommandKey, ConfigKey<String> powershellCommandKey, boolean allowNoOp) {
-        String regularCommand = getEntity().getConfig(regularCommandKey);
-        String powershellCommand = getEntity().getConfig(powershellCommandKey);
-        if (Strings.isBlank(regularCommand) && Strings.isBlank(powershellCommand)) {
+    @Override
+    public Integer executeNativeOrPsCommand(Map flags, String regularCommand, String powerShellCommand, String phase, Boolean allowNoOp) {
+        if (Strings.isBlank(regularCommand) && Strings.isBlank(powerShellCommand)) {
             if (allowNoOp) {
-                return new WinRmToolResponse("", "", 0);
+                return new WinRmToolResponse("", "", 0).getStatusCode();
             } else {
-                throw new IllegalStateException(String.format("Exactly one of %s or %s must be set", regularCommandKey.getName(), powershellCommandKey.getName()));
+                throw new IllegalStateException(String.format("Exactly one of %s or %s must be set", regularCommand, powerShellCommand));
             }
-        } else if (!Strings.isBlank(regularCommand) && !Strings.isBlank(powershellCommand)) {
-            throw new IllegalStateException(String.format("%s and %s cannot both be set", regularCommandKey.getName(), powershellCommandKey.getName()));
+        } else if (!Strings.isBlank(regularCommand) && !Strings.isBlank(powerShellCommand)) {
+            throw new IllegalStateException(String.format("%s and %s cannot both be set", regularCommand, powerShellCommand));
         }
 
         ByteArrayOutputStream stdIn = new ByteArrayOutputStream();
-        ByteArrayOutputStream stdOut = new ByteArrayOutputStream();
-        ByteArrayOutputStream stdErr = new ByteArrayOutputStream();
+        ByteArrayOutputStream stdOut = flags.get("out") != null ? (ByteArrayOutputStream)flags.get("out") : new ByteArrayOutputStream();
+        ByteArrayOutputStream stdErr = flags.get("err") != null ? (ByteArrayOutputStream)flags.get("err") : new ByteArrayOutputStream();
 
         Task<?> currentTask = Tasks.current();
         if (currentTask != null) {
-            writeToStream(stdIn, Strings.isBlank(regularCommand) ? powershellCommand : regularCommand);
-            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, stdIn));
+            if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDIN)==null) {
+                writeToStream(stdIn, Strings.isBlank(regularCommand) ? powerShellCommand : regularCommand);
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, stdIn));
+            }
 
             if (BrooklynTaskTags.stream(currentTask, BrooklynTaskTags.STREAM_STDOUT)==null) {
                 Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, stdOut));
+                flags.put("out", stdOut);
                 Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, stdErr));
+                flags.put("err", stdErr);
             }
         }
 
         WinRmToolResponse response;
         if (Strings.isBlank(regularCommand)) {
-            response = getLocation().executePsScript(ImmutableList.of(powershellCommand));
+            response = getLocation().executePsScript(ImmutableList.of(powerShellCommand));
         } else {
             response = getLocation().executeScript(ImmutableList.of(regularCommand));
         }
@@ -174,10 +230,10 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
             writeToStream(stdErr, response.getStdErr());
         }
 
-        return response;
+        return response.getStatusCode();
     }
 
-    private void writeToStream(ByteArrayOutputStream stream, String string)  {
+    private void writeToStream(ByteArrayOutputStream stream, String string) {
         try {
             stream.write(string.getBytes());
         } catch (IOException e) {

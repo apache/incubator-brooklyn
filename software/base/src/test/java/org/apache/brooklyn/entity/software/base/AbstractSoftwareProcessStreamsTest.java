@@ -63,9 +63,9 @@ public abstract class AbstractSoftwareProcessStreamsTest extends BrooklynAppLive
         }
     }
 
-    protected String getStreamOrFail(Task<?> task, String streamType) {
+    public static String getStreamOrFail(Task<?> task, String streamType) {
         String msg = "task="+task+"; stream="+streamType;
-        BrooklynTaskTags.WrappedStream stream = checkNotNull(BrooklynTaskTags.stream(task, BrooklynTaskTags.STREAM_STDIN), "Stream null: " + msg);
+        BrooklynTaskTags.WrappedStream stream = checkNotNull(BrooklynTaskTags.stream(task, streamType), "Stream null: " + msg);
         return checkNotNull(stream.streamContents.get(), "Contents null: "+msg);
     }
 
@@ -105,8 +105,8 @@ public abstract class AbstractSoftwareProcessStreamsTest extends BrooklynAppLive
             String stdin = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_STDIN);
             String stdout = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_STDOUT);
             String stderr = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_STDERR);
-            String env = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_ENV);
-            String msg = "stdin="+stdin+"; stdout="+stdout+"; stderr="+stderr+"; env="+env;
+//            String env = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_ENV);
+            String msg = "stdin="+stdin+"; stdout="+stdout+"; stderr="+stderr; //+"; env="+env;
 
             assertTrue(stdin.contains("echo "+echoed), msg);
             assertTrue(stdout.contains(echoed), msg);
