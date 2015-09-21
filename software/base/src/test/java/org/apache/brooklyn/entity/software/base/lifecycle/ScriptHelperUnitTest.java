@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.entity.software.base.lifecycle;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
@@ -35,7 +36,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 import static org.apache.brooklyn.entity.software.base.VanillaSoftwareProcessStreamsIntegrationTest.getStreamOrFail;
 import static org.mockito.Mockito.any;
