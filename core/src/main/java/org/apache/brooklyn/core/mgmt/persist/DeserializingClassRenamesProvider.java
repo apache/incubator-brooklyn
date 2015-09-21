@@ -38,19 +38,22 @@ public class DeserializingClassRenamesProvider {
 
     public static final String DESERIALIZING_CLASS_RENAMES_PROPERTIES_PATH = "classpath://org/apache/brooklyn/core/mgmt/persist/deserializingClassRenames.properties";
     
-    private static Map<String, String> cache = null;
+    private static volatile Map<String, String> cache;
     
     @Beta
     public static Map<String, String> loadDeserializingClassRenames() {
-        if (cache!=null) return cache;
-        synchronized (DeserializingClassRenamesProvider.class) {
-            cache = loadDeserializingClassRenamesCache();
-            return cache;
+        // Double-checked locking - got to use volatile or some such!
+        if (cache == null) {
+            synchronized (DeserializingClassRenamesProvider.class) {
+                if (cache == null) {
+                    cache = loadDeserializingClassRenamesCache();
+                }
+            }
         }
+        return cache;
     }
     
-    private synchronized static Map<String, String> loadDeserializingClassRenamesCache() {
-        if (cache!=null) return cache;
+    private static Map<String, String> loadDeserializingClassRenamesCache() {
         InputStream resource = new ResourceUtils(DeserializingClassRenamesProvider.class).getResourceFromUrl(DESERIALIZING_CLASS_RENAMES_PROPERTIES_PATH);
         if (resource != null) {
             try {

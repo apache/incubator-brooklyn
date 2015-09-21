@@ -33,6 +33,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
 
@@ -65,10 +66,10 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         policy.subscribe(entity, TestEntity.NAME, listener);
         policy.subscribe(entity, TestEntity.MY_NOTIF, listener);
         
-        otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
-        entity.setAttribute(TestEntity.SEQUENCE, 123);
-        entity.setAttribute(TestEntity.NAME, "myname");
-        entity.emit(TestEntity.MY_NOTIF, 789);
+        otherEntity.sensors().set(TestEntity.SEQUENCE, 456);
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        entity.sensors().emit(TestEntity.MY_NOTIF, 789);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -87,10 +88,10 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         policy.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
         policy.unsubscribe(entity);
         
-        entity.setAttribute(TestEntity.SEQUENCE, 123);
-        entity.setAttribute(TestEntity.NAME, "myname");
-        entity.emit(TestEntity.MY_NOTIF, 456);
-        otherEntity.setAttribute(TestEntity.SEQUENCE, 789);
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        entity.sensors().emit(TestEntity.MY_NOTIF, 456);
+        otherEntity.sensors().set(TestEntity.SEQUENCE, 789);
         
         Thread.sleep(SHORT_WAIT_MS);
         Asserts.succeedsEventually(new Runnable() {
@@ -108,9 +109,9 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         
         policy.unsubscribe(entity, handle2);
         
-        entity.setAttribute(TestEntity.SEQUENCE, 123);
-        entity.setAttribute(TestEntity.NAME, "myname");
-        otherEntity.setAttribute(TestEntity.SEQUENCE, 456);
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        otherEntity.sensors().set(TestEntity.SEQUENCE, 456);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -119,5 +120,34 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
                         new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, otherEntity, 456)));
             }});
     }
+
+    @Test
+    public void testSubscriptionReceivesInitialValueEvents() {
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        
+        policy.subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, TestEntity.SEQUENCE, listener);
+        policy.subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, TestEntity.NAME, listener);
+        
+        Asserts.succeedsEventually(new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.getEvents(), ImmutableList.of(
+                        new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, entity, 123),
+                        new BasicSensorEvent<String>(TestEntity.NAME, entity, "myname")));
+            }});
+    }
     
+    @Test
+    public void testSubscriptionNotReceivesInitialValueEventsByDefault() {
+        entity.sensors().set(TestEntity.SEQUENCE, 123);
+        entity.sensors().set(TestEntity.NAME, "myname");
+        
+        policy.subscribe(entity, TestEntity.SEQUENCE, listener);
+        policy.subscribe(entity, TestEntity.NAME, listener);
+        
+        Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), new Runnable() {
+            @Override public void run() {
+                assertEquals(listener.getEvents(), ImmutableList.of());
+            }});
+    }
 }

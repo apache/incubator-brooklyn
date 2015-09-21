@@ -157,8 +157,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             if (!(entity instanceof SoftwareProcess)) {
                 throw new IllegalArgumentException("Expected SoftwareProcess, but got entity "+entity);
             }
-            subscribe(entity, Attributes.SERVICE_UP, this);
-            onUpdated();
+            subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, Attributes.SERVICE_STATE_ACTUAL, this);
+            subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, Attributes.SERVICE_UP, this);
         }
 
         @Override
@@ -168,8 +168,12 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
         protected void onUpdated() {
             Boolean up = entity.getAttribute(SERVICE_UP);
+            Lifecycle state = entity.getAttribute(SERVICE_STATE_ACTUAL);
             if (up == null || up) {
-                entity.setAttribute(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
+                entity.sensors().set(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
+            } else if (state == Lifecycle.STOPPING || state == Lifecycle.STOPPED || state == Lifecycle.DESTROYED) {
+                // stopping/stopped, so expect not to be up; get rid of the diagnostics.
+                entity.sensors().set(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
             } else {
                 ((SoftwareProcess)entity).populateServiceNotUpDiagnostics();
             }

@@ -37,10 +37,13 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ExecutionManager;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.SubscriptionManager;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.sensor.BasicSensorEvent;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.BasicExecutionManager;
 import org.apache.brooklyn.util.core.task.SingleThreadedScheduler;
 import org.apache.brooklyn.util.text.Identifiers;
@@ -90,7 +93,7 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
     }
     
     @SuppressWarnings("unchecked")
-    protected synchronized <T> SubscriptionHandle subscribe(Map<String, Object> flags, Subscription<T> s) {
+    protected synchronized <T> SubscriptionHandle subscribe(Map<String, Object> flags, final Subscription<T> s) {
         Entity producer = s.producer;
         Sensor<T> sensor= s.sensor;
         s.subscriber = getSubscriber(flags, s);
@@ -105,6 +108,7 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
             s.subscriberExecutionManagerTagSupplied = false;
         }
         s.eventFilter = (Predicate<SensorEvent<T>>) flags.remove("eventFilter");
+        boolean notifyOfInitialValue = Boolean.TRUE.equals(flags.remove("notifyOfInitialValue"));
         s.flags = flags;
         
         if (LOG.isDebugEnabled()) LOG.debug("Creating subscription {} for {} on {} {} in {}", new Object[] {s.id, s.subscriber, producer, sensor, this});
@@ -116,6 +120,41 @@ public class LocalSubscriptionManager extends AbstractSubscriptionManager {
         if (!s.subscriberExecutionManagerTagSupplied && s.subscriberExecutionManagerTag!=null) {
             ((BasicExecutionManager) em).setTaskSchedulerForTag(s.subscriberExecutionManagerTag, SingleThreadedScheduler.class);
         }
+
+        if (notifyOfInitialValue) {
+            if (producer == null) {
+                LOG.warn("Cannot notifyOfInitialValue for subscription with wildcard producer: "+s);
+            } else if (sensor == null) {
+                LOG.warn("Cannot notifyOfInitialValue for subscription with wilcard sensor: "+s);
+            } else if (!(sensor instanceof AttributeSensor)) {
+                LOG.warn("Cannot notifyOfInitialValue for subscription with non-attribute sensor: "+s);
+            } else {
+                if (LOG.isTraceEnabled()) LOG.trace("sending initial value of {} -> {} to {}", new Object[] {s.producer, s.sensor, s});
+                Map<String, Object> tagsMap = MutableMap.of("tag", s.subscriberExecutionManagerTag);
+                em.submit(tagsMap, new Runnable() {
+                    @Override
+                    public String toString() {
+                        return "LSM.publishInitialValue("+s.producer+", "+s.sensor+")";
+                    }
+                    public void run() {
+                        Object val = s.producer.getAttribute((AttributeSensor<?>) s.sensor);
+                        @SuppressWarnings("rawtypes") // TODO s.listener.onEvent gives compilation error if try to use <T>
+                        SensorEvent event = new BasicSensorEvent(s.sensor, s.producer, val);
+                        if (s.eventFilter!=null && !s.eventFilter.apply(event))
+                            return;
+                        try {
+                            s.listener.onEvent(event);
+                        } catch (Throwable t) {
+                            if (event!=null && event.getSource()!=null && Entities.isNoLongerManaged(event.getSource())) {
+                                LOG.debug("Error processing initial-value subscription to "+LocalSubscriptionManager.this+", after entity unmanaged: "+t, t);
+                            } else {
+                                LOG.warn("Error processing initial-value subscription to "+LocalSubscriptionManager.this+": "+t, t);
+                            }
+                        }
+                    }});
+            }
+        }
+        
         return s;
     }
 
