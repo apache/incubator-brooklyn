@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -30,6 +32,7 @@ import java.util.Map;
 
 public class VanillaWindowsProcessWinrmStreamsLiveTest extends AbstractSoftwareProcessStreamsTest {
     private Location location;
+    private static final String NON_ZERO_CODE_COMMAND = "ldskhflkdshflkdshfkjdsf";
 
     @BeforeMethod(alwaysRun=true)
     @Override
@@ -78,6 +81,19 @@ public class VanillaWindowsProcessWinrmStreamsLiveTest extends AbstractSoftwareP
                 .configure(VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, "echo true"));
         app.start(ImmutableList.of(location));
         assertStreams(entity);
+    }
+
+    @Test(groups = "Live", expectedExceptions = IllegalStateException.class)
+    public void testNonZeroExitCode() throws Throwable {
+        try {
+            app.createAndManageChild(EntitySpec.create(VanillaWindowsProcess.class)
+                    .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "echo " + getCommands().get("winrm: launch.*"))
+                    .configure(VanillaWindowsProcess.POST_LAUNCH_COMMAND, NON_ZERO_CODE_COMMAND)
+                    .configure(VanillaWindowsProcess.CHECK_RUNNING_COMMAND, "echo true"));
+            app.start(ImmutableList.of(location));
+        } catch (PropagatedRuntimeException e) {
+            throw Exceptions.getFirstInteresting(e);
+        }
     }
 
     @Override
