@@ -39,7 +39,7 @@ public class RabbitQueue extends RabbitDestination implements Queue {
 
     @Override
     public void create() {
-        setAttribute(QUEUE_NAME, getName());
+        sensors().set(QUEUE_NAME, getName());
         super.create();
     }
 

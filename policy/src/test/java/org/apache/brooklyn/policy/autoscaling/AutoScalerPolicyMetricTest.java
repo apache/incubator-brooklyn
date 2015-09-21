@@ -69,12 +69,12 @@ public class AutoScalerPolicyMetricTest {
         tc.resize(1);
         
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
-        tc.setAttribute(MY_ATTRIBUTE, 100);
+        tc.sensors().set(MY_ATTRIBUTE, 100);
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 1));
 
-        tc.setAttribute(MY_ATTRIBUTE, 101);
+        tc.sensors().set(MY_ATTRIBUTE, 101);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
     }
     
@@ -83,12 +83,12 @@ public class AutoScalerPolicyMetricTest {
         tc.resize(2);
         
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
-        tc.setAttribute(MY_ATTRIBUTE, 50);
+        tc.sensors().set(MY_ATTRIBUTE, 50);
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 2));
 
-        tc.setAttribute(MY_ATTRIBUTE, 49);
+        tc.sensors().set(MY_ATTRIBUTE, 49);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
     }
     
@@ -97,14 +97,14 @@ public class AutoScalerPolicyMetricTest {
         tc.resize(5);
         
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
         
         // workload 200 so requires doubling size to 10 to handle: (200*5)/100 = 10
-        tc.setAttribute(MY_ATTRIBUTE, 200);
+        tc.sensors().set(MY_ATTRIBUTE, 200);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 10));
         
         // workload 5, requires 1 entity: (10*110)/100 = 11
-        tc.setAttribute(MY_ATTRIBUTE, 110);
+        tc.sensors().set(MY_ATTRIBUTE, 110);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 11));
     }
     
@@ -113,17 +113,17 @@ public class AutoScalerPolicyMetricTest {
         tc.resize(5);
         
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
         
         // workload can be handled by 4 servers, within its valid range: (49*5)/50 = 4.9
-        tc.setAttribute(MY_ATTRIBUTE, 49);
+        tc.sensors().set(MY_ATTRIBUTE, 49);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 4));
         
         // workload can be handled by 4 servers, within its valid range: (25*4)/50 = 2
-        tc.setAttribute(MY_ATTRIBUTE, 25);
+        tc.sensors().set(MY_ATTRIBUTE, 25);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
         
-        tc.setAttribute(MY_ATTRIBUTE, 0);
+        tc.sensors().set(MY_ATTRIBUTE, 0);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
     }
     
@@ -135,14 +135,14 @@ public class AutoScalerPolicyMetricTest {
                 .metricLowerBound(50).metricUpperBound(100)
                 .minPoolSize(2).maxPoolSize(6)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         // Decreases to min-size only
-        tc.setAttribute(MY_ATTRIBUTE, 0);
+        tc.sensors().set(MY_ATTRIBUTE, 0);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
         
         // Increases to max-size only
-        tc.setAttribute(MY_ATTRIBUTE, 100000);
+        tc.sensors().set(MY_ATTRIBUTE, 100000);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
     }
     
@@ -153,7 +153,7 @@ public class AutoScalerPolicyMetricTest {
         
         BasicNotificationSensor<MaxPoolSizeReachedEvent> maxSizeReachedSensor = AutoScalerPolicy.DEFAULT_MAX_SIZE_REACHED_SENSOR;
         
-        app.subscribe(tc, maxSizeReachedSensor, new SensorEventListener<MaxPoolSizeReachedEvent>() {
+        app.subscriptions().subscribe(tc, maxSizeReachedSensor, new SensorEventListener<MaxPoolSizeReachedEvent>() {
                 @Override public void onEvent(SensorEvent<MaxPoolSizeReachedEvent> event) {
                     maxReachedEvents.add(event.getValue());
                 }});
@@ -163,15 +163,15 @@ public class AutoScalerPolicyMetricTest {
                 .maxPoolSize(6)
                 .maxSizeReachedSensor(maxSizeReachedSensor)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         // workload can be handled by 6 servers, so no need to notify: 6 <= (100*6)/50
-        tc.setAttribute(MY_ATTRIBUTE, 600);
+        tc.sensors().set(MY_ATTRIBUTE, 600);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
         assertTrue(maxReachedEvents.isEmpty());
         
         // Increases to above max capacity: would require (100000*6)/100 = 6000
-        tc.setAttribute(MY_ATTRIBUTE, 100000);
+        tc.sensors().set(MY_ATTRIBUTE, 100000);
         
         // Assert our listener gets notified (once)
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
@@ -195,13 +195,13 @@ public class AutoScalerPolicyMetricTest {
         tc.resize(1);
         
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         policy.destroy();
         assertTrue(policy.isDestroyed());
         assertFalse(policy.isRunning());
         
-        tc.setAttribute(MY_ATTRIBUTE, 100000);
+        tc.sensors().set(MY_ATTRIBUTE, 100000);
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 1));
         
         // TODO Could assert all subscriptions have been de-registered as well, 
@@ -211,7 +211,7 @@ public class AutoScalerPolicyMetricTest {
     @Test
     public void testSuspendState() {
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
         
         policy.suspend();
         assertFalse(policy.isRunning());
@@ -227,11 +227,11 @@ public class AutoScalerPolicyMetricTest {
         tc.resize(1);
         
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         policy.suspend();
         
-        tc.setAttribute(MY_ATTRIBUTE, 100000);
+        tc.sensors().set(MY_ATTRIBUTE, 100000);
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 1));
     }
     
@@ -240,11 +240,11 @@ public class AutoScalerPolicyMetricTest {
         tc.resize(1);
         
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE).metricLowerBound(50).metricUpperBound(100).build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
         
         policy.suspend();
         policy.resume();
-        tc.setAttribute(MY_ATTRIBUTE, 101);
+        tc.sensors().set(MY_ATTRIBUTE, 101);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
     }
     
@@ -260,14 +260,14 @@ public class AutoScalerPolicyMetricTest {
                 .metricLowerBound(50)
                 .metricUpperBound(100)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         // First confirm that tc is not being listened to for this entity
-        tc.setAttribute(TestEntity.SEQUENCE, 101);
+        tc.sensors().set(TestEntity.SEQUENCE, 101);
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 1));
 
         // Then confirm we listen to the correct "entityWithMetric"
-        entityWithMetric.setAttribute(TestEntity.SEQUENCE, 101);
+        entityWithMetric.sensors().set(TestEntity.SEQUENCE, 101);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
     }
 }

@@ -108,8 +108,8 @@ public class ConfigMapTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testConfigSubMap() throws Exception {
-        entity.setConfig(MyBaseEntity.SUPER_KEY_1, "s1");
-        entity.setConfig(MySubEntity.SUB_KEY_2, "s2");
+        entity.config().set(MyBaseEntity.SUPER_KEY_1, "s1");
+        entity.config().set(MySubEntity.SUB_KEY_2, "s2");
         ConfigMap sub = entity.getConfigMap().submap(ConfigPredicates.matchingGlob("sup*"));
         Assert.assertEquals(sub.getConfigRaw(MyBaseEntity.SUPER_KEY_1, true).get(), "s1");
         Assert.assertFalse(sub.getConfigRaw(MySubEntity.SUB_KEY_2, true).isPresent());
@@ -119,13 +119,13 @@ public class ConfigMapTest extends BrooklynAppUnitTestSupport {
     public void testFailFastOnInvalidConfigKeyCoercion() throws Exception {
         MyOtherEntity entity2 = new MyOtherEntity(app);
         ConfigKey<Integer> key = MyOtherEntity.INT_KEY;
-        entity2.setConfig((ConfigKey)key, "thisisnotanint");
+        entity2.config().set((ConfigKey)key, "thisisnotanint");
     }
 
     @Test
     public void testGetConfigOfPredicateTaskReturnsCoercedClosure() throws Exception {
         MyOtherEntity entity2 = new MyOtherEntity(app);
-        entity2.setConfig(MyOtherEntity.PREDICATE_KEY, Predicates.notNull());
+        entity2.config().set(MyOtherEntity.PREDICATE_KEY, Predicates.notNull());
         Entities.manage(entity2);
 
         Predicate predicate = entity2.getConfig(MyOtherEntity.PREDICATE_KEY);
@@ -157,7 +157,7 @@ public class ConfigMapTest extends BrooklynAppUnitTestSupport {
         Future<String> future = executor.submit(work);
 
         final MyOtherEntity entity2 = new MyOtherEntity(app);
-        entity2.setConfig((ConfigKey)MyOtherEntity.STRING_KEY, future);
+        entity2.config().set((ConfigKey)MyOtherEntity.STRING_KEY, future);
         Entities.manage(entity2);
 
         Future<String> getConfigFuture = executor.submit(new Callable<String>() {
@@ -178,7 +178,7 @@ public class ConfigMapTest extends BrooklynAppUnitTestSupport {
         Task<String> task = executionManager.submit(work);
 
         final MyOtherEntity entity2 = new MyOtherEntity(app);
-        entity2.setConfig(MyOtherEntity.STRING_KEY, task);
+        entity2.config().set(MyOtherEntity.STRING_KEY, task);
         Entities.manage(entity2);
 
         Future<String> getConfigFuture = executor.submit(new Callable<String>() {
@@ -200,7 +200,7 @@ public class ConfigMapTest extends BrooklynAppUnitTestSupport {
         Task<String> task = new BasicTask<String>(work);
 
         final MyOtherEntity entity2 = new MyOtherEntity(app);
-        entity2.setConfig(MyOtherEntity.STRING_KEY, task);
+        entity2.config().set(MyOtherEntity.STRING_KEY, task);
         Entities.manage(entity2);
 
         Future<String> getConfigFuture = executor.submit(new Callable<String>() {

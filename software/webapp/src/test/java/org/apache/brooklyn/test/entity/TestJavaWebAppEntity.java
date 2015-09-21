@@ -59,8 +59,8 @@ public interface TestJavaWebAppEntity extends VanillaJavaApp, WebAppService, Ent
         public void start(java.util.Collection<? extends Location> locations) {
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
             LOG.trace("Starting {}", this);
-            entity().setAttribute(SERVICE_PROCESS_IS_RUNNING, true);
-            entity().setAttribute(Attributes.SERVICE_UP, true);
+            entity().sensors().set(SERVICE_PROCESS_IS_RUNNING, true);
+            entity().sensors().set(Attributes.SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.RUNNING);
         }
 
@@ -68,8 +68,8 @@ public interface TestJavaWebAppEntity extends VanillaJavaApp, WebAppService, Ent
         public void stop(ConfigBag parameters) {
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
             LOG.trace("Stopping {}", this);
-            entity().setAttribute(Attributes.SERVICE_UP, false);
-            entity().setAttribute(SERVICE_PROCESS_IS_RUNNING, false);
+            entity().sensors().set(Attributes.SERVICE_UP, false);
+            entity().sensors().set(SERVICE_PROCESS_IS_RUNNING, false);
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
         }
     }

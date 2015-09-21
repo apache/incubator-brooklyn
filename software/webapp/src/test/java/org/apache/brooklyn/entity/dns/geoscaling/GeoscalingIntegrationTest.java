@@ -121,9 +121,9 @@ public class GeoscalingIntegrationTest {
     @Test(groups={"Integration"})
     public void testRoutesToExpectedLocation() {
         // Without this config, running on a home network (i.e. no public IP) the entity will have a private IP and will be ignored
-        ((EntityLocal)geoDns).setConfig(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
+        ((EntityLocal)geoDns).config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
         
-        target.setAttribute(Attributes.HOSTNAME,addrWithGeo.getHostName());
+        target.sensors().set(Attributes.HOSTNAME,addrWithGeo.getHostName());
         
         app.start(ImmutableList.of(locWithGeo));
         
@@ -135,10 +135,10 @@ public class GeoscalingIntegrationTest {
     @Test(groups={"Integration"})
     public void testIgnoresAddressWithoutGeography() throws Exception {
         System.setProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName(), StubHostGeoLookup.class.getName());
-        ((EntityLocal)geoDns).setConfig(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, false); // false is default
+        ((EntityLocal)geoDns).config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, false); // false is default
         
         app.start(ImmutableList.of(locWithoutGeo));
-        target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
+        target.sensors().set(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
         
         LOG.info("geo-scaling test, using {}.{}; expect not to be wired to {}", new Object[] {subDomain, primaryDomain, addrWithoutGeo});
         
@@ -152,10 +152,10 @@ public class GeoscalingIntegrationTest {
     @Test(groups={"Integration"})
     public void testIncludesAddressWithoutGeography() {
         System.setProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName(), StubHostGeoLookup.class.getName());
-        ((EntityLocal)geoDns).setConfig(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
+        ((EntityLocal)geoDns).config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
         
         app.start(ImmutableList.of(locWithoutGeo));
-        target.setAttribute(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
+        target.sensors().set(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
         
         LOG.info("geo-scaling test, using {}.{}; expect to be wired to {}", new Object[] {subDomain, primaryDomain, addrWithoutGeo});
         

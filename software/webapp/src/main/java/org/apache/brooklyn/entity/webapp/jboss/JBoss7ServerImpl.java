@@ -78,7 +78,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         
         String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource",
                 hp.getHostText(), hp.getPort());
-        setAttribute(MANAGEMENT_URL, managementUri);
+        sensors().set(MANAGEMENT_URL, managementUri);
         log.debug("JBoss sensors for "+this+" reading from "+managementUri);
         Map<String, String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
         boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
@@ -128,7 +128,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
     protected void connectServiceUp() {
         connectServiceUpIsRunning();
         
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+        enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(MANAGEMENT_URL_UP)
             .computing(Functionals.ifNotEquals(true).value("Management URL not reachable") )
             .build());

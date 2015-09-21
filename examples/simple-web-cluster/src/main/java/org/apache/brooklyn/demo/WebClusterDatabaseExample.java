@@ -80,27 +80,27 @@ public class WebClusterDatabaseExample extends AbstractApplication {
                                 attributeWhenReady(mysql, MySqlNode.DATASTORE_URL), 
                                 DB_TABLE, DB_USERNAME, DB_PASSWORD)) );
 
-        web.addEnricher(HttpLatencyDetector.builder().
+        web.enrichers().add(HttpLatencyDetector.builder().
                 url(ControlledDynamicWebAppCluster.ROOT_URL).
                 rollup(10, TimeUnit.SECONDS).
                 build());
 
         // simple scaling policy
-        web.getCluster().addPolicy(AutoScalerPolicy.builder().
+        web.getCluster().policies().add(AutoScalerPolicy.builder().
                 metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE).
                 metricRange(10, 100).
                 sizeRange(1, 5).
                 build());
 
         // expose some KPI's
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(WebAppServiceConstants.ROOT_URL,
                         DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
                         HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW)
                 .from(web)
                 .build());
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(ImmutableMap.of(DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT))
                 .from(web)
                 .build());

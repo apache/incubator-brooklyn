@@ -103,7 +103,7 @@ public class RebindCatalogEntityTest extends RebindTestFixture<StartableApplicat
         EntitySpec<StartableApplication> appSpec = EntitySpec.create(StartableApplication.class, appClazz)
                 .configure("myconf", "myconfval");
         origApp = ApplicationBuilder.newManagedApp(appSpec, origManagementContext);
-        ((EntityInternal)origApp).setAttribute(Sensors.newStringSensor("mysensor"), "mysensorval");
+        ((EntityInternal)origApp).sensors().set(Sensors.newStringSensor("mysensor"), "mysensorval");
         
         newApp = rebindWithAppClass();
         Entities.dumpInfo(newApp);

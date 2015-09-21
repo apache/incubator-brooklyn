@@ -95,7 +95,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     static void addAmphibianSensor(EntityInternal entity) {
         // Add new sensor
         entity.getMutableEntityType().addSensor(SENSOR);
-        entity.setAttribute(SENSOR, 12345);
+        entity.sensors().set(SENSOR, 12345);
 
         // Register display value hint
         RendererHints.register(SENSOR, RendererHints.displayValue(Functions.compose(StringFunctions.append(" frogs"), Functions.toStringFunction())));

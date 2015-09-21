@@ -35,7 +35,7 @@ public class QpidQueueImpl extends QpidDestinationImpl implements QpidQueue {
     @Override
     public void onManagementStarting() {
         super.onManagementStarting();
-        setAttribute(QUEUE_NAME, getName());
+        sensors().set(QUEUE_NAME, getName());
         try {
             exchange = new ObjectName(format("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"%s\",name=\"%s\",ExchangeType=direct", virtualHost, getExchangeName()));
         } catch (MalformedObjectNameException e) {

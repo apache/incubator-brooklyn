@@ -219,8 +219,8 @@ public class NginxHttpsSslIntegrationTest extends BrooklynAppLiveTestSupport {
                 .certificateDestination(getFile("ssl/certs/localhost/server.crt"))
                 .keyDestination(getFile("ssl/certs/localhost/server.key"))
                 .build();
-        ((EntityInternal)nginx).setConfig(LoadBalancer.PROXY_HTTPS_PORT, PortRanges.fromString("8443+"));
-        ((EntityInternal)nginx).setConfig(NginxController.SSL_CONFIG, ssl);
+        ((EntityInternal)nginx).config().set(LoadBalancer.PROXY_HTTPS_PORT, PortRanges.fromString("8443+"));
+        ((EntityInternal)nginx).config().set(NginxController.SSL_CONFIG, ssl);
 
         try {
             log.info("restarting nginx as ssl");

@@ -62,7 +62,7 @@ public class ZooKeeperEnsembleImpl extends DynamicClusterImpl implements ZooKeep
         log.info("Initializing the ZooKeeper Ensemble");
         super.init();
 
-        policy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policy = policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Members tracker")
                 .configure("group", this));
     }
@@ -75,7 +75,7 @@ public class ZooKeeperEnsembleImpl extends DynamicClusterImpl implements ZooKeep
         @Override
         protected void onEntityAdded(Entity member) {
             if (member.getAttribute(ZooKeeperNode.MY_ID) == null) {
-                ((EntityInternal) member).setAttribute(ZooKeeperNode.MY_ID, myId.incrementAndGet());
+                ((EntityInternal) member).sensors().set(ZooKeeperNode.MY_ID, myId.incrementAndGet());
             }
         }
 
@@ -98,7 +98,7 @@ public class ZooKeeperEnsembleImpl extends DynamicClusterImpl implements ZooKeep
         for (Entity zookeeper : getMembers()) {
             zookeeperServers.add(zookeeper.getAttribute(Attributes.HOSTNAME));
         }
-        setAttribute(ZOOKEEPER_SERVERS, zookeeperServers);
+        sensors().set(ZOOKEEPER_SERVERS, zookeeperServers);
     }
 
 }

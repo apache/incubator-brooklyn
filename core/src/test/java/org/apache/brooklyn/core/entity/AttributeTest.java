@@ -45,7 +45,7 @@ public class AttributeTest {
 
     @Test
     public void canGetAndSetAttribute() {
-        e.setAttribute(COLOR, "red");
+        e.sensors().set(COLOR, "red");
         assertEquals(e.getAttribute(COLOR), "red");
     }
     
@@ -60,7 +60,7 @@ public class AttributeTest {
         assertNull(e.getAttributeByNameParts(COLOR.getNameParts()));
         
         // Once set, returns val
-        e.setAttribute(COLOR, "red");
+        e.sensors().set(COLOR, "red");
         assertEquals(e.getAttributeByNameParts(COLOR.getNameParts()), "red");
     }
 }

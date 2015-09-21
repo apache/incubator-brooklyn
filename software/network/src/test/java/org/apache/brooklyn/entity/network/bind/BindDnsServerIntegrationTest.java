@@ -128,7 +128,7 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
         cluster.resize(1);
         assertDnsEntityEventuallyHasActiveMembers(1);
         EntityLocal e = (EntityLocal) Iterables.getOnlyElement(cluster.getMembers());
-        e.setAttribute(PrefixAndIdEnricher.SENSOR, " _-pretend.hostname.10.0.0.7.my-cloud.com");
+        e.sensors().set(PrefixAndIdEnricher.SENSOR, " _-pretend.hostname.10.0.0.7.my-cloud.com");
         EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.A_RECORDS,
                 ImmutableMap.of("pretend-hostname-10-0-0-7-my-cloud-com", e.getAttribute(Attributes.ADDRESS)));
     }
@@ -139,7 +139,7 @@ public class BindDnsServerIntegrationTest extends RebindTestFixture<TestApplicat
         cluster.resize(1);
         assertDnsEntityEventuallyHasActiveMembers(1);
         EntityLocal e = (EntityLocal) Iterables.getOnlyElement(cluster.getMembers());
-        e.setAttribute(PrefixAndIdEnricher.SENSOR, Strings.repeat("a", 171));
+        e.sensors().set(PrefixAndIdEnricher.SENSOR, Strings.repeat("a", 171));
         EntityTestUtils.assertAttributeEqualsEventually(dns, BindDnsServer.A_RECORDS,
                 ImmutableMap.of(Strings.repeat("a", 63), e.getAttribute(Attributes.ADDRESS)));
     }

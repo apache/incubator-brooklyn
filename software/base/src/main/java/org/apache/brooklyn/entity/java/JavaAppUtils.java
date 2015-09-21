@@ -94,10 +94,10 @@ public class JavaAppUtils {
     }
 
     public static void connectJavaAppServerPolicies(EntityLocal entity, Duration windowPeriod) {
-        entity.addEnricher(new TimeFractionDeltaEnricher<Double>(entity, UsesJavaMXBeans.PROCESS_CPU_TIME, 
+        entity.enrichers().add(new TimeFractionDeltaEnricher<Double>(entity, UsesJavaMXBeans.PROCESS_CPU_TIME, 
                 UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_LAST, TimeUnit.MILLISECONDS));
 
-        entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity,
+        entity.enrichers().add(new RollingTimeWindowMeanEnricher<Double>(entity,
                 UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_LAST, UsesJavaMXBeans.PROCESS_CPU_TIME_FRACTION_IN_WINDOW,
                 windowPeriod));
     }

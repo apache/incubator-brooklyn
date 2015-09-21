@@ -161,8 +161,8 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
                 "- type: "+CatalogUtils.getVersionedId(appSymbolicName, appVersion);
         origApp = (StartableApplication) createAndStartApplication(yaml);
         BasicEntity origEntity = (BasicEntity) Iterables.getOnlyElement(origApp.getChildren());
-        TestPolicy origPolicy = (TestPolicy) Iterables.getOnlyElement(origEntity.getPolicies());
-        TestEnricher origEnricher = (TestEnricher) Iterables.tryFind(origEntity.getEnrichers(), Predicates.instanceOf(TestEnricher.class)).get();
+        TestPolicy origPolicy = (TestPolicy) Iterables.getOnlyElement(origEntity.policies());
+        TestEnricher origEnricher = (TestEnricher) Iterables.tryFind(origEntity.enrichers(), Predicates.instanceOf(TestEnricher.class)).get();
         assertEquals(origEntity.getCatalogItemId(), appSymbolicName+":"+appVersion);
 
         // Depending on test-mode, delete the catalog item, and then rebind
@@ -223,8 +223,8 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
 
         // Ensure app is still there, and that it is usabe - e.g. "stop" effector functions as expected
         BasicEntity newEntity = (BasicEntity) Iterables.getOnlyElement(newApp.getChildren());
-        Policy newPolicy = Iterables.getOnlyElement(newEntity.getPolicies());
-        Enricher newEnricher = Iterables.tryFind(newEntity.getEnrichers(), Predicates.instanceOf(TestEnricher.class)).get();
+        Policy newPolicy = Iterables.getOnlyElement(newEntity.policies());
+        Enricher newEnricher = Iterables.tryFind(newEntity.enrichers(), Predicates.instanceOf(TestEnricher.class)).get();
         assertEquals(newEntity.getCatalogItemId(), appSymbolicName+":"+appVersion);
 
         newApp.stop();

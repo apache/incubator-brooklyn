@@ -108,8 +108,8 @@ public class BrooklynMetricsTest {
         
         // Setting attribute causes event to be published and delivered to the subscriber
         // Note that the brooklyn metrics entity itself is also publishing sensors
-        app.subscribe(e, TestEntity.SEQUENCE, SensorEventListener.NOOP);
-        e.setAttribute(TestEntity.SEQUENCE, 1);
+        app.subscriptions().subscribe(e, TestEntity.SEQUENCE, SensorEventListener.NOOP);
+        e.sensors().set(TestEntity.SEQUENCE, 1);
         
         Asserts.succeedsEventually(MutableMap.of("timeout", Duration.FIVE_SECONDS), new Runnable() {
             public void run() {

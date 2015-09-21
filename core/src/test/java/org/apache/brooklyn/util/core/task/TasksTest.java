@@ -72,13 +72,13 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testResolvesAttributeWhenReady() throws Exception {
-        app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        app.sensors().set(TestApplication.MY_ATTRIBUTE, "myval");
         assertResolvesValue(attributeWhenReady(app, TestApplication.MY_ATTRIBUTE), String.class, "myval");
     }
     
     @Test
     public void testResolvesMapWithAttributeWhenReady() throws Exception {
-        app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        app.sensors().set(TestApplication.MY_ATTRIBUTE, "myval");
         Map<?,?> orig = ImmutableMap.of("mykey", attributeWhenReady(app, TestApplication.MY_ATTRIBUTE));
         Map<?,?> expected = ImmutableMap.of("mykey", "myval");
         assertResolvesValue(orig, String.class, expected);
@@ -86,7 +86,7 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testResolvesSetWithAttributeWhenReady() throws Exception {
-        app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        app.sensors().set(TestApplication.MY_ATTRIBUTE, "myval");
         Set<?> orig = ImmutableSet.of(attributeWhenReady(app, TestApplication.MY_ATTRIBUTE));
         Set<?> expected = ImmutableSet.of("myval");
         assertResolvesValue(orig, String.class, expected);
@@ -94,7 +94,7 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testResolvesMapOfMapsWithAttributeWhenReady() throws Exception {
-        app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        app.sensors().set(TestApplication.MY_ATTRIBUTE, "myval");
         Map<?,?> orig = ImmutableMap.of("mykey", ImmutableMap.of("mysubkey", attributeWhenReady(app, TestApplication.MY_ATTRIBUTE)));
         Map<?,?> expected = ImmutableMap.of("mykey", ImmutableMap.of("mysubkey", "myval"));
         assertResolvesValue(orig, String.class, expected);
@@ -103,7 +103,7 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
     @SuppressWarnings("unchecked")
     @Test
     public void testResolvesIterableOfMapsWithAttributeWhenReady() throws Exception {
-        app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        app.sensors().set(TestApplication.MY_ATTRIBUTE, "myval");
         // using Iterables.concat so that orig is of type FluentIterable rather than List etc
         Iterable<?> orig = Iterables.concat(ImmutableList.of(ImmutableMap.of("mykey", attributeWhenReady(app, TestApplication.MY_ATTRIBUTE))));
         Iterable<Map<?,?>> expected = ImmutableList.<Map<?,?>>of(ImmutableMap.of("mykey", "myval"));
@@ -117,7 +117,7 @@ public class TasksTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testErrorsResolvingPropagatesOrSwallowedAllCorrectly() throws Exception {
-        app.setConfig(TestEntity.CONF_OBJECT, ValueResolverTest.newThrowTask(Duration.ZERO));
+        app.config().set(TestEntity.CONF_OBJECT, ValueResolverTest.newThrowTask(Duration.ZERO));
         Task<Object> t = Tasks.builder().body(Functionals.callable(EntityFunctions.config(TestEntity.CONF_OBJECT), app)).build();
         ValueResolver<Object> v = Tasks.resolving(t).as(Object.class).context(app.getExecutionContext());
         

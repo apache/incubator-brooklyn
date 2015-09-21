@@ -167,7 +167,7 @@ public class JmxHelper {
         this(toJmxUrl(entity), entity, entity.getAttribute(UsesJmx.JMX_USER), entity.getAttribute(UsesJmx.JMX_PASSWORD));
         
         if (entity.getAttribute(UsesJmx.JMX_URL) == null) {
-            entity.setAttribute(UsesJmx.JMX_URL, url);
+            entity.sensors().set(UsesJmx.JMX_URL, url);
         }
     }
     

@@ -172,7 +172,7 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
     public void testRenameClass() throws Exception {
         ConfigKey<Object> CONF1 = new BasicConfigKey<Object>(Object.class, "test.conf1");
         
-        origApp.setConfig(CONF1, new OrigType("myfieldval"));
+        origApp.config().set(CONF1, new OrigType("myfieldval"));
         
         CompoundTransformer transformer = CompoundTransformer.builder()
                 .renameClassTag(OrigType.class.getName(), RenamedType.class.getName())
@@ -189,7 +189,7 @@ public class CompoundTransformerTest extends RebindTestFixtureWithApp {
         ConfigKey<Object> CONF1 = new BasicConfigKey<Object>(Object.class, "test.conf1");
         
         Predicate<Entity> origPredicate = idEqualTo(origApp.getId());
-        origApp.setConfig(CONF1, origPredicate);
+        origApp.config().set(CONF1, origPredicate);
         
         CompoundTransformer transformer = CompoundTransformer.builder()
                 .renameClassTag(origPredicate.getClass().getName(), RenamedIdEqualToPredicate.class.getName())

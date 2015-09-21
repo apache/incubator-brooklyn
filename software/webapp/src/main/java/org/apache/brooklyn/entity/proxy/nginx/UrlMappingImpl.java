@@ -80,7 +80,7 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
             rewrites = new ArrayList<UrlRewriteRule>();
         }
         rewrites.add(rule);
-        setConfig(REWRITES, rewrites);
+        config().set(REWRITES, rewrites);
         return this;
     }
 
@@ -101,7 +101,7 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
 
     @Override
     public void setTarget(Entity target) {
-        setConfig(TARGET_PARENT, target);
+        config().set(TARGET_PARENT, target);
         recompute();
     }
 
@@ -162,7 +162,7 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
         Set<String> result = Collections.unmodifiableSet(resultM);
         Collection<String> oldAddresses = getAttribute(TARGET_ADDRESSES);
         if (oldAddresses == null || !result.equals(ImmutableSet.copyOf(oldAddresses))) {
-            setAttribute(TARGET_ADDRESSES, result);
+            sensors().set(TARGET_ADDRESSES, result);
         }
     }
 
@@ -189,14 +189,14 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
 
         Entity t = getTarget();
         if (t != null) {
-            subscriptionHandle = subscribeToChildren(t, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
+            subscriptionHandle = subscriptions().subscribeToChildren(t, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
                 @Override public void onEvent(SensorEvent<Boolean> event) {
                     boolean changed = (event.getValue()) ? addMember(event.getSource()) : removeMember(event.getSource());
                     if (changed) {
                         recomputeAddresses();
                     }
                 }});
-            subscriptionHandle2 = subscribe(t, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+            subscriptionHandle2 = subscriptions().subscribe(t, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> event) {
                     removeMember(event.getValue());
                     // recompute, irrespective of change, because framework may have already invoked the removeMember call

@@ -120,7 +120,7 @@ public class ServiceReplacer extends AbstractPolicy {
         
         super.setEntity(entity);
 
-        subscribeToMembers((Group)entity, failureSensorToMonitor, new SensorEventListener<Object>() {
+        subscriptions().subscribeToMembers((Group)entity, failureSensorToMonitor, new SensorEventListener<Object>() {
                 @Override public void onEvent(final SensorEvent<Object> event) {
                     // Must execute in another thread - if we called entity.replaceMember in the event-listener's thread
                     // then we'd block all other events being delivered to this entity's other subscribers.
@@ -208,6 +208,6 @@ public class ServiceReplacer extends AbstractPolicy {
         if (getConfig(SET_ON_FIRE_ON_FAILURE)) {
             ServiceProblemsLogic.updateProblemsIndicator(entity, "ServiceReplacer", "replacement failed: "+msg);
         }
-        entity.emit(ENTITY_REPLACEMENT_FAILED, new FailureDescriptor(entity, msg));
+        entity.sensors().emit(ENTITY_REPLACEMENT_FAILED, new FailureDescriptor(entity, msg));
     }
 }

@@ -60,7 +60,7 @@ public class MachineLifecycleEffectorTasksTest {
     public static boolean canStop(StopMode stopMode, boolean isEntityStopped) {
         BasicEntityImpl entity = new BasicEntityImpl();
         Lifecycle state = isEntityStopped ? Lifecycle.STOPPED : Lifecycle.RUNNING;
-        entity.setAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL, state);
+        entity.sensors().set(SoftwareProcess.SERVICE_STATE_ACTUAL, state);
         return MachineLifecycleEffectorTasks.canStop(stopMode, entity);
     }
     
@@ -107,7 +107,7 @@ public class MachineLifecycleEffectorTasksTest {
             }
         });
         try {
-            ((EntityLocal) triggerEntity).setAttribute(ready, true);
+            ((EntityLocal) triggerEntity).sensors().set(ready, true);
             task.get(Duration.THIRTY_SECONDS);
         } catch (Throwable t) {
             Exceptions.propagateIfFatal(t);

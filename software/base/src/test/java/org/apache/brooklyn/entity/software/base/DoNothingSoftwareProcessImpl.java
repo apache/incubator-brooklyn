@@ -32,7 +32,7 @@ public class DoNothingSoftwareProcessImpl extends SoftwareProcessImpl implements
     protected void connectSensors() {
         super.connectSensors();
         if (getAttribute(SERVICE_STATE_ACTUAL) == Lifecycle.STARTING) {
-            setAttribute(SERVICE_UP, true);
+            sensors().set(SERVICE_UP, true);
         }
     }
 }

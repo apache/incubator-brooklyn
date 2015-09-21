@@ -60,7 +60,7 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     protected void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
-        setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
+        sensors().set(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
     }
 
     @Override

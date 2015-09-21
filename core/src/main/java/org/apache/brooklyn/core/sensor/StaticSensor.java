@@ -64,7 +64,7 @@ public class StaticSensor<T> extends AddSensor<T> {
         Maybe<T> v = Tasks.resolving(value).as((Class<T>)sensor.getType()).timeout(ValueResolver.PRETTY_QUICK_WAIT).getMaybe();
         if (v.isPresent()) {
             log.debug(this+" setting sensor "+sensor+" to "+v.get());
-            entity.setAttribute(sensor, v.get());
+            entity.sensors().set(sensor, v.get());
         } else {
             log.debug(this+" not setting sensor "+sensor+"; cannot resolve "+value);
         }

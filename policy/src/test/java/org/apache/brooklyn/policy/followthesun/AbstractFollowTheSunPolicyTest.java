@@ -102,13 +102,13 @@ public class AbstractFollowTheSunPolicyTest {
         pool = app.createAndManageChild(EntitySpec.create(FollowTheSunPool.class));
         pool.setContents(containerGroup, itemGroup);
         policy = new FollowTheSunPolicy(MockItemEntity.ITEM_USAGE_METRIC, model, FollowTheSunParameters.newDefault());
-        pool.addPolicy(policy);
+        pool.policies().add(policy);
         app.start(ImmutableList.of(loc1, loc2));
     }
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() {
-        if (pool != null && policy != null) pool.removePolicy(policy);
+        if (pool != null && policy != null) pool.policies().remove(policy);
         if (app != null) Entities.destroyAll(app.getManagementContext());
         MockItemEntityImpl.totalMoveCount.set(0);
         MockItemEntityImpl.lastMoveTime.set(0);
@@ -229,7 +229,7 @@ public class AbstractFollowTheSunPolicyTest {
     protected static MockItemEntity newItem(TestApplication app, MockContainerEntity container, String name, Map<? extends Entity, Double> workpattern) {
         MockItemEntity item = newItem(app, container, name);
         if (workpattern != null) {
-            ((EntityLocal)item).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, (Map) workpattern);
+            ((EntityLocal)item).sensors().set(MockItemEntity.ITEM_USAGE_METRIC, (Map) workpattern);
         }
         return item;
     }

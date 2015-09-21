@@ -145,11 +145,11 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         this.poolEntity = (FollowTheSunPool) entity;
         
         // Detect when containers are added to or removed from the pool.
-        subscribe(poolEntity, FollowTheSunPool.CONTAINER_ADDED, eventHandler);
-        subscribe(poolEntity, FollowTheSunPool.CONTAINER_REMOVED, eventHandler);
-        subscribe(poolEntity, FollowTheSunPool.ITEM_ADDED, eventHandler);
-        subscribe(poolEntity, FollowTheSunPool.ITEM_REMOVED, eventHandler);
-        subscribe(poolEntity, FollowTheSunPool.ITEM_MOVED, eventHandler);
+        subscriptions().subscribe(poolEntity, FollowTheSunPool.CONTAINER_ADDED, eventHandler);
+        subscriptions().subscribe(poolEntity, FollowTheSunPool.CONTAINER_REMOVED, eventHandler);
+        subscriptions().subscribe(poolEntity, FollowTheSunPool.ITEM_ADDED, eventHandler);
+        subscriptions().subscribe(poolEntity, FollowTheSunPool.ITEM_REMOVED, eventHandler);
+        subscriptions().subscribe(poolEntity, FollowTheSunPool.ITEM_MOVED, eventHandler);
         
         // Take heed of any extant containers.
         for (Entity container : poolEntity.getContainerGroup().getMembers()) {
@@ -212,7 +212,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     }
     
     private void onContainerAdded(Entity container, boolean rebalanceNow) {
-        subscribe(container, Attributes.LOCATION_CHANGED, eventHandler);
+        subscriptions().subscribe(container, Attributes.LOCATION_CHANGED, eventHandler);
         Location location = locationFinder.apply(container);
         
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of container {} in location {}", new Object[] {this, container, location});
@@ -232,7 +232,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
         
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", new Object[] {this, item, parentContainer});
         
-        subscribe(item, itemUsageMetric, eventHandler);
+        subscriptions().subscribe(item, itemUsageMetric, eventHandler);
         
         // Update the model, including the current metric value (if any).
         Map<? extends Movable, Double> currentValue = item.getAttribute(itemUsageMetric);
@@ -248,7 +248,7 @@ public class FollowTheSunPolicy extends AbstractPolicy {
     
     private void onItemRemoved(Movable item, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording removal of item {}", this, item);
-        unsubscribe(item);
+        subscriptions().unsubscribe(item);
         model.onItemRemoved(item);
         if (rebalanceNow) scheduleLatencyReductionJig();
     }

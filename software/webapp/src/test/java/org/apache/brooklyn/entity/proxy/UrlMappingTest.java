@@ -139,7 +139,7 @@ public class UrlMappingTest {
         assertExpectedTargetsEventually(members);
         
         // Stop one member, and expect the URL Mapping to be updated accordingly
-        target1.setAttribute(StubAppServer.SERVICE_UP, false);
+        target1.sensors().set(StubAppServer.SERVICE_UP, false);
 
         assertExpectedTargetsEventually(ImmutableSet.of(target2));
     }
@@ -178,7 +178,7 @@ public class UrlMappingTest {
         
         // Stop one member, and expect the URL Mapping to be updated accordingly
         log.info("pretending one node down");
-        target1.setAttribute(StubAppServer.SERVICE_UP, false);
+        target1.sensors().set(StubAppServer.SERVICE_UP, false);
         assertExpectedTargetsEventually(ImmutableSet.of(target2, target3));
 
         // Unmanage a member, and expect the URL Mapping to be updated accordingly

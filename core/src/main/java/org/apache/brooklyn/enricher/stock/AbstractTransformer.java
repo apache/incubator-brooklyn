@@ -71,7 +71,7 @@ public abstract class AbstractTransformer<T,U> extends AbstractEnricher implemen
             return;
         }
         
-        subscribe(producer, sourceSensor, this);
+        subscriptions().subscribe(producer, sourceSensor, this);
         
         if (sourceSensor instanceof AttributeSensor) {
             Object value = producer.getAttribute((AttributeSensor<?>)sourceSensor);

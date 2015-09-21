@@ -74,7 +74,7 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
         MongoDBAuthenticationUtils.setAuthenticationConfig(shardClusterSpec, this);
         sensors().set(SHARD_CLUSTER, addChild(shardClusterSpec));
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(MongoDBConfigServerCluster.CONFIG_SERVER_ADDRESSES)
                 .from(getAttribute(CONFIG_SERVER_CLUSTER))
                 .build());
@@ -97,7 +97,7 @@ public class MongoDBShardedDeploymentImpl extends AbstractEntity implements Mong
                     .get();
 
             if (getConfigRaw(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP, true).isPresent()) {
-                addPolicy(PolicySpec.create(ColocatedRouterTrackingPolicy.class)
+                policies().add(PolicySpec.create(ColocatedRouterTrackingPolicy.class)
                         .displayName("Co-located router tracker")
                         .configure("group", getConfig(MongoDBShardedDeployment.CO_LOCATED_ROUTER_GROUP)));
             }

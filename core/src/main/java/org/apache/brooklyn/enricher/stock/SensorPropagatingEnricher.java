@@ -131,7 +131,7 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
         for (Sensor<?> s: sensors) {
-            subscribe(source, s, this);
+            subscriptions().subscribe(source, s, this);
         }
     }
     
@@ -146,9 +146,9 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
                 new Object[] {this, event, entity, (sourceSensor == destinationSensor ? "" : " (as "+destinationSensor+")")});
         
         if (event.getSensor() instanceof AttributeSensor) {
-            entity.setAttribute((AttributeSensor)destinationSensor, event.getValue());
+            entity.sensors().set((AttributeSensor)destinationSensor, event.getValue());
         } else {
-            entity.emit((Sensor)destinationSensor, event.getValue());
+            entity.sensors().emit((Sensor)destinationSensor, event.getValue());
         }       
     }
 
@@ -163,14 +163,14 @@ public class SensorPropagatingEnricher extends AbstractEnricher implements Senso
             if (s instanceof AttributeSensor) {
                 AttributeSensor destinationSensor = (AttributeSensor<?>) getDestinationSensor(s);
                 Object v = source.getAttribute((AttributeSensor)s);
-                if (v != null || includeNullValues) entity.setAttribute(destinationSensor, v);
+                if (v != null || includeNullValues) entity.sensors().set(destinationSensor, v);
             }
         }
     }
 
     /** convenience, to be called by the host */
     public SensorPropagatingEnricher addToEntityAndEmitAll(Entity host) {
-        host.addEnricher(this);
+        host.enrichers().add(this);
         emitAllAttributes();
         return this;
     }

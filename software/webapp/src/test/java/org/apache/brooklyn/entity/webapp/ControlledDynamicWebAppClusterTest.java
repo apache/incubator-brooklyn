@@ -88,8 +88,8 @@ public class ControlledDynamicWebAppClusterTest extends BrooklynAppUnitTestSuppo
     @Test
     public void testUsesCustomControlledGroup() {
         TestJavaWebAppEntity webServer = app.createAndManageChild(EntitySpec.create(TestJavaWebAppEntity.class));
-        webServer.setAttribute(Attributes.SUBNET_HOSTNAME, "myhostname");
-        webServer.setAttribute(Attributes.HTTP_PORT, 1234);
+        webServer.sensors().set(Attributes.SUBNET_HOSTNAME, "myhostname");
+        webServer.sensors().set(Attributes.HTTP_PORT, 1234);
         
         TrackingAbstractController controller = app.createAndManageChild(EntitySpec.create(TrackingAbstractController.class));
         Group controlledGroup = app.createAndManageChild(EntitySpec.create(BasicGroup.class));

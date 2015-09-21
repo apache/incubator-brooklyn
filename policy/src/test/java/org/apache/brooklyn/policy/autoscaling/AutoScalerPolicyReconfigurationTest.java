@@ -62,7 +62,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .metricLowerBound(50).metricUpperBound(100)
                 .minPoolSize(2)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         policy.config().set(AutoScalerPolicy.MIN_POOL_SIZE, 3);
         
@@ -77,15 +77,15 @@ public class AutoScalerPolicyReconfigurationTest {
                 .metricLowerBound(50).metricUpperBound(100)
                 .minPoolSize(2)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
         
         // 25*4 = 100 -> 2 nodes at 50 each
-        tc.setAttribute(MY_ATTRIBUTE, 25);
+        tc.sensors().set(MY_ATTRIBUTE, 25);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
 
         // Decreases to new min-size
         policy.config().set(AutoScalerPolicy.MIN_POOL_SIZE, 1);
-        tc.setAttribute(MY_ATTRIBUTE, 0);
+        tc.sensors().set(MY_ATTRIBUTE, 0);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
     }
     
@@ -97,7 +97,7 @@ public class AutoScalerPolicyReconfigurationTest {
                 .metricLowerBound(50).metricUpperBound(100)
                 .maxPoolSize(6)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         policy.config().set(AutoScalerPolicy.MAX_POOL_SIZE, 4);
         
@@ -112,16 +112,16 @@ public class AutoScalerPolicyReconfigurationTest {
                 .metricLowerBound(50).metricUpperBound(100)
                 .maxPoolSize(6)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         // 200*3 = 600 -> 6 nodes at 100 each
-        tc.setAttribute(MY_ATTRIBUTE, 200);
+        tc.sensors().set(MY_ATTRIBUTE, 200);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
         
         policy.config().set(AutoScalerPolicy.MAX_POOL_SIZE, 8);
         
         // Increases to max-size only
-        tc.setAttribute(MY_ATTRIBUTE, 100000);
+        tc.sensors().set(MY_ATTRIBUTE, 100000);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 8));
     }
     
@@ -132,11 +132,11 @@ public class AutoScalerPolicyReconfigurationTest {
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE)
                 .metricLowerBound(50).metricUpperBound(100)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         policy.config().set(AutoScalerPolicy.METRIC_LOWER_BOUND, 51);
 
-        tc.setAttribute(MY_ATTRIBUTE, 50);
+        tc.sensors().set(MY_ATTRIBUTE, 50);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
     }
 
@@ -147,11 +147,11 @@ public class AutoScalerPolicyReconfigurationTest {
         AutoScalerPolicy policy = new AutoScalerPolicy.Builder().metric(MY_ATTRIBUTE)
                 .metricLowerBound(50).metricUpperBound(100)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         policy.config().set(AutoScalerPolicy.METRIC_UPPER_BOUND, 99);
 
-        tc.setAttribute(MY_ATTRIBUTE, 100);
+        tc.sensors().set(MY_ATTRIBUTE, 100);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
     }
 
@@ -163,11 +163,11 @@ public class AutoScalerPolicyReconfigurationTest {
                 .metricLowerBound(50).metricUpperBound(100)
                 .resizeUpStabilizationDelay(Duration.TWO_MINUTES)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         policy.config().set(AutoScalerPolicy.RESIZE_UP_STABILIZATION_DELAY, Duration.ZERO);
 
-        tc.setAttribute(MY_ATTRIBUTE, 101);
+        tc.sensors().set(MY_ATTRIBUTE, 101);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
     }
     
@@ -179,11 +179,11 @@ public class AutoScalerPolicyReconfigurationTest {
                 .metricLowerBound(50).metricUpperBound(100)
                 .resizeDownStabilizationDelay(Duration.TWO_MINUTES)
                 .build();
-        tc.addPolicy(policy);
+        tc.policies().add(policy);
 
         policy.config().set(AutoScalerPolicy.RESIZE_DOWN_STABILIZATION_DELAY, Duration.ZERO);
 
-        tc.setAttribute(MY_ATTRIBUTE, 1);
+        tc.sensors().set(MY_ATTRIBUTE, 1);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
     }
 }

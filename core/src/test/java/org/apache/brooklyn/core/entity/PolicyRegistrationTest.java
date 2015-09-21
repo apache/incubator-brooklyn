@@ -23,6 +23,7 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -67,11 +68,11 @@ public class PolicyRegistrationTest extends BrooklynAppUnitTestSupport {
         added = Lists.newCopyOnWriteArrayList();
         removed = Lists.newCopyOnWriteArrayList();
         
-        app.subscribe(entity, AbstractEntity.POLICY_ADDED, new SensorEventListener<PolicyDescriptor>() {
+        app.subscriptions().subscribe(entity, AbstractEntity.POLICY_ADDED, new SensorEventListener<PolicyDescriptor>() {
             @Override public void onEvent(SensorEvent<PolicyDescriptor> event) {
                 added.add(event.getValue());
             }});
-        app.subscribe(entity, AbstractEntity.POLICY_REMOVED, new SensorEventListener<PolicyDescriptor>() {
+        app.subscriptions().subscribe(entity, AbstractEntity.POLICY_REMOVED, new SensorEventListener<PolicyDescriptor>() {
                 @Override public void onEvent(SensorEvent<PolicyDescriptor> event) {
                     removed.add(event.getValue());
                 }});
@@ -79,7 +80,7 @@ public class PolicyRegistrationTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testGetPoliciesIsInitiallyEmpty() {
-        assertEquals(entity.getPolicies(), ImmutableList.of());
+        assertEquals(ImmutableList.copyOf(entity.policies()), ImmutableList.of());
     }
 
     @Test(expectedExceptions = { UnsupportedOperationException.class })
@@ -88,48 +89,57 @@ public class PolicyRegistrationTest extends BrooklynAppUnitTestSupport {
         fail();
     }
 
+    @Test(expectedExceptions = { UnsupportedOperationException.class })
+    public void testPoliciesIteratorReturnsImmutable() {
+        entity.policies().add(policy1);
+        Iterator<Policy> iterator = entity.policies().iterator();
+        iterator.next();
+        iterator.remove();
+        fail();
+    }
+
     @Test
     public void testAddAndRemovePolicies() {
-        entity.addPolicy(policy1);
-        assertEquals(entity.getPolicies(), ImmutableList.of(policy1));
+        entity.policies().add(policy1);
+        assertEquals(ImmutableList.copyOf(entity.policies()), ImmutableList.of(policy1));
         assertEqualsEventually(added, ImmutableList.of(new PolicyDescriptor(policy1)));
         
-        entity.addPolicy(policy2);
-        assertEquals(entity.getPolicies(), ImmutableList.of(policy1, policy2));
+        entity.policies().add(policy2);
+        assertEquals(ImmutableList.copyOf(entity.policies()), ImmutableList.of(policy1, policy2));
         assertEqualsEventually(added, ImmutableList.of(new PolicyDescriptor(policy1), new PolicyDescriptor(policy2)));
         
-        entity.removePolicy(policy1);
-        assertEquals(entity.getPolicies(), ImmutableList.of(policy2));
+        entity.policies().remove(policy1);
+        assertEquals(ImmutableList.copyOf(entity.policies()), ImmutableList.of(policy2));
         assertEqualsEventually(removed, ImmutableList.of(new PolicyDescriptor(policy1)));
         
-        entity.removePolicy(policy2);
-        assertEquals(entity.getPolicies(), ImmutableList.of());
+        entity.policies().remove(policy2);
+        assertEquals(ImmutableList.copyOf(entity.policies()), ImmutableList.of());
         assertEqualsEventually(removed, ImmutableList.of(new PolicyDescriptor(policy1), new PolicyDescriptor(policy2)));
     }
 
     @Test
     public void testAddPolicySpec() {
-        EntitySpecTest.MyPolicy policy = entity.addPolicy(PolicySpec.create(EntitySpecTest.MyPolicy.class));
+        EntitySpecTest.MyPolicy policy = entity.policies().add(PolicySpec.create(EntitySpecTest.MyPolicy.class));
         assertNotNull(policy);
-        assertEquals(entity.getPolicies(), ImmutableList.of(policy));
+        assertEquals(ImmutableList.copyOf(entity.policies()), ImmutableList.of(policy));
         assertEqualsEventually(added, ImmutableList.of(new PolicyDescriptor(policy)));
     }
     
     @Test
     public void testAddEnricherSpec() {
         TestEntity entity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class, TestEntityNoEnrichersImpl.class));
-        EntitySpecTest.MyEnricher enricher = entity2.addEnricher(EnricherSpec.create(EntitySpecTest.MyEnricher.class));
+        EntitySpecTest.MyEnricher enricher = entity2.enrichers().add(EnricherSpec.create(EntitySpecTest.MyEnricher.class));
         assertNotNull(enricher);
-        assertEquals(entity2.getEnrichers(), ImmutableList.of(enricher));
+        assertEquals(ImmutableList.copyOf(entity2.enrichers()), ImmutableList.of(enricher));
     }
 
     @Test
     public void testRemoveAllPolicies() {
-        entity.addPolicy(policy1);
-        entity.addPolicy(policy2);
-        entity.removeAllPolicies();
+        entity.policies().add(policy1);
+        entity.policies().add(policy2);
+        entity.policies().removeAllPolicies();
         
-        assertEquals(entity.getPolicies(), ImmutableList.of());
+        assertEquals(ImmutableList.copyOf(entity.policies()), ImmutableList.of());
         assertCollectionEqualsEventually(removed, ImmutableSet.of(new PolicyDescriptor(policy1), new PolicyDescriptor(policy2)));
     }
     

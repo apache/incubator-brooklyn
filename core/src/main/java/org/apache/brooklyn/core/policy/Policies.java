@@ -46,7 +46,7 @@ public class Policies {
             @Override
             public void setEntity(EntityLocal entity) {
                 super.setEntity(entity);
-                entity.subscribe(entity, sensor, listenerFromValueClosure(code));
+                entity.subscriptions().subscribe(entity, sensor, listenerFromValueClosure(code));
             }
         };
     }
@@ -57,7 +57,7 @@ public class Policies {
             @Override
             public void setEntity(EntityLocal entity) {
                 super.setEntity(entity);
-                entity.subscribe(remoteEntity, remoteSensor, listenerFromValueClosure(code));
+                entity.subscriptions().subscribe(remoteEntity, remoteSensor, listenerFromValueClosure(code));
             }
         };
     }

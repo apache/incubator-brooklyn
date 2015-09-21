@@ -107,10 +107,10 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     @Override
     public void init() {
         super.init();
-        setAttribute(AVAILABLE_COUNT, 0);
-        setAttribute(CLAIMED_COUNT, 0);
-        setAttribute(ENTITY_MACHINE, Maps.<Entity, MachineLocation>newHashMap());
-        setAttribute(MACHINE_ENTITY, Maps.<MachineLocation, Entity>newHashMap());
+        sensors().set(AVAILABLE_COUNT, 0);
+        sensors().set(CLAIMED_COUNT, 0);
+        sensors().set(ENTITY_MACHINE, Maps.<Entity, MachineLocation>newHashMap());
+        sensors().set(MACHINE_ENTITY, Maps.<MachineLocation, Entity>newHashMap());
     }
 
     @Override
@@ -135,15 +135,15 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
         super.stop();
         deleteLocation();
         synchronized (mutex) {
-            setAttribute(AVAILABLE_COUNT, 0);
-            setAttribute(CLAIMED_COUNT, 0);
-            getAttribute(ENTITY_MACHINE).clear();
-            getAttribute(MACHINE_ENTITY).clear();
+            sensors().set(AVAILABLE_COUNT, 0);
+            sensors().set(CLAIMED_COUNT, 0);
+            sensors().get(ENTITY_MACHINE).clear();
+            sensors().get(MACHINE_ENTITY).clear();
         }
     }
 
     private void addMembershipTrackerPolicy() {
-        membershipTracker = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        membershipTracker = policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName(getDisplayName() + " membership tracker")
                 .configure("group", this));
     }
@@ -175,10 +175,10 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
         Location location = getManagementContext().getLocationRegistry().resolve(definition);
         LOG.info("Resolved and registered dynamic location {}: {}", locationName, location);
 
-        setAttribute(LOCATION_SPEC, locationSpec);
-        setAttribute(DYNAMIC_LOCATION, location);
-        setAttribute(LOCATION_NAME, location.getId());
-        setAttribute(DYNAMIC_LOCATION_DEFINITION, definition);
+        sensors().set(LOCATION_SPEC, locationSpec);
+        sensors().set(DYNAMIC_LOCATION, location);
+        sensors().set(LOCATION_NAME, location.getId());
+        sensors().set(DYNAMIC_LOCATION_DEFINITION, definition);
 
         return (ServerPoolLocation) location;
     }
@@ -197,10 +197,10 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
             LOG.debug("{} unregistering dynamic location {}", this, definition);
             getManagementContext().getLocationRegistry().removeDefinedLocation(definition.getId());
         }
-        setAttribute(LOCATION_SPEC, null);
-        setAttribute(DYNAMIC_LOCATION, null);
-        setAttribute(LOCATION_NAME, null);
-        setAttribute(DYNAMIC_LOCATION_DEFINITION, null);
+        sensors().set(LOCATION_SPEC, null);
+        sensors().set(DYNAMIC_LOCATION, null);
+        sensors().set(LOCATION_NAME, null);
+        sensors().set(DYNAMIC_LOCATION_DEFINITION, null);
     }
 
     @Override
@@ -371,7 +371,7 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
     }
 
     private void setEntityStatus(Entity entity, MachinePoolMemberStatus status) {
-        ((EntityInternal) entity).setAttribute(SERVER_STATUS, status);
+        ((EntityInternal) entity).sensors().set(SERVER_STATUS, status);
     }
 
     private Optional<Entity> getMemberWithStatus(MachinePoolMemberStatus status) {
@@ -409,8 +409,8 @@ public class ServerPoolImpl extends DynamicClusterImpl implements ServerPool {
                     claimed++;
                 }
             }
-            setAttribute(AVAILABLE_COUNT, available);
-            setAttribute(CLAIMED_COUNT, claimed);
+            sensors().set(AVAILABLE_COUNT, available);
+            sensors().set(CLAIMED_COUNT, claimed);
         }
     }
 

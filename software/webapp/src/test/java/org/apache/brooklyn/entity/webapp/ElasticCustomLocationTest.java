@@ -73,8 +73,8 @@ public class ElasticCustomLocationTest {
     @Test
     public void testElasticClusterCreatesTestEntity() {
         MockWebServiceLocation l = new MockWebServiceLocation();
-        app.setConfig(MockWebService.ROOT_WAR, "WAR0");
-        app.setConfig(MockWebService.NAMED_WARS, ImmutableList.of("ignore://WARn"));
+        app.config().set(MockWebService.ROOT_WAR, "WAR0");
+        app.config().set(MockWebService.NAMED_WARS, ImmutableList.of("ignore://WARn"));
         
         ElasticJavaWebAppService svc = 
             new ElasticJavaWebAppService.Factory().newFactoryForLocation(l).newEntity(MutableMap.of("war", "WAR1"), app);

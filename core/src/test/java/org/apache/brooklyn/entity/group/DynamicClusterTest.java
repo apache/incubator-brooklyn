@@ -215,7 +215,7 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
             .configure(DynamicCluster.INITIAL_SIZE, 1));
         
         RecordingSensorEventListener<Lifecycle> r = new RecordingSensorEventListener<>();
-        app.subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, r);
+        app.subscriptions().subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, r);
 
         cluster.start(ImmutableList.of(loc));
         EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);

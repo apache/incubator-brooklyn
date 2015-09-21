@@ -232,7 +232,7 @@ public class JavaWebAppsIntegrationTest {
             log.info("pc1 - "+clusterComponent+" - "+cluster);
             
             Assert.assertEquals(cluster.getPolicies().size(), 1);
-            Policy policy = cluster.getPolicies().iterator().next();
+            Policy policy = cluster.policies().iterator().next();
             Assert.assertNotNull(policy);
             Assert.assertTrue(policy instanceof AutoScalerPolicy, "policy="+policy);
             Assert.assertEquals(policy.getConfig(AutoScalerPolicy.MAX_POOL_SIZE), (Integer)5);

@@ -113,7 +113,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     protected void setInstallDir(String installDir) {
         this.installDir = installDir;
-        entity.setAttribute(SoftwareProcess.INSTALL_DIR, installDir);
+        entity.sensors().set(SoftwareProcess.INSTALL_DIR, installDir);
     }
 
     public String getInstallDir() {
@@ -150,7 +150,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     protected void setInstallLabel() {
         if (getEntity().getConfigRaw(SoftwareProcess.INSTALL_UNIQUE_LABEL, false).isPresentAndNonNull()) return;
-        getEntity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL,
+        getEntity().config().set(SoftwareProcess.INSTALL_UNIQUE_LABEL,
             getEntity().getEntityType().getSimpleName()+
             (Strings.isNonBlank(getVersion()) ? "_"+getVersion() : "")+
             (Strings.isNonBlank(getInstallLabelExtraSalt()) ? "_"+getInstallLabelExtraSalt() : "") );
@@ -169,7 +169,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
 
     protected void setRunDir(String runDir) {
         this.runDir = runDir;
-        entity.setAttribute(SoftwareProcess.RUN_DIR, runDir);
+        entity.sensors().set(SoftwareProcess.RUN_DIR, runDir);
     }
 
     public String getRunDir() {
@@ -189,7 +189,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
                 log.warn("Using legacy 'brooklyn.dirs.run' setting for "+entity+"; may be removed in future versions.");
                 runDir = Os.mergePathsUnix(runBasedir, entity.getApplication().getId()+"/"+"entities"+"/"+getEntityVersionLabel()+"_"+entity.getId());
                 runDir = Os.tidyPath(runDir);
-                getEntity().setAttribute(SoftwareProcess.RUN_DIR, runDir);
+                getEntity().sensors().set(SoftwareProcess.RUN_DIR, runDir);
                 return runDir;
             }
         }
@@ -205,7 +205,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
         }
 
         expandedInstallDir = val;
-        getEntity().setAttribute(SoftwareProcess.EXPANDED_INSTALL_DIR, val);
+        getEntity().sensors().set(SoftwareProcess.EXPANDED_INSTALL_DIR, val);
     }
 
     public String getExpandedInstallDir() {
@@ -574,7 +574,7 @@ public abstract class AbstractSoftwareProcessSshDriver extends AbstractSoftwareP
             String pidFile = (usePidFile instanceof CharSequence ? usePidFile : Os.mergePathsUnix(getRunDir(), PID_FILENAME)).toString();
             String processOwner = (String) flags.get(PROCESS_OWNER);
             if (LAUNCHING.equals(phase)) {
-                entity.setAttribute(SoftwareProcess.PID_FILE, pidFile);
+                entity.sensors().set(SoftwareProcess.PID_FILE, pidFile);
                 s.footer.prepend("echo $! > "+pidFile);
             } else if (CHECK_RUNNING.equals(phase)) {
                 // old method, for supplied service, or entity.id

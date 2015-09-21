@@ -58,7 +58,7 @@ public class MockItemEntityImpl extends AbstractEntity implements MockItemEntity
     @Override
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: item {} setting {} to {}", new Object[] {this, attribute, val});
-        return super.setAttribute(attribute, val);
+        return super.sensors().set(attribute, val);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class MockItemEntityImpl extends AbstractEntity implements MockItemEntity
                     if (currentContainer != null) currentContainer.removeItem(MockItemEntityImpl.this);
                     currentContainer = destination;
                     destination.addItem(MockItemEntityImpl.this);
-                    setAttribute(CONTAINER, currentContainer);
+                    sensors().set(CONTAINER, currentContainer);
                 } finally {
                     _lock.unlock();
                 }

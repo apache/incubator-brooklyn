@@ -374,7 +374,7 @@ public abstract class MachineLifecycleEffectorTasks {
             final Map<String, Object> flags = obtainProvisioningFlags(location);
             if (!(location instanceof LocalhostMachineProvisioningLocation))
                 log.info("Starting {}, obtaining a new location instance in {} with ports {}", new Object[]{entity(), location, flags.get("inboundPorts")});
-            entity().setAttribute(SoftwareProcess.PROVISIONING_LOCATION, location);
+            entity().sensors().set(SoftwareProcess.PROVISIONING_LOCATION, location);
             MachineLocation machine;
             try {
                 machine = Tasks.withBlockingDetails("Provisioning machine in " + location, new ObtainLocationTask(location, flags));
@@ -446,15 +446,15 @@ public abstract class MachineLifecycleEffectorTasks {
             // simply because subnet is still being looked up)
             Maybe<String> lh = Machines.getSubnetHostname(machine);
             Maybe<String> la = Machines.getSubnetIp(machine);
-            if (lh.isPresent()) entity().setAttribute(Attributes.SUBNET_HOSTNAME, lh.get());
-            if (la.isPresent()) entity().setAttribute(Attributes.SUBNET_ADDRESS, la.get());
-            entity().setAttribute(Attributes.HOSTNAME, machine.getAddress().getHostName());
-            entity().setAttribute(Attributes.ADDRESS, machine.getAddress().getHostAddress());
+            if (lh.isPresent()) entity().sensors().set(Attributes.SUBNET_HOSTNAME, lh.get());
+            if (la.isPresent()) entity().sensors().set(Attributes.SUBNET_ADDRESS, la.get());
+            entity().sensors().set(Attributes.HOSTNAME, machine.getAddress().getHostName());
+            entity().sensors().set(Attributes.ADDRESS, machine.getAddress().getHostAddress());
             if (machine instanceof SshMachineLocation) {
                 @SuppressWarnings("resource")
                 SshMachineLocation sshMachine = (SshMachineLocation) machine;
                 UserAndHostAndPort sshAddress = UserAndHostAndPort.fromParts(sshMachine.getUser(), sshMachine.getAddress().getHostName(), sshMachine.getPort());
-                entity().setAttribute(Attributes.SSH_ADDRESS, sshAddress);
+                entity().sensors().set(Attributes.SSH_ADDRESS, sshAddress);
             }
 
             if (Boolean.TRUE.equals(entity().getConfig(SoftwareProcess.OPEN_IPTABLES))) {
@@ -529,8 +529,8 @@ public abstract class MachineLifecycleEffectorTasks {
             resolvedBase = Os.tidyPath(base);
             log.warn("Could not resolve on-box directory for "+entity+" at "+machine+"; using "+resolvedBase+", though this may not be accurate at the target (and may fail shortly)");
         }
-        entity.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, resolvedBase);
-        entity.setConfig(ON_BOX_BASE_DIR_RESOLVED, true);
+        entity.config().set(BrooklynConfigKeys.ONBOX_BASE_DIR, resolvedBase);
+        entity.config().set(ON_BOX_BASE_DIR_RESOLVED, true);
         return resolvedBase;
     }
 
@@ -764,7 +764,7 @@ public abstract class MachineLifecycleEffectorTasks {
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.ON_FIRE);
             Exceptions.propagate(e);
         }
-        entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
+        entity().sensors().set(SoftwareProcess.SERVICE_UP, false);
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPED);
 
         DynamicTasks.queue("post-stop", new PostStopCustomTask());
@@ -809,7 +809,7 @@ public abstract class MachineLifecycleEffectorTasks {
                 return "Already stopped";
             }
             ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
-            entity().setAttribute(SoftwareProcess.SERVICE_UP, false);
+            entity().sensors().set(SoftwareProcess.SERVICE_UP, false);
             preStopCustom();
             return null;
         }
@@ -961,10 +961,10 @@ public abstract class MachineLifecycleEffectorTasks {
      */
     protected void clearEntityLocationAttributes(Location machine) {
         entity().removeLocations(ImmutableList.of(machine));
-        entity().setAttribute(Attributes.HOSTNAME, null);
-        entity().setAttribute(Attributes.ADDRESS, null);
-        entity().setAttribute(Attributes.SUBNET_HOSTNAME, null);
-        entity().setAttribute(Attributes.SUBNET_ADDRESS, null);
+        entity().sensors().set(Attributes.HOSTNAME, null);
+        entity().sensors().set(Attributes.ADDRESS, null);
+        entity().sensors().set(Attributes.SUBNET_HOSTNAME, null);
+        entity().sensors().set(Attributes.SUBNET_ADDRESS, null);
     }
 
 }

@@ -200,7 +200,7 @@ public class AbstractGeoDnsServiceTest {
 
     @Test
     public void testSubscribesToHostname() {
-        ((EntityInternal)geoDns).setConfig(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
+        ((EntityInternal)geoDns).config().set(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname) );
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 0);
         publishSensors(2, true, true, true);
@@ -218,15 +218,15 @@ public class AbstractGeoDnsServiceTest {
         
         for (Entity e: testEntities.getMembers()) {
             if (includeServiceUp)
-                ((EntityInternal)e).setAttribute(Attributes.SERVICE_UP, true);
+                ((EntityInternal)e).sensors().set(Attributes.SERVICE_UP, true);
             
             SshMachineLocation l = Machines.findUniqueSshMachineLocation(e.getLocations()).get();
             if (includeAddress)
-                ((EntityInternal)e).setAttribute(Attributes.ADDRESS, l.getAddress().getHostAddress());
+                ((EntityInternal)e).sensors().set(Attributes.ADDRESS, l.getAddress().getHostAddress());
             String h = (String) l.config().getBag().getStringKey("hostname");
             if (h==null) h = l.getAddress().getHostName();
             if (includeHostname)
-                ((EntityInternal)e).setAttribute(Attributes.HOSTNAME, h);
+                ((EntityInternal)e).sensors().set(Attributes.HOSTNAME, h);
         }
     }
     
@@ -252,7 +252,7 @@ public class AbstractGeoDnsServiceTest {
 
     @Test
     public void testFiltersEntirelyPrivate() {
-        ((EntityInternal)geoDns).setConfig(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
+        ((EntityInternal)geoDns).config().set(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname, northChildWithLocation) );
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 0);
         publishSensors(3, true, true, true);

@@ -66,7 +66,7 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
         
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class)
                 .configure("childrenAsMembers", true));
-        policy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
+        policy = app.policies().add(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure("group", group));
 
         app.start(ImmutableList.of(loc));
@@ -93,7 +93,7 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     public void testNotifiedOfMemberChanged() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
 
-        e1.setAttribute(Startable.SERVICE_UP, true);
+        e1.sensors().set(Startable.SERVICE_UP, true);
 
         assertRecordsEventually(Record.newAdded(e1), Record.newChanged(e1));
     }
@@ -138,13 +138,13 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     public void testNotifiedOfExtraTrackedSensors() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
 
-        app.removeAllPolicies();
-        RecordingMembershipTrackingPolicy policy2 = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
+        app.policies().removeAllPolicies();
+        RecordingMembershipTrackingPolicy policy2 = app.policies().add(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure("group", group)
                 .configure("sensorsToTrack", ImmutableSet.of(TestEntity.NAME)));
 
 
-        e1.setAttribute(TestEntity.NAME, "myname");
+        e1.sensors().set(TestEntity.NAME, "myname");
 
         assertRecordsEventually(policy2, Record.newAdded(e1), Record.newChanged(e1));
     }
@@ -152,11 +152,11 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testDeprecatedSetGroupWorks() throws Exception {
         RecordingMembershipTrackingPolicy policy2 = new RecordingMembershipTrackingPolicy(MutableMap.of("sensorsToTrack", ImmutableSet.of(TestEntity.NAME)));
-        group.addPolicy(policy2);
+        group.policies().add(policy2);
         policy2.setGroup(group);
 
         TestEntity e1 = createAndManageChildOf(group);
-        e1.setAttribute(TestEntity.NAME, "myname");
+        e1.sensors().set(TestEntity.NAME, "myname");
 
         assertRecordsEventually(policy2, Record.newAdded(e1), Record.newChanged(e1));
     }
@@ -165,19 +165,19 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     public void testNotNotifiedOfExtraTrackedSensorsIfNonDuplicate() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
         
-        app.removeAllPolicies();
-        RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
+        app.policies().removeAllPolicies();
+        RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.policies().add(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
                 .configure(AbstractMembershipTrackingPolicy.NOTIFY_ON_DUPLICATES, false)
                 .configure(AbstractMembershipTrackingPolicy.GROUP, group));
 
-        e1.setAttribute(TestEntity.NAME, "myname");
+        e1.sensors().set(TestEntity.NAME, "myname");
         assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1));
         
-        e1.setAttribute(TestEntity.NAME, "myname");
+        e1.sensors().set(TestEntity.NAME, "myname");
         assertRecordsContinually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1));
         
-        e1.setAttribute(TestEntity.NAME, "mynewname");
+        e1.sensors().set(TestEntity.NAME, "mynewname");
         assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1), Record.newChanged(e1));
     }
 
@@ -186,18 +186,18 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     public void testDefaultNotNotifiedOfExtraTrackedSensorsIfDuplicate() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
 
-        app.removeAllPolicies();
-        RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
+        app.policies().removeAllPolicies();
+        RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.policies().add(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
                 .configure(AbstractMembershipTrackingPolicy.GROUP, group));
 
-        e1.setAttribute(TestEntity.NAME, "myname");
+        e1.sensors().set(TestEntity.NAME, "myname");
         assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1));
         
-        e1.setAttribute(TestEntity.NAME, "myname");
+        e1.sensors().set(TestEntity.NAME, "myname");
         assertRecordsContinually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1));
         
-        e1.setAttribute(TestEntity.NAME, "mynewname");
+        e1.sensors().set(TestEntity.NAME, "mynewname");
         assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1), Record.newChanged(e1));
     }
 
@@ -205,19 +205,19 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     public void testNotifiedOfExtraTrackedSensorsIfDuplicate() throws Exception {
         TestEntity e1 = createAndManageChildOf(group);
 
-        app.removeAllPolicies();
-        RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.addPolicy(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
+        app.policies().removeAllPolicies();
+        RecordingMembershipTrackingPolicy nonDuplicateTrackingPolicy = app.policies().add(PolicySpec.create(RecordingMembershipTrackingPolicy.class)
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(TestEntity.NAME))
                 .configure(AbstractMembershipTrackingPolicy.NOTIFY_ON_DUPLICATES, true)
                 .configure(AbstractMembershipTrackingPolicy.GROUP, group));
 
-        e1.setAttribute(TestEntity.NAME, "myname");
+        e1.sensors().set(TestEntity.NAME, "myname");
         assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1));
         
-        e1.setAttribute(TestEntity.NAME, "myname");
+        e1.sensors().set(TestEntity.NAME, "myname");
         assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1), Record.newChanged(e1));
         
-        e1.setAttribute(TestEntity.NAME, "mynewname");
+        e1.sensors().set(TestEntity.NAME, "mynewname");
         assertRecordsEventually(nonDuplicateTrackingPolicy, Record.newAdded(e1), Record.newChanged(e1), Record.newChanged(e1), Record.newChanged(e1));
     }
 

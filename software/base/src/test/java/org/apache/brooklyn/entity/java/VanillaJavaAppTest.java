@@ -119,7 +119,7 @@ public class VanillaJavaAppTest {
         final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", "my.Main").configure("classpath", ImmutableList.of("c1", "c2"))
             .configure("args", ImmutableList.of("a1", "a2")));
-        ((EntityLocal)javaProcess).setConfig(UsesJava.JAVA_SYSPROPS, ImmutableMap.of("fooKey", "fooValue", "barKey", "barValue"));
+        ((EntityLocal)javaProcess).config().set(UsesJava.JAVA_SYSPROPS, ImmutableMap.of("fooKey", "fooValue", "barKey", "barValue"));
         // TODO: how to test: launch standalone app that outputs system properties to stdout? Probe via JMX?
     }
 
@@ -243,7 +243,7 @@ public class VanillaJavaAppTest {
         VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
-        ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
+        ((EntityLocal)javaProcess).config().set(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
         app.start(ImmutableList.of(loc));
 
         assertEquals(javaProcess.getAttribute(UsesJmx.JMX_PORT), (Integer)port);
@@ -257,8 +257,8 @@ public class VanillaJavaAppTest {
         final VanillaJavaApp javaProcess = app.createAndManageChild(EntitySpec.create(VanillaJavaApp.class)
             .configure("main", main).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH))
             .configure("args", ImmutableList.of()));
-        ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
-        ((EntityLocal)javaProcess).setConfig(UsesJmx.JMX_SSL_ENABLED, true);
+        ((EntityLocal)javaProcess).config().set(UsesJmx.JMX_PORT, PortRanges.fromInteger(port));
+        ((EntityLocal)javaProcess).config().set(UsesJmx.JMX_SSL_ENABLED, true);
         
         app.start(ImmutableList.of(loc));
         // will fail above if JMX can't connect, but also do some add'l checks

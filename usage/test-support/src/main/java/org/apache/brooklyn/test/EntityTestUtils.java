@@ -141,7 +141,7 @@ public class EntityTestUtils {
     public static void assertAttributeChangesEventually(final Entity entity, final AttributeSensor<?> attribute) {
         final Object origValue = entity.getAttribute(attribute);
         final AtomicBoolean changed = new AtomicBoolean();
-        SubscriptionHandle handle = ((EntityLocal)entity).subscribe(entity, attribute, new SensorEventListener<Object>() {
+        SubscriptionHandle handle = entity.subscriptions().subscribe(entity, attribute, new SensorEventListener<Object>() {
             @Override public void onEvent(SensorEvent<Object> event) {
                 if (!Objects.equal(origValue, event.getValue())) {
                     changed.set(true);
@@ -153,7 +153,7 @@ public class EntityTestUtils {
                     assertTrue(changed.get(), entity+" -> "+attribute+" not changed");
                 }});
         } finally {
-            ((EntityLocal)entity).unsubscribe(entity, handle);
+            entity.subscriptions().unsubscribe(entity, handle);
         }
     }
     

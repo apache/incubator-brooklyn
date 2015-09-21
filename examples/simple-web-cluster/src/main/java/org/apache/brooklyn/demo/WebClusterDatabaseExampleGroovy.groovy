@@ -68,7 +68,7 @@ public class WebClusterDatabaseExampleGroovy extends AbstractApplication {
                             attributeWhenReady(mysql, MySqlNode.DATASTORE_URL), 
                             DB_TABLE, DB_USERNAME, DB_PASSWORD));
     
-        web.getCluster().addPolicy(AutoScalerPolicy.builder().
+        web.getCluster().policies().add(AutoScalerPolicy.builder().
                 metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_LAST_PER_NODE).
                 sizeRange(1, 5).
                 metricRange(10, 100).

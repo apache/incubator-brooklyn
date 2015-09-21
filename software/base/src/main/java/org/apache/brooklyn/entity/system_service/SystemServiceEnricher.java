@@ -62,7 +62,7 @@ public class SystemServiceEnricher extends AbstractEnricher implements Enricher 
     }
 
     private void subscribeLaunch() {
-        subscribe(entity, Attributes.SERVICE_STATE_ACTUAL, new EntityLaunchListener(this));
+        subscriptions().subscribe(entity, Attributes.SERVICE_STATE_ACTUAL, new EntityLaunchListener(this));
     }
 
     public void onLaunched(Task<?> task) {

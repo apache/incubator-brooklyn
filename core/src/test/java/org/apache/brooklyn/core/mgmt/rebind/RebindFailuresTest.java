@@ -194,23 +194,23 @@ public class RebindFailuresTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testRebindWithFailingPolicyContinuesWithoutPolicy() throws Exception {
-        origApp.addPolicy(PolicySpec.create(MyPolicyFailingImpl.class)
+        origApp.policies().add(PolicySpec.create(MyPolicyFailingImpl.class)
                 .configure(MyPolicyFailingImpl.FAIL_ON_REBIND, true));
         
         newApp = rebind();
         
-        Optional<Policy> newPolicy = Iterables.tryFind(newApp.getPolicies(), Predicates.instanceOf(MyPolicyFailingImpl.class));
+        Optional<Policy> newPolicy = Iterables.tryFind(newApp.policies(), Predicates.instanceOf(MyPolicyFailingImpl.class));
         assertFalse(newPolicy.isPresent(), "policy="+newPolicy);
     }
 
     @Test
     public void testRebindWithFailingEnricherContinuesWithoutEnricher() throws Exception {
-        origApp.addEnricher(EnricherSpec.create(MyEnricherFailingImpl.class)
+        origApp.enrichers().add(EnricherSpec.create(MyEnricherFailingImpl.class)
                 .configure(MyEnricherFailingImpl.FAIL_ON_REBIND, true));
         
         newApp = rebind();
         
-        Optional<Enricher> newEnricher = Iterables.tryFind(newApp.getEnrichers(), Predicates.instanceOf(MyEnricherFailingImpl.class));
+        Optional<Enricher> newEnricher = Iterables.tryFind(newApp.enrichers(), Predicates.instanceOf(MyEnricherFailingImpl.class));
         assertFalse(newEnricher.isPresent(), "enricher="+newEnricher);
     }
 

@@ -112,12 +112,12 @@ public class JmxFeedTest {
     
     public static class TestEntityWithJmx extends TestEntityImpl {
         @Override public void init() {
-            setAttribute(Attributes.HOSTNAME, "localhost");
-            setAttribute(UsesJmx.JMX_PORT, 
+            sensors().set(Attributes.HOSTNAME, "localhost");
+            sensors().set(UsesJmx.JMX_PORT, 
                     LocalhostMachineProvisioningLocation.obtainPort(PortRanges.fromString("40123+")));
             // only supports no-agent, at the moment
-            setConfig(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.NONE);
-            setAttribute(UsesJmx.RMI_REGISTRY_PORT, -1);  // -1 means to use the JMX_PORT only
+            config().set(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.NONE);
+            sensors().set(UsesJmx.RMI_REGISTRY_PORT, -1);  // -1 means to use the JMX_PORT only
             ConfigToAttributes.apply(this, UsesJmx.JMX_CONTEXT);
         }
     }
@@ -354,7 +354,7 @@ public class JmxFeedTest {
             app2.start(ImmutableList.of(new SimulatedLocation()));
             
             final List<SensorEvent<String>> received = Lists.newArrayList();
-            app2.subscribe(null, EntityWithEmitter.MY_NOTIF, new SensorEventListener<String>() {
+            app2.subscriptions().subscribe(null, EntityWithEmitter.MY_NOTIF, new SensorEventListener<String>() {
                 public void onEvent(SensorEvent<String> event) {
                     received.add(event);
                 }});
@@ -366,7 +366,7 @@ public class JmxFeedTest {
             jmxHelper.addNotificationListener(jmxObjectName, new NotificationListener() {
                     public void handleNotification(Notification notif, Object callback) {
                         if (notif.getType().equals("one")) {
-                            entity.emit(EntityWithEmitter.MY_NOTIF, (String) notif.getUserData());
+                            entity.sensors().emit(EntityWithEmitter.MY_NOTIF, (String) notif.getUserData());
                         }
                     }});
             

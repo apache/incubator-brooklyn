@@ -47,14 +47,14 @@ public class EntityFunctionsTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testAttribute() throws Exception {
-        entity.setAttribute(TestEntity.NAME, "myname");
+        entity.sensors().set(TestEntity.NAME, "myname");
         assertEquals(EntityFunctions.attribute(TestEntity.NAME).apply(entity), "myname");
         assertNull(EntityFunctions.attribute(TestEntity.SEQUENCE).apply(entity));
     }
     
     @Test
     public void testConfig() throws Exception {
-        entity.setConfig(TestEntity.CONF_NAME, "myname");
+        entity.config().set(TestEntity.CONF_NAME, "myname");
         assertEquals(EntityFunctions.config(TestEntity.CONF_NAME).apply(entity), "myname");
         assertNull(EntityFunctions.config(TestEntity.CONF_OBJECT).apply(entity));
     }

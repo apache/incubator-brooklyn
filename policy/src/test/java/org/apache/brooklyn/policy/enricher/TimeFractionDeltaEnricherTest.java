@@ -66,7 +66,7 @@ public class TimeFractionDeltaEnricherTest {
     @Test
     public void testCalculatesFractions() {
         TimeFractionDeltaEnricher<Integer> enricher = new TimeFractionDeltaEnricher<Integer>(producer, intSensor, fractionSensor, TimeUnit.MILLISECONDS);
-        producer.addEnricher(enricher);
+        producer.enrichers().add(enricher);
         
         enricher.onEvent(new BasicSensorEvent<Integer>(intSensor, producer, 0, 1000000L));
         enricher.onEvent(new BasicSensorEvent<Integer>(intSensor, producer, 0, 1001000L));
@@ -85,7 +85,7 @@ public class TimeFractionDeltaEnricherTest {
     @Test
     public void testConvertsTimeUnits() {
         TimeFractionDeltaEnricher<Integer> enricher = new TimeFractionDeltaEnricher<Integer>(producer, intSensor, fractionSensor, TimeUnit.MICROSECONDS);
-        producer.addEnricher(enricher);
+        producer.enrichers().add(enricher);
         
         enricher.onEvent(new BasicSensorEvent<Integer>(intSensor, producer, 0, 1000000L));
         enricher.onEvent(new BasicSensorEvent<Integer>(intSensor, producer, 1000000, 1001000L));
@@ -95,7 +95,7 @@ public class TimeFractionDeltaEnricherTest {
     @Test
     public void testConverts100NanosTimeBlocks() {
         TimeFractionDeltaEnricher<Integer> enricher = new TimeFractionDeltaEnricher<Integer>(producer, intSensor, fractionSensor, 100);
-        producer.addEnricher(enricher);
+        producer.enrichers().add(enricher);
         
         enricher.onEvent(new BasicSensorEvent<Integer>(intSensor, producer, 0, 1000000L));
         enricher.onEvent(new BasicSensorEvent<Integer>(intSensor, producer, 10000000, 1001000L));

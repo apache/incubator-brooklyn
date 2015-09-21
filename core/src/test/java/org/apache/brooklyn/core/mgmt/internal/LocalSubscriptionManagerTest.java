@@ -64,7 +64,7 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testSubscribeToEntityAttributeChange() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        app.subscribe(entity, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
+        app.subscriptions().subscribe(entity, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
                     latch.countDown();
                 }});
@@ -77,7 +77,7 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testSubscribeToEntityWithAttributeWildcard() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        app.subscribe(entity, null, new SensorEventListener<Object>() {
+        app.subscriptions().subscribe(entity, null, new SensorEventListener<Object>() {
             @Override public void onEvent(SensorEvent<Object> event) {
                 latch.countDown();
             }});
@@ -90,7 +90,7 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testSubscribeToAttributeChangeWithEntityWildcard() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        app.subscribe(null, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
+        app.subscriptions().subscribe(null, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
                     latch.countDown();
                 }});
@@ -103,7 +103,7 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testSubscribeToChildAttributeChange() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        app.subscribeToChildren(app, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
+        app.subscriptions().subscribeToChildren(app, TestEntity.SEQUENCE, new SensorEventListener<Object>() {
             @Override public void onEvent(SensorEvent<Object> event) {
                 latch.countDown();
             }});
@@ -123,7 +123,7 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
 
         final List<SensorEvent<Integer>> events = new CopyOnWriteArrayList<SensorEvent<Integer>>();
         final CountDownLatch latch = new CountDownLatch(1);
-        app.subscribeToMembers(group, TestEntity.SEQUENCE, new SensorEventListener<Integer>() {
+        app.subscriptions().subscribeToMembers(group, TestEntity.SEQUENCE, new SensorEventListener<Integer>() {
             @Override public void onEvent(SensorEvent<Integer> event) {
                 events.add(event);
                 latch.countDown();
@@ -154,10 +154,10 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
                         @Override public void onEvent(SensorEvent<Object> event) {
                         }
                     };
-                    app.subscribe(null, TestEntity.SEQUENCE, noopListener);
+                    app.subscriptions().subscribe(null, TestEntity.SEQUENCE, noopListener);
                     while (!Thread.currentThread().isInterrupted()) {
-                        SubscriptionHandle handle = app.subscribe(null, TestEntity.SEQUENCE, noopListener);
-                        app.unsubscribe(null, handle);
+                        SubscriptionHandle handle = app.subscriptions().subscribe(null, TestEntity.SEQUENCE, noopListener);
+                        app.subscriptions().unsubscribe(null, handle);
                     }
                 } catch (Exception e) {
                     threadException.set(e);

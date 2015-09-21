@@ -46,7 +46,7 @@ public class RubyRepSshDriver extends AbstractSoftwareProcessSshDriver implement
     public RubyRepSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
 
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
+        entity.sensors().set(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
     }
 
     protected String getLogFileLocation() {

@@ -70,7 +70,7 @@ public class EntityPersistencePerformanceTest extends RebindTestFixtureWithApp {
         
         for (int i = 0; i < numEntities; i++) {
             TestEntity entity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
-            entity.addPolicy(PolicySpec.create(TestPolicy.class));
+            entity.policies().add(PolicySpec.create(TestPolicy.class));
             SimulatedLocation loc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class));
             entities.add(entity);
             locs.add(loc);
@@ -84,9 +84,9 @@ public class EntityPersistencePerformanceTest extends RebindTestFixtureWithApp {
                             int i = 0;
                             public void run() {
                                 for (TestEntity entity : entities) {
-                                    entity.setAttribute(TestEntity.SEQUENCE, i++);
-                                    Policy policy = Iterables.find(entity.getPolicies(), Predicates.instanceOf(TestPolicy.class));
-                                    policy.setConfig(TestPolicy.CONF_NAME, "name-"+i);
+                                    entity.sensors().set(TestEntity.SEQUENCE, i++);
+                                    Policy policy = Iterables.find(entity.policies(), Predicates.instanceOf(TestPolicy.class));
+                                    policy.config().set(TestPolicy.CONF_NAME, "name-"+i);
                                 }
                             }})
                     .limitTimeTo(testLength)

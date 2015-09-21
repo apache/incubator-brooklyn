@@ -88,7 +88,7 @@ public class WindowsPerformanceCounterFeedLiveTest extends BrooklynAppLiveTestSu
     @Test(groups={"Live","Disabled"}, enabled=false)
     public void testRetrievesPerformanceCounters() throws Exception {
         // We can be pretty sure that a Windows instance in the cloud will have zero telephone lines...
-        entity.setAttribute(TELEPHONE_LINES, 42);
+        entity.sensors().set(TELEPHONE_LINES, 42);
         WindowsPerformanceCounterFeed feed = WindowsPerformanceCounterFeed.builder()
                 .entity(entity)
                 .addSensor("\\Processor(_total)\\% Idle Time", CPU_IDLE_TIME)

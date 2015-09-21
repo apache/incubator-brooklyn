@@ -360,7 +360,7 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         d.events.clear();
 
         if (isEntityStopped) {
-            ((EntityInternal)entity).setAttribute(ServiceStateLogic.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
+            ((EntityInternal)entity).sensors().set(ServiceStateLogic.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
         }
 
         TaskAdaptable<Void> t1 = Entities.submit(entity, Effectors.invocation(entity, Startable.STOP,
@@ -678,21 +678,21 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         public void stop() {
             events.add("stop");
             launched = false;
-            entity.setAttribute(Startable.SERVICE_UP, false);
-            entity.setAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
+            entity.sensors().set(Startable.SERVICE_UP, false);
+            entity.sensors().set(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
         }
     
         @Override
         public void kill() {
             events.add("kill");
             launched = false;
-            entity.setAttribute(Startable.SERVICE_UP, false);
+            entity.sensors().set(Startable.SERVICE_UP, false);
         }
     
         @Override
         public void install() {
             events.add("install");
-            entity.setAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.STARTING);
+            entity.sensors().set(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.STARTING);
         }
     
         @Override
@@ -704,8 +704,8 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
         public void launch() {
             events.add("launch");
             launched = true;
-            entity.setAttribute(Startable.SERVICE_UP, true);
-            entity.setAttribute(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+            entity.sensors().set(Startable.SERVICE_UP, true);
+            entity.sensors().set(SoftwareProcess.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         }
 
         @Override

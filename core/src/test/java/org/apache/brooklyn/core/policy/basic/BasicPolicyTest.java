@@ -60,7 +60,7 @@ public class BasicPolicyTest extends BrooklynAppUnitTestSupport {
         policy.setDisplayName("Bob");
         policy.config().set(MyPolicy.STR_KEY, "aval");
         policy.config().set(MyPolicy.INT_KEY, 2);
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getDisplayName(), "Bob");
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "aval");
@@ -69,7 +69,7 @@ public class BasicPolicyTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testAddSpec() throws Exception {
-        MyPolicy policy = app.addPolicy(PolicySpec.create(MyPolicy.class)
+        MyPolicy policy = app.policies().add(PolicySpec.create(MyPolicy.class)
             .displayName("Bob")
             .configure(MyPolicy.STR_KEY, "aval").configure(MyPolicy.INT_KEY, 2));
         
@@ -80,7 +80,7 @@ public class BasicPolicyTest extends BrooklynAppUnitTestSupport {
         
     @Test
     public void testTagsFromSpec() throws Exception {
-        MyPolicy policy = app.addPolicy(PolicySpec.create(MyPolicy.class).tag(99).uniqueTag("x"));
+        MyPolicy policy = app.policies().add(PolicySpec.create(MyPolicy.class).tag(99).uniqueTag("x"));
 
         assertEquals(policy.tags().getTags(), MutableSet.of("x", 99));
         assertEquals(policy.getUniqueTag(), "x");

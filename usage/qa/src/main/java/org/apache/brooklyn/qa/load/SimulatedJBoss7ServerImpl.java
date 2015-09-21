@@ -106,11 +106,11 @@ public class SimulatedJBoss7ServerImpl extends JBoss7ServerImpl {
 
         String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource",
                 hp.getHostText(), hp.getPort());
-        setAttribute(MANAGEMENT_URL, managementUri);
+        sensors().set(MANAGEMENT_URL, managementUri);
 
         if (simulateExternalMonitoring) {
             // TODO What would set this normally, if not doing connectServiceUpIsRunning?
-            setAttribute(SERVICE_PROCESS_IS_RUNNING, true);
+            sensors().set(SERVICE_PROCESS_IS_RUNNING, true);
         } else {
             // if simulating entity, then simulate work of periodic HTTP request; TODO but not parsing JSON response
             String uriToPoll = (simulateEntity) ? "http://localhost:8081" : managementUri;
@@ -135,17 +135,17 @@ public class SimulatedJBoss7ServerImpl extends JBoss7ServerImpl {
                         .callable(new Callable<Boolean>() {
                             private int counter = 0;
                             public Boolean call() {
-                                setAttribute(REQUEST_COUNT, (counter++ % 100));
-                                setAttribute(ERROR_COUNT, (counter++ % 100));
-                                setAttribute(TOTAL_PROCESSING_TIME, (counter++ % 100));
-                                setAttribute(MAX_PROCESSING_TIME, (counter++ % 100));
-                                setAttribute(BYTES_RECEIVED, (long) (counter++ % 100));
-                                setAttribute(BYTES_SENT, (long) (counter++ % 100));
+                                sensors().set(REQUEST_COUNT, (counter++ % 100));
+                                sensors().set(ERROR_COUNT, (counter++ % 100));
+                                sensors().set(TOTAL_PROCESSING_TIME, (counter++ % 100));
+                                sensors().set(MAX_PROCESSING_TIME, (counter++ % 100));
+                                sensors().set(BYTES_RECEIVED, (long) (counter++ % 100));
+                                sensors().set(BYTES_SENT, (long) (counter++ % 100));
                                 return true;
                             }}))
                 .build();
         
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+        enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
                 .from(MANAGEMENT_URL_UP)
                 .computing(Functionals.ifNotEquals(true).value("Management URL not reachable") )
                 .build());

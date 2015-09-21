@@ -122,7 +122,7 @@ public class ConnectionFailureDetectorTest {
     public void testNotNotifiedOfFailuresForHealthy() throws Exception {
         // Create members before and after the policy is registered, to test both scenarios
         
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress));
         
         assertNoEventsContinually();
@@ -130,7 +130,7 @@ public class ConnectionFailureDetectorTest {
     
     @Test
     public void testNotifiedOfFailure() throws Exception {
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress));
 
         stopServerSocket();
@@ -141,7 +141,7 @@ public class ConnectionFailureDetectorTest {
     
     @Test
     public void testNotifiedOfRecovery() throws Exception {
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress));
         
         stopServerSocket();
@@ -157,7 +157,7 @@ public class ConnectionFailureDetectorTest {
     public void testReportsFailureWhenAlreadyDownOnRegisteringPolicy() throws Exception {
         stopServerSocket();
 
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress));
 
         assertHasEventEventually(HASensors.CONNECTION_FAILED, Predicates.<Object>equalTo(app), null);
@@ -165,7 +165,7 @@ public class ConnectionFailureDetectorTest {
 
     @Test(groups="Integration") // Because slow
     public void testNotNotifiedOfTemporaryFailuresDuringStabilisationDelay() throws Exception {
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress)
                 .configure(ConnectionFailureDetector.CONNECTION_FAILED_STABILIZATION_DELAY, Duration.ONE_MINUTE));
         
@@ -180,7 +180,7 @@ public class ConnectionFailureDetectorTest {
     public void testNotifiedOfFailureAfterStabilisationDelay() throws Exception {
         final int stabilisationDelay = 1000;
         
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress)
                 .configure(ConnectionFailureDetector.CONNECTION_FAILED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
@@ -194,7 +194,7 @@ public class ConnectionFailureDetectorTest {
     public void testFailuresThenUpDownResetsStabilisationCount() throws Exception {
         final long stabilisationDelay = 1000;
         
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress)
                 .configure(ConnectionFailureDetector.CONNECTION_FAILED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
@@ -213,7 +213,7 @@ public class ConnectionFailureDetectorTest {
     public void testNotNotifiedOfTemporaryRecoveryDuringStabilisationDelay() throws Exception {
         final long stabilisationDelay = 1000;
         
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress)
                 .configure(ConnectionFailureDetector.CONNECTION_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
@@ -232,7 +232,7 @@ public class ConnectionFailureDetectorTest {
     public void testNotifiedOfRecoveryAfterStabilisationDelay() throws Exception {
         final int stabilisationDelay = 1000;
         
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress)
                 .configure(ConnectionFailureDetector.CONNECTION_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         
@@ -249,7 +249,7 @@ public class ConnectionFailureDetectorTest {
     public void testRecoversThenDownUpResetsStabilisationCount() throws Exception {
         final long stabilisationDelay = 1000;
         
-        app.addPolicy(PolicySpec.create(ConnectionFailureDetector.class)
+        app.policies().add(PolicySpec.create(ConnectionFailureDetector.class)
                 .configure(ConnectionFailureDetector.ENDPOINT, serverSocketAddress)
                 .configure(ConnectionFailureDetector.CONNECTION_RECOVERED_STABILIZATION_DELAY, Duration.of(stabilisationDelay)));
         

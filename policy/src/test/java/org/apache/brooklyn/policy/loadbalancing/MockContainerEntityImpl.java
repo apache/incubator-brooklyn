@@ -54,9 +54,10 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
     ReentrantLock _lock = new ReentrantLock();
 
     @Override
+    @Deprecated
     public <T> T setAttribute(AttributeSensor<T> attribute, T val) {
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: container {} setting {} to {}", new Object[] {this, attribute, val});
-        return super.setAttribute(attribute, val);
+        return super.sensors().set(attribute, val);
     }
 
     @Override
@@ -104,7 +105,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: adding item {} to container {}", item, this);
         if (!running || offloading) throw new IllegalStateException("Container "+getDisplayName()+" is not running; cannot add item "+item);
         addMember(item);
-        emit(ITEM_ADDED, item);
+        sensors().emit(ITEM_ADDED, item);
     }
 
     @Override
@@ -112,7 +113,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
         if (LOG.isDebugEnabled()) LOG.debug("Mocks: removing item {} from container {}", item, this);
         if (!running) throw new IllegalStateException("Container "+getDisplayName()+" is not running; cannot remove item "+item);
         removeMember(item);
-        emit(ITEM_REMOVED, item);
+        sensors().emit(ITEM_REMOVED, item);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -137,8 +138,8 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
             Time.sleep(getDelay());
             running = true;
             addLocations(locs);
-            emit(Attributes.LOCATION_CHANGED, null);
-            setAttribute(SERVICE_UP, true);
+            sensors().emit(Attributes.LOCATION_CHANGED, null);
+            sensors().set(SERVICE_UP, true);
         } finally {
             _lock.unlock();
         }
@@ -151,7 +152,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
         try {
             running = false;
             Time.sleep(getDelay());
-            setAttribute(SERVICE_UP, false);
+            sensors().set(SERVICE_UP, false);
         } finally {
             _lock.unlock();
         }
@@ -160,7 +161,7 @@ public class MockContainerEntityImpl extends AbstractGroupImpl implements MockCo
     private void stopWithoutLock() {
         running = false;
         Time.sleep(getDelay());
-        setAttribute(SERVICE_UP, false);
+        sensors().set(SERVICE_UP, false);
     }
 
     public void offloadAndStop(final MockContainerEntity otherContainer) {

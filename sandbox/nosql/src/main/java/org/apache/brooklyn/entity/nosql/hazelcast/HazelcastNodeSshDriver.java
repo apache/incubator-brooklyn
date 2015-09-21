@@ -87,7 +87,7 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     @Override
     public void launch() {
         
-        entity.setAttribute(HazelcastNode.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
+        entity.sensors().set(HazelcastNode.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
         
         String maxHeapMemorySize = getHeapMemorySize();
         

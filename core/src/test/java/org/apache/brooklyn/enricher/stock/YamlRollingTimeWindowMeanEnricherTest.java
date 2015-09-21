@@ -65,12 +65,12 @@ public class YamlRollingTimeWindowMeanEnricherTest {
         deltaSensor = new BasicAttributeSensor<Double>(Double.class, "delta sensor");
         avgSensor = new BasicAttributeSensor<Double>(Double.class, "avg sensor");
             
-        delta = producer.addEnricher(EnricherSpec.create(YamlTimeWeightedDeltaEnricher.class)
+        delta = producer.enrichers().add(EnricherSpec.create(YamlTimeWeightedDeltaEnricher.class)
                 .configure(YamlTimeWeightedDeltaEnricher.PRODUCER, producer)
                 .configure(YamlTimeWeightedDeltaEnricher.SOURCE_SENSOR, intSensor)
                 .configure(YamlTimeWeightedDeltaEnricher.TARGET_SENSOR, deltaSensor));
 
-        averager = producer.addEnricher(EnricherSpec.create(YamlRollingTimeWindowMeanEnricher.class)
+        averager = producer.enrichers().add(EnricherSpec.create(YamlRollingTimeWindowMeanEnricher.class)
                 .configure(YamlRollingTimeWindowMeanEnricher.PRODUCER, producer)
                 .configure(YamlRollingTimeWindowMeanEnricher.SOURCE_SENSOR, deltaSensor)
                 .configure(YamlRollingTimeWindowMeanEnricher.TARGET_SENSOR, avgSensor)

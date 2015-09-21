@@ -297,7 +297,7 @@ public class EntityExecutionManagerTest {
         List<Task<?>> t1 = em.getAllTasks();
         
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        entity.setAttribute(TestEntity.NAME, "bob");
+        entity.sensors().set(TestEntity.NAME, "bob");
         entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
         Entities.destroy(entity);
         Time.sleep(Duration.ONE_SECOND);
@@ -347,7 +347,7 @@ public class EntityExecutionManagerTest {
             try {
                 LOG.debug(JavaClassNames.niceClassAndMethod()+": iteration="+i);
                 TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-                entity.setAttribute(byteArrayAttrib, new BigObject(10*1000*1000));
+                entity.sensors().set(byteArrayAttrib, new BigObject(10*1000*1000));
                 entity.invoke(TestEntity.MY_EFFECTOR, ImmutableMap.<String,Object>of()).get();
                 
                 // we get exceptions because tasks are still trying to publish after deployment;

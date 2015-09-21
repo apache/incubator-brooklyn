@@ -63,14 +63,14 @@ public abstract class AbstractMultipleSensorAggregator<U> extends AbstractAggreg
         BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(producer),
             "{} subscribing to children of {}", this, producer);
         for (Sensor<?> sourceSensor: getSourceSensors()) {
-            subscribeToChildren(producer, sourceSensor, this);
+            subscriptions().subscribeToChildren(producer, sourceSensor, this);
         }
     }
 
     @Override
     protected void addProducerHardcoded(Entity producer) {
         for (Sensor<?> sourceSensor: getSourceSensors()) {
-            subscribe(producer, sourceSensor, this);
+            subscriptions().subscribe(producer, sourceSensor, this);
         }
         onProducerAdded(producer);
     }

@@ -243,7 +243,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (!result) {
             log.warn("No way to check whether "+entity()+" is running; assuming yes");
         }
-        entity().setAttribute(SoftwareProcess.SERVICE_UP, true);
+        entity().sensors().set(SoftwareProcess.SERVICE_UP, true);
     }
     
     protected boolean tryCheckStartPid() {
@@ -256,7 +256,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         }
 
         // and set the PID
-        entity().setAttribute(Attributes.PID, 
+        entity().sensors().set(Attributes.PID, 
                 Integer.parseInt(DynamicTasks.queue(SshEffectorTasks.ssh("cat "+getPidFile()).runAsRoot()).block().getStdout().trim()));
         return true;
     }
@@ -353,7 +353,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (DynamicTasks.queue(SshEffectorTasks.isPidRunning(pid).runAsRoot()).get()) {
             throw new IllegalStateException("Process for "+entity()+" in "+pid+" still running after kill");
         }
-        entity().setAttribute(Attributes.PID, null);
+        entity().sensors().set(Attributes.PID, null);
         return true;
     }
 

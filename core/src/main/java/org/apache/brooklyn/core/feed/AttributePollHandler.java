@@ -226,7 +226,7 @@ public class AttributePollHandler<V> implements PollHandler<V> {
             if (suppressDuplicates && Objects.equal(coercedV, entity.getAttribute(sensor))) {
                 // no change; nothing
             } else {
-                entity.setAttribute(sensor, coercedV);
+                entity.sensors().set(sensor, coercedV);
             }
         }
     }

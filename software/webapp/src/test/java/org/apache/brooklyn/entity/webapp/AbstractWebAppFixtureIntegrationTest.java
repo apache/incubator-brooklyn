@@ -437,7 +437,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
-        ((EntityLocal)entity).setConfig(JavaWebAppService.ROOT_WAR, resource.toString());
+        ((EntityLocal)entity).config().set(JavaWebAppService.ROOT_WAR, resource.toString());
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         //tomcat may need a while to unpack everything
@@ -459,7 +459,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
-        ((EntityLocal)entity).setConfig(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.toString()));
+        ((EntityLocal)entity).config().set(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.toString()));
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
 
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {

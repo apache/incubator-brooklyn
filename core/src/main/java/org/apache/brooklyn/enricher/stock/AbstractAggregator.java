@@ -137,7 +137,7 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
     }
 
     protected void setEntitySubscribeProducerMemberEvents() {
-        subscribe(producer, Changeable.MEMBER_ADDED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(producer, Changeable.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 if (entityFilter.apply(event.getValue())) {
                     addProducerMember(event.getValue());
@@ -145,7 +145,7 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
                 }
             }
         });
-        subscribe(producer, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(producer, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 removeProducer(event.getValue());
                 onUpdated();
@@ -165,13 +165,13 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
     }
 
     protected void setEntitySubscribingProducerChildrenEvents() {
-        subscribe(producer, AbstractEntity.CHILD_REMOVED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(producer, AbstractEntity.CHILD_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 removeProducer(event.getValue());
                 onUpdated();
             }
         });
-        subscribe(producer, AbstractEntity.CHILD_ADDED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(producer, AbstractEntity.CHILD_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 if (entityFilter.apply(event.getValue())) {
                     addProducerChild(event.getValue());
@@ -212,7 +212,7 @@ public abstract class AbstractAggregator<T,U> extends AbstractEnricher implement
     // TODO If producer removed but then get (queued) event from it after this method returns,  
     protected void removeProducer(Entity producer) {
         if (LOG.isDebugEnabled()) LOG.debug("{} stopped listening to {}", new Object[] {this, producer });
-        unsubscribe(producer);
+        subscriptions().unsubscribe(producer);
         onProducerRemoved(producer);
     }
 

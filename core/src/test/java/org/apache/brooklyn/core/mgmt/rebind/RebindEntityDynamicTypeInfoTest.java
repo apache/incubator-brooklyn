@@ -66,11 +66,11 @@ public class RebindEntityDynamicTypeInfoTest extends RebindTestFixtureWithApp {
         origApp.addChild(EntitySpec.create(TestEntity.class));
         
         // dynamic conf key
-        origApp.setConfig(TestEntity.CONF_NAME, "slim");
+        origApp.config().set(TestEntity.CONF_NAME, "slim");
         // declared sensor
-        origApp.setAttribute(TestApplication.MY_ATTRIBUTE, "foo");
+        origApp.sensors().set(TestApplication.MY_ATTRIBUTE, "foo");
         // dynamic sensor
-        origApp.setAttribute(TestEntity.SEQUENCE, 98765);
+        origApp.sensors().set(TestEntity.SEQUENCE, 98765);
         
         // dynamic effector
         origApp.getMutableEntityType().addEffector(SayHiBody.EFFECTOR);

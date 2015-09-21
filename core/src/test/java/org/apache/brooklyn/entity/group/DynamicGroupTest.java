@@ -45,9 +45,6 @@ import org.apache.brooklyn.core.entity.EntityPredicates;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.group.AbstractGroup;
-import org.apache.brooklyn.entity.group.DynamicGroup;
-import org.apache.brooklyn.entity.group.DynamicGroupImpl;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -156,7 +153,7 @@ public class DynamicGroupTest {
         assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of());
         
         // When changed (such that subscription spots it), then entity added
-        e1.setAttribute(MY_ATTRIBUTE, "yes");
+        e1.sensors().set(MY_ATTRIBUTE, "yes");
         
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
@@ -164,7 +161,7 @@ public class DynamicGroupTest {
             }});
 
         // When it stops matching, entity is removed        
-        e1.setAttribute(MY_ATTRIBUTE, "no");
+        e1.sensors().set(MY_ATTRIBUTE, "no");
         
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
@@ -195,8 +192,8 @@ public class DynamicGroupTest {
         // Does not subscribe to things which do not match predicate filter, 
         // so event from e1 should normally be ignored 
         // but pending rescans may cause it to pick up e1, so we ignore e1 in the entity filter also
-        e1.setAttribute(MY_ATTRIBUTE, "yes");
-        e2.setAttribute(MY_ATTRIBUTE, "yes");
+        e1.sensors().set(MY_ATTRIBUTE, "yes");
+        e2.sensors().set(MY_ATTRIBUTE, "yes");
         
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
@@ -272,7 +269,7 @@ public class DynamicGroupTest {
         final AtomicInteger removedNotifications = new AtomicInteger(0);
         final List<Exception> exceptions = new CopyOnWriteArrayList<Exception>();
         
-        app.subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
+        app.subscriptions().subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             public void onEvent(SensorEvent<Entity> event) {
                 try {
                     TestEntity val = (TestEntity) event.getValue();
@@ -286,7 +283,7 @@ public class DynamicGroupTest {
                 }
             }});
 
-        app.subscribe(group, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+        app.subscriptions().subscribe(group, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             public void onEvent(SensorEvent<Entity> event) {
                 try {
                     TestEntity val = (TestEntity) event.getValue();
@@ -376,7 +373,7 @@ public class DynamicGroupTest {
                 notificationCount.incrementAndGet();
             }
         };
-        ((EntityLocal)group2).setConfig(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class));
+        group2.config().set(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class));
         app.addChild(group2);
         Entities.manage(group2);
         
@@ -427,7 +424,7 @@ public class DynamicGroupTest {
                 super.onEntityAdded(item);
             }
         };
-        ((EntityLocal)group2).setConfig(DynamicGroup.ENTITY_FILTER, Predicates.<Object>equalTo(e3));
+        group2.config().set(DynamicGroup.ENTITY_FILTER, Predicates.<Object>equalTo(e3));
         app.addChild(group2);
         
         Thread t1 = new Thread(new Runnable() {
@@ -476,18 +473,24 @@ public class DynamicGroupTest {
         final List<Entity> membersAdded = new CopyOnWriteArrayList<Entity>();
         
         final DynamicGroupImpl group2 = new DynamicGroupImpl() {
-            @Override
-            public <T> void emit(Sensor<T> sensor, T val) {
-                // intercept inside AbstractGroup.addMember, while it still holds lock on members
-                if (sensor == AbstractGroup.MEMBER_ADDED && addingMemberDoLatching.get()) {
-                    addingMemberReachedLatch.countDown();
-                    try {
-                        addingMemberContinueLatch.await();
-                    } catch (InterruptedException e) {
-                        throw Exceptions.propagate(e);
+            private final BasicSensorSupport interceptedSensors = new BasicSensorSupport() {
+                @Override
+                public <T> void emit(Sensor<T> sensor, T val) {
+                    // intercept inside AbstractGroup.addMember, while it still holds lock on members
+                    if (sensor == AbstractGroup.MEMBER_ADDED && addingMemberDoLatching.get()) {
+                        addingMemberReachedLatch.countDown();
+                        try {
+                            addingMemberContinueLatch.await();
+                        } catch (InterruptedException e) {
+                            throw Exceptions.propagate(e);
+                        }
                     }
+                    super.emit(sensor, val);
                 }
-                super.emit(sensor, val);
+            };
+            @Override
+            public BasicSensorSupport sensors() {
+                return interceptedSensors;
             }
             @Override
             public boolean removeMember(final Entity member) {
@@ -495,11 +498,11 @@ public class DynamicGroupTest {
                 return super.removeMember(member);
             }
         };
-        group2.setConfig(DynamicGroup.MEMBER_DELEGATE_CHILDREN, true);
+        group2.config().set(DynamicGroup.MEMBER_DELEGATE_CHILDREN, true);
         app.addChild(group2);
         Entities.manage(group2);
         
-        app.subscribe(group2, AbstractGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
+        app.subscriptions().subscribe(group2, AbstractGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 membersAdded.add(event.getValue());
             }});

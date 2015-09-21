@@ -85,7 +85,7 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
 
     public void addProducer(Entity producer) {
         if (LOG.isDebugEnabled()) LOG.debug("{} linked ({}, {}) to {}", new Object[] {this, producer, source, target});
-        subscribe(producer, source, this);
+        subscriptions().subscribe(producer, source, this);
         synchronized (values) {
             S vo = values.get(producer);
             if (vo==null) {
@@ -105,7 +105,7 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
     // TODO If producer removed but then get (queued) event from it after this method returns,  
     public S removeProducer(Entity producer) {
         if (LOG.isDebugEnabled()) LOG.debug("{} unlinked ({}, {}) from {}", new Object[] {this, producer, source, target});
-        unsubscribe(producer);
+        subscriptions().unsubscribe(producer);
         S removed = values.remove(producer);
         onUpdated();
         return removed;
@@ -144,12 +144,12 @@ public abstract class AbstractAggregatingEnricher<S,T> extends AbstractEnricher 
         }
         
         if (allMembers) {
-            subscribe(entity, Changeable.MEMBER_ADDED, new SensorEventListener<Entity>() {
+            subscriptions().subscribe(entity, Changeable.MEMBER_ADDED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> it) {
                     if (filter.apply(it.getValue())) addProducer(it.getValue());
                 }
             });
-            subscribe(entity, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+            subscriptions().subscribe(entity, Changeable.MEMBER_REMOVED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> it) {
                     removeProducer(it.getValue());
                 }

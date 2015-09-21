@@ -133,7 +133,7 @@ public class SaltLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         }
 
         // and set the PID
-        entity().setAttribute(Attributes.PID,
+        entity().sensors().set(Attributes.PID,
                 Integer.parseInt(DynamicTasks.queue(SshEffectorTasks.ssh("cat "+pidFile).runAsRoot()).block().getStdout().trim()));
         return true;
     }
@@ -201,7 +201,7 @@ public class SaltLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (DynamicTasks.queue(SshEffectorTasks.isPidRunning(pid).runAsRoot()).get()) {
             throw new IllegalStateException("Process for "+entity()+" in "+pid+" still running after kill");
         }
-        entity().setAttribute(Attributes.PID, null);
+        entity().sensors().set(Attributes.PID, null);
         return true;
     }
 

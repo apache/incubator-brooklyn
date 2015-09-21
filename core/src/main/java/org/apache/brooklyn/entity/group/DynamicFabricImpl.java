@@ -70,7 +70,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     public void init() {
         super.init();
         
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .aggregating(Changeable.GROUP_SIZE)
                 .publishing(FABRIC_SIZE)
                 .fromMembers()
@@ -78,7 +78,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
                 .valueToReportIfNoSensors(0)
                 .build());
         
-        setAttribute(SERVICE_UP, false);
+        sensors().set(SERVICE_UP, false);
     }
     
     protected EntitySpec<?> getMemberSpec() {
@@ -162,7 +162,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
             
             waitForTasksOnStart(tasks);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
-            setAttribute(SERVICE_UP, true);
+            sensors().set(SERVICE_UP, true);
         } catch (Exception e) {
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
@@ -192,7 +192,7 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
             Task<?> invoke = Entities.invokeEffector(this, stoppableChildren, Startable.STOP);
             if (invoke != null) invoke.get();
             ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
-            setAttribute(SERVICE_UP, false);
+            sensors().set(SERVICE_UP, false);
         } catch (Exception e) {
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);

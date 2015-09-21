@@ -78,7 +78,7 @@ public class SshCommandSensorIntegrationTest {
                 .configure(SshCommandSensor.SENSOR_COMMAND, "echo foo > "+tempFile.getAbsolutePath()+"\n"
                     + "wc "+tempFile.getAbsolutePath()))
             .apply(entity);
-        entity.setAttribute(Attributes.SERVICE_UP, true);
+        entity.sensors().set(Attributes.SERVICE_UP, true);
 
         String val = EntityTestUtils.assertAttributeEventuallyNonNull(entity, SENSOR_STRING);
         assertTrue(val.contains("1"), "val="+val);

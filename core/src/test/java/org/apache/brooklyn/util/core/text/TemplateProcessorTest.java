@@ -146,7 +146,7 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testApplyTemplatedConfigWithAttributeWhenReady() {
-        app.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        app.sensors().set(TestApplication.MY_ATTRIBUTE, "myval");
 
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
                 .configure(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(app, TestApplication.MY_ATTRIBUTE)));

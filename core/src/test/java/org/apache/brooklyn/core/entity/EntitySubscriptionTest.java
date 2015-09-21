@@ -79,9 +79,9 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscriptionReceivesEvents() {
-        entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
-        entity.subscribe(observedEntity, TestEntity.NAME, listener);
-        entity.subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.NAME, listener);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
         
         otherEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
@@ -99,7 +99,7 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscriptionToAllReceivesEvents() {
-        entity.subscribe(null, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribe(null, TestEntity.SEQUENCE, listener);
         
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
         otherEntity.sensors().set(TestEntity.SEQUENCE, 456);
@@ -114,7 +114,7 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscribeToChildrenReceivesEvents() {
-        entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
         
         observedChildEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.SEQUENCE, 456);
@@ -128,7 +128,7 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscribeToChildrenReceivesEventsForDynamicallyAddedChildren() {
-        entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
         
         final TestEntity observedChildEntity2 = observedEntity.createAndManageChild(EntitySpec.create(TestEntity.class));
         observedChildEntity2.sensors().set(TestEntity.SEQUENCE, 123);
@@ -142,10 +142,10 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscribeToMembersReceivesEvents() {
-        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
         observedMemberEntity.sensors().set(TestEntity.SEQUENCE, 123);
-        ((EntityLocal)observedGroup).sensors().set(TestEntity.SEQUENCE, 456);
+        observedGroup.sensors().set(TestEntity.SEQUENCE, 456);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -156,7 +156,7 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscribeToMembersReceivesEventsForDynamicallyAddedMembers() {
-        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
         final TestEntity observedMemberEntity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         observedGroup.addMember(observedMemberEntity2);
@@ -171,7 +171,7 @@ public class EntitySubscriptionTest {
     
     @Test(groups="Integration")
     public void testSubscribeToMembersIgnoresEventsForDynamicallyRemovedMembers() {
-        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
         observedGroup.removeMember(observedMemberEntity);
         
@@ -185,11 +185,11 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testUnsubscribeRemovesAllSubscriptionsForThatEntity() {
-        entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
-        entity.subscribe(observedEntity, TestEntity.NAME, listener);
-        entity.subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
-        entity.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
-        entity.unsubscribe(observedEntity);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.NAME, listener);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
+        entity.subscriptions().subscribe(otherEntity, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().unsubscribe(observedEntity);
         
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.NAME, "myname");
@@ -205,11 +205,11 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testUnsubscribeUsingHandleStopsEvents() {
-        SubscriptionHandle handle1 = entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
-        SubscriptionHandle handle2 = entity.subscribe(observedEntity, TestEntity.NAME, listener);
-        SubscriptionHandle handle3 = entity.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
+        SubscriptionHandle handle1 = entity.subscriptions().subscribe(observedEntity, TestEntity.SEQUENCE, listener);
+        SubscriptionHandle handle2 = entity.subscriptions().subscribe(observedEntity, TestEntity.NAME, listener);
+        SubscriptionHandle handle3 = entity.subscriptions().subscribe(otherEntity, TestEntity.SEQUENCE, listener);
         
-        entity.unsubscribe(observedEntity, handle2);
+        entity.subscriptions().unsubscribe(observedEntity, handle2);
         
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.NAME, "myname");
@@ -226,7 +226,7 @@ public class EntitySubscriptionTest {
     @Test
     public void testSubscriptionReceivesEventsInOrder() {
         final int NUM_EVENTS = 100;
-        entity.subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
 
         for (int i = 0; i < NUM_EVENTS; i++) {
             observedEntity.sensors().emit(TestEntity.MY_NOTIF, i);
@@ -263,8 +263,8 @@ public class EntitySubscriptionTest {
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.NAME, "myname");
         
-        entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
-        entity.subscribe(observedEntity, TestEntity.NAME, listener);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribe(observedEntity, TestEntity.NAME, listener);
         
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), new Runnable() {
             @Override public void run() {

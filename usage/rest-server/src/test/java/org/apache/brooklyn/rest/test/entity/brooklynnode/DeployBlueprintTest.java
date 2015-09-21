@@ -63,7 +63,7 @@ public class DeployBlueprintTest extends BrooklynRestApiLauncherTestFixture {
         EntitySpec<BrooklynNode> spec = EntitySpec.create(BrooklynNode.class);
         EntityManager mgr = getManagementContextFromJettyServerAttributes(server).getEntityManager();
         BrooklynNode node = mgr.createEntity(spec);
-        ((EntityLocal)node).setAttribute(BrooklynNode.WEB_CONSOLE_URI, webConsoleUri);
+        ((EntityLocal)node).sensors().set(BrooklynNode.WEB_CONSOLE_URI, webConsoleUri);
         mgr.manage(node);
         Map<String, String> params = ImmutableMap.of(DeployBlueprintEffector.BLUEPRINT_CAMP_PLAN.getName(), "{ services: [ serviceType: \"java:"+BasicApplication.class.getName()+"\" ] }");
         String id = node.invoke(BrooklynNode.DEPLOY_BLUEPRINT, params).getUnchecked();

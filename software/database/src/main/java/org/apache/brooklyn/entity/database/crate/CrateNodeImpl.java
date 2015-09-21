@@ -49,9 +49,9 @@ public class CrateNodeImpl extends SoftwareProcessImpl implements CrateNode{
         super.connectSensors();
         connectServiceUpIsRunning();
         jmxFeed = JavaAppUtils.connectMXBeanSensors(this);
-        setAttribute(DATASTORE_URL, "crate://" + getAttribute(HOSTNAME) + ":" + getPort());
+        sensors().set(DATASTORE_URL, "crate://" + getAttribute(HOSTNAME) + ":" + getPort());
         String url = "http://" + getAttribute(HOSTNAME) + ":" + getHttpPort();
-        setAttribute(MANAGEMENT_URL, url);
+        sensors().set(MANAGEMENT_URL, url);
 
         httpFeed = HttpFeed.builder()
                 .entity(this)
@@ -74,7 +74,7 @@ public class CrateNodeImpl extends SoftwareProcessImpl implements CrateNode{
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] {"version", "es_version"}, String.class)))
                 .build();
 
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+        enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
                 .from(SERVER_OK)
                 .computing(Functionals.ifNotEquals(true).value("Crate server reports it is not ok."))
                 .build());

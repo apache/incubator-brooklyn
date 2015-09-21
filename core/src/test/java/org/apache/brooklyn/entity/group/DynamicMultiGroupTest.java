@@ -78,7 +78,7 @@ public class DynamicMultiGroupTest {
                         .configure(ENTITY_FILTER, instanceOf(TestEntity.class))
                         .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
         );
-        app.subscribeToChildren(group, SENSOR, new SensorEventListener<String>() {
+        app.subscriptions().subscribeToChildren(group, SENSOR, new SensorEventListener<String>() {
             public void onEvent(SensorEvent<String> event) { dmg.rescanEntities(); }
         });
 
@@ -118,7 +118,7 @@ public class DynamicMultiGroupTest {
                         .configure(ENTITY_FILTER, instanceOf(TestEntity.class))
                         .configure(BUCKET_FUNCTION, bucketFromAttribute(SENSOR))
         );
-        app.subscribeToChildren(group, SENSOR, new SensorEventListener<String>() {
+        app.subscriptions().subscribeToChildren(group, SENSOR, new SensorEventListener<String>() {
             public void onEvent(SensorEvent<String> event) { dmg.rescanEntities(); }
         });
 
@@ -127,8 +127,8 @@ public class DynamicMultiGroupTest {
         TestEntity child2 = app.createAndManageChild(EntitySpec.create(childSpec).displayName("child2"));
 
         // Expect two buckets: bucketA and bucketB 
-        child1.setAttribute(SENSOR, "bucketA");
-        child2.setAttribute(SENSOR, "bucketB");
+        child1.sensors().set(SENSOR, "bucketA");
+        child2.sensors().set(SENSOR, "bucketB");
         dmg.rescanEntities();
         Group bucketA = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketA"), null);
         Group bucketB = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketB"), null);
@@ -136,8 +136,8 @@ public class DynamicMultiGroupTest {
         assertNotNull(bucketB);
         
         // Expect second bucket to be removed when empty 
-        child1.setAttribute(SENSOR, "bucketA");
-        child2.setAttribute(SENSOR, "bucketA");
+        child1.sensors().set(SENSOR, "bucketA");
+        child2.sensors().set(SENSOR, "bucketA");
         dmg.rescanEntities();
         bucketA = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketA"), null);
         bucketB = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketB"), null);
@@ -147,8 +147,8 @@ public class DynamicMultiGroupTest {
 
     private void checkDistribution(final Group group, final DynamicMultiGroup dmg, final EntitySpec<TestEntity> childSpec, final TestEntity child1, final TestEntity child2) {
         // Start with both children in bucket A; there is no bucket B
-        child1.setAttribute(SENSOR, "bucketA");
-        child2.setAttribute(SENSOR, "bucketA");
+        child1.sensors().set(SENSOR, "bucketA");
+        child2.sensors().set(SENSOR, "bucketA");
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 Group bucketA = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketA"), null);
@@ -160,7 +160,7 @@ public class DynamicMultiGroupTest {
         });
 
         // Move child 1 into bucket B
-        child1.setAttribute(SENSOR, "bucketB");
+        child1.sensors().set(SENSOR, "bucketB");
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 Group bucketA = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketA"), null);
@@ -173,7 +173,7 @@ public class DynamicMultiGroupTest {
         });
 
         // Move child 2 into bucket B; there is now no bucket A
-        child2.setAttribute(SENSOR, "bucketB");
+        child2.sensors().set(SENSOR, "bucketB");
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 Group bucketA = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketA"), null);
@@ -187,7 +187,7 @@ public class DynamicMultiGroupTest {
         // Add new child 3, associated with new bucket C
         final TestEntity child3 = group.addChild(EntitySpec.create(childSpec).displayName("child3"));
         Entities.manage(child3);
-        child3.setAttribute(SENSOR, "bucketC");
+        child3.sensors().set(SENSOR, "bucketC");
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 Group bucketC = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketC"), null);
@@ -198,7 +198,7 @@ public class DynamicMultiGroupTest {
 
         // Un-set the sensor on child 3 -- gets removed from bucket C, which then
         // disappears as it is empty.
-        child3.setAttribute(SENSOR, null);
+        child3.sensors().set(SENSOR, null);
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 Group bucketB = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketB"), null);
@@ -210,7 +210,7 @@ public class DynamicMultiGroupTest {
         });
 
         // Add child 3 back to bucket C -- this should result in a new group entity
-        child3.setAttribute(SENSOR, "bucketC");
+        child3.sensors().set(SENSOR, "bucketC");
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 Group bucketC = (Group) find(dmg.getChildren(), displayNameEqualTo("bucketC"), null);

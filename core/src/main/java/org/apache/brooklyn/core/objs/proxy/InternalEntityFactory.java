@@ -243,7 +243,7 @@ public class InternalEntityFactory extends InternalFactory {
             ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
-                ((EntityLocal)entity).setConfig((ConfigKey)entry.getKey(), entry.getValue());
+                entity.config().set((ConfigKey)entry.getKey(), entry.getValue());
             }
 
             Entity parent = spec.getParent();
@@ -294,19 +294,19 @@ public class InternalEntityFactory extends InternalFactory {
                 }
                 
                 for (Enricher enricher : spec.getEnrichers()) {
-                    entity.addEnricher(enricher);
+                    entity.enrichers().add(enricher);
                 }
                 
                 for (EnricherSpec<?> enricherSpec : spec.getEnricherSpecs()) {
-                    entity.addEnricher(policyFactory.createEnricher(enricherSpec));
+                    entity.enrichers().add(policyFactory.createEnricher(enricherSpec));
                 }
                 
                 for (Policy policy : spec.getPolicies()) {
-                    entity.addPolicy((AbstractPolicy)policy);
+                    entity.policies().add((AbstractPolicy)policy);
                 }
                 
                 for (PolicySpec<?> policySpec : spec.getPolicySpecs()) {
-                    entity.addPolicy(policyFactory.createPolicy(policySpec));
+                    entity.policies().add(policyFactory.createPolicy(policySpec));
                 }
                                 
                 for (Entity child: entity.getChildren()) {

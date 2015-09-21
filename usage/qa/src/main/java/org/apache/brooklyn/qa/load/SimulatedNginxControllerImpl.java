@@ -72,8 +72,8 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
 
         // From AbstractController.connectSensors
         if (getUrl()==null) {
-            setAttribute(MAIN_URI, URI.create(inferUrl()));
-            setAttribute(ROOT_URL, inferUrl());
+            sensors().set(MAIN_URI, URI.create(inferUrl()));
+            sensors().set(ROOT_URL, inferUrl());
         }
         addServerPoolMemberTrackingPolicy();
 
@@ -108,14 +108,14 @@ public class SimulatedNginxControllerImpl extends NginxControllerImpl {
         Group urlMappings = getConfig(URL_MAPPINGS);
         if (urlMappings != null) {
             // Listen to the targets of each url-mapping changing
-            subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, new SensorEventListener<Collection<String>>() {
+            subscriptions().subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, new SensorEventListener<Collection<String>>() {
                     @Override public void onEvent(SensorEvent<Collection<String>> event) {
                         updateNeeded();
                     }
                 });
 
             // Listen to url-mappings being added and removed
-            urlMappingsMemberTrackerPolicy = addPolicy(PolicySpec.create(UrlMappingsMemberTrackerPolicy.class)
+            urlMappingsMemberTrackerPolicy = policies().add(PolicySpec.create(UrlMappingsMemberTrackerPolicy.class)
                     .configure("group", urlMappings));
         }
     }

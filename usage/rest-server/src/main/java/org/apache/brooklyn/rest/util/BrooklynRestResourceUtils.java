@@ -123,10 +123,10 @@ public class BrooklynRestResourceUtils {
     public Policy getPolicy(Entity entity, String policy) {
         if (policy==null) return null;
 
-        for (Policy p: entity.getPolicies()) {
+        for (Policy p: entity.policies()) {
             if (policy.equals(p.getId())) return p;
         }
-        for (Policy p: entity.getPolicies()) {
+        for (Policy p: entity.policies()) {
             if (policy.equals(p.getDisplayName())) return p;
         }
         
@@ -286,7 +286,7 @@ public class BrooklynRestResourceUtils {
 
                     Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(clazz, name, configO, catalogItemId));
                     instance.addChild(soleChild);
-                    instance.addEnricher(Enrichers.builder()
+                    instance.enrichers().add(Enrichers.builder()
                             .propagatingAllBut(Attributes.SERVICE_UP, Attributes.SERVICE_NOT_UP_INDICATORS, 
                                     Attributes.SERVICE_STATE_ACTUAL, Attributes.SERVICE_STATE_EXPECTED, 
                                     Attributes.SERVICE_PROBLEMS)

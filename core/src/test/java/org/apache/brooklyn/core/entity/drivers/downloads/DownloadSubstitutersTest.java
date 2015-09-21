@@ -56,7 +56,7 @@ public class DownloadSubstitutersTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testSimpleSubstitution() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         String pattern = "mykey1=${mykey1},mykey2=${mykey2}";
         String result = DownloadSubstituters.substitute(pattern, ImmutableMap.of("mykey1", "myval1", "mykey2", "myval2"));
         assertEquals(result, "mykey1=myval1,mykey2=myval2");
@@ -64,7 +64,7 @@ public class DownloadSubstitutersTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSubstitutionIncludesDefaultSubs() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         String pattern = "version=${version},type=${type},simpletype=${simpletype}";
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver);
         String result = DownloadSubstituters.substitute(req, pattern);
@@ -100,7 +100,7 @@ public class DownloadSubstitutersTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSubstitutionUsesOverrides() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         String pattern = "version=${version},mykey1=${mykey1}";
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver, ImmutableMap.of("version", "overriddenversion", "mykey1", "myval1"));
         String result = DownloadSubstituters.substitute(req, pattern);
@@ -121,7 +121,7 @@ public class DownloadSubstitutersTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSubstituter() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         String baseurl = "version=${version},type=${type},simpletype=${simpletype}";
         Map<String,Object> subs = DownloadSubstituters.getBasicEntitySubstitutions(driver);
         DownloadTargets result = DownloadSubstituters.substituter(Functions.constant(baseurl), Functions.constant(subs)).apply(new BasicDownloadRequirement(driver));

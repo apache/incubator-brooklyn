@@ -157,24 +157,24 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
          * subscribe to hostname, and keep an accurate set of current seeds in a sensor;
          * then at nodes we set the initial seeds to be the current seeds when ready (non-empty)
          */
-        subscribeToMembers(this, Attributes.HOSTNAME, new SensorEventListener<String>() {
+        subscriptions().subscribeToMembers(this, Attributes.HOSTNAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
                 seedTracker.onHostnameChanged(event.getSource(), event.getValue());
             }
         });
-        subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 seedTracker.onMemberRemoved(event.getValue());
             }
         });
-        subscribeToMembers(this, Attributes.SERVICE_UP, new SensorEventListener<Boolean>() {
+        subscriptions().subscribeToMembers(this, Attributes.SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override
             public void onEvent(SensorEvent<Boolean> event) {
                 seedTracker.onServiceUpChanged(event.getSource(), event.getValue());
             }
         });
-        subscribeToMembers(this, Attributes.SERVICE_STATE_ACTUAL, new SensorEventListener<Lifecycle>() {
+        subscriptions().subscribeToMembers(this, Attributes.SERVICE_STATE_ACTUAL, new SensorEventListener<Lifecycle>() {
             @Override
             public void onEvent(SensorEvent<Lifecycle> event) {
                 // trigger a recomputation also when lifecycle state changes, 
@@ -185,7 +185,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         });
         
         // Track the datacenters for this cluster
-        subscribeToMembers(this, CassandraNode.DATACENTER_NAME, new SensorEventListener<String>() {
+        subscriptions().subscribeToMembers(this, CassandraNode.DATACENTER_NAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
                 Entity member = event.getSource();
@@ -211,7 +211,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
                 return Optional.absent();
             }
         });
-        subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 Entity entity = event.getSource();
                 Multimap<String, Entity> datacenterUsage = getAttribute(DATACENTER_USAGE);
@@ -370,7 +370,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
     protected void connectSensors() {
         connectEnrichers();
         
-        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Cassandra Cluster Tracker")
                 .configure("sensorsToTrack", ImmutableSet.of(Attributes.SERVICE_UP, Attributes.HOSTNAME, CassandraNode.THRIFT_PORT))
                 .configure("group", this));
@@ -417,7 +417,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {
             AttributeSensor<? extends Number> t = es.get(0);
             AttributeSensor<? extends Number> total = es.get(1);
-            addEnricher(Enrichers.builder()
+            enrichers().add(Enrichers.builder()
                     .aggregating(t)
                     .publishing(total)
                     .fromMembers()
@@ -430,7 +430,7 @@ public class CassandraDatacenterImpl extends DynamicClusterImpl implements Cassa
         for (List<? extends AttributeSensor<? extends Number>> es : averagingEnricherSetup) {
             AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
-            addEnricher(Enrichers.builder()
+            enrichers().add(Enrichers.builder()
                     .aggregating(t)
                     .publishing(average)
                     .fromMembers()

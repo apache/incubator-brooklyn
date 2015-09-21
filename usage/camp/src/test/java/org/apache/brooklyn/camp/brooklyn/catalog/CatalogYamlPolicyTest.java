@@ -80,7 +80,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "        config3: config3");
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        Policy policy = Iterables.getOnlyElement(simpleEntity.getPolicies());
+        Policy policy = Iterables.getOnlyElement(simpleEntity.policies());
         assertEquals(policy.getPolicyType().getName(), SIMPLE_POLICY_TYPE);
         assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config1")), "config1");
         assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config2")), "config2 override");
@@ -105,7 +105,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
             "        config3: config3");
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        Policy policy = Iterables.getOnlyElement(simpleEntity.getPolicies());
+        Policy policy = Iterables.getOnlyElement(simpleEntity.policies());
         assertEquals(policy.getPolicyType().getName(), SIMPLE_POLICY_TYPE);
         assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config1")), "config1");
         assertEquals(policy.getConfig(new BasicConfigKey<String>(String.class, "config2")), "config2 override");
@@ -143,7 +143,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         Entity app = createAndStartApplication(yaml);
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        Policy policy = Iterables.getOnlyElement(simpleEntity.getPolicies());
+        Policy policy = Iterables.getOnlyElement(simpleEntity.policies());
         assertEquals(policy.getPolicyType().getName(), SIMPLE_POLICY_TYPE);
 
         deleteCatalogEntity(referencedSymbolicName);

@@ -90,7 +90,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         if (webServerFactory == null && webServerSpec == null) {
             log.debug("creating default web server spec for {}", this);
             webServerSpec = EntitySpec.create(TomcatServer.class);
-            setAttribute(MEMBER_SPEC, webServerSpec);
+            sensors().set(MEMBER_SPEC, webServerSpec);
         }
         
         log.debug("creating cluster child for {}", this);
@@ -114,11 +114,11 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         } else {
             log.warn("In {}, not setting cluster's {} because already set on webClusterSpec", new Object[] {this, webClusterFlags.keySet()});
         }
-        setAttribute(WEB_CLUSTER_SPEC, webClusterSpec);
+        sensors().set(WEB_CLUSTER_SPEC, webClusterSpec);
         
         DynamicWebAppCluster cluster = addChild(webClusterSpec);
         if (Entities.isManaged(this)) Entities.manage(cluster);
-        setAttribute(CLUSTER, cluster);
+        sensors().set(CLUSTER, cluster);
         setEntityFilter(EntityPredicates.isMemberOf(cluster));
         
         LoadBalancer controller = getAttribute(CONTROLLER);
@@ -127,21 +127,21 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
             if (controllerSpec == null) {
                 log.debug("creating controller using default spec for {}", this);
                 controllerSpec = EntitySpec.create(NginxController.class);
-                setAttribute(CONTROLLER_SPEC, controllerSpec);
+                sensors().set(CONTROLLER_SPEC, controllerSpec);
             } else {
                 log.debug("creating controller using custom spec for {}", this);
             }
             controller = addChild(controllerSpec);
-            addEnricher(Enrichers.builder().propagating(LoadBalancer.PROXY_HTTP_PORT, LoadBalancer.PROXY_HTTPS_PORT).from(controller).build());
+            enrichers().add(Enrichers.builder().propagating(LoadBalancer.PROXY_HTTP_PORT, LoadBalancer.PROXY_HTTPS_PORT).from(controller).build());
             if (Entities.isManaged(this)) Entities.manage(controller);
-            setAttribute(CONTROLLER, controller);
+            sensors().set(CONTROLLER, controller);
         }
         
         Group controlledGroup = getAttribute(CONTROLLED_GROUP);
         if (controlledGroup == null) {
             log.debug("using cluster as controlledGroup for {}", this);
             controlledGroup = cluster;
-            setAttribute(CONTROLLED_GROUP, cluster);
+            sensors().set(CONTROLLED_GROUP, cluster);
         } else {
             log.debug("using custom controlledGroup {} for {}", controlledGroup, this);
         }
@@ -167,7 +167,7 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     protected void doBind() {
         DynamicWebAppCluster cluster = getAttribute(CLUSTER);
         if (cluster != null) {
-            subscribe(cluster, DynamicWebAppCluster.GROUP_MEMBERS, new SensorEventListener<Object>() {
+            subscriptions().subscribe(cluster, DynamicWebAppCluster.GROUP_MEMBERS, new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
                     // TODO inefficient impl; also worth extracting this into a mixin of some sort.
                     rescanEntities();
@@ -277,11 +277,11 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
     
     void connectSensors() {
         // FIXME no longer needed
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagatingAllButUsualAnd(Attributes.MAIN_URI, ROOT_URL, GROUP_MEMBERS, GROUP_SIZE)
                 .from(getCluster())
                 .build());
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 // include hostname and address of controller (need both in case hostname only resolves to internal/private ip)
                 .propagating(LoadBalancer.HOSTNAME, Attributes.ADDRESS, Attributes.MAIN_URI, ROOT_URL)
                 .from(getController())

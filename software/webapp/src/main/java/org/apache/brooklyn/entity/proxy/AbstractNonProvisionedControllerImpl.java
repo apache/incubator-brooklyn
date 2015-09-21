@@ -124,7 +124,7 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
     protected void addServerPoolMemberTrackerPolicy() {
         Group serverPool = getServerPool();
         if (serverPool != null) {
-            serverPoolMemberTrackerPolicy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+            serverPoolMemberTrackerPolicy = policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                     .displayName("Controller targets tracker")
                     .configure("group", serverPool));
             
@@ -148,13 +148,13 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
             }
             
             LOG.info("Resetting {}, members {} with addresses {}", new Object[] {this, serverPoolTargets, serverPoolAddresses});
-            setAttribute(SERVER_POOL_TARGETS, serverPoolTargets);
+            sensors().set(SERVER_POOL_TARGETS, serverPoolTargets);
         }
     }
     
     protected void removeServerPoolMemberTrackerPolicy() {
         if (serverPoolMemberTrackerPolicy != null) {
-            removePolicy(serverPoolMemberTrackerPolicy);
+            policies().remove(serverPoolMemberTrackerPolicy);
         }
     }
     
@@ -174,7 +174,7 @@ public abstract class AbstractNonProvisionedControllerImpl extends AbstractEntit
             LOG.debug("Reloading {} in response to changes", this);
             invoke(RELOAD);
         }
-        setAttribute(SERVER_POOL_TARGETS, serverPoolTargets);
+        sensors().set(SERVER_POOL_TARGETS, serverPoolTargets);
     }
     
     protected synchronized void onServerPoolMemberChanged(Entity member) {

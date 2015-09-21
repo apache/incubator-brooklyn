@@ -43,7 +43,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
                 .put("strKey", "aval")
                 .put("intKey", 2)
                 .build());
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY), "aval");
         assertEquals(enricher.getConfig(MyEnricher.INT_KEY), (Integer)2);
@@ -57,7 +57,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
         MyEnricher enricher = new MyEnricher(MutableMap.builder()
                 .put(differentKey, "aval")
                 .build());
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getConfig(differentKey), null);
         assertEquals(enricher.getEnricherType().getConfigKey(differentKey.getName()), null);
@@ -69,7 +69,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
                 .put(MyEnricher.STR_KEY, "aval")
                 .put(MyEnricher.INT_KEY, 2)
                 .build());
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY), "aval");
         assertEquals(enricher.getConfig(MyEnricher.INT_KEY), (Integer)2);
@@ -82,7 +82,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
         MyEnricher enricher = new MyEnricher(MutableMap.builder()
                 .put(MyEnricher.INT_KEY_WITH_DEFAULT, 0)
                 .build());
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.INT_KEY_WITH_DEFAULT), (Integer)0);
     }
@@ -92,7 +92,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
         MyEnricher enricher = new MyEnricher(MutableMap.builder()
                 .put(MyEnricher.STR_KEY_WITH_DEFAULT, null)
                 .build());
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY_WITH_DEFAULT), null);
     }
@@ -102,7 +102,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
         MyEnricher enricher = new MyEnricher();
         enricher.config().set(MyEnricher.STR_KEY, "aval");
         enricher.config().set(MyEnricher.INT_KEY, 2);
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY), "aval");
         assertEquals(enricher.getConfig(MyEnricher.INT_KEY), (Integer)2);
@@ -114,7 +114,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
                 .put(MyEnricher.STR_KEY, "aval")
                 .build());
         enricher.config().set(MyEnricher.STR_KEY, "diffval");
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY), "diffval");
     }
@@ -124,7 +124,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
         MyEnricher enricher = new MyEnricher(MutableMap.builder()
                 .put(MyEnricher.STR_KEY, "origval")
                 .build());
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         try {
             enricher.config().set(MyEnricher.STR_KEY,"newval");
@@ -139,7 +139,7 @@ public class EnricherConfigTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testConfigReturnsDefaultValueIfNotSet() throws Exception {
         MyEnricher enricher = new MyEnricher();
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY_WITH_DEFAULT), "str key default");
     }

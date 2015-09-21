@@ -208,12 +208,12 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
             config().set(CassandraDatacenter.SEED_SUPPLIER, getSeedSupplier());
         
         // track members
-        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Cassandra Fabric Tracker")
                 .configure("group", this));
 
         // Track first node's startup
-        subscribeToMembers(this, CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, new SensorEventListener<Long>() {
+        subscriptions().subscribeToMembers(this, CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC, new SensorEventListener<Long>() {
             @Override
             public void onEvent(SensorEvent<Long> event) {
                 Long oldval = getAttribute(CassandraDatacenter.FIRST_NODE_STARTED_TIME_UTC);
@@ -228,7 +228,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
         });
         
         // Track the datacenters for this cluster
-        subscribeToMembers(this, CassandraDatacenter.DATACENTER_USAGE, new SensorEventListener<Multimap<String,Entity>>() {
+        subscriptions().subscribeToMembers(this, CassandraDatacenter.DATACENTER_USAGE, new SensorEventListener<Multimap<String,Entity>>() {
             @Override
             public void onEvent(SensorEvent<Multimap<String,Entity>> event) {
                 Multimap<String, Entity> usage = calculateDatacenterUsage();
@@ -236,7 +236,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
                 sensors().set(DATACENTERS, usage.keySet());
             }
         });
-        subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(this, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 Multimap<String, Entity> usage = calculateDatacenterUsage();
                 sensors().set(DATACENTER_USAGE, usage);
@@ -342,7 +342,7 @@ public class CassandraFabricImpl extends DynamicFabricImpl implements CassandraF
     protected void connectEnrichers() {
         // TODO Aggregate across sub-clusters
 
-        subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
+        subscriptions().subscribeToMembers(this, SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
                 sensors().set(SERVICE_UP, calculateServiceUp());
             }

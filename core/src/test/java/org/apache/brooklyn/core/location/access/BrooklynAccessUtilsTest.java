@@ -79,7 +79,7 @@ public class BrooklynAccessUtilsTest extends BrooklynAppUnitTestSupport {
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
                 .configure(BrooklynAccessUtils.PORT_FORWARDING_MANAGER, pfm)
                 .location(machine));
-        entity.setAttribute(Attributes.HOSTNAME, privateIp);
+        entity.sensors().set(Attributes.HOSTNAME, privateIp);
 
         assertEquals(BrooklynAccessUtils.getBrooklynAccessibleAddress(entity, privatePort), HostAndPort.fromParts(privateIp, privatePort));
     }

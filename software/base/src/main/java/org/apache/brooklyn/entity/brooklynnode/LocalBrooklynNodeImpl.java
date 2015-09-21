@@ -37,8 +37,8 @@ public class LocalBrooklynNodeImpl extends BrooklynNodeImpl implements LocalBroo
             password = (String) properties.get(String.format(BROOKLYN_WEBCONSOLE_PASSWORD_KEY, user));
         }
         if (Strings.isNonBlank(user) && Strings.isNonBlank(password)) {
-            setConfig(MANAGEMENT_USER, user);
-            setConfig(MANAGEMENT_PASSWORD, password);
+            config().set(MANAGEMENT_USER, user);
+            config().set(MANAGEMENT_PASSWORD, password);
         }
         super.connectSensors();
     }

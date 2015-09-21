@@ -700,8 +700,7 @@ public class LocalEntityManager implements EntityManagerInternal {
         
         if (!getLastManagementTransitionMode(e.getId()).isReadOnly()) {
             e.clearParent();
-            Collection<Group> groups = e.getGroups();
-            for (Group group : groups) {
+            for (Group group : e.groups()) {
                 if (!Entities.isNoLongerManaged(group)) group.removeMember(e);
             }
             if (e instanceof Group) {

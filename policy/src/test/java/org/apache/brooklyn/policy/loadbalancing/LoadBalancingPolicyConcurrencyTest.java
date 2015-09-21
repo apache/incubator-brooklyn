@@ -201,7 +201,7 @@ public class LoadBalancingPolicyConcurrencyTest extends AbstractLoadBalancingPol
                             return;
                         }
                         double jitteredWorkrate = workrate + (random.nextDouble()*jitter*2 - jitter);
-                        ((EntityLocal)item).setAttribute(TEST_METRIC, (int) Math.max(0, jitteredWorkrate));
+                        ((EntityLocal)item).sensors().set(TEST_METRIC, (int) Math.max(0, jitteredWorkrate));
                     }
                 },
                 0, WORKRATE_UPDATE_PERIOD_MS, TimeUnit.MILLISECONDS);

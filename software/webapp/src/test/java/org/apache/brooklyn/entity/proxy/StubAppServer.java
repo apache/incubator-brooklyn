@@ -71,13 +71,13 @@ public class StubAppServer extends AbstractEntity implements Startable {
     
     private void startInLocation(MachineLocation loc) {
         addLocations(ImmutableList.of((Location)loc));
-        setAttribute(HOSTNAME, loc.getAddress().getHostName());
-        setAttribute(HTTP_PORT, nextPort.getAndIncrement());
-        setAttribute(SERVICE_UP, true);
+        sensors().set(HOSTNAME, loc.getAddress().getHostName());
+        sensors().set(HTTP_PORT, nextPort.getAndIncrement());
+        sensors().set(SERVICE_UP, true);
     }
 
     public void stop() {
-        setAttribute(SERVICE_UP, false);
+        sensors().set(SERVICE_UP, false);
     }
     
     @Override

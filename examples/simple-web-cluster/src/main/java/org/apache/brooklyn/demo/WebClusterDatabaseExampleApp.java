@@ -133,25 +133,25 @@ public class WebClusterDatabaseExampleApp extends AbstractApplication implements
                         .configure(DynamicCluster.INITIAL_SIZE, 2)
                         .configure(WebAppService.ENABLED_PROTOCOLS, ImmutableSet.of(getConfig(USE_HTTPS) ? "https" : "http")) );
 
-        web.addEnricher(HttpLatencyDetector.builder().
+        web.enrichers().add(HttpLatencyDetector.builder().
                 url(ROOT_URL).
                 rollup(10, TimeUnit.SECONDS).
                 build());
         
-        web.getCluster().addPolicy(AutoScalerPolicy.builder().
+        web.getCluster().policies().add(AutoScalerPolicy.builder().
                 metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE).
                 metricRange(10, 100).
                 sizeRange(2, 5).
                 build());
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(WebAppServiceConstants.ROOT_URL,
                         DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
                         HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW)
                 .from(web)
                 .build());
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(ImmutableMap.of(DynamicWebAppCluster.GROUP_SIZE, APPSERVERS_COUNT))
                 .from(web)
                 .build());

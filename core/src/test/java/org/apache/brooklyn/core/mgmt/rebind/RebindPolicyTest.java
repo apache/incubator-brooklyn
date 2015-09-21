@@ -68,33 +68,33 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     @Test
     public void testRestoresSimplePolicyFromConstructor() throws Exception {
         MyPolicy origPolicy = new MyPolicy(MutableMap.of("myfield", "myFieldVal", "myconfigkey", "myConfigVal"));
-        origApp.addPolicy(origPolicy);
+        origApp.policies().add(origPolicy);
         runRestoresSimplePolicy();
     }
 
     @Test
     public void testRestoresDeprecatedPolicyFromConstructorWithoutNoArgs() throws Exception {
         MyPolicyWithoutNoArgConstructor origPolicy = new MyPolicyWithoutNoArgConstructor(MutableMap.of("myfield", "myFieldVal", "myconfigkey", "myConfigVal"));
-        origApp.addPolicy(origPolicy);
+        origApp.policies().add(origPolicy);
         runRestoresSimplePolicy();
     }
 
     @Test
     public void testRestoresSimplePolicyFromPolicySpec() throws Exception {
-        origApp.addPolicy(PolicySpec.create(MyPolicy.class)
+        origApp.policies().add(PolicySpec.create(MyPolicy.class)
                 .configure("myfield", "myFieldVal")
                 .configure(MyPolicy.MY_CONFIG, "myConfigVal"));
         runRestoresSimplePolicy();
     }
     
     protected void runRestoresSimplePolicy() throws Exception {
-        MyPolicy origPolicy = (MyPolicy) Iterables.getOnlyElement(origApp.getPolicies());
+        MyPolicy origPolicy = (MyPolicy) Iterables.getOnlyElement(origApp.policies());
         assertTrue(origPolicy.isRunning());
         assertTrue(origPolicy.initCalled);
         assertFalse(origPolicy.rebindCalled);
         
         newApp = rebind();
-        MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
+        MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.policies());
         
         assertEquals(newPolicy.myfield, "myFieldVal");
         assertEquals(newPolicy.getConfig(MyPolicy.MY_CONFIG), "myConfigVal");
@@ -105,7 +105,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testRestoresConfig() throws Exception {
-        origApp.addPolicy(PolicySpec.create(MyPolicy.class)
+        origApp.policies().add(PolicySpec.create(MyPolicy.class)
                 .displayName("My Policy")
                 .uniqueTag("tagU")
                 .tag("tag1").tag("tag2")
@@ -114,7 +114,7 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
                 .configure(MyPolicy.MY_CONFIG_WITHOUT_SETFROMFLAG, "myVal for witout setFromFlag"));
 
         newApp = rebind();
-        MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
+        MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.policies());
         
         assertEquals(newPolicy.getDisplayName(), "My Policy");
         
@@ -130,8 +130,8 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     public void testExpungesOnEntityUnmanaged() throws Exception {
         Location loc = origManagementContext.getLocationRegistry().resolve("localhost");
         TestEntity entity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
-        MyPolicy policy = entity.addPolicy(PolicySpec.create(MyPolicy.class));
-        MyEnricher enricher = entity.addEnricher(EnricherSpec.create(MyEnricher.class));
+        MyPolicy policy = entity.policies().add(PolicySpec.create(MyPolicy.class));
+        MyEnricher enricher = entity.enrichers().add(EnricherSpec.create(MyEnricher.class));
 
         RebindTestUtils.waitForPersisted(origApp);
 
@@ -149,13 +149,13 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     @Test
     public void testExpungesOnPolicyRemoved() throws Exception {
         TestEntity entity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
-        MyPolicy policy = entity.addPolicy(PolicySpec.create(MyPolicy.class));
-        MyEnricher enricher = entity.addEnricher(EnricherSpec.create(MyEnricher.class));
+        MyPolicy policy = entity.policies().add(PolicySpec.create(MyPolicy.class));
+        MyEnricher enricher = entity.enrichers().add(EnricherSpec.create(MyEnricher.class));
 
         RebindTestUtils.waitForPersisted(origApp);
 
-        entity.removePolicy(policy);
-        entity.removeEnricher(enricher);
+        entity.policies().remove(policy);
+        entity.enrichers().remove(enricher);
         RebindTestUtils.waitForPersisted(origApp);
         
         BrooklynMementoManifest manifest = loadMementoManifest();
@@ -165,10 +165,10 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testReboundConfigDoesNotContainId() throws Exception {
-        MyPolicy policy = origApp.addPolicy(PolicySpec.create(MyPolicy.class));
+        MyPolicy policy = origApp.policies().add(PolicySpec.create(MyPolicy.class));
         
         newApp = rebind();
-        MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.getPolicies());
+        MyPolicy newPolicy = (MyPolicy) Iterables.getOnlyElement(newApp.policies());
 
         assertNull(newPolicy.getConfig(ConfigKeys.newStringConfigKey("id")));
         assertEquals(newPolicy.getId(), policy.getId());
@@ -176,22 +176,22 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testReconfigurePolicyPersistsChange() throws Exception {
-        MyPolicyReconfigurable policy = origApp.addPolicy(PolicySpec.create(MyPolicyReconfigurable.class)
+        MyPolicyReconfigurable policy = origApp.policies().add(PolicySpec.create(MyPolicyReconfigurable.class)
                 .configure(MyPolicyReconfigurable.MY_CONFIG, "oldval"));
         policy.config().set(MyPolicyReconfigurable.MY_CONFIG, "newval");
         
         newApp = rebind();
-        MyPolicyReconfigurable newPolicy = (MyPolicyReconfigurable) Iterables.getOnlyElement(newApp.getPolicies());
+        MyPolicyReconfigurable newPolicy = (MyPolicyReconfigurable) Iterables.getOnlyElement(newApp.policies());
 
         assertEquals(newPolicy.getConfig(MyPolicyReconfigurable.MY_CONFIG), "newval");
     }
 
     @Test
     public void testIsRebinding() throws Exception {
-        origApp.addPolicy(PolicySpec.create(PolicyChecksIsRebinding.class));
+        origApp.policies().add(PolicySpec.create(PolicyChecksIsRebinding.class));
 
         newApp = rebind();
-        PolicyChecksIsRebinding newPolicy = (PolicyChecksIsRebinding) Iterables.getOnlyElement(newApp.getPolicies());
+        PolicyChecksIsRebinding newPolicy = (PolicyChecksIsRebinding) Iterables.getOnlyElement(newApp.policies());
 
         assertTrue(newPolicy.isRebindingValWhenRebinding());
         assertFalse(newPolicy.isRebinding());
@@ -199,12 +199,12 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testPolicyTags() throws Exception {
-        Policy origPolicy = origApp.addPolicy(PolicySpec.create(MyPolicy.class));
+        Policy origPolicy = origApp.policies().add(PolicySpec.create(MyPolicy.class));
         origPolicy.tags().addTag("foo");
         origPolicy.tags().addTag(origApp);
 
         newApp = rebind();
-        Policy newPolicy = Iterables.getOnlyElement(newApp.getPolicies());
+        Policy newPolicy = Iterables.getOnlyElement(newApp.policies());
 
         Asserts.assertEqualsIgnoringOrder(newPolicy.tags().getTags(), ImmutableSet.of("foo", newApp));
     }
@@ -224,14 +224,14 @@ public class RebindPolicyTest extends RebindTestFixtureWithApp {
         TestEntity origEntity = origApp.createAndManageChild(EntitySpec.create(TestEntity.class));
         origGroup.addMember(origEntity);
         
-        EnricherChecksEntityHierarchy origEnricher = origApp.addEnricher(EnricherSpec.create(EnricherChecksEntityHierarchy.class));
-        PolicyChecksEntityHierarchy origPolicy = origApp.addPolicy(PolicySpec.create(PolicyChecksEntityHierarchy.class));
+        EnricherChecksEntityHierarchy origEnricher = origApp.enrichers().add(EnricherSpec.create(EnricherChecksEntityHierarchy.class));
+        PolicyChecksEntityHierarchy origPolicy = origApp.policies().add(PolicySpec.create(PolicyChecksEntityHierarchy.class));
         assertTrue(origEnricher.success);
         assertTrue(origPolicy.success);
         
         newApp = (TestApplication) rebind();
-        EnricherChecksEntityHierarchy newEnricher = (EnricherChecksEntityHierarchy) Iterables.getOnlyElement(newApp.getEnrichers());
-        PolicyChecksEntityHierarchy newPolicy = (PolicyChecksEntityHierarchy) Iterables.getOnlyElement(newApp.getPolicies());
+        EnricherChecksEntityHierarchy newEnricher = (EnricherChecksEntityHierarchy) Iterables.getOnlyElement(newApp.enrichers());
+        PolicyChecksEntityHierarchy newPolicy = (PolicyChecksEntityHierarchy) Iterables.getOnlyElement(newApp.policies());
 
         assertTrue(newEnricher.success);
         assertTrue(newPolicy.success);

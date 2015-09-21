@@ -78,7 +78,7 @@ public abstract class JavaSoftwareProcessSshDriver extends AbstractSoftwareProce
     public JavaSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
         super(entity, machine);
 
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
+        entity.sensors().set(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
     }
 
     protected abstract String getLogFileLocation();

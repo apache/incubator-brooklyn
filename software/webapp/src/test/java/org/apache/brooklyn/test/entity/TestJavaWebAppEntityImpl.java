@@ -40,7 +40,7 @@ public class TestJavaWebAppEntityImpl extends VanillaJavaAppImpl implements Test
     public synchronized void spoofRequest() {
         Integer rc = getAttribute(WebAppServiceConstants.REQUEST_COUNT);
         if (rc==null) rc = 0;
-        setAttribute(WebAppServiceConstants.REQUEST_COUNT, rc+1);
+        sensors().set(WebAppServiceConstants.REQUEST_COUNT, rc+1);
     }
 
     @Override

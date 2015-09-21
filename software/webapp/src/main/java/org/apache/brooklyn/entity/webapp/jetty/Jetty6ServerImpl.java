@@ -76,7 +76,7 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                     // NB: requestsActive may be useful
                     .build();
             
-            addEnricher(Enrichers.builder()
+            enrichers().add(Enrichers.builder()
                     .combining(RESPONSES_4XX_COUNT, RESPONSES_5XX_COUNT)
                     .publishing(ERROR_COUNT)
                     .computingSum()

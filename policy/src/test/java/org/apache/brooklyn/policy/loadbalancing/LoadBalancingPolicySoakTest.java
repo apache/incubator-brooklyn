@@ -159,7 +159,7 @@ public class LoadBalancingPolicySoakTest extends AbstractLoadBalancingPolicyTest
             
             for (int j = 0; j < numItems; j++) {
                 MockItemEntity item = items.get(j);
-                ((EntityLocal)item).setAttribute(MockItemEntity.TEST_METRIC, itemRates.get(j));
+                ((EntityLocal)item).sensors().set(MockItemEntity.TEST_METRIC, itemRates.get(j));
             }
                 
             // Stop containers, and start others

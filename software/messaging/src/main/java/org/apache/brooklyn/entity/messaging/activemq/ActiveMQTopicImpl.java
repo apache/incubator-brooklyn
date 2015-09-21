@@ -26,7 +26,7 @@ public class ActiveMQTopicImpl extends ActiveMQDestinationImpl implements Active
     @Override
     public void onManagementStarting() {
         super.onManagementStarting();
-        setAttribute(TOPIC_NAME, getName());
+        sensors().set(TOPIC_NAME, getName());
     }
 
     @Override

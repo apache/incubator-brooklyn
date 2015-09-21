@@ -32,7 +32,7 @@ public class ActiveMQQueueImpl extends ActiveMQDestinationImpl implements Active
     @Override
     public void onManagementStarting() {
         super.onManagementStarting();
-        setAttribute(QUEUE_NAME, getName());
+        sensors().set(QUEUE_NAME, getName());
     }
 
     public String getQueueName() {

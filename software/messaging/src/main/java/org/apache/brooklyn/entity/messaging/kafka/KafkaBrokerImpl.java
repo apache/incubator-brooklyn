@@ -18,21 +18,18 @@
  */
 package org.apache.brooklyn.entity.messaging.kafka;
 
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.ObjectName;
 
-import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.core.entity.Entities;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.entity.messaging.MessageBroker;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.entity.zookeeper.ZooKeeperNode;
 import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
 import org.apache.brooklyn.feed.jmx.JmxFeed;
 import org.apache.brooklyn.feed.jmx.JmxHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Functions;
 import com.google.common.base.Objects.ToStringHelper;
@@ -55,7 +52,7 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     @Override
     public void init() {
         super.init();
-        setAttribute(BROKER_ID, Math.abs(hashCode())); // Must be positive for partitioning to work
+        sensors().set(BROKER_ID, Math.abs(hashCode())); // Must be positive for partitioning to work
     }
 
     @Override
@@ -160,9 +157,9 @@ public class KafkaBrokerImpl extends SoftwareProcessImpl implements MessageBroke
     public void setBrokerUrl() {
         ZooKeeperNode zookeeper = getZookeeper();
         if (zookeeper != null) {
-            setAttribute(BROKER_URL, String.format("zookeeper://%s:%d", zookeeper.getAttribute(HOSTNAME), zookeeper.getZookeeperPort()));
+            sensors().set(BROKER_URL, String.format("zookeeper://%s:%d", zookeeper.getAttribute(HOSTNAME), zookeeper.getZookeeperPort()));
         } else {
-            setAttribute(BROKER_URL, String.format("kafka://%s:%d", getAttribute(HOSTNAME), getKafkaPort()));
+            sensors().set(BROKER_URL, String.format("kafka://%s:%d", getAttribute(HOSTNAME), getKafkaPort()));
         }
     }
 

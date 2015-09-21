@@ -71,7 +71,7 @@ public class WebClusterExample extends AbstractApplication {
                         .configure("httpPort", "8080+")
                         .configure("war", WAR_PATH)));
         
-        web.getCluster().addPolicy(AutoScalerPolicy.builder()
+        web.getCluster().policies().add(AutoScalerPolicy.builder()
                 .metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE)
                 .sizeRange(1, 5)
                 .metricRange(10, 100)

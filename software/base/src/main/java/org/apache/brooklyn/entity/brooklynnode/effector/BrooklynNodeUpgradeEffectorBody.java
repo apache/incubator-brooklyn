@@ -143,10 +143,10 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
             @Override
             public void run() {
                 DynamicTasks.waitForLast();
-                ((EntityInternal)entity()).setAttribute(SoftwareProcess.INSTALL_DIR, (String)null);
-                entity().setConfig(SoftwareProcess.INSTALL_UNIQUE_LABEL, (String)null);
+                ((EntityInternal)entity()).sensors().set(SoftwareProcess.INSTALL_DIR, (String)null);
+                entity().config().set(SoftwareProcess.INSTALL_UNIQUE_LABEL, (String)null);
                 entity().getConfigMap().addToLocalBag(parameters.getAllConfig());
-                entity().setAttribute(BrooklynNode.DOWNLOAD_URL, entity().getConfig(DOWNLOAD_URL));
+                entity().sensors().set(BrooklynNode.DOWNLOAD_URL, entity().getConfig(DOWNLOAD_URL));
 
                 // Setting SUGGESTED_VERSION will result in an new empty INSTALL_FOLDER, but clear it
                 // just in case the user specified already installed version.
@@ -178,7 +178,7 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
         if (Strings.isBlank(launchParameters)) launchParameters = "";
         else launchParameters += " ";
         launchParameters += "--highAvailability "+HighAvailabilityMode.HOT_STANDBY;
-        ((EntityInternal)dryRunChild).setConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS, launchParameters);
+        ((EntityInternal)dryRunChild).config().set(BrooklynNode.EXTRA_LAUNCH_PARAMETERS, launchParameters);
 
         Entities.manage(dryRunChild);
         final String dryRunNodeUid = dryRunChild.getId();

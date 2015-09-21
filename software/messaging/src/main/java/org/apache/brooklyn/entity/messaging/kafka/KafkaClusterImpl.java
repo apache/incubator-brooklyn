@@ -55,7 +55,7 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     public void init() {
         super.init();
         
-        setAttribute(SERVICE_UP, false);
+        sensors().set(SERVICE_UP, false);
         ConfigToAttributes.apply(this, BROKER_SPEC);
         ConfigToAttributes.apply(this, ZOOKEEPER);
         ConfigToAttributes.apply(this, ZOOKEEPER_SPEC);
@@ -67,13 +67,13 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
             if (zookeeperSpec == null) {
                 log.debug("creating zookeeper using default spec for {}", this);
                 zookeeperSpec = EntitySpec.create(KafkaZooKeeper.class);
-                setAttribute(ZOOKEEPER_SPEC, zookeeperSpec);
+                sensors().set(ZOOKEEPER_SPEC, zookeeperSpec);
             } else {
                 log.debug("creating zookeeper using custom spec for {}", this);
             }
             zookeeper = addChild(zookeeperSpec);
             if (Entities.isManaged(this)) Entities.manage(zookeeper);
-            setAttribute(ZOOKEEPER, zookeeper);
+            sensors().set(ZOOKEEPER, zookeeper);
         }
 
         log.debug("creating cluster child for {}", this);
@@ -81,14 +81,14 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
         if (brokerSpec == null) {
             log.debug("creating default broker spec for {}", this);
             brokerSpec = EntitySpec.create(KafkaBroker.class);
-            setAttribute(BROKER_SPEC, brokerSpec);
+            sensors().set(BROKER_SPEC, brokerSpec);
         }
         // Relies on initialSize being inherited by DynamicCluster, because key id is identical
         // We add the zookeeper configuration to the KafkaBroker specification here
         DynamicCluster cluster = addChild(EntitySpec.create(DynamicCluster.class)
                 .configure("memberSpec", EntitySpec.create(brokerSpec).configure(KafkaBroker.ZOOKEEPER, zookeeper)));
         if (Entities.isManaged(this)) Entities.manage(cluster);
-        setAttribute(CLUSTER, cluster);
+        sensors().set(CLUSTER, cluster);
         
         connectSensors();
     }
@@ -141,7 +141,7 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
         }
 
         clearLocations();
-        setAttribute(SERVICE_UP, false);
+        sensors().set(SERVICE_UP, false);
 
         if (errors.size() != 0) {
             throw new CompoundRuntimeException("Error stopping Kafka cluster", errors);
@@ -158,11 +158,11 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     }
 
     void connectSensors() {
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagatingAllBut(SERVICE_UP)
                 .from(getCluster())
                 .build());
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(SERVICE_UP)
                 .from(getZooKeeper())
                 .build());

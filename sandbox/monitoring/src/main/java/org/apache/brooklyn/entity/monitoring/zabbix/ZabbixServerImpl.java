@@ -82,7 +82,7 @@ public class ZabbixServerImpl extends AbstractEntity implements ZabbixServer {
                         .onSuccess(HttpValueFunctions.jsonContents("result", String.class)))
                 .build();
 
-        policy = addPolicy(PolicySpec.create(AgentTrackingPolicy.class)
+        policy = policies().add(PolicySpec.create(AgentTrackingPolicy.class)
                 .displayName("Zabbix Agent Tracker")
                 .configure("group", monitoredEntities));
 
@@ -90,7 +90,7 @@ public class ZabbixServerImpl extends AbstractEntity implements ZabbixServer {
             added(each);
         }
 
-        setAttribute(Startable.SERVICE_UP, true);
+        sensors().set(Startable.SERVICE_UP, true);
     }
 
     public static class AgentTrackingPolicy extends AbstractMembershipTrackingPolicy {

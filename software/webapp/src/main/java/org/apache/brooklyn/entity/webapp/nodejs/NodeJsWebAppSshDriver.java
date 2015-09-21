@@ -67,8 +67,8 @@ public class NodeJsWebAppSshDriver extends AbstractSoftwareProcessSshDriver impl
     @Override
     public void postLaunch() {
         String rootUrl = String.format("http://%s:%d/", getHostname(), getHttpPort());
-        entity.setAttribute(Attributes.MAIN_URI, URI.create(rootUrl));
-        entity.setAttribute(WebAppService.ROOT_URL, rootUrl);
+        entity.sensors().set(Attributes.MAIN_URI, URI.create(rootUrl));
+        entity.sensors().set(WebAppService.ROOT_URL, rootUrl);
     }
 
     protected Map<String, Integer> getPortMap() {

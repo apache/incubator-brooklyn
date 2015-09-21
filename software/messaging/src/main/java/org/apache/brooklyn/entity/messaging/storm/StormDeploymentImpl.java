@@ -49,12 +49,12 @@ public class StormDeploymentImpl extends BasicStartableImpl implements StormDepl
             ZooKeeperEnsemble.class).configure(
                 ZooKeeperEnsemble.INITIAL_SIZE, getConfig(ZOOKEEPERS_COUNT)));
         
-        setConfig(Storm.ZOOKEEPER_ENSEMBLE, zooKeeperEnsemble);
+        config().set(Storm.ZOOKEEPER_ENSEMBLE, zooKeeperEnsemble);
         
         Storm nimbus = addChild(EntitySpec.create(Storm.class).configure(ROLE, NIMBUS));
         
-        setConfig(Storm.NIMBUS_ENTITY, nimbus);
-        setConfig(Storm.START_MUTEX, new Object());
+        config().set(Storm.NIMBUS_ENTITY, nimbus);
+        config().set(Storm.START_MUTEX, new Object());
         
         addChild(EntitySpec.create(DynamicCluster.class)
             .configure(DynamicCluster.MEMBER_SPEC, 
@@ -64,11 +64,11 @@ public class StormDeploymentImpl extends BasicStartableImpl implements StormDepl
         
         Storm ui = addChild(EntitySpec.create(Storm.class).configure(ROLE, UI));
         
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(Storm.STORM_UI_URL)
                 .from(ui)
                 .build());
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(Attributes.HOSTNAME)
                 .from(nimbus)
                 .build());

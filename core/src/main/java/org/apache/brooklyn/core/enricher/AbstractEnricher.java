@@ -106,9 +106,9 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
                 if (Objects.equal(oldValue, newVal))
                     return;
             }
-            entity.setAttribute((AttributeSensor<T>)sensor, newVal);
+            entity.sensors().set((AttributeSensor<T>)sensor, newVal);
         } else { 
-            entity.emit(sensor, newVal);
+            entity.sensors().emit(sensor, newVal);
         }
     }
     
