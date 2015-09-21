@@ -301,8 +301,6 @@ public interface Entity extends BrooklynObject {
     
     SensorSupport sensors();
 
-    SubscriptionSupport subscriptions();
-
     PolicySupport policies();
 
     EnricherSupport enrichers();
@@ -353,55 +351,6 @@ public interface Entity extends BrooklynObject {
         <T> void emit(Sensor<T> sensor, T value);
     }
     
-    @Beta
-    public interface SubscriptionSupport {
-        /**
-         * Allow us to subscribe to data from a {@link Sensor} on another entity.
-         * 
-         * @return a subscription id which can be used to unsubscribe
-         *
-         * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
-         */
-        // FIXME remove from interface?
-        @Beta
-        <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
-     
-        /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
-        // FIXME remove from interface?
-        @Beta
-        <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
-     
-        /** @see SubscriptionManager#subscribeToMembers(Group, Sensor, SensorEventListener) */
-        // FIXME remove from interface?
-        @Beta
-        <T> SubscriptionHandle subscribeToMembers(Group group, Sensor<T> sensor, SensorEventListener<? super T> listener);
-
-        /**
-         * Unsubscribes from the given producer.
-         *
-         * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
-         */
-        @Beta
-        boolean unsubscribe(Entity producer);
-
-        /**
-         * Unsubscribes the given handle.
-         *
-         * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
-         */
-        @Beta
-        boolean unsubscribe(Entity producer, SubscriptionHandle handle);
-        
-        /**
-         * Unsubscribes the given handle.
-         * 
-         * It is (currently) more efficient to also pass in the producer -
-         * see {@link BasicSubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)} 
-         */
-        @Beta
-        boolean unsubscribe(SubscriptionHandle handle);
-    }
-
     @Beta
     public interface PolicySupport {
         /**

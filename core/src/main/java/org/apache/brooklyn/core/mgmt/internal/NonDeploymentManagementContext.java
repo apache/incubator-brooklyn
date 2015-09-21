@@ -241,6 +241,13 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
 
     @Override
+    public synchronized SubscriptionContext getSubscriptionContext(Location loc) {
+        // Should never be called; the NonDeploymentManagementContext is associated with a particular entity, whereas
+        // the #getSubscriptionContext(loc) should only be called in the context of a location.
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public ExecutionContext getExecutionContext(Entity entity) {
         if (!this.entity.equals(entity)) throw new IllegalStateException("Non-deployment context "+this+" can only use a single Entity: has "+this.entity+", but passed "+entity);
         if (mode==NonDeploymentManagementContextMode.MANAGEMENT_STOPPED)

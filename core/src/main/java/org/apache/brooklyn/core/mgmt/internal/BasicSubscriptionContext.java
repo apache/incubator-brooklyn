@@ -19,7 +19,6 @@
 package org.apache.brooklyn.core.mgmt.internal;
 
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.mapOf;
-import groovy.lang.Closure;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -41,6 +40,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+
+import groovy.lang.Closure;
 
 /**
  * A {@link SubscriptionContext} for an entity or other user of a {@link SubscriptionManager}.

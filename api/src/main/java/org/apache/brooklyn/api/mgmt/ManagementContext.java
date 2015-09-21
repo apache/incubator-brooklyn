@@ -28,6 +28,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolverManager;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.mgmt.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityManager;
@@ -155,6 +156,14 @@ public interface ManagementContext {
      * of conveniently subscribing on behalf of that entity  
      */
     SubscriptionContext getSubscriptionContext(Entity entity);
+
+    /**
+     * Returns a {@link SubscriptionContext} instance representing subscriptions
+     * (from the {@link SubscriptionManager}) associated with this location, and capable 
+     * of conveniently subscribing on behalf of that location  
+     */
+    @Beta
+    SubscriptionContext getSubscriptionContext(Location location);
 
     @Beta // method may move to an internal interface; brooklyn users should not need to call this directly
     RebindManager getRebindManager();

@@ -25,6 +25,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal.SubscriptionSupportInternal;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
@@ -49,13 +50,21 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
     }
     
     /**
-     * Config not supported for catalog item. See {@link #getPlanYaml()}.
+     * @throws UnsupportedOperationException; Config not supported for catalog item. See {@link #getPlanYaml()}.
      */
     @Override
     public ConfigurationSupportInternal config() {
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * @throws UnsupportedOperationException; subscriptions are not supported for catalog items
+     */
+    @Override
+    public SubscriptionSupportInternal subscriptions() {
+        throw new UnsupportedOperationException();
+    }
+    
     @Override
     public <U> U setConfig(ConfigKey<U> key, U val) {
         return config().set(key, val);

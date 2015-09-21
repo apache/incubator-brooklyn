@@ -184,9 +184,6 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     SensorSupportInternal sensors();
 
     @Override
-    SubscriptionSupportInternal subscriptions();
-
-    @Override
     PolicySupportInternal policies();
 
     @Override
@@ -227,11 +224,6 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
          * @return True if any feeds existed at this entity; false otherwise
          */
         boolean removeAllFeeds();
-    }
-    
-    @Beta
-    public interface SubscriptionSupportInternal extends Entity.SubscriptionSupport {
-        public void unsubscribeAll();
     }
     
     @Beta
