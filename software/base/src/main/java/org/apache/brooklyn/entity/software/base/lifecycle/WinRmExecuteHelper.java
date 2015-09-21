@@ -48,7 +48,6 @@ import static java.lang.String.format;
 public class WinRmExecuteHelper {
     public static final Logger LOG = LoggerFactory.getLogger(WinRmExecuteHelper.class);
 
-    private Entity entity;
     private Task<Integer> task;
 
     protected final NativeWindowsScriptRunner runner;
@@ -75,10 +74,6 @@ public class WinRmExecuteHelper {
     public WinRmExecuteHelper setPsCommand(String psCommand) {
         this.psCommand = psCommand;
         return this;
-    }
-
-    protected Entity getEntity() {
-        return entity;
     }
 
     /** queues the task for execution if we are in a {@link TaskQueueingContext} (e.g. EffectorTaskFactory);
