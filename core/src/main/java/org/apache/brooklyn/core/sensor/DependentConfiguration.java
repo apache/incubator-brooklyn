@@ -483,9 +483,19 @@ public class DependentConfiguration {
             taskArgs);
     }
 
+    public static Task<String> regexReplacement(Object source, Object pattern, Object replacement) {
+        List<TaskAdaptable<Object>> taskArgs = getTaskAdaptable(source, pattern, replacement);
+        Function<List<Object>, String> transformer = new RegexTransformerString(source, pattern, replacement);
+        return transformMultiple(
+                MutableMap.of("displayName", String.format("creating regex replacement function (%s:%s)", pattern, replacement)),
+                transformer,
+                taskArgs
+        );
+    }
+
     public static Task<Function<String, String>> regexReplacement(Object pattern, Object replacement) {
         List<TaskAdaptable<Object>> taskArgs = getTaskAdaptable(pattern, replacement);
-        Function<List<Object>, Function<String, String>> transformer = new RegexTransformer(pattern, replacement);
+        Function<List<Object>, Function<String, String>> transformer = new RegexTransformerFunction(pattern, replacement);
         return transformMultiple(
                 MutableMap.of("displayName", String.format("creating regex replacement function (%s:%s)", pattern, replacement)),
                 transformer,
@@ -505,12 +515,35 @@ public class DependentConfiguration {
         return taskArgs;
     }
 
-    public static class RegexTransformer  implements Function<List<Object>, Function<String, String>> {
+    public static class RegexTransformerString implements Function<List<Object>, String> {
+
+        private final Object source;
+        private final Object pattern;
+        private final Object replacement;
+
+        public RegexTransformerString(Object source, Object pattern, Object replacement){
+            this.source = source;
+            this.pattern = pattern;
+            this.replacement = replacement;
+        }
+
+        @Nullable
+        @Override
+        public String apply(@Nullable List<Object> input) {
+            Iterator<?> taskArgsIterator = input.iterator();
+            String resolvedSource = resolveArgument(source, taskArgsIterator);
+            String resolvedPattern = resolveArgument(pattern, taskArgsIterator);
+            String resolvedReplacement = resolveArgument(replacement, taskArgsIterator);
+            return new RegexReplacer(resolvedPattern, resolvedReplacement).apply(resolvedSource);
+        }
+    }
+
+    public static class RegexTransformerFunction implements Function<List<Object>, Function<String, String>> {
 
         private final Object pattern;
         private final Object replacement;
 
-        public RegexTransformer(Object pattern, Object replacement){
+        public RegexTransformerFunction(Object pattern, Object replacement){
             this.pattern = pattern;
             this.replacement = replacement;
         }
@@ -521,18 +554,24 @@ public class DependentConfiguration {
             return new RegexReplacer(resolveArgument(pattern, taskArgsIterator), resolveArgument(replacement, taskArgsIterator));
         }
 
-        private String resolveArgument(Object argument, Iterator<?> taskArgsIterator) {
-            Object resolvedArgument;
-            if (argument instanceof TaskAdaptable || argument instanceof TaskFactory) {
-                resolvedArgument = taskArgsIterator.next();
-            } else if (argument instanceof DeferredSupplier) {
-                resolvedArgument = ((DeferredSupplier<?>) argument).get();
-            } else {
-                resolvedArgument = argument;
-            }
-            return String.valueOf(resolvedArgument);
-        }
+    }
 
+    /**
+     * Resolves the argument as follows:
+     *
+     * If the argument is a DeferredSupplier, we will block and wait for it to resolve. If the argument is TaskAdaptable or TaskFactory,
+     * we will assume that the resolved task has been queued on the {@code taskArgsIterator}, otherwise the argument has already been resolved.
+     */
+    private static String resolveArgument(Object argument, Iterator<?> taskArgsIterator) {
+        Object resolvedArgument;
+        if (argument instanceof TaskAdaptable) {
+            resolvedArgument = taskArgsIterator.next();
+        } else if (argument instanceof DeferredSupplier) {
+            resolvedArgument = ((DeferredSupplier<?>) argument).get();
+        } else {
+            resolvedArgument = argument;
+        }
+        return String.valueOf(resolvedArgument);
     }
 
     public static class RegexReplacer implements Function<String, String> {

@@ -168,8 +168,15 @@ public class BrooklynDslInterpreter extends PlanInterpreterAdapter {
         
         String fn = f.getFunction();
         fn = Strings.removeFromStart(fn, "$brooklyn:");
+        if (fn.startsWith("function.")) {
+            // If the function name starts with 'function.', then we look for the function in BrooklynDslCommon.Functions
+            // As all functions in BrooklynDslCommon.Functions are static, we don't need to worry whether a class
+            // or an instance was passed into this method
+            o = BrooklynDslCommon.Functions.class;
+            fn = Strings.removeFromStart(fn, "function.");
+        }
         try {
-            List<Object> args = new ArrayList<Object>();
+            List<Object> args = new ArrayList<>();
             for (Object arg: f.getArgs()) {
                 args.add( deepEvaluation ? evaluate(arg, true) : arg );
             }

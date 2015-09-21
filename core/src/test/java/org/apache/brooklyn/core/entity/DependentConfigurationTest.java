@@ -113,7 +113,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
-    public void testRegexReplacementWithStrings() throws Exception {
+    public void testRegexReplacementFunctionWithStrings() throws Exception {
         Task<Function<String, String>> task = DependentConfiguration.regexReplacement("foo", "bar");
         submit(task);
         Function<String, String> regexReplacer = task.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
@@ -121,9 +121,8 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
     }
 
     @Test
-    public void testRegexReplacementWithAttributeWhenReady() throws Exception {
+    public void testRegexReplacementFunctionWithAttributeWhenReady() throws Exception {
         AttributeSensor<Object> replacementSensor = Sensors.newSensor(Object.class, "test.replacement");
-        DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME);
         Task<String> pattern = DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME);
         Task<Object> replacement = DependentConfiguration.attributeWhenReady(entity, replacementSensor);
         Task<Function<String, String>> task = DependentConfiguration.regexReplacement(pattern, replacement);
@@ -132,6 +131,30 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
         entity.sensors().set(replacementSensor, "bar");
         Function<String, String> regexReplacer = task.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         Assert.assertEquals(regexReplacer.apply("somefootext"), "somebartext");
+    }
+
+    @Test
+    public void testRegexReplacementWithStrings() throws Exception {
+        Task<String> task = DependentConfiguration.regexReplacement("somefootext", "foo", "bar");
+        submit(task);
+        String result = task.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(result, "somebartext");
+    }
+
+    @Test
+    public void testRegexReplacementWithAttributeWhenReady() throws Exception {
+        AttributeSensor<String> sourceSensor = Sensors.newStringSensor("test.source");
+        AttributeSensor<String> replacementSensor = Sensors.newSensor(String.class, "test.replacement");
+        Task<String> source = DependentConfiguration.attributeWhenReady(entity, sourceSensor);
+        Task<String> pattern = DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME);
+        Task<String> replacement = DependentConfiguration.attributeWhenReady(entity, replacementSensor);
+        Task<String> task = DependentConfiguration.regexReplacement(source, pattern, replacement);
+        submit(task);
+        entity.sensors().set(sourceSensor, "somefootext");
+        entity.sensors().set(TestEntity.NAME, "foo");
+        entity.sensors().set(replacementSensor, "bar");
+        String result = task.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        Assert.assertEquals(result, "somebartext");
     }
 
     @Test
