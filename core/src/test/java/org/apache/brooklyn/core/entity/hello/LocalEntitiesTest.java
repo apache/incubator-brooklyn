@@ -94,7 +94,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         final AtomicReference<SensorEvent<?>> evt = new AtomicReference<SensorEvent<?>>();
         final CountDownLatch latch = new CountDownLatch(1);
         
-        app.getSubscriptionContext().subscribe(h, HelloEntity.AGE, new SensorEventListener<Integer>() {
+        app.subscriptions().subscribe(h, HelloEntity.AGE, new SensorEventListener<Integer>() {
             @Override public void onEvent(SensorEvent<Integer> event) {
                 evt.set(event);
                 latch.countDown();
@@ -121,7 +121,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         app.start(ImmutableList.of(loc));
         
         final AtomicReference<SensorEvent<?>> evt = new AtomicReference<SensorEvent<?>>();
-        app.getSubscriptionContext().subscribe(h, HelloEntity.ITS_MY_BIRTHDAY, new SensorEventListener<Object>() {
+        app.subscriptions().subscribe(h, HelloEntity.ITS_MY_BIRTHDAY, new SensorEventListener<Object>() {
             @Override public void onEvent(SensorEvent<Object> event) {
                 evt.set(event);
                 synchronized (evt) {
@@ -149,7 +149,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         final List<Integer> data = Lists.newArrayList();
         final CountDownLatch latch = new CountDownLatch(5);
         
-        app.getSubscriptionContext().subscribe(h, HelloEntity.AGE, new SensorEventListener<Integer>() {
+        app.subscriptions().subscribe(h, HelloEntity.AGE, new SensorEventListener<Integer>() {
             @Override public void onEvent(SensorEvent<Integer> event) {
                 data.add(event.getValue());
                 Time.sleep((int)(20*Math.random()));
@@ -163,7 +163,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         }
         assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
 
-        app.getSubscriptionContext().unsubscribeAll();
+        app.subscriptions().unsubscribeAll();
         h.setAge(6);
         long totalTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         

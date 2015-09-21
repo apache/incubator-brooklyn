@@ -1069,7 +1069,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             if (getManagementSupport().isNoLongerManaged())
                 throw new IllegalStateException("Entity "+AbstractEntity.this+" is no longer managed, when trying to publish "+sensor+" "+val);
 
-            SubscriptionContext subsContext = getSubscriptionContext();
+            SubscriptionContext subsContext = subscriptions().getSubscriptionContext();
             if (subsContext != null) subsContext.publish(sensor.newEvent(getProxyIfAvailable(), val));
         }
     }
@@ -1390,8 +1390,23 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             return getSubscriptionTracker().unsubscribe(producer, handle);
         }
 
+        /**
+         * Unsubscribes the given handle.
+         * 
+         * It is (currently) more efficient to also pass in the producer -
+         * see {@link BasicSubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)} 
+         */
         @Override
-        public SubscriptionContext getSubscriptionContext() {
+        public boolean unsubscribe(SubscriptionHandle handle) {
+            return getSubscriptionTracker().unsubscribe(handle);
+        }
+
+        @Override
+        public void unsubscribeAll() {
+            getSubscriptionTracker().unsubscribeAll();
+        }
+        
+        protected SubscriptionContext getSubscriptionContext() {
             synchronized (AbstractEntity.this) {
                 return getManagementSupport().getSubscriptionContext();
             }
@@ -1457,15 +1472,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Deprecated
     public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
         return subscriptions().unsubscribe(producer, handle);
-    }
-
-    /**
-     * @deprecated since 0.9.0; see {@code subscriptions().getSubscriptionContext()}
-     */
-    @Override
-    @Deprecated
-    public synchronized SubscriptionContext getSubscriptionContext() {
-        return subscriptions().getSubscriptionContext();
     }
 
     /**

@@ -391,6 +391,15 @@ public interface Entity extends BrooklynObject {
          */
         @Beta
         boolean unsubscribe(Entity producer, SubscriptionHandle handle);
+        
+        /**
+         * Unsubscribes the given handle.
+         * 
+         * It is (currently) more efficient to also pass in the producer -
+         * see {@link BasicSubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)} 
+         */
+        @Beta
+        boolean unsubscribe(SubscriptionHandle handle);
     }
 
     @Beta

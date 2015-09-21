@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
+import org.apache.brooklyn.core.entity.AbstractEntity.BasicSubscriptionSupport;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -120,6 +121,21 @@ public class SubscriptionTracker {
        }
        return context.unsubscribe(handle);
    }
+
+   /**
+   * Unsubscribes the given handle.
+   * 
+   * It is (currently) more efficient to also pass in the producer -
+   * see {@link BasicSubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)}
+   *
+   * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+   */
+  public boolean unsubscribe(SubscriptionHandle handle) {
+      synchronized (subscriptions) {
+          subscriptions.values().remove(handle);
+      }
+      return context.unsubscribe(handle);
+  }
 
     /**
     * @return an ordered list of all subscription handles

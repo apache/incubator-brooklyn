@@ -274,13 +274,13 @@ public class DependentConfiguration {
             List<SubscriptionHandle> abortSubscriptions = Lists.newArrayList();
             
             try {
-                subscription = ((EntityInternal)entity).getSubscriptionContext().subscribe(source, sensor, new SensorEventListener<T>() {
+                subscription = entity.subscriptions().subscribe(source, sensor, new SensorEventListener<T>() {
                     @Override public void onEvent(SensorEvent<T> event) {
                         synchronized (publishedValues) { publishedValues.add(event.getValue()); }
                         semaphore.release();
                     }});
                 for (final AttributeAndSensorCondition abortCondition : abortSensorConditions) {
-                    abortSubscriptions.add(((EntityInternal)entity).getSubscriptionContext().subscribe(abortCondition.source, abortCondition.sensor, new SensorEventListener<Object>() {
+                    abortSubscriptions.add(entity.subscriptions().subscribe(abortCondition.source, abortCondition.sensor, new SensorEventListener<Object>() {
                         @Override public void onEvent(SensorEvent<Object> event) {
                             if (abortCondition.predicate.apply(event.getValue())) {
                                 abortionExceptions.add(new Exception("Abort due to "+abortCondition.source+" -> "+abortCondition.sensor));
@@ -354,10 +354,10 @@ public class DependentConfiguration {
                 throw Exceptions.propagate(e);
             } finally {
                 if (subscription != null) {
-                    ((EntityInternal)entity).getSubscriptionContext().unsubscribe(subscription);
+                    entity.subscriptions().unsubscribe(subscription);
                 }
                 for (SubscriptionHandle handle : abortSubscriptions) {
-                    ((EntityInternal)entity).getSubscriptionContext().unsubscribe(handle);
+                    entity.subscriptions().unsubscribe(handle);
                 }
             }
         }

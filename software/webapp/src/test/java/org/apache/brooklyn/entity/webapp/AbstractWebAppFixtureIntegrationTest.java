@@ -369,11 +369,10 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         SubscriptionHandle subscriptionHandle = null;
-        SubscriptionContext subContext = ((EntityInternal)entity).getSubscriptionContext();
 
         try {
             final List<SensorEvent> events = new CopyOnWriteArrayList<SensorEvent>();
-            subscriptionHandle = subContext.subscribe(entity, WebAppService.REQUESTS_PER_SECOND_IN_WINDOW, new SensorEventListener<Double>() {
+            subscriptionHandle = entity.subscriptions().subscribe(entity, WebAppService.REQUESTS_PER_SECOND_IN_WINDOW, new SensorEventListener<Double>() {
                 public void onEvent(SensorEvent<Double> event) {
                     log.info("publishesRequestsPerSecondMetricRepeatedly.onEvent: {}", event);
                     events.add(event);
@@ -395,7 +394,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                     }
                 }});
         } finally {
-            if (subscriptionHandle != null) subContext.unsubscribe(subscriptionHandle);
+            if (subscriptionHandle != null) entity.subscriptions().unsubscribe(subscriptionHandle);
             entity.stop();
         }
     }

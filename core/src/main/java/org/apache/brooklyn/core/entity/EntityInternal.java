@@ -24,25 +24,19 @@ import java.util.Map;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
-import org.apache.brooklyn.api.entity.Entity.SensorSupport;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.EntityMemento;
-import org.apache.brooklyn.api.objs.Configurable;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.entity.internal.EntityConfigMap;
 import org.apache.brooklyn.core.mgmt.internal.EntityManagementSupport;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
-import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
 import org.apache.brooklyn.util.core.config.ConfigBag;
-import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 
@@ -152,12 +146,6 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
      */    
     ExecutionContext getExecutionContext();
 
-    /**
-     * @deprecated since 0.9.0; see {@link SubscriptionSupportInternal#getSubscriptionContext()}, e.g. with {@code subscriptions().getSubscriptionContext()}
-     */
-    @Deprecated
-    SubscriptionContext getSubscriptionContext();
-    
     /** returns the dynamic type corresponding to the type of this entity instance */
     @Beta
     EntityDynamicType getMutableEntityType();
@@ -243,7 +231,7 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     
     @Beta
     public interface SubscriptionSupportInternal extends Entity.SubscriptionSupport {
-        SubscriptionContext getSubscriptionContext();
+        public void unsubscribeAll();
     }
     
     @Beta
