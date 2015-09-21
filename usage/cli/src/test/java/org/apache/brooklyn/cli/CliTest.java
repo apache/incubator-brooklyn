@@ -47,6 +47,7 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.cli.AbstractMain.BrooklynCommand;
 import org.apache.brooklyn.cli.AbstractMain.BrooklynCommandCollectingArgs;
+import org.apache.brooklyn.cli.AbstractMain.DefaultInfoCommand;
 import org.apache.brooklyn.cli.AbstractMain.HelpCommand;
 import org.apache.brooklyn.cli.Main.AppShutdownHandler;
 import org.apache.brooklyn.cli.Main.GeneratePasswordCommand;
@@ -300,12 +301,39 @@ public class CliTest {
         cli.parse("launch", "blah", "my.App");
     }
     
+    @Test
     public void testHelpCommand() {
         Cli<BrooklynCommand> cli = buildCli();
         BrooklynCommand command = cli.parse("help");
-        assertTrue(command instanceof HelpCommand);
-        command = cli.parse();
-        assertTrue(command instanceof HelpCommand);
+        assertTrue(command instanceof HelpCommand, "Command is: "+command);
+    }
+    
+    @Test
+    public void testDefaultInfoCommand() {
+        Cli<BrooklynCommand> cli = buildCli();
+        BrooklynCommand command = cli.parse("");
+        assertTrue(command instanceof DefaultInfoCommand, "Command is: "+command);
+    }
+
+    @Test
+    public void testCliSystemPropertyDefines() {
+        Cli<BrooklynCommand> cli = buildCli();
+        BrooklynCommand command0 = cli.parse(
+            "-Dorg.apache.brooklyn.cli.CliTest.sample1=foo",
+            "-Dorg.apache.brooklyn.cli.CliTest.sample2=bar",
+            "launch", 
+            "-Dorg.apache.brooklyn.cli.CliTest.sample3=baz"
+            );
+        assertTrue(command0 instanceof LaunchCommand);
+        LaunchCommand command = (LaunchCommand) command0;
+        assertEquals(command.getDefines().size(), 3, 
+            "Command is: "+command);
+        assertTrue(command.getDefines().get(0).equals("org.apache.brooklyn.cli.CliTest.sample1=foo"),  
+            "Command is: "+command);
+        assertTrue(command.getDefines().get(2).equals("org.apache.brooklyn.cli.CliTest.sample3=baz"), 
+            "Command is: "+command);
+        assertEquals(command.getDefinesAsMap().get("org.apache.brooklyn.cli.CliTest.sample3"), "baz",
+            "Command is: "+command);
     }
 
     @Test

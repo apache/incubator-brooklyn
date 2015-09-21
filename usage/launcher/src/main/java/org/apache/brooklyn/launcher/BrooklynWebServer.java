@@ -39,6 +39,7 @@ import javax.servlet.DispatcherType;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -588,6 +589,11 @@ public class BrooklynWebServer {
         boolean isRoot = cleanPathSpec.isEmpty();
 
         WebAppContext context = new WebAppContext();
+        // use a unique session ID to prevent interference with other web apps on same server (esp for localhost);
+        // it might be better to make this brooklyn-only or base on the management-plane ID;
+        // but i think it actually *is* per-server instance, since we don't cache sessions server-side,
+        // so i think this is write. [Alex 2015-09] 
+        context.setInitParameter(SessionManager.__SessionCookieProperty, SessionManager.__DefaultSessionCookie+"_"+"BROOKLYN"+Identifiers.makeRandomId(6));
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
         for (Map.Entry<String, Object> attributeEntry : attributes.entrySet()) {
             context.setAttribute(attributeEntry.getKey(), attributeEntry.getValue());
