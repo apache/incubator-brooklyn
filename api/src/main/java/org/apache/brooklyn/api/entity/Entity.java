@@ -25,9 +25,11 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.mgmt.SubscriptionContext;
+import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
+import org.apache.brooklyn.api.mgmt.SubscriptionManager;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.objs.BrooklynObject;
-import org.apache.brooklyn.api.objs.Configurable.ConfigurationSupport;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -36,6 +38,7 @@ import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
+import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -274,6 +277,8 @@ public interface Entity extends BrooklynObject {
     
     SensorSupport sensors();
 
+    SubscriptionSupport subscriptions();
+    
     @Beta
     public interface SensorSupport {
 
@@ -318,5 +323,45 @@ public interface Entity extends BrooklynObject {
          * as this method will not update local values.
          */
         <T> void emit(Sensor<T> sensor, T value);
+    }
+    
+    @Beta
+    public interface SubscriptionSupport {
+        /**
+         * Allow us to subscribe to data from a {@link Sensor} on another entity.
+         * 
+         * @return a subscription id which can be used to unsubscribe
+         *
+         * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
+         */
+        // FIXME remove from interface?
+        @Beta
+        <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
+     
+        /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
+        // FIXME remove from interface?
+        @Beta
+        <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
+     
+        /** @see SubscriptionManager#subscribeToMembers(Group, Sensor, SensorEventListener) */
+        // FIXME remove from interface?
+        @Beta
+        <T> SubscriptionHandle subscribeToMembers(Group group, Sensor<T> sensor, SensorEventListener<? super T> listener);
+
+        /**
+         * Unsubscribes from the given producer.
+         *
+         * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+         */
+        @Beta
+        boolean unsubscribe(Entity producer);
+
+        /**
+         * Unsubscribes the given handle.
+         *
+         * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+         */
+        @Beta
+        boolean unsubscribe(Entity producer, SubscriptionHandle handle);
     }
 }

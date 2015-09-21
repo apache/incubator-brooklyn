@@ -151,7 +151,11 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
      * Do not cache this object; instead call getExecutionContext() each time you need to use it.
      */    
     ExecutionContext getExecutionContext();
-    
+
+    /**
+     * @deprecated since 0.9.0; see {@link SubscriptionSupportInternal#getSubscriptionContext()}, e.g. with {@code subscriptions().getSubscriptionContext()}
+     */
+    @Deprecated
     SubscriptionContext getSubscriptionContext();
     
     /** returns the dynamic type corresponding to the type of this entity instance */
@@ -190,6 +194,8 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     
     SensorSupportInternal sensors();
 
+    SubscriptionSupportInternal subscriptions();
+
     @Beta
     public interface SensorSupportInternal extends Entity.SensorSupport {
         /**
@@ -203,8 +209,6 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
 
         @Beta
         void remove(AttributeSensor<?> attribute);
-
-
     }
 
     public interface FeedSupport {
@@ -227,5 +231,10 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
          * @return True if any feeds existed at this entity; false otherwise
          */
         boolean removeAllFeeds();
+    }
+    
+    @Beta
+    public interface SubscriptionSupportInternal extends Entity.SubscriptionSupport {
+        SubscriptionContext getSubscriptionContext();
     }
 }
