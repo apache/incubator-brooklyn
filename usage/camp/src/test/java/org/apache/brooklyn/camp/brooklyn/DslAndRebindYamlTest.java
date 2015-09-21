@@ -25,6 +25,7 @@ import java.util.concurrent.Callable;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
@@ -35,6 +36,7 @@ import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.slf4j.Logger;
@@ -239,6 +241,74 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
             "  id: x",
             "  brooklyn.config:",
             "    test.confName: $brooklyn:formatString(\"hello %s\", \"world\")");
+    }
+
+
+    /*
+           - type: org.apache.brooklyn.enricher.stock.Transformer
+          brooklyn.config:
+            enricher.sourceSensor: $brooklyn:sensor("mongodb.server.replicaSet.primary.endpoint")
+            enricher.targetSensor: $brooklyn:sensor("justtheport")
+            enricher.transformation: $brooklyn:function.regexReplacement("^.*:", "")
+        - type: org.apache.brooklyn.enricher.stock.Transformer
+          brooklyn.config:
+            enricher.sourceSensor: $brooklyn:sensor("mongodb.server.replicaSet.primary.endpoint")
+            enricher.targetSensor: $brooklyn:sensor("directport")
+            enricher.targetValue: $brooklyn:regexReplacement($brooklyn:attributeWhenReady("mongodb.server.replicaSet.primary.endpoint"), "^.*:", "foo")
+     */
+
+    @Test
+    public void testRegexReplacementWithStrings() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
+                "  brooklyn.config:",
+                "    test.regex.config: $brooklyn:regexReplacement(\"somefooname\", \"foo\", \"bar\")"
+        );
+        Assert.assertEquals("somebarname", testEntity.getConfig(ConfigKeys.newStringConfigKey("test.regex.config")));
+    }
+
+    @Test
+    public void testRegexReplacementWithAttributeWhenReady() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
+                "  brooklyn.config:",
+                "    test.regex.config: $brooklyn:regexReplacement($brooklyn:attributeWhenReady(\"test.regex.source\"), $brooklyn:attributeWhenReady(\"test.regex.pattern\"), $brooklyn:attributeWhenReady(\"test.regex.replacement\"))"
+        );
+        testEntity.sensors().set(Sensors.newStringSensor("test.regex.source"), "somefooname");
+        testEntity.sensors().set(Sensors.newStringSensor("test.regex.pattern"), "foo");
+        testEntity.sensors().set(Sensors.newStringSensor("test.regex.replacement"), "bar");
+
+        Assert.assertEquals("somebarname", testEntity.getConfig(ConfigKeys.newStringConfigKey("test.regex.config")));
+    }
+
+    @Test
+    public void testRegexReplacementFunctionWithStrings() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
+                "  brooklyn.enrichers:",
+                "  - type: org.apache.brooklyn.enricher.stock.Transformer",
+                "    brooklyn.config:",
+                "      enricher.sourceSensor: $brooklyn:sensor(\"test.name\")",
+                "      enricher.targetSensor: $brooklyn:sensor(\"test.name.transformed\")",
+                "      enricher.transformation: $brooklyn:function.regexReplacement(\"foo\", \"bar\")"
+        );
+        testEntity.sensors().set(TestEntity.NAME, "somefooname");
+        AttributeSensor<String> transformedSensor = Sensors.newStringSensor("test.name.transformed");
+        EntityTestUtils.assertAttributeEqualsEventually(testEntity, transformedSensor, "somebarname");
+    }
+
+    @Test
+    public void testRegexReplacementFunctionWithAttributeWhenReady() throws Exception {
+        Entity testEntity = setupAndCheckTestEntityInBasicYamlWith(
+                "  brooklyn.enrichers:",
+                "  - type: org.apache.brooklyn.enricher.stock.Transformer",
+                "    brooklyn.config:",
+                "      enricher.sourceSensor: $brooklyn:sensor(\"test.name\")",
+                "      enricher.targetSensor: $brooklyn:sensor(\"test.name.transformed\")",
+                "      enricher.transformation: $brooklyn:function.regexReplacement($brooklyn:attributeWhenReady(\"test.pattern\"), $brooklyn:attributeWhenReady(\"test.replacement\"))"
+        );
+        testEntity.sensors().set(Sensors.newStringSensor("test.pattern"), "foo");
+        testEntity.sensors().set(Sensors.newStringSensor("test.replacement"), "bar");
+        testEntity.sensors().set(TestEntity.NAME, "somefooname");
+        AttributeSensor<String> transformedSensor = Sensors.newStringSensor("test.name.transformed");
+        EntityTestUtils.assertAttributeEqualsEventually(testEntity, transformedSensor, "somebarname");
     }
 
 }
