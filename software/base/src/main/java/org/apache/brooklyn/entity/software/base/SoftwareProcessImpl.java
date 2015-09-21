@@ -171,6 +171,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             Lifecycle state = entity.getAttribute(SERVICE_STATE_ACTUAL);
             if (up == null || up) {
                 entity.sensors().set(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
+            } else if (state == null || state == Lifecycle.CREATED) {
+                // not yet started; do nothing
             } else if (state == Lifecycle.STOPPING || state == Lifecycle.STOPPED || state == Lifecycle.DESTROYED) {
                 // stopping/stopped, so expect not to be up; get rid of the diagnostics.
                 entity.sensors().set(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
