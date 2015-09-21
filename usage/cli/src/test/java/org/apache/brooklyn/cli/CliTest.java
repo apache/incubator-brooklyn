@@ -311,7 +311,7 @@ public class CliTest {
     @Test
     public void testDefaultInfoCommand() {
         Cli<BrooklynCommand> cli = buildCli();
-        BrooklynCommand command = cli.parse("");
+        BrooklynCommand command = cli.parse();
         assertTrue(command instanceof DefaultInfoCommand, "Command is: "+command);
     }
 
