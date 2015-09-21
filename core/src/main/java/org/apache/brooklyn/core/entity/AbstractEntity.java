@@ -198,8 +198,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     private Reference<String> iconUrl = new BasicReference<String>();
 
     Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
-    Collection<AbstractPolicy> policies = Lists.newCopyOnWriteArrayList();
-    Collection<AbstractEnricher> enrichers = Lists.newCopyOnWriteArrayList();
+    private Collection<AbstractPolicy> policiesInternal = Lists.newCopyOnWriteArrayList();
+    private Collection<AbstractEnricher> enrichersInternal = Lists.newCopyOnWriteArrayList();
     Collection<Feed> feeds = Lists.newCopyOnWriteArrayList();
 
     // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
@@ -221,7 +221,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     private final BasicSensorSupport sensors = new BasicSensorSupport();
 
     private final BasicSubscriptionSupport subscriptions = new BasicSubscriptionSupport();
-    
+
+    private final BasicPolicySupport policies = new BasicPolicySupport();
+
+    private final BasicEnricherSupport enrichers = new BasicEnricherSupport();
+
     /**
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
@@ -1522,82 +1526,212 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     
     // -------- POLICIES --------------------
 
+    @Override 
+    @Beta
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return PolicySupportInternal
+    // TODO revert to PolicySupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicPolicySupport policies() {
+        return policies;
+    }
+
+    @Override 
+    @Beta
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return EnricherSupportInternal
+    // TODO revert to EnricherSupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicEnricherSupport enrichers() {
+        return enrichers;
+    }
+
+    /**
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #policies()} is reverted to return {@link {PolicySupportInternal} instead of
+     * {@link BasicPolicySupport}.
+     */
+    @Beta
+    // TODO revert to private when config() is reverted to return SensorSupportInternal
+    public class BasicPolicySupport implements PolicySupportInternal {
+        
+        @Override
+        public Collection<Policy> getPolicies() {
+            return ImmutableList.<Policy>copyOf(policiesInternal);
+        }
+
+        @Override
+        public void addPolicy(Policy policy) {
+            Policy old = findApparentlyEqualAndWarnIfNotSameUniqueTag(policiesInternal, policy);
+            if (old!=null) {
+                LOG.debug("Removing "+old+" when adding "+policy+" to "+AbstractEntity.this);
+                removePolicy(old);
+            }
+            
+            CatalogUtils.setCatalogItemIdOnAddition(AbstractEntity.this, policy);
+            policiesInternal.add((AbstractPolicy)policy);
+            ((AbstractPolicy)policy).setEntity(AbstractEntity.this);
+            
+            getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
+            emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
+        }
+
+        @Override
+        public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
+            T policy = getManagementContext().getEntityManager().createPolicy(spec);
+            addPolicy(policy);
+            return policy;
+        }
+        
+        @Override
+        public boolean removePolicy(Policy policy) {
+            ((AbstractPolicy)policy).destroy();
+            boolean changed = policiesInternal.remove(policy);
+            
+            if (changed) {
+                getManagementSupport().getEntityChangeListener().onPolicyRemoved(policy);
+                emit(AbstractEntity.POLICY_REMOVED, new PolicyDescriptor(policy));
+            }
+            return changed;
+        }
+        
+        @Override
+        public boolean removeAllPolicies() {
+            boolean changed = false;
+            for (Policy policy : policiesInternal) {
+                removePolicy(policy);
+                changed = true;
+            }
+            return changed;
+        }
+    }
+
+    /**
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #enrichers()} is reverted to return {@link EnricherSupportInternal} instead of
+     * {@link BasicEnricherSupport}.
+     */
+    @Beta
+    // TODO revert to private when config() is reverted to return SensorSupportInternal
+    public class BasicEnricherSupport implements EnricherSupportInternal {
+        @Override
+        public Collection<Enricher> getEnrichers() {
+            return ImmutableList.<Enricher>copyOf(enrichersInternal);
+        }
+
+        @Override
+        public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
+            T enricher = getManagementContext().getEntityManager().createEnricher(spec);
+            addEnricher(enricher);
+            return enricher;
+        }
+
+        @Override
+        public void addEnricher(Enricher enricher) {
+            Enricher old = findApparentlyEqualAndWarnIfNotSameUniqueTag(enrichersInternal, enricher);
+            if (old!=null) {
+                LOG.debug("Removing "+old+" when adding "+enricher+" to "+AbstractEntity.this);
+                removeEnricher(old);
+            }
+            
+            CatalogUtils.setCatalogItemIdOnAddition(AbstractEntity.this, enricher);
+            enrichersInternal.add((AbstractEnricher) enricher);
+            ((AbstractEnricher)enricher).setEntity(AbstractEntity.this);
+            
+            getManagementSupport().getEntityChangeListener().onEnricherAdded(enricher);
+            // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
+        }
+        
+        @Override
+        public boolean removeEnricher(Enricher enricher) {
+            ((AbstractEnricher)enricher).destroy();
+            boolean changed = enrichersInternal.remove(enricher);
+            
+            if (changed) {
+                getManagementSupport().getEntityChangeListener().onEnricherRemoved(enricher);
+            }
+            return changed;
+
+        }
+
+        @Override
+        public boolean removeAllEnrichers() {
+            boolean changed = false;
+            for (AbstractEnricher enricher : enrichersInternal) {
+                changed = removeEnricher(enricher) || changed;
+            }
+            return changed;
+        }
+    }
+    
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#getPolicies()}; e.g. {@code policies().getPolicies()}
+     */
     @Override
+    @Deprecated
     public Collection<Policy> getPolicies() {
-        return ImmutableList.<Policy>copyOf(policies);
+        return policies().getPolicies();
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#addPolicy(Policy)}; e.g. {@code policies().addPolicy(policy)}
+     */
     @Override
+    @Deprecated
     public void addPolicy(Policy policy) {
-        Policy old = findApparentlyEqualAndWarnIfNotSameUniqueTag(policies, policy);
-        if (old!=null) {
-            LOG.debug("Removing "+old+" when adding "+policy+" to "+this);
-            removePolicy(old);
-        }
-        
-        CatalogUtils.setCatalogItemIdOnAddition(this, policy);
-        policies.add((AbstractPolicy)policy);
-        ((AbstractPolicy)policy).setEntity(this);
-        
-        getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
-        emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
+        policies().addPolicy(policy);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#addPolicy(PolicySpec)}; e.g. {@code policies().addPolicy(spec)}
+     */
     @Override
+    @Deprecated
     public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
-        T policy = getManagementContext().getEntityManager().createPolicy(spec);
-        addPolicy(policy);
-        return policy;
+        return policies().addPolicy(spec);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#; e.g. {@code enrichers().addEnricher(spec)}
+     */
     @Override
+    @Deprecated
     public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
-        T enricher = getManagementContext().getEntityManager().createEnricher(spec);
-        addEnricher(enricher);
-        return enricher;
+        return enrichers().addEnricher(spec);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#removePolicy(Policy)}; e.g. {@code policies().removePolicy(policy)}
+     */
     @Override
+    @Deprecated
     public boolean removePolicy(Policy policy) {
-        ((AbstractPolicy)policy).destroy();
-        boolean changed = policies.remove(policy);
-        
-        if (changed) {
-            getManagementSupport().getEntityChangeListener().onPolicyRemoved(policy);
-            emit(AbstractEntity.POLICY_REMOVED, new PolicyDescriptor(policy));
-        }
-        return changed;
+        return policies().removePolicy(policy);
     }
     
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#removeAllPolicies()}; e.g. {@code policies().removeAllPolicies()}
+     */
     @Override
+    @Deprecated
     public boolean removeAllPolicies() {
-        boolean changed = false;
-        for (Policy policy : policies) {
-            removePolicy(policy);
-            changed = true;
-        }
-        return changed;
+        return policies().removeAllPolicies();
     }
     
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#getEnrichers()}; e.g. {@code enrichers().getEnrichers()}
+     */
     @Override
+    @Deprecated
     public Collection<Enricher> getEnrichers() {
-        return ImmutableList.<Enricher>copyOf(enrichers);
+        return enrichers().getEnrichers();
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#addEnricher(Enricher)}; e.g. {@code enrichers().addEnricher(enricher)}
+     */
     @Override
+    @Deprecated
     public void addEnricher(Enricher enricher) {
-        Enricher old = findApparentlyEqualAndWarnIfNotSameUniqueTag(enrichers, enricher);
-        if (old!=null) {
-            LOG.debug("Removing "+old+" when adding "+enricher+" to "+this);
-            removeEnricher(old);
-        }
-        
-        CatalogUtils.setCatalogItemIdOnAddition(this, enricher);
-        enrichers.add((AbstractEnricher) enricher);
-        ((AbstractEnricher)enricher).setEntity(this);
-        
-        getManagementSupport().getEntityChangeListener().onEnricherAdded(enricher);
-        // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
+        enrichers().addEnricher(enricher);
     }
     
     private <T extends EntityAdjunct> T findApparentlyEqualAndWarnIfNotSameUniqueTag(Collection<? extends T> items, T newItem) {
@@ -1677,25 +1811,22 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return null;
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#removeEnricher(Enricher)}; e.g. {@code enrichers().removeEnricher(enricher)}
+     */
     @Override
+    @Deprecated
     public boolean removeEnricher(Enricher enricher) {
-        ((AbstractEnricher)enricher).destroy();
-        boolean changed = enrichers.remove(enricher);
-        
-        if (changed) {
-            getManagementSupport().getEntityChangeListener().onEnricherRemoved(enricher);
-        }
-        return changed;
-
+        return enrichers().removeEnricher(enricher);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#removeAllEnrichers()}; e.g. {@code enrichers().removeAllEnrichers()}
+     */
     @Override
+    @Deprecated
     public boolean removeAllEnrichers() {
-        boolean changed = false;
-        for (AbstractEnricher enricher : enrichers) {
-            changed = removeEnricher(enricher) || changed;
-        }
-        return changed;
+        return enrichers().removeAllEnrichers();
     }
     
     // -------- FEEDS --------------------

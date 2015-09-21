@@ -160,12 +160,18 @@ public interface Entity extends BrooklynObject {
     
     /**
      * @return an immutable thread-safe view of the policies.
+     * 
+     * @deprecated since 0.9.0; see {@link PolicySupport#getPolicies()}
      */
+    @Deprecated
     Collection<Policy> getPolicies();
     
     /**
      * @return an immutable thread-safe view of the enrichers.
+     * 
+     * @deprecated since 0.9.0; see {@link EnricherSupport#getEnrichers()}
      */
+    @Deprecated
     Collection<Enricher> getEnrichers();
     
     /**
@@ -240,34 +246,52 @@ public interface Entity extends BrooklynObject {
     
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
+     * 
+     * @deprecated since 0.9.0; see {@link PolicySupport#addPolicy(Policy)}
      */
+    @Deprecated
     void addPolicy(Policy policy);
     
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
+     * 
+     * @deprecated since 0.9.0; see {@link PolicySupport#addPolicy(PolicySpec)}
      */
+    @Deprecated
     <T extends Policy> T addPolicy(PolicySpec<T> enricher);
     
     /**
      * Removes the given policy from this entity. 
      * @return True if the policy existed at this entity; false otherwise
+     * 
+     * @deprecated since 0.9.0; see {@link PolicySupport#removePolicy(Policy)}
      */
+    @Deprecated
     boolean removePolicy(Policy policy);
     
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
+     * 
+     * @deprecated since 0.9.0; see {@link EnricherSupport#addEnricher(Enricher)}
      */
+    @Deprecated
     void addEnricher(Enricher enricher);
     
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
+     * 
+     * @deprecated since 0.9.0; see {@link EnricherSupport#addEnricher(EnricherSpec)}
      */
+    @Deprecated
     <T extends Enricher> T addEnricher(EnricherSpec<T> enricher);
     
     /**
      * Removes the given enricher from this entity. 
      * @return True if the policy enricher at this entity; false otherwise
+     * 
+     * @deprecated since 0.9.0; see {@link EnricherSupport#removeEnricher(Enricher)}
      */
+    @Deprecated
     boolean removeEnricher(Enricher enricher);
     
     /**
@@ -278,7 +302,11 @@ public interface Entity extends BrooklynObject {
     SensorSupport sensors();
 
     SubscriptionSupport subscriptions();
-    
+
+    PolicySupport policies();
+
+    EnricherSupport enrichers();
+
     @Beta
     public interface SensorSupport {
 
@@ -363,5 +391,53 @@ public interface Entity extends BrooklynObject {
          */
         @Beta
         boolean unsubscribe(Entity producer, SubscriptionHandle handle);
+    }
+
+    @Beta
+    public interface PolicySupport {
+        /**
+         * @return an immutable thread-safe view of the policies.
+         */
+        Collection<Policy> getPolicies();
+        
+        /**
+         * Adds the given policy to this entity. Also calls policy.setEntity if available.
+         */
+        void addPolicy(Policy policy);
+        
+        /**
+         * Adds the given policy to this entity. Also calls policy.setEntity if available.
+         */
+        <T extends Policy> T addPolicy(PolicySpec<T> enricher);
+        
+        /**
+         * Removes the given policy from this entity. 
+         * @return True if the policy existed at this entity; false otherwise
+         */
+        boolean removePolicy(Policy policy);
+    }
+    
+    @Beta
+    public interface EnricherSupport {
+        /**
+         * @return an immutable thread-safe view of the enrichers.
+         */
+        Collection<Enricher> getEnrichers();
+        
+        /**
+         * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
+         */
+        void addEnricher(Enricher enricher);
+        
+        /**
+         * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
+         */
+        <T extends Enricher> T addEnricher(EnricherSpec<T> enricher);
+        
+        /**
+         * Removes the given enricher from this entity. 
+         * @return True if the policy enricher at this entity; false otherwise
+         */
+        boolean removeEnricher(Enricher enricher);
     }
 }

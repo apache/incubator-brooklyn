@@ -43,6 +43,8 @@ import com.google.common.base.Function;
  * of sub-types.
  * FIXME Add {@link setAttribute(AttributeSensorAndConfigKey<?,T>)} back in if/when move it back,
  * or if we extract an interface for AttributeSensorAndConfigKey.
+ * 
+ * @deprecated since 0.9.0; use {@link Entity} or {@link org.apache.brooklyn.core.entity.EntityInternal}
  */
 public interface EntityLocal extends Entity {
     
@@ -166,13 +168,19 @@ public interface EntityLocal extends Entity {
     /**
      * Removes all policy from this entity. 
      * @return True if any policies existed at this entity; false otherwise
+     * 
+     * @deprecated since 0.9.0; see {@link PolicySupportInternal#removeAllPolicies()}, e.g. {@code ((EntityInternal)entity).policies().removeAllPolicies()}
      */
+    @Deprecated
     boolean removeAllPolicies();
     
     /**
      * Removes all enricher from this entity.
      * Use with caution as some entities automatically register enrichers; this will remove those enrichers as well.
      * @return True if any enrichers existed at this entity; false otherwise
+     * 
+     * @deprecated since 0.9.0; see {@link EnricherSupportInternal#removeAllEnrichers()}, e.g. {@code ((EntityInternal)entity).enrichers().removeAllEnrichers()}
      */
+    @Deprecated
     boolean removeAllEnrichers();
 }

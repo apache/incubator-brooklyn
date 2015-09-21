@@ -192,9 +192,17 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
      */
     void requestPersist();
     
+    @Override
     SensorSupportInternal sensors();
 
+    @Override
     SubscriptionSupportInternal subscriptions();
+
+    @Override
+    PolicySupportInternal policies();
+
+    @Override
+    EnricherSupportInternal enrichers();
 
     @Beta
     public interface SensorSupportInternal extends Entity.SensorSupport {
@@ -236,5 +244,24 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     @Beta
     public interface SubscriptionSupportInternal extends Entity.SubscriptionSupport {
         SubscriptionContext getSubscriptionContext();
+    }
+    
+    @Beta
+    public interface PolicySupportInternal extends Entity.PolicySupport {
+        /**
+         * Removes all policy from this entity. 
+         * @return True if any policies existed at this entity; false otherwise
+         */
+        boolean removeAllPolicies();
+    }
+    
+    @Beta
+    public interface EnricherSupportInternal extends Entity.EnricherSupport {
+        /**
+         * Removes all enricher from this entity.
+         * Use with caution as some entities automatically register enrichers; this will remove those enrichers as well.
+         * @return True if any enrichers existed at this entity; false otherwise
+         */
+        boolean removeAllEnrichers();
     }
 }
