@@ -109,6 +109,11 @@ public interface Entity extends BrooklynObject {
     Collection<Entity> getChildren();
     
     /**
+     * Sets the entity's display name.
+     */
+    void setDisplayName(String displayName);
+
+    /**
      * Sets the parent (i.e. "owner") of this entity. Returns this entity, for convenience.
      *
      * @see #getParent

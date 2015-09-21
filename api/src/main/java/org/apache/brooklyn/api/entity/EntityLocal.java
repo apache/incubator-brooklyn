@@ -50,12 +50,6 @@ public interface EntityLocal extends Entity {
     // Separate out what is specific to "local jvm", and what is here for an SPI rather than API.
 
     /**
-     * Sets the entity's display name.
-     * Must be called before the entity is managed.
-     */
-    void setDisplayName(String displayName);
-
-    /**
      * @deprecated since 0.7.0; use {@link #config()}, such as {@code entity.config().set(key, val)}
      */
     @Deprecated
