@@ -171,6 +171,9 @@ public class Enrichers {
         public JoinerBuilder joining(AttributeSensor<?> source) {
             return new JoinerBuilder(source);
         }
+        public ReducerBuilder reducing(List<AttributeSensor<?>> sourceSensors) {
+            return new ReducerBuilder(sourceSensors);
+        }
     }
 
 
@@ -676,6 +679,49 @@ public class Enrichers {
                     .toString();
         }
     }
+
+    protected abstract static class AbstractReducerBuilder<S, B extends AbstractReducerBuilder<S, B>> extends AbstractEnricherBuilder<B> {
+        protected AttributeSensor<S> publishing;
+        protected Entity fromEntity;
+        protected List<AttributeSensor<?>> reducing;
+        protected Function<List<AttributeSensor<?>>, String> computing;
+
+        public AbstractReducerBuilder(List<AttributeSensor<?>> val) {
+            super(Reducer.class);
+            this.reducing = checkNotNull(val);
+        }
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public <S> ReducerBuilder<S> publishing(AttributeSensor<? extends S> val) {
+            this.publishing = (AttributeSensor) checkNotNull(val);
+            return (ReducerBuilder) this;
+        }
+
+        public B from(Entity val) {
+            this.fromEntity = checkNotNull(val);
+            return self();
+        }
+
+        public B computing(Function<List<AttributeSensor<?>>, String> val) {
+            this.computing = checkNotNull(val);
+            return self();
+        }
+
+        public EnricherSpec<?> build() {
+            return super.build().configure(MutableMap.builder()
+                    .put(Reducer.SOURCE_SENSORS, reducing)
+                    .put(Reducer.PRODUCER, fromEntity)
+                    .put(Reducer.TARGET_SENSOR, publishing)
+                    .put(Reducer.REDUCER_FUNCTION, computing)
+                    .build()
+            );
+        }
+
+        @Override
+        protected String getDefaultUniqueTag() {
+            return "reducer:" + reducing.toString();
+        }
+    }
     
     public static class InitialBuilder extends AbstractInitialBuilder<InitialBuilder> {
     }
@@ -726,6 +772,12 @@ public class Enrichers {
     public static class JoinerBuilder extends AbstractJoinerBuilder<JoinerBuilder> {
         public JoinerBuilder(AttributeSensor<?> source) {
             super(source);
+        }
+    }
+
+    public static class ReducerBuilder<S> extends AbstractReducerBuilder<S, ReducerBuilder<S>> {
+        public ReducerBuilder(List<AttributeSensor<?>> val) {
+            super(val);
         }
     }
 

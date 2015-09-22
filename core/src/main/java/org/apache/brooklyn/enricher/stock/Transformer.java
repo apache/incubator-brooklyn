@@ -23,6 +23,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.core.task.ValueResolver;
