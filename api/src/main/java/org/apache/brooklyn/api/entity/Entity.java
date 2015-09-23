@@ -191,7 +191,7 @@ public interface Entity extends BrooklynObject {
      * automatically be called. However, the reverse is not true (calling this method will 
      * not tell the group; this behaviour may change in a future release!)
      * 
-     * @deprecated since 0.9.0; see {@link GroupSupport#getGroups()} and {@link #groups()}
+     * @deprecated since 0.9.0; see {@link GroupSupport#add()} and {@link #groups()}
      */
     @Deprecated
     void addGroup(Group group);
@@ -203,7 +203,7 @@ public interface Entity extends BrooklynObject {
      * automatically be called. However, the reverse is not true (calling this method will 
      * not tell the group; this behaviour may change in a future release!)
      * 
-     * @deprecated since 0.9.0; see {@link GroupSupport#getGroups()} and {@link #groups()}
+     * @deprecated since 0.9.0; see {@link GroupSupport#remove()} and {@link #groups()}
      */
     @Deprecated
     void removeGroup(Group group);
@@ -256,7 +256,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
      * 
-     * @deprecated since 0.9.0; see {@link PolicySupport#addPolicy(Policy)}
+     * @deprecated since 0.9.0; see {@link PolicySupport#add(Policy)}
      */
     @Deprecated
     void addPolicy(Policy policy);
@@ -264,7 +264,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given policy to this entity. Also calls policy.setEntity if available.
      * 
-     * @deprecated since 0.9.0; see {@link PolicySupport#addPolicy(PolicySpec)}
+     * @deprecated since 0.9.0; see {@link PolicySupport#add(PolicySpec)}
      */
     @Deprecated
     <T extends Policy> T addPolicy(PolicySpec<T> enricher);
@@ -273,7 +273,7 @@ public interface Entity extends BrooklynObject {
      * Removes the given policy from this entity. 
      * @return True if the policy existed at this entity; false otherwise
      * 
-     * @deprecated since 0.9.0; see {@link PolicySupport#removePolicy(Policy)}
+     * @deprecated since 0.9.0; see {@link PolicySupport#remove(Policy)}
      */
     @Deprecated
     boolean removePolicy(Policy policy);
@@ -281,7 +281,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
      * 
-     * @deprecated since 0.9.0; see {@link EnricherSupport#addEnricher(Enricher)}
+     * @deprecated since 0.9.0; see {@link EnricherSupport#add(Enricher)}
      */
     @Deprecated
     void addEnricher(Enricher enricher);
@@ -289,7 +289,7 @@ public interface Entity extends BrooklynObject {
     /**
      * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
      * 
-     * @deprecated since 0.9.0; see {@link EnricherSupport#addEnricher(EnricherSpec)}
+     * @deprecated since 0.9.0; see {@link EnricherSupport#add(EnricherSpec)}
      */
     @Deprecated
     <T extends Enricher> T addEnricher(EnricherSpec<T> enricher);
@@ -298,7 +298,7 @@ public interface Entity extends BrooklynObject {
      * Removes the given enricher from this entity. 
      * @return True if the policy enricher at this entity; false otherwise
      * 
-     * @deprecated since 0.9.0; see {@link EnricherSupport#removeEnricher(Enricher)}
+     * @deprecated since 0.9.0; see {@link EnricherSupport#remove(Enricher)}
      */
     @Deprecated
     boolean removeEnricher(Enricher enricher);
@@ -372,18 +372,18 @@ public interface Entity extends BrooklynObject {
         /**
          * Adds the given policy to this entity. Also calls policy.setEntity if available.
          */
-        void addPolicy(Policy policy);
+        void add(Policy policy);
         
         /**
          * Adds the given policy to this entity. Also calls policy.setEntity if available.
          */
-        <T extends Policy> T addPolicy(PolicySpec<T> enricher);
+        <T extends Policy> T add(PolicySpec<T> enricher);
         
         /**
          * Removes the given policy from this entity. 
          * @return True if the policy existed at this entity; false otherwise
          */
-        boolean removePolicy(Policy policy);
+        boolean remove(Policy policy);
     }
     
     @Beta
@@ -396,18 +396,18 @@ public interface Entity extends BrooklynObject {
         /**
          * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
          */
-        void addEnricher(Enricher enricher);
+        void add(Enricher enricher);
         
         /**
          * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
          */
-        <T extends Enricher> T addEnricher(EnricherSpec<T> enricher);
+        <T extends Enricher> T add(EnricherSpec<T> enricher);
         
         /**
          * Removes the given enricher from this entity. 
          * @return True if the policy enricher at this entity; false otherwise
          */
-        boolean removeEnricher(Enricher enricher);
+        boolean remove(Enricher enricher);
     }
     
     @Beta
@@ -426,7 +426,7 @@ public interface Entity extends BrooklynObject {
          * automatically be called. However, the reverse is not true (calling this method will 
          * not tell the group; this behaviour may change in a future release!)
          */
-        void addGroup(Group group);
+        void add(Group group);
 
         /**
          * Removes this entity as a member of the given {@link Group}. Called by framework.
@@ -435,6 +435,6 @@ public interface Entity extends BrooklynObject {
          * automatically be called. However, the reverse is not true (calling this method will 
          * not tell the group; this behaviour may change in a future release!)
          */
-        void removeGroup(Group group);
+        void remove(Group group);
     }
 }

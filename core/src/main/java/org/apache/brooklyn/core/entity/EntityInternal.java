@@ -242,6 +242,6 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
          * Use with caution as some entities automatically register enrichers; this will remove those enrichers as well.
          * @return True if any enrichers existed at this entity; false otherwise
          */
-        boolean removeAllEnrichers();
+        boolean removeAll();
     }
 }

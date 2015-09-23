@@ -707,7 +707,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // TODO revert to private when groups() is reverted to return GroupSupport
     public class BasicGroupSupport implements GroupSupport {
         @Override
-        public void addGroup(Group group) {
+        public void add(Group group) {
             boolean changed = groupsInternal.add(group);
             getApplication();
             
@@ -717,7 +717,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
-        public void removeGroup(Group group) {
+        public void remove(Group group) {
             boolean changed = groupsInternal.remove(group);
             getApplication();
             
@@ -738,7 +738,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public void addGroup(Group group) {
-        groups().addGroup(group);
+        groups().add(group);
     }
 
     /**
@@ -747,7 +747,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public void removeGroup(Group group) {
-        groups().removeGroup(group);
+        groups().remove(group);
     }
 
     /**
@@ -1612,11 +1612,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
-        public void addPolicy(Policy policy) {
+        public void add(Policy policy) {
             Policy old = findApparentlyEqualAndWarnIfNotSameUniqueTag(policiesInternal, policy);
             if (old!=null) {
                 LOG.debug("Removing "+old+" when adding "+policy+" to "+AbstractEntity.this);
-                removePolicy(old);
+                remove(old);
             }
             
             CatalogUtils.setCatalogItemIdOnAddition(AbstractEntity.this, policy);
@@ -1628,14 +1628,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
-        public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
+        public <T extends Policy> T add(PolicySpec<T> spec) {
             T policy = getManagementContext().getEntityManager().createPolicy(spec);
-            addPolicy(policy);
+            add(policy);
             return policy;
         }
         
         @Override
-        public boolean removePolicy(Policy policy) {
+        public boolean remove(Policy policy) {
             ((AbstractPolicy)policy).destroy();
             boolean changed = policiesInternal.remove(policy);
             
@@ -1650,7 +1650,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         public boolean removeAllPolicies() {
             boolean changed = false;
             for (Policy policy : policiesInternal) {
-                removePolicy(policy);
+                remove(policy);
                 changed = true;
             }
             return changed;
@@ -1671,18 +1671,18 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
-        public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
+        public <T extends Enricher> T add(EnricherSpec<T> spec) {
             T enricher = getManagementContext().getEntityManager().createEnricher(spec);
-            addEnricher(enricher);
+            add(enricher);
             return enricher;
         }
 
         @Override
-        public void addEnricher(Enricher enricher) {
+        public void add(Enricher enricher) {
             Enricher old = findApparentlyEqualAndWarnIfNotSameUniqueTag(enrichersInternal, enricher);
             if (old!=null) {
                 LOG.debug("Removing "+old+" when adding "+enricher+" to "+AbstractEntity.this);
-                removeEnricher(old);
+                remove(old);
             }
             
             CatalogUtils.setCatalogItemIdOnAddition(AbstractEntity.this, enricher);
@@ -1694,7 +1694,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
         
         @Override
-        public boolean removeEnricher(Enricher enricher) {
+        public boolean remove(Enricher enricher) {
             ((AbstractEnricher)enricher).destroy();
             boolean changed = enrichersInternal.remove(enricher);
             
@@ -1706,10 +1706,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
-        public boolean removeAllEnrichers() {
+        public boolean removeAll() {
             boolean changed = false;
             for (AbstractEnricher enricher : enrichersInternal) {
-                changed = removeEnricher(enricher) || changed;
+                changed = remove(enricher) || changed;
             }
             return changed;
         }
@@ -1730,7 +1730,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public void addPolicy(Policy policy) {
-        policies().addPolicy(policy);
+        policies().add(policy);
     }
 
     /**
@@ -1739,7 +1739,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
-        return policies().addPolicy(spec);
+        return policies().add(spec);
     }
 
     /**
@@ -1748,7 +1748,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
-        return enrichers().addEnricher(spec);
+        return enrichers().add(spec);
     }
 
     /**
@@ -1757,7 +1757,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public boolean removePolicy(Policy policy) {
-        return policies().removePolicy(policy);
+        return policies().remove(policy);
     }
     
     /**
@@ -1784,7 +1784,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public void addEnricher(Enricher enricher) {
-        enrichers().addEnricher(enricher);
+        enrichers().add(enricher);
     }
     
     private <T extends EntityAdjunct> T findApparentlyEqualAndWarnIfNotSameUniqueTag(Collection<? extends T> items, T newItem) {
@@ -1870,7 +1870,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public boolean removeEnricher(Enricher enricher) {
-        return enrichers().removeEnricher(enricher);
+        return enrichers().remove(enricher);
     }
 
     /**
@@ -1879,7 +1879,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     @Deprecated
     public boolean removeAllEnrichers() {
-        return enrichers().removeAllEnrichers();
+        return enrichers().removeAll();
     }
     
     // -------- FEEDS --------------------
