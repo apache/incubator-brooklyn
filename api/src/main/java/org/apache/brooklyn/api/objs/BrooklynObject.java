@@ -99,6 +99,16 @@ public interface BrooklynObject extends Identifiable, Configurable {
         @Beta
         <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
      
+        /**
+         * Allow us to subscribe to data from a {@link Sensor} on another entity.
+         * 
+         * @return a subscription id which can be used to unsubscribe
+         *
+         * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
+         */
+        @Beta
+        <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
+
         /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
         @Beta
         <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);

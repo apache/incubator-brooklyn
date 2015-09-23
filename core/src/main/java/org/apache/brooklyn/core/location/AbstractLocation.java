@@ -507,6 +507,11 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
 
         @Override
+        public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
+        }
+
+        @Override
         public <T> SubscriptionHandle subscribeToMembers(Group producerGroup, Sensor<T> sensor, SensorEventListener<? super T> listener) {
             return getSubscriptionTracker().subscribeToMembers(producerGroup, sensor, listener);
         }

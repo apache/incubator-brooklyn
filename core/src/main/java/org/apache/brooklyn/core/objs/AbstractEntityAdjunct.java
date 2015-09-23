@@ -213,6 +213,12 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         }
 
         @Override
+        public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            if (!checkCanSubscribe()) return null;
+            return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
+        }
+
+        @Override
         public <T> SubscriptionHandle subscribeToMembers(Group producerGroup, Sensor<T> sensor, SensorEventListener<? super T> listener) {
             if (!checkCanSubscribe(producerGroup)) return null;
             return getSubscriptionTracker().subscribeToMembers(producerGroup, sensor, listener);
@@ -479,13 +485,6 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         if (!checkCanSubscribe()) return null;
         return getSubscriptionTracker().subscribe(producer, sensor, listener);
-    }
-
-    @Beta
-    /** @see SubscriptionContext#subscribe(Map, Entity, Sensor, SensorEventListener) */
-    public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        if (!checkCanSubscribe()) return null;
-        return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
     }
 
     /**

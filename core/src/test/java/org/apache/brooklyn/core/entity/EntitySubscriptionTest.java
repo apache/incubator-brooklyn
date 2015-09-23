@@ -246,8 +246,8 @@ public class EntitySubscriptionTest {
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.NAME, "myname");
         
-        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.SEQUENCE, listener);
-        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.NAME, listener);
+        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.SEQUENCE, listener);
+        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.NAME, listener);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -275,9 +275,9 @@ public class EntitySubscriptionTest {
     // TODO A visual inspection test that we get a log.warn telling us we can't get the initial-value
     @Test
     public void testSubscriptionForInitialValueWhenNotValid() {
-        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.MY_NOTIF, listener);
-        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, null, listener);
-        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), null, TestEntity.NAME, listener);
-        entity.subscribe(ImmutableMap.of("notifyOfInitialValue", true), null, null, listener);
+        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.MY_NOTIF, listener);
+        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, null, listener);
+        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), null, TestEntity.NAME, listener);
+        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), null, null, listener);
     }
 }

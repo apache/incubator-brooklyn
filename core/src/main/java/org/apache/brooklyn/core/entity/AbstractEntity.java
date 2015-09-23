@@ -1410,6 +1410,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
+        public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
+        }
+
+        @Override
         public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
             return getSubscriptionTracker().subscribeToChildren(parent, sensor, listener);
         }
@@ -1478,13 +1483,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Deprecated
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         return subscriptions().subscribe(producer, sensor, listener);
-    }
-
-    /** @see EntityLocal#subscribe */
-    @Override
-    @Beta
-    public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
     }
 
     /**

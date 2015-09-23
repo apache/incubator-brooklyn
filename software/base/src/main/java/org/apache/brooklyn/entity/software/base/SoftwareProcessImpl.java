@@ -157,8 +157,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             if (!(entity instanceof SoftwareProcess)) {
                 throw new IllegalArgumentException("Expected SoftwareProcess, but got entity "+entity);
             }
-            subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, Attributes.SERVICE_STATE_ACTUAL, this);
-            subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, Attributes.SERVICE_UP, this);
+            subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, Attributes.SERVICE_STATE_ACTUAL, this);
+            subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, Attributes.SERVICE_UP, this);
         }
 
         @Override
