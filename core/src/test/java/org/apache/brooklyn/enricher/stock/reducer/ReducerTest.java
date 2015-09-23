@@ -1,4 +1,4 @@
-package org.apache.brooklyn.enricher.stock;
+package org.apache.brooklyn.enricher.stock.reducer;
 
 import java.util.List;
 import java.util.Map;
@@ -11,7 +11,9 @@ import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.enricher.stock.Reducer.StringStringReducer;
+import org.apache.brooklyn.enricher.stock.Enrichers;
+import org.apache.brooklyn.enricher.stock.reducer.Reducer;
+import org.apache.brooklyn.enricher.stock.reducer.StringStringReducer;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -152,6 +154,25 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
 
         entity.sensors().set(STR2, "bar");
         EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "foo, bar");
+    }
+    
+    @Test
+    public void testReducingBuilderWithFormatStringFunction() {
+        
+        entity.addEnricher(Enrichers.builder()
+            .reducing(StringStringReducer.class, ImmutableList.of(STR1, STR2))
+            .from(entity)
+            .computing("formatString", ImmutableMap.<String, Object>of("format", "hello, %s and %s"))
+            .publishing(STR3)
+            .build()
+        );
+        EntityTestUtils.assertAttributeEquals(entity, STR3, null);
+        
+        entity.sensors().set(STR1, "foo");
+        EntityTestUtils.assertAttributeEqualsContinually(entity, STR3, null);
+
+        entity.sensors().set(STR2, "bar");
+        EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "hello, foo and bar");
     }
     
     @Test

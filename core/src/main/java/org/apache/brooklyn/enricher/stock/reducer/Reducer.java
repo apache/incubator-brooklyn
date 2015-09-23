@@ -1,4 +1,4 @@
-package org.apache.brooklyn.enricher.stock;
+package org.apache.brooklyn.enricher.stock.reducer;
 
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +38,7 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
     @SetFromFlag("transformation")
     public static final ConfigKey<String> REDUCER_FUNCTION_UNTYPED = ConfigKeys.newStringConfigKey("enricher.reducerFunction.untyped",
         "A string matching a pre-defined named reducer function, such as join");
-    public static final ConfigKey<Map<String, Object>> PARAMETERS = ConfigKeys.newConfigKey(new TypeToken<Map<String, Object>>() {}, "enricher.reducerFunctionParameters", 
+    public static final ConfigKey<Map<String, Object>> PARAMETERS = ConfigKeys.newConfigKey(new TypeToken<Map<String, Object>>() {}, "enricher.reducerFunction.parameters", 
         "A map of parameters to pass into the reducer function");
    
     protected Entity producer;
@@ -105,21 +105,7 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
 
         emit((Sensor<T>)destinationSensor, result);
     }
-    
-    public static class StringStringReducer extends Reducer<String, String> {
-        
-        public StringStringReducer() {}
-
-        @Override
-        protected Function<List<String>, String> createReducerFunction(
-                String reducerName, Map<String, ?> parameters) {
-            if(reducerName.equals("joiner")){
-                return new JoinerFunction(parameters.get("separator"));
-            }
-            throw new IllegalStateException("unknown function: " + reducerName);
-        }
-    }
-
+   
     public static class JoinerReducerFunction<A> implements Function<List<A>, String> {
         
         private Object separator;
@@ -156,6 +142,21 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
         @Override
         public String apply(List<A> input) {
             return input.toString();
+        }
+        
+    }
+    
+    public static class FormatStringReducerFunction<T> implements Function<List<T>, String> {
+        
+        private String format;
+
+        public FormatStringReducerFunction(String format) {
+            this.format = Preconditions.checkNotNull(format, "format");
+        }
+
+        @Override
+        public String apply(List<T> input) {
+            return String.format(format, input.toArray());
         }
         
     }
