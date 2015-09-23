@@ -24,6 +24,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
+import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -243,5 +244,26 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
          * @return True if any enrichers existed at this entity; false otherwise
          */
         boolean removeAll();
+    }
+    
+    @Beta
+    public interface GroupSupportInternal extends Entity.GroupSupport {
+        /**
+         * Add this entity as a member of the given {@link Group}. Called by framework.
+         * <p>
+         * Users should call {@link Group#addMember(Entity)} instead; this method will then 
+         * automatically be called. However, the reverse is not true (calling this method will 
+         * not tell the group; this behaviour may change in a future release!)
+         */
+        void add(Group group);
+
+        /**
+         * Removes this entity as a member of the given {@link Group}. Called by framework.
+         * <p>
+         * Users should call {@link Group#removeMember(Entity)} instead; this method will then 
+         * automatically be called. However, the reverse is not true (calling this method will 
+         * not tell the group; this behaviour may change in a future release!)
+         */
+        void remove(Group group);
     }
 }

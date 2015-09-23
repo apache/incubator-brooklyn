@@ -19,17 +19,16 @@
 package org.apache.brooklyn.api.entity;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.mgmt.SubscriptionContext;
-import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
-import org.apache.brooklyn.api.mgmt.SubscriptionManager;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -38,7 +37,6 @@ import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
-import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -362,79 +360,80 @@ public interface Entity extends BrooklynObject {
         <T> void emit(Sensor<T> sensor, T value);
     }
     
+    public interface AdjunctSupport<T extends EntityAdjunct> extends Iterable<T> {
+        /**
+         * @return A read-only thread-safe iterator over all the instances.
+         */
+        Iterator<T> iterator();
+        
+        /**
+         * Adds an instance.
+         */
+        void add(T val);
+        
+        /**
+         * Removes an instance.
+         */
+        boolean remove(T val);
+    }
+    
     @Beta
-    public interface PolicySupport {
-        /**
-         * @return an immutable thread-safe view of the policies.
-         */
-        Collection<Policy> getPolicies();
-        
+    public interface PolicySupport extends AdjunctSupport<Policy> {
         /**
          * Adds the given policy to this entity. Also calls policy.setEntity if available.
          */
+        @Override
         void add(Policy policy);
-        
-        /**
-         * Adds the given policy to this entity. Also calls policy.setEntity if available.
-         */
-        <T extends Policy> T add(PolicySpec<T> enricher);
         
         /**
          * Removes the given policy from this entity. 
          * @return True if the policy existed at this entity; false otherwise
          */
+        @Override
         boolean remove(Policy policy);
+        
+        /**
+         * Adds the given policy to this entity. Also calls policy.setEntity if available.
+         */
+        <T extends Policy> T add(PolicySpec<T> enricher);
     }
     
     @Beta
-    public interface EnricherSupport {
-        /**
-         * @return an immutable thread-safe view of the enrichers.
-         */
-        Collection<Enricher> getEnrichers();
-        
+    public interface EnricherSupport extends AdjunctSupport<Enricher> {
         /**
          * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
          */
+        @Override
         void add(Enricher enricher);
-        
-        /**
-         * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
-         */
-        <T extends Enricher> T add(EnricherSpec<T> enricher);
         
         /**
          * Removes the given enricher from this entity. 
          * @return True if the policy enricher at this entity; false otherwise
          */
+        @Override
         boolean remove(Enricher enricher);
+        
+        /**
+         * Adds the given enricher to this entity. Also calls enricher.setEntity if available.
+         */
+        <T extends Enricher> T add(EnricherSpec<T> enricher);
     }
-    
+
+    /**
+     * For managing/querying the group membership of this entity. 
+     * 
+     * Groupings can be used to allow easy management/monitoring of a group of entities.
+     * 
+     * To add/remove this entity from a group, users should call {@link Group#addMember(Entity)} 
+     * and {@link Group#removeMember(Entity)}. In a future release, add/remove methods may be
+     * added here.
+     */
     @Beta
-    public interface GroupSupport {
+    public interface GroupSupport extends Iterable<Group> {
         /**
-         * The {@link Collection} of {@link Group}s that this entity is a member of.
-         *
-         * Groupings can be used to allow easy management/monitoring of a group of entities.
+         * A read-only thread-safe iterator over all the {@link Group}s that this entity is a member of.
          */
-        Collection<Group> getGroups();
-
-        /**
-         * Add this entity as a member of the given {@link Group}. Called by framework.
-         * <p>
-         * Users should call {@link Group#addMember(Entity)} instead; this method will then 
-         * automatically be called. However, the reverse is not true (calling this method will 
-         * not tell the group; this behaviour may change in a future release!)
-         */
-        void add(Group group);
-
-        /**
-         * Removes this entity as a member of the given {@link Group}. Called by framework.
-         * <p>
-         * Users should call {@link Group#removeMember(Entity)} instead; this method will then 
-         * automatically be called. However, the reverse is not true (calling this method will 
-         * not tell the group; this behaviour may change in a future release!)
-         */
-        void remove(Group group);
+        @Override
+        Iterator<Group> iterator();
     }
 }

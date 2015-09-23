@@ -705,7 +705,16 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
      */
     @Beta
     // TODO revert to private when groups() is reverted to return GroupSupport
-    public class BasicGroupSupport implements GroupSupport {
+    public class BasicGroupSupport implements GroupSupportInternal {
+        @Override
+        public Iterator<Group> iterator() { 
+            return asList().iterator();
+        }
+        
+        protected List<Group> asList() { 
+            return ImmutableList.copyOf(groupsInternal);
+        }
+        
         @Override
         public void add(Group group) {
             boolean changed = groupsInternal.add(group);
@@ -724,11 +733,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             if (changed) {
                 emit(AbstractEntity.GROUP_REMOVED, group);
             }
-        }
-        
-        @Override
-        public Collection<Group> getGroups() { 
-            return ImmutableList.copyOf(groupsInternal);
         }
     }
     
@@ -751,12 +755,12 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
 
     /**
-     * @deprecated since 0.9.0; see {@link #groups()} and {@link GroupSupport#getGroups()}
+     * @deprecated since 0.9.0; see {@link #groups()} and {@link GroupSupport#iterator()}
      */
     @Override
     @Deprecated
     public Collection<Group> getGroups() { 
-        return groups().getGroups();
+        return groups().asList();
     }
     
     @Override
@@ -1607,7 +1611,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     public class BasicPolicySupport implements PolicySupportInternal {
         
         @Override
-        public Collection<Policy> getPolicies() {
+        public Iterator<Policy> iterator() {
+            return asList().iterator();
+        }
+
+        protected List<Policy> asList() {
             return ImmutableList.<Policy>copyOf(policiesInternal);
         }
 
@@ -1666,7 +1674,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // TODO revert to private when config() is reverted to return SensorSupportInternal
     public class BasicEnricherSupport implements EnricherSupportInternal {
         @Override
-        public Collection<Enricher> getEnrichers() {
+        public Iterator<Enricher> iterator() {
+            return asList().iterator();
+        }
+
+        protected List<Enricher> asList() {
             return ImmutableList.<Enricher>copyOf(enrichersInternal);
         }
 
@@ -1716,12 +1728,12 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
     
     /**
-     * @deprecated since 0.9.0; see {@link BasicPolicySupport#getPolicies()}; e.g. {@code policies().getPolicies()}
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#iterator()}; e.g. {@code policies().iterator()}
      */
     @Override
     @Deprecated
     public Collection<Policy> getPolicies() {
-        return policies().getPolicies();
+        return policies().asList();
     }
 
     /**
@@ -1770,12 +1782,12 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     }
     
     /**
-     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#getEnrichers()}; e.g. {@code enrichers().getEnrichers()}
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#iterator()}; e.g. {@code enrichers().iterator()}
      */
     @Override
     @Deprecated
     public Collection<Enricher> getEnrichers() {
-        return enrichers().getEnrichers();
+        return enrichers().asList();
     }
 
     /**
