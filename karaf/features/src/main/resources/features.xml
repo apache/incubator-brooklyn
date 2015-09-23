@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.2.0" name="org.apache.brooklyn-${project.version}">
+
+  <repository>mvn:org.apache.karaf.features/standard/${karaf.version}/xml/features</repository>
+  <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
+  <repository>mvn:org.apache.karaf.features/spring/${karaf.version}/xml/features</repository>
+
+  <!-- TODO: complete the features set -->
+  <feature name="brooklyn-core" version="${project.version}" resolver="(obr)">
+    <bundle>mvn:org.apache.brooklyn/brooklyn-core/${project.version}</bundle>
+  </feature>
+</features>
