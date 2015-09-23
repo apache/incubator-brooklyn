@@ -87,8 +87,8 @@ public class EntityTypeTest extends BrooklynAppUnitTestSupport {
         super.setUp();
         entity = (EntityInternal) app.createAndManageChild(EntitySpec.create(Entity.class, EmptyEntityForTesting.class));
         listener = new RecordingSensorEventListener<>();
-        app.getSubscriptionContext().subscribe(entity, SENSOR_ADDED, listener);
-        app.getSubscriptionContext().subscribe(entity, SENSOR_REMOVED, listener);
+        app.subscriptions().subscribe(entity, SENSOR_ADDED, listener);
+        app.subscriptions().subscribe(entity, SENSOR_REMOVED, listener);
     }
 
     @Test

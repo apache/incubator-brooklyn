@@ -32,17 +32,17 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
-import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.Configurable;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.Entities;
@@ -58,7 +58,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -82,7 +81,9 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
     protected transient ExecutionContext execution;
 
     private final BasicConfigurationSupport config = new BasicConfigurationSupport();
-    
+
+    private final BasicSubscriptionSupport subscriptions = new BasicSubscriptionSupport();
+
     /**
      * The config values of this entity. Updating this map should be done
      * via {@link #config()}.
@@ -199,6 +200,95 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return config;
     }
 
+    @Override
+    public BasicSubscriptionSupport subscriptions() {
+        return subscriptions;
+    }
+
+    public class BasicSubscriptionSupport implements SubscriptionSupportInternal {
+        @Override
+        public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            if (!checkCanSubscribe()) return null;
+            return getSubscriptionTracker().subscribe(producer, sensor, listener);
+        }
+
+        @Override
+        public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            if (!checkCanSubscribe()) return null;
+            return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
+        }
+
+        @Override
+        public <T> SubscriptionHandle subscribeToMembers(Group producerGroup, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            if (!checkCanSubscribe(producerGroup)) return null;
+            return getSubscriptionTracker().subscribeToMembers(producerGroup, sensor, listener);
+        }
+
+        @Override
+        public <T> SubscriptionHandle subscribeToChildren(Entity producerParent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            if (!checkCanSubscribe(producerParent)) return null;
+            return getSubscriptionTracker().subscribeToChildren(producerParent, sensor, listener);
+        }
+        
+        @Override
+        public boolean unsubscribe(Entity producer) {
+            if (destroyed.get()) return false;
+            return getSubscriptionTracker().unsubscribe(producer);
+        }
+
+        @Override
+        public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+            if (destroyed.get()) return false;
+            return getSubscriptionTracker().unsubscribe(producer, handle);
+        }
+
+        @Override
+        public boolean unsubscribe(SubscriptionHandle handle) {
+            if (destroyed.get()) return false;
+            return getSubscriptionTracker().unsubscribe(handle);
+        }
+
+        @Override
+        public void unsubscribeAll() {
+            if (destroyed.get()) return;
+            getSubscriptionTracker().unsubscribeAll();
+        }
+
+        protected SubscriptionTracker getSubscriptionTracker() {
+            synchronized (AbstractEntityAdjunct.this) {
+                if (_subscriptionTracker!=null) return _subscriptionTracker;
+                if (entity==null) return null;
+                _subscriptionTracker = new SubscriptionTracker(((EntityInternal)entity).getManagementSupport().getSubscriptionContext());
+                return _subscriptionTracker;
+            }
+        }
+        
+        /** returns false if deleted, throws exception if invalid state, otherwise true.
+         * okay if entity is not yet managed (but not if entity is no longer managed). */
+        protected boolean checkCanSubscribe(Entity producer) {
+            if (destroyed.get()) return false;
+            if (producer==null) throw new IllegalStateException(this+" given a null target for subscription");
+            if (entity==null) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because it is not associated to an entity");
+            if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because the associated entity "+entity+" is no longer managed");
+            return true;
+        }
+        
+        protected boolean checkCanSubscribe() {
+            if (destroyed.get()) return false;
+            if (entity==null) throw new IllegalStateException(this+" cannot subscribe because it is not associated to an entity");
+            if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe because the associated entity "+entity+" is no longer managed");
+            return true;
+        }
+
+        /**
+         * @return a list of all subscription handles
+         */
+        protected Collection<SubscriptionHandle> getAllSubscriptions() {
+            SubscriptionTracker tracker = getSubscriptionTracker();
+            return (tracker != null) ? tracker.getAllSubscriptions() : Collections.<SubscriptionHandle>emptyList();
+        }
+    }
+    
     private class BasicConfigurationSupport implements ConfigurationSupportInternal {
 
         @Override
@@ -377,6 +467,10 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         }
     }
 
+    /**
+     * @deprecated since 0.9.0; for internal use only
+     */
+    @Deprecated
     protected synchronized SubscriptionTracker getSubscriptionTracker() {
         if (_subscriptionTracker!=null) return _subscriptionTracker;
         if (entity==null) return null;
@@ -384,82 +478,77 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return _subscriptionTracker;
     }
     
-    @VisibleForTesting //intended as protected, meant for subclasses
-    /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
+    /**
+     * @deprecated since 0.9.0; see {@link SubscriptionSupport#subscribe(Entity, Sensor, SensorEventListener)} and {@link BrooklynObject#subscriptions()}
+     */
+    @Deprecated
     public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         if (!checkCanSubscribe()) return null;
         return getSubscriptionTracker().subscribe(producer, sensor, listener);
     }
 
-    @VisibleForTesting //intended as protected, meant for subclasses
-    @Beta
-    /** @see SubscriptionContext#subscribe(Map, Entity, Sensor, SensorEventListener) */
-    public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        if (!checkCanSubscribe()) return null;
-        return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
-    }
-
-    @VisibleForTesting //intended as protected, meant for subclasses
-    /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
+    /**
+     * @deprecated since 0.9.0; see {@link SubscriptionSupport#subscribeToMembers(Entity, Sensor, SensorEventListener)} and {@link BrooklynObject#subscriptions()}
+     */
+    @Deprecated
     public <T> SubscriptionHandle subscribeToMembers(Group producerGroup, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         if (!checkCanSubscribe(producerGroup)) return null;
         return getSubscriptionTracker().subscribeToMembers(producerGroup, sensor, listener);
     }
 
-    @VisibleForTesting //intended as protected, meant for subclasses 
-    /** @see SubscriptionContext#subscribe(Entity, Sensor, SensorEventListener) */
+    /**
+     * @deprecated since 0.9.0; see {@link SubscriptionSupport#subscribeToChildren(Entity, Sensor, SensorEventListener)} and {@link BrooklynObject#subscriptions()}
+     */
+    @Deprecated
     public <T> SubscriptionHandle subscribeToChildren(Entity producerParent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         if (!checkCanSubscribe(producerParent)) return null;
         return getSubscriptionTracker().subscribeToChildren(producerParent, sensor, listener);
     }
 
-    /** @deprecated since 0.7.0 use {@link #checkCanSubscribe(Entity)} */
+    /**
+     * @deprecated since 0.7.0 use {@link BasicSubscriptionSupport#checkCanSubscribe(Entity)
+     */
     @Deprecated
     protected boolean check(Entity requiredEntity) {
         return checkCanSubscribe(requiredEntity);
     }
-    /** returns false if deleted, throws exception if invalid state, otherwise true.
-     * okay if entity is not yet managed (but not if entity is no longer managed). */
+    
+    /**
+     * @deprecated since 0.9.0; for internal use only
+     */
+    @Deprecated
     protected boolean checkCanSubscribe(Entity producer) {
-        if (destroyed.get()) return false;
-        if (producer==null) throw new IllegalStateException(this+" given a null target for subscription");
-        if (entity==null) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because it is not associated to an entity");
-        if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe to "+producer+" because the associated entity "+entity+" is no longer managed");
-        return true;
+        return subscriptions().checkCanSubscribe(producer);
     }
+    
+    /**
+     * @deprecated since 0.9.0; for internal use only
+     */
+    @Deprecated
     protected boolean checkCanSubscribe() {
-        if (destroyed.get()) return false;
-        if (entity==null) throw new IllegalStateException(this+" cannot subscribe because it is not associated to an entity");
-        if (((EntityInternal)entity).getManagementSupport().isNoLongerManaged()) throw new IllegalStateException(this+" cannot subscribe because the associated entity "+entity+" is no longer managed");
-        return true;
+        return subscriptions().checkCanSubscribe();
     }
         
     /**
-     * Unsubscribes the given producer.
-     *
-     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+     * @deprecated since 0.9.0; see {@link SubscriptionSupport#unsubscribe(Entity)} and {@link BrooklynObject#subscriptions()}
      */
-    @VisibleForTesting //intended as protected, meant for subclasses
+    @Deprecated
     public boolean unsubscribe(Entity producer) {
-        if (destroyed.get()) return false;
-        return getSubscriptionTracker().unsubscribe(producer);
+        return subscriptions().unsubscribe(producer);
     }
 
     /**
-     * Unsubscribes the given producer.
-     *
-     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+     * @deprecated since 0.9.0; see {@link SubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)} and {@link BrooklynObject#subscriptions()}
      */
-    @VisibleForTesting //intended as protected, meant for subclasses
+    @Deprecated
     public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
-        if (destroyed.get()) return false;
-        return getSubscriptionTracker().unsubscribe(producer, handle);
+        return subscriptions().unsubscribe(producer, handle);
     }
 
     /**
-     * @return a list of all subscription handles
+     * @deprecated since 0.9.0; for internal use only
      */
-    @VisibleForTesting //intended as protected, meant for subclasses
+    @Deprecated
     protected Collection<SubscriptionHandle> getAllSubscriptions() {
         SubscriptionTracker tracker = getSubscriptionTracker();
         return (tracker != null) ? tracker.getAllSubscriptions() : Collections.<SubscriptionHandle>emptyList();

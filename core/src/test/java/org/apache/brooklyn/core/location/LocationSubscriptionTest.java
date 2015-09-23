@@ -16,13 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.entity;
+package org.apache.brooklyn.core.location;
 
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.RecordingSensorEventListener;
 import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.sensor.BasicSensorEvent;
 import org.apache.brooklyn.core.test.entity.TestApplication;
@@ -34,18 +36,14 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
-public class EntitySubscriptionTest {
+public class LocationSubscriptionTest {
 
     // TODO Duplication between this and PolicySubscriptionTest
     
-    private static final long SHORT_WAIT_MS = 100;
-
     private SimulatedLocation loc;
     private TestApplication app;
-    private TestEntity entity;
     private TestEntity observedEntity;
     private BasicGroup observedGroup;
     private TestEntity observedChildEntity;
@@ -57,7 +55,6 @@ public class EntitySubscriptionTest {
     public void setUp() {
         app = TestApplication.Factory.newManagedInstanceForTests();
         loc = app.newSimulatedLocation();
-        entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         observedEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         observedChildEntity = observedEntity.createAndManageChild(EntitySpec.create(TestEntity.class));
 
@@ -79,9 +76,9 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscriptionReceivesEvents() {
-        entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
-        entity.subscribe(observedEntity, TestEntity.NAME, listener);
-        entity.subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
+        loc.subscriptions().subscribe(observedEntity, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().subscribe(observedEntity, TestEntity.NAME, listener);
+        loc.subscriptions().subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
         
         otherEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
@@ -99,7 +96,7 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscriptionToAllReceivesEvents() {
-        entity.subscribe(null, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().subscribe(null, TestEntity.SEQUENCE, listener);
         
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
         otherEntity.sensors().set(TestEntity.SEQUENCE, 456);
@@ -114,7 +111,7 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscribeToChildrenReceivesEvents() {
-        entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
         
         observedChildEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.SEQUENCE, 456);
@@ -128,7 +125,7 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscribeToChildrenReceivesEventsForDynamicallyAddedChildren() {
-        entity.subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().subscribeToChildren(observedEntity, TestEntity.SEQUENCE, listener);
         
         final TestEntity observedChildEntity2 = observedEntity.createAndManageChild(EntitySpec.create(TestEntity.class));
         observedChildEntity2.sensors().set(TestEntity.SEQUENCE, 123);
@@ -142,10 +139,10 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscribeToMembersReceivesEvents() {
-        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
         observedMemberEntity.sensors().set(TestEntity.SEQUENCE, 123);
-        ((EntityLocal)observedGroup).sensors().set(TestEntity.SEQUENCE, 456);
+        observedGroup.sensors().set(TestEntity.SEQUENCE, 456);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -156,7 +153,7 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testSubscribeToMembersReceivesEventsForDynamicallyAddedMembers() {
-        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
         final TestEntity observedMemberEntity2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         observedGroup.addMember(observedMemberEntity2);
@@ -171,7 +168,7 @@ public class EntitySubscriptionTest {
     
     @Test(groups="Integration")
     public void testSubscribeToMembersIgnoresEventsForDynamicallyRemovedMembers() {
-        entity.subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().subscribeToMembers(observedGroup, TestEntity.SEQUENCE, listener);
         
         observedGroup.removeMember(observedMemberEntity);
         
@@ -185,11 +182,11 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testUnsubscribeRemovesAllSubscriptionsForThatEntity() {
-        entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
-        entity.subscribe(observedEntity, TestEntity.NAME, listener);
-        entity.subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
-        entity.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
-        entity.unsubscribe(observedEntity);
+        loc.subscriptions().subscribe(observedEntity, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().subscribe(observedEntity, TestEntity.NAME, listener);
+        loc.subscriptions().subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
+        loc.subscriptions().subscribe(otherEntity, TestEntity.SEQUENCE, listener);
+        loc.subscriptions().unsubscribe(observedEntity);
         
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.NAME, "myname");
@@ -205,11 +202,11 @@ public class EntitySubscriptionTest {
     
     @Test
     public void testUnsubscribeUsingHandleStopsEvents() {
-        SubscriptionHandle handle1 = entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
-        SubscriptionHandle handle2 = entity.subscribe(observedEntity, TestEntity.NAME, listener);
-        SubscriptionHandle handle3 = entity.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
+        SubscriptionHandle handle1 = loc.subscriptions().subscribe(observedEntity, TestEntity.SEQUENCE, listener);
+        SubscriptionHandle handle2 = loc.subscriptions().subscribe(observedEntity, TestEntity.NAME, listener);
+        SubscriptionHandle handle3 = loc.subscriptions().subscribe(otherEntity, TestEntity.SEQUENCE, listener);
         
-        entity.unsubscribe(observedEntity, handle2);
+        loc.subscriptions().unsubscribe(observedEntity, handle2);
         
         observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
         observedEntity.sensors().set(TestEntity.NAME, "myname");
@@ -226,7 +223,7 @@ public class EntitySubscriptionTest {
     @Test
     public void testSubscriptionReceivesEventsInOrder() {
         final int NUM_EVENTS = 100;
-        entity.subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
+        loc.subscriptions().subscribe(observedEntity, TestEntity.MY_NOTIF, listener);
 
         for (int i = 0; i < NUM_EVENTS; i++) {
             observedEntity.sensors().emit(TestEntity.MY_NOTIF, i);
@@ -241,43 +238,4 @@ public class EntitySubscriptionTest {
             }});
     }
 
-    @Test
-    public void testSubscriptionReceivesInitialValueEvents() {
-        observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
-        observedEntity.sensors().set(TestEntity.NAME, "myname");
-        
-        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.SEQUENCE, listener);
-        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.NAME, listener);
-        
-        Asserts.succeedsEventually(new Runnable() {
-            @Override public void run() {
-                assertEquals(listener.getEvents(), ImmutableList.of(
-                        new BasicSensorEvent<Integer>(TestEntity.SEQUENCE, observedEntity, 123),
-                        new BasicSensorEvent<String>(TestEntity.NAME, observedEntity, "myname")));
-            }});
-    }
-
-    
-    @Test
-    public void testSubscriptionNotReceivesInitialValueEventsByDefault() {
-        observedEntity.sensors().set(TestEntity.SEQUENCE, 123);
-        observedEntity.sensors().set(TestEntity.NAME, "myname");
-        
-        entity.subscribe(observedEntity, TestEntity.SEQUENCE, listener);
-        entity.subscribe(observedEntity, TestEntity.NAME, listener);
-        
-        Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), new Runnable() {
-            @Override public void run() {
-                assertEquals(listener.getEvents(), ImmutableList.of());
-            }});
-    }
-
-    // TODO A visual inspection test that we get a log.warn telling us we can't get the initial-value
-    @Test
-    public void testSubscriptionForInitialValueWhenNotValid() {
-        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, TestEntity.MY_NOTIF, listener);
-        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), observedEntity, null, listener);
-        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), null, TestEntity.NAME, listener);
-        entity.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), null, null, listener);
-    }
 }

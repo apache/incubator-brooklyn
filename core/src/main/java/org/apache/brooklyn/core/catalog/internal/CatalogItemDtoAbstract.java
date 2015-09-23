@@ -26,8 +26,6 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
@@ -37,6 +35,8 @@ import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
@@ -66,10 +66,18 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @SetFromFlag boolean disabled;
 
     /**
-     * Config not supported for catalog item. See {@link #getPlanYaml()}.
+     * @throws UnsupportedOperationException; Config not supported for catalog item. See {@link #getPlanYaml()}.
      */
     @Override
     public ConfigurationSupportInternal config() {
+        throw new UnsupportedOperationException();
+    }
+    
+    /**
+     * @throws UnsupportedOperationException; subscriptions are not supported for catalog items
+     */
+    @Override
+    public SubscriptionSupportInternal subscriptions() {
         throw new UnsupportedOperationException();
     }
     

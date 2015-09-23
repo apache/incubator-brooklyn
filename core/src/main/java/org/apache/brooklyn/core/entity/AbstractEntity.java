@@ -190,7 +190,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // then we need temp vals here. When setManagementContext is called, we'll switch these out for the read-deal;
     // i.e. for the values backed by storage
     private Reference<Entity> parent = new BasicReference<Entity>();
-    private Set<Group> groups = Sets.newLinkedHashSet();
+    private Set<Group> groupsInternal = Sets.newLinkedHashSet();
     private Set<Entity> children = Sets.newLinkedHashSet();
     private Reference<List<Location>> locations = new BasicReference<List<Location>>(ImmutableList.<Location>of()); // dups removed in addLocations
     private Reference<Long> creationTimeUtc = new BasicReference<Long>(System.currentTimeMillis());
@@ -198,8 +198,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     private Reference<String> iconUrl = new BasicReference<String>();
 
     Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
-    Collection<AbstractPolicy> policies = Lists.newCopyOnWriteArrayList();
-    Collection<AbstractEnricher> enrichers = Lists.newCopyOnWriteArrayList();
+    private Collection<AbstractPolicy> policiesInternal = Lists.newCopyOnWriteArrayList();
+    private Collection<AbstractEnricher> enrichersInternal = Lists.newCopyOnWriteArrayList();
     Collection<Feed> feeds = Lists.newCopyOnWriteArrayList();
 
     // FIXME we do not currently support changing parents, but to implement a cluster that can shrink we need to support at least
@@ -219,6 +219,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     private final BasicConfigurationSupport config = new BasicConfigurationSupport();
 
     private final BasicSensorSupport sensors = new BasicSensorSupport();
+
+    private final BasicSubscriptionSupport subscriptions = new BasicSubscriptionSupport();
+
+    private final BasicPolicySupport policies = new BasicPolicySupport();
+
+    private final BasicEnricherSupport enrichers = new BasicEnricherSupport();
+
+    private final BasicGroupSupport groups = new BasicGroupSupport();
 
     /**
      * The config values of this entity. Updating this map should be done
@@ -461,7 +469,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
         if (BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE)) {
             Entity oldParent = parent.get();
-            Set<Group> oldGroups = groups;
+            Set<Group> oldGroups = groupsInternal;
             Set<Entity> oldChildren = children;
             List<Location> oldLocations = locations.get();
             EntityConfigMap oldConfig = configsInternal;
@@ -471,7 +479,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             String oldIconUrl = iconUrl.get();
 
             parent = managementContext.getStorage().getReference(getId()+"-parent");
-            groups = SetFromLiveMap.create(managementContext.getStorage().<Group,Boolean>getMap(getId()+"-groups"));
+            groupsInternal = SetFromLiveMap.create(managementContext.getStorage().<Group,Boolean>getMap(getId()+"-groups"));
             children = SetFromLiveMap.create(managementContext.getStorage().<Entity,Boolean>getMap(getId()+"-children"));
             locations = managementContext.getStorage().getNonConcurrentList(getId()+"-locations");
             creationTimeUtc = managementContext.getStorage().getReference(getId()+"-creationTime");
@@ -485,7 +493,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             // before setting the parent etc. However, for backwards compatibility we still support some
             // things calling the entity's constructor directly.
             if (oldParent != null) parent.set(oldParent);
-            if (oldGroups.size() > 0) groups.addAll(oldGroups);
+            if (oldGroups.size() > 0) groupsInternal.addAll(oldGroups);
             if (oldChildren.size() > 0) children.addAll(oldChildren);
             if (oldLocations.size() > 0) locations.set(ImmutableList.copyOf(oldLocations));
             if (creationTimeUtc.isNull()) creationTimeUtc.set(oldCreationTimeUtc);
@@ -679,26 +687,82 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return changed;
     }
 
+    // -------- GROUPS --------------
+
+    @Override 
+    @Beta
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return EnricherSupportInternal
+    // TODO revert to EnricherSupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicGroupSupport groups() {
+        return groups;
+    }
+
+    /**
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #groups()} is reverted to return {@link {GroupSupport} instead of
+     * {@link BasicGroupSupport}.
+     */
+    @Beta
+    // TODO revert to private when groups() is reverted to return GroupSupport
+    public class BasicGroupSupport implements GroupSupportInternal {
+        @Override
+        public Iterator<Group> iterator() { 
+            return asList().iterator();
+        }
+        
+        protected List<Group> asList() { 
+            return ImmutableList.copyOf(groupsInternal);
+        }
+        
+        @Override
+        public void add(Group group) {
+            boolean changed = groupsInternal.add(group);
+            getApplication();
+            
+            if (changed) {
+                emit(AbstractEntity.GROUP_ADDED, group);
+            }
+        }
+
+        @Override
+        public void remove(Group group) {
+            boolean changed = groupsInternal.remove(group);
+            getApplication();
+            
+            if (changed) {
+                emit(AbstractEntity.GROUP_REMOVED, group);
+            }
+        }
+    }
+    
+    /**
+     * @deprecated since 0.9.0; see {@link #groups()} and {@link GroupSupport#addGroup(Group)}
+     */
     @Override
+    @Deprecated
     public void addGroup(Group group) {
-        boolean changed = groups.add(group);
-        getApplication();
-        
-        if (changed) {
-            emit(AbstractEntity.GROUP_ADDED, group);
-        }
+        groups().add(group);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link #groups()} and {@link GroupSupport#removeGroup(Group)}
+     */
     @Override
+    @Deprecated
     public void removeGroup(Group group) {
-        boolean changed = groups.remove(group);
-        getApplication();
-        
-        if (changed) {
-            emit(AbstractEntity.GROUP_REMOVED, group);
-        }
+        groups().remove(group);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link #groups()} and {@link GroupSupport#iterator()}
+     */
+    @Override
+    @Deprecated
+    public Collection<Group> getGroups() { 
+        return groups().asList();
+    }
+    
     @Override
     public Entity getParent() {
         return parent.get();
@@ -709,11 +773,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return ImmutableList.copyOf(children);
     }
     
-    @Override
-    public Collection<Group> getGroups() { 
-        return ImmutableList.copyOf(groups);
-    }
-
     /**
      * Returns the application, looking it up if not yet known (registering if necessary)
      */
@@ -1063,7 +1122,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             if (getManagementSupport().isNoLongerManaged())
                 throw new IllegalStateException("Entity "+AbstractEntity.this+" is no longer managed, when trying to publish "+sensor+" "+val);
 
-            SubscriptionContext subsContext = getSubscriptionContext();
+            SubscriptionContext subsContext = subscriptions().getSubscriptionContext();
             if (subsContext != null) subsContext.publish(sensor.newEvent(getProxyIfAvailable(), val));
         }
     }
@@ -1331,61 +1390,147 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     
     // -------- SUBSCRIPTIONS --------------
 
-    /** @see EntityLocal#subscribe */
-    @Override
-    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        return getSubscriptionTracker().subscribe(producer, sensor, listener);
-    }
-
-    /** @see EntityLocal#subscribe */
-    @Override
+    @Override 
     @Beta
-    public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
-    }
-
-    /** @see EntityLocal#subscribeToChildren */
-    @Override
-    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        return getSubscriptionTracker().subscribeToChildren(parent, sensor, listener);
-    }
-
-    /** @see EntityLocal#subscribeToMembers */
-    @Override
-    public <T> SubscriptionHandle subscribeToMembers(Group group, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        return getSubscriptionTracker().subscribeToMembers(group, sensor, listener);
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return SubscriptionSupportInternal
+    // TODO revert to SubscriptionSupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicSubscriptionSupport subscriptions() {
+        return subscriptions;
     }
 
     /**
-     * Unsubscribes the given producer.
-     *
-     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #subscriptions()} is reverted to return {@link SubscriptionSupportInternal} instead of
+     * {@link BasicSubscriptionSupport}.
      */
-    @Override
-    public boolean unsubscribe(Entity producer) {
-        return getSubscriptionTracker().unsubscribe(producer);
-    }
-
-    /**
-     * Unsubscribes the given handle.
-     *
-     * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
-     */
-    @Override
-    public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
-        return getSubscriptionTracker().unsubscribe(producer, handle);
-    }
-
-    @Override
-    public synchronized SubscriptionContext getSubscriptionContext() {
-        return getManagementSupport().getSubscriptionContext();
-    }
-
-    protected synchronized SubscriptionTracker getSubscriptionTracker() {
-        if (_subscriptionTracker == null) {
-            _subscriptionTracker = new SubscriptionTracker(getSubscriptionContext());
+    @Beta
+    // TODO revert to private when config() is reverted to return SensorSupportInternal
+    public class BasicSubscriptionSupport implements SubscriptionSupportInternal {
+        
+        @Override
+        public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribe(producer, sensor, listener);
         }
-        return _subscriptionTracker;
+
+        @Override
+        public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
+        }
+
+        @Override
+        public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribeToChildren(parent, sensor, listener);
+        }
+
+        @Override
+        public <T> SubscriptionHandle subscribeToMembers(Group group, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribeToMembers(group, sensor, listener);
+        }
+
+        /**
+         * Unsubscribes the given producer.
+         *
+         * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+         */
+        @Override
+        public boolean unsubscribe(Entity producer) {
+            return getSubscriptionTracker().unsubscribe(producer);
+        }
+
+        /**
+         * Unsubscribes the given handle.
+         *
+         * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+         */
+        @Override
+        public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+            return getSubscriptionTracker().unsubscribe(producer, handle);
+        }
+
+        /**
+         * Unsubscribes the given handle.
+         * 
+         * It is (currently) more efficient to also pass in the producer -
+         * see {@link BasicSubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)} 
+         */
+        @Override
+        public boolean unsubscribe(SubscriptionHandle handle) {
+            return getSubscriptionTracker().unsubscribe(handle);
+        }
+
+        @Override
+        public void unsubscribeAll() {
+            getSubscriptionTracker().unsubscribeAll();
+        }
+        
+        protected SubscriptionContext getSubscriptionContext() {
+            synchronized (AbstractEntity.this) {
+                return getManagementSupport().getSubscriptionContext();
+            }
+        }
+
+        protected SubscriptionTracker getSubscriptionTracker() {
+            synchronized (AbstractEntity.this) {
+                if (_subscriptionTracker == null) {
+                    _subscriptionTracker = new SubscriptionTracker(getSubscriptionContext());
+                }
+                return _subscriptionTracker;
+            }
+        }
+    }
+    
+    /**
+     * @deprecated since 0.9.0; see {@code subscriptions().subscribe(producer, sensor, listener)}
+     */
+    @Override
+    @Deprecated
+    public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        return subscriptions().subscribe(producer, sensor, listener);
+    }
+
+    /**
+     * @deprecated since 0.9.0; see {@code subscriptions().subscribeToChildren(parent, sensor, listener)}
+     */
+    @Override
+    @Deprecated
+    public <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        return subscriptions().subscribeToChildren(parent, sensor, listener);
+    }
+
+    /**
+     * @deprecated since 0.9.0; see {@code subscriptions().subscribeToMembers(producer, sensor, listener)}
+     */
+    @Override
+    @Deprecated
+    public <T> SubscriptionHandle subscribeToMembers(Group group, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+        return subscriptions().subscribeToMembers(group, sensor, listener);
+    }
+
+    /**
+     * @deprecated since 0.9.0; see {@code subscriptions().unsubscribe(producer)}
+     */
+    @Override
+    @Deprecated
+    public boolean unsubscribe(Entity producer) {
+        return subscriptions().unsubscribe(producer);
+    }
+
+    /**
+     * @deprecated since 0.9.0; see {@code subscriptions().unsubscribe(producer, handle)}
+     */
+    @Override
+    @Deprecated
+    public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+        return subscriptions().unsubscribe(producer, handle);
+    }
+
+    /**
+     * @deprecated since 0.9.0; for internal use only
+     */
+    @Deprecated
+    protected synchronized SubscriptionTracker getSubscriptionTracker() {
+        return subscriptions().getSubscriptionTracker();
     }
     
     @Override
@@ -1438,82 +1583,220 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     
     // -------- POLICIES --------------------
 
+    @Override 
+    @Beta
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return PolicySupportInternal
+    // TODO revert to PolicySupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicPolicySupport policies() {
+        return policies;
+    }
+
+    @Override 
+    @Beta
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return EnricherSupportInternal
+    // TODO revert to EnricherSupportInternal when groovy subclasses work without this (eg new groovy version)
+    public BasicEnricherSupport enrichers() {
+        return enrichers;
+    }
+
+    /**
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #policies()} is reverted to return {@link {PolicySupportInternal} instead of
+     * {@link BasicPolicySupport}.
+     */
+    @Beta
+    // TODO revert to private when config() is reverted to return SensorSupportInternal
+    public class BasicPolicySupport implements PolicySupportInternal {
+        
+        @Override
+        public Iterator<Policy> iterator() {
+            return asList().iterator();
+        }
+
+        protected List<Policy> asList() {
+            return ImmutableList.<Policy>copyOf(policiesInternal);
+        }
+
+        @Override
+        public void add(Policy policy) {
+            Policy old = findApparentlyEqualAndWarnIfNotSameUniqueTag(policiesInternal, policy);
+            if (old!=null) {
+                LOG.debug("Removing "+old+" when adding "+policy+" to "+AbstractEntity.this);
+                remove(old);
+            }
+            
+            CatalogUtils.setCatalogItemIdOnAddition(AbstractEntity.this, policy);
+            policiesInternal.add((AbstractPolicy)policy);
+            ((AbstractPolicy)policy).setEntity(AbstractEntity.this);
+            
+            getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
+            emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
+        }
+
+        @Override
+        public <T extends Policy> T add(PolicySpec<T> spec) {
+            T policy = getManagementContext().getEntityManager().createPolicy(spec);
+            add(policy);
+            return policy;
+        }
+        
+        @Override
+        public boolean remove(Policy policy) {
+            ((AbstractPolicy)policy).destroy();
+            boolean changed = policiesInternal.remove(policy);
+            
+            if (changed) {
+                getManagementSupport().getEntityChangeListener().onPolicyRemoved(policy);
+                emit(AbstractEntity.POLICY_REMOVED, new PolicyDescriptor(policy));
+            }
+            return changed;
+        }
+        
+        @Override
+        public boolean removeAllPolicies() {
+            boolean changed = false;
+            for (Policy policy : policiesInternal) {
+                remove(policy);
+                changed = true;
+            }
+            return changed;
+        }
+    }
+
+    /**
+     * Direct use of this class is strongly discouraged. It will become private in a future release,
+     * once {@link #enrichers()} is reverted to return {@link EnricherSupportInternal} instead of
+     * {@link BasicEnricherSupport}.
+     */
+    @Beta
+    // TODO revert to private when config() is reverted to return SensorSupportInternal
+    public class BasicEnricherSupport implements EnricherSupportInternal {
+        @Override
+        public Iterator<Enricher> iterator() {
+            return asList().iterator();
+        }
+
+        protected List<Enricher> asList() {
+            return ImmutableList.<Enricher>copyOf(enrichersInternal);
+        }
+
+        @Override
+        public <T extends Enricher> T add(EnricherSpec<T> spec) {
+            T enricher = getManagementContext().getEntityManager().createEnricher(spec);
+            add(enricher);
+            return enricher;
+        }
+
+        @Override
+        public void add(Enricher enricher) {
+            Enricher old = findApparentlyEqualAndWarnIfNotSameUniqueTag(enrichersInternal, enricher);
+            if (old!=null) {
+                LOG.debug("Removing "+old+" when adding "+enricher+" to "+AbstractEntity.this);
+                remove(old);
+            }
+            
+            CatalogUtils.setCatalogItemIdOnAddition(AbstractEntity.this, enricher);
+            enrichersInternal.add((AbstractEnricher) enricher);
+            ((AbstractEnricher)enricher).setEntity(AbstractEntity.this);
+            
+            getManagementSupport().getEntityChangeListener().onEnricherAdded(enricher);
+            // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
+        }
+        
+        @Override
+        public boolean remove(Enricher enricher) {
+            ((AbstractEnricher)enricher).destroy();
+            boolean changed = enrichersInternal.remove(enricher);
+            
+            if (changed) {
+                getManagementSupport().getEntityChangeListener().onEnricherRemoved(enricher);
+            }
+            return changed;
+
+        }
+
+        @Override
+        public boolean removeAll() {
+            boolean changed = false;
+            for (AbstractEnricher enricher : enrichersInternal) {
+                changed = remove(enricher) || changed;
+            }
+            return changed;
+        }
+    }
+    
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#iterator()}; e.g. {@code policies().iterator()}
+     */
     @Override
+    @Deprecated
     public Collection<Policy> getPolicies() {
-        return ImmutableList.<Policy>copyOf(policies);
+        return policies().asList();
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#addPolicy(Policy)}; e.g. {@code policies().addPolicy(policy)}
+     */
     @Override
+    @Deprecated
     public void addPolicy(Policy policy) {
-        Policy old = findApparentlyEqualAndWarnIfNotSameUniqueTag(policies, policy);
-        if (old!=null) {
-            LOG.debug("Removing "+old+" when adding "+policy+" to "+this);
-            removePolicy(old);
-        }
-        
-        CatalogUtils.setCatalogItemIdOnAddition(this, policy);
-        policies.add((AbstractPolicy)policy);
-        ((AbstractPolicy)policy).setEntity(this);
-        
-        getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
-        emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
+        policies().add(policy);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#addPolicy(PolicySpec)}; e.g. {@code policies().addPolicy(spec)}
+     */
     @Override
+    @Deprecated
     public <T extends Policy> T addPolicy(PolicySpec<T> spec) {
-        T policy = getManagementContext().getEntityManager().createPolicy(spec);
-        addPolicy(policy);
-        return policy;
+        return policies().add(spec);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#; e.g. {@code enrichers().addEnricher(spec)}
+     */
     @Override
+    @Deprecated
     public <T extends Enricher> T addEnricher(EnricherSpec<T> spec) {
-        T enricher = getManagementContext().getEntityManager().createEnricher(spec);
-        addEnricher(enricher);
-        return enricher;
+        return enrichers().add(spec);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#removePolicy(Policy)}; e.g. {@code policies().removePolicy(policy)}
+     */
     @Override
+    @Deprecated
     public boolean removePolicy(Policy policy) {
-        ((AbstractPolicy)policy).destroy();
-        boolean changed = policies.remove(policy);
-        
-        if (changed) {
-            getManagementSupport().getEntityChangeListener().onPolicyRemoved(policy);
-            emit(AbstractEntity.POLICY_REMOVED, new PolicyDescriptor(policy));
-        }
-        return changed;
+        return policies().remove(policy);
     }
     
+    /**
+     * @deprecated since 0.9.0; see {@link BasicPolicySupport#removeAllPolicies()}; e.g. {@code policies().removeAllPolicies()}
+     */
     @Override
+    @Deprecated
     public boolean removeAllPolicies() {
-        boolean changed = false;
-        for (Policy policy : policies) {
-            removePolicy(policy);
-            changed = true;
-        }
-        return changed;
+        return policies().removeAllPolicies();
     }
     
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#iterator()}; e.g. {@code enrichers().iterator()}
+     */
     @Override
+    @Deprecated
     public Collection<Enricher> getEnrichers() {
-        return ImmutableList.<Enricher>copyOf(enrichers);
+        return enrichers().asList();
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#addEnricher(Enricher)}; e.g. {@code enrichers().addEnricher(enricher)}
+     */
     @Override
+    @Deprecated
     public void addEnricher(Enricher enricher) {
-        Enricher old = findApparentlyEqualAndWarnIfNotSameUniqueTag(enrichers, enricher);
-        if (old!=null) {
-            LOG.debug("Removing "+old+" when adding "+enricher+" to "+this);
-            removeEnricher(old);
-        }
-        
-        CatalogUtils.setCatalogItemIdOnAddition(this, enricher);
-        enrichers.add((AbstractEnricher) enricher);
-        ((AbstractEnricher)enricher).setEntity(this);
-        
-        getManagementSupport().getEntityChangeListener().onEnricherAdded(enricher);
-        // TODO Could add equivalent of AbstractEntity.POLICY_ADDED for enrichers; no use-case for that yet
+        enrichers().add(enricher);
     }
     
     private <T extends EntityAdjunct> T findApparentlyEqualAndWarnIfNotSameUniqueTag(Collection<? extends T> items, T newItem) {
@@ -1593,25 +1876,22 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         return null;
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#removeEnricher(Enricher)}; e.g. {@code enrichers().removeEnricher(enricher)}
+     */
     @Override
+    @Deprecated
     public boolean removeEnricher(Enricher enricher) {
-        ((AbstractEnricher)enricher).destroy();
-        boolean changed = enrichers.remove(enricher);
-        
-        if (changed) {
-            getManagementSupport().getEntityChangeListener().onEnricherRemoved(enricher);
-        }
-        return changed;
-
+        return enrichers().remove(enricher);
     }
 
+    /**
+     * @deprecated since 0.9.0; see {@link BasicEnricherSupport#removeAllEnrichers()}; e.g. {@code enrichers().removeAllEnrichers()}
+     */
     @Override
+    @Deprecated
     public boolean removeAllEnrichers() {
-        boolean changed = false;
-        for (AbstractEnricher enricher : enrichers) {
-            changed = removeEnricher(enricher) || changed;
-        }
-        return changed;
+        return enrichers().removeAll();
     }
     
     // -------- FEEDS --------------------

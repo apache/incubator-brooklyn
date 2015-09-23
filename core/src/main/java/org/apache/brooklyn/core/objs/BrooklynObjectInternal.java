@@ -38,7 +38,11 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
     @SuppressWarnings("rawtypes")  // subclasses typically apply stronger typing
     RebindSupport getRebindSupport();
     
+    @Override
     ConfigurationSupportInternal config();
+
+    @Override
+    SubscriptionSupportInternal subscriptions();
 
     @Beta
     public interface ConfigurationSupportInternal extends Configurable.ConfigurationSupport {
@@ -99,5 +103,10 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
         
         @Beta
         void refreshInheritedConfigOfChildren();
+    }
+    
+    @Beta
+    public interface SubscriptionSupportInternal extends BrooklynObject.SubscriptionSupport {
+        public void unsubscribeAll();
     }
 }

@@ -179,7 +179,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
 
     @Override
     public Response rename(String application, String entity, String newName) {
-        EntityLocal entityLocal = brooklyn().getEntity(application, entity);
+        Entity entityLocal = brooklyn().getEntity(application, entity);
         entityLocal.setDisplayName(newName);
         return status(Response.Status.OK).build();
     }

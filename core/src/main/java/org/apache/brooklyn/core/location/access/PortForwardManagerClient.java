@@ -402,4 +402,9 @@ public class PortForwardManagerClient implements PortForwardManager {
     public ConfigurationSupport config() {
         return getDelegate().config();
     }
+    
+    @Override
+    public SubscriptionSupport subscriptions() {
+        return getDelegate().subscriptions();
+    }
 }

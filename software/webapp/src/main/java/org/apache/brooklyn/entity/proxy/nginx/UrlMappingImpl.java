@@ -184,8 +184,8 @@ public class UrlMappingImpl extends AbstractGroupImpl implements UrlMapping {
 
     @Override
     public synchronized void recompute() {
-        if (subscriptionHandle != null) getSubscriptionContext().unsubscribe(subscriptionHandle);
-        if (subscriptionHandle2 != null) getSubscriptionContext().unsubscribe(subscriptionHandle2);
+        if (subscriptionHandle != null) subscriptions().unsubscribe(subscriptionHandle);
+        if (subscriptionHandle2 != null) subscriptions().unsubscribe(subscriptionHandle2);
 
         Entity t = getTarget();
         if (t != null) {

@@ -126,8 +126,8 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         entity.sensors().set(TestEntity.SEQUENCE, 123);
         entity.sensors().set(TestEntity.NAME, "myname");
         
-        policy.subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, TestEntity.SEQUENCE, listener);
-        policy.subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, TestEntity.NAME, listener);
+        policy.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, TestEntity.SEQUENCE, listener);
+        policy.subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, TestEntity.NAME, listener);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
