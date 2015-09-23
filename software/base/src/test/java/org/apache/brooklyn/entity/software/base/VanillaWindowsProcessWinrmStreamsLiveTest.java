@@ -18,41 +18,78 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.Map;
+
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.software.base.test.location.WindowsTestFixture;
+import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.Map;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class VanillaWindowsProcessWinrmStreamsLiveTest extends AbstractSoftwareProcessStreamsTest {
-    private Location location;
+    
+    private static final Logger LOG = LoggerFactory.getLogger(VanillaWindowsProcessWinrmStreamsLiveTest.class);
 
-    @BeforeMethod(alwaysRun=true)
+    protected MachineProvisioningLocation<WinRmMachineLocation> location;
+    protected WinRmMachineLocation machine;
+    
+    // Using BeforeClass so that uses just a single VM for all tests
+    @BeforeClass(alwaysRun = true)
+    public void setUpClass() throws Exception {
+        super.setUp();
+        if (app != null) Entities.destroy(app);
+        
+        location = WindowsTestFixture.setUpWindowsLocation(mgmt);
+        machine = location.obtain(ImmutableMap.of());
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws Exception {
+        try {
+            if (location != null && machine != null) location.release(machine);
+        } catch (Throwable t) {
+            LOG.error("Caught exception in tearDownClass method", t);
+        } finally {
+            super.tearDown();
+        }
+    }
+
+    @BeforeMethod(alwaysRun = true)
     @Override
     public void setUp() throws Exception {
-        super.setUp();
+        app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
+    }
 
-        Map<String, Object> config = ImmutableMap.<String, Object>builder()
-                .put("inboundPorts", ImmutableList.of(5985, 3389))
-                .put("osFamily", "windows")
-                .put("displayName", "AWS Oregon (Windows)")
-                .put("imageOwner", "801119661308")
-                .put("imageNameRegex", "Windows_Server-2012-R2_RTM-English-64Bit-Base-.*")
-                .put("hardwareId", "m3.medium")
-                .put("checkRunning.command", "echo true")
-                .put("useJcloudsSshInit", false)
-                .build();
-        location = ((JcloudsLocation)mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-west-1", config)).obtain();
+    @AfterMethod(alwaysRun = true)
+    @Override
+    public void tearDown() throws Exception {
+        try {
+            if (app != null) Entities.destroy(app);
+        } catch (Throwable t) {
+            LOG.error("Caught exception in tearDown method", t);
+        } finally {
+            app = null;
+        }
     }
 
     @Test(groups = "Live")
     @Override
     public void testGetsStreams() {
         VanillaWindowsProcess entity = app.createAndManageChild(EntitySpec.create(VanillaWindowsProcess.class)
+                .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true)
                 .configure(VanillaSoftwareProcess.PRE_INSTALL_COMMAND, "echo " + getCommands().get("winrm: pre-install-command.*"))
                 .configure(VanillaSoftwareProcess.INSTALL_COMMAND, "echo " + getCommands().get("winrm: install.*"))
                 .configure(VanillaSoftwareProcess.POST_INSTALL_COMMAND, "echo " + getCommands().get("winrm: post-install-command.*"))
@@ -61,13 +98,14 @@ public class VanillaWindowsProcessWinrmStreamsLiveTest extends AbstractSoftwareP
                 .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, "echo " + getCommands().get("winrm: launch.*"))
                 .configure(VanillaSoftwareProcess.POST_LAUNCH_COMMAND, "echo " + getCommands().get("winrm: post-launch-command.*"))
                 .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "echo true"));
-        app.start(ImmutableList.of(location));
+        app.start(ImmutableList.of(machine));
         assertStreams(entity);
     }
 
     @Test(groups = "Live")
     public void testGetsStreamsPowerShell() {
         VanillaWindowsProcess entity = app.createAndManageChild(EntitySpec.create(VanillaWindowsProcess.class)
+                .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true)
                 .configure(VanillaWindowsProcess.PRE_INSTALL_POWERSHELL_COMMAND, "echo " + getCommands().get("winrm: pre-install-command.*"))
                 .configure(VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND, "echo " + getCommands().get("winrm: install.*"))
                 .configure(VanillaWindowsProcess.POST_INSTALL_POWERSHELL_COMMAND, "echo " + getCommands().get("winrm: post-install-command.*"))
@@ -76,7 +114,7 @@ public class VanillaWindowsProcessWinrmStreamsLiveTest extends AbstractSoftwareP
                 .configure(VanillaWindowsProcess.LAUNCH_POWERSHELL_COMMAND, "echo " + getCommands().get("winrm: launch.*"))
                 .configure(VanillaWindowsProcess.POST_LAUNCH_POWERSHELL_COMMAND, "echo " + getCommands().get("winrm: post-launch-command.*"))
                 .configure(VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, "echo true"));
-        app.start(ImmutableList.of(location));
+        app.start(ImmutableList.of(machine));
         assertStreams(entity);
     }
 

@@ -18,10 +18,16 @@
  */
 package org.apache.brooklyn.entity.software.base.lifecycle;
 
-import com.google.common.annotations.Beta;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import org.apache.brooklyn.api.entity.Entity;
+import static java.lang.String.format;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.TaskQueueingContext;
@@ -33,14 +39,9 @@ import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
-import static java.lang.String.format;
+import com.google.common.annotations.Beta;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 /**
  * <code>org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper</code> analog for WinRM
@@ -96,7 +97,11 @@ public class WinRmExecuteHelper {
 
         try {
             ByteArrayOutputStream stdin = new ByteArrayOutputStream();
-            stdin.write((command != null ? command : psCommand).getBytes());
+            if (command != null) {
+                stdin.write(command.getBytes());
+            } else if (psCommand != null) {
+                stdin.write(psCommand.getBytes());
+            }
             tb.tag(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, stdin));
         } catch (IOException e) {
             LOG.warn("Error registering stream "+BrooklynTaskTags.STREAM_STDIN+" on "+tb+": "+e, e);

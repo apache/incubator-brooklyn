@@ -32,8 +32,10 @@ import org.apache.brooklyn.entity.software.base.lifecycle.NativeWindowsScriptRun
 import org.apache.brooklyn.entity.software.base.lifecycle.WinRmExecuteHelper;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.ReferenceWithError;
 import org.apache.brooklyn.util.repeat.Repeater;
+import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.python.core.PyException;
@@ -171,7 +173,19 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         if (createParentDir) {
             createDirectory(getDirectory(target), "Creating resource directory");
         }
-        return copyTo(new File(source), target);
+        
+        InputStream stream = null;
+        try {
+            Tasks.setBlockingDetails("retrieving resource "+source+" for copying across");
+            stream = resource.getResourceFromUrl(source);
+            Tasks.setBlockingDetails("copying resource "+source+" to server");
+            return copyTo(stream, target);
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        } finally {
+            Tasks.setBlockingDetails(null);
+            if (stream != null) Streams.closeQuietly(stream);
+        }
     }
 
     @Override
@@ -193,10 +207,10 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
             if (allowNoOp) {
                 return new WinRmToolResponse("", "", 0).getStatusCode();
             } else {
-                throw new IllegalStateException(String.format("Exactly one of %s or %s must be set", regularCommand, powerShellCommand));
+                throw new IllegalStateException(String.format("Exactly one of cmd or psCmd must be set for %s of %s", phase, entity));
             }
         } else if (!Strings.isBlank(regularCommand) && !Strings.isBlank(powerShellCommand)) {
-            throw new IllegalStateException(String.format("%s and %s cannot both be set", regularCommand, powerShellCommand));
+            throw new IllegalStateException(String.format("%s and %s cannot both be set for %s of %s", regularCommand, powerShellCommand, phase, entity));
         }
 
         ByteArrayOutputStream stdIn = new ByteArrayOutputStream();

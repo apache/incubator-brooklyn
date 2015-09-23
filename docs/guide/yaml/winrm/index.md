@@ -4,7 +4,7 @@ layout: website-normal
 ---
 
 Brooklyn can deploy to Windows servers using WinRM to run commands. These deployments can be 
-expressed in pure YAML, and utilise PowerShell to install and manage the software process. 
+expressed in pure YAML, and utilise Powershell to install and manage the software process. 
 This approach is similar to the use of SSH for UNIX-like servers.
 
 
@@ -73,6 +73,10 @@ to `VanillaSoftwareProcess`, but adapted to work for Windows and WinRM instead o
 [documentation for VanillaSoftwareProcess](../custom-entities.html#vanilla-software-using-bash) to find out what you
 can do with this entity.
 
+Entity authors are strongly encouraged to write Windows Powershell or Batch scripts as separate 
+files, to configure these to be uploaded, and then to configure the appropriate command as a 
+single line that executes given script.
+
 For example - here is a simplified blueprint (but see [Tips and Tricks](#tips-and-tricks) below!):
 
     name: Server with 7-Zip
@@ -91,7 +95,7 @@ For example - here is a simplified blueprint (but see [Tips and Tricks](#tips-an
     services:
     - type: org.apache.brooklyn.entity.software.base.VanillaWindowsProcess
       brooklyn.config:
-        templates.install:
+        templates.preinstall:
           file:///Users/richard/install7zip.ps1: "C:\\install7zip.ps1"
         install.command: powershell -command "C:\\install7zip.ps1"
         customize.command: echo true
@@ -112,7 +116,7 @@ The installation script - referred to as `/Users/richard/install7zip.ps1` in the
 
     Start-Process "msiexec" -ArgumentList '/qn','/i',$Dl -RedirectStandardOutput ( [System.IO.Path]::Combine($Path, "stdout.txt") ) -RedirectStandardError ( [System.IO.Path]::Combine($Path, "stderr.txt") ) -Wait
 
-This is only a very simple example. A core complex example can be found in the [Microsoft SQL Server blueprint in the
+This is only a very simple example. A more complex example can be found in the [Microsoft SQL Server blueprint in the
 Brooklyn source code]({{ site.brooklyn.url.git }}/software/database/src/main/resources/org/apache/brooklyn/entity/database/mssql).
 
 
@@ -130,16 +134,52 @@ process.
 
 ### Powershell
 
-Powershell commands can be supplied directly using config options such as `launch.powershell.command`.
+Powershell commands can be supplied using config options such as `launch.powershell.command`.
 
-### Rebooting
+This is an alternative to supplying a standard batch command using config such as `launch.command`.
+For a given phase, only one of the commands (Powershell or Batch) should be supplied.
 
-Where a reboot is required as part of the entity setup, this can be configured using
-config like `pre.install.reboot.required` and `install.reboot.required`. If required, the 
-installation commands can be split between the pre-install, install and post-install phases
-in order to do a reboot at the appropriate point of the VM setup.
+### Getting the Right Exit Codes
 
-## Powershell scripts and configuration files on classpath
+WinRM (or at least the chosen WinRM client!) can return a zero exit code even on error in certain 
+circumstances. It is therefore advisable to follow the guidelines below.
+
+*For a given command, write the Powershell or Batch script as a separate multi-command file. 
+Upload this (e.g. by including it in the `files.preinstall` configuration). For the configuration
+of the given command, execute the file.*
+
+For Powershell files, consider including the line below at the start of the file. 
+Without this, it defaults to "continue" which means that if a command in the Powershell file fails
+then it will continue and return an exit code based on only the final command.
+
+    $ErrorActionPreference = "Stop"
+
+See [Incorrect Exit Codes](#incorrect-exit-codes) under Known Limitations below.
+
+### Executing Scripts From Batch Commands
+
+In a batch command, you can execute a batch file or Powershell file. For example:
+
+    install.command: powershell -NonInteractive -NoProfile -Command "C:\\install7zip.ps1"
+
+Or alternatively:
+
+    install.command: C:\\install7zip.bat
+
+### Executing Scripts From Powershell
+
+In a Powershell command, you can execute a batch file or Powershell file. There are many ways
+to do this (see official Powershell docs). For example:
+ 
+    install.powershell.command: "& C:\\install7zip.ps1"
+
+Or alternatively:
+
+    install.powershell.command: "& C:\\install7zip.bat"
+
+Note the quotes around the command. This is because the "&" has special meaning in a YAML value. 
+
+### Uploading Script and Configuration Files
 
 Often, blueprints will require that (parameterized) scripts and configuration files are available to be copied to the
 target VM. These must be URLs resolvable from the Brooklyn instance, or on the Brooklyn classpath. One simple way 
@@ -148,11 +188,65 @@ an OSGi bundle can be used, referenced from the catalog item.
 
 Ensure that these scripts end each line with "\r\n", rather than just "\n".
 
+There are two types of file that can be uploaded: plain files and templated files. A plain 
+file is uploaded unmodified. A templated file is interpreted as a [FreeMarker](http://freemarker.org) 
+template. This supports a powerful set of substitutions. In brief, anything (unescaped) of the form
+`${name}` will be substituted, in this case looking up "name" for the value to use.
+
+Templated files (be they configuration files or scripts) gives a powerful way to inject dependent 
+configuration when installing an entity (e.g. for customising the install, or for referencing the
+connection details of another entity). A common substitution is of the form `${config['mykey']}`. 
+This looks up a config key (in this case named "mykey") and will insert the value into the file.
+Another common substitution is is of the form `${attribute['myattribute']}` - this looks up the
+attribute named "myattribute" of this entity.
+
+Files can be referenced as URLs. This includes support for things like `classpath://mypath/myfile.bat`. 
+This looks for the given (fully qualified) resource on the Brooklyn classpath.
+
+The destination for the file upload is specified in the entity's configuration. Note that "\" must
+be escaped. For example `"C:\\install7zip.ps1"`.
+
+A list of plain files to be uploaded can be configured under `files.preinstall`, `files.install` and
+`files.runtime`. These are uploaded respectively prior to executing the `pre.install.command`,
+prior to `install.command` and prior to `pre.launch.command`.
+
+A list of templated files to be uploaded can be configured under `templates.preinstall`, `templates.install`
+and `templates.runtime`. The times these are uploaded is as for the plain files. The templates 
+substitutions will be resolved only at the point when the file is to be uploaded.
+
+For example:
+
+    files.preinstall:
+    - classpath://com/acme/installAcme.ps1
+    - classpath://com/acme/acme.conf
+
+### Parameterised Scripts
+
+Calling parameterised Batch and Powershell scripts is done in the normal Windows way - see
+offical Microsoft docs. For example:
+
+    install.command: "c:\\myscript.bat myarg1 myarg2"
+
+Or as a Powershell example:
+
+    install.powershell.command: "& c:\\myscript.ps1 -key1 myarg1 -key2 myarg2"
+
+It is also possible to construct the script parameters by referencing attributes of this or
+other entities using the standard `attributeWhenReady` mechanism. For example:
+
+    install.command: $brooklyn:formatString("c:\\myscript.bat %s", component("db").attributeWhenReady("datastore.url"))
+
+### Rebooting
+
+Where a reboot is required as part of the entity setup, this can be configured using
+config like `pre.install.reboot.required` and `install.reboot.required`. If required, the 
+installation commands can be split between the pre-install, install and post-install phases
+in order to do a reboot at the appropriate point of the VM setup.
+
 ### Install Location
 
 Blueprint authors are encouraged to explicitly specify the full path for file uploads, and 
 for paths in their Powershell scripts (e.g. for installation, configuration files, log files, etc).
-
 
 ### How and Why to re-authenticate within a powershell script
 
@@ -207,9 +301,9 @@ a similarly named AMI. For example:
     brooklyn.location.named.AWS\ Oregon\ Win.imageOwner = 801119661308
     ...
 
-## stdout and stderr in a PowerShell script
+## stdout and stderr in a Powershell script
 
-When calling an executable in a PowerShell script, the stdout and stderr will usually be output to the console.
+When calling an executable in a Powershell script, the stdout and stderr will usually be output to the console.
 This is captured by Brooklyn, and shown in the activities view under the specific tasks.
 
 An alternative is to redirect stdout and stderr to a file on the VM, which can be helpful if one expects sys admins
@@ -225,7 +319,7 @@ For example, instead of running the following:
 
 The `-ArgumentList` is simply the arguments that are to be passed to the executable, `-RedirectStandardOutput` and
 `RedirectStandardError` take file locations for the output (if the file already exists, it will be overwritten). The
-`-PassThru` argument indicates that PowerShell should write to the file *in addition* to the console, rather than
+`-PassThru` argument indicates that Powershell should write to the file *in addition* to the console, rather than
 *instead* of the console. The `-Wait` argument will cause the scriptlet to block until the process is complete.
 
 Further details can be found on the [Start-Process documentation page](https://technet.microsoft.com/en-us/library/hh849848.aspx)
@@ -248,7 +342,6 @@ with the required WinRM setup and make Brooklyn use this image.
 If the configuration options `userMetadata` or `userMetadataString` are used on the location, then this will override
 the default setup script. This allows one to supply a custom setup script. However, if userMetadata contains something
 else then the setup will not be done and the VM may not not be accessible remotely over WinRM.
-
 
 ### Credentials issue requiring special configuration
 
@@ -279,13 +372,63 @@ Additional logs may be created by some Windows programs. For example, MSSQL crea
 Known Limitations
 -----------------
 
-### Use of unencrypted HTTP
+### Use of Unencrypted HTTP
 
 Brooklyn is currently using unencrypted HTTP for WinRM communication. This means that the login credentials will be
 transmitted in clear text.
 
 In future we aim to improve Brooklyn to support HTTPS. However this requires adding support to the underlying 
 WinRM library, and also involves certificate creation and verification.
+
+### Incorrect Exit Codes
+
+Some limitations with WinRM (or at least the chosen WinRM Client!) are listed below:
+
+##### Single-line Powershell files
+
+When a Powershell file contains just a single command, the execution of that file over WinRM returns exit code 0
+even if the command fails! This is the case for even simple examples like `exit 1` or `thisFileDoesNotExist.exe`.
+
+A workaround is to add an initial command, for example:
+
+    Write-Host dummy line for workaround 
+    exit 1
+
+##### Direct Configuration of Powershell commands
+
+If a command is directly configured with Powershell that includes `exit`, the return code over WinRM
+is not respected. For example, the command below will receive an exit code of 0.
+
+    launch.powershell.command: |
+      echo first
+      exit 1
+
+##### Direct Configuration of Batch commands
+
+If a command is directly configured with a batch exit, the return code over WinRM
+is not respected. For example, the command below will receive an exit code of 0.
+
+    launch.command: exit /B 1
+
+##### Non-zero Exit Code Returned as One
+
+If a batch or Powershell file exits with an exit code greater than one (or negative), this may 
+be reported as 1 over WinRM. For example, if a batch file ends with `exit /B 3`, the WinRM 
+result from executing that file will be 1.
+
+### Direct Configuration of Multi-line Batch Commands Not Executed
+
+If a command is directly configured with multi-line batch commands, then only the first line 
+will be executed. For example the command below will only output "first":
+
+    launch.command: |
+      echo first
+      echo second
+
+The workaround is to write a file with the batch commands, have that file uploaded, and execute it.
+
+Note this is not done automatically because that could affect the capture and returning
+of the exit code for the commands executed.
 
 ### Install location
 
