@@ -207,10 +207,10 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
             if (allowNoOp) {
                 return new WinRmToolResponse("", "", 0).getStatusCode();
             } else {
-                throw new IllegalStateException(String.format("Exactly one of %s or %s must be set", regularCommand, powerShellCommand));
+                throw new IllegalStateException(String.format("Exactly one of cmd or psCmd must be set for %s of %s", phase, entity));
             }
         } else if (!Strings.isBlank(regularCommand) && !Strings.isBlank(powerShellCommand)) {
-            throw new IllegalStateException(String.format("%s and %s cannot both be set", regularCommand, powerShellCommand));
+            throw new IllegalStateException(String.format("%s and %s cannot both be set for %s of %s", regularCommand, powerShellCommand, phase, entity));
         }
 
         ByteArrayOutputStream stdIn = new ByteArrayOutputStream();
