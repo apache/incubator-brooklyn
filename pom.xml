@@ -90,6 +90,7 @@
         <module>policy</module>
 
         <module>locations/jclouds</module>
+        <module>karaf</module>
 
         <!-- module>sandbox/cassandra-multicloud-snitch</module -->
         <!-- module>sandbox/database</module -->
