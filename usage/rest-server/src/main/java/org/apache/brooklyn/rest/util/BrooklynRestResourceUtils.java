@@ -22,6 +22,7 @@ import static org.apache.brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
 import groovy.lang.GroovyClassLoader;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ import java.util.concurrent.Future;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
@@ -444,9 +447,13 @@ public class BrooklynRestResourceUtils {
         if (mgmt.getEntitlementManager().isEntitled(Entitlements.getEntitlementContext(),
                 Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(entity, 
                     StringAndArgument.of("expunge", MutableMap.of("release", release))))) {
+            Map<String, Object> flags = MutableMap.<String, Object>of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
+                    + entity.getDisplayName() + " (" + entity + ")");
+            if (Entitlements.getEntitlementContext() != null) {
+                flags.put("tags", MutableSet.of(BrooklynTaskTags.tagForEntitlement(Entitlements.getEntitlementContext())));
+            }
             return mgmt.getExecutionManager().submit(
-                    MutableMap.of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
-                            + entity.getDisplayName() + " (" + entity + ")"), new Runnable() {
+                    flags, new Runnable() {
                         @Override
                         public void run() {
                             if (release)
