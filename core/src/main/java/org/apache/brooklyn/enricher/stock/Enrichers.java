@@ -48,6 +48,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -171,8 +172,8 @@ public class Enrichers {
         public JoinerBuilder joining(AttributeSensor<?> source) {
             return new JoinerBuilder(source);
         }
-        public ReducerBuilder reducing(List<AttributeSensor<?>> sourceSensors) {
-            return new ReducerBuilder(sourceSensors);
+        public <S, T> ReducerBuilder<S, T> reducing(Class<? extends Reducer<S, T>> clazz, List<AttributeSensor<S>> sourceSensors) {
+            return new ReducerBuilder<S, T>(clazz, sourceSensors);
         }
     }
 
@@ -680,21 +681,22 @@ public class Enrichers {
         }
     }
 
-    protected abstract static class AbstractReducerBuilder<S, B extends AbstractReducerBuilder<S, B>> extends AbstractEnricherBuilder<B> {
-        protected AttributeSensor<S> publishing;
+    protected abstract static class AbstractReducerBuilder<S, T, B extends AbstractReducerBuilder<S, T, B>> extends AbstractEnricherBuilder<B> {
+        protected AttributeSensor<T> publishing;
         protected Entity fromEntity;
-        protected List<AttributeSensor<?>> reducing;
-        protected Function<List<AttributeSensor<?>>, String> computing;
+        protected List<AttributeSensor<S>> reducing;
+        protected Function<List<S>, T> computing;
+        protected String functionName;
+        private Map<String, Object> parameters;
 
-        public AbstractReducerBuilder(List<AttributeSensor<?>> val) {
-            super(Reducer.class);
+        public AbstractReducerBuilder(Class<? extends Reducer<S, T>> clazz, List<AttributeSensor<S>> val) {
+            super(clazz);
             this.reducing = checkNotNull(val);
         }
-
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        public <S> ReducerBuilder<S> publishing(AttributeSensor<? extends S> val) {
-            this.publishing = (AttributeSensor) checkNotNull(val);
-            return (ReducerBuilder) this;
+        
+        public B publishing(AttributeSensor<T> val) {
+            this.publishing =  checkNotNull(val);
+            return self();
         }
 
         public B from(Entity val) {
@@ -702,8 +704,18 @@ public class Enrichers {
             return self();
         }
 
-        public B computing(Function<List<AttributeSensor<?>>, String> val) {
+        public B computing(Function<List<S>, T> val) {
             this.computing = checkNotNull(val);
+            return self();
+        }
+        
+        public B computing(String functionName) {
+            return computing(functionName, ImmutableMap.<String, Object>of());
+        }
+        
+        public B computing(String functionName, Map<String, Object> parameters) {
+            this.functionName = functionName;
+            this.parameters = parameters;
             return self();
         }
 
@@ -712,7 +724,9 @@ public class Enrichers {
                     .put(Reducer.SOURCE_SENSORS, reducing)
                     .put(Reducer.PRODUCER, fromEntity)
                     .put(Reducer.TARGET_SENSOR, publishing)
-                    .put(Reducer.REDUCER_FUNCTION, computing)
+                    .putIfNotNull(Reducer.REDUCER_FUNCTION, computing)
+                    .putIfNotNull(Reducer.REDUCER_FUNCTION_UNTYPED, functionName)
+                    .putIfNotNull(Reducer.PARAMETERS, parameters)
                     .build()
             );
         }
@@ -775,9 +789,9 @@ public class Enrichers {
         }
     }
 
-    public static class ReducerBuilder<S> extends AbstractReducerBuilder<S, ReducerBuilder<S>> {
-        public ReducerBuilder(List<AttributeSensor<?>> val) {
-            super(val);
+    public static class ReducerBuilder<S, T> extends AbstractReducerBuilder<S, T, ReducerBuilder<S, T>> {
+        public ReducerBuilder(Class<? extends Reducer<S, T>> clazz, List<AttributeSensor<S>> val) {
+            super(clazz, val);
         }
     }
 
