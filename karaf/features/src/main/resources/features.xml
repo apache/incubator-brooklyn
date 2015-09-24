@@ -9,4 +9,8 @@
   <feature name="brooklyn-core" version="${project.version}" resolver="(obr)">
     <bundle>mvn:org.apache.brooklyn/brooklyn-core/${project.version}</bundle>
   </feature>
+
+  <feature name="brooklyn-commands"  version="${project.version}">
+      <bundle>mvn:org.apache.brooklyn/brooklyn-commands/${project.version}</bundle>
+  </feature>
 </features>
