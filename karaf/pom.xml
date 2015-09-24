@@ -32,11 +32,14 @@
 
   <properties>
     <karaf.version>4.0.1</karaf.version>
+
+    <org.osgi.core.version>6.0.0</org.osgi.core.version>
+    <org.osgi.compendium.version>5.0.0</org.osgi.compendium.version>
     
     <lifecycle-mapping-plugin.version>1.0.0</lifecycle-mapping-plugin.version>
 
-    <maven.compiler.source>1.7</maven.compiler.source>
-    <maven.compiler.target>1.7</maven.compiler.target>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
   </properties>
 
   <modules>
