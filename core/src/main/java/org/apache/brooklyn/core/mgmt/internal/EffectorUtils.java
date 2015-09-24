@@ -36,6 +36,7 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.effector.BasicParameterType;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -340,15 +341,19 @@ public class EffectorUtils {
     
     /** returns a (mutable) map of the standard flags which should be placed on an effector */
     public static Map<Object,Object> getTaskFlagsForEffectorInvocation(Entity entity, Effector<?> effector, ConfigBag parameters) {
+        List<Object> tags = MutableList.of(
+                BrooklynTaskTags.EFFECTOR_TAG,
+                BrooklynTaskTags.tagForEffectorCall(entity, effector.getName(), parameters),
+                BrooklynTaskTags.tagForTargetEntity(entity));
+        if (Entitlements.getEntitlementContext() != null) {
+            tags.add(BrooklynTaskTags.tagForEntitlement(Entitlements.getEntitlementContext()));
+        }
         return MutableMap.builder()
                 .put("description", "Invoking effector "+effector.getName()
                     +" on "+entity.getDisplayName()
                     +(parameters!=null ? " with parameters "+parameters.getAllConfig() : ""))
                 .put("displayName", effector.getName())
-                .put("tags", MutableList.of(
-                        BrooklynTaskTags.EFFECTOR_TAG, 
-                        BrooklynTaskTags.tagForEffectorCall(entity, effector.getName(), parameters), 
-                        BrooklynTaskTags.tagForTargetEntity(entity)))
+                .put("tags", tags)
                 .build();
     }
 

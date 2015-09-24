@@ -57,6 +57,7 @@ import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.entity.machine.MachineInitTasks;
 import org.apache.brooklyn.entity.machine.ProvidesProvisioningFlags;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
@@ -65,6 +66,7 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwarePara
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwareParameters.StopMode;
 import org.apache.brooklyn.entity.stock.EffectorStartableImpl.StartParameters;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -618,7 +620,16 @@ public abstract class MachineLifecycleEffectorTasks {
         if (isRestartMachine==RestartMachineMode.FALSE) {
             DynamicTasks.queue("stopping (process)", new StopProcessesAtMachineTask());
         } else {
-            DynamicTasks.queue("stopping (machine)", new StopMachineTask());
+            Map<String, Object> stopMachineFlags =  MutableMap.of();
+            if (Entitlements.getEntitlementContext() != null) {
+                stopMachineFlags.put("tags", MutableSet.of(BrooklynTaskTags.tagForEntitlement(Entitlements.getEntitlementContext())));
+            }
+            Task<String> stopTask = Tasks.<String>builder()
+                    .displayName("stopping (machine)")
+                    .body(new StopMachineTask())
+                    .flags(stopMachineFlags)
+                    .build();
+            DynamicTasks.queue(stopTask);
         }
 
         DynamicTasks.queue("starting", new StartInLocationsTask());
@@ -706,7 +717,15 @@ public abstract class MachineLifecycleEffectorTasks {
         Task<StopMachineDetails<Integer>> stoppingMachine = null;
         if (canStop(stopMachineMode, machine.isAbsent())) {
             // Release this machine (even if error trying to stop process - we rethrow that after)
-            stoppingMachine = DynamicTasks.queue("stopping (machine)", stopTask);
+            Map<String, Object> stopMachineFlags =  MutableMap.of();
+            if (Entitlements.getEntitlementContext() != null) {
+                stopMachineFlags.put("tags", MutableSet.of(BrooklynTaskTags.tagForEntitlement(Entitlements.getEntitlementContext())));
+            }
+            Task<StopMachineDetails<Integer>> stopMachineTask = Tasks.<StopMachineDetails<Integer>>builder()
+                    .displayName("stopping (machine)")
+                    .body(stopTask).flags(stopMachineFlags)
+                    .build();
+            stoppingMachine = DynamicTasks.queue(stopMachineTask);
 
             DynamicTasks.drain(entity().getConfig(STOP_PROCESS_TIMEOUT), false);
 
