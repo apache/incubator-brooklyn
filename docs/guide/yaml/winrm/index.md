@@ -355,6 +355,18 @@ refer to [How and Why to re-authenticate withing a powershell script](#how-and-w
 If using the imageId of a Windows community AMI, you may find that the AMI is deleted after a few weeks.
 See [Windows AMIs on AWS](#windows-amis-on-aws) above.
 
+### VM Provisioning Times Out
+
+In some environments, provisioning of Windows VMs can take a very long time to return a usable VM.
+If the image is old, it may install many security updates (and reboot several times) before it is
+usable.
+
+On a VMware vCloud Director environment, the guest customizations can cause the VM to reboot (sometimes
+several times) before the VM is usable.
+
+This could cause the WinRM connection attempts to timeout. The location configuration option 
+`waitForWinRmAvailable` defaults to `30m` (i.e. 30 minutes). This can be increased if required.
+
 ### Windows log files
 
 Details of the commands executed, and their results, can be found in the Brooklyn log and in the Brooklyn 
@@ -415,6 +427,36 @@ is not respected. For example, the command below will receive an exit code of 0.
 If a batch or Powershell file exits with an exit code greater than one (or negative), this may 
 be reported as 1 over WinRM. For example, if a batch file ends with `exit /B 3`, the WinRM 
 result from executing that file will be 1.
+
+### PowerShell "Preparing modules for first use"
+
+The first command executed over WinRM has been observed to include stderr saying "Preparing 
+modules for first use", such as that below:
+
+    < CLIXML
+    <Objs Version="1.1.0.1" xmlns="http://schemas.microsoft.com/powershell/2004/04"><Obj S="progress" RefId="0"><TN RefId="0"><T>System.Management.Automation.PSCustomObject</T><T>System.Object</T></TN><MS><I64 N="SourceId">1</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj><Obj S="progress" RefId="1"><TNRef RefId="0" /><MS><I64 N="SourceId">2</I64><PR N="Record"><AV>Preparing modules for first use.</AV><AI>0</AI><Nil /><PI>-1</PI><PC>-1</PC><T>Completed</T><SR>-1</SR><SD> </SD></PR></MS></Obj></Objs>
+
+The command still succeeded. This has only been observed on private clouds (e.g. not on
+AWS). It could be related to the specific Windows images in use. It is recommended that 
+VM images are prepared carefully, e.g. so that security patches are up-to-date and the
+VM is suitably initialised.
+
+### WinRM executeScript failed: httplib.BadStatusLine: ''
+
+As described in https://issues.apache.org/jira/browse/BROOKLYN-173, a failure has been
+observed where the 10 attempts to execute the command over WinRM failed with:
+
+    httplib.BadStatusLine: ''
+
+Subsequently retrying the command worked. It is unclear what caused the failure, but could 
+have been that the Windows VM was not yet in the right state.
+
+One possible workaround is to ensure the Windows VM is in a good state for immediate use (e.g. 
+security updates are up-to-date). Another option is to increase the number of retries, 
+which defaults to 10. This is a configuration option on the machine location, so can be set on
+the location's brooklyn.properties or in the YAML: 
+
+    execTries: 20
 
 ### Direct Configuration of Multi-line Batch Commands Not Executed
 
