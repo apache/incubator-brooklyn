@@ -226,7 +226,7 @@ This project includes the software: ch.qos.logback
   Used under the following license: Eclipse Public License, version 1.0 (http://www.eclipse.org/legal/epl-v10.html)
 
 This project includes the software: com.fasterxml.jackson
-  Available at: http://wiki.fasterxml.com/JacksonHome http://wiki.fasterxml.com/JacksonJAXBAnnotations
+  Available at: http://wiki.fasterxml.com/JacksonHome
   Developed by: FasterXML (http://fasterxml.com/)
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
@@ -342,12 +342,6 @@ This project includes the software: commons-logging
   Developed by: The Apache Software Foundation (http://www.apache.org/)
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
-This project includes the software: dataTables.js
-  Available at: http://www.datatables.net
-  Developed by: SpryMedia Ltd (http://sprymedia.co.uk/)
-  Used under the following license: The BSD 3-Clause (New BSD) License (http://opensource.org/licenses/BSD-3-Clause)
-  Copyright (c) Allan Jardine (2008-2012)
-
 This project includes the software: dom4j
   Available at: http://dom4j.sourceforge.net/
   Developed by: MetaStuff Ltd. (http://sourceforge.net/projects/dom4j)
@@ -356,6 +350,7 @@ This project includes the software: dom4j
 This project includes the software: handlebars.js
   Available at: https://github.com/wycats/handlebars.js
   Developed by: Yehuda Katz (https://github.com/wycats/)
+  Inclusive of: handlebars*.js
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Yehuda Katz (2012)
 
@@ -383,27 +378,50 @@ This project includes the software: javax.ws.rs
   Developed by: Sun Microsystems, Inc (http://www.sun.com/)
   Used under the following license: CDDL License (http://www.opensource.org/licenses/cddl1.php)
 
-This project includes the software: jquery.ba-bbq.js
+This project includes the software: jQuery JavaScript Library
+  Available at: http://jquery.com/
+  Developed by: The jQuery Foundation (http://jquery.org/)
+  Inclusive of: jquery.js
+  Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
+  Copyright (c) John Resig (2011)
+  Includes code fragments from sizzle.js:
+    Copyright (c) jQuery Foundation and other contributors (2011)
+    Available at http://sizzlejs.com
+    Used under the MIT license
+
+This project includes the software: jQuery BBQ: Back Button & Query Library
   Available at: http://benalman.com/projects/jquery-bbq-plugin/
   Developed by: "Cowboy" Ben Alman (http://benalman.com/)
+  Inclusive of: jquery.ba-bbq*.js
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
-  Copyright (c) "\"Cowboy\" Ben Alman (2010)"
+  Copyright (c) "Cowboy" Ben Alman (2010)"
 
-This project includes the software: jquery.form.js
+This project includes the software: DataTables Table plug-in for jQuery
+  Available at: http://www.datatables.net/
+  Developed by: SpryMedia Ltd (http://sprymedia.co.uk/)
+  Inclusive of: jquery.dataTables.{js,css}
+  Used under the following license: The BSD 3-Clause (New BSD) License (http://opensource.org/licenses/BSD-3-Clause)
+  Copyright (c) Allan Jardine (2008-2012)
+
+This project includes the software: jQuery Form Plugin
   Available at: https://github.com/malsup/form
   Developed by: Mike Alsup (http://malsup.com/)
+  Inclusive of: jquery.form.js
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) M. Alsup (2006-2013)
 
-This project includes the software: jquery.js
-  Available at: http://jquery.com/
-  Developed by: The jQuery Foundation (http://jquery.org/)
+This project includes the software: jQuery Wiggle
+  Available at: https://github.com/jordanthomas/jquery-wiggle
+  Inclusive of: jquery.wiggle.min.js
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
-  Copyright (c) John Resig (2011)
+  Copyright (c) WonderGroup and Jordan Thomas (2010)
+  Previously online at http://labs.wondergroup.com/demos/mini-ui/index.html.
+  The version included here is from the Swagger UI distribution.
 
 This project includes the software: js-uri
   Available at: http://code.google.com/p/js-uri/
   Developed by: js-uri contributors (https://code.google.com/js-uri)
+  Inclusive of: URI.js
   Used under the following license: The BSD 3-Clause (New BSD) License (http://opensource.org/licenses/BSD-3-Clause)
   Copyright (c) js-uri contributors (2013)
 
@@ -439,11 +457,6 @@ This project includes the software: net.schmizz
 This project includes the software: org.99soft.guice
   Available at: http://99soft.github.com/rocoto/
   Developed by: 99 Software Foundation (http://www.99soft.org/)
-  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
-
-This project includes the software: org.apache.brooklyn
-  Available at: https://brooklyn.incubator.apache.org/
-  Developed by: The Apache Software Foundation (http://www.apache.org/)
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.commons
@@ -543,32 +556,49 @@ This project includes the software: org.yaml
   Available at: http://www.snakeyaml.org
   Used under the following license: Apache License, version 2.0 (in-project reference: LICENSE.txt)
 
-This project includes the software: require.js
-  Available at: http://github.com/jrburke/requirejs for details
+This project includes the software: RequireJS
+  Available at: http://requirejs.org/
   Developed by: The Dojo Foundation (http://dojofoundation.org/)
+  Inclusive of: require.js, text.js
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) The Dojo Foundation (2010-2012)
 
-This project includes the software: require.js/r.js
-  Available at: http://github.com/jrburke/requirejs for details
+This project includes the software: RequireJS (r.js maven plugin)
+  Available at: http://github.com/jrburke/requirejs
   Developed by: The Dojo Foundation (http://dojofoundation.org/)
+  Inclusive of: r.js
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
-  Copyright (c) The Dojo Foundation (2010-2012)
-
-This project includes the software: sizzle.js
-  Available at: http://sizzlejs.com/
-  Developed by: The jQuery Foundation (http://jquery.org/)
-  Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
-  Copyright (c) jQuery Foundation and other contributors (2011)
+  Copyright (c) The Dojo Foundation (2009-2013)
+  Includes code fragments for source-map and other functionality:
+    Copyright (c) The Mozilla Foundation and contributors (2011)
+    Used under the BSD 2-Clause license.
+  Includes code fragments for parse-js and other functionality:
+    Copyright (c) Mihai Bazon (2010, 2012)
+    Used under the BSD 2-Clause license.
+  Includes code fragments for uglifyjs/consolidator:
+    Copyright (c) Robert Gust-Bardon (2012)
+    Used under the BSD 2-Clause license.
+  Includes code fragments for the esprima parser:
+    Copyright (c):
+      Ariya Hidayat (2011, 2012)
+      Mathias Bynens (2012)
+      Joost-Wim Boekesteijn (2012)
+      Kris Kowal (2012)
+      Yusuke Suzuki (2012)
+      Arpad Borsos (2012)
+    Used under the BSD 2-Clause license.
 
 This project includes the software: Swagger JS
   Available at: https://github.com/wordnik/swagger-js
+  Inclusive of: swagger.js
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+  Copyright (c) SmartBear Software (2011-2015)
 
 This project includes the software: Swagger UI
   Available at: https://github.com/wordnik/swagger-ui
+  Inclusive of: swagger-ui.js
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
-  Copyright (c) SmartBear Software (2011-2015), portions WonderGroup and Jordan Thomas (2010)
+  Copyright (c) SmartBear Software (2011-2015)
 
 This project includes the software: typeahead.js
   Available at: https://github.com/twitter/typeahead.js
@@ -579,6 +609,7 @@ This project includes the software: typeahead.js
 This project includes the software: underscore.js
   Available at: http://underscorejs.org
   Developed by: DocumentCloud Inc (http://www.documentcloud.org/)
+  Inclusive of: underscore*.{js,map}
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2009-2013)
 
@@ -599,6 +630,7 @@ This project includes the software: xpp3
 This project includes the software: ZeroClipboard
   Available at: http://zeroclipboard.org/
   Developed by: ZeroClipboard contributors (https://github.com/zeroclipboard)
+  Inclusive of: ZeroClipboard.*
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Jon Rohan, James M. Greene (2014)
 
