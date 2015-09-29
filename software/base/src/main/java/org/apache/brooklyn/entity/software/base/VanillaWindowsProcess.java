@@ -20,6 +20,7 @@ package org.apache.brooklyn.entity.software.base;
 
 import java.util.Collection;
 
+import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
@@ -29,6 +30,7 @@ import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.collect.ImmutableSet;
 
+@Catalog(name="Vanilla Windows Process", description="A basic Windows entity configured with scripts, e.g. for launch, check-running and stop")
 @ImplementedBy(VanillaWindowsProcessImpl.class)
 public interface VanillaWindowsProcess extends AbstractVanillaProcess {
     // 3389 is RDP; 5985 is WinRM (3389 isn't used by Brooklyn, but useful for the end-user subsequently)
