@@ -20,27 +20,31 @@ define([
     "underscore", "backbone"
 ], function (_, Backbone) {
 
-    var AppTree = {}
+    var AppTree = {};
 
     AppTree.Model = Backbone.Model.extend({
-        defaults:function () {
+        defaults: function() {
             return {
-                id:"",
-                name:"",
-                type:"",
-                iconUrl:"",
-                serviceUp:"",
-                serviceState:"",
-                applicationId:"",
-                parentId:"",
-                children:[]
-            }
+                id: "",
+                name: "",
+                type: "",
+                iconUrl: "",
+                serviceUp: "",
+                serviceState: "",
+                applicationId: "",
+                parentId: "",
+                children: [],
+                members: []
+            };
         },
-        getDisplayName:function () {
-            return this.get("name")
+        getDisplayName: function() {
+            return this.get("name");
         },
-        hasChildren:function () {
-            return this.get("children").length > 0
+        hasChildren: function() {
+            return this.get("children").length > 0;
+        },
+        hasMembers: function() {
+            return this.get("members").length > 0;
         }
     })
 
@@ -48,7 +52,7 @@ define([
         model: AppTree.Model,
         includedEntities: [],
 
-        getApplications: function () {
+        getApplications: function() {
             var entities = [];
             _.each(this.models, function(it) {
                 if (it.get('id') == it.get('applicationId'))
@@ -56,7 +60,8 @@ define([
             });
             return entities;
         },
-        getNonApplications: function () {
+
+        getNonApplications: function() {
             var entities = [];
             _.each(this.models, function(it) {
                 if (it.get('id') != it.get('applicationId'))
@@ -64,20 +69,22 @@ define([
             });
             return entities;
         },
-        includeEntities: function (entities) {
+
+        includeEntities: function(entities) {
             // accepts id as string or object with id field
             var oldLength = this.includedEntities.length;
-            var newList = [].concat(this.includedEntities)
+            var newList = [].concat(this.includedEntities);
             for (entityId in entities) {
-                var entity = entities[entityId]
+                var entity = entities[entityId];
                 if (typeof entity === 'string')
-                    newList.push(entity)
+                    newList.push(entity);
                 else
-                    newList.push(entity.id)
+                    newList.push(entity.id);
             }
-            this.includedEntities = _.uniq(newList)
+            this.includedEntities = _.uniq(newList);
             return (this.includedEntities.length > oldLength);
         },
+
         /**
          * Depth-first search of entries in this.models for the first entity whose ID matches the
          * function's argument. Includes each entity's children.
@@ -88,7 +95,7 @@ define([
             for (var i = 0, l = this.models.length; i < l; i++) {
                 var model = this.models[i];
                 if (model.get("id") === id) {
-                    return model.getDisplayName()
+                    return model.getDisplayName();
                 } else {
                     // slice(0) makes a shallow clone of the array
                     var queue = model.get("children").slice(0);
@@ -109,6 +116,7 @@ define([
             // a string they'll get "stringundefined", whereas this way they'll just get "string".
             return "";
         },
+
         url: function() {
             if (this.includedEntities.length) {
                 var ids = this.includedEntities.join(",");
@@ -116,7 +124,7 @@ define([
             } else
                 return "/v1/applications/fetch";
         }
-    })
+    });
 
-    return AppTree
+    return AppTree;
 })

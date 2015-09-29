@@ -28,31 +28,31 @@ define([
              AppTree, EntityDetailsView, EntitySummary, Application,
              TreeItemHtml, TreeEmptyHtml, EntityDetailsEmptyHtml, EntityNotFoundHtml) {
 
-    var treeViewTemplate = _.template(TreeItemHtml),
-        notFoundTemplate = _.template(EntityNotFoundHtml);
+    var treeViewTemplate = _.template(TreeItemHtml);
+    var notFoundTemplate = _.template(EntityNotFoundHtml);
 
-    
+
     var ApplicationTreeView = Backbone.View.extend({
         template: treeViewTemplate,
         hoverTimer: null,
 
-        events:{
+        events: {
             'click span.entity_tree_node .tree-change':'treeChange',
             'click span.entity_tree_node':'displayEntity'
         },
-        
-        initialize:function () {
             this.collection.on('all', this.modelEvent, this)
             this.collection.on('change', this.modelChange, this)
             this.collection.on('remove', this.modelRemove, this)
             this.collection.on('add', this.modelAdd, this)
             this.collection.on('reset', this.renderFull, this)
+
+        initialize: function() {
             _.bindAll(this);
         },
 
-        beforeClose:function () {
-            this.collection.off("reset", this.renderFull)
-            if (this.detailsView) this.detailsView.close()
+        beforeClose: function() {
+            this.collection.off("reset", this.renderFull);
+            if (this.detailsView) this.detailsView.close();
         },
         
         modelChange: function (child) {
@@ -64,7 +64,8 @@ define([
         modelRemove: function (child) {
             this.removeNode(child.id)
         },
-        modelEvent: function (eventName, event, x) {
+
+        modelEvent: function(eventName, event, x) {
             if (/^change/i.test(eventName) || eventName == "remove" || eventName == "add" ||
                     eventName == "reset" ||
                     // above are handled; below is no-op
@@ -76,12 +77,12 @@ define([
                 // ignore; app-explorer should clear the view
                 return;
             }
-            
+
             // don't think we get other events, but just in case:
-            log("unhandled model event")
-            log(eventName)
-            log(event)
-            log(x)
+            log("unhandled model event");
+            log(eventName);
+            log(event);
+            log(x);
         },
 
         removeNode: function(id) {
@@ -89,7 +90,6 @@ define([
             // collection seems sometimes to have children nodes;
             // not sure why, but that's okay for now
             if (this.collection.getApplications().length==0)
-//            if (this.collection.isEmpty() || $('lozenge-app-tree-wrapper').length==0)
                 this.renderFull();
         },
         
@@ -111,7 +111,7 @@ define([
                 parentId = node.closest("entity_tree_node_wrapper").data('parentId');
             if (!isApp && !parentId) {
                 log("no parentId yet available for "+id+"; skipping;")
-                return false;                
+                return false;
             }
             
             var statusIconUrl = nModel
@@ -218,16 +218,16 @@ define([
                 $(node).html($newNode)
                 this.addEventsToNode($(node))
             }
-            return true
+            return true;
         },
-        
-        renderFull:function () {
-            var that = this
-            this.$el.empty()
+
+        renderFull: function() {
+            var that = this;
+            this.$el.empty();
 
             // Display tree and highlight the selected entity.
-            if (this.collection.getApplications().length==0) {
-                that.$el.append(_.template(TreeEmptyHtml))
+            if (this.collection.getApplications().length == 0) {
+                that.$el.append(_.template(TreeEmptyHtml));
             } else {
                 _.each(this.collection.getApplications(), function(appId) {
                     that.updateNode(appId, null, true);
@@ -237,63 +237,59 @@ define([
                     that.updateNode(id);
                 });
             }
-            
+
             this.highlightEntity();
 
             // Render the details for the selected entity.
             if (this.detailsView) {
-                this.detailsView.render()
+                this.detailsView.render();
             } else {
                 // if nothing selected, select the first application
                 if (!this.collection.isEmpty()) {
                     var app0 = this.collection.first().id;
                     _.defer(function () {
                         if (!that.selectedEntityId)
-                            that.displayEntityId(app0, app0)
+                            that.displayEntityId(app0, app0);
                     });
                 } else {
                     _.defer(function() {
                         $("div#details").html(_.template(EntityDetailsEmptyHtml));
-                        $("div#details").find("a[href='#summary']").tab('show')
-                    })
+                        $("div#details").find("a[href='#summary']").tab('show');
+                    });
                 }
             }
-            return this
+            return this;
         },
 
         addEventsToNode: function($node) {
             var that = this;
-            
-            // prevent default click-handling
-            // don't think this is needed, 18 Sep 2013; but leaving for a few weeks just in case
-//            $('a', $node).click(function(e) { e.preventDefault(); })
-            
+
             // show the "light-popup" (expand / expand all / etc) menu
             // if user hovers for 500ms. surprising there is no option for this (hover delay).
             // also, annoyingly, clicks around the time the animation starts don't seem to get handled
             // if the click is in an overlapping reason; this is why we position relative top: 12px in css
             $('.light-popup', $node).parent().parent().hover(
-                    function (parent) {
+                    function(parent) {
                         that.cancelHoverTimer();
                         that.hoverTimer = setTimeout(function() {
                             var menu = $(parent.currentTarget).find('.light-popup')
                             menu.show()
                         }, 500);
                     },
-                    function (parent) {
+                    function(parent) {
                         that.cancelHoverTimer();
                         var menu = $(parent.currentTarget).find('.light-popup')
                         menu.hide()
                         // hide all others too
                         $('.light-popup').hide()
-                    })
+                    });
         },
+
         cancelHoverTimer: function() {
-            var that = this;
-            if (that.hoverTimer!=null) {
-                clearTimeout(that.hoverTimer);
-                that.hoverTimer = null;
-            }            
+            if (this.hoverTimer != null) {
+                clearTimeout(this.hoverTimer);
+                this.hoverTimer = null;
+            }
         },
 
         displayEntity: function(event) {
@@ -301,29 +297,30 @@ define([
                 // trying to open in a new tab, do not act on it here!
                 return;
             event.preventDefault();
-            var nodeSpan = $(event.currentTarget)
-            var nodeA = $(event.currentTarget).children('a').first()
-            var entityId = nodeSpan.parent().attr("id"),
-                href = nodeA.attr('href'),
-                tab = (this.detailsView)
+            var $nodeSpan = $(event.currentTarget);
+            var $nodeA = $nodeSpan.children('a').first();
+            var entityId = $nodeSpan.closest('.tree-box').data("entityId");
+            var href = $nodeA.attr('href');
+            var tab = (this.detailsView)
                     ? this.detailsView.$el.find(".tab-pane.active").attr("id")
                     : undefined;
             if (href) {
                 if (tab) {
-                    href = href+"/"+tab
-                    stateId = entityId+"/"+tab
-                    this.preselectTab(tab)
+                    href = href+"/"+tab;
+                    stateId = entityId+"/"+tab;
+                    this.preselectTab(tab);
                 }
                 Backbone.history.navigate(href);
-                this.displayEntityId(entityId, nodeSpan.data("app-id"));
+                this.displayEntityId(entityId, $nodeSpan.data("app-id"));
             } else {
-                log("no a.href in clicked target")
-                log(nodeSpan)
+                log("no a.href in clicked target");
+                log($nodeSpan);
             }
         },
-        displayEntityId:function (id, appName, afterLoad) {
+
+        displayEntityId: function (id, appName, afterLoad) {
             var that = this;
-            this.highlightEntity(id)
+            this.highlightEntity(id);
 
             var entityLoadFailed = function() {
                 return that.displayEntityNotFound(id);
@@ -348,17 +345,17 @@ define([
                     return; 
                 }
             }
-            
-            var app = new Application.Model(),
-                entitySummary = new EntitySummary.Model;
 
-            app.url = "/v1/applications/" + appName
+            var app = new Application.Model();
+            var entitySummary = new EntitySummary.Model;
+
+            app.url = "/v1/applications/" + appName;
             entitySummary.url = "/v1/applications/" + appName + "/entities/" + id;
 
             // in case the server response time is low, fade out while it refreshes
             // (since we can't show updated details until we've retrieved app + entity details)
-            ViewUtils.fadeToIndicateInitialLoad($("div#details"))
-            
+            ViewUtils.fadeToIndicateInitialLoad($("div#details"));
+
             $.when(app.fetch(), entitySummary.fetch())
                 .done(function() {
                     that.showDetails(app, entitySummary);
@@ -375,42 +372,44 @@ define([
             var $target = $(event.currentTarget);
             var $treeBox = $target.closest('.tree-box');
             if ($target.hasClass('tr-expand')) {
-                this.showChildrenOf($treeBox, false)
+                this.showChildrenOf($treeBox, false);
             } else if ($target.hasClass('tr-expand-all')) {
-                this.showChildrenOf($treeBox, true)
+                this.showChildrenOf($treeBox, true);
             } else if ($target.hasClass('tr-collapse')) {
-                this.hideChildrenOf($treeBox, false)
+                this.hideChildrenOf($treeBox, false);
             } else if ($target.hasClass('tr-collapse-all')) {
-                this.hideChildrenOf($treeBox, true)
+                this.hideChildrenOf($treeBox, true);
             } else {
                 // default - toggle
                 if ($treeBox.children('.node-children').is(':visible')) {
-                    this.hideChildrenOf($treeBox, false)
+                    this.hideChildrenOf($treeBox, false);
                 } else {
-                    this.showChildrenOf($treeBox, false)
+                    this.showChildrenOf($treeBox, false);
                 }
             }
             // hide the popup menu
             this.cancelHoverTimer();
-            $('.light-popup').hide()
+            $('.light-popup').hide();
             // don't let other events interfere
             return false
         },
+
         hideChildrenOf: function($treeBox, recurse) {
             var that = this;
             if (recurse) {
                 $treeBox.children('.node-children').children().each(function (index, childBox) {
                     that.hideChildrenOf($(childBox), recurse)
-                })
+                });
             }
-            $treeBox.children('.node-children').slideUp(300)
-            $treeBox.children('.entity_tree_node_wrapper').find('.tree-node-state').removeClass('icon-chevron-down').addClass('icon-chevron-right')
+            $treeBox.children('.node-children').slideUp(300);
+            $treeBox.children('.entity_tree_node_wrapper').find('.tree-node-state').removeClass('icon-chevron-down').addClass('icon-chevron-right');
         },
+
         showChildrenOf: function($treeBox, recurse) {
             var that = this;
             var idToExpand = $treeBox.children('.entity_tree_node_wrapper').attr('id');
             var model = this.collection.get(idToExpand);
-            if (model==null) {
+            if (model == null) {
                 // not yet loaded; parallel thread should load
                 return;
             }
@@ -428,43 +427,43 @@ define([
                         if (recurse) {
                             $treeBox.children('.node-children').children().each(function (index, childBox) {
                                 _.defer( function() { that.showChildrenOf($(childBox), recurse) } );
-                            })
-                        }                        
+                            });
+                        }
                     }
                 })
             }
-            $treeBox.children('.node-children').slideDown(300)
-            $treeBox.children('.entity_tree_node_wrapper').find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down')            
+            $treeBox.children('.node-children').slideDown(300);
+            $treeBox.children('.entity_tree_node_wrapper').find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down');
             if (recurse) {
                 $treeBox.children('.node-children').children().each(function (index, childBox) {
-                    that.showChildrenOf($(childBox), recurse)
+                    that.showChildrenOf($(childBox), recurse);
                 })
             }
         },
-        
+
         /**
          * Causes the tab with the given name to be selected automatically when
          * the view is next rendered.
          */
         preselectTab: function(tab, tabDetails) {
-            this.currentTab = tab
+            this.currentTab = tab;
             this.currentTabDetails = tabDetails;
         },
 
         showDetails: function(app, entitySummary) {
-            var self = this;
-            ViewUtils.cancelFadeOnceLoaded($("div#details"))
-            
-            var whichTab = this.currentTab
+            var that = this;
+            ViewUtils.cancelFadeOnceLoaded($("div#details"));
+
+            var whichTab = this.currentTab;
             if (whichTab === undefined) {
                 whichTab = "summary";
                 if (this.detailsView) {
                     whichTab = this.detailsView.$el.find(".tab-pane.active").attr("id");
-                    this.detailsView.close()
+                    this.detailsView.close();
                 }
             }
             if (this.detailsView) {
-                this.detailsView.close()
+                this.detailsView.close();
             }
             this.detailsView = new EntityDetailsView({
                 model:entitySummary,
@@ -473,47 +472,47 @@ define([
                 preselectTab:whichTab,
                 preselectTabDetails:this.currentTabDetails,
             });
-            
+
             this.detailsView.on("entity.expunged", function() {
-                self.preselectTab("summary");
-                var id = self.selectedEntityId;
-                var model = self.collection.get(id);
+                that.preselectTab("summary");
+                var id = that.selectedEntityId;
+                var model = that.collection.get(id);
                 if (model && model.get("parentId")) {
-                    self.displayEntityId(model.get("parentId"));
-                } else if (self.collection) {
-                    self.displayEntityId(self.collection.first().id);
+                    that.displayEntityId(model.get("parentId"));
+                } else if (that.collection) {
+                    that.displayEntityId(that.collection.first().id);
                 } else if (id) {
-                    self.displayEntityNotFound(id);
+                    that.displayEntityNotFound(id);
                 } else {
-                    self.displayEntityNotFound("?");
+                    that.displayEntityNotFound("?");
                 }
-                self.collection.fetch();
+                that.collection.fetch();
             });
             this.detailsView.render( $("div#details") );
         },
 
-        highlightEntity:function (id) {
-            if (id) this.selectedEntityId = id
-            else id = this.selectedEntityId
-            
-            $(".entity_tree_node_wrapper").removeClass("active")
+        highlightEntity: function(id) {
+            if (id) this.selectedEntityId = id;
+            else id = this.selectedEntityId;
+
+            $(".entity_tree_node_wrapper").removeClass("active");
             if (id) {
                 var $selectedNode = $(".entity_tree_node_wrapper#"+id);
                 // make this node active
-                $selectedNode.addClass("active")
-                
+                $selectedNode.addClass("active");
+
                 // open the parent nodes if needed
                 var $nodeToOpenInParent = $selectedNode;
                 while ($nodeToOpenInParent.length && !$nodeToOpenInParent.is(':visible')) {
                     $nodeToOpenInParent = $nodeToOpenInParent.closest('.node-children').closest('.tree-box');
-                    this.showChildrenOf($nodeToOpenInParent)
+                    this.showChildrenOf($nodeToOpenInParent);
                 }
-                
+
                 // if we want to auto-expand the children of the selected node:
 //              this.showChildrenOf($selectedNode.closest('.tree-box'), false)
             }
         }
-    })
+    });
 
-    return ApplicationTreeView
+    return ApplicationTreeView;
 })
