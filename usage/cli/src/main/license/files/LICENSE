@@ -197,6 +197,7 @@ Contents:
 This project includes the software: typeahead.js
   Available at: https://github.com/twitter/typeahead.js
   Developed by: Twitter, Inc (http://twitter.com)
+  Version used: 0.10.5
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Twitter, Inc. and other contributors (2013-2014)
 
@@ -204,6 +205,7 @@ This project includes the software: underscore.js
   Available at: http://underscorejs.org
   Developed by: DocumentCloud Inc (http://www.documentcloud.org/)
   Inclusive of: underscore*.{js,map}
+  Version used: 1.4.4
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2009-2013)
 

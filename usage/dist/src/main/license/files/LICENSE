@@ -196,192 +196,232 @@ Contents:
 
 This project includes the software: aopalliance
   Available at: http://aopalliance.sourceforge.net
+  Version used: 1.0
   Used under the following license: Public Domain
 
 This project includes the software: asm
   Available at: http://asm.objectweb.org/asm/
   Developed by: ObjectWeb (http://www.objectweb.org/)
+  Version used: 3.3.1
   Used under the following license: BSD License (http://asm.objectweb.org/license.html)
 
 This project includes the software: async.js
   Available at: https://github.com/p15martin/google-maps-hello-world/blob/master/js/libs/async.js
   Developed by: Miller Medeiros (https://github.com/millermedeiros/)
+  Version used: 0.1.1
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Miller Medeiros (2011)
 
 This project includes the software: backbone.js
   Available at: http://backbonejs.org
   Developed by: DocumentCloud Inc (http://www.documentcloud.org/)
+  Version used: 1.0.0
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2010-2013)
 
 This project includes the software: bootstrap.js
   Available at: http://twitter.github.com/bootstrap/javascript.html#transitions
+  Version used: 2.0.4
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
   Copyright (c) Twitter, Inc (2012)
 
 This project includes the software: ch.qos.logback
   Available at: http://logback.qos.ch
   Developed by: QOS.ch (http://www.qos.ch)
+  Version used: 1.0.7
   Used under the following license: Eclipse Public License, version 1.0 (http://www.eclipse.org/legal/epl-v10.html)
 
 This project includes the software: com.fasterxml.jackson
   Available at: http://wiki.fasterxml.com/JacksonHome
   Developed by: FasterXML (http://fasterxml.com/)
+  Version used: 2.4.2; 2.4.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.code.findbugs
   Available at: http://findbugs.sourceforge.net/
+  Version used: 2.0.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.code.gson
   Available at: http://code.google.com/p/google-gson/
   Developed by: Google, Inc. (http://www.google.com)
+  Version used: 2.3
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.guava
   Available at: http://code.google.com/p/guava-libraries/guava
+  Version used: 17.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.http-client
   Available at: http://code.google.com/p/google-http-java-client/google-http-client/
   Developed by: Google (http://www.google.com/)
+  Version used: 1.18.0-rc
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.inject
   Available at: http://code.google.com/p/google-guice/guice/
   Developed by: Google, Inc. (http://www.google.com)
+  Version used: 3.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.inject.extensions
   Available at: http://code.google.com/p/google-guice/extensions-parent/
   Developed by: Google, Inc. (http://www.google.com)
+  Version used: 3.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.googlecode.concurrentlinkedhashmap
   Available at: http://code.google.com/p/concurrentlinkedhashmap
+  Version used: 1.0_jdk5
   Used under the following license: Apache License (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.jamesmurty.utils
   Available at: https://github.com/jmurty/java-xmlbuilder
+  Version used: 1.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 
 This project includes the software: com.jayway.jsonpath
   Available at: https://github.com/jayway/JsonPath
+  Version used: 2.0.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.jcraft
   Available at: http://www.jcraft.com/jsch-agent-proxy/
   Developed by: JCraft,Inc. (http://www.jcraft.com/)
+  Version used: 0.0.8
   Used under the following license: The BSD 3-Clause (New BSD) License (http://www.jcraft.com/jsch-agent-proxy/LICENSE.txt)
 
 This project includes the software: com.maxmind.db
   Available at: http://dev.maxmind.com/
   Developed by: MaxMind, Inc. (http://www.maxmind.com/)
+  Version used: 0.3.4
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
 
 This project includes the software: com.maxmind.geoip2
   Available at: http://dev.maxmind.com/geoip/geoip2/web-services
   Developed by: MaxMind, Inc. (http://www.maxmind.com/)
+  Version used: 0.8.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
 
 This project includes the software: com.squareup.okhttp
   Available at: https://github.com/square/okhttp/okhttp
+  Version used: 2.2.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.squareup.okio
   Available at: https://github.com/square/okio/okio
+  Version used: 1.2.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.sun.jersey
   Available at: https://jersey.java.net/
   Developed by: Oracle Corporation (http://www.oracle.com/)
+  Version used: 1.18.1
   Used under the following license: Common Development and Distribution License, version 1.1 (http://glassfish.java.net/public/CDDL+GPL_1_1.html)
 
 This project includes the software: com.sun.jersey.contribs
   Available at: https://jersey.java.net/jersey-contribs/jersey-multipart/
   Developed by: Oracle Corporation (http://www.oracle.com/)
+  Version used: 1.18.1
   Used under the following license: Common Development and Distribution License, version 1.1 (http://glassfish.java.net/public/CDDL+GPL_1_1.html)
 
 This project includes the software: com.thoughtworks.xstream
   Available at: http://codehaus.org/xstream-parent/xstream/
   Developed by: XStream (http://xstream.codehaus.org)
+  Version used: 1.4.7
   Used under the following license: BSD License (http://xstream.codehaus.org/license.html)
 
 This project includes the software: com.wordnik
   Available at: https://github.com/wordnik/swagger-core/
+  Version used: 1.0.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
 
 This project includes the software: commons-beanutils
   Available at: http://commons.apache.org/proper/commons-beanutils/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.9.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: commons-codec
   Available at: http://commons.apache.org/proper/commons-codec/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.9
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: commons-collections
   Available at: http://commons.apache.org/collections/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 3.2.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: commons-io
   Available at: http://commons.apache.org/io/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 2.4
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: commons-lang
   Available at: http://commons.apache.org/lang/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 2.4
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: commons-logging
   Available at: http://commons.apache.org/proper/commons-logging/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: dom4j
   Available at: http://dom4j.sourceforge.net/
   Developed by: MetaStuff Ltd. (http://sourceforge.net/projects/dom4j)
+  Version used: 1.6.1
   Used under the following license: MetaStuff BSD style license (3-clause) (http://dom4j.sourceforge.net/dom4j-1.6.1/license.html)
 
 This project includes the software: handlebars.js
   Available at: https://github.com/wycats/handlebars.js
   Developed by: Yehuda Katz (https://github.com/wycats/)
   Inclusive of: handlebars*.js
+  Version used: 1.0-rc1
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Yehuda Katz (2012)
 
 This project includes the software: io.airlift
   Available at: https://github.com/airlift/airline
+  Version used: 0.6
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: io.cloudsoft.windows
   Available at: http://github.com/cloudsoft/winrm4j
+  Version used: 0.1.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: javax.annotation
   Available at: http://jcp.org/aboutJava/communityprocess/final/jsr250/index.html
+  Version used: 1.0
   Used under the following license: Common Development and Distribution License, version 1.0 (https://glassfish.dev.java.net/public/CDDLv1.0.html)
 
 This project includes the software: javax.inject
   Available at: http://code.google.com/p/atinject/
+  Version used: 1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: javax.validation
+  Version used: 1.0.0.GA
   Used under the following license: Apache License, version 2.0 (in-project reference: license.txt)
 
 This project includes the software: javax.ws.rs
   Available at: https://jsr311.dev.java.net
   Developed by: Sun Microsystems, Inc (http://www.sun.com/)
+  Version used: 1.1.1
   Used under the following license: CDDL License (http://www.opensource.org/licenses/cddl1.php)
 
 This project includes the software: jQuery JavaScript Library
   Available at: http://jquery.com/
   Developed by: The jQuery Foundation (http://jquery.org/)
   Inclusive of: jquery.js
+  Version used: 1.7.2
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) John Resig (2011)
   Includes code fragments from sizzle.js:
@@ -393,6 +433,7 @@ This project includes the software: jQuery BBQ: Back Button & Query Library
   Available at: http://benalman.com/projects/jquery-bbq-plugin/
   Developed by: "Cowboy" Ben Alman (http://benalman.com/)
   Inclusive of: jquery.ba-bbq*.js
+  Version used: 1.2.1
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) "Cowboy" Ben Alman (2010)"
 
@@ -400,6 +441,7 @@ This project includes the software: DataTables Table plug-in for jQuery
   Available at: http://www.datatables.net/
   Developed by: SpryMedia Ltd (http://sprymedia.co.uk/)
   Inclusive of: jquery.dataTables.{js,css}
+  Version used: 1.9.4
   Used under the following license: The BSD 3-Clause (New BSD) License (http://opensource.org/licenses/BSD-3-Clause)
   Copyright (c) Allan Jardine (2008-2012)
 
@@ -407,12 +449,14 @@ This project includes the software: jQuery Form Plugin
   Available at: https://github.com/malsup/form
   Developed by: Mike Alsup (http://malsup.com/)
   Inclusive of: jquery.form.js
+  Version used: 3.09
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) M. Alsup (2006-2013)
 
 This project includes the software: jQuery Wiggle
   Available at: https://github.com/jordanthomas/jquery-wiggle
   Inclusive of: jquery.wiggle.min.js
+  Version used: swagger-ui:1.0.1
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) WonderGroup and Jordan Thomas (2010)
   Previously online at http://labs.wondergroup.com/demos/mini-ui/index.html.
@@ -422,144 +466,175 @@ This project includes the software: js-uri
   Available at: http://code.google.com/p/js-uri/
   Developed by: js-uri contributors (https://code.google.com/js-uri)
   Inclusive of: URI.js
+  Version used: r29
   Used under the following license: The BSD 3-Clause (New BSD) License (http://opensource.org/licenses/BSD-3-Clause)
   Copyright (c) js-uri contributors (2013)
 
 This project includes the software: js-yaml.js
   Available at: https://github.com/nodeca/
   Developed by: Vitaly Puzrin (https://github.com/nodeca/)
+  Version used: 3.2.7
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Vitaly Puzrin (2011-2015)
 
 This project includes the software: moment.js
   Available at: http://momentjs.com
   Developed by: Tim Wood (http://momentjs.com)
+  Version used: 2.1.0
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Tim Wood, Iskren Chernev, Moment.js contributors (2011-2014)
 
 This project includes the software: net.iharder
   Available at: http://iharder.net/base64/
+  Version used: 2.3.8
   Used under the following license: Public domain
 
 This project includes the software: net.java.dev.jna
   Available at: https://github.com/twall/jna
+  Version used: 4.0.0
   Used under the following license: Apache License, version 2.0 (http://www.gnu.org/licenses/licenses.html)
 
 This project includes the software: net.minidev
   Available at: (invalid url reported: http://json-smart/) (invalid url reported: http://asm/)
   Developed by: Chemouni Uriel (http://www.minidev.net/)
+  Version used: 2.1.1; 1.0.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: net.schmizz
   Available at: http://github.com/shikhar/sshj
+  Version used: 0.8.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.99soft.guice
   Available at: http://99soft.github.com/rocoto/
   Developed by: 99 Software Foundation (http://www.99soft.org/)
+  Version used: 6.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.commons
   Available at: http://commons.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 3.1; 1.4
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.felix
   Available at: http://felix.apache.org/org.apache.felix.framework/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 4.4.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.httpcomponents
   Available at: http://hc.apache.org/httpcomponents-client http://hc.apache.org/httpcomponents-core-ga
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 4.4.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.jclouds
   Available at: http://jclouds.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.9.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.bouncycastle
   Available at: http://www.bouncycastle.org/java.html
+  Version used: 1.49
   Used under the following license: Bouncy Castle Licence (http://www.bouncycastle.org/licence.html)
 
 This project includes the software: org.codehaus.groovy
   Available at: http://groovy.codehaus.org/
   Developed by: The Codehaus (http://codehaus.org)
+  Version used: 2.3.4
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.codehaus.jackson
   Available at: http://jackson.codehaus.org
   Developed by: FasterXML (http://fasterxml.com)
+  Version used: 1.9.13
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.codehaus.jettison
+  Version used: 1.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 
 This project includes the software: org.eclipse.jetty
   Available at: http://www.eclipse.org/jetty
   Developed by: Mort Bay Consulting (http://www.mortbay.com)
+  Version used: 8.1.17.v20150415
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 
 This project includes the software: org.eclipse.jetty.orbit
   Available at: http://www.eclipse.org/jetty/jetty-orbit/javax.servlet
   Developed by: Mort Bay Consulting (http://www.mortbay.com)
+  Version used: 3.0.0.v201112011016
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 
 This project includes the software: org.freemarker
   Available at: http://freemarker.org/
+  Version used: 2.3.22
   Used under the following license: Apache License, version 2.0 (http://freemarker.org/LICENSE.txt)
 
 This project includes the software: org.glassfish.external
+  Version used: 1.0-b01-ea
   Used under the following license: Common Development and Distribution License (http://opensource.org/licenses/CDDL-1.0)
 
 This project includes the software: org.hibernate
   Available at: http://jtidy.sourceforge.net
+  Version used: r8-20060801
   Used under the following license: Java HTML Tidy License (http://sourceforge.net/p/jtidy/code/HEAD/tree/trunk/jtidy/LICENSE.txt?revision=95)
 
 This project includes the software: org.javassist
   Available at: http://www.javassist.org/
+  Version used: 3.16.1-GA
   Used under the following license: Apache License, version 2.0 (http://www.mozilla.org/MPL/MPL-1.1.html)
 
 This project includes the software: org.jvnet.mimepull
   Available at: http://mimepull.java.net
   Developed by: Oracle Corporation (http://www.oracle.com/)
+  Version used: 1.9.3
   Used under the following license: Common Development and Distribution License, version 1.1 (https://glassfish.java.net/public/CDDL+GPL_1_1.html)
 
 This project includes the software: org.mongodb
   Available at: http://www.mongodb.org
+  Version used: 3.0.3
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.python
   Available at: http://www.jython.org/
+  Version used: 2.7-b3
   Used under the following license: Jython Software License (http://www.jython.org/license.html)
 
 This project includes the software: org.reflections
   Available at: http://code.google.com/p/reflections/reflections/
+  Version used: 0.9.9-RC1
   Used under the following license: WTFPL (http://www.wtfpl.net/)
 
 This project includes the software: org.scala-lang
   Available at: http://www.scala-lang.org/
   Developed by: LAMP/EPFL (http://lamp.epfl.ch/)
+  Version used: 2.9.1-1
   Used under the following license: BSD License (http://www.scala-lang.org/downloads/license.html)
 
 This project includes the software: org.slf4j
   Available at: http://www.slf4j.org
   Developed by: QOS.ch (http://www.qos.ch)
+  Version used: 1.6.6
   Used under the following license: The MIT License (http://www.opensource.org/licenses/mit-license.php)
 
 This project includes the software: org.tukaani
   Available at: http://tukaani.org/xz/java.html
+  Version used: 1.0
   Used under the following license: Public Domain
 
 This project includes the software: org.yaml
   Available at: http://www.snakeyaml.org
+  Version used: 1.11
   Used under the following license: Apache License, version 2.0 (in-project reference: LICENSE.txt)
 
 This project includes the software: RequireJS
   Available at: http://requirejs.org/
   Developed by: The Dojo Foundation (http://dojofoundation.org/)
   Inclusive of: require.js, text.js
+  Version used: 2.0.6
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) The Dojo Foundation (2010-2012)
 
@@ -567,6 +642,7 @@ This project includes the software: RequireJS (r.js maven plugin)
   Available at: http://github.com/jrburke/requirejs
   Developed by: The Dojo Foundation (http://dojofoundation.org/)
   Inclusive of: r.js
+  Version used: 2.1.6
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) The Dojo Foundation (2009-2013)
   Includes code fragments for source-map and other functionality:
@@ -591,18 +667,21 @@ This project includes the software: RequireJS (r.js maven plugin)
 This project includes the software: Swagger JS
   Available at: https://github.com/wordnik/swagger-js
   Inclusive of: swagger.js
+  Version used: 1.0.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
   Copyright (c) SmartBear Software (2011-2015)
 
 This project includes the software: Swagger UI
   Available at: https://github.com/wordnik/swagger-ui
   Inclusive of: swagger-ui.js
+  Version used: 1.0.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
   Copyright (c) SmartBear Software (2011-2015)
 
 This project includes the software: typeahead.js
   Available at: https://github.com/twitter/typeahead.js
   Developed by: Twitter, Inc (http://twitter.com)
+  Version used: 0.10.5
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Twitter, Inc. and other contributors (2013-2014)
 
@@ -610,27 +689,32 @@ This project includes the software: underscore.js
   Available at: http://underscorejs.org
   Developed by: DocumentCloud Inc (http://www.documentcloud.org/)
   Inclusive of: underscore*.{js,map}
+  Version used: 1.4.4
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2009-2013)
 
 This project includes the software: xml-apis
   Available at: http://xml.apache.org/commons/#external
   Developed by: Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.0.b2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: xmlpull
   Available at: http://www.xmlpull.org
+  Version used: 1.1.3.1
   Used under the following license: Public Domain (http://www.xmlpull.org/v1/download/unpacked/LICENSE.txt)
 
 This project includes the software: xpp3
   Available at: http://www.extreme.indiana.edu/xgws/xsoap/xpp/mxp1/
   Developed by: Extreme! Lab, Indiana University (http://www.extreme.indiana.edu/)
+  Version used: 1.1.4c
   Used under the following license: Indiana University Extreme! Lab Software License, vesion 1.1.1 (https://github.com/apache/openmeetings/blob/a95714ce3f7e587d13d3d0bb3b4f570be15c67a5/LICENSE#L1361)
 
 This project includes the software: ZeroClipboard
   Available at: http://zeroclipboard.org/
   Developed by: ZeroClipboard contributors (https://github.com/zeroclipboard)
   Inclusive of: ZeroClipboard.*
+  Version used: 1.3.1
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Jon Rohan, James M. Greene (2014)
 
