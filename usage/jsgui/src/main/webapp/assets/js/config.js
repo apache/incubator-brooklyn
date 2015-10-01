@@ -32,7 +32,7 @@ require.config({
         "bootstrap":"libs/bootstrap",
         "jquery-form":"libs/jquery.form",
         "jquery-datatables":"libs/jquery.dataTables",
-        "jquery-slideto":"libs/jquery.slideto.min",
+        "jquery-slideto":"util/jquery.slideto",
         "jquery-wiggle":"libs/jquery.wiggle.min",
         "jquery-ba-bbq":"libs/jquery.ba-bbq.min",
         "moment":"libs/moment",
@@ -40,7 +40,7 @@ require.config({
         "brooklyn":"util/brooklyn",
         "brooklyn-view":"util/brooklyn-view",
         "brooklyn-utils":"util/brooklyn-utils",
-        "datatables-extensions":"libs/dataTables.extensions",
+        "datatables-extensions":"util/dataTables.extensions",
         "googlemaps":"view/googlemaps",
         "async":"libs/async",  //not explicitly referenced, but needed for google
         "text":"libs/text",
