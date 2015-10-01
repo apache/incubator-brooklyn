@@ -22,11 +22,14 @@ under the License.
     var isLoaded = (model ? true : false);
     var isApp = (parentId ? false : true);
 
+    // Only emphasise applications at the top level, not as indirect references.
+    isApp &= !indirect;
+
     if (!isLoaded) {
 %>
         <i>Loading... (<%= id %>)</i>
 <%  } else {
-        var hasChildren = model.hasChildren();
+        var hasChildren = model.hasChildren() || model.hasMembers();
         var iconUrl = model.get('iconUrl');
 
         var entityIconSize = isApp ? 40 : 30;
@@ -38,7 +41,7 @@ under the License.
 %>
 
   <span class="entity_tree_node name entity" id="span-<%= id %>" 
-        data-entity-type="<%= model.get('type') %>" data-parent-id="<%= parentId %>" data-app-id="<%= model.get('applicationId') %>">
+        data-entity-id="<%= id %>" data-entity-type="<%= model.get('type') %>" data-parent-id="<%= parentId %>" data-app-id="<%= model.get('applicationId') %>">
     <a href="#v1/applications/<%= model.get('applicationId') %>/entities/<%= id %>">
 
       <div style="min-width: <%= statusColumnWidth + (iconUrl ? entityIconSize : 6)%>px; min-height: <%= minHeight %>px; max-height: 40px; display: inline-block; margin-right: 4px; vertical-align: middle;">
@@ -68,7 +71,10 @@ under the License.
             <img src="<%= iconUrl %>" style="max-width: <%= entityIconSize %>px; max-height: <%= entityIconSize %>px; position: absolute; left: <%= statusColumnWidth %>px; top: 0; bottom: 0; margin: auto;">
         <% } %>
       </div>
-     
+
+      <% if (indirect) { %>
+        <i class="indirection-icon icon-share-alt"></i>
+      <% } %>
       <span style="max-height: 18px; padding-right: 6px; position: relative; margin: auto; top: 2px; bottom: 0;"><%= model.get('name') %></span>
 
     </a>

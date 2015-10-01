@@ -77,7 +77,7 @@ define([
                 }
                 this.preselectTab(tab, tabDetails);
             }
-            this.treeView.displayEntityId(entityId)
+            this.treeView.selectEntity(entityId)
         },
         preselectTab: function(tab, tabDetails) {
             this.treeView.preselectTab(tab, tabDetails)
