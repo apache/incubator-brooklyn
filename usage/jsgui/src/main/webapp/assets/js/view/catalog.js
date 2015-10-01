@@ -157,7 +157,7 @@ define([
                     textWrapping: true,
                     mode: {name: "yaml", globalVars: true}
                 });
-
+                this.editor.on("drop",function(editor, e) { });
                 this.editor.setValue("# Please add your blueprint here\n");
             }
         },
@@ -183,6 +183,8 @@ define([
         }
     });
 
+    // TODO: newYamlForm is no longer used. But some api calls (like the $.ajax(options) ),
+    //	may be needed.
     function newYamlForm(addView, addViewParent) {
     	log("newYamlForm(" + addView + ", " + addViewParent + ")");
         return new Brooklyn.view.Form({
@@ -305,6 +307,7 @@ define([
         className: "accordion-item",
         events: {
             'click .accordion-head': 'toggle',
+            'dragstart': 'dragstart',
             'click .accordion-nav-row': 'showDetails'
         },
         bodyTemplate: _.template(
@@ -400,6 +403,15 @@ define([
             } else {
                 body.slideUp('fast')
             }
+        },
+
+        dragstart: function(ev) {
+            var cid = $(ev.srcElement).data("cid");
+            var model = this.collection.get(cid);
+            var planYaml = model.get("planYaml");
+            // TODO: use jsYaml to convert any JSON to yaml, or use the model with yaml inside
+            ev.originalEvent.dataTransfer.effectAllowed = "copy";
+            ev.originalEvent.dataTransfer.setData("text/plain", planYaml);
         },
 
         show: function() {
@@ -598,7 +610,20 @@ define([
                 template: template,
                 name: viewName
             }).render();
-            this.setDetailsView(newView)
+            this.setCatalogItemsView(newView);
+        },
+
+        setCatalogItemsView: function(view) {
+            this.$("#catalog-item-details").html(view.el);
+            if (this.itemDetailsView) {
+                // Try to re-open sections that were previously visible.
+                var openedItem = this.itemDetailsView.$(".in").attr("id");
+                if (openedItem) {
+                    view.$("#" + openedItem).addClass("in");
+                }
+                this.itemDetailsView.close();
+            }
+            this.itemDetailsView = view;
         },
 
         setDetailsView: function(view) {
