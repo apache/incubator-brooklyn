@@ -23,21 +23,24 @@
  */
 define([
     "underscore", "jquery", "backbone", "view/viewutils", 
-    "./application-add-wizard", "model/app-tree", "./application-tree", 
-    "text!tpl/apps/page.html"
-], function (_, $, Backbone, ViewUtils, AppAddWizard, AppTree, ApplicationTreeView, PageHtml) {
+    "./application-add-wizard", "model/application", "model/entity-summary", "model/app-tree", "./application-tree",  "./entity-details",
+    "text!tpl/apps/details.html", "text!tpl/apps/entity-not-found.html", "text!tpl/apps/page.html"
+], function (_, $, Backbone, ViewUtils,
+        AppAddWizard, Application, EntitySummary, AppTree, ApplicationTreeView, EntityDetailsView,
+        EntityDetailsEmptyHtml, EntityNotFoundHtml, PageHtml) {
 
     var ApplicationExplorerView = Backbone.View.extend({
         tagName:"div",
         className:"container container-fluid",
         id:'application-explorer',
         template:_.template(PageHtml),
+        notFoundTemplate: _.template(EntityNotFoundHtml),
         events:{
             'click .application-tree-refresh': 'refreshApplicationsInPlace',
             'click #add-new-application':'createApplication',
             'click .delete':'deleteApplication'
         },
-        initialize:function () {
+        initialize: function () {
             this.$el.html(this.template({}))
             $(".nav1").removeClass("active");
             $(".nav1_apps").addClass("active");
@@ -46,7 +49,12 @@ define([
                 collection:this.collection,
                 appRouter:this.options.appRouter
             })
+            this.treeView.on('entitySelected', function(e) {
+               this.displayEntityId(e.id, e.get('applicationId'), false);
+            }, this);
             this.$('div#app-tree').html(this.treeView.renderFull().el)
+            this.$('div#details').html(EntityDetailsEmptyHtml);
+
             ViewUtils.fetchRepeatedlyWithDelay(this, this.collection)
         },
         refreshApplicationsInPlace: function() {
@@ -54,9 +62,11 @@ define([
             // (not a full visual recompute, which reset does - both in application-tree.js)
             this.collection.fetch();
         },
-        beforeClose:function () {
-            this.collection.off("reset", this.render)
-            this.treeView.close()
+        beforeClose: function () {
+            this.collection.off("reset", this.render);
+            this.treeView.close();
+            if (this.detailsView)
+                this.detailsView.close();
         },
         show: function(entityId) {
             var tab = "";
@@ -79,10 +89,6 @@ define([
             }
             this.treeView.selectEntity(entityId)
         },
-        preselectTab: function(tab, tabDetails) {
-            this.treeView.preselectTab(tab, tabDetails)
-        },
-        
         createApplication:function () {
             var that = this;
             if (this._modal) {
@@ -102,7 +108,97 @@ define([
         deleteApplication:function (event) {
             // call Backbone destroy() which does HTTP DELETE on the model
             this.collection.get(event.currentTarget['id']).destroy({wait:true})
-        }
+        },
+        /**
+         * Causes the tab with the given name to be selected automatically when
+         * the view is next rendered.
+         */
+        preselectTab: function(tab, tabDetails) {
+            this.currentTab = tab;
+            this.currentTabDetails = tabDetails;
+        },
+        showDetails: function(app, entitySummary) {
+            var that = this;
+            ViewUtils.cancelFadeOnceLoaded($("div#details"));
+
+            var whichTab = this.currentTab;
+            if (!whichTab) {
+                whichTab = "summary";
+                if (this.detailsView) {
+                    whichTab = this.detailsView.$el.find(".tab-pane.active").attr("id");
+                    this.detailsView.close();
+                }
+            }
+            if (this.detailsView) {
+                this.detailsView.close();
+            }
+            this.detailsView = new EntityDetailsView({
+                model: entitySummary,
+                application: app,
+                appRouter: this.options.appRouter,
+                preselectTab: whichTab,
+                preselectTabDetails: this.currentTabDetails,
+            });
+
+            this.detailsView.on("entity.expunged", function() {
+                that.preselectTab("summary");
+                var id = that.selectedEntityId;
+                var model = that.collection.get(id);
+                if (model && model.get("parentId")) {
+                    that.displayEntityId(model.get("parentId"));
+                } else if (that.collection) {
+                    that.displayEntityId(that.collection.first().id);
+                } else if (id) {
+                    that.displayEntityNotFound(id);
+                } else {
+                    that.displayEntityNotFound("?");
+                }
+                that.collection.fetch();
+            });
+            this.detailsView.render( $("div#details") );
+        },
+        displayEntityId: function (id, appName, afterLoad) {
+            var that = this;
+            var entityLoadFailed = function() {
+                return that.displayEntityNotFound(id);
+            };
+            if (appName === undefined) {
+                if (!afterLoad) {
+                    // try a reload if given an ID we don't recognise
+                    this.collection.includeEntities([id]);
+                    this.collection.fetch({
+                        success: function() { _.defer(function() { that.displayEntityId(id, appName, true); }); },
+                        error: function() { _.defer(function() { that.displayEntityId(id, appName, true); }); }
+                    });
+                    ViewUtils.fadeToIndicateInitialLoad($("div#details"))
+                    return;
+                } else {
+                    // no such app
+                    entityLoadFailed();
+                    return; 
+                }
+            }
+
+            var app = new Application.Model();
+            var entitySummary = new EntitySummary.Model;
+
+            app.url = "/v1/applications/" + appName;
+            entitySummary.url = "/v1/applications/" + appName + "/entities/" + id;
+
+            // in case the server response time is low, fade out while it refreshes
+            // (since we can't show updated details until we've retrieved app + entity details)
+            ViewUtils.fadeToIndicateInitialLoad($("div#details"));
+
+            $.when(app.fetch(), entitySummary.fetch())
+                .done(function() {
+                    that.showDetails(app, entitySummary);
+                })
+                .fail(entityLoadFailed);
+        },
+        displayEntityNotFound: function(id) {
+            $("div#details").html(this.notFoundTemplate({"id": id}));
+            ViewUtils.cancelFadeOnceLoaded($("div#details"))
+        },
     })
 
     return ApplicationExplorerView

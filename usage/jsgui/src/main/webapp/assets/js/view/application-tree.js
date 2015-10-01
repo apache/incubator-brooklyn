@@ -22,14 +22,12 @@
  */
 define([
     "underscore", "jquery", "backbone", "view/viewutils",
-    "model/app-tree", "./entity-details", "model/entity-summary", "model/application",
-    "text!tpl/apps/tree-item.html", "text!tpl/apps/tree-empty.html", "text!tpl/apps/details.html", "text!tpl/apps/entity-not-found.html"
+    "model/app-tree", "text!tpl/apps/tree-item.html", "text!tpl/apps/tree-empty.html"
 ], function (_, $, Backbone, ViewUtils,
-             AppTree, EntityDetailsView, EntitySummary, Application,
-             TreeItemHtml, TreeEmptyHtml, EntityDetailsEmptyHtml, EntityNotFoundHtml) {
+             AppTree, TreeItemHtml, EmptyTreeHtml) {
 
-    var treeViewTemplate = _.template(TreeItemHtml);
-    var notFoundTemplate = _.template(EntityNotFoundHtml);
+    var emptyTreeTemplate = _.template(EmptyTreeHtml);
+    var treeItemTemplate = _.template(TreeItemHtml);
 
     var findAllTreeboxes = function(id, $scope) {
         return $('.tree-box[data-entity-id="' + id + '"]', $scope);
@@ -43,8 +41,8 @@ define([
         return $parentTreebox.children('.node-children').children('.tree-box[data-entity-id="' + id + '"]');
     };
 
-    var findMasterTreebox = function(id) {
-        return $('.tree-box[data-entity-id="' + id + '"]:not(.indirect)');
+    var findMasterTreebox = function(id, $scope) {
+        return $('.tree-box[data-entity-id="' + id + '"]:not(.indirect)', $scope);
     };
 
     var createEntityTreebox = function(id, name, $domParent, depth, indirect) {
@@ -153,13 +151,13 @@ define([
         var entity = treeView.collection.get(id);
         if (entity) {
             treeView.selectedEntityId = id;
-            treeView.displayEntityId(entity.id, entity.get('applicationId'), false);
+            treeView.trigger('entitySelected', entity);
         }
     };
 
 
     return Backbone.View.extend({
-        template: treeViewTemplate,
+        template: treeItemTemplate,
         hoverTimer: null,
 
         events: {
@@ -177,7 +175,6 @@ define([
 
         beforeClose: function() {
             this.collection.off("reset", this.renderFull);
-            if (this.detailsView) this.detailsView.close();
         },
 
         entityAdded: function(entity) {
@@ -187,7 +184,11 @@ define([
 
             // If the new entity is an application, we must create its placeholder in the DOM.
             if (!entity.get('parentId')) {
-                getOrCreateApplicationTreebox(entity.id, entity.get('name'), this);
+                var $treebox = getOrCreateApplicationTreebox(entity.id, entity.get('name'), this);
+
+                // Select the new app if there's no current selection.
+                if (!this.selectedEntityId)
+                    selectTreebox(entity.id, $treebox, this);
             }
 
             this.entityChanged(entity);
@@ -219,7 +220,7 @@ define([
         },
 
         selectEntity: function(id) {
-            var $treebox = findMasterTreebox(id);
+            var $treebox = findMasterTreebox(id, this.$el);
             selectTreebox(id, $treebox, this);
         },
 
@@ -229,7 +230,8 @@ define([
 
             // Display tree and highlight the selected entity.
             if (this.collection.getApplications().length == 0) {
-                that.$el.append(_.template(TreeEmptyHtml));
+                this.$el.append(emptyTreeTemplate());
+
             } else {
                 _.each(this.collection.getApplications(), function(appId) {
                     var entity = that.collection.get(appId);
@@ -238,24 +240,11 @@ define([
                 });
             }
 
-            // this.highlightEntity();
-
-            // Render the details for the selected entity.
-            if (this.detailsView) {
-                this.detailsView.render();
-            } else {
-                // if nothing selected, select the first application
-                if (!this.collection.isEmpty()) {
-                    var app0 = this.collection.first().id;
-                    _.defer(function () {
-                        that.selectEntity(app0);
-                    });
-                } else {
-                    _.defer(function() {
-                        $("div#details").html(_.template(EntityDetailsEmptyHtml));
-                        $("div#details").find("a[href='#summary']").tab('show');
-                    });
-                }
+            // Select the first app if there's no current selection.
+            if (!this.selectedEntityId) {
+                var firstApp = _.first(this.collection.getApplications());
+                if (firstApp)
+                    this.selectEntity(firstApp);
             }
             return this;
         },
@@ -265,57 +254,6 @@ define([
                 clearTimeout(this.hoverTimer);
                 this.hoverTimer = null;
             }
-        },
-
-        displayEntityId: function (id, appName, afterLoad) {
-            var that = this;
-            //this.highlightEntity(id);
-
-            var entityLoadFailed = function() {
-                return that.displayEntityNotFound(id);
-            };
-
-            if (appName === undefined) {
-                var $treebox = findMasterTreebox(id);
-                appName = $treebox.children(".entity_tree_node").data("app-id");
-            }
-            if (appName === undefined) {
-                if (!afterLoad) {
-                    // try a reload if given an ID we don't recognise
-                    this.collection.includeEntities([id]);
-                    this.collection.fetch({
-                        success: function() { _.defer(function() { that.displayEntityId(id, appName, true); }); },
-                        error: function() { _.defer(function() { that.displayEntityId(id, appName, true); }); }
-                    });
-                    ViewUtils.fadeToIndicateInitialLoad($("div#details"))
-                    return;
-                } else {
-                    // no such app
-                    entityLoadFailed();
-                    return; 
-                }
-            }
-
-            var app = new Application.Model();
-            var entitySummary = new EntitySummary.Model;
-
-            app.url = "/v1/applications/" + appName;
-            entitySummary.url = "/v1/applications/" + appName + "/entities/" + id;
-
-            // in case the server response time is low, fade out while it refreshes
-            // (since we can't show updated details until we've retrieved app + entity details)
-            ViewUtils.fadeToIndicateInitialLoad($("div#details"));
-
-            $.when(app.fetch(), entitySummary.fetch())
-                .done(function() {
-                    that.showDetails(app, entitySummary);
-                })
-                .fail(entityLoadFailed);
-        },
-
-        displayEntityNotFound: function(id) {
-            $("div#details").html(notFoundTemplate({"id": id}));
-            ViewUtils.cancelFadeOnceLoaded($("div#details"))
         },
 
         treeChange: function(event) {
@@ -409,56 +347,6 @@ define([
             }
             $childContainer.slideUp(300);
             $wrapper.find('.tree-node-state').removeClass('icon-chevron-down').addClass('icon-chevron-right');
-        },
-
-        /**
-         * Causes the tab with the given name to be selected automatically when
-         * the view is next rendered.
-         */
-        preselectTab: function(tab, tabDetails) {
-            this.currentTab = tab;
-            this.currentTabDetails = tabDetails;
-        },
-
-        showDetails: function(app, entitySummary) {
-            var that = this;
-            ViewUtils.cancelFadeOnceLoaded($("div#details"));
-
-            var whichTab = this.currentTab;
-            if (whichTab === undefined) {
-                whichTab = "summary";
-                if (this.detailsView) {
-                    whichTab = this.detailsView.$el.find(".tab-pane.active").attr("id");
-                    this.detailsView.close();
-                }
-            }
-            if (this.detailsView) {
-                this.detailsView.close();
-            }
-            this.detailsView = new EntityDetailsView({
-                model: entitySummary,
-                application: app,
-                appRouter: this.options.appRouter,
-                preselectTab: whichTab,
-                preselectTabDetails: this.currentTabDetails,
-            });
-
-            this.detailsView.on("entity.expunged", function() {
-                that.preselectTab("summary");
-                var id = that.selectedEntityId;
-                var model = that.collection.get(id);
-                if (model && model.get("parentId")) {
-                    that.displayEntityId(model.get("parentId"));
-                } else if (that.collection) {
-                    that.displayEntityId(that.collection.first().id);
-                } else if (id) {
-                    that.displayEntityNotFound(id);
-                } else {
-                    that.displayEntityNotFound("?");
-                }
-                that.collection.fetch();
-            });
-            this.detailsView.render( $("div#details") );
         },
 
     });
