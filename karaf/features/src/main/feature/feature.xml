@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.2.0" name="org.apache.brooklyn-${project.version}">
+
+    <repository>mvn:org.apache.karaf.features/standard/${karaf.version}/xml/features</repository>
+    <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
+    <repository>mvn:org.apache.karaf.features/spring/${karaf.version}/xml/features</repository>
+  
+    <!-- TODO: complete the features set -->
+    <feature name="brooklyn-core" version="${project.version}" description="Brooklyn Core">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-core/${project.version}</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-api/${project.version}</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/${project.version}</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-groovy/${project.version}</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-logback-includes/${project.version}</bundle>
+    
+        <bundle dependency="true">mvn:com.google.guava/guava/${guava.version}</bundle>
+        <bundle dependency="true">mvn:com.google.code.gson/gson/${gson.version}</bundle>
+        <bundle dependency="true">mvn:com.jayway.jsonpath/json-path/${jsonPath.version}</bundle>
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${fasterxml.jackson.version}</bundle>
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${fasterxml.jackson.version}</bundle>
+        <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${fasterxml.jackson.version}</bundle>
+        <bundle dependency="true">mvn:net.minidev/json-smart/${jsonSmart.version}</bundle>
+        <bundle dependency="true">mvn:net.minidev/asm/${minidev.asm.version}</bundle>
+        <bundle dependency="true">mvn:com.thoughtworks.xstream/xstream/${xstream.version}</bundle>
+
+        <!-- TODO: don't use wrap: -->
+        <bundle dependency="true">wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle> <!-- from geoip -->
+        <bundle dependency="true">wrap:mvn:com.maxmind.geoip2/geoip2/${maxmind.version}</bundle> <!-- from geoip2 -->
+        <bundle dependency="true">wrap:mvn:xpp3/xpp3_min/1.1.4c</bundle> <!-- from com.thoughtworks.xstream/xstream -->
+    </feature>
+  
+    <feature name="brooklyn-commands"  version="${project.version}"  description="Brooklyn Shell Commands">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-commands/${project.version}</bundle>
+        <!--<feature version="${project.version}">brooklyn-core</feature>-->
+    </feature>
+  
+</features>
