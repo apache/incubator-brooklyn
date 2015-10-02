@@ -37,6 +37,11 @@
     
     <lifecycle-mapping-plugin.version>1.0.0</lifecycle-mapping-plugin.version>
 
+    <!-- pax-exam -->
+    <pax.exam.version>4.5.0</pax.exam.version>
+    <pax.url.version>2.4.1</pax.url.version>
+    <ops4j.base.version>1.5.0</ops4j.base.version>
+
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
   </properties>
@@ -45,7 +50,23 @@
     <module>features</module>
     <module>apache-brooklyn</module>
     <module>commands</module>
+    <module>itest</module>
   </modules>
+  
+  <dependencyManagement>
+      <dependencies>
+          <dependency>
+              <groupId>org.ops4j.base</groupId>
+              <artifactId>ops4j-base-lang</artifactId>
+              <version>${ops4j.base.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.ops4j.base</groupId>
+              <artifactId>ops4j-base-util-property</artifactId>
+              <version>${ops4j.base.version}</version>
+          </dependency>
+      </dependencies>
+  </dependencyManagement>
 
   <build>
     <pluginManagement>
