@@ -16,14 +16,14 @@
     KIND, either express or implied.  See the License for the
     specific language governing permissions and limitations
     under the License.
--->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+--><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.brooklyn</groupId>
-    <artifactId>brooklyn</artifactId>
+    <artifactId>brooklyn-parent</artifactId>
     <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>brooklyn-karaf</artifactId>
@@ -38,6 +38,11 @@
     
     <lifecycle-mapping-plugin.version>1.0.0</lifecycle-mapping-plugin.version>
 
+    <!-- pax-exam -->
+    <pax.exam.version>4.5.0</pax.exam.version>
+    <pax.url.version>2.4.1</pax.url.version>
+    <ops4j.base.version>1.5.0</ops4j.base.version>
+
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
   </properties>
@@ -46,7 +51,23 @@
     <module>features</module>
     <module>apache-brooklyn</module>
     <module>commands</module>
+    <module>itest</module>
   </modules>
+  
+  <dependencyManagement>
+      <dependencies>
+          <dependency>
+              <groupId>org.ops4j.base</groupId>
+              <artifactId>ops4j-base-lang</artifactId>
+              <version>${ops4j.base.version}</version>
+          </dependency>
+          <dependency>
+              <groupId>org.ops4j.base</groupId>
+              <artifactId>ops4j-base-util-property</artifactId>
+              <version>${ops4j.base.version}</version>
+          </dependency>
+      </dependencies>
+  </dependencyManagement>
 
   <build>
     <pluginManagement>
@@ -68,7 +89,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore />
+                    <ignore/>
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -81,7 +102,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore />
+                    <ignore/>
                   </action>
                 </pluginExecution>
                 <pluginExecution>
@@ -95,7 +116,7 @@
                     </goals>
                   </pluginExecutionFilter>
                   <action>
-                    <ignore />
+                    <ignore/>
                   </action>
                 </pluginExecution>
                 
