@@ -16,27 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.enricher.stock.reducer;
+package org.apache.brooklyn.util.core.sensor;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
-import com.google.common.base.Function;
+import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.testng.annotations.Test;
 
-public class StringStringReducer extends GenericStringReducer<String> {
-    
-    public StringStringReducer() {}
+public class SensorPredicatesTest extends BrooklynAppUnitTestSupport {
 
-    @Override
-    protected Function<List<String>, String> createReducerFunction(
-            String reducerName, Map<String, ?> parameters) {
-        Function<List<String>, String> function = super.createReducerFunction(reducerName, parameters);
-        if(function != null) return function;
-        
-        if(Objects.equals(reducerName, "joiner")){
-            return new JoinerFunction(parameters.get("separator"));
-        }
-        throw new IllegalStateException("unknown function: " + reducerName);
+    @Test
+    public void testDisplayNameEqualTo() throws Exception {
+        Sensor<Object> task = Sensors.newSensor(Object.class, "myname");
+        assertTrue(SensorPredicates.sensorNameEqualTo("myname").apply(task));
+        assertFalse(SensorPredicates.sensorNameEqualTo("wrong").apply(task));
     }
+    
 }

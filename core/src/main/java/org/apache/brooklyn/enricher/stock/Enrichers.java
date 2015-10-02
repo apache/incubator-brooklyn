@@ -691,7 +691,7 @@ public class Enrichers {
         private Map<String, Object> parameters;
 
         public AbstractReducerBuilder(Class<? extends Reducer<S, T>> clazz, List<AttributeSensor<S>> val) {
-            super(clazz);
+            super(checkNotNull(clazz));
             this.reducing = checkNotNull(val);
         }
         
@@ -726,7 +726,7 @@ public class Enrichers {
                     .put(Reducer.PRODUCER, fromEntity)
                     .put(Reducer.TARGET_SENSOR, publishing)
                     .putIfNotNull(Reducer.REDUCER_FUNCTION, computing)
-                    .putIfNotNull(Reducer.REDUCER_FUNCTION_UNTYPED, functionName)
+                    .putIfNotNull(Reducer.REDUCER_FUNCTION_TRANSFORMATION, functionName)
                     .putIfNotNull(Reducer.PARAMETERS, parameters)
                     .build()
             );

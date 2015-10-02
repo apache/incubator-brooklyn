@@ -32,6 +32,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
+import org.apache.brooklyn.util.core.sensor.SensorPredicates;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.core.task.ValueResolver;
 import org.slf4j.Logger;
@@ -39,8 +40,10 @@ import org.slf4j.LoggerFactory;
 
 import com.google.api.client.util.Lists;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
@@ -54,8 +57,8 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
     public static ConfigKey<List<? extends AttributeSensor<?>>> SOURCE_SENSORS = ConfigKeys.newConfigKey(new TypeToken<List<? extends AttributeSensor<?>>>() {}, "enricher.sourceSensors");
     public static ConfigKey<Function<List<?>,?>> REDUCER_FUNCTION = ConfigKeys.newConfigKey(new TypeToken<Function<List<?>, ?>>() {}, "enricher.reducerFunction");
     @SetFromFlag("transformation")
-    public static final ConfigKey<String> REDUCER_FUNCTION_UNTYPED = ConfigKeys.newStringConfigKey("enricher.reducerFunction.untyped",
-        "A string matching a pre-defined named reducer function, such as join");
+    public static final ConfigKey<String> REDUCER_FUNCTION_TRANSFORMATION = ConfigKeys.newStringConfigKey("enricher.reducerFunction.transformation",
+        "A string matching a pre-defined named reducer function, such as joiner");
     public static final ConfigKey<Map<String, Object>> PARAMETERS = ConfigKeys.newConfigKey(new TypeToken<Map<String, Object>>() {}, "enricher.reducerFunction.parameters", 
         "A map of parameters to pass into the reducer function");
    
@@ -75,12 +78,15 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
 
         for (Object sensorO : getConfig(SOURCE_SENSORS)) {
             AttributeSensor<S> sensor = Tasks.resolving(sensorO).as(AttributeSensor.class).timeout(ValueResolver.REAL_QUICK_WAIT).context(producer).get();
-            if(!sensorListTemp.contains(sensor)) {
+            Optional<? extends Sensor<?>> foundSensor = Iterables.tryFind(sensorListTemp, 
+                    SensorPredicates.sensorNameEqualTo(sensor.getName()));
+            
+            if(!foundSensor.isPresent()) {
                 sensorListTemp.add(sensor);
             }
         }
         
-        String reducerName = config().get(REDUCER_FUNCTION_UNTYPED);
+        String reducerName = config().get(REDUCER_FUNCTION_TRANSFORMATION);
         Function<List<S>, T> reducerFunction = (Function) config().get(REDUCER_FUNCTION);
         if(reducerFunction == null){
             Map<String, ?> parameters = config().get(PARAMETERS);

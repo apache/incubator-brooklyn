@@ -16,27 +16,34 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.enricher.stock.reducer;
+package org.apache.brooklyn.util.core.sensor;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import org.apache.brooklyn.api.sensor.Sensor;
 
-import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 
-public class StringStringReducer extends GenericStringReducer<String> {
-    
-    public StringStringReducer() {}
+public class SensorPredicates {
 
-    @Override
-    protected Function<List<String>, String> createReducerFunction(
-            String reducerName, Map<String, ?> parameters) {
-        Function<List<String>, String> function = super.createReducerFunction(reducerName, parameters);
-        if(function != null) return function;
-        
-        if(Objects.equals(reducerName, "joiner")){
-            return new JoinerFunction(parameters.get("separator"));
-        }
-        throw new IllegalStateException("unknown function: " + reducerName);
+    private SensorPredicates() {
+        // not instantiable
     }
+    
+    public static Predicate<Sensor<?>> sensorNameEqualTo(String sensorName) {
+        return new SensorNameEquals(sensorName);
+    }
+
+    private static class SensorNameEquals implements Predicate<Sensor<?>> {
+        
+        private String sensor;
+
+        public SensorNameEquals(String sensor) {
+            this.sensor = sensor;
+        }
+
+        @Override
+        public boolean apply(Sensor<?> other) {
+            return this.sensor.equals(other.getName());
+        }
+    }
+
 }
