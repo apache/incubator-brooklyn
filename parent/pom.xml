@@ -162,6 +162,9 @@
         <commons-codec.version>1.9</commons-codec.version>
         <log4j.version>1.2.17</log4j.version>
         <commons-logging.version>1.2</commons-logging.version>
+        <jline.version>2.12</jline.version>
+        <jsonSmart.version>2.1.1</jsonSmart.version>
+        <minidev.asm.version>1.0.2</minidev.asm.version>
     </properties>
 
     <dependencyManagement>
@@ -580,6 +583,21 @@
                 <groupId>net.java.dev.jna</groupId>
                 <artifactId>jna-platform</artifactId>
                 <version>${jna.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jline</groupId>
+                <artifactId>jline</artifactId>
+                <version>${jline.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>${jsonSmart.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>asm</artifactId>
+                <version>${minidev.asm.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -1154,6 +1172,7 @@
                   <exclude>**/src/test/resources/org/apache/brooklyn/entity/software/base/template_with_extra_substitutions.txt</exclude>
                   <exclude>**/src/main/resources/banner.txt</exclude>
                   <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
+                  <exclude>**/src/main/history/dependencies.xml</exclude>
                   <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
                   <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
 
