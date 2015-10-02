@@ -142,6 +142,155 @@ The following `brooklyn.properties` options can also be used:
     brooklyn.persistence.backups.dir=/path/to/backupContainer
 
 
+
+### Persist to Riak CS via S3 API
+
+
+Object Store Persistence allows Brooklyn to persist to a database too, rather than to the file system.  
+Here is an example of how to set up it to persist to Riak using Riak CS Sorage API, which is compatible with the Amazon S3 REST API.  
+To set up persistence you need to have installed Riak, Stanchion and Riak CS.
+
+[Here you could find download links and versions compatibility information](http://docs.basho.com/riakcs/latest/riakcs-downloads/)
+
+Configuration steps:
+
+* Assume you have already installed Riak
+* Stop Riak
+* Set up `riak.conf`
+
+>
+    listener.http.internal = <internal_ip>:8098
+    listener.protobuf.internal = <internal_ip>:8087
+    buckets.default.allow_mult = true
+
+[Basho Docs for configuring Riak](http://docs.basho.com/riakcs/latest/cookbooks/configuration/Configuring-Riak/)
+
+* Install [Stanchion](http://docs.basho.com/riakcs/latest/riakcs-downloads/#Stanchion-2-0-0)
+* Set up `stanchion.conf`
+
+>
+    listener = <internal_ip>:8085
+    riak_host = <internal_ip>:8087
+    nodename = stanchion@<erlang_nodename>
+
+**The \<erlang_nodename\> must have the same RDNS.** When using IP it shouldn't matter.
+
+Before continuing with the set up check whether riak and stanchion run properly.  
+Start Riak:
+`ulimit -n 65536 && service riak start`  
+Start Stanchion:
+`ulimit -n 65536 && service stanchion start`  
+**Don't forget to stop them**, as you'll need to make changes to their configurations.
+
+[Basho Docs for configuring Stanchion](http://docs.basho.com/riakcs/latest/cookbooks/configuration/Configuring-Stanchion/)
+
+* Install [Riak CS](http://docs.basho.com/riakcs/latest/riakcs-downloads/#Riak-CS-2-0-1)
+* Set up `riak-cs.conf`
+
+>
+    listener = <internal_ip>:8080
+    riak_host = <internal_ip>:8087
+    stanchion_host = <internal_ip>:8085
+    anonymous_user_creation = on
+    nodename = riak-cs@<internal_ip>
+    root_host = <external_ip> - for TAI
+    root_host = <endpoint> - for AWS
+    pool.request.overflow = 0
+    pool.list.overflow = 0
+
+[Basho Docs for configuring Riak CS](http://docs.basho.com/riakcs/latest/cookbooks/configuration/Configuring-Riak-CS/)
+
+* Create `/etc/riak/advanced.config`
+* Add the following configuration:
+
+>
+    [
+    {riak_kv, [
+        %% Other configs
+        {add_paths, ["/usr/lib64/riak-cs/lib/riak_cs-2.0.1/ebin"]},
+        {storage_backend, riak_cs_kv_multi_backend},
+        {multi_backend_prefix_list, [{<<"0b:">>, be_blocks}]},
+        {multi_backend_default, be_default},
+        {multi_backend, [
+            {be_default, riak_kv_eleveldb_backend, [
+                {total_leveldb_mem_percent, 30},
+                {data_root, "/var/lib/riak/leveldb"}
+            ]},
+            {be_blocks, riak_kv_bitcask_backend, [
+                {data_root, "/var/lib/riak/bitcask"}
+            ]}
+        ]}
+        %% Other configs
+    ]},
+    {riak_core, [
+        %% Other configs
+        {default_bucket_props, [{allow_mult, true}]}
+        %% Other configs
+    ]}
+    ].
+
+
+(Don't forget to check all paths, except `/var/lib/riak/leveldb`)
+
+* Run Riak, Stanchion and Riak CS in the same order  
+`ulimit -n 65536 && service riak start && service stanchion start && service riak-cs start`
+
+* Create credentials:
+
+TAI
+
+    curl  -H 'Content-Type: application/json' \
+      -XPOST http://<internal_ip>:8080/riak-cs/user \
+      --data '{"email":"email1@example.com", "name":"example"}'
+
+AWS
+
+    curl -H 'Content-Type: application/json' \
+      -XPOST http://<endpoint>:8080/riak-cs/user \
+      --data '{"email":"email1@example.com", "name":"example"}'
+
+
+
+* Changes to `riak-cs.conf`:
+    * Run `service riak-cs stop`
+    * Set up
+>
+    admin.key =  <"key_id" from the returned credentials>  
+    admin.secret =  <"key_secret" from the returned credentials>  
+    anonymous_user_creation = off
+
+* Changes to `stanchion.conf`:
+    * Run `service stanchion stop`
+    * Set up
+>
+    admin.key =  <"key_id" from the returned credentials>  
+    admin.secret =  <"key_secret" from the returned credentials>
+
+* Run again Stanchion and Riak CS  
+`ulimit -n 65536 && service stanchion start && service riak-cs start`
+
+* If you're using TAI, add NAT rule for 8080
+
+* Add the following to `brooklyn.properties`:
+
+TAI
+
+    brooklyn.location.named.<name>=jclouds:s3:http://<s3_hostname>:<natted_ip>
+    brooklyn.location.named.<name>.identity=<Riak CS username>
+    brooklyn.location.named.<name>.credential=<Riak CS secret key>
+
+AWS
+
+    brooklyn.location.named.<name>=jclouds:s3:http://<s3_hostname>:8080
+    brooklyn.location.named.<name>.identity=<Riak CS username>
+    brooklyn.location.named.<name>.credential=<Riak CS secret key>
+
+* Run blrooklyn with command:  
+`launch --persist auto --persistenceDir  <bucket.name>  --persistenceLocation named:<name>`
+
+Bucket names should follow the riak cs [bucket naming convention](http://docs.basho.com/riakcs/latest/references/apis/storage/s3/RiakCS-PUT-Bucket/#Bucket-Naming)
+
+
 Rebinding to State
 ------------------
 
