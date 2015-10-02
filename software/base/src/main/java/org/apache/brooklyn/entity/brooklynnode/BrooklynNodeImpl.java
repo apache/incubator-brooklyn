@@ -78,6 +78,7 @@ import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -502,6 +503,11 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 .from(WEB_CONSOLE_ACCESSIBLE)
                 .computing(Functionals.ifNotEquals(true).value("URL where Brooklyn listens is not answering correctly") )
                 .build());
+
+            addEnricher(Enrichers.builder().transforming(WEB_CONSOLE_ACCESSIBLE)
+                    .computing(Functions.identity())
+                    .publishing(SERVICE_PROCESS_IS_RUNNING)
+                    .build());
         } else {
             connectServiceUpIsRunning();
         }
