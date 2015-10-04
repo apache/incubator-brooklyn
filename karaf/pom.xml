@@ -21,9 +21,8 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.apache.brooklyn</groupId>
-    <artifactId>brooklyn-parent</artifactId>
+    <artifactId>brooklyn</artifactId>
     <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
-    <relativePath>../parent/pom.xml</relativePath>
   </parent>
 
   <artifactId>brooklyn-karaf</artifactId>
