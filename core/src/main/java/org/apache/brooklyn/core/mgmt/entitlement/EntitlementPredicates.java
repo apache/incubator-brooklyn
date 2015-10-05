@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.core.mgmt.entitlement;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.mgmt.entitlement.EntitlementClass;
@@ -27,8 +29,10 @@ import com.google.common.base.Predicate;
 
 public class EntitlementPredicates {
 
-    public static <T> Predicate<T> isEntitled(final EntitlementManager entitlementManager, final EntitlementClass<T> entitlementClass) {
-
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static <T> Predicate<T> isEntitledOld(final EntitlementManager entitlementManager, final EntitlementClass<T> entitlementClass) {
+        // TODO PERSISTENCE WORKAROUND
         return new Predicate<T>() {
             @Override
             public boolean apply(@Nullable T t) {
@@ -37,4 +41,21 @@ public class EntitlementPredicates {
         };
     }
 
+    public static <T> Predicate<T> isEntitled(final EntitlementManager entitlementManager, final EntitlementClass<T> entitlementClass) {
+        return new IsEntitled<>(checkNotNull(entitlementManager, "entitlementManager"), checkNotNull(entitlementClass, "entitlementClass"));
+    }
+
+    protected static class IsEntitled<T> implements Predicate<T> {
+        private final EntitlementManager entitlementManager;
+        private final EntitlementClass<T> entitlementClass;
+        
+        protected IsEntitled(final EntitlementManager entitlementManager, final EntitlementClass<T> entitlementClass) {
+            this.entitlementManager = checkNotNull(entitlementManager, "entitlementManager");
+            this.entitlementClass = checkNotNull(entitlementClass, "entitlementClass");
+        }
+        @Override
+        public boolean apply(@Nullable T t) {
+            return Entitlements.isEntitled(entitlementManager, entitlementClass, t);
+        }
+    }
 }

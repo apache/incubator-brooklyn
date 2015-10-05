@@ -25,11 +25,10 @@ import com.google.common.base.Predicate;
 
 public class MathPredicates {
 
-    /**
-     * Creates a predicate comparing a given number with {@code val}. 
-     * A number of {@code null} passed to the predicate will always return false.
-     */
-    public static <T extends Number> Predicate<T> greaterThan(final double val) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private  static <T extends Number> Predicate<T> greaterThanOld(final double val) {
+        // TODO PERSISTENCE WORKAROUND
         return new Predicate<T>() {
             public boolean apply(@Nullable T input) {
                 return (input == null) ? false : input.doubleValue() > val;
@@ -37,11 +36,10 @@ public class MathPredicates {
         };
     }
 
-    /**
-     * Creates a predicate comparing a given number with {@code val}. 
-     * A number of {@code null} passed to the predicate will always return false.
-     */
-    public static <T extends Number> Predicate<T> greaterThanOrEqual(final double val) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private  static <T extends Number> Predicate<T> greaterThanOrEqualOld(final double val) {
+        // TODO PERSISTENCE WORKAROUND
         return new Predicate<T>() {
             public boolean apply(@Nullable T input) {
                 return (input == null) ? false : input.doubleValue() >= val;
@@ -49,14 +47,24 @@ public class MathPredicates {
         };
     }
 
-    /**
-     * Creates a predicate comparing a given number with {@code val}. 
-     * A number of {@code null} passed to the predicate will always return false.
-     */
-    public static <T extends Number> Predicate<T> lessThan(final double val) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private  static <T extends Number> Predicate<T> lessThanOld(final double val) {
+        // TODO PERSISTENCE WORKAROUND
         return new Predicate<T>() {
             public boolean apply(@Nullable T input) {
                 return (input == null) ? false : input.doubleValue() < val;
+            }
+        };
+    }
+
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private  static <T extends Number> Predicate<T> lessThanOrEqualOld(final double val) {
+        // TODO PERSISTENCE WORKAROUND
+        return new Predicate<T>() {
+            public boolean apply(@Nullable T input) {
+                return (input == null) ? false : input.doubleValue() <= val;
             }
         };
     }
@@ -65,12 +73,72 @@ public class MathPredicates {
      * Creates a predicate comparing a given number with {@code val}. 
      * A number of {@code null} passed to the predicate will always return false.
      */
+    public static <T extends Number> Predicate<T> greaterThan(final double val) {
+        return new GreaterThan<T>(val);
+    }
+
+    protected static class GreaterThan<T extends Number> implements Predicate<T> {
+        private final double val;
+        protected GreaterThan(double val) {
+            this.val = val;
+        }
+        public boolean apply(@Nullable T input) {
+            return (input == null) ? false : input.doubleValue() > val;
+        }
+    }
+    
+    /**
+     * Creates a predicate comparing a given number with {@code val}. 
+     * A number of {@code null} passed to the predicate will always return false.
+     */
+    public static <T extends Number> Predicate<T> greaterThanOrEqual(final double val) {
+        return new GreaterThanOrEqual<T>(val);
+    }
+
+    protected static class GreaterThanOrEqual<T extends Number> implements Predicate<T> {
+        private final double val;
+        protected GreaterThanOrEqual(double val) {
+            this.val = val;
+        }
+        public boolean apply(@Nullable T input) {
+            return (input == null) ? false : input.doubleValue() >= val;
+        }
+    }
+    
+    /**
+     * Creates a predicate comparing a given number with {@code val}. 
+     * A number of {@code null} passed to the predicate will always return false.
+     */
+    public static <T extends Number> Predicate<T> lessThan(final double val) {
+        return new LessThan<T>(val);
+    }
+
+    protected static class LessThan<T extends Number> implements Predicate<T> {
+        private final double val;
+        protected LessThan(double val) {
+            this.val = val;
+        }
+        public boolean apply(@Nullable T input) {
+            return (input == null) ? false : input.doubleValue() < val;
+        }
+    }
+    
+    /**
+     * Creates a predicate comparing a given number with {@code val}. 
+     * A number of {@code null} passed to the predicate will always return false.
+     */
     public static <T extends Number> Predicate<T> lessThanOrEqual(final double val) {
-        return new Predicate<T>() {
-            public boolean apply(@Nullable T input) {
-                return (input == null) ? false : input.doubleValue() <= val;
-            }
-        };
+        return new LessThanOrEqual<T>(val);
+    }
+    
+    protected static class LessThanOrEqual<T extends Number> implements Predicate<T> {
+        private final double val;
+        protected LessThanOrEqual(double val) {
+            this.val = val;
+        }
+        public boolean apply(@Nullable T input) {
+            return (input == null) ? false : input.doubleValue() <= val;
+        }
     }
     
     /**
