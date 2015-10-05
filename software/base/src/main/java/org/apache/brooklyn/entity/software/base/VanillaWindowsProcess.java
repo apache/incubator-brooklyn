@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.software.base;
 import java.util.Collection;
 
 import org.apache.brooklyn.api.catalog.Catalog;
+import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
@@ -51,14 +52,34 @@ public interface VanillaWindowsProcess extends AbstractVanillaProcess {
             "indicates that a reboot should be performed after the install command is run", false);
     ConfigKey<Boolean> CUSTOMIZE_REBOOT_REQUIRED = ConfigKeys.newBooleanConfigKey("customize.reboot.required",
             "indicates that a reboot should be performed after the customize command is run", false);
+
+    @CatalogConfig(label = "Launch Command")
+    ConfigKey<String> LAUNCH_COMMAND = VanillaSoftwareProcess.LAUNCH_COMMAND;
+
+    @CatalogConfig(label = "Launch PowerShell command")
     ConfigKey<String> LAUNCH_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("launch.powershell.command",
             "command to run to launch the process");
+
+    @CatalogConfig(label = "Check Running Command")
+    ConfigKey<String> CHECK_RUNNING_COMMAND = VanillaSoftwareProcess.CHECK_RUNNING_COMMAND;
+
+    @CatalogConfig(label = "Check Running PowerShell Command")
     ConfigKey<String> CHECK_RUNNING_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("checkRunning.powershell.command",
             "command to determine whether the process is running");
+
+    @CatalogConfig(label = "Stop PowerShell Command")
+    ConfigKey<String> STOP_COMMAND = VanillaSoftwareProcess.STOP_COMMAND;
+
+    @CatalogConfig(label = "Stop Command")
     ConfigKey<String> STOP_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("stop.powershell.command",
             "command to run to stop the process");
     ConfigKey<String> CUSTOMIZE_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("customize.powershell.command",
             "powershell command to run during the customization phase");
+
+    @CatalogConfig(label = "Install Command")
+    ConfigKey<String> INSTALL_COMMAND = VanillaSoftwareProcess.INSTALL_COMMAND;
+
+    @CatalogConfig(label = "Install PowerShell command")
     ConfigKey<String> INSTALL_POWERSHELL_COMMAND = ConfigKeys.newStringConfigKey("install.powershell.command",
             "powershell command to run during the install phase");
     ConfigKey<Duration> REBOOT_BEGUN_TIMEOUT = ConfigKeys.newDurationConfigKey("reboot.begun.timeout",
