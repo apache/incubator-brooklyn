@@ -57,14 +57,14 @@
       <scope>runtime</scope>
     </dependency>
 
-    <!--dependency>
+    <dependency>
       <groupId>org.apache.brooklyn</groupId>
-      <artifactId>features</artifactId>
+      <artifactId>brooklyn-features</artifactId>
       <version>${project.version}</version>
       <type>xml</type>
       <classifier>features</classifier>
       <scope>runtime</scope>
-    </dependency-->
+    </dependency>
 
   </dependencies>
 
@@ -112,9 +112,10 @@
             <bootFeature>ssh</bootFeature>
             <bootFeature>system</bootFeature>
             <bootFeature>wrap</bootFeature>
-            <!--bootFeature>brooklyn-core</bootFeature-->
+            <!-- brooklyn features -->
+            <bootFeature>brooklyn-core</bootFeature>
           </bootFeatures>
-	    </configuration>
+        </configuration>
       </plugin>
     </plugins>
   </build>
