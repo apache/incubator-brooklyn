@@ -84,7 +84,7 @@ public class DownloadProducerFromLocalRepoTest {
         // uses default of ${simpletype}-${version}.tar.gz";
         String entityVersion = "myversion";
         String downloadFilename = (entitySimpleType+"-"+entityVersion+".tar.gz").toLowerCase();
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, entityVersion);
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, entityVersion);
         assertResolves(String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", entitySimpleType, entityVersion, downloadFilename));
     }
     
@@ -92,7 +92,7 @@ public class DownloadProducerFromLocalRepoTest {
     public void testReturnsFilenameFromDriver() throws Exception {
         String entityVersion = "myversion";
         String filename = "my.file.name";
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, entityVersion);
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, entityVersion);
         
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver, ImmutableMap.of("filename", filename));
         assertResolves(req, String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", entitySimpleType, entityVersion, filename));
@@ -104,7 +104,7 @@ public class DownloadProducerFromLocalRepoTest {
         String entityVersion = "myversion";
         String fileSuffix = "mysuffix";
         String expectedFilename = (entitySimpleType+"-"+entityVersion+"."+fileSuffix).toLowerCase();
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, entityVersion);
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, entityVersion);
         
         BasicDownloadRequirement req = new BasicDownloadRequirement(driver, ImmutableMap.of("fileSuffix", fileSuffix));
         assertResolves(req, String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", entitySimpleType, entityVersion, expectedFilename));

@@ -87,7 +87,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         Assert.assertEquals(moreEntity.getCatalogItemId(), "more-entity:1.0");
         
         Assert.assertEquals(moreEntity.getPolicies().size(), 1, "wrong policies: "+moreEntity.getPolicies());
-        Policy policy = Iterables.getOnlyElement(moreEntity.getPolicies());
+        Policy policy = Iterables.getOnlyElement(moreEntity.policies());
         // it was loaded by yaml w ref to catalog, so should have the simple-policy catalog-id
         Assert.assertEquals(policy.getCatalogItemId(), "simple-policy:1.0");
     }
@@ -106,7 +106,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         OsgiVersionMoreEntityTest.assertV2MethodCall(moreEntity);
         
         Assert.assertEquals(moreEntity.getPolicies().size(), 1, "wrong policies: "+moreEntity.getPolicies());
-        Policy policy = Iterables.getOnlyElement(moreEntity.getPolicies());
+        Policy policy = Iterables.getOnlyElement(moreEntity.policies());
         // it was loaded from the java so should have the base more-entity catalog id
         Assert.assertEquals(policy.getCatalogItemId(), "more-entity:1.0");
     }
@@ -220,7 +220,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
                 "  brooklyn.policies:",
                 "  - type: more-policy:2.0.test");
         Entity basicEntity = Iterables.getOnlyElement(app.getChildren());
-        Policy morePolicy = Iterables.getOnlyElement(basicEntity.getPolicies());
+        Policy morePolicy = Iterables.getOnlyElement(basicEntity.policies());
         
         Assert.assertEquals(morePolicy.getCatalogItemId(), "more-policy:2.0.test");
         OsgiVersionMoreEntityTest.assertV2MethodCall(morePolicy);

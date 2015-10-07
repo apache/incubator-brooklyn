@@ -63,7 +63,7 @@ public class BrooklynClusterImpl extends DynamicClusterImpl implements BrooklynC
                         .callable(new MasterChildFinder()))
                 .build());
         
-        addEnricher( Enrichers.builder().transforming(MASTER_NODE)
+        enrichers().add( Enrichers.builder().transforming(MASTER_NODE)
             .uniqueTag("master-node-web-uri")
             .publishing(BrooklynNode.WEB_CONSOLE_URI)
             .computing(EntityFunctions.attribute(BrooklynNode.WEB_CONSOLE_URI))

@@ -84,7 +84,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
 
     @Override
     public void postLaunch() {
-        entity.setAttribute(JBoss6Server.HTTP_PORT, DEFAULT_HTTP_PORT + getPortIncrement());
+        entity.sensors().set(JBoss6Server.HTTP_PORT, DEFAULT_HTTP_PORT + getPortIncrement());
         super.postLaunch();
     }
 

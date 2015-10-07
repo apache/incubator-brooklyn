@@ -245,11 +245,11 @@ public class SelectMasterEffectorTest extends BrooklynAppUnitTestSupport {
     }
 
     public static void setManagementState(Entity entity, ManagementNodeState state) {
-        ((EntityLocal)entity).setAttribute(BrooklynNode.MANAGEMENT_NODE_STATE, state);
+        ((EntityLocal)entity).sensors().set(BrooklynNode.MANAGEMENT_NODE_STATE, state);
     }
 
     public static void setPriority(Entity entity, int priority) {
-        ((EntityLocal)entity).setAttribute(MockBrooklynNode.HA_PRIORITY, priority);
+        ((EntityLocal)entity).sensors().set(MockBrooklynNode.HA_PRIORITY, priority);
     }
 
     private void selectMaster(DynamicCluster cluster, String id) {

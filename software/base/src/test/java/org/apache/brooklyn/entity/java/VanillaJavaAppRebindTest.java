@@ -160,13 +160,13 @@ public class VanillaJavaAppRebindTest {
         public void onManagementStarted() {
             super.onManagementStarted();
             LOG.info("mgmt started for "+this);
-            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, PROCESS_CPU_TIME, AVG1, Duration.TEN_SECONDS));
+            enrichers().add(new RollingTimeWindowMeanEnricher<Double>(this, PROCESS_CPU_TIME, AVG1, Duration.TEN_SECONDS));
         }
         @Override
         protected void connectSensors() {
             super.connectSensors();
             LOG.info("connecting sensors for "+this);
-            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, PROCESS_CPU_TIME, AVG2, Duration.TEN_SECONDS));
+            enrichers().add(new RollingTimeWindowMeanEnricher<Double>(this, PROCESS_CPU_TIME, AVG2, Duration.TEN_SECONDS));
         }
     }
 

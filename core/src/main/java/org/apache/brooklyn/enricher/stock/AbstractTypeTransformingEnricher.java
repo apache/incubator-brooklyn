@@ -56,7 +56,7 @@ public abstract class AbstractTypeTransformingEnricher<T,U> extends AbstractEnri
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
         if (producer==null) producer = entity;
-        subscribe(producer, source, this);
+        subscriptions().subscribe(producer, source, this);
         
         if (source instanceof AttributeSensor) {
             Object value = producer.getAttribute((AttributeSensor)source);

@@ -211,7 +211,7 @@ public class FollowTheSunPolicySoakTest extends AbstractFollowTheSunPolicyTest {
                     double jitteredWorkrate = Math.max(0, baseWorkrate + (random.nextDouble()*jitter*2 - jitter));
                     workrates.put(source, jitteredWorkrate);
                 }
-                ((EntityLocal)item).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, workrates);
+                ((EntityLocal)item).sensors().set(MockItemEntity.ITEM_USAGE_METRIC, workrates);
             }
 
             // Stop containers, and start others

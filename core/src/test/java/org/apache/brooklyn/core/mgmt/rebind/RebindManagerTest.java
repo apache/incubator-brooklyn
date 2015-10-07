@@ -56,7 +56,7 @@ public class RebindManagerTest extends RebindTestFixtureWithApp {
                     .orSubmitAsync()
                     .asTask()
                     .getUnchecked();
-            setAttribute(TestEntity.NAME, val);
+            sensors().set(TestEntity.NAME, val);
         }
     }
 }

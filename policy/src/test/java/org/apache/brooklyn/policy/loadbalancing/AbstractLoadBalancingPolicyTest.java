@@ -27,7 +27,6 @@ import java.util.Random;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -99,7 +98,7 @@ public class AbstractLoadBalancingPolicyTest {
         pool = app.createAndManageChild(EntitySpec.create(BalanceableWorkerPool.class));
         pool.setContents(containerGroup, itemGroup);
         policy = new LoadBalancingPolicy(MutableMap.of("minPeriodBetweenExecs", 1), TEST_METRIC, model);
-        pool.addPolicy(policy);
+        pool.policies().add(policy);
         app.start(ImmutableList.of(loc));
     }
     
@@ -214,7 +213,7 @@ public class AbstractLoadBalancingPolicyTest {
                 .displayName(name));
         LOG.debug("Managing new item {} on container {}", item, container);
         item.move(container);
-        ((EntityLocal)item).setAttribute(TEST_METRIC, (int)workrate);
+        item.sensors().set(TEST_METRIC, (int)workrate);
         return item;
     }
     
@@ -224,7 +223,7 @@ public class AbstractLoadBalancingPolicyTest {
                 .configure(Movable.IMMOVABLE, true));
         LOG.debug("Managed new item {} on container {}", item, container);
         item.move(container);
-        ((EntityLocal)item).setAttribute(TEST_METRIC, (int)workrate);
+        item.sensors().set(TEST_METRIC, (int)workrate);
         return item;
     }
     

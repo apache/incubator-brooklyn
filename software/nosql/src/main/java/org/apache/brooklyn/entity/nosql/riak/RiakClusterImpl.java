@@ -68,7 +68,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     public void init() {
         super.init();
         log.info("Initializing the riak cluster...");
-        setAttribute(IS_CLUSTER_INIT, false);
+        sensors().set(IS_CLUSTER_INIT, false);
     }
 
     @Override
@@ -91,7 +91,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 EntityPredicates.attributeEqualTo(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, true),
                 EntityPredicates.attributeEqualTo(RiakNode.SERVICE_UP, true)));
         if (anyNode.isPresent()) {
-            setAttribute(IS_CLUSTER_INIT, true);
+            sensors().set(IS_CLUSTER_INIT, true);
         } else {
             log.warn("No Riak Nodes are found on the cluster: {}. Initialization Failed", getId());
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
@@ -105,7 +105,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     }
 
     protected void connectSensors() {
-        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Controller targets tracker")
                 .configure("sensorsToTrack", ImmutableSet.of(RiakNode.SERVICE_UP))
                 .configure("group", this));
@@ -120,7 +120,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                     } })
                  .fromMembers()
                  .build();
-        addEnricher(first);
+        enrichers().add(first);
         
         Map<? extends AttributeSensor<? extends Number>, ? extends AttributeSensor<? extends Number>> enricherSetup = 
             ImmutableMap.<AttributeSensor<? extends Number>, AttributeSensor<? extends Number>>builder()
@@ -136,7 +136,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     }
 
     private void addAveragingMemberEnricher(AttributeSensor<? extends Number> fromSensor, AttributeSensor<? extends Number> toSensor) {
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
             .aggregating(fromSensor)
             .publishing(toSensor)
             .fromMembers()
@@ -146,7 +146,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
     }
 
     private void addSummingMemberEnricher(AttributeSensor<? extends Number> source) {
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
             .aggregating(source)
             .publishing(source)
             .fromMembers()
@@ -173,12 +173,12 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 // flag a first node to be the first node in the riak cluster.
                 Boolean firstNode = getAttribute(IS_FIRST_NODE_SET);
                 if (!Boolean.TRUE.equals(firstNode)) {
-                    setAttribute(IS_FIRST_NODE_SET, Boolean.TRUE);
+                    sensors().set(IS_FIRST_NODE_SET, Boolean.TRUE);
 
                     nodes.put(member, riakName);
-                    setAttribute(RIAK_CLUSTER_NODES, nodes);
+                    sensors().set(RIAK_CLUSTER_NODES, nodes);
 
-                    ((EntityInternal) member).setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
+                    ((EntityInternal) member).sensors().set(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
 
                     log.info("Added initial Riak node {}: {}; {} to new cluster", new Object[] { this, member, getRiakName(member) });
                 } else {
@@ -192,7 +192,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                             String anyNodeName = anyNodeInCluster.get().getAttribute(RiakNode.RIAK_NODE_NAME);
                             Entities.invokeEffectorWithArgs(this, member, RiakNode.JOIN_RIAK_CLUSTER, anyNodeName).blockUntilEnded();
                             nodes.put(member, riakName);
-                            setAttribute(RIAK_CLUSTER_NODES, nodes);
+                            sensors().set(RIAK_CLUSTER_NODES, nodes);
                             log.info("Added Riak node {}: {}; {} to cluster", new Object[] { this, member, getRiakName(member) });
                         }
                     } else {
@@ -211,7 +211,7 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                         Entities.invokeEffectorWithArgs(this, anyNodeInCluster.get(), RiakNode.REMOVE_FROM_CLUSTER, getRiakName(member)).blockUntilEnded();
                     }
                     nodes.remove(member);
-                    setAttribute(RIAK_CLUSTER_NODES, nodes);
+                    sensors().set(RIAK_CLUSTER_NODES, nodes);
                     log.info("Removed Riak node {}: {}; {} from cluster", new Object[]{ this, member, getRiakName(member) });
                 }
             }
@@ -232,8 +232,8 @@ public class RiakClusterImpl extends DynamicClusterImpl implements RiakCluster {
                 addressesPbPort.add(riakNode.getAttribute(Attributes.SUBNET_HOSTNAME) + ":" + riakNode.getAttribute(RiakNode.RIAK_PB_PORT));
             }
         }
-        setAttribute(RiakCluster.NODE_LIST, Joiner.on(",").join(addresses));
-        setAttribute(RiakCluster.NODE_LIST_PB_PORT, Joiner.on(",").join(addressesPbPort));
+        sensors().set(RiakCluster.NODE_LIST, Joiner.on(",").join(addresses));
+        sensors().set(RiakCluster.NODE_LIST_PB_PORT, Joiner.on(",").join(addressesPbPort));
     }
 
     protected boolean belongsInServerPool(Entity member) {

@@ -26,7 +26,7 @@ public class MongoDBClientImpl extends SoftwareProcessImpl implements MongoDBCli
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(Startable.SERVICE_UP, true);
+        sensors().set(Startable.SERVICE_UP, true);
     }
 
     @SuppressWarnings("rawtypes")

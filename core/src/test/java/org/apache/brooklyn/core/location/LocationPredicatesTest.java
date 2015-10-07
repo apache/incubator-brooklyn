@@ -63,7 +63,7 @@ public class LocationPredicatesTest {
     
     @Test
     public void testConfigEqualTo() throws Exception {
-        loc.setConfig(TestEntity.CONF_NAME, "myname");
+        loc.config().set(TestEntity.CONF_NAME, "myname");
         assertTrue(LocationPredicates.configEqualTo(TestEntity.CONF_NAME, "myname").apply(loc));
         assertFalse(LocationPredicates.configEqualTo(TestEntity.CONF_NAME, "wrongname").apply(loc));
     }

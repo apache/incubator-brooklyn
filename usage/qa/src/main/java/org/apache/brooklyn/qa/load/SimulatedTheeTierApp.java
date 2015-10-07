@@ -99,20 +99,20 @@ public class SimulatedTheeTierApp extends AbstractApplication {
                         .configure(DynamicCluster.INITIAL_SIZE, 2)
                         .configure(WebAppService.ENABLED_PROTOCOLS, ImmutableSet.of(USE_HTTPS ? "https" : "http")) );
 
-        web.getCluster().addPolicy(AutoScalerPolicy.builder().
+        web.getCluster().policies().add(AutoScalerPolicy.builder().
                 metric(DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW_PER_NODE).
                 metricRange(10, 100).
                 sizeRange(2, 5).
                 build());
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(Attributes.MAIN_URI, WebAppServiceConstants.ROOT_URL,
                         DynamicWebAppCluster.REQUESTS_PER_SECOND_IN_WINDOW,
                         HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW)
                 .from(web)
                 .build());
         
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .aggregating(Startable.SERVICE_UP)
                 .publishing(Startable.SERVICE_UP)
                 .fromHardcodedProducers(ImmutableList.of(web, mysql))

@@ -134,7 +134,7 @@ public class PostgreSqlNodeSaltImpl extends EffectorStartableImpl implements Pos
     }
 
     protected void connectSensors() {
-        setAttribute(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
+        sensors().set(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
 
         Location machine = Iterables.get(getLocations(), 0, null);
 

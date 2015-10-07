@@ -67,7 +67,7 @@ public class EntityAndAttribute<T> implements Supplier<T> {
     }
 
     public void setValue(T val) {
-        ((EntityLocal)entity).setAttribute(attribute, val);
+        ((EntityLocal)entity).sensors().set(attribute, val);
     }
 
     /**

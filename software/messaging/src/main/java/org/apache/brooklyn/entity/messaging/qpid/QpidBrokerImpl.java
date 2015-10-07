@@ -60,7 +60,7 @@ public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implemen
 
     public void setBrokerUrl() {
         String urlFormat = "amqp://guest:guest@/%s?brokerlist='tcp://%s:%d'";
-        setAttribute(BROKER_URL, format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)));
+        sensors().set(BROKER_URL, format(urlFormat, getAttribute(VIRTUAL_HOST_NAME), getAttribute(HOSTNAME), getAttribute(AMQP_PORT)));
     }
     
     @Override

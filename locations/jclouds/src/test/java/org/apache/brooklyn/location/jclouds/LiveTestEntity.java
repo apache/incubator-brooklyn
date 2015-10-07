@@ -52,7 +52,7 @@ public interface LiveTestEntity extends TestEntity {
         public void start(final Collection<? extends Location> locs) {
             LOG.trace("Starting {}", this);
             callHistory.add("start");
-            setAttribute(SERVICE_STATE, Lifecycle.STARTING);
+            sensors().set(SERVICE_STATE, Lifecycle.STARTING);
             counter.incrementAndGet();
             addLocations(locs);
             provisioningLocation = (JcloudsLocation) Iterables.find(locs, Predicates.instanceOf(JcloudsLocation.class));
@@ -62,19 +62,19 @@ public interface LiveTestEntity extends TestEntity {
                 throw Throwables.propagate(e);
             }
             addLocations(ImmutableList.of(obtainedLocation));
-            setAttribute(SERVICE_STATE, Lifecycle.RUNNING);
+            sensors().set(SERVICE_STATE, Lifecycle.RUNNING);
         }
 
         @Override
         public void stop() {
             LOG.trace("Stopping {}", this);
             callHistory.add("stop");
-            setAttribute(SERVICE_STATE, Lifecycle.STOPPING);
+            sensors().set(SERVICE_STATE, Lifecycle.STOPPING);
             counter.decrementAndGet();
             if (provisioningLocation != null && obtainedLocation != null) {
                 provisioningLocation.release(obtainedLocation);
             }
-            setAttribute(SERVICE_STATE, Lifecycle.STOPPED);
+            sensors().set(SERVICE_STATE, Lifecycle.STOPPED);
         }
 
         public MachineProvisioningLocation<?> getProvisioningLocation() {

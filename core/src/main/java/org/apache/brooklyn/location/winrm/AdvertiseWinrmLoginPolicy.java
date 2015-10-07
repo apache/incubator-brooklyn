@@ -53,7 +53,7 @@ public class AdvertiseWinrmLoginPolicy extends AbstractPolicy implements SensorE
 
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
-        subscribe(entity, AbstractEntity.LOCATION_ADDED, this);
+        subscriptions().subscribe(entity, AbstractEntity.LOCATION_ADDED, this);
     }
 
     @Override
@@ -75,6 +75,6 @@ public class AdvertiseWinrmLoginPolicy extends AbstractPolicy implements SensorE
         
         LOG.info("Advertising user "+user+" @ "+hostname+":"+port);
         
-        ((EntityLocal)entity).setAttribute(VM_USER_CREDENTIALS, creds);
+        ((EntityLocal)entity).sensors().set(VM_USER_CREDENTIALS, creds);
     }
 }

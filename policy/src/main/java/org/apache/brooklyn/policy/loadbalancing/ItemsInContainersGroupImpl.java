@@ -99,9 +99,9 @@ public class ItemsInContainersGroupImpl extends DynamicGroupImpl implements Item
     @Override
     public void setContainers(Group containerGroup) {
         this.containerGroup = containerGroup;
-        subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
-        subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
-        subscribe(null, Movable.CONTAINER, eventHandler);
+        subscriptions().subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
+        subscriptions().subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
+        subscriptions().subscribe(null, Movable.CONTAINER, eventHandler);
         
         if (LOG.isTraceEnabled()) LOG.trace("{} scanning entities on container group set", this);
         rescanEntities();

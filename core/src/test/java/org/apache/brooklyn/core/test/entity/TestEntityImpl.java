@@ -115,7 +115,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     @Override
     public synchronized void setSequenceValue(int value) {
         sequenceValue = value;
-        setAttribute(SEQUENCE, value);
+        sensors().set(SEQUENCE, value);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         counter.incrementAndGet();
         addLocations(locs);
-        setAttribute(SERVICE_UP, true);
+        sensors().set(SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
     }
 
@@ -135,7 +135,7 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         callHistory.add("stop");
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         counter.decrementAndGet();
-        setAttribute(SERVICE_UP, false);
+        sensors().set(SERVICE_UP, false);
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
     }
 

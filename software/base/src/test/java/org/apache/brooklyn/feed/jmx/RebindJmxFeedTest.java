@@ -112,7 +112,7 @@ public class RebindJmxFeedTest extends RebindTestFixtureWithApp {
         assertEquals(newFeeds.size(), 1);
         
         // Expect the feed to still be polling
-        newEntity.setAttribute(SENSOR_STRING, null);
+        newEntity.sensors().set(SENSOR_STRING, null);
         EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_STRING, "myval");
     }
 
@@ -124,12 +124,12 @@ public class RebindJmxFeedTest extends RebindTestFixtureWithApp {
             // TODO Auto-generated method stub
             super.start(locs);
             
-            setAttribute(Attributes.HOSTNAME, "localhost");
-            setAttribute(UsesJmx.JMX_PORT, 
+            sensors().set(Attributes.HOSTNAME, "localhost");
+            sensors().set(UsesJmx.JMX_PORT, 
                     LocalhostMachineProvisioningLocation.obtainPort(PortRanges.fromString("40123+")));
             // only supports no-agent, at the moment
-            setConfig(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.NONE);
-            setAttribute(UsesJmx.RMI_REGISTRY_PORT, -1);  // -1 means to use the JMX_PORT only
+            config().set(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.NONE);
+            sensors().set(UsesJmx.RMI_REGISTRY_PORT, -1);  // -1 means to use the JMX_PORT only
             ConfigToAttributes.apply(this, UsesJmx.JMX_CONTEXT);
             
             JmxFeed.Builder feedBuilder = JmxFeed.builder()

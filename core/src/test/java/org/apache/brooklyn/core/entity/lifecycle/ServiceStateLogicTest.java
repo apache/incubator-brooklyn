@@ -203,7 +203,7 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
         
         // if we change the state quorum check for the app to be "all are healthy and at least one running" *then* it shows stopped
         // (normally this would be done in `initEnrichers` of course)
-        Enricher appChildrenBasedEnricher = EntityAdjuncts.tryFindWithUniqueTag(app.getEnrichers(), ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG).get();
+        Enricher appChildrenBasedEnricher = EntityAdjuncts.tryFindWithUniqueTag(app.enrichers(), ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG).get();
         appChildrenBasedEnricher.config().set(ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK, QuorumChecks.allAndAtLeastOne());
         assertAttributeEqualsEventually(app, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         
@@ -271,14 +271,14 @@ public class ServiceStateLogicTest extends BrooklynAppUnitTestSupport {
 
         //manually set state to healthy as enrichers are disabled
         EntityInternal child = (EntityInternal) cluster.getMembers().iterator().next();
-        child.setAttribute(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
-        child.setAttribute(Attributes.SERVICE_UP, Boolean.TRUE);
+        child.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        child.sensors().set(Attributes.SERVICE_UP, Boolean.TRUE);
 
         EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
 
         //set untyped service state, the quorum check should be able to handle coercion
         AttributeSensor<Object> stateSensor = Sensors.newSensor(Object.class, Attributes.SERVICE_STATE_ACTUAL.getName());
-        child.setAttribute(stateSensor, "running");
+        child.sensors().set(stateSensor, "running");
 
         EntityTestUtils.assertAttributeEqualsContinually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
     }

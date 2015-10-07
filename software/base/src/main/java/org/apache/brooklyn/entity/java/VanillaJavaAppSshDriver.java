@@ -111,7 +111,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
 
         // Transform stdout into list of files in classpath
         if (Strings.isBlank(stdout)) {
-            getEntity().setAttribute(VanillaJavaApp.CLASSPATH_FILES, ImmutableList.of(Os.mergePaths(getRunDir(), "lib")));
+            getEntity().sensors().set(VanillaJavaApp.CLASSPATH_FILES, ImmutableList.of(Os.mergePaths(getRunDir(), "lib")));
         } else {
             // FIXME Cannot handle spaces in paths properly
             Iterable<String> lines = Splitter.on(CharMatcher.BREAKING_WHITESPACE).omitEmptyStrings().trimResults().split(stdout);
@@ -121,7 +121,7 @@ public class VanillaJavaAppSshDriver extends JavaSoftwareProcessSshDriver implem
                             return Os.mergePathsUnix(getRunDir(), "lib", input);
                         }
                     });
-            getEntity().setAttribute(VanillaJavaApp.CLASSPATH_FILES, ImmutableList.copyOf(files));
+            getEntity().sensors().set(VanillaJavaApp.CLASSPATH_FILES, ImmutableList.copyOf(files));
         }
     }
 

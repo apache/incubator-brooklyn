@@ -34,7 +34,7 @@ public class QpidTopicImpl extends QpidDestinationImpl implements QpidTopic {
     @Override
     public void onManagementStarting() {
         super.onManagementStarting();
-        setAttribute(TOPIC_NAME, getName());
+        sensors().set(TOPIC_NAME, getName());
         try {
             String virtualHost = getParent().getVirtualHost();
             exchange = new ObjectName(format("org.apache.qpid:type=VirtualHost.Exchange,VirtualHost=\"%s\",name=\"%s\",ExchangeType=topic", virtualHost, getExchangeName()));

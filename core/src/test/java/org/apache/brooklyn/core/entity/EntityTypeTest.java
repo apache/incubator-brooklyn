@@ -196,7 +196,7 @@ public class EntityTypeTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testAddSensorValueThroughEntity() throws Exception{
-        entity.setAttribute(TEST_SENSOR, "abc");
+        entity.sensors().set(TEST_SENSOR, "abc");
         assertEquals(entity.getEntityType().getSensors(), 
                 ImmutableSet.builder().addAll(DEFAULT_SENSORS).add(TEST_SENSOR).build());
         
@@ -205,7 +205,7 @@ public class EntityTypeTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testRemoveSensorThroughEntity() throws Exception{
-        entity.setAttribute(TEST_SENSOR, "abc");
+        entity.sensors().set(TEST_SENSOR, "abc");
         entity.removeAttribute(TEST_SENSOR);
         assertFalse(entity.getEntityType().getSensors().contains(TEST_SENSOR), "sensors="+entity.getEntityType().getSensors()); 
         assertEquals(entity.getAttribute(TEST_SENSOR), null);

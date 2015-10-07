@@ -109,7 +109,7 @@ public class BrooklynNodeRestTest {
             
             EntityTestUtils.assertAttributeEqualsEventually(mirror, Attributes.SERVICE_UP, true);
             
-            ((EntityInternal)newApp).setAttribute(TestEntity.NAME, "foo");
+            ((EntityInternal)newApp).sensors().set(TestEntity.NAME, "foo");
             EntityTestUtils.assertAttributeEqualsEventually(mirror, TestEntity.NAME, "foo");
             log.info("Mirror successfully validated");
             

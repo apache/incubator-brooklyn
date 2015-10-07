@@ -73,11 +73,11 @@ public class DynamicWebAppFabricTest {
         
         app.start(locs);
         for (Entity member : fabric.getChildren()) {
-            ((EntityLocal)member).setAttribute(Changeable.GROUP_SIZE, 1);
+            ((EntityLocal)member).sensors().set(Changeable.GROUP_SIZE, 1);
         }
         
         for (Entity member : fabric.getChildren()) {
-            ((EntityInternal)member).setAttribute(DynamicGroup.GROUP_SIZE, 1);
+            ((EntityInternal)member).sensors().set(DynamicGroup.GROUP_SIZE, 1);
             ((TestJavaWebAppEntity)member).spoofRequest();
         }
         EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", TIMEOUT_MS), fabric, DynamicWebAppFabric.REQUEST_COUNT, 2);

@@ -49,7 +49,7 @@ public class ConfigMapGroovyTest {
     @Test
     public void testGetConfigOfTypeClosureReturnsClosure() throws Exception {
         MyOtherEntity entity2 = new MyOtherEntity(app);
-        entity2.setConfig(MyOtherEntity.CLOSURE_KEY, { return "abc" } );
+        entity2.config().set(MyOtherEntity.CLOSURE_KEY, { return "abc" } );
         Entities.manage(entity2);
         
         Closure configVal = entity2.getConfig(MyOtherEntity.CLOSURE_KEY);

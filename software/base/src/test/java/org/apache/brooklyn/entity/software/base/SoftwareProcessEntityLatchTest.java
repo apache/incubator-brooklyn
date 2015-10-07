@@ -127,7 +127,7 @@ public class SoftwareProcessEntityLatchTest extends BrooklynAppUnitTestSupport {
         assertDriverEventsEquals(entity, preLatchEvents);
 
         assertFalse(task.isDone());
-        ((EntityLocal)triggerEntity).setAttribute(Attributes.SERVICE_UP, true);
+        ((EntityLocal)triggerEntity).sensors().set(Attributes.SERVICE_UP, true);
         task.get(Duration.THIRTY_SECONDS);
         assertDriverEventsEquals(entity, ImmutableList.of("setup", "copyInstallResources", "install", "customize", "copyRuntimeResources", "launch"));
     }

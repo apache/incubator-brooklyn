@@ -65,7 +65,7 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        setAttribute(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MARIADB_PORT)));
+        sensors().set(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MARIADB_PORT)));
 
         /*        
          * TODO status gives us things like:
@@ -95,7 +95,7 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
                     .build();
         } else {
             LOG.warn("Location(s) {} not an ssh-machine location, so not polling for status; setting serviceUp immediately", getLocations());
-            setAttribute(SERVICE_UP, true);
+            sensors().set(SERVICE_UP, true);
         }
     }
 
@@ -112,14 +112,14 @@ public class MariaDbNodeImpl extends SoftwareProcessImpl implements MariaDbNode 
     public String getSocketUid() {
         String result = getAttribute(MariaDbNode.SOCKET_UID);
         if (Strings.isBlank(result))
-            setAttribute(MariaDbNode.SOCKET_UID, (result = Identifiers.makeRandomId(6)));
+            sensors().set(MariaDbNode.SOCKET_UID, (result = Identifiers.makeRandomId(6)));
         return result;
     }
 
     public String getPassword() {
         String result = getAttribute(MariaDbNode.PASSWORD);
         if (Strings.isBlank(result))
-            setAttribute(MariaDbNode.PASSWORD, (result = Identifiers.makeRandomId(6)));
+            sensors().set(MariaDbNode.PASSWORD, (result = Identifiers.makeRandomId(6)));
         return result;
     }
 

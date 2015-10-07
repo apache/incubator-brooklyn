@@ -475,8 +475,8 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
             removeFromCollector(instance);
             if (instance instanceof Entity) {
                 Entity entity = (Entity) instance;
-                for (BrooklynObject adjunct : entity.getPolicies()) removeFromCollector(adjunct);
-                for (BrooklynObject adjunct : entity.getEnrichers()) removeFromCollector(adjunct);
+                for (BrooklynObject adjunct : entity.policies()) removeFromCollector(adjunct);
+                for (BrooklynObject adjunct : entity.enrichers()) removeFromCollector(adjunct);
                 for (BrooklynObject adjunct : ((EntityInternal)entity).feeds().getFeeds()) removeFromCollector(adjunct);
             }
         }

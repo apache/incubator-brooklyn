@@ -45,7 +45,7 @@ public class MockBrooklynNode extends AbstractEntity implements BrooklynNode {
         super.init();
         getMutableEntityType().addEffector(SetHighAvailabilityPriorityEffectorBody.SET_HIGH_AVAILABILITY_PRIORITY);
         getMutableEntityType().addEffector(SetHighAvailabilityModeEffectorBody.SET_HIGH_AVAILABILITY_MODE);
-        setAttribute(HA_PRIORITY, 0);
+        sensors().set(HA_PRIORITY, 0);
     }
 
     @Override

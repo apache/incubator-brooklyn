@@ -72,13 +72,13 @@ public class WebClusterApp extends AbstractApplication {
                 .configure("initialSize", 1)
                 .configure("memberSpec", jbossSpec));
 
-        web.getCluster().addEnricher(Enrichers.builder()
+        web.getCluster().enrichers().add(Enrichers.builder()
                 .aggregating(sinusoidalLoad)
                 .publishing(averageLoad)
                 .fromMembers()
                 .computingAverage()
                 .build());
-        web.getCluster().addPolicy(AutoScalerPolicy.builder()
+        web.getCluster().policies().add(AutoScalerPolicy.builder()
                 .metric(averageLoad)
                 .sizeRange(1, 3)
                 .metricRange(0.3, 0.7)

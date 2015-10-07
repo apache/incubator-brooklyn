@@ -35,7 +35,7 @@ public class TestClusterImpl extends DynamicClusterImpl implements TestCluster {
     public void init() {
         super.init();
         size = getConfig(INITIAL_SIZE);
-        setAttribute(Startable.SERVICE_UP, true);
+        sensors().set(Startable.SERVICE_UP, true);
     }
     
     @Override

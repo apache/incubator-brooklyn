@@ -644,7 +644,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         // TODO not holding synchronization lock while notifying risks out-of-order if addChild+removeChild called in rapid succession.
         // But doing notification in synchronization block may risk deadlock?
         if (changed) {
-            emit(AbstractEntity.CHILD_ADDED, child);
+            sensors().emit(AbstractEntity.CHILD_ADDED, child);
         }
         return child;
     }
@@ -682,7 +682,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
         
         if (changed) {
-            emit(AbstractEntity.CHILD_REMOVED, child);
+            sensors().emit(AbstractEntity.CHILD_REMOVED, child);
         }
         return changed;
     }
@@ -721,7 +721,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             getApplication();
             
             if (changed) {
-                emit(AbstractEntity.GROUP_ADDED, group);
+                sensors().emit(AbstractEntity.GROUP_ADDED, group);
             }
         }
 
@@ -731,7 +731,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             getApplication();
             
             if (changed) {
-                emit(AbstractEntity.GROUP_REMOVED, group);
+                sensors().emit(AbstractEntity.GROUP_REMOVED, group);
             }
         }
     }
@@ -847,7 +847,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             }
             
             for (Location loc : truelyNewLocations) {
-                emit(AbstractEntity.LOCATION_ADDED, loc);
+                sensors().emit(AbstractEntity.LOCATION_ADDED, loc);
             }
         }
         
@@ -869,7 +869,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             locations.set(MutableList.<Location>builder().addAll(oldLocations).removeAll(removedLocations).buildImmutable());
             
             for (Location loc : trulyRemovedLocations) {
-                emit(AbstractEntity.LOCATION_REMOVED, loc);
+                sensors().emit(AbstractEntity.LOCATION_REMOVED, loc);
             }
         }
         
@@ -1577,8 +1577,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     // these enrichers do nothing unless Attributes.SERVICE_NOT_UP_INDICATORS are used
     // and/or SERVICE_STATE_EXPECTED 
     protected void initEnrichers() {
-        addEnricher(ServiceNotUpLogic.newEnricherForServiceUpIfNotUpIndicatorsEmpty());
-        addEnricher(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
+        enrichers().add(ServiceNotUpLogic.newEnricherForServiceUpIfNotUpIndicatorsEmpty());
+        enrichers().add(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
     }
     
     // -------- POLICIES --------------------
@@ -1632,7 +1632,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             ((AbstractPolicy)policy).setEntity(AbstractEntity.this);
             
             getManagementSupport().getEntityChangeListener().onPolicyAdded(policy);
-            emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
+            sensors().emit(AbstractEntity.POLICY_ADDED, new PolicyDescriptor(policy));
         }
 
         @Override
@@ -1649,7 +1649,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             
             if (changed) {
                 getManagementSupport().getEntityChangeListener().onPolicyRemoved(policy);
-                emit(AbstractEntity.POLICY_REMOVED, new PolicyDescriptor(policy));
+                sensors().emit(AbstractEntity.POLICY_REMOVED, new PolicyDescriptor(policy));
             }
             return changed;
         }

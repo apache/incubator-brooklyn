@@ -146,7 +146,7 @@ public class ServiceStateLogic {
         };
         
         if (!Entities.isNoLongerManaged(entity)) { 
-            entity.modifyAttribute(sensor, modifier);
+            entity.sensors().modify(sensor, modifier);
         }
     }
     
@@ -169,9 +169,9 @@ public class ServiceStateLogic {
                 }
             }
         }
-        ((EntityInternal)entity).setAttribute(Attributes.SERVICE_STATE_EXPECTED, new Lifecycle.Transition(state, new Date()));
+        ((EntityInternal)entity).sensors().set(Attributes.SERVICE_STATE_EXPECTED, new Lifecycle.Transition(state, new Date()));
         
-        Maybe<Enricher> enricher = EntityAdjuncts.tryFindWithUniqueTag(entity.getEnrichers(), ComputeServiceState.DEFAULT_ENRICHER_UNIQUE_TAG);
+        Maybe<Enricher> enricher = EntityAdjuncts.tryFindWithUniqueTag(entity.enrichers(), ComputeServiceState.DEFAULT_ENRICHER_UNIQUE_TAG);
         if (enricher.isPresent() && enricher.get() instanceof ComputeServiceState) {
             ((ComputeServiceState)enricher.get()).onEvent(null);
         }
@@ -265,9 +265,9 @@ public class ServiceStateLogic {
                 suppressDuplicates = true;
             }
             
-            subscribe(entity, SERVICE_PROBLEMS, this);
-            subscribe(entity, SERVICE_UP, this);
-            subscribe(entity, SERVICE_STATE_EXPECTED, this);
+            subscriptions().subscribe(entity, SERVICE_PROBLEMS, this);
+            subscriptions().subscribe(entity, SERVICE_UP, this);
+            subscriptions().subscribe(entity, SERVICE_STATE_EXPECTED, this);
             onEvent(null);
         }
 
@@ -577,7 +577,7 @@ public class ServiceStateLogic {
         }
 
         public void addTo(Entity entity) {
-            entity.addEnricher(this);
+            entity.enrichers().add(this);
         }
 
         public ComputeServiceIndicatorsFromChildrenAndMembersSpec checkChildrenAndMembers() {

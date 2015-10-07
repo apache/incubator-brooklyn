@@ -1,5 +1,4 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
  * regarding copyright ownership.  The ASF licenses this file
@@ -108,7 +107,7 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
                 Object value = entry.getValue();
                 @SuppressWarnings("unused") // just to ensure we can load the declared type? or maybe not needed
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
-                entity.setConfig((ConfigKey<Object>)key, value);
+                entity.config().set((ConfigKey<Object>)key, value);
             } catch (ClassNotFoundException e) {
                 throw Throwables.propagate(e);
             }
@@ -124,7 +123,7 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
             AbstractPolicy policy = (AbstractPolicy) rebindContext.lookup().lookupPolicy(policyId);
             if (policy != null) {
                 try {
-                    entity.addPolicy(policy);
+                    entity.policies().add(policy);
                 } catch (Exception e) {
                     rebindContext.getExceptionHandler().onAddPolicyFailed(entity, policy, e);
                 }
@@ -142,7 +141,7 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
             AbstractEnricher enricher = (AbstractEnricher) rebindContext.lookup().lookupEnricher(enricherId);
             if (enricher != null) {
                 try {
-                    entity.addEnricher(enricher);
+                    entity.enrichers().add(enricher);
                 } catch (Exception e) {
                     rebindContext.getExceptionHandler().onAddEnricherFailed(entity, enricher, e);
                 }

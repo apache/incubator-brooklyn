@@ -75,7 +75,7 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
 
     // TODO thread-safety issues: if multiple concurrent calls, may break (e.g. deployment_wars being reset)
     public void deployInitialWars() {
-        if (getAttribute(DEPLOYED_WARS) == null) setAttribute(DEPLOYED_WARS, Sets.<String>newLinkedHashSet());
+        if (getAttribute(DEPLOYED_WARS) == null) sensors().set(DEPLOYED_WARS, Sets.<String>newLinkedHashSet());
         
         String rootWar = getConfig(ROOT_WAR);
         if (rootWar!=null) deploy(rootWar, "ROOT.war");
@@ -134,7 +134,7 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
                 deployedWars = Sets.newLinkedHashSet();
             }
             deployedWars.add(deployedName);
-            setAttribute(DEPLOYED_WARS, deployedWars);
+            sensors().set(DEPLOYED_WARS, deployedWars);
         } catch (RuntimeException e) {
             // Log and propagate, so that log says which entity had problems...
             LOG.warn("Error deploying '"+url+"' to "+targetName+" on "+toString()+"; rethrowing...", e);
@@ -157,7 +157,7 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
                 deployedWars = Sets.newLinkedHashSet();
             }
             deployedWars.remove( driver.getFilenameContextMapper().convertDeploymentTargetNameToContext(targetName) );
-            setAttribute(DEPLOYED_WARS, deployedWars);
+            sensors().set(DEPLOYED_WARS, deployedWars);
         } catch (RuntimeException e) {
             // Log and propagate, so that log says which entity had problems...
             LOG.warn("Error undeploying '"+targetName+"' on "+toString()+"; rethrowing...", e);
@@ -172,8 +172,8 @@ public abstract class JavaWebAppSoftwareProcessImpl extends SoftwareProcessImpl 
         // TODO might not be enough, as policy may still be executing and have a record of historic vals; should remove policies
         // (also not sure we want this; implies more generally a responsibility for sensors to announce things when disconnected,
         // vs them just showing the last known value...)
-        setAttribute(REQUESTS_PER_SECOND_LAST, 0D);
-        setAttribute(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
+        sensors().set(REQUESTS_PER_SECOND_LAST, 0D);
+        sensors().set(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
     }
 
     public boolean isHttpEnabled() {

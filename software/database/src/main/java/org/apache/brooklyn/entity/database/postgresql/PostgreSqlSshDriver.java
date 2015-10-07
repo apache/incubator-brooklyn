@@ -80,7 +80,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
     public PostgreSqlSshDriver(PostgreSqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
 
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFile());
+        entity.sensors().set(Attributes.LOG_FILE_LOCATION, getLogFile());
     }
 
     /*
@@ -336,7 +336,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
         if(Strings.isEmpty(config)) {
             config = def;
             log.debug(entity + " has no config specified for " + key + "; using default `" + def + "`");
-            entity.setAttribute(key, config);
+            entity.sensors().set(key, config);
         }
         return config;
     }

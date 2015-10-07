@@ -130,7 +130,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
 
     @Test(groups="Integration")
     public void testLocalhostInCustom() throws Exception {
-        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        localhost.config().set(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
 
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
         app.start(ImmutableList.of(localhost));
@@ -158,7 +158,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
         File tempLocal = new File(tempDataDir, "tempLocal.txt");
         Files.write(tempLocalContent, tempLocal, Charsets.UTF_8);
         
-        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        localhost.config().set(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
 
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
         app.start(ImmutableList.of(localhost));
@@ -209,7 +209,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
         File tempLocal = new File(tempDataDir, "tempLocal.txt");
         Files.write(tempLocalContent, tempLocal, Charsets.UTF_8);
         
-        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        localhost.config().set(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
 
         MyService entity = app.createAndManageChild(EntitySpec.create(MyService.class));
         app.start(ImmutableList.of(localhost));
@@ -234,7 +234,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
     @Test(groups="Integration")
     public void testPreAndPostLaunchCommands() throws IOException {
         File tempFile = new File(tempDataDir, "tempFile.txt");
-        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        localhost.config().set(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
         app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
                 .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
                 .configure(SoftwareProcess.PRE_LAUNCH_COMMAND, String.format("echo inPreLaunch >> %s", tempFile.getAbsoluteFile()))
@@ -252,7 +252,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
 
     @Test(groups="Integration")
     public void testInstallResourcesCopy() throws IOException {
-        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        localhost.config().set(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
         File template = new File(Os.tmp(), "template.yaml");
         VanillaSoftwareProcess entity = app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
                 .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
@@ -286,7 +286,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
 
     @Test(groups="Integration")
     public void testRuntimeResourcesCopy() throws IOException {
-        localhost.setConfig(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
+        localhost.config().set(BrooklynConfigKeys.ONBOX_BASE_DIR, tempDataDir.getAbsolutePath());
         File template = new File(Os.tmp(), "template.yaml");
         VanillaSoftwareProcess entity = app.createAndManageChild(EntitySpec.create(VanillaSoftwareProcess.class)
                 .configure(VanillaSoftwareProcess.CHECK_RUNNING_COMMAND, "")
@@ -364,7 +364,7 @@ public class SoftwareProcessSshDriverIntegrationTest {
         public void launch() {
             events.add("launch");
             launched = true;
-            entity.setAttribute(Startable.SERVICE_UP, true);
+            entity.sensors().set(Startable.SERVICE_UP, true);
         }
         
         @Override
@@ -376,14 +376,14 @@ public class SoftwareProcessSshDriverIntegrationTest {
         public void stop() {
             events.add("stop");
             launched = false;
-            entity.setAttribute(Startable.SERVICE_UP, false);
+            entity.sensors().set(Startable.SERVICE_UP, false);
         }
     
         @Override
         public void kill() {
             events.add("kill");
             launched = false;
-            entity.setAttribute(Startable.SERVICE_UP, false);
+            entity.sensors().set(Startable.SERVICE_UP, false);
         }
     }
 }

@@ -104,12 +104,12 @@ public class ServiceReplacerTest {
         app.start(ImmutableList.<Location>of(loc));
 
         ServiceReplacer policy = new ServiceReplacer(new ConfigBag().configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
-        cluster.addPolicy(policy);
+        cluster.policies().add(policy);
 
         final Set<Entity> initialMembers = ImmutableSet.copyOf(cluster.getMembers());
         final TestEntity e1 = (TestEntity) Iterables.get(initialMembers, 1);
         
-        e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        e1.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
         
         // Expect e1 to be replaced
         Asserts.succeedsEventually(new Runnable() {
@@ -132,7 +132,7 @@ public class ServiceReplacerTest {
     // fails the startup of the replacement entity (but not the original). 
     @Test
     public void testSetsOnFireWhenFailToReplaceMember() throws Exception {
-        app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
+        app.subscriptions().subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
         
         final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
@@ -151,12 +151,12 @@ public class ServiceReplacerTest {
         log.info("started "+app+" for "+JavaClassNames.niceClassAndMethod());
         
         ServiceReplacer policy = new ServiceReplacer(new ConfigBag().configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
-        cluster.addPolicy(policy);
+        cluster.policies().add(policy);
         
         final Set<Entity> initialMembers = ImmutableSet.copyOf(cluster.getMembers());
         final TestEntity e1 = (TestEntity) Iterables.get(initialMembers, 0);
         
-        e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        e1.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
 
         // Expect cluster to go on-fire when fails to start replacement
         // Note that we've set up-quorum and running-quorum to be "alwaysTrue" so that we don't get a transient onFire
@@ -179,7 +179,7 @@ public class ServiceReplacerTest {
     
     @Test(groups="Integration") // has a 1 second wait
     public void testDoesNotOnFireWhenFailToReplaceMember() throws Exception {
-        app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
+        app.subscriptions().subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
         
         final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
@@ -191,12 +191,12 @@ public class ServiceReplacerTest {
         ServiceReplacer policy = new ServiceReplacer(new ConfigBag()
                 .configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED)
                 .configure(ServiceReplacer.SET_ON_FIRE_ON_FAILURE, false));
-        cluster.addPolicy(policy);
+        cluster.policies().add(policy);
         
         final Set<Entity> initialMembers = ImmutableSet.copyOf(cluster.getMembers());
         final TestEntity e1 = (TestEntity) Iterables.get(initialMembers, 0);
         
-        e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        e1.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
 
         // Configured to not mark cluster as on fire
         Asserts.succeedsContinually(new Runnable() {
@@ -210,7 +210,7 @@ public class ServiceReplacerTest {
 
     @Test(groups="Integration")  // 1s wait
     public void testStopFailureOfOldEntityDoesNotSetClusterOnFire() throws Exception {
-        app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
+        app.subscriptions().subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
         
         final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
@@ -218,13 +218,13 @@ public class ServiceReplacerTest {
                 .configure(DynamicCluster.INITIAL_SIZE, 2));
         app.start(ImmutableList.<Location>of(loc));
         
-        cluster.addPolicy(PolicySpec.create(ServiceReplacer.class)
+        cluster.policies().add(PolicySpec.create(ServiceReplacer.class)
                 .configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
         
         final Set<Entity> initialMembers = ImmutableSet.copyOf(cluster.getMembers());
         final TestEntity e1 = (TestEntity) Iterables.get(initialMembers, 0);
         
-        e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        e1.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
 
         // Expect e1 to be replaced
         Asserts.succeedsEventually(new Runnable() {
@@ -268,7 +268,7 @@ public class ServiceReplacerTest {
      */
     @Test(groups="Integration") // because takes 1.2 seconds
     public void testAbandonsReplacementAfterNumFailures() throws Exception {
-        app.subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
+        app.subscriptions().subscribe(null, ServiceReplacer.ENTITY_REPLACEMENT_FAILED, eventListener);
         
         final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
@@ -280,13 +280,13 @@ public class ServiceReplacerTest {
         ServiceReplacer policy = new ServiceReplacer(new ConfigBag()
                 .configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED)
                 .configure(ServiceReplacer.FAIL_ON_NUM_RECURRING_FAILURES, 3));
-        cluster.addPolicy(policy);
+        cluster.policies().add(policy);
 
         final Set<Entity> initialMembers = ImmutableSet.copyOf(cluster.getMembers());
         for (int i = 0; i < 5; i++) {
             final int counter = i+1;
             EntityInternal entity = (EntityInternal) Iterables.get(initialMembers, i);
-            entity.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(entity, "simulate failure"));
+            entity.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(entity, "simulate failure"));
             if (i <= 3) {
                 Asserts.succeedsEventually(new Runnable() {
                     @Override public void run() {

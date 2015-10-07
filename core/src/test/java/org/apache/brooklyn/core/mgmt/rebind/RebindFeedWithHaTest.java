@@ -117,8 +117,8 @@ public class RebindFeedWithHaTest extends RebindTestFixtureWithApp {
         assertEquals(newFeeds.size(), 1);
         
         // Expect the feed to still be polling
-        newEntity.setAttribute(SENSOR_INT, null);
-        newEntity.setAttribute(SENSOR_STRING, null);
+        newEntity.sensors().set(SENSOR_INT, null);
+        newEntity.sensors().set(SENSOR_STRING, null);
         EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_INT, (Integer)200);
         EntityTestUtils.assertAttributeEqualsEventually(newEntity, SENSOR_STRING, "{\"foo\":\"myfoo\"}");
     }

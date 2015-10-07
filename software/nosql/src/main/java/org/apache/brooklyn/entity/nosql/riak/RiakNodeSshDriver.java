@@ -100,9 +100,9 @@ public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements R
         // Set package install attribute
         OsDetails osDetails = getMachine().getMachineDetails().getOsDetails();
         if (osDetails.isLinux()) {
-            entity.setAttribute(RiakNode.RIAK_PACKAGE_INSTALL, true);
+            entity.sensors().set(RiakNode.RIAK_PACKAGE_INSTALL, true);
         } else if (osDetails.isMac()) {
-            entity.setAttribute(RiakNode.RIAK_PACKAGE_INSTALL, false);
+            entity.sensors().set(RiakNode.RIAK_PACKAGE_INSTALL, false);
         }
     }
 
@@ -309,7 +309,7 @@ public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements R
         }
 
         //set the riak node name
-        entity.setAttribute(RiakNode.RIAK_NODE_NAME, format("riak@%s", getSubnetHostname()));
+        entity.sensors().set(RiakNode.RIAK_NODE_NAME, format("riak@%s", getSubnetHostname()));
     }
 
     @Override
@@ -335,7 +335,7 @@ public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements R
         launchScript.failOnNonZeroResultCode().execute();
 
         String mainUri = String.format("http://%s:%s/admin", entity.getAttribute(Attributes.HOSTNAME), entity.getAttribute(RiakNode.RIAK_WEB_PORT));
-        entity.setAttribute(Attributes.MAIN_URI, URI.create(mainUri));
+        entity.sensors().set(Attributes.MAIN_URI, URI.create(mainUri));
     }
 
     @Override
@@ -410,7 +410,7 @@ public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements R
 
                 joinClusterScript.execute();
 
-                entity.setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
+                entity.sensors().set(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.TRUE);
             } else {
                 log.warn("entity {}: is already in the riak cluster", entity.getId());
             }
@@ -432,7 +432,7 @@ public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements R
 
             leaveClusterScript.execute();
 
-            entity.setAttribute(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.FALSE);
+            entity.sensors().set(RiakNode.RIAK_NODE_HAS_JOINED_CLUSTER, Boolean.FALSE);
         } else {
             log.warn("entity {}: has already left the riak cluster", entity.getId());
         }
@@ -578,7 +578,7 @@ public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements R
         boolean riakOnPath = newScript("riakOnPath")
                 .body.append("which riak")
                 .execute() == 0;
-        entity.setAttribute(RiakNode.RIAK_ON_PATH, riakOnPath);
+        entity.sensors().set(RiakNode.RIAK_ON_PATH, riakOnPath);
     }
 
     private String getRiakName() {

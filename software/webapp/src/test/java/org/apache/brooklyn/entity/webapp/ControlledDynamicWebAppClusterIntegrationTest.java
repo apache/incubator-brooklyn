@@ -140,7 +140,7 @@ public class ControlledDynamicWebAppClusterIntegrationTest extends BrooklynAppLi
         EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
         
         RecordingSensorEventListener<Lifecycle> listener = new RecordingSensorEventListener<Lifecycle>(true);
-        app.subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, listener);
+        app.subscriptions().subscribe(cluster, Attributes.SERVICE_STATE_ACTUAL, listener);
         app.start(locs);
         
         Asserts.eventually(Suppliers.ofInstance(listener.getEventValues()), CollectionFunctionals.sizeEquals(2));

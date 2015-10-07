@@ -99,8 +99,8 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testConfigCanBeSetOnEntity() throws Exception {
         TestEntity entity = new TestEntityImpl(app);
-        entity.setConfig(strKey, "aval");
-        entity.setConfig(intKey, 2);
+        entity.config().set(strKey, "aval");
+        entity.config().set(intKey, 2);
         Entities.manage(entity);
         
         assertEquals(entity.getConfig(strKey), "aval");
@@ -110,7 +110,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testConfigInheritedFromParent() throws Exception {
         TestEntity parent = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKey, "aval")), app);
-        parent.setConfig(intKey, 2);
+        parent.config().set(intKey, 2);
         TestEntity entity = new TestEntityImpl(parent);
         Entities.manage(parent);
         
@@ -131,7 +131,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     public void testConfigSetterOverridesParentValue() throws Exception {
         TestEntity parent = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKey, "aval")), app);
         TestEntity entity = new TestEntityImpl(parent);
-        entity.setConfig(strKey, "diffval");
+        entity.config().set(strKey, "diffval");
         Entities.manage(parent);
         
         assertEquals("diffval", entity.getConfig(strKey));
@@ -140,7 +140,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testConfigSetterOverridesConstructorValue() throws Exception {
         TestEntity entity = new TestEntityImpl(MutableMap.of("config", MutableMap.of(strKey, "aval")), app);
-        entity.setConfig(strKey, "diffval");
+        entity.config().set(strKey, "diffval");
         Entities.manage(entity);
         
         assertEquals("diffval", entity.getConfig(strKey));
@@ -149,7 +149,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testConfigSetOnParentInheritedByExistingChildrenBeforeStarted() throws Exception {
         TestEntity entity = new TestEntityImpl(app);
-        app.setConfig(strKey,"aval");
+        app.config().set(strKey,"aval");
         Entities.manage(entity);
 
         assertEquals("aval", entity.getConfig(strKey));
@@ -159,7 +159,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     public void testConfigInheritedThroughManyGenerations() throws Exception {
         TestEntity e = new TestEntityImpl(app);
         TestEntity e2 = new TestEntityImpl(e);
-        app.setConfig(strKey,"aval");
+        app.config().set(strKey,"aval");
         Entities.manage(e);
 
         assertEquals("aval", app.getConfig(strKey));
@@ -174,7 +174,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
         app.start(ImmutableList.of(new SimulatedLocation()));
         
         try {
-            app.setConfig(strKey,"aval");
+            app.config().set(strKey,"aval");
             fail();
         } catch (IllegalStateException e) {
             // success
@@ -193,7 +193,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testGetFutureConfigWhenReady() throws Exception {
         TestEntity entity = new TestEntityImpl(app);
-        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone(Callables.returning("aval")));
+        entity.config().set(TestEntity.CONF_NAME, DependentConfiguration.whenDone(Callables.returning("aval")));
         Entities.manage(entity);
         app.start(ImmutableList.of(new SimulatedLocation()));
         
@@ -204,7 +204,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     public void testGetFutureConfigBlocksUntilReady() throws Exception {
         TestEntity entity = new TestEntityImpl(app);
         final CountDownLatch latch = new CountDownLatch(1);
-        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.whenDone(new Callable<String>() {
+        entity.config().set(TestEntity.CONF_NAME, DependentConfiguration.whenDone(new Callable<String>() {
             @Override public String call() throws Exception {
                 latch.await();
                 return "aval";
@@ -234,12 +234,12 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     public void testGetAttributeWhenReadyConfigReturnsWhenSet() throws Exception {
         TestEntity entity = new TestEntityImpl(app);
         TestEntity entity2 = new TestEntityImpl(app);
-        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME));
+        entity.config().set(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME));
         Entities.manage(entity);
         Entities.manage(entity2);
         app.start(ImmutableList.of(new SimulatedLocation()));
         
-        entity2.setAttribute(TestEntity.NAME, "aval");
+        entity2.sensors().set(TestEntity.NAME, "aval");
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "aval");
     }
     
@@ -247,7 +247,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     public void testGetAttributeWhenReadyWithPostProcessingConfigReturnsWhenSet() throws Exception {
         TestEntity entity = new TestEntityImpl(app);
         TestEntity entity2 = new TestEntityImpl(app);
-        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributePostProcessedWhenReady(entity2, TestEntity.NAME, Predicates.notNull(), new Function<String,String>() {
+        entity.config().set(TestEntity.CONF_NAME, DependentConfiguration.attributePostProcessedWhenReady(entity2, TestEntity.NAME, Predicates.notNull(), new Function<String,String>() {
             @Override public String apply(String input) {
                 return (input == null) ? null : input+"mysuffix";
             }}));
@@ -255,7 +255,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
         Entities.manage(entity2);
         app.start(ImmutableList.of(new SimulatedLocation()));
         
-        entity2.setAttribute(TestEntity.NAME, "aval");
+        entity2.sensors().set(TestEntity.NAME, "aval");
         assertEquals(entity.getConfig(TestEntity.CONF_NAME), "avalmysuffix");
     }
     
@@ -263,7 +263,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
     public void testGetAttributeWhenReadyConfigBlocksUntilSet() throws Exception {
         TestEntity entity = new TestEntityImpl(app);
         final TestEntity entity2 = new TestEntityImpl(app);
-        entity.setConfig(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME));
+        entity.config().set(TestEntity.CONF_NAME, DependentConfiguration.attributeWhenReady(entity2, TestEntity.NAME));
         Entities.manage(entity);
         Entities.manage(entity2);
         app.start(ImmutableList.of(new SimulatedLocation()));
@@ -274,7 +274,7 @@ public class EntityConfigMapUsageLegacyTest extends BrooklynAppUnitTestSupport {
         Thread t = new Thread(new Runnable() {
             @Override public void run() {
                 Time.sleep(sleepTime);
-                entity2.setAttribute(TestEntity.NAME, "aval");
+                entity2.sensors().set(TestEntity.NAME, "aval");
             }});
         try {
             long starttime = System.currentTimeMillis();

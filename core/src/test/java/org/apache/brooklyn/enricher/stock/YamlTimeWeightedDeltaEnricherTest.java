@@ -62,7 +62,7 @@ public class YamlTimeWeightedDeltaEnricherTest {
     @Test
     public void testMonospaceTimeWeightedDeltaEnricher() {
         @SuppressWarnings("unchecked")
-        YamlTimeWeightedDeltaEnricher<Integer> delta = producer.addEnricher(EnricherSpec.create(YamlTimeWeightedDeltaEnricher.class)
+        YamlTimeWeightedDeltaEnricher<Integer> delta = producer.enrichers().add(EnricherSpec.create(YamlTimeWeightedDeltaEnricher.class)
             .configure(YamlTimeWeightedDeltaEnricher.PRODUCER, producer)
             .configure(YamlTimeWeightedDeltaEnricher.SOURCE_SENSOR, intSensor)
             .configure(YamlTimeWeightedDeltaEnricher.TARGET_SENSOR, deltaSensor));
@@ -86,7 +86,7 @@ public class YamlTimeWeightedDeltaEnricherTest {
     @Test
     public void testVariableTimeWeightedDeltaEnricher() {
         @SuppressWarnings("unchecked")
-        YamlTimeWeightedDeltaEnricher<Integer> delta = producer.addEnricher(EnricherSpec.create(YamlTimeWeightedDeltaEnricher.class)
+        YamlTimeWeightedDeltaEnricher<Integer> delta = producer.enrichers().add(EnricherSpec.create(YamlTimeWeightedDeltaEnricher.class)
             .configure(YamlTimeWeightedDeltaEnricher.PRODUCER, producer)
             .configure(YamlTimeWeightedDeltaEnricher.SOURCE_SENSOR, intSensor)
             .configure(YamlTimeWeightedDeltaEnricher.TARGET_SENSOR, deltaSensor));

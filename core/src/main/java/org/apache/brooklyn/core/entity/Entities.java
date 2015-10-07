@@ -377,14 +377,14 @@ public class Entities {
 
         if (!e.getPolicies().isEmpty()) {
             out.append(currentIndentation+tab+tab+"Policies:\n");
-            for (Policy policy : e.getPolicies()) {
+            for (Policy policy : e.policies()) {
                 dumpInfo(policy, out, currentIndentation+tab+tab+tab, tab);
             }
         }
 
         if (!e.getEnrichers().isEmpty()) {
             out.append(currentIndentation+tab+tab+"Enrichers:\n");
-            for (Enricher enricher : e.getEnrichers()) {
+            for (Enricher enricher : e.enrichers()) {
                 dumpInfo(enricher, out, currentIndentation+tab+tab+tab, tab);
             }
         }

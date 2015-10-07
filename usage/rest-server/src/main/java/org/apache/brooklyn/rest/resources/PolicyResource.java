@@ -23,10 +23,7 @@ import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.core.policy.Policies;
@@ -39,6 +36,8 @@ import org.apache.brooklyn.rest.transform.ApplicationTransformer;
 import org.apache.brooklyn.rest.transform.PolicyTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
@@ -52,7 +51,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
     @Override
     public List<PolicySummary> list( final String application, final String entityToken) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
-        return FluentIterable.from(entity.getPolicies())
+        return FluentIterable.from(entity.policies())
             .transform(new Function<Policy, PolicySummary>() {
                 @Override
                 public PolicySummary apply(Policy policy) {
@@ -67,9 +66,9 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
     @Override
     public Map<String, Boolean> batchConfigRead( String application, String entityToken) {
         // TODO: add test
-        EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        Entity entity = brooklyn().getEntity(application, entityToken);
         Map<String, Boolean> result = Maps.newLinkedHashMap();
-        for (Policy p : entity.getPolicies()) {
+        for (Policy p : entity.policies()) {
             result.put(p.getId(), !p.isSuspended());
         }
         return result;
@@ -80,7 +79,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
     @Override
     public PolicySummary addPolicy( String application,String entityToken, String policyTypeName,
             Map<String, String> config) {
-        EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        Entity entity = brooklyn().getEntity(application, entityToken);
         Class<? extends Policy> policyType;
         try {
             policyType = (Class<? extends Policy>) Class.forName(policyTypeName);
@@ -92,7 +91,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
             throw Exceptions.propagate(e);
         }
 
-        Policy policy = entity.addPolicy(PolicySpec.create(policyType).configure(config));
+        Policy policy = entity.policies().add(PolicySpec.create(policyType).configure(config));
         log.debug("REST API added policy " + policy + " to " + entity);
 
         return PolicyTransformer.policySummary(entity, policy);
@@ -122,11 +121,11 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
 
     @Override
     public Response destroy(String application, String entityToken, String policyToken) {
-        EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        Entity entity = brooklyn().getEntity(application, entityToken);
         Policy policy = brooklyn().getPolicy(entity, policyToken);
 
         policy.suspend();
-        entity.removePolicy(policy);
+        entity.policies().remove(policy);
         return Response.status(Response.Status.NO_CONTENT).build();
     }
 }

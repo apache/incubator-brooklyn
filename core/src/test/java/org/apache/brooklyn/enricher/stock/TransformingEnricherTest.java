@@ -57,9 +57,9 @@ public class TransformingEnricherTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testTransformingEnricher() throws Exception {
         //ensure previous values get picked up
-        producer.setAttribute(intSensorA, 3);
+        producer.sensors().set(intSensorA, 3);
 
-        producer.addEnricher(Enrichers.builder()
+        producer.enrichers().add(Enrichers.builder()
                 .transforming(intSensorA)
                 //.computing(MathFunctions.times(2)) // TODO calling it before "publishing" means it doesn't check return type!
                 .publishing(target)

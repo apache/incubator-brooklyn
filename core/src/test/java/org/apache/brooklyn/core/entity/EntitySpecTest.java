@@ -89,7 +89,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
                         .configure(MyPolicy.CONF1, "myconf1val")
                         .configure("myfield", "myfieldval")));
         
-        Policy policy = Iterables.getOnlyElement(entity.getPolicies());
+        Policy policy = Iterables.getOnlyElement(entity.policies());
         assertTrue(policy instanceof MyPolicy, "policy="+policy);
         assertEquals(policy.getDisplayName(), "mypolicyname");
         assertEquals(policy.getConfig(MyPolicy.CONF1), "myconf1val");
@@ -101,7 +101,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
                 .policy(policy));
         
-        assertEquals(Iterables.getOnlyElement(entity.getPolicies()), policy);
+        assertEquals(Iterables.getOnlyElement(entity.policies()), policy);
     }
     
     @Test
@@ -112,7 +112,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
                         .configure(MyEnricher.CONF1, "myconf1val")
                         .configure("myfield", "myfieldval")));
         
-        Enricher enricher = Iterables.getOnlyElement(entity.getEnrichers());
+        Enricher enricher = Iterables.getOnlyElement(entity.enrichers());
         assertTrue(enricher instanceof MyEnricher, "enricher="+enricher);
         assertEquals(enricher.getDisplayName(), "myenrichername");
         assertEquals(enricher.getConfig(MyEnricher.CONF1), "myconf1val");
@@ -124,7 +124,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class, TestEntityNoEnrichersImpl.class)
                 .enricher(enricher));
         
-        assertEquals(Iterables.getOnlyElement(entity.getEnrichers()), enricher);
+        assertEquals(Iterables.getOnlyElement(entity.enrichers()), enricher);
     }
     
     @Test
@@ -134,7 +134,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
                 .member(entity));
         
         Asserts.assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of(entity));
-        Asserts.assertEqualsIgnoringOrder(entity.getGroups(), ImmutableSet.of(group));
+        Asserts.assertEqualsIgnoringOrder(entity.groups(), ImmutableSet.of(group));
     }
     
     @Test
@@ -144,7 +144,7 @@ public class EntitySpecTest extends BrooklynAppUnitTestSupport {
                 .group(group));
         
         Asserts.assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of(entity));
-        Asserts.assertEqualsIgnoringOrder(entity.getGroups(), ImmutableSet.of(group));
+        Asserts.assertEqualsIgnoringOrder(entity.groups(), ImmutableSet.of(group));
     }
     
     @Test

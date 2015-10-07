@@ -39,7 +39,7 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     @Override
     public void init() {
         super.init();
-        subscribeToChildren(this, MongoDBRouter.RUNNING, new SensorEventListener<Boolean>() {
+        subscriptions().subscribeToChildren(this, MongoDBRouter.RUNNING, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
                 setAnyRouter();
             }
@@ -49,7 +49,7 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     @Override
     public void start(Collection<? extends Location> locations) {
         super.start(locations);
-        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Router cluster membership tracker")
                 .configure("group", this));
     }
@@ -67,10 +67,10 @@ public class MongoDBRouterClusterImpl extends DynamicClusterImpl implements Mong
     }
     
     protected void setAnyRouter() {
-        setAttribute(MongoDBRouterCluster.ANY_ROUTER, Iterables.tryFind(getRouters(), 
+        sensors().set(MongoDBRouterCluster.ANY_ROUTER, Iterables.tryFind(getRouters(), 
                 EntityPredicates.attributeEqualTo(Startable.SERVICE_UP, true)).orNull());
 
-        setAttribute(
+        sensors().set(
                 MongoDBRouterCluster.ANY_RUNNING_ROUTER, 
                 Iterables.tryFind(getRouters(), EntityPredicates.attributeEqualTo(MongoDBRouter.RUNNING, true))
                 .orNull());

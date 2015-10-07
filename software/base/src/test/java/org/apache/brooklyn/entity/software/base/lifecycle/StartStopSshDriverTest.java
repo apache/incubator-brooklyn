@@ -125,7 +125,7 @@ public class StartStopSshDriverTest {
 
     @Test(groups="Integration")
     public void testSshScriptHeaderUsedWhenSpecified() {
-        entity.setConfig(BrooklynConfigKeys.SSH_CONFIG_SCRIPT_HEADER, "#!/bin/bash -e\necho hello world");
+        entity.config().set(BrooklynConfigKeys.SSH_CONFIG_SCRIPT_HEADER, "#!/bin/bash -e\necho hello world");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         driver.execute(ImmutableMap.of("out", out), Arrays.asList("echo goodbye"), "test");
         String s = out.toString();
@@ -137,7 +137,7 @@ public class StartStopSshDriverTest {
 
     @Test(groups="Integration")
     public void testSshCliPickedUpWhenSpecified() {
-        entity.setConfig(BrooklynConfigKeys.SSH_TOOL_CLASS, SshCliTool.class.getName());
+        entity.config().set(BrooklynConfigKeys.SSH_TOOL_CLASS, SshCliTool.class.getName());
         driver.execute(Arrays.asList("echo hi"), "test");
         assertTrue(sshMachineLocation.lastTool instanceof SshCliTool, "expect CLI tool, got "+
                         (sshMachineLocation.lastTool!=null ? ""+sshMachineLocation.lastTool.getClass()+":" : "") + sshMachineLocation.lastTool);

@@ -189,7 +189,7 @@ public class AttributeMapTest {
         AttributeSensor<Integer> childSensor = Sensors.newIntegerSensor("a.b", "");
         
         final RecordingSensorEventListener<Object> listener = new RecordingSensorEventListener<>();
-        entity.subscribe(entity, sensor, listener);
+        entity.subscriptions().subscribe(entity, sensor, listener);
         
         map.modify(childSensor, Functions.constant(Maybe.<Integer>absent()));
         

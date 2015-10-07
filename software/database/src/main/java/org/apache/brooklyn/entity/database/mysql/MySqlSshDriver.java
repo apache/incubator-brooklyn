@@ -70,7 +70,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public MySqlSshDriver(MySqlNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
 
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFile());
+        entity.sensors().set(Attributes.LOG_FILE_LOCATION, getLogFile());
     }
 
     public String getOsTag() {
@@ -228,7 +228,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void launch() {
-        entity.setAttribute(MySqlNode.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
+        entity.sensors().set(MySqlNode.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
         newScript(MutableMap.of("usePidFile", true), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
             .body.append(format("nohup %s/bin/mysqld --defaults-file=%s --user=`whoami` > %s 2>&1 < /dev/null &", getBaseDir(), getConfigFile(), getLogFile()))

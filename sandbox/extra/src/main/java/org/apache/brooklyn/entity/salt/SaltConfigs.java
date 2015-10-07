@@ -46,7 +46,7 @@ public class SaltConfigs {
 
     public static void addToRunList(EntityInternal entity, String...states) {
         for (String state : states) {
-            entity.setConfig(SaltConfig.SALT_RUN_LIST, SetModifications.addItem(state));
+            entity.config().set(SaltConfig.SALT_RUN_LIST, SetModifications.addItem(state));
         }
     }
 
@@ -55,7 +55,7 @@ public class SaltConfigs {
     }
 
     public static void addToFormulas(EntityInternal entity, String formulaName, String formulaUrl) {
-        entity.setConfig(SaltConfig.SALT_FORMULAS.subKey(formulaName), formulaUrl);
+        entity.config().set(SaltConfig.SALT_FORMULAS.subKey(formulaName), formulaUrl);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -65,7 +65,7 @@ public class SaltConfigs {
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void addLaunchAttributes(EntityInternal entity, Map<? extends Object,? extends Object> attributesMap) {
-        entity.setConfig(SaltConfig.SALT_LAUNCH_ATTRIBUTES, MapModifications.add((Map)attributesMap));
+        entity.config().set(SaltConfig.SALT_LAUNCH_ATTRIBUTES, MapModifications.add((Map)attributesMap));
     }
     
     /** replaces the attributes underneath the rootAttribute parameter with the given value;
@@ -77,7 +77,7 @@ public class SaltConfigs {
     /** replaces the attributes underneath the rootAttribute parameter with the given value;
      * see {@link #addLaunchAttributesMap(EntitySpec, Map)} for richer functionality */
     public static void setLaunchAttribute(EntityInternal entity, String rootAttribute, Object value) {
-        entity.setConfig(SaltConfig.SALT_LAUNCH_ATTRIBUTES.subKey(rootAttribute), value);
+        entity.config().set(SaltConfig.SALT_LAUNCH_ATTRIBUTES.subKey(rootAttribute), value);
     }
 
     public static <T> T getRequiredConfig(Entity entity, ConfigKey<T> key) {

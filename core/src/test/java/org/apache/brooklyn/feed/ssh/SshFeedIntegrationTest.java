@@ -206,7 +206,7 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
         Entities.manage(entity2);
         Time.sleep(Duration.seconds(2));
         Assert.assertEquals(entity2.getAttribute(SENSOR_STRING), null);
-        entity2.setAttribute(Attributes.SERVICE_UP, true);
+        entity2.sensors().set(Attributes.SERVICE_UP, true);
     
         EntityTestUtils.assertAttributeEventually(entity2, SENSOR_STRING, StringPredicates.containsLiteral("hello"));
     }

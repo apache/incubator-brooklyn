@@ -170,9 +170,9 @@ public class ConfigEntityInheritanceTest {
 
     @Test
     public void testConfigKeysInheritance() throws Exception {
-        app.setConfig(MyEntityWithPartiallyHeritableConfig.HERITABLE, "heritable");
-        app.setConfig(MyEntityWithPartiallyHeritableConfig.UNINHERITABLE, "uninheritable");
-        app.setConfig(MyEntityWithPartiallyHeritableConfig.ALWAYS_HERITABLE, "always_heritable");
+        app.config().set(MyEntityWithPartiallyHeritableConfig.HERITABLE, "heritable");
+        app.config().set(MyEntityWithPartiallyHeritableConfig.UNINHERITABLE, "uninheritable");
+        app.config().set(MyEntityWithPartiallyHeritableConfig.ALWAYS_HERITABLE, "always_heritable");
         Entity child = app.addChild(EntitySpec.create(MyEntityWithPartiallyHeritableConfig.class));
         
         Assert.assertNotNull(child.getConfig(MyEntityWithPartiallyHeritableConfig.HERITABLE));

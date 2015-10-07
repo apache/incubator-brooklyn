@@ -56,7 +56,7 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
         HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getNodePort());
 
         String nodeUri = String.format("http://%s:%d/hazelcast/rest/cluster", hp.getHostText(), hp.getPort());
-        setAttribute(Attributes.MAIN_URI, URI.create(nodeUri));
+        sensors().set(Attributes.MAIN_URI, URI.create(nodeUri));
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Node {} is using {} as a main URI", this, nodeUri);

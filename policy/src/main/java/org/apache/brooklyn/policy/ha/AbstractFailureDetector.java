@@ -305,7 +305,7 @@ public abstract class AbstractFailureDetector extends AbstractPolicy {
                 if (currentRecoveryPeriod > serviceRecoveredStabilizationDelay && sinceLastDownPeriod > serviceRecoveredStabilizationDelay) {
                     String description = getDescription(calculatedStatus);
                     LOG.warn("{} check for {}, publishing recovered: {}", new Object[] {this, entity, description});
-                    entity.emit(getSensorRecovered(), new HASensors.FailureDescriptor(entity, description));
+                    entity.sensors().emit(getSensorRecovered(), new HASensors.FailureDescriptor(entity, description));
                     lastPublished = LastPublished.RECOVERED;
                     currentFailureStartTime = null;
                 } else {
@@ -321,7 +321,7 @@ public abstract class AbstractFailureDetector extends AbstractPolicy {
                 if (currentFailurePeriod > serviceFailedStabilizationDelay && sinceLastUpPeriod > serviceFailedStabilizationDelay) {
                     String description = getDescription(calculatedStatus);
                     LOG.warn("{} connectivity-check for {}, publishing failed: {}", new Object[] {this, entity, description});
-                    entity.emit(getSensorFailed(), new HASensors.FailureDescriptor(entity, description));
+                    entity.sensors().emit(getSensorFailed(), new HASensors.FailureDescriptor(entity, description));
                     lastPublished = LastPublished.FAILED;
                     currentRecoveryStartTime = null;
                 } else {

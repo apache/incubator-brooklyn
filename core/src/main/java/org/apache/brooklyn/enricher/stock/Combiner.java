@@ -93,7 +93,7 @@ public class Combiner<T,U> extends AbstractEnricher implements SensorEventListen
         checkState(sourceSensors.size() > 0, "must specify at least one sourceSensor");
 
         for (Sensor<T> sourceSensor : sourceSensors) {
-            subscribe(producer, sourceSensor, this);
+            subscriptions().subscribe(producer, sourceSensor, this);
         }
         
         for (Sensor<T> sourceSensor : sourceSensors) {

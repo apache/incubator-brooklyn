@@ -171,7 +171,7 @@ public class CumulusRDFApplication extends AbstractApplication {
         });
 
         // Listen for HOSTNAME changes from the Cassandra fabric to show at least one node is available
-        subscribe(cassandra, CassandraDatacenter.HOSTNAME, new SensorEventListener<String>() {
+        subscriptions().subscribe(cassandra, CassandraDatacenter.HOSTNAME, new SensorEventListener<String>() {
             @Override
             public void onEvent(SensorEvent<String> event) {
                 if (Strings.isNonBlank(event.getValue())) {

@@ -43,7 +43,7 @@ public class ChefConfigs {
 
     public static void addToLaunchRunList(EntityInternal entity, String ...recipes) {
         for (String recipe: recipes)
-            entity.setConfig(ChefConfig.CHEF_LAUNCH_RUN_LIST, SetModifications.addItem(recipe));
+            entity.config().set(ChefConfig.CHEF_LAUNCH_RUN_LIST, SetModifications.addItem(recipe));
     }
 
     public static void addToCookbooksFromGithub(EntitySpec<?> entity, String ...cookbookNames) {
@@ -68,7 +68,7 @@ public class ChefConfigs {
     }
 
     public static void addToCookbooksFromGithub(EntityInternal entity, String cookbookName, String cookbookUrl) {
-        entity.setConfig(ChefConfig.CHEF_COOKBOOK_URLS.subKey(cookbookName), cookbookUrl);
+        entity.config().set(ChefConfig.CHEF_COOKBOOK_URLS.subKey(cookbookName), cookbookUrl);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -78,7 +78,7 @@ public class ChefConfigs {
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void addLaunchAttributes(EntityInternal entity, Map<? extends Object,? extends Object> attributesMap) {
-        entity.setConfig(ChefConfig.CHEF_LAUNCH_ATTRIBUTES, MapModifications.add((Map)attributesMap));
+        entity.config().set(ChefConfig.CHEF_LAUNCH_ATTRIBUTES, MapModifications.add((Map)attributesMap));
     }
     
     /** replaces the attributes underneath the rootAttribute parameter with the given value;
@@ -90,7 +90,7 @@ public class ChefConfigs {
     /** replaces the attributes underneath the rootAttribute parameter with the given value;
      * see {@link #addLaunchAttributesMap(EntitySpec, Map)} for richer functionality */
     public static void setLaunchAttribute(EntityInternal entity, String rootAttribute, Object value) {
-        entity.setConfig(ChefConfig.CHEF_LAUNCH_ATTRIBUTES.subKey(rootAttribute), value);
+        entity.config().set(ChefConfig.CHEF_LAUNCH_ATTRIBUTES.subKey(rootAttribute), value);
     }
 
     public static <T> T getRequiredConfig(Entity entity, ConfigKey<T> key) {

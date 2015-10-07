@@ -41,7 +41,6 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceNotUpL
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.enricher.stock.Enrichers;
-import org.apache.brooklyn.entity.database.DatastoreMixins;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 import org.apache.brooklyn.feed.function.FunctionFeed;
 import org.apache.brooklyn.feed.function.FunctionPollConfig;
@@ -91,12 +90,12 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
     public void init() {
         super.init();
         // Set id supplier in attribute so it is serialized
-        setAttribute(SLAVE_NEXT_SERVER_ID, new NextServerIdSupplier());
-        setAttribute(SLAVE_ID_ADDRESS_MAPPING, new ConcurrentHashMap<String, String>());
+        sensors().set(SLAVE_NEXT_SERVER_ID, new NextServerIdSupplier());
+        sensors().set(SLAVE_ID_ADDRESS_MAPPING, new ConcurrentHashMap<String, String>());
         if (getConfig(SLAVE_PASSWORD) == null) {
-            setAttribute(SLAVE_PASSWORD, Identifiers.makeRandomId(8));
+            sensors().set(SLAVE_PASSWORD, Identifiers.makeRandomId(8));
         } else {
-            setAttribute(SLAVE_PASSWORD, getConfig(SLAVE_PASSWORD));
+            sensors().set(SLAVE_PASSWORD, getConfig(SLAVE_PASSWORD));
         }
         initSubscriptions();
     }
@@ -108,8 +107,8 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
     }
 
     private void initSubscriptions() {
-        subscribeToMembers(this, MySqlNode.SERVICE_PROCESS_IS_RUNNING, new NodeRunningListener(this));
-        subscribe(this, MEMBER_REMOVED, new MemberRemovedListener());
+        subscriptions().subscribeToMembers(this, MySqlNode.SERVICE_PROCESS_IS_RUNNING, new NodeRunningListener(this));
+        subscriptions().subscribe(this, MEMBER_REMOVED, new MemberRemovedListener());
     }
 
     @Override
@@ -122,7 +121,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
         propagateMasterAttribute(MySqlNode.MYSQL_PORT);
         propagateMasterAttribute(MySqlNode.DATASTORE_URL);
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .aggregating(MySqlNode.DATASTORE_URL)
                 .publishing(SLAVE_DATASTORE_URL_LIST)
                 .computing(Functions.<Collection<String>>identity())
@@ -130,7 +129,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                 .fromMembers()
                 .build());
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .aggregating(MySqlNode.QUERIES_PER_SECOND_FROM_MYSQL)
                 .publishing(QUERIES_PER_SECOND_FROM_MYSQL_PER_NODE)
                 .fromMembers()
@@ -140,7 +139,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
     }
 
     private void propagateMasterAttribute(AttributeSensor<?> att) {
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .aggregating(att)
                 .publishing(att)
                 .computing(IfFunctions.ifPredicate(CollectionFunctionals.notEmpty())
@@ -227,7 +226,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                         .description("Polls SHOW SLAVE STATUS"))
                 .build());
 
-            node.addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            node.enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
                     .from(MySqlSlave.SLAVE_HEALTHY)
                     .computing(Functionals.ifNotEquals(true).value("Slave replication status is not healthy") )
                     .build());
@@ -264,7 +263,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
             Map<String, String> status = MySqlRowParser.parseSingle(result);
             String secondsBehindMaster = status.get("Seconds_Behind_Master");
             if (secondsBehindMaster != null && !"NULL".equals(secondsBehindMaster)) {
-                ((EntityLocal)slave).setAttribute(MySqlSlave.SLAVE_SECONDS_BEHIND_MASTER, new Integer(secondsBehindMaster));
+                slave.sensors().set(MySqlSlave.SLAVE_SECONDS_BEHIND_MASTER, new Integer(secondsBehindMaster));
             }
             return "Yes".equals(status.get("Slave_IO_Running")) && "Yes".equals(status.get("Slave_SQL_Running"));
         }
@@ -309,11 +308,11 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
             Map<String, String> status = MySqlRowParser.parseSingle(binLogInfo);
             String file = status.get("File");
             if (file != null) {
-                ((EntityInternal)master).setAttribute(MySqlMaster.MASTER_LOG_FILE, file);
+                ((EntityInternal)master).sensors().set(MySqlMaster.MASTER_LOG_FILE, file);
             }
             String position = status.get("Position");
             if (position != null) {
-                ((EntityInternal)master).setAttribute(MySqlMaster.MASTER_LOG_POSITION, new Integer(position));
+                ((EntityInternal)master).sensors().set(MySqlMaster.MASTER_LOG_POSITION, new Integer(position));
             }
 
             //NOTE: Will be executed on each start, analogously to the standard CREATION_SCRIPT config
@@ -387,7 +386,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                     !Boolean.TRUE.equals(node.getAttribute(NODE_REPLICATION_INITIALIZED))) {
 
                 // Events executed sequentially so no need to synchronize here.
-                ((EntityLocal)node).setAttribute(NODE_REPLICATION_INITIALIZED, Boolean.TRUE);
+                node.sensors().set(NODE_REPLICATION_INITIALIZED, Boolean.TRUE);
 
                 DynamicTasks.queueIfPossible(TaskBuilder.builder()
                         .displayName("Configure master-slave replication on node")

@@ -473,7 +473,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             // web-console is not enabled
             webConsoleUri = null;
         }
-        setAttribute(WEB_CONSOLE_URI, webConsoleUri);
+        sensors().set(WEB_CONSOLE_URI, webConsoleUri);
 
         if (webConsoleUri != null) {
             httpFeed = HttpFeed.builder()
@@ -498,7 +498,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 // TODO when updating the map, if it would change from empty to empty on a successful run (see in nginx)
                 ServiceNotUpLogic.updateNotUpIndicator(this, WEB_CONSOLE_ACCESSIBLE, "No response from the web console yet");
             }
-            addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
                 .from(WEB_CONSOLE_ACCESSIBLE)
                 .computing(Functionals.ifNotEquals(true).value("URL where Brooklyn listens is not answering correctly") )
                 .build());

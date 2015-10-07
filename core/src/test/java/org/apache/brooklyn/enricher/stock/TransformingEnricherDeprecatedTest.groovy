@@ -69,9 +69,9 @@ public class TransformingEnricherDeprecatedTest {
         final SensorTransformingEnricher e1 = new SensorTransformingEnricher<Integer,Long>(intSensorA, target, 
             { 2*it });
         
-        producer.setAttribute(intSensorA, 3);
+        producer.sensors().set(intSensorA, 3);
         //ensure previous values get picked up
-        producer.addEnricher(e1);
+        producer.enrichers().add(e1);
 
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), 
                 new Callable<Object>() { public Object call() {

@@ -63,7 +63,7 @@ public class SameBrooklynNodeImpl extends AbstractEntity implements BrooklynNode
     
     protected void connectSensors() {
         URI webConsoleUri = getManagementContext().getManagementNodeUri().orNull();
-        setAttribute(WEB_CONSOLE_URI, webConsoleUri);
+        sensors().set(WEB_CONSOLE_URI, webConsoleUri);
 
         if (webConsoleUri != null) {
             httpFeed = HttpFeed.builder()
@@ -77,7 +77,7 @@ public class SameBrooklynNodeImpl extends AbstractEntity implements BrooklynNode
                     .build();
 
         } else {
-            setAttribute(SERVICE_UP, true);
+            sensors().set(SERVICE_UP, true);
         }
     }
     

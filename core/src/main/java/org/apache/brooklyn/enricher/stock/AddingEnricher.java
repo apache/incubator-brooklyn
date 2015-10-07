@@ -58,7 +58,7 @@ public class AddingEnricher extends AbstractEnricher implements SensorEventListe
         super.setEntity(entity);
         
         for (Sensor source: sources) {
-            subscribe(entity, source, this);
+            subscriptions().subscribe(entity, source, this);
             if (source instanceof AttributeSensor) {
                 Object value = entity.getAttribute((AttributeSensor)source);
                 if (value!=null)
@@ -73,9 +73,9 @@ public class AddingEnricher extends AbstractEnricher implements SensorEventListe
         Number value = recompute();
         Number typedValue = cast(value, (Class<? extends Number>)target.getType());
         if (target instanceof AttributeSensor) {
-            entity.setAttribute((AttributeSensor)target, typedValue);
+            entity.sensors().set((AttributeSensor)target, typedValue);
         } else if (typedValue!=null)
-            entity.emit((Sensor)target, typedValue);
+            entity.sensors().emit((Sensor)target, typedValue);
     }
 
     @SuppressWarnings("unchecked")

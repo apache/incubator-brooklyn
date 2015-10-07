@@ -77,7 +77,7 @@ public class HttpRequestSensorTest {
                 .configure(HttpRequestSensor.JSON_PATH, "$.myKey")
                 .configure(HttpRequestSensor.SENSOR_URI, serverUrl + "/myKey/myValue"));
         sensor.apply(entity);
-        entity.setAttribute(Attributes.SERVICE_UP, true);
+        entity.sensors().set(Attributes.SERVICE_UP, true);
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_STRING, "myValue");
     }

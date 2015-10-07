@@ -47,7 +47,7 @@ public class DeltaEnricher<T extends Number> extends AbstractTransformingEnriche
     public void onEvent(SensorEvent<T> event) {
         Number current = elvis(event.getValue(), 0);
         double newVal = current.doubleValue() - last.doubleValue();
-        entity.setAttribute((AttributeSensor<T>)target, TypeCoercions.coerce(newVal, target.getTypeToken()));
+        entity.sensors().set((AttributeSensor<T>)target, TypeCoercions.coerce(newVal, target.getTypeToken()));
         last = current;
     }
 }

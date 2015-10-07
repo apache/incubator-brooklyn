@@ -71,9 +71,9 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public NginxSshDriver(NginxControllerImpl entity, SshMachineLocation machine) {
         super(entity, machine);
 
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
-        entity.setAttribute(NginxController.ACCESS_LOG_LOCATION, getAccessLogLocation());
-        entity.setAttribute(NginxController.ERROR_LOG_LOCATION, getErrorLogLocation());
+        entity.sensors().set(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
+        entity.sensors().set(NginxController.ACCESS_LOG_LOCATION, getAccessLogLocation());
+        entity.sensors().set(NginxController.ERROR_LOG_LOCATION, getErrorLogLocation());
     }
 
     @Override
@@ -117,12 +117,12 @@ public class NginxSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     @Override
     public void postLaunch() {
-        entity.setAttribute(NginxController.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
+        entity.sensors().set(NginxController.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
         if (((AbstractController)entity).isSsl()) {
-            entity.setAttribute(Attributes.HTTPS_PORT, getPort());
+            entity.sensors().set(Attributes.HTTPS_PORT, getPort());
             ((EntityInternal)entity).removeAttribute(Attributes.HTTP_PORT);
         } else {
-            entity.setAttribute(Attributes.HTTP_PORT, getPort());
+            entity.sensors().set(Attributes.HTTP_PORT, getPort());
             ((EntityInternal)entity).removeAttribute(Attributes.HTTPS_PORT);
         }
         super.postLaunch();

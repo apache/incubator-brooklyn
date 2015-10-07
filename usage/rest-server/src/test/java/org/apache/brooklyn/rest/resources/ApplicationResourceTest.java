@@ -335,7 +335,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
                 .get(ApplicationSummary.class);
         assertEquals(summary.getStatus(), Status.RUNNING);
 
-        ((EntityLocal)app).setAttribute(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        ((EntityLocal)app).sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         try {
             ApplicationSummary summary2 = client().resource("/v1/applications/"+app.getId())
                     .get(ApplicationSummary.class);
@@ -343,7 +343,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             assertEquals(summary2.getStatus(), Status.ERROR);
             
         } finally {
-            ((EntityLocal)app).setAttribute(Attributes.SERVICE_STATE_ACTUAL, origState);
+            ((EntityLocal)app).sensors().set(Attributes.SERVICE_STATE_ACTUAL, origState);
         }
     }
 

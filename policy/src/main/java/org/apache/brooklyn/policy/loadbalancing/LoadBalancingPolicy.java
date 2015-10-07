@@ -151,11 +151,11 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
         this.poolEntity = (BalanceableWorkerPool) entity;
         
         // Detect when containers are added to or removed from the pool.
-        subscribe(poolEntity, BalanceableWorkerPool.CONTAINER_ADDED, eventHandler);
-        subscribe(poolEntity, BalanceableWorkerPool.CONTAINER_REMOVED, eventHandler);
-        subscribe(poolEntity, BalanceableWorkerPool.ITEM_ADDED, eventHandler);
-        subscribe(poolEntity, BalanceableWorkerPool.ITEM_REMOVED, eventHandler);
-        subscribe(poolEntity, BalanceableWorkerPool.ITEM_MOVED, eventHandler);
+        subscriptions().subscribe(poolEntity, BalanceableWorkerPool.CONTAINER_ADDED, eventHandler);
+        subscriptions().subscribe(poolEntity, BalanceableWorkerPool.CONTAINER_REMOVED, eventHandler);
+        subscriptions().subscribe(poolEntity, BalanceableWorkerPool.ITEM_ADDED, eventHandler);
+        subscriptions().subscribe(poolEntity, BalanceableWorkerPool.ITEM_REMOVED, eventHandler);
+        subscriptions().subscribe(poolEntity, BalanceableWorkerPool.ITEM_MOVED, eventHandler);
         
         // Take heed of any extant containers.
         for (Entity container : poolEntity.getContainerGroup().getMembers()) {
@@ -214,7 +214,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
                                     AutoScalerPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
                                     AutoScalerPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
             
-                            ((EntityLocal)poolEntity).emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, eventVal);
+                            poolEntity.sensors().emit(AutoScalerPolicy.DEFAULT_POOL_COLD_SENSOR, eventVal);
                             
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolLowThreshold()/model.getPoolSize()));
@@ -232,7 +232,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
                                     AutoScalerPolicy.POOL_LOW_THRESHOLD_KEY, model.getPoolLowThreshold(),
                                     AutoScalerPolicy.POOL_HIGH_THRESHOLD_KEY, model.getPoolHighThreshold());
                             
-                            ((EntityLocal)poolEntity).emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, eventVal);
+                            poolEntity.sensors().emit(AutoScalerPolicy.DEFAULT_POOL_HOT_SENSOR, eventVal);
                             
                             if (LOG.isInfoEnabled()) {
                                 int desiredPoolSize = (int) Math.ceil(model.getCurrentPoolWorkrate() / (model.getPoolHighThreshold()/model.getPoolSize()));
@@ -303,7 +303,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
         Preconditions.checkArgument(item instanceof Movable, "Added item "+item+" must implement Movable");
         if (LOG.isTraceEnabled()) LOG.trace("{} recording addition of item {} in container {}", new Object[] {this, item, parentContainer});
         
-        subscribe(item, metric, eventHandler);
+        subscriptions().subscribe(item, metric, eventHandler);
         
         // Update the model, including the current metric value (if any).
         boolean immovable = (Boolean)elvis(item.getConfig(Movable.IMMOVABLE), false);
@@ -317,7 +317,7 @@ public class LoadBalancingPolicy<NodeType extends Entity, ItemType extends Movab
     
     private void onItemRemoved(ItemType item, NodeType parentContainer, boolean rebalanceNow) {
         if (LOG.isTraceEnabled()) LOG.trace("{} recording removal of item {}", this, item);
-        unsubscribe(item);
+        subscriptions().unsubscribe(item);
         model.onItemRemoved(item);
         if (rebalanceNow) scheduleRebalance();
     }

@@ -114,7 +114,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
         final Task<String> t = submit(DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME));
         assertNotDoneContinually(t);
         
-        entity.setAttribute(TestEntity.NAME, "myval");
+        entity.sensors().set(TestEntity.NAME, "myval");
         assertEquals(assertDoneEventually(t), "myval");
     }
 
@@ -122,10 +122,10 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
     public void testAttributeWhenReadyWithPredicate() throws Exception {
         final Task<String> t = submit(DependentConfiguration.attributeWhenReady(entity, TestEntity.NAME, Predicates.equalTo("myval2")));
         
-        entity.setAttribute(TestEntity.NAME, "myval");
+        entity.sensors().set(TestEntity.NAME, "myval");
         assertNotDoneContinually(t);
         
-        entity.setAttribute(TestEntity.NAME, "myval2");
+        entity.sensors().set(TestEntity.NAME, "myval2");
         assertEquals(assertDoneEventually(t), "myval2");
     }
 
@@ -134,7 +134,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
         final Task<String> t = submit(DependentConfiguration.valueWhenAttributeReady(entity, TestEntity.SEQUENCE, Functions.toStringFunction()));
         assertNotDoneContinually(t);
         
-        entity.setAttribute(TestEntity.SEQUENCE, 1);
+        entity.sensors().set(TestEntity.SEQUENCE, 1);
         assertEquals(assertDoneEventually(t), "1");
     }
 
@@ -147,7 +147,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
         assertNotDoneContinually(t);
         
-        entity.setAttribute(TestEntity.SEQUENCE, 1);
+        entity.sensors().set(TestEntity.SEQUENCE, 1);
         assertEquals(assertDoneEventually(t), "1");
     }
 
@@ -163,7 +163,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
         assertNotDoneContinually(t);
         
-        entity.setAttribute(TestEntity.SEQUENCE, 1);
+        entity.sensors().set(TestEntity.SEQUENCE, 1);
         assertEquals(assertDoneEventually(t), "1");
     }
 
@@ -175,7 +175,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                 .build());
         assertNotDoneContinually(t);
         
-        entity.setAttribute(TestEntity.NAME, "myval");
+        entity.sensors().set(TestEntity.NAME, "myval");
         assertEquals(assertDoneEventually(t), "myval");
     }
 
@@ -188,10 +188,10 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
         assertNotDoneContinually(t);
 
-        entity2.setAttribute(TestEntity.SEQUENCE, 321);
+        entity2.sensors().set(TestEntity.SEQUENCE, 321);
         assertNotDoneContinually(t);
 
-        entity2.setAttribute(TestEntity.SEQUENCE, 1);
+        entity2.sensors().set(TestEntity.SEQUENCE, 1);
         try {
             assertDoneEventually(t);
             fail();
@@ -212,10 +212,10 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
         assertNotDoneContinually(t);
 
-        entity2.setAttribute(TestEntity.SEQUENCE, 321);
+        entity2.sensors().set(TestEntity.SEQUENCE, 321);
         assertNotDoneContinually(t);
 
-        entity2.setAttribute(TestEntity.SEQUENCE, 1);
+        entity2.sensors().set(TestEntity.SEQUENCE, 1);
         try {
             assertDoneEventually(t);
             fail();
@@ -226,7 +226,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testAttributeWhenReadyWithAbortFailsWhenAbortConditionAlreadyHolds() throws Exception {
-        entity2.setAttribute(TestEntity.SEQUENCE, 1);
+        entity2.sensors().set(TestEntity.SEQUENCE, 1);
         final Task<String> t = submit(DependentConfiguration.builder()
                 .attributeWhenReady(entity, TestEntity.NAME)
                 .abortIf(entity2, TestEntity.SEQUENCE, Predicates.equalTo(1))
@@ -241,7 +241,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testAttributeWhenReadyWithAbortFailsWhenAbortConditionAlreadyHoldsWaitingNow() throws Exception {
-        entity2.setAttribute(TestEntity.SEQUENCE, 1);
+        entity2.sensors().set(TestEntity.SEQUENCE, 1);
         final Task<String> t = submit(new Callable<String>() {
             public String call() {
                 return DependentConfiguration.builder()
@@ -267,7 +267,7 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                         .runNow();
             }
         });
-        entity.setAttribute(TestEntity.NAME, "myentity");
+        entity.sensors().set(TestEntity.NAME, "myentity");
         assertDoneEventually(t);
         assertEquals(t.get(), "myentity");
     }
@@ -325,10 +325,10 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                 .build());
         assertNotDoneContinually(t);
         
-        entity.setAttribute(TestEntity.NAME, "myval");
+        entity.sensors().set(TestEntity.NAME, "myval");
         assertNotDoneContinually(t);
         
-        entity2.setAttribute(TestEntity.NAME, "myval2");
+        entity2.sensors().set(TestEntity.NAME, "myval2");
         assertEquals(ImmutableSet.copyOf(assertDoneEventually(t)), ImmutableSet.of("myval", "myval2"));
     }
 
@@ -338,13 +338,13 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                 .attributeWhenReadyFromMultiple(ImmutableList.of(entity, entity2), TestEntity.NAME, StringPredicates.startsWith("myval"))
                 .build());
         
-        entity.setAttribute(TestEntity.NAME, "wrongval");
-        entity2.setAttribute(TestEntity.NAME, "wrongval2");
+        entity.sensors().set(TestEntity.NAME, "wrongval");
+        entity2.sensors().set(TestEntity.NAME, "wrongval2");
         assertNotDoneContinually(t);
         
-        entity.setAttribute(TestEntity.NAME, "myval");
+        entity.sensors().set(TestEntity.NAME, "myval");
         assertNotDoneContinually(t);
-        entity2.setAttribute(TestEntity.NAME, "myval2");
+        entity2.sensors().set(TestEntity.NAME, "myval2");
         assertEquals(ImmutableSet.copyOf(assertDoneEventually(t)), ImmutableSet.of("myval", "myval2"));
     }
 
@@ -364,8 +364,8 @@ public class DependentConfigurationTest extends BrooklynAppUnitTestSupport {
                         }})
                 .build());
         
-        entity.setAttribute(TestEntity.SEQUENCE, 1);
-        entity2.setAttribute(TestEntity.SEQUENCE, 2);
+        entity.sensors().set(TestEntity.SEQUENCE, 1);
+        entity2.sensors().set(TestEntity.SEQUENCE, 2);
         assertEquals(assertDoneEventually(t), "1,2");
     }
 

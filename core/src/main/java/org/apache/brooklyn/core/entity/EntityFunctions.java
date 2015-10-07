@@ -95,7 +95,7 @@ public class EntityFunctions {
                         ((EntityInternal)input).removeAttribute(sensor);
                     } else {
                         value = TypeCoercions.coerce(value, sensor.getTypeToken());
-                        ((EntityInternal)input).setAttribute(sensor, value);
+                        ((EntityInternal)input).sensors().set(sensor, value);
                     }
                 }
                 return null;

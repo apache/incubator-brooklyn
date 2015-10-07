@@ -43,7 +43,7 @@ public class TrackingAbstractControllerImpl extends AbstractControllerImpl imple
     @Override
     public void connectSensors() {
         super.connectSensors();
-        setAttribute(SERVICE_UP, true);
+        sensors().set(SERVICE_UP, true);
     }
     
     @Override

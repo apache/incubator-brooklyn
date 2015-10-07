@@ -89,7 +89,7 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
             newConfig.putAll(ConfigBag.newInstance(parameters.get(EXTRA_CONFIG)).getAllConfigAsConfigKeyMap());
             newMemberSpec.configure(newConfig.getAllConfigAsConfigKeyMap());
             
-            entity().setConfig(BrooklynCluster.MEMBER_SPEC, newMemberSpec);
+            entity().config().set(BrooklynCluster.MEMBER_SPEC, newMemberSpec);
             
             log.debug("Upgrading "+entity()+", new "+BrooklynCluster.MEMBER_SPEC+": "+newMemberSpec+" / "+newMemberSpec.getConfig()+" (adding: "+newConfig+")");
             
@@ -99,7 +99,7 @@ public class BrooklynClusterUpgradeEffectorBody extends EffectorBody<Void> imple
         } finally {
             if (!success) {
                 log.debug("Upgrading "+entity()+" failed, will rethrow after restoring "+BrooklynCluster.MEMBER_SPEC+" to: "+origMemberSpec);
-                entity().setConfig(BrooklynCluster.MEMBER_SPEC, origMemberSpec);
+                entity().config().set(BrooklynCluster.MEMBER_SPEC, origMemberSpec);
             }
             
             upgradeInProgress.set(false);

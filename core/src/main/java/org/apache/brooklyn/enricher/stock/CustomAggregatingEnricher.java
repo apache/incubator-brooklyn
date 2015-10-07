@@ -113,7 +113,7 @@ public class CustomAggregatingEnricher<S,T> extends AbstractAggregatingEnricher<
     @Override
     public void onUpdated() {
         try {
-            entity.setAttribute(target, getAggregate());
+            entity.sensors().set(target, getAggregate());
         } catch (Throwable t) {
             LOG.warn("Error calculating and setting aggregate for enricher "+this, t);
             throw Throwables.propagate(t);

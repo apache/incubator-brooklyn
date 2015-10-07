@@ -71,7 +71,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testSummingEnricherWithNoProducersDefaultsToNull() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -82,7 +82,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSummingEnricherWithNoProducers() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -95,7 +95,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSummingEnricherWhenNoSensorValuesYet() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -108,7 +108,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSummingEnricherWhenNoSensorValuesYetDefaultsToNull() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -119,7 +119,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSummingEnricherWithNoValues() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -130,33 +130,33 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testSummingEnricherWithOneValue() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
                 .fromHardcodedProducers(ImmutableList.of(entity))
                 .build());
 
-        entity.setAttribute(intSensor, 1);
+        entity.sensors().set(intSensor, 1);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
     }
     
     @Test
     public void testSummingEnricherWhenNullSensorValue() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
                 .fromHardcodedProducers(ImmutableList.of(entity))
                 .build());
 
-        entity.setAttribute(intSensor, null);
+        entity.sensors().set(intSensor, null);
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, target, null);
     }
     
     @Test
     public void testSummingEnricherWhenDefaultValueForUnreportedSensors() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -167,13 +167,13 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 3);
         
-        entity.setAttribute(intSensor, null);
+        entity.sensors().set(intSensor, null);
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, target, 3);
         
-        entity.setAttribute(intSensor, 1);
+        entity.sensors().set(intSensor, 1);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
         
-        entity.setAttribute(intSensor, 7);
+        entity.sensors().set(intSensor, 7);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 7);
     }
     
@@ -183,20 +183,20 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         TestEntity producer2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         TestEntity producer3 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
                 .fromHardcodedProducers(ImmutableList.of(producer1, producer2, producer3))
                 .build());
 
-        producer3.setAttribute(intSensor, 1);
+        producer3.sensors().set(intSensor, 1);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
 
-        producer1.setAttribute(intSensor, 2);
+        producer1.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 3);
 
-        producer2.setAttribute(intSensor, 4);
+        producer2.sensors().set(intSensor, 4);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 7);
     }
     
@@ -204,7 +204,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     public void testAveragingEnricherWhenNoAndNullSensorValues() {
         TestEntity producer1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(doubleSensor)
                 .computingAverage()
@@ -213,7 +213,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, doubleSensor, null);
         
-        producer1.setAttribute(intSensor, null);
+        producer1.sensors().set(intSensor, null);
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, doubleSensor, null);
     }
 
@@ -221,7 +221,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     public void testAveragingEnricherWhenDefaultValueForUnreportedSensors() {
         TestEntity producer1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(doubleSensor)
                 .computingAverage()
@@ -232,16 +232,16 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 3d);
         
-        producer1.setAttribute(intSensor, null);
+        producer1.sensors().set(intSensor, null);
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, doubleSensor, 3d);
         
-        producer1.setAttribute(intSensor, 4);
+        producer1.sensors().set(intSensor, 4);
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 4d);
     }
 
     @Test
     public void testAveragingEnricherWhenNoSensors() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(doubleSensor)
                 .computingAverage()
@@ -255,7 +255,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testAveragingEnricherWhenNoProducersDefaultsToNull() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(doubleSensor)
                 .computingAverage()
@@ -271,7 +271,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         TestEntity producer2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         TestEntity producer3 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(doubleSensor)
                 .computingAverage()
@@ -280,16 +280,16 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 50), entity, doubleSensor, null);
 
-        producer1.setAttribute(intSensor, 3);
+        producer1.sensors().set(intSensor, 3);
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 3d);
         
-        producer2.setAttribute(intSensor, 1);
+        producer2.sensors().set(intSensor, 1);
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 2d);
 
-        producer3.setAttribute(intSensor, 5);
+        producer3.sensors().set(intSensor, 5);
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 3d);
 
-        producer2.setAttribute(intSensor, 4);
+        producer2.sensors().set(intSensor, 4);
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 4d);
     }
     
@@ -299,7 +299,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         TestEntity producer2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         TestEntity producer3 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(doubleSensor)
                 .computingAverage()
@@ -310,13 +310,13 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 0d);
 
-        producer1.setAttribute(intSensor, 3);
+        producer1.sensors().set(intSensor, 3);
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 1d);
 
-        producer2.setAttribute(intSensor, 3);
+        producer2.sensors().set(intSensor, 3);
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 2d);
 
-        producer3.setAttribute(intSensor, 3);
+        producer3.sensors().set(intSensor, 3);
         EntityTestUtils.assertAttributeEqualsEventually(entity, doubleSensor, 3d);
     }
     
@@ -327,7 +327,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         TestEntity p2 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         log.debug("created {} and the entities it will contain {} {}", new Object[] {group, p1, p2});
 
-        group.addEnricher(Enrichers.builder()
+        group.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -339,11 +339,11 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(group, target, 0);
 
         group.addMember(p1);
-        p1.setAttribute(intSensor, 1);
+        p1.sensors().set(intSensor, 1);
         EntityTestUtils.assertAttributeEqualsEventually(group, target, 1);
 
         group.addMember(p2);
-        p2.setAttribute(intSensor, 2);
+        p2.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsEventually(group, target, 3);
 
         group.removeMember(p2);
@@ -362,10 +362,10 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         TestEntity p2 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
         group.addMember(p1);
         group.addMember(p2);
-        p1.setAttribute(intSensor, 1);
+        p1.sensors().set(intSensor, 1);
         Entities.manage(group);
         
-        group.addEnricher(Enrichers.builder()
+        group.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -375,7 +375,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsEventually(group, target, 1);
 
-        p2.setAttribute(intSensor, 2);
+        p2.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsEventually(group, target, 3);
         
         group.removeMember(p2);
@@ -389,10 +389,10 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         TestEntity p2 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
         group.addMember(p1);
         group.addMember(p2);
-        p1.setAttribute(intSensor, 1);
+        p1.sensors().set(intSensor, 1);
         Entities.manage(group);
         
-        app.addEnricher(Enrichers.builder()
+        app.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -403,7 +403,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsEventually(app, target, 1);
 
-        p2.setAttribute(intSensor, 2);
+        p2.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsEventually(app, target, 3);
         
         group.removeMember(p2);
@@ -418,11 +418,11 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         TestEntity p3 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         group.addMember(p1);
         group.addMember(p2);
-        p1.setAttribute(intSensor, 1);
-        p2.setAttribute(intSensor, 2);
-        p3.setAttribute(intSensor, 4);
+        p1.sensors().set(intSensor, 1);
+        p2.sensors().set(intSensor, 2);
+        p3.sensors().set(intSensor, 4);
         
-        group.addEnricher(Enrichers.builder()
+        group.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -438,7 +438,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testAggregatesNewChidren() {
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -450,11 +450,11 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 0);
 
         TestEntity p1 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
-        p1.setAttribute(intSensor, 1);
+        p1.sensors().set(intSensor, 1);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
 
         TestEntity p2 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
-        p2.setAttribute(intSensor, 2);
+        p2.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 3);
 
         Entities.unmanage(p2);
@@ -465,9 +465,9 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     public void testAggregatesExistingChildren() {
         TestEntity p1 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
         TestEntity p2 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
-        p1.setAttribute(intSensor, 1);
+        p1.sensors().set(intSensor, 1);
         
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -477,7 +477,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
 
-        p2.setAttribute(intSensor, 2);
+        p2.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 3);
         
         Entities.unmanage(p2);
@@ -488,9 +488,9 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     public void testAggregatesChildrenOfProducer() {
         TestEntity p1 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
         TestEntity p2 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
-        p1.setAttribute(intSensor, 1);
+        p1.sensors().set(intSensor, 1);
         
-        app.addEnricher(Enrichers.builder()
+        app.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -501,7 +501,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEqualsEventually(app, target, 1);
 
-        p2.setAttribute(intSensor, 2);
+        p2.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsEventually(app, target, 3);
         
         Entities.unmanage(p2);
@@ -511,9 +511,9 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testAppliesFilterWhenAggregatingChildrenOfGroup() {
         TestEntity p1 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
-        p1.setAttribute(intSensor, 1);
+        p1.sensors().set(intSensor, 1);
         
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computingSum()
@@ -524,7 +524,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
         
         TestEntity p2 = entity.createAndManageChild(EntitySpec.create(TestEntity.class));
-        p2.setAttribute(intSensor, 2);
+        p2.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), entity, target, 1);
     }
     
@@ -539,7 +539,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
             }
         };
         
-        entity.addEnricher(Enrichers.builder()
+        entity.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
                 .publishing(target)
                 .computing(aggregator)
@@ -550,7 +550,7 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 1);
         
         // Event by producer
-        producer1.setAttribute(intSensor, 2);
+        producer1.sensors().set(intSensor, 2);
         EntityTestUtils.assertAttributeEqualsEventually(entity, target, 5);
     }
 }

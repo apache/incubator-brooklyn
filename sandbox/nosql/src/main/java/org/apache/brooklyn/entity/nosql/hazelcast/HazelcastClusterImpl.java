@@ -67,10 +67,10 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
             if (LOG.isInfoEnabled()) {
                 LOG.info(this + " cluster password not provided for " + CLUSTER_PASSWORD.getName() + " : generating random password");
             }
-            setConfig(CLUSTER_PASSWORD, Strings.makeRandomId(12));
+            config().set(CLUSTER_PASSWORD, Strings.makeRandomId(12));
         }
         
-        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Hazelcast members tracker")
                 .configure("group", this));
     }
@@ -83,7 +83,7 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
         @Override
         protected void onEntityAdded(Entity member) {
             if (member.getAttribute(HazelcastNode.NODE_NAME) == null) {
-                ((EntityInternal) member).setAttribute(HazelcastNode.NODE_NAME, "hazelcast-" + nextMemberId.incrementAndGet());
+                ((EntityInternal) member).sensors().set(HazelcastNode.NODE_NAME, "hazelcast-" + nextMemberId.incrementAndGet());
                 if (LOG.isInfoEnabled()) {
                     LOG.info("Node {} added to the cluster", member);
                 }
@@ -120,6 +120,6 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
         for (Entity member : getMembers()) {
             clusterNodes.add(member.getAttribute(Attributes.ADDRESS));
         }
-        setAttribute(PUBLIC_CLUSTER_NODES, clusterNodes);
+        sensors().set(PUBLIC_CLUSTER_NODES, clusterNodes);
     }
 }

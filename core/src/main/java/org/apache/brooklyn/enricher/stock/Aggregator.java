@@ -121,12 +121,12 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     protected void setEntityBeforeSubscribingProducerChildrenEvents() {
         BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(producer),
             "{} subscribing to children of {}", this, producer);
-        subscribeToChildren(producer, sourceSensor, this);
+        subscriptions().subscribeToChildren(producer, sourceSensor, this);
     }
 
     @Override
     protected void addProducerHardcoded(Entity producer) {
-        subscribe(producer, sourceSensor, this);
+        subscriptions().subscribe(producer, sourceSensor, this);
         onProducerAdded(producer);
     }
 
@@ -138,7 +138,7 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
 
     @Override
     protected void addProducerMember(Entity producer) {
-        subscribe(producer, sourceSensor, this);
+        subscriptions().subscribe(producer, sourceSensor, this);
         onProducerAdded(producer);
     }
 

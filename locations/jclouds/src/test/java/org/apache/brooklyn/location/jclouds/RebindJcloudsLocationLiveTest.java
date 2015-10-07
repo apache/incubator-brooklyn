@@ -59,7 +59,7 @@ public class RebindJcloudsLocationLiveTest extends AbstractJcloudsLiveTest {
         origEntity = origApp.createAndManageChild(EntitySpec.create(LiveTestEntity.class));
 
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
-        jcloudsLocation.setConfig(JcloudsLocation.HARDWARE_ID, AWS_EC2_SMALL_HARDWARE_ID);
+        jcloudsLocation.config().set(JcloudsLocation.HARDWARE_ID, AWS_EC2_SMALL_HARDWARE_ID);
     }
 
     @AfterMethod(alwaysRun = true)

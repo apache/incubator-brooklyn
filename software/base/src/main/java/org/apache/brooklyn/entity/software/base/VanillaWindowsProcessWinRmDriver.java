@@ -37,7 +37,7 @@ public class VanillaWindowsProcessWinRmDriver extends AbstractSoftwareProcessWin
     public void start() {
         WinRmMachineLocation machine = (WinRmMachineLocation) location;
         UserAndHostAndPort winrmAddress = UserAndHostAndPort.fromParts(machine.getUser(), machine.getAddress().getHostName(), machine.config().get(WinRmMachineLocation.WINRM_PORT));
-        getEntity().setAttribute(Attributes.WINRM_ADDRESS, winrmAddress);
+        getEntity().sensors().set(Attributes.WINRM_ADDRESS, winrmAddress);
 
         super.start();
     }

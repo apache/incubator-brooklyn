@@ -53,7 +53,7 @@ public class EntityAdjuncts {
         ComputeServiceIndicatorsFromChildrenAndMembers.DEFAULT_UNIQUE_TAG_UP);
     
     public static List<Enricher> getNonSystemEnrichers(Entity entity) {
-        List<Enricher> result = MutableList.copyOf(entity.getEnrichers());
+        List<Enricher> result = MutableList.copyOf(entity.enrichers());
         Iterator<Enricher> ri = result.iterator();
         while (ri.hasNext()) {
             if (isSystemEnricher(ri.next())) ri.remove();

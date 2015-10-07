@@ -56,15 +56,15 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         otherEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         listener = new RecordingSensorEventListener<>();
         policy = new AbstractPolicy() {};
-        entity.addPolicy(policy);
+        entity.policies().add(policy);
         app.start(ImmutableList.of(loc));
     }
 
     @Test
     public void testSubscriptionReceivesEvents() throws Exception {
-        policy.subscribe(entity, TestEntity.SEQUENCE, listener);
-        policy.subscribe(entity, TestEntity.NAME, listener);
-        policy.subscribe(entity, TestEntity.MY_NOTIF, listener);
+        policy.subscriptions().subscribe(entity, TestEntity.SEQUENCE, listener);
+        policy.subscriptions().subscribe(entity, TestEntity.NAME, listener);
+        policy.subscriptions().subscribe(entity, TestEntity.MY_NOTIF, listener);
         
         otherEntity.sensors().set(TestEntity.SEQUENCE, 456);
         entity.sensors().set(TestEntity.SEQUENCE, 123);
@@ -82,11 +82,11 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testUnsubscribeRemovesAllSubscriptionsForThatEntity() throws Exception {
-        policy.subscribe(entity, TestEntity.SEQUENCE, listener);
-        policy.subscribe(entity, TestEntity.NAME, listener);
-        policy.subscribe(entity, TestEntity.MY_NOTIF, listener);
-        policy.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
-        policy.unsubscribe(entity);
+        policy.subscriptions().subscribe(entity, TestEntity.SEQUENCE, listener);
+        policy.subscriptions().subscribe(entity, TestEntity.NAME, listener);
+        policy.subscriptions().subscribe(entity, TestEntity.MY_NOTIF, listener);
+        policy.subscriptions().subscribe(otherEntity, TestEntity.SEQUENCE, listener);
+        policy.subscriptions().unsubscribe(entity);
         
         entity.sensors().set(TestEntity.SEQUENCE, 123);
         entity.sensors().set(TestEntity.NAME, "myname");
@@ -103,11 +103,11 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testUnsubscribeUsingHandleStopsEvents() throws Exception {
-        SubscriptionHandle handle1 = policy.subscribe(entity, TestEntity.SEQUENCE, listener);
-        SubscriptionHandle handle2 = policy.subscribe(entity, TestEntity.NAME, listener);
-        SubscriptionHandle handle3 = policy.subscribe(otherEntity, TestEntity.SEQUENCE, listener);
+        SubscriptionHandle handle1 = policy.subscriptions().subscribe(entity, TestEntity.SEQUENCE, listener);
+        SubscriptionHandle handle2 = policy.subscriptions().subscribe(entity, TestEntity.NAME, listener);
+        SubscriptionHandle handle3 = policy.subscriptions().subscribe(otherEntity, TestEntity.SEQUENCE, listener);
         
-        policy.unsubscribe(entity, handle2);
+        policy.subscriptions().unsubscribe(entity, handle2);
         
         entity.sensors().set(TestEntity.SEQUENCE, 123);
         entity.sensors().set(TestEntity.NAME, "myname");
@@ -142,8 +142,8 @@ public class PolicySubscriptionTest extends BrooklynAppUnitTestSupport {
         entity.sensors().set(TestEntity.SEQUENCE, 123);
         entity.sensors().set(TestEntity.NAME, "myname");
         
-        policy.subscribe(entity, TestEntity.SEQUENCE, listener);
-        policy.subscribe(entity, TestEntity.NAME, listener);
+        policy.subscriptions().subscribe(entity, TestEntity.SEQUENCE, listener);
+        policy.subscriptions().subscribe(entity, TestEntity.NAME, listener);
         
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), new Runnable() {
             @Override public void run() {

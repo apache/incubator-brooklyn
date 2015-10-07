@@ -91,7 +91,7 @@ public class TomcatAutoScalerPolicyTest {
                 .metricRange(0, 1)
                 .minPoolSize(1)
                 .build();
-        cluster.addPolicy(policy);
+        cluster.policies().add(policy);
         
         app.start(ImmutableList.of(loc));
         

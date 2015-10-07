@@ -57,7 +57,7 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
     protected void connectSensors() {
         boolean simulateExternalMonitoring = getConfig(SIMULATE_EXTERNAL_MONITORING);
         if (simulateExternalMonitoring) {
-            setAttribute(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MYSQL_PORT)));
+            sensors().set(DATASTORE_URL, String.format("mysql://%s:%s/", getAttribute(HOSTNAME), getAttribute(MYSQL_PORT)));
             
             feed = FunctionFeed.builder()
                     .entity(this)
@@ -66,7 +66,7 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
                             .callable(new Callable<Boolean>() {
                                 private int counter = 0;
                                 public Boolean call() {
-                                    setAttribute(QUERIES_PER_SECOND_FROM_MYSQL, (double)(counter++ % 100));
+                                    sensors().set(QUERIES_PER_SECOND_FROM_MYSQL, (double)(counter++ % 100));
                                     return true;
                                 }})
                             .setOnFailureOrException(false))
@@ -154,7 +154,7 @@ public class SimulatedMySqlNodeImpl extends MySqlNodeImpl {
                 return;
             }
             
-            entity.setAttribute(MySqlNode.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
+            entity.sensors().set(MySqlNode.PID_FILE, getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME);
             
             if (entity.getConfig(SKIP_SSH_ON_START)) {
                 // minimal ssh, so that isRunning will subsequently work

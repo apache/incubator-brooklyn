@@ -74,10 +74,10 @@ public class GroupTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testEntityGetGroups() throws Exception {
         group.addMember(entity1);
-        Asserts.assertEqualsIgnoringOrder(entity1.getGroups(), ImmutableSet.of(group));
+        Asserts.assertEqualsIgnoringOrder(entity1.groups(), ImmutableSet.of(group));
         
         group.removeMember(entity1);
-        Asserts.assertEqualsIgnoringOrder(entity1.getGroups(), ImmutableSet.of());
+        Asserts.assertEqualsIgnoringOrder(entity1.groups(), ImmutableSet.of());
    }
     
     @Test
@@ -91,7 +91,7 @@ public class GroupTest extends BrooklynAppUnitTestSupport {
     public void testUnmanagedGroupAutomaticallyRemovedMembers() throws Exception {
         group.addMember(entity1);
         Entities.unmanage(group);
-        Asserts.assertEqualsIgnoringOrder(entity1.getGroups(), ImmutableSet.of());
+        Asserts.assertEqualsIgnoringOrder(entity1.groups(), ImmutableSet.of());
     }
     
     @Test
@@ -115,7 +115,7 @@ public class GroupTest extends BrooklynAppUnitTestSupport {
         mgmt.getSubscriptionManager().subscribe(entity1, AbstractEntity.GROUP_ADDED, groupAddedListener);
         mgmt.getSubscriptionManager().subscribe(entity1, AbstractEntity.GROUP_REMOVED, groupRemovedListener);
         
-        entity1.addGroup(group);
+        group.addMember(entity1);
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String msg = "events="+groupAddedListener.getEvents();
@@ -125,7 +125,7 @@ public class GroupTest extends BrooklynAppUnitTestSupport {
             }});
         assertEquals(groupRemovedListener.getEvents().size(), 0, "events="+groupRemovedListener.getEvents());
         
-        entity1.removeGroup(group);
+        group.removeMember(entity1);
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 String msg = "events="+groupRemovedListener.getEvents();

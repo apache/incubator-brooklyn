@@ -155,7 +155,7 @@ public class HttpLatencyDetector extends AbstractEnricher implements Enricher {
 
     protected void startSubscriptions(EntityLocal entity) {
         if (getConfig(REQUIRE_SERVICE_UP)) {
-            subscribe(entity, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
+            subscriptions().subscribe(entity, Startable.SERVICE_UP, new SensorEventListener<Boolean>() {
                 @Override
                 public void onEvent(SensorEvent<Boolean> event) {
                     if (AtomicReferences.setIfDifferent(serviceUp, Boxing.unboxSafely(event.getValue(), false))) {
@@ -174,7 +174,7 @@ public class HttpLatencyDetector extends AbstractEnricher implements Enricher {
 
         AttributeSensor<?> urlSensor = getConfig(URL_SENSOR);
         if (urlSensor!=null) {
-            subscribe(entity, urlSensor, new SensorEventListener<Object>() {
+            subscriptions().subscribe(entity, urlSensor, new SensorEventListener<Object>() {
                 @Override
                 public void onEvent(SensorEvent<Object> event) {
                     Function<String, String> postProcessor = getConfig(URL_POST_PROCESSING);
@@ -202,7 +202,7 @@ public class HttpLatencyDetector extends AbstractEnricher implements Enricher {
     protected void activateAdditionalEnrichers(EntityLocal entity) {
         Duration rollupWindowSize = getConfig(ROLLUP_WINDOW_SIZE);
         if (rollupWindowSize!=null) {
-            entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity,
+            entity.enrichers().add(new RollingTimeWindowMeanEnricher<Double>(entity,
                 REQUEST_LATENCY_IN_SECONDS_MOST_RECENT, REQUEST_LATENCY_IN_SECONDS_IN_WINDOW,
                 rollupWindowSize));
         }

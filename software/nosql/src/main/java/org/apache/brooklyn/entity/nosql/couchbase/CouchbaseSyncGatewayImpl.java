@@ -51,7 +51,7 @@ public class CouchbaseSyncGatewayImpl extends SoftwareProcessImpl implements Cou
         String managementUri = String.format("http://%s:%s",
                 hp.getHostText(), hp.getPort());
 
-        setAttribute(MANAGEMENT_URL, managementUri);
+        sensors().set(MANAGEMENT_URL, managementUri);
 
         httpFeed = HttpFeed.builder()
                 .entity(this)

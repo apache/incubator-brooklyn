@@ -461,9 +461,9 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         
         T newVal = TypeCoercions.coerce(val, sensor.getTypeToken());
         if (sensor instanceof AttributeSensor) {
-            entity.setAttribute((AttributeSensor<T>)sensor, newVal);
+            entity.sensors().set((AttributeSensor<T>)sensor, newVal);
         } else { 
-            entity.emit(sensor, newVal);
+            entity.sensors().emit(sensor, newVal);
         }
     }
 

@@ -49,7 +49,7 @@ public class TestSensorAndEffectorInitializer implements EntityInitializer {
                 @Override
                 public String call(ConfigBag parameters) {
                     Object name = parameters.getStringKey("name");
-                    entity().setAttribute(Sensors.newStringSensor(SENSOR_LAST_HELLO), ""+name);
+                    entity().sensors().set(Sensors.newStringSensor(SENSOR_LAST_HELLO), ""+name);
                     return helloWord()+" "+name;
                 }
             }).build();
@@ -59,7 +59,7 @@ public class TestSensorAndEffectorInitializer implements EntityInitializer {
         
         AttributeSensor<String> emitted = Sensors.newStringSensor(SENSOR_HELLO_DEFINED_EMITTED);
         ((EntityInternal)entity).getMutableEntityType().addSensor(emitted);
-        entity.setAttribute(emitted, "1");
+        entity.sensors().set(emitted, "1");
     }
 
     public static class TestConfigurableInitializer extends TestSensorAndEffectorInitializer {

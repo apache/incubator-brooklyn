@@ -81,7 +81,7 @@ public class ElasticSearchNodeSshDriver extends AbstractSoftwareProcessSshDriver
     @Override
     public void launch() {
         String pidFile = getRunDir() + "/" + AbstractSoftwareProcessSshDriver.PID_FILENAME;
-        entity.setAttribute(ElasticSearchNode.PID_FILE, pidFile);
+        entity.sensors().set(ElasticSearchNode.PID_FILE, pidFile);
         StringBuilder commandBuilder = new StringBuilder()
             .append(String.format("%s/bin/elasticsearch -d -p %s", getExpandedInstallDir(), pidFile));
         if (entity.getConfig(ElasticSearchNode.TEMPLATE_CONFIGURATION_URL) != null) {

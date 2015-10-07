@@ -63,8 +63,8 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
 
     public AbstractSoftwareProcessWinRmDriver(EntityLocal entity, WinRmMachineLocation location) {
         super(entity, location);
-        entity.setAttribute(WINDOWS_USERNAME, location.config().get(WinRmMachineLocation.USER));
-        entity.setAttribute(WINDOWS_PASSWORD, location.config().get(WinRmMachineLocation.PASSWORD));
+        entity.sensors().set(WINDOWS_USERNAME, location.config().get(WinRmMachineLocation.USER));
+        entity.sensors().set(WINDOWS_PASSWORD, location.config().get(WinRmMachineLocation.PASSWORD));
     }
 
     /** @see #newScript(Map, String) */

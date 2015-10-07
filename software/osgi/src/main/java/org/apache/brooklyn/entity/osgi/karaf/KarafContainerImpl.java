@@ -111,7 +111,7 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
         //FIXME should have a better way of setting config -- firstly, not here!
         //preferred style is to have config auto-applied to attributes, and have default values in their definition, not here
         //use of "properties.{user,password}" is non-standard; is that requried? use default jmxUser, jmxPassword flags?
-        setAttribute(JMX_CONTEXT, String.format("karaf-%s", getConfig(KARAF_NAME.getConfigKey())));
+        sensors().set(JMX_CONTEXT, String.format("karaf-%s", getConfig(KARAF_NAME.getConfigKey())));
         
         ConfigToAttributes.apply(this);
 
@@ -135,7 +135,7 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
                                     // If MBean is unreachable, then mark as service-down
                                     if (Boolean.TRUE.equals(getAttribute(SERVICE_UP))) {
                                         LOG.debug("Entity "+this+" is not reachable on JMX");
-                                        setAttribute(SERVICE_UP, false);
+                                        sensors().set(SERVICE_UP, false);
                                     }
                                     return null;
                                 }}))
@@ -144,21 +144,21 @@ public class KarafContainerImpl extends SoftwareProcessImpl implements KarafCont
         
         
         // INSTANCES aggregates data for the other sensors.
-        subscribe(this, KARAF_INSTANCES, new SensorEventListener<Map>() {
+        subscriptions().subscribe(this, KARAF_INSTANCES, new SensorEventListener<Map>() {
                 @Override public void onEvent(SensorEvent<Map> event) {
-                    Map map = event.getValue();
+                    Map<?,?> map = event.getValue();
                     if (map == null) return;
                     
-                    setAttribute(SERVICE_UP, "Started".equals(map.get("State")));
-                    setAttribute(KARAF_ROOT, (Boolean) map.get("Is Root"));
-                    setAttribute(KARAF_JAVA_OPTS, (String) map.get("JavaOpts"));
-                    setAttribute(KARAF_INSTALL_LOCATION, (String) map.get("Location"));
-                    setAttribute(KARAF_NAME, (String) map.get("Name"));
-                    setAttribute(KARAF_PID, (Integer) map.get("Pid"));
-                    setAttribute(KARAF_SSH_PORT, (Integer) map.get("Ssh Port"));
-                    setAttribute(KARAF_RMI_REGISTRY_PORT, (Integer) map.get("RMI Registry Port"));
-                    setAttribute(KARAF_RMI_SERVER_PORT, (Integer) map.get("RMI Server Port"));
-                    setAttribute(KARAF_STATE, (String) map.get("State"));
+                    sensors().set(SERVICE_UP, "Started".equals(map.get("State")));
+                    sensors().set(KARAF_ROOT, (Boolean) map.get("Is Root"));
+                    sensors().set(KARAF_JAVA_OPTS, (String) map.get("JavaOpts"));
+                    sensors().set(KARAF_INSTALL_LOCATION, (String) map.get("Location"));
+                    sensors().set(KARAF_NAME, (String) map.get("Name"));
+                    sensors().set(KARAF_PID, (Integer) map.get("Pid"));
+                    sensors().set(KARAF_SSH_PORT, (Integer) map.get("Ssh Port"));
+                    sensors().set(KARAF_RMI_REGISTRY_PORT, (Integer) map.get("RMI Registry Port"));
+                    sensors().set(KARAF_RMI_SERVER_PORT, (Integer) map.get("RMI Server Port"));
+                    sensors().set(KARAF_STATE, (String) map.get("State"));
                 }});
         
     }

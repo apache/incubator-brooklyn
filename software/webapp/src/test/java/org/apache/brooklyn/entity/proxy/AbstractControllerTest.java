@@ -110,25 +110,25 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         List<Collection<String>> u = Lists.newArrayList(controller.getUpdates());
         assertTrue(u.isEmpty(), "expected no updates, but got "+u);
         
-        child.setAttribute(Startable.SERVICE_UP, true);
+        child.sensors().set(Startable.SERVICE_UP, true);
         
         // TODO Ugly sleep to allow AbstractController to detect node having been added
         Thread.sleep(100);
         
-        child.setAttribute(ClusteredEntity.HOSTNAME, "mymachine");
-        child.setAttribute(Attributes.SUBNET_HOSTNAME, "mymachine");
-        child.setAttribute(ClusteredEntity.HTTP_PORT, 1234);
+        child.sensors().set(ClusteredEntity.HOSTNAME, "mymachine");
+        child.sensors().set(Attributes.SUBNET_HOSTNAME, "mymachine");
+        child.sensors().set(ClusteredEntity.HTTP_PORT, 1234);
         assertEventuallyExplicitAddressesMatch(ImmutableList.of("mymachine:1234"));
         
-        child.setAttribute(ClusteredEntity.HOSTNAME, "mymachine2");
-        child.setAttribute(Attributes.SUBNET_HOSTNAME, "mymachine2");
+        child.sensors().set(ClusteredEntity.HOSTNAME, "mymachine2");
+        child.sensors().set(Attributes.SUBNET_HOSTNAME, "mymachine2");
         assertEventuallyExplicitAddressesMatch(ImmutableList.of("mymachine2:1234"));
         
-        child.setAttribute(ClusteredEntity.HTTP_PORT, 1235);
+        child.sensors().set(ClusteredEntity.HTTP_PORT, 1235);
         assertEventuallyExplicitAddressesMatch(ImmutableList.of("mymachine2:1235"));
         
-        child.setAttribute(ClusteredEntity.HOSTNAME, null);
-        child.setAttribute(Attributes.SUBNET_HOSTNAME, null);
+        child.sensors().set(ClusteredEntity.HOSTNAME, null);
+        child.sensors().set(Attributes.SUBNET_HOSTNAME, null);
         assertEventuallyExplicitAddressesMatch(ImmutableList.<String>of());
     }
 
@@ -141,8 +141,8 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         List<Collection<String>> u = Lists.newArrayList(controller.getUpdates());
         assertTrue(u.isEmpty(), "expected empty list but got "+u);
         
-        child.setAttribute(ClusteredEntity.HTTP_PORT, 1234);
-        child.setAttribute(Startable.SERVICE_UP, true);
+        child.sensors().set(ClusteredEntity.HTTP_PORT, 1234);
+        child.sensors().set(Startable.SERVICE_UP, true);
         assertEventuallyAddressesMatchCluster();
 
         // Second child
@@ -154,8 +154,8 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
             }});
         EntityLocal child2 = (EntityLocal) Iterables.getOnlyElement(MutableSet.builder().addAll(cluster.getMembers()).remove(child).build());
         
-        child2.setAttribute(ClusteredEntity.HTTP_PORT, 1234);
-        child2.setAttribute(Startable.SERVICE_UP, true);
+        child2.sensors().set(ClusteredEntity.HTTP_PORT, 1234);
+        child2.sensors().set(Startable.SERVICE_UP, true);
         assertEventuallyAddressesMatchCluster();
         
         // And remove all children; expect all addresses to go away
@@ -173,8 +173,8 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         // Get some children, so we can remove one...
         cluster.resize(2);
         for (Entity it: cluster.getMembers()) { 
-            ((EntityLocal)it).setAttribute(ClusteredEntity.HTTP_PORT, 1234);
-            ((EntityLocal)it).setAttribute(Startable.SERVICE_UP, true);
+            ((EntityLocal)it).sensors().set(ClusteredEntity.HTTP_PORT, 1234);
+            ((EntityLocal)it).sensors().set(Startable.SERVICE_UP, true);
         }
         assertEventuallyAddressesMatchCluster();
 
@@ -189,17 +189,17 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         // Get some children, so we can remove one...
         cluster.resize(2);
         for (Entity it: cluster.getMembers()) { 
-            ((EntityLocal)it).setAttribute(ClusteredEntity.HTTP_PORT, 1234);
-            ((EntityLocal)it).setAttribute(Startable.SERVICE_UP, true);
+            ((EntityLocal)it).sensors().set(ClusteredEntity.HTTP_PORT, 1234);
+            ((EntityLocal)it).sensors().set(Startable.SERVICE_UP, true);
         }
         assertEventuallyAddressesMatchCluster();
 
         // Now unset host/port, and remove children
         // Note the unsetting of hostname is done in SoftwareProcessImpl.stop(), so this is realistic
         for (Entity it : cluster.getMembers()) {
-            ((EntityLocal)it).setAttribute(ClusteredEntity.HTTP_PORT, null);
-            ((EntityLocal)it).setAttribute(ClusteredEntity.HOSTNAME, null);
-            ((EntityLocal)it).setAttribute(Startable.SERVICE_UP, false);
+            ((EntityLocal)it).sensors().set(ClusteredEntity.HTTP_PORT, null);
+            ((EntityLocal)it).sensors().set(ClusteredEntity.HOSTNAME, null);
+            ((EntityLocal)it).sensors().set(Startable.SERVICE_UP, false);
         }
         assertEventuallyAddressesMatch(ImmutableList.<Entity>of());
     }
@@ -219,12 +219,12 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         List<Collection<String>> u = Lists.newArrayList(controller.getUpdates());
         assertTrue(u.isEmpty(), "expected no updates, but got "+u);
         
-        child.setAttribute(Startable.SERVICE_UP, true);
+        child.sensors().set(Startable.SERVICE_UP, true);
         
         // TODO Ugly sleep to allow AbstractController to detect node having been added
         Thread.sleep(100);
         
-        child.setAttribute(ClusteredEntity.HOST_AND_PORT, "mymachine:1234");
+        child.sensors().set(ClusteredEntity.HOST_AND_PORT, "mymachine:1234");
         assertEventuallyExplicitAddressesMatch(ImmutableList.of("mymachine:1234"));
     }
 
@@ -277,7 +277,7 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         cluster.addMember(child);
 
         for (int i = 0; i < 100; i++) {
-            child.setAttribute(Attributes.SERVICE_UP, true);
+            child.sensors().set(Attributes.SERVICE_UP, true);
         }
         
         Thread.sleep(100);
@@ -352,8 +352,8 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
                 throw Exceptions.propagate(e);
             }
             addLocations(Arrays.asList(machine));
-            setAttribute(HOSTNAME, machine.getAddress().getHostName());
-            setAttribute(Attributes.SUBNET_HOSTNAME, machine.getAddress().getHostName());
+            sensors().set(HOSTNAME, machine.getAddress().getHostName());
+            sensors().set(Attributes.SUBNET_HOSTNAME, machine.getAddress().getHostName());
         }
         public void stop() {
             if (provisioner!=null) provisioner.release((MachineLocation) firstLocation());

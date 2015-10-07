@@ -101,9 +101,9 @@ public class DescendantsTest extends BrooklynRestResourceTest {
         assertEquals(sensors.size(), 0);
 
         long v = 0;
-        ((EntityLocal)application).setAttribute(Sensors.newLongSensor("foo"), v);
+        ((EntityLocal)application).sensors().set(Sensors.newLongSensor("foo"), v);
         for (Entity e: entities)
-            ((EntityLocal)e).setAttribute(Sensors.newLongSensor("foo"), v+=123);
+            ((EntityLocal)e).sensors().set(Sensors.newLongSensor("foo"), v+=123);
         
         sensors = client().resource("/v1/applications/"+application.getApplicationId()+"/descendants/sensor/foo")
             .get(new GenericType<Map<String,Object>>() {});

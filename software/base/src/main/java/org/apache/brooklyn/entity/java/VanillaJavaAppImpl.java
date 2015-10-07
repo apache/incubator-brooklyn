@@ -63,7 +63,7 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
         List<String> newCP = new ArrayList<String>();
         if (cp!=null) newCP.addAll(cp);
         newCP.add(url);
-        setConfig(CLASSPATH, newCP);
+        config().set(CLASSPATH, newCP);
     }
 
     public void addToClasspath(Collection<String> urls) {
@@ -71,7 +71,7 @@ public class VanillaJavaAppImpl extends SoftwareProcessImpl implements VanillaJa
         List<String> newCP = new ArrayList<String>();
         if (cp!=null) newCP.addAll(cp);
         newCP.addAll(urls);
-        setConfig(CLASSPATH, newCP);
+        config().set(CLASSPATH, newCP);
     }
 
     @Override

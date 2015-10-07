@@ -34,22 +34,22 @@ public class TypedToyMySqlEntityChef extends ChefEntityImpl {
 
         String password = "p4ssw0rd";
         
-        setConfig(CHEF_COOKBOOK_PRIMARY_NAME, "mysql");
-        setConfig(CHEF_COOKBOOK_URLS, ImmutableMap.of(
+        config().set(CHEF_COOKBOOK_PRIMARY_NAME, "mysql");
+        config().set(CHEF_COOKBOOK_URLS, ImmutableMap.of(
             "mysql", GithubUrls.tgz("opscode-cookbooks", "mysql", "v4.0.12"),
             "openssl", GithubUrls.tgz("opscode-cookbooks", "openssl", "v1.1.0"),
             "mysql", GithubUrls.tgz("opscode-cookbooks", "build-essential", "v1.4.4")));
         
-        setConfig(CHEF_LAUNCH_RUN_LIST, ImmutableSet.of("mysql::server"));
-        setConfig(CHEF_LAUNCH_ATTRIBUTES, ImmutableMap.<String,Object>of(
+        config().set(CHEF_LAUNCH_RUN_LIST, ImmutableSet.of("mysql::server"));
+        config().set(CHEF_LAUNCH_ATTRIBUTES, ImmutableMap.<String,Object>of(
             "mysql", ImmutableMap.of(
                 "server_root_password", password,
                 "server_repl_password", password,
                 "server_debian_password", password)));
         
-        setConfig(ChefConfig.PID_FILE, "/var/run/mysqld/mysqld.pid");
+        config().set(ChefConfig.PID_FILE, "/var/run/mysqld/mysqld.pid");
         
-        setConfig(CHEF_MODE, ChefModes.SOLO);
+        config().set(CHEF_MODE, ChefModes.SOLO);
     }
 
 }

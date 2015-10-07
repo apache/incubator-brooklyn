@@ -28,7 +28,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
@@ -59,7 +58,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         final MockContainerEntity containerA = newContainer(app, loc1, "A");
         final MockItemEntity item1 = newItem(app, containerA, "1");
         final MockItemEntity item2 = newItem(app, containerA, "2");
-        ((EntityLocal)item2).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item1, 11d));
+        item2.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item1, 11d));
         
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             @Override public void run() {
@@ -73,7 +72,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
     
     @Test
     public void testPolicyAcceptsLocationFinder() {
-        pool.removePolicy(policy);
+        pool.policies().remove(policy);
         
         Function<Entity, Location> customLocationFinder = new Function<Entity, Location>() {
             @Override public Location apply(Entity input) {
@@ -86,7 +85,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
                 model, 
                 FollowTheSunParameters.newDefault());
         
-        pool.addPolicy(customPolicy);
+        pool.policies().add(customPolicy);
         
         final MockContainerEntity containerA = newContainer(app, loc1, "A");
         
@@ -116,7 +115,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item1 = newItem(app, containerA, "1");
         MockItemEntity item2 = newItem(app, containerB, "2");
 
-        ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
+        item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
         
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.<MockItemEntity>of(), containerB, ImmutableList.of(item1, item2)));
     }
@@ -129,7 +128,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item1 = newItem(app, containerA, "1");
         MockItemEntity item2 = newItem(app, containerB, "2");
 
-        ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 0.1d));
+        item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 0.1d));
         
         Thread.sleep(SHORT_WAIT_MS);
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.of(item1), containerB, ImmutableList.of(item2)));
@@ -144,7 +143,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item2 = newItem(app, containerA, "2");
         MockItemEntity item3 = newItem(app, containerB, "3");
         
-        ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d, item3, 100.1d));
+        item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d, item3, 100.1d));
         
         Thread.sleep(SHORT_WAIT_MS);
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.of(item1, item2), containerB, ImmutableList.of(item3)));
@@ -158,8 +157,8 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item1 = newItem(app, containerA, "1");
         MockItemEntity item2 = newItem(app, containerB, "2");
         
-        ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item1, 100d));
-        ((EntityLocal)item2).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
+        item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item1, 100d));
+        item2.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
         
         Thread.sleep(SHORT_WAIT_MS);
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.of(item1), containerB, ImmutableList.of(item2)));
@@ -174,7 +173,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item2 = newItem(app, containerA, "2");
         MockItemEntity item3 = newItem(app, containerB, "3");
         
-        ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d, item3, 1000d));
+        item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d, item3, 1000d));
         
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.of(item2), containerB, ImmutableList.of(item1, item3)));
         
@@ -193,7 +192,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item2 = newItem(app, containerA, "2");
         MockItemEntity item3 = newItem(app, containerB, "3");
         
-        ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d, item3, 1000d));
+        item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d, item3, 1000d));
         
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.of(item2), containerB, ImmutableList.of(item1, item3)));
         
@@ -209,7 +208,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item1 = newLockedItem(app, containerA, "1");
         MockItemEntity item2 = newItem(app, containerB, "2");
         
-        ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
+        item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
         
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.of(item1), containerB, ImmutableList.of(item2)));
     }
@@ -221,7 +220,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         MockItemEntity item1 = newLockedItem(app, containerA, "1");
         MockItemEntity item2 = newItem(app, containerA, "2");
         
-        ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item1, 100d));
+        item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item1, 100d));
         
         assertItemDistributionEventually(ImmutableMap.of(containerA, ImmutableList.of(item1, item2), containerB, ImmutableList.<MockItemEntity>of()));
     }
@@ -247,7 +246,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         final long minPeriodBetweenExecs = 1000;
         final long timePrecision = 250;
         
-        pool.removePolicy(policy);
+        pool.policies().remove(policy);
         
         MockContainerEntity containerA = newContainer(app, loc1, "A");
         MockContainerEntity containerB = newContainer(app, loc2, "B");
@@ -261,7 +260,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
             model,
             FollowTheSunParameters.newDefault());
     
-        pool.addPolicy(customPolicy);
+        pool.policies().add(customPolicy);
         
         // Record times that things are moved, by lisening to the container sensor being set
         final Stopwatch stopwatch = Stopwatch.createStarted();
@@ -269,7 +268,7 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         final List<Long> eventTimes = Lists.newCopyOnWriteArrayList();
         final Semaphore semaphore = new Semaphore(0);
         
-        app.subscribe(item1, Movable.CONTAINER, new SensorEventListener<Entity>() {
+        app.subscriptions().subscribe(item1, Movable.CONTAINER, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 long eventTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
                 LOG.info("Received {} at {}", event, eventTime);
@@ -280,12 +279,12 @@ public class FollowTheSunPolicyTest extends AbstractFollowTheSunPolicyTest {
         String errmsg = "";
         for (int i = 0; i < MAX_ATTEMPTS; i++) {
             // Set the workrate, causing the policy to move item1 to item2's location, and wait for it to happen
-            ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
+            item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item2, 100d));
             assertTrue(semaphore.tryAcquire(TIMEOUT_MS, TimeUnit.MILLISECONDS));
             assertEquals(item1.getAttribute(Movable.CONTAINER), containerB);
             
             // now cause item1 to be moved to item3's location, and wait for it to happen
-            ((EntityLocal)item1).setAttribute(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item3, 100d));
+            item1.sensors().set(MockItemEntity.ITEM_USAGE_METRIC, ImmutableMap.<Entity,Double>of(item3, 100d));
             assertTrue(semaphore.tryAcquire(TIMEOUT_MS, TimeUnit.MILLISECONDS));
             assertEquals(item1.getAttribute(Movable.CONTAINER), containerA);
             

@@ -78,7 +78,7 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
         enricher.setDisplayName("Bob");
         enricher.config().set(MyEnricher.STR_KEY, "aval");
         enricher.config().set(MyEnricher.INT_KEY, 2);
-        app.addEnricher(enricher);
+        app.enrichers().add(enricher);
         
         assertEquals(enricher.getDisplayName(), "Bob");
         assertEquals(enricher.getConfig(MyEnricher.STR_KEY), "aval");
@@ -87,7 +87,7 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testAddSpec() throws Exception {
-        MyEnricher enricher = app.addEnricher(EnricherSpec.create(MyEnricher.class)
+        MyEnricher enricher = app.enrichers().add(EnricherSpec.create(MyEnricher.class)
             .displayName("Bob")
             .configure(MyEnricher.STR_KEY, "aval").configure(MyEnricher.INT_KEY, 2));
         
@@ -98,7 +98,7 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
         
     @Test
     public void testTagsFromSpec() throws Exception {
-        MyEnricher enricher = app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
+        MyEnricher enricher = app.enrichers().add(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
 
         assertEquals(enricher.tags().getTags(), MutableSet.of("x", 99));
         assertEquals(enricher.getUniqueTag(), "x");
@@ -106,12 +106,12 @@ public class BasicEnricherTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testSameUniqueTagEnricherNotAddedTwice() throws Exception {
-        app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
-        app.addEnricher(EnricherSpec.create(MyEnricher.class).tag(94).uniqueTag("x"));
+        app.enrichers().add(EnricherSpec.create(MyEnricher.class).tag(99).uniqueTag("x"));
+        app.enrichers().add(EnricherSpec.create(MyEnricher.class).tag(94).uniqueTag("x"));
         
         assertEquals(app.getEnrichers().size(), 1);
         // the more recent one should dominate
-        Enricher enricher = Iterables.getOnlyElement(app.getEnrichers());
+        Enricher enricher = Iterables.getOnlyElement(app.enrichers());
         Assert.assertTrue(enricher.tags().containsTag(94));
         Assert.assertFalse(enricher.tags().containsTag(99));
     }

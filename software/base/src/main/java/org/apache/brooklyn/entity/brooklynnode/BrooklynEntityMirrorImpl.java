@@ -56,7 +56,7 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
         public Map apply(HttpToolResponse input) {
             Map<?, ?> entitySummary = new Gson().fromJson(input.getContentAsString(), Map.class);
             String catalogItemId = (String)entitySummary.get("catalogItemId");
-            setAttribute(MIRROR_CATALOG_ITEM_ID, catalogItemId);
+            sensors().set(MIRROR_CATALOG_ITEM_ID, catalogItemId);
             return entitySummary;
         }
     }
@@ -74,7 +74,7 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
         connectSensorsAsync();
 
         //start spinning, could take some time before MIRRORED_ENTITY_URL is available for first time mirroring
-        setAttribute(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STARTING);
+        sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STARTING);
     }
 
     @Override
@@ -111,8 +111,8 @@ public class BrooklynEntityMirrorImpl extends AbstractEntity implements Brooklyn
             public Void apply(HttpToolResponse input) {
                 Map sensors = new Gson().fromJson(input.getContentAsString(), Map.class);
                 for (Object kv: sensors.entrySet())
-                    setAttribute(Sensors.newSensor(Object.class, ""+((Map.Entry)kv).getKey()), ((Map.Entry)kv).getValue());
-                setAttribute(MIRROR_STATUS, "normal");
+                    sensors().set(Sensors.newSensor(Object.class, ""+((Map.Entry)kv).getKey()), ((Map.Entry)kv).getValue());
+                sensors().set(MIRROR_STATUS, "normal");
                 return null;
             }
         };

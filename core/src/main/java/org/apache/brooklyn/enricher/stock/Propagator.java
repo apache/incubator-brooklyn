@@ -147,10 +147,10 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
                 "Nothing to propagate; detected: propagatingAll (%s, excluding %s), sensorMapping (%s)", propagatingAll, getConfig(PROPAGATING_ALL_BUT), sensorMapping);
 
         if (propagatingAll) {
-            subscribe(producer, null, this);
+            subscriptions().subscribe(producer, null, this);
         } else {
             for (Sensor<?> sensor : sensorMapping.keySet()) {
-                subscribe(producer, sensor, this);
+                subscriptions().subscribe(producer, sensor, this);
             }
         }
         
@@ -191,7 +191,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
                 Object v = producer.getAttribute((AttributeSensor<?>)s);
                 // TODO we should keep a timestamp for the source sensor and echo it 
                 // (this pretends timestamps are current, which probably isn't the case when we are propagating)
-                if (v != null || includeNullValues) entity.setAttribute(destinationSensor, v);
+                if (v != null || includeNullValues) entity.sensors().set(destinationSensor, v);
             }
         }
     }

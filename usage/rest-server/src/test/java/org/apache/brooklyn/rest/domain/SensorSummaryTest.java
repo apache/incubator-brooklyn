@@ -90,7 +90,7 @@ public class SensorSummaryTest {
     @Test
     public void testSensorWithMultipleOpenUrlActionsRegistered() throws IOException {
         AttributeSensor<String> sensor = Sensors.newStringSensor("sensor1");
-        entity.setAttribute(sensor, "http://myval");
+        entity.sensors().set(sensor, "http://myval");
         RendererHints.register(sensor, RendererHints.namedActionWithUrl());
         RendererHints.register(sensor, RendererHints.namedActionWithUrl());
 

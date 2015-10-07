@@ -61,7 +61,7 @@ public class ResilientMongoDbApp extends AbstractApplication implements Startabl
         
         initResilience(rs);
         
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(MongoDBReplicaSet.REPLICA_SET_ENDPOINTS, MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
                 .from(rs)
                 .build());
@@ -72,19 +72,19 @@ public class ResilientMongoDbApp extends AbstractApplication implements Startabl
      * failing that attempting to _replace_ the entity (e.g. a new VM), and 
      * failing that setting the cluster "on-fire" */
     protected void initResilience(MongoDBReplicaSet rs) {
-        subscribe(rs, DynamicCluster.MEMBER_ADDED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(rs, DynamicCluster.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override
             public void onEvent(SensorEvent<Entity> addition) {
                 initSoftwareProcess((SoftwareProcess)addition.getValue());
             }
         });
-        rs.addPolicy(new ServiceReplacer(ServiceRestarter.ENTITY_RESTART_FAILED));
+        rs.policies().add(new ServiceReplacer(ServiceRestarter.ENTITY_RESTART_FAILED));
     }
 
     /** invoked whenever a new MongoDB server is added (the server may not be started yet) */
     protected void initSoftwareProcess(SoftwareProcess p) {
-        p.addEnricher(new ServiceFailureDetector());
-        p.addPolicy(new ServiceRestarter(ServiceFailureDetector.ENTITY_FAILED));
+        p.enrichers().add(new ServiceFailureDetector());
+        p.policies().add(new ServiceRestarter(ServiceFailureDetector.ENTITY_FAILED));
     }
     
     public static void main(String[] argv) {

@@ -51,8 +51,8 @@ public class EntityLocationsTest extends BrooklynAppUnitTestSupport {
         
         final RecordingSensorEventListener<Object> addedEvents = new RecordingSensorEventListener<>();
         final RecordingSensorEventListener<Object> removedEvents = new RecordingSensorEventListener<>();
-        app.subscribe(app, AbstractEntity.LOCATION_ADDED, addedEvents);
-        app.subscribe(app, AbstractEntity.LOCATION_REMOVED, removedEvents);
+        app.subscriptions().subscribe(app, AbstractEntity.LOCATION_ADDED, addedEvents);
+        app.subscriptions().subscribe(app, AbstractEntity.LOCATION_REMOVED, removedEvents);
 
         // Add first location
         app.addLocations(ImmutableList.of(l));
@@ -85,8 +85,8 @@ public class EntityLocationsTest extends BrooklynAppUnitTestSupport {
         
         final RecordingSensorEventListener<Object> addedEvents = new RecordingSensorEventListener<>();
         final RecordingSensorEventListener<Object> removedEvents = new RecordingSensorEventListener<>();
-        app.subscribe(app, AbstractEntity.LOCATION_ADDED, addedEvents);
-        app.subscribe(app, AbstractEntity.LOCATION_REMOVED, removedEvents);
+        app.subscriptions().subscribe(app, AbstractEntity.LOCATION_ADDED, addedEvents);
+        app.subscriptions().subscribe(app, AbstractEntity.LOCATION_REMOVED, removedEvents);
 
         // Add first location
         app.addLocations(ImmutableList.of(l, l));

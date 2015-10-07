@@ -62,7 +62,7 @@ public class RollingMeanEnricher<T extends Number> extends AbstractTypeTransform
     public void onEvent(SensorEvent<T> event) {
         values.addLast(event.getValue());
         pruneValues();
-        entity.setAttribute((AttributeSensor<Double>)target, getAverage());
+        entity.sensors().set((AttributeSensor<Double>)target, getAverage());
     }
     
     private void pruneValues() {

@@ -45,7 +45,7 @@ public class ConfigToAttributes {
         T v = entity.getAttribute(key);
         if (v!=null) return v;
         v = key.getAsSensorValue(entity);
-        if (v!=null) entity.setAttribute(key, v);
+        if (v!=null) entity.sensors().set(key, v);
         return v;
     }
 

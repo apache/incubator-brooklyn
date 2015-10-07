@@ -104,10 +104,10 @@ public class BalanceableWorkerPoolImpl extends AbstractEntity implements Balance
         this.itemGroup = itemGroup;
         if (resizable == null && containerGroup instanceof Resizable) resizable = (Resizable) containerGroup;
         
-        subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
-        subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
-        subscribe(itemGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
-        subscribe(itemGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
+        subscriptions().subscribe(containerGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
+        subscriptions().subscribe(containerGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
+        subscriptions().subscribe(itemGroup, AbstractGroup.MEMBER_ADDED, eventHandler);
+        subscriptions().subscribe(itemGroup, AbstractGroup.MEMBER_REMOVED, eventHandler);
         
         // Process extant containers and items
         for (Entity existingContainer : containerGroup.getMembers()) {
@@ -141,7 +141,7 @@ public class BalanceableWorkerPoolImpl extends AbstractEntity implements Balance
     }
     
     private void onContainerAdded(BalanceableContainer<?> newContainer) {
-        subscribe(newContainer, Startable.SERVICE_UP, eventHandler);
+        subscriptions().subscribe(newContainer, Startable.SERVICE_UP, eventHandler);
         if (!(newContainer instanceof Startable) || Boolean.TRUE.equals(newContainer.getAttribute(Startable.SERVICE_UP))) {
             onContainerUp(newContainer);
         }
@@ -149,36 +149,36 @@ public class BalanceableWorkerPoolImpl extends AbstractEntity implements Balance
     
     private void onContainerUp(BalanceableContainer<?> newContainer) {
         if (containers.add(newContainer)) {
-            emit(CONTAINER_ADDED, newContainer);
+            sensors().emit(CONTAINER_ADDED, newContainer);
         }
     }
     
     private void onContainerDown(BalanceableContainer<?> oldContainer) {
         if (containers.remove(oldContainer)) {
-            emit(CONTAINER_REMOVED, oldContainer);
+            sensors().emit(CONTAINER_REMOVED, oldContainer);
         }
     }
     
     private void onContainerRemoved(BalanceableContainer<?> oldContainer) {
-        unsubscribe(oldContainer);
+        subscriptions().unsubscribe(oldContainer);
         onContainerDown(oldContainer);
     }
     
     private void onItemAdded(Entity item) {
         if (items.add(item)) {
-            subscribe(item, Movable.CONTAINER, eventHandler);
-            emit(ITEM_ADDED, new ContainerItemPair(item.getAttribute(Movable.CONTAINER), item));
+            subscriptions().subscribe(item, Movable.CONTAINER, eventHandler);
+            sensors().emit(ITEM_ADDED, new ContainerItemPair(item.getAttribute(Movable.CONTAINER), item));
         }
     }
     
     private void onItemRemoved(Entity item) {
         if (items.remove(item)) {
-            unsubscribe(item);
-            emit(ITEM_REMOVED, new ContainerItemPair(null, item));
+            subscriptions().unsubscribe(item);
+            sensors().emit(ITEM_REMOVED, new ContainerItemPair(null, item));
         }
     }
     
     private void onItemMoved(Entity item, BalanceableContainer<?> container) {
-        emit(ITEM_MOVED, new ContainerItemPair(container, item));
+        sensors().emit(ITEM_MOVED, new ContainerItemPair(container, item));
     }
 }

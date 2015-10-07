@@ -117,7 +117,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
         log.info("App started:");
         Entities.dumpInfo(app);
         TestEntity entity = (TestEntity)app.getChildren().iterator().next();
-        entity.setAttribute(TestEntity.NAME, "New Name");
+        entity.sensors().set(TestEntity.NAME, "New Name");
         Asserts.eventually(Entities.attributeSupplier(app, TestEntity.NAME), Predicates.<String>equalTo("New Name"));
     }
     
@@ -162,7 +162,7 @@ public class EnrichersYamlTest extends AbstractYamlTest {
             }}).get();
         Assert.assertEquals(producer, childEntity);
         Asserts.assertTrue(Boolean.valueOf(propagator.getConfig(Propagator.PROPAGATING_ALL)), "Expected Propagator.PROPAGATING_ALL to be true");
-        ((TestEntity)childEntity).setAttribute(TestEntity.NAME, "New Name");
+        ((TestEntity)childEntity).sensors().set(TestEntity.NAME, "New Name");
         Asserts.eventually(Entities.attributeSupplier(parentEntity, TestEntity.NAME), Predicates.<String>equalTo("New Name"));
     }
     

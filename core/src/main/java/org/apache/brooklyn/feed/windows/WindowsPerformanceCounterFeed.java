@@ -305,7 +305,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
                 AttributeSensor<Object> attribute = (AttributeSensor<Object>) Sensors.newSensor(clazz, config.getSensor().getName(), config.getDescription());
                 try {
                     Object value = TypeCoercions.coerce(rawValue, TypeToken.of(clazz));
-                    entity.setAttribute(attribute, value);
+                    entity.sensors().set(attribute, value);
                 } catch (Exception e) {
                     Exceptions.propagateIfFatal(e);
                     if (failedAttributes.add(attribute)) {
@@ -324,7 +324,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
             for (WindowsPerformanceCounterPollConfig<?> config : polls) {
                 Class<?> clazz = config.getSensor().getType();
                 AttributeSensor<?> attribute = Sensors.newSensor(clazz, config.getSensor().getName(), config.getDescription());
-                entity.setAttribute(attribute, null);
+                entity.sensors().set(attribute, null);
             }
         }
 
@@ -333,7 +333,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
             log.error("Detected exception while retrieving Windows Performance Counters from entity " +
                     entity.getDisplayName(), exception);
             for (WindowsPerformanceCounterPollConfig<?> config : polls) {
-                entity.setAttribute(Sensors.newSensor(config.getSensor().getClass(), config.getPerformanceCounterName(), config.getDescription()), null);
+                entity.sensors().set(Sensors.newSensor(config.getSensor().getClass(), config.getPerformanceCounterName(), config.getDescription()), null);
             }
         }
 

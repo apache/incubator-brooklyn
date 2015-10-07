@@ -63,7 +63,7 @@ public class MariaDbSshDriver extends AbstractSoftwareProcessSshDriver implement
     public MariaDbSshDriver(MariaDbNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
 
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFile());
+        entity.sensors().set(Attributes.LOG_FILE_LOCATION, getLogFile());
     }
 
     public String getOsTag() {

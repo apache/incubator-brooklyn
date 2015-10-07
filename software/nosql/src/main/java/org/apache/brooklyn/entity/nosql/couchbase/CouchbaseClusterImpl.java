@@ -119,13 +119,13 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
         log.info("Initializing the Couchbase cluster...");
         super.init();
         
-        addEnricher(
+        enrichers().add(
             Enrichers.builder()
                 .transforming(COUCHBASE_CLUSTER_UP_NODES)
                 .from(this)
                 .publishing(COUCHBASE_CLUSTER_UP_NODE_ADDRESSES)
                 .computing(new ListOfHostAndPort()).build() );
-        addEnricher(
+        enrichers().add(
             Enrichers.builder()
                 .transforming(COUCHBASE_CLUSTER_UP_NODE_ADDRESSES)
                 .from(this)
@@ -163,14 +163,14 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             addAveragingMemberEnricher(nodeSensor, enricherSetup.get(nodeSensor));
         }
         
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+        enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .from(IS_CLUSTER_INITIALIZED).computing(
                 IfFunctions.ifNotEquals(true).value("The cluster is not yet completely initialized")
                     .defaultValue(null).build()).build() );
     }
     
     private void addAveragingMemberEnricher(AttributeSensor<? extends Number> fromSensor, AttributeSensor<? extends Number> toSensor) {
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
             .aggregating(fromSensor)
             .publishing(toSensor)
             .fromMembers()
@@ -180,7 +180,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     }
 
     private void addSummingMemberEnricher(AttributeSensor<? extends Number> source) {
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
             .aggregating(source)
             .publishing(source)
             .fromMembers()
@@ -191,13 +191,13 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
     @Override
     protected void doStart() {
-        setAttribute(IS_CLUSTER_INITIALIZED, false);
+        sensors().set(IS_CLUSTER_INITIALIZED, false);
         
         super.doStart();
 
         connectSensors();
         
-        setAttribute(BUCKET_CREATION_IN_PROGRESS, false);
+        sensors().set(BUCKET_CREATION_IN_PROGRESS, false);
 
         //start timeout before adding the servers
         Tasks.setBlockingDetails("Pausing while Couchbase stabilizes");
@@ -210,8 +210,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
             
             //TODO: select a new primary node if this one fails
             Entity primaryNode = upNodes.get().iterator().next();
-            ((EntityInternal) primaryNode).setAttribute(CouchbaseNode.IS_PRIMARY_NODE, true);
-            setAttribute(COUCHBASE_PRIMARY_NODE, primaryNode);
+            ((EntityInternal) primaryNode).sensors().set(CouchbaseNode.IS_PRIMARY_NODE, true);
+            sensors().set(COUCHBASE_PRIMARY_NODE, primaryNode);
 
             Set<Entity> serversToAdd = MutableSet.<Entity>copyOf(getUpNodes());
 
@@ -233,7 +233,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                     log.warn(this+" is not quorate; will likely fail later, but proceeding for now");
                 }
                 for (Entity server: serversToAdd) {
-                    ((EntityInternal) server).setAttribute(CouchbaseNode.IS_IN_CLUSTER, true);
+                    ((EntityInternal) server).sensors().set(CouchbaseNode.IS_IN_CLUSTER, true);
                 }
             }
                 
@@ -264,7 +264,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 }
             }
 
-            setAttribute(IS_CLUSTER_INITIALIZED, true);
+            sensors().set(IS_CLUSTER_INITIALIZED, true);
             
         } else {
             throw new IllegalStateException("No up nodes available after starting");
@@ -280,7 +280,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
     }
 
     protected void connectSensors() {
-        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Controller targets tracker")
                 .configure("group", this));
     }
@@ -324,7 +324,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                     if (!upNodes.get().contains(member)) {
                         Set<Entity> newNodes = Sets.newHashSet(getUpNodes());
                         newNodes.add(member);
-                        setAttribute(COUCHBASE_CLUSTER_UP_NODES, newNodes);
+                        sensors().set(COUCHBASE_CLUSTER_UP_NODES, newNodes);
 
                         //add to set of servers to be added.
                         if (isClusterInitialized()) {
@@ -334,7 +334,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 } else {
                     Set<Entity> newNodes = Sets.newHashSet();
                     newNodes.add(member);
-                    setAttribute(COUCHBASE_CLUSTER_UP_NODES, newNodes);
+                    sensors().set(COUCHBASE_CLUSTER_UP_NODES, newNodes);
 
                     if (isClusterInitialized()) {
                         addServer(member);
@@ -344,7 +344,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 Set<Entity> upNodes = getUpNodes();
                 if (upNodes != null && upNodes.contains(member)) {
                     upNodes.remove(member);
-                    setAttribute(COUCHBASE_CLUSTER_UP_NODES, upNodes);
+                    sensors().set(COUCHBASE_CLUSTER_UP_NODES, upNodes);
                     log.info("Removing couchbase node {}: {}; from cluster", new Object[]{this, member});
                 }
             }
@@ -398,7 +398,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
 
     @Override
     protected void initEnrichers() {
-        addEnricher(Enrichers.builder().updatingMap(ServiceStateLogic.SERVICE_NOT_UP_INDICATORS)
+        enrichers().add(Enrichers.builder().updatingMap(ServiceStateLogic.SERVICE_NOT_UP_INDICATORS)
             .from(COUCHBASE_CLUSTER_UP_NODES)
             .computing(new Function<Set<Entity>, Object>() {
                 @Override
@@ -479,7 +479,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                 Entities.invokeEffectorWithArgs(this, getPrimaryNode(), CouchbaseNode.SERVER_ADD, webAdmin.toString(), username, password).getUnchecked();
             }
             //FIXME check feedback of whether the server was added.
-            ((EntityInternal) serverToAdd).setAttribute(CouchbaseNode.IS_IN_CLUSTER, true);
+            ((EntityInternal) serverToAdd).sensors().set(CouchbaseNode.IS_IN_CLUSTER, true);
         }
     }
 
@@ -533,7 +533,7 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                         if (CouchbaseClusterImpl.this.resetBucketCreation.get() != null) {
                             CouchbaseClusterImpl.this.resetBucketCreation.get().stop();
                         }
-                        setAttribute(CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, true);
+                        sensors().set(CouchbaseCluster.BUCKET_CREATION_IN_PROGRESS, true);
                         HostAndPort hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(primaryNode, primaryNode.getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT));
 
                         CouchbaseClusterImpl.this.resetBucketCreation.set(HttpFeed.builder()
