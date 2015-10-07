@@ -282,10 +282,11 @@ define([
             return false;
         },
 
-        showChildrenOf: function($treeBox, recurse) {
+        showChildrenOf: function($treeBox, recurse, excludedEntityIds) {
+            excludedEntityIds = excludedEntityIds || [];
+            var idToExpand = $treeBox.data('entityId');
             var $wrapper = $treeBox.children('.entity_tree_node_wrapper');
             var $childContainer = $treeBox.children('.node-children');
-            var idToExpand = $treeBox.data('entityId');
             var model = this.collection.get(idToExpand);
             if (model == null) {
                 // not yet loaded; parallel thread should load
@@ -311,16 +312,28 @@ define([
                 }
             });
 
+            // Avoid infinite recursive expansion using a "taboo list" of indirect entities already expanded in this
+            // operation. Example: a group that contains itself or one of its own ancestors. Such cycles can only
+            // originate via "indirect" subordinates.
+            var expandIfNotExcluded = function($treebox, excludedEntityIds, defer) {
+                if ($treebox.hasClass('indirect')) {
+                    var id = $treebox.data('entityId');
+                    if (_.contains(excludedEntityIds, id))
+                        return;
+                    excludedEntityIds.push(id);
+                }
+                var doExpand = function() { that.showChildrenOf($treebox, recurse, excludedEntityIds); };
+                if (defer) _.defer(doExpand);
+                else doExpand();
+            };
+
             if (this.collection.includeEntities(_.union(children, members))) {
                 // we have to load entities before we can proceed
                 this.collection.fetch({
                     success: function() {
                         if (recurse) {
                             $childContainer.children('.tree-box').each(function () {
-                                var $treebox = $(this);
-                                _.defer(function() {
-                                    that.showChildrenOf($treebox, recurse);
-                                });
+                                expandIfNotExcluded($(this), excludedEntityIds, true);
                             });
                         }
                     }
@@ -331,8 +344,8 @@ define([
             $wrapper.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down');
             if (recurse) {
                 $childContainer.children('.tree-box').each(function () {
-                    that.showChildrenOf($(this), recurse);
-                })
+                    expandIfNotExcluded($(this), excludedEntityIds, false);
+                });
             }
         },
 
