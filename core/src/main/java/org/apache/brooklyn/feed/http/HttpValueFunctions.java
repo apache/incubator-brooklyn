@@ -39,6 +39,7 @@ public class HttpValueFunctions {
     
     /** @deprecated since 0.7.0; only here for deserialization of persisted state */
     private static Function<HttpToolResponse, Integer> responseCodeLegacy() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
         return new Function<HttpToolResponse, Integer>() {
             @Override public Integer apply(HttpToolResponse input) {
                 return input.getResponseCode();
@@ -70,6 +71,7 @@ public class HttpValueFunctions {
     
     /** @deprecated since 0.7.0; only here for deserialization of persisted state */
     private static Function<HttpToolResponse, String> stringContentsFunctionLegacy() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
         return new Function<HttpToolResponse, String>() {
             @Override public String apply(HttpToolResponse input) {
                 return input.getContentAsString();
@@ -105,6 +107,7 @@ public class HttpValueFunctions {
 
     /** @deprecated since 0.7.0; only here for deserialization of persisted state */
     private static Function<HttpToolResponse, Long> latencyLegacy() {
+        // TODO PERSISTENCE WORKAROUND kept anonymous function in case referenced in persisted state
         return new Function<HttpToolResponse, Long>() {
             public Long apply(HttpToolResponse input) {
                 return input.getLatencyFullContent();

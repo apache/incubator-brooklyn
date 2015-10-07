@@ -19,18 +19,30 @@
 package org.apache.brooklyn.util.math;
 
 import org.apache.brooklyn.test.FixedLocaleTest;
-import org.apache.brooklyn.util.math.MathFunctions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class MathFunctionsTest extends FixedLocaleTest {
 
     @Test
-    public void testAdd() {
+    public void testPlus() {
         Assert.assertEquals(MathFunctions.plus(3).apply(4), (Integer)7);
+        Assert.assertEquals(MathFunctions.plus(3L).apply(4L), (Long)7L);
         Assert.assertEquals(MathFunctions.plus(0.3).apply(0.4).doubleValue(), 0.7, 0.00000001);
     }
     
+    @Test
+    public void testTimes() {
+        Assert.assertEquals(MathFunctions.times(3).apply(4), (Integer)12);
+        Assert.assertEquals(MathFunctions.times(3L).apply(4L), (Long)12L);
+        Assert.assertEquals(MathFunctions.times(0.3).apply(0.4).doubleValue(), 0.12, 0.00000001);
+    }
+    
+    @Test
+    public void testDivide() {
+        Assert.assertEquals(MathFunctions.divide(2.0).apply(8), 4.0, 0.00000001);
+    }
+
     @Test
     public void testReadableString() {
         Assert.assertEquals(MathFunctions.readableString(3, 5).apply(0.0123456), "1.23E-2");

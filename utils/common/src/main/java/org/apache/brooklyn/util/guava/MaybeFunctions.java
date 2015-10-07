@@ -22,7 +22,10 @@ import com.google.common.base.Function;
 
 public class MaybeFunctions {
 
-    public static <T> Function<T, Maybe<T>> wrap() {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static <T> Function<T, Maybe<T>> wrapOld() {
+        // TODO PERSISTENCE WORKAROUND
         return new Function<T, Maybe<T>>() {
             @Override
             public Maybe<T> apply(T input) {
@@ -31,7 +34,10 @@ public class MaybeFunctions {
         };
     }
 
-    public static <T> Function<Maybe<T>, T> get() {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static <T> Function<Maybe<T>, T> getOld() {
+        // TODO PERSISTENCE WORKAROUND
         return new Function<Maybe<T>, T>() {
             @Override
             public T apply(Maybe<T> input) {
@@ -40,7 +46,10 @@ public class MaybeFunctions {
         };
     }
 
-    public static <T> Function<Maybe<T>, T> or(final T value) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static <T> Function<Maybe<T>, T> orOld(final T value) {
+        // TODO PERSISTENCE WORKAROUND
         return new Function<Maybe<T>, T>() {
             @Override
             public T apply(Maybe<T> input) {
@@ -49,4 +58,41 @@ public class MaybeFunctions {
         };
     }
 
+    public static <T> Function<T, Maybe<T>> wrap() {
+        return new WrapMaybe<T>();
+    }
+
+    protected static class WrapMaybe<T> implements Function<T, Maybe<T>> {
+        @Override
+        public Maybe<T> apply(T input) {
+            return Maybe.fromNullable(input);
+        }
+    };
+
+    public static <T> Function<Maybe<T>, T> get() {
+        return new GetMaybe<T>();
+    }
+    
+    protected static class GetMaybe<T> implements Function<Maybe<T>, T> {
+        @Override
+        public T apply(Maybe<T> input) {
+            return input.get();
+        }
+    }
+
+    public static <T> Function<Maybe<T>, T> or(final T value) {
+        return new OrMaybe<T>(value);
+    }
+    
+    protected static class OrMaybe<T> implements Function<Maybe<T>, T> {
+        private final T value;
+
+        public OrMaybe(T value) {
+            this.value = value;
+        }
+        @Override
+        public T apply(Maybe<T> input) {
+            return input.or(value);
+        }
+    }
 }
