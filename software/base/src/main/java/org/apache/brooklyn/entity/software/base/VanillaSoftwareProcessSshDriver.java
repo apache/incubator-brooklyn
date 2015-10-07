@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.software.base;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
@@ -36,6 +37,8 @@ import org.apache.brooklyn.util.ssh.BashCommands;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
 
+import com.google.common.collect.ImmutableMap;
+
 public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshDriver implements VanillaSoftwareProcessDriver {
 
     public VanillaSoftwareProcessSshDriver(EntityLocal entity, SshMachineLocation machine) {
@@ -44,13 +47,20 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
 
     String downloadedFilename = null;
 
-    /** needed because the download url might be different! */
+    /**
+     * Needed because the download url and install commands are likely different for different VanillaSoftwareProcesses!
+     * This is particularly true for YAML entities. We take a hash of the download_url, install_command and environment variables.
+     * We thus assume any templating of the script has already been done by this point.
+     */
     @Override
     protected String getInstallLabelExtraSalt() {
+        
         Maybe<Object> url = getEntity().getConfigRaw(SoftwareProcess.DOWNLOAD_URL, true);
-        if (url.isAbsent()) return null;
+        String installCommand = getEntity().getConfig(VanillaSoftwareProcess.INSTALL_COMMAND);
+        Map<String, Object> shellEnv = getEntity().getConfig(VanillaSoftwareProcess.SHELL_ENVIRONMENT);
+        
         // TODO a user-friendly hash would be nice, but tricky since we don't want it to be too long or contain path chars
-        return Identifiers.makeIdFromHash( url.get().hashCode() );
+        return Identifiers.makeIdFromHash(Objects.hash(url.or(null), installCommand, shellEnv));
     }
     
     @Override
@@ -65,7 +75,7 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
             commands.addAll(BashCommands.commandsToDownloadUrlsAs(urls, downloadedFilename));
             commands.addAll(ArchiveUtils.installCommands(downloadedFilename));
 
-            int result = newScript(INSTALLING)
+            int result = newScript(ImmutableMap.of(INSTALL_INCOMPLETE, true), INSTALLING)
                     .failOnNonZeroResultCode(false)
                     .body.append(commands)
                     .execute();
@@ -82,7 +92,9 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
             }
         }
         
+        // If downloadUrl did partial install (see INSTALL_INCOMPLETE above) then always execute install so mark it as completed.
         String installCommand = getEntity().getConfig(VanillaSoftwareProcess.INSTALL_COMMAND);
+        if (url.isPresentAndNonNull() && Strings.isBlank(installCommand)) installCommand = "# mark as complete";
         
         if (Strings.isNonBlank(installCommand)) {
             newScript(INSTALLING)

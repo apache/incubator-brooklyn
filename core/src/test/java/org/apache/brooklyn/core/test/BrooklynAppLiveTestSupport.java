@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.core.test;
 
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
@@ -45,10 +46,10 @@ public class BrooklynAppLiveTestSupport {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         if (mgmt!=null) {
-            app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
+            app = ApplicationBuilder.newManagedApp(newAppSpec(), mgmt);
         } else {
             mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
-            app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
+            app = ApplicationBuilder.newManagedApp(newAppSpec(), mgmt);
         }
     }
 
@@ -63,4 +64,7 @@ public class BrooklynAppLiveTestSupport {
         }
     }
 
+    protected EntitySpec<? extends TestApplication> newAppSpec() {
+        return EntitySpec.create(TestApplication.class);
+    }
 }

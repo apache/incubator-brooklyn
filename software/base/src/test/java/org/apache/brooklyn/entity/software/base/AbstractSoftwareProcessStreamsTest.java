@@ -18,31 +18,28 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.collect.Lists;
-import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.mgmt.HasTaskChildren;
-import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
-import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
-import org.apache.brooklyn.core.internal.BrooklynProperties;
-import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
-import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.util.core.task.TaskPredicates;
-import org.apache.brooklyn.util.text.StringPredicates;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.BeforeMethod;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static org.testng.Assert.assertTrue;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.HasTaskChildren;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.util.core.task.TaskPredicates;
+import org.apache.brooklyn.util.text.StringPredicates;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Optional;
+import com.google.common.base.Predicate;
+import com.google.common.collect.Lists;
 
 public abstract class AbstractSoftwareProcessStreamsTest extends BrooklynAppLiveTestSupport {
     private static final Logger log = LoggerFactory.getLogger(AbstractSoftwareProcessStreamsTest.class);
@@ -51,16 +48,9 @@ public abstract class AbstractSoftwareProcessStreamsTest extends BrooklynAppLive
 
     protected abstract Map<String, String> getCommands();
 
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() throws Exception {
-        if (mgmt!=null) {
-            app = ApplicationBuilder.newManagedApp(TestApplication.class, mgmt);
-        } else {
-            mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
-            EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
-                    .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true);
-            app = ApplicationBuilder.newManagedApp(appSpec, mgmt);
-        }
+    protected EntitySpec<? extends TestApplication> newAppSpec() {
+        return EntitySpec.create(TestApplication.class)
+                .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, true);
     }
 
     public static String getStreamOrFail(Task<?> task, String streamType) {
