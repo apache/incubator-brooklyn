@@ -41,7 +41,6 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.config.ConfigMap;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
@@ -289,16 +288,11 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         }
     }
     
-    private class BasicConfigurationSupport implements ConfigurationSupportInternal {
+    private class BasicConfigurationSupport extends AbstractConfigurationSupportInternal {
 
         @Override
         public <T> T get(ConfigKey<T> key) {
             return configsInternal.getConfig(key);
-        }
-
-        @Override
-        public <T> T get(HasConfigKey<T> key) {
-            return get(key.getConfigKey());
         }
 
         @SuppressWarnings("unchecked")
@@ -312,11 +306,6 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
             return result;
         }
 
-        @Override
-        public <T> T set(HasConfigKey<T> key, T val) {
-            return setConfig(key.getConfigKey(), val);
-        }
-
         @SuppressWarnings("unchecked")
         @Override
         public <T> T set(ConfigKey<T> key, Task<T> val) {
@@ -327,11 +316,6 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
             T result = (T) configsInternal.setConfig(key, val);
             onChanged();
             return result;
-        }
-
-        @Override
-        public <T> T set(HasConfigKey<T> key, Task<T> val) {
-            return set(key.getConfigKey(), val);
         }
 
         @Override
@@ -350,18 +334,8 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         }
 
         @Override
-        public Maybe<Object> getRaw(HasConfigKey<?> key) {
-            return getRaw(key.getConfigKey());
-        }
-
-        @Override
         public Maybe<Object> getLocalRaw(ConfigKey<?> key) {
             return configsInternal.getConfigRaw(key, false);
-        }
-
-        @Override
-        public Maybe<Object> getLocalRaw(HasConfigKey<?> key) {
-            return getLocalRaw(key.getConfigKey());
         }
 
         @Override

@@ -59,6 +59,7 @@ import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.internal.SubscriptionTracker;
 import org.apache.brooklyn.core.mgmt.rebind.BasicLocationRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
+import org.apache.brooklyn.core.objs.AbstractConfigurationSupportInternal;
 import org.apache.brooklyn.util.collections.SetFromLiveMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
@@ -379,7 +380,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         return subscriptions;
     }
 
-    private class BasicConfigurationSupport implements ConfigurationSupportInternal {
+    private class BasicConfigurationSupport extends AbstractConfigurationSupportInternal {
 
         @Override
         public <T> T get(ConfigKey<T> key) {
@@ -397,11 +398,6 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
 
         @Override
-        public <T> T get(HasConfigKey<T> key) {
-            return get(key.getConfigKey());
-        }
-
-        @Override
         public <T> T set(ConfigKey<T> key, T val) {
             T result = configBag.put(key, val);
             onChanged();
@@ -409,18 +405,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
 
         @Override
-        public <T> T set(HasConfigKey<T> key, T val) {
-            return set(key.getConfigKey(), val);
-        }
-
-        @Override
         public <T> T set(ConfigKey<T> key, Task<T> val) {
-            // TODO Support for locations
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public <T> T set(HasConfigKey<T> key, Task<T> val) {
             // TODO Support for locations
             throw new UnsupportedOperationException();
         }
@@ -446,19 +431,9 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
 
         @Override
-        public Maybe<Object> getRaw(HasConfigKey<?> key) {
-            return getRaw(key.getConfigKey());
-        }
-
-        @Override
         public Maybe<Object> getLocalRaw(ConfigKey<?> key) {
             if (hasConfig(key, false)) return Maybe.of(getLocalBag().getStringKey(key.getName()));
             return Maybe.absent();
-        }
-
-        @Override
-        public Maybe<Object> getLocalRaw(HasConfigKey<?> key) {
-            return getLocalRaw(key.getConfigKey());
         }
 
         @Override

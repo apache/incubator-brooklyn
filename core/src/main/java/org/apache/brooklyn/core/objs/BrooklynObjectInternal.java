@@ -74,7 +74,7 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
         Maybe<Object> getRaw(ConfigKey<?> key);
 
         /**
-         * @see {@link #getConfigRaw(ConfigKey)}
+         * @see {@link #getRaw(ConfigKey)}
          */
         @Beta
         Maybe<Object> getRaw(HasConfigKey<?> key);
@@ -87,7 +87,7 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
         Maybe<Object> getLocalRaw(ConfigKey<?> key);
 
         /**
-         * @see {@link #getLocalConfigRaw(ConfigKey)}
+         * @see {@link #getLocalRaw(ConfigKey)}
          */
         @Beta
         Maybe<Object> getLocalRaw(HasConfigKey<?> key);
