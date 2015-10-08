@@ -1214,7 +1214,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             
             getManagementSupport().getEntityChangeListener().onConfigChanged(key);
             return result;
+        }
 
+        @Override
+        protected ExecutionContext getContext() {
+            return AbstractEntity.this.getExecutionContext();
         }
     }
     

@@ -33,6 +33,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -472,6 +473,11 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
         private ConfigInheritance getDefaultInheritance() {
             return ConfigInheritance.ALWAYS;
+        }
+
+        @Override
+        protected ExecutionContext getContext() {
+            return AbstractLocation.this.getManagementContext().getServerExecutionContext();
         }
     }
     

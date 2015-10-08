@@ -23,8 +23,11 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
+import java.util.concurrent.Callable;
+
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
@@ -38,8 +41,11 @@ import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
@@ -164,7 +170,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             fail("Expected exception when managing entity setting invalid default value");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
         }
     }
 
@@ -176,7 +182,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             fail("Expected exception when config key set to null");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
         }
     }
 
@@ -188,7 +194,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             fail("Expected exception when managing entity with invalid config");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
         }
     }
 
@@ -196,14 +202,14 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
     public void testExceptionWhenAppGrandchildHasInvalidConfig() {
         app.start(ImmutableList.of(app.newSimulatedLocation()));
         TestEntity testEntity = app.addChild(EntitySpec.create(TestEntity.class));
+        try {
         testEntity.addChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
                 .configure(EntityRequiringConfigKeyInRange.RANGE, -1));
-        try {
             Entities.manage(testEntity);
             fail("Expected exception when managing child with invalid config");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
         }
     }
 
@@ -217,7 +223,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             fail("Expected exception when validating policy with missing config");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
         }
     }
 
@@ -229,7 +235,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             fail("Expected exception when creating policy with missing config");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
         }
     }
 
@@ -241,7 +247,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             fail("Expected exception when creating enricher with invalid config");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t, "Exception was: " + Exceptions.collapseText(e));
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
         }
     }
 
@@ -278,8 +284,39 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             fail("Expected exception when managing entity with incorrect config");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
         }
+    }
+
+    @Test
+    public void testQuickFutureResolved() {
+        // Result of task is -1, outside of the range specified by the config key.
+        try {
+            app.createAndManageChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
+                    .configure(EntityRequiringConfigKeyInRange.RANGE, sleepingTask(Duration.ZERO, -1)));
+            fail("Expected exception when managing entity with incorrect config");
+        } catch (Exception e) {
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
+        }
+    }
+
+    @Test
+    public void testSlowFutureNotResolved() {
+        // i.e. no exception because task is too slow to resolve.
+        app.createAndManageChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
+                .configure(EntityRequiringConfigKeyInRange.RANGE, sleepingTask(Duration.PRACTICALLY_FOREVER, -1)));
+    }
+
+    private static <T> Task<T> sleepingTask(final Duration delay, final T result) {
+        return Tasks.<T>builder()
+                .body(new Callable<T>() {
+                    @Override public T call() throws Exception {
+                        Time.sleep(delay);
+                        return result;
+                    }
+                })
+                .build();
     }
 
 }

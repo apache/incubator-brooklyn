@@ -357,6 +357,11 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         public void refreshInheritedConfigOfChildren() {
             // no-op for location
         }
+
+        @Override
+        protected ExecutionContext getContext() {
+            return AbstractEntityAdjunct.this.execution;
+        }
     }
 
     public <T> T getConfig(ConfigKey<T> key) {

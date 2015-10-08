@@ -29,6 +29,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct;
 import org.apache.brooklyn.core.objs.BrooklynObjectPredicate;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,11 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+/**
+ * Checks configuration constraints on entities and their adjuncts.
+ *
+ * @since 0.9.0
+ */
 public abstract class ConfigConstraints<T extends BrooklynObject> {
 
     public static final Logger LOG = LoggerFactory.getLogger(ConfigConstraints.class);
@@ -107,13 +113,13 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
         Iterable<ConfigKey<?>> configKeys = getBrooklynObjectTypeConfigKeys();
         LOG.trace("Checking config keys on {}: {}", getBrooklynObject(), configKeys);
         for (ConfigKey<?> configKey : configKeys) {
-            // getRaw returns null if explicitly set and absent if config key was unset.
-            Object value = configInternal.getRaw(configKey).or(configKey.getDefaultValue());
-
-            if (value == null || value.getClass().isAssignableFrom(configKey.getType())) {
-                // Cast should be safe because the author of the constraint on the config key had to
-                // keep its type to Predicte<? super T>, where T is ConfigKey<T>.
+            // getNonBlocking method coerces the value to the config key's type.
+            Maybe<?> maybeValue = configInternal.getNonBlocking(configKey);
+            if (maybeValue.isPresent()) {
+                Object value = maybeValue.get();
                 try {
+                    // Cast is safe because the author of the constraint on the config key had to
+                    // keep its type to Predicte<? super T>, where T is ConfigKey<T>.
                     Predicate<Object> po = (Predicate<Object>) configKey.getConstraint();
                     boolean isValid;
                     if (po instanceof BrooklynObjectPredicate) {
@@ -125,7 +131,7 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
                         violating.add(configKey);
                     }
                 } catch (Exception e) {
-                    LOG.debug("Error checking constraint on {} {} ", configKey.getName(), e);
+                    LOG.debug("Error checking constraint on " + configKey.getName(), e);
                 }
             }
         }

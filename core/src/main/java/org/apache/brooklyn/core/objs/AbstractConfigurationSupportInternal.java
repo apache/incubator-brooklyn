@@ -19,9 +19,17 @@
 
 package org.apache.brooklyn.core.objs;
 
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
+
+import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.time.Duration;
 
 public abstract class AbstractConfigurationSupportInternal implements BrooklynObjectInternal.ConfigurationSupportInternal {
 
@@ -41,6 +49,30 @@ public abstract class AbstractConfigurationSupportInternal implements BrooklynOb
     }
 
     @Override
+    public <T> Maybe<T> getNonBlocking(HasConfigKey<T> key) {
+        return getNonBlocking(key.getConfigKey());
+    }
+
+    @Override
+    public <T> Maybe<T> getNonBlocking(ConfigKey<T> key) {
+        // getRaw returns Maybe(val) if the key was explicitly set (where val can be null)
+        // or Absent if the config key was unset.
+        Object unresolved = getRaw(key).or(key.getDefaultValue());
+        final Object marker = new Object();
+        // Give tasks a short grace period to resolve.
+        Object resolved = Tasks.resolving(unresolved)
+                .as(Object.class)
+                .defaultValue(marker)
+                .timeout(Duration.of(5, TimeUnit.MILLISECONDS))
+                .context(getContext())
+                .swallowExceptions()
+                .get();
+        return (resolved != marker)
+               ? TypeCoercions.tryCoerce(resolved, key.getTypeToken())
+               : Maybe.<T>absent();
+    }
+
+    @Override
     public <T> T set(HasConfigKey<T> key, Task<T> val) {
         return set(key.getConfigKey(), val);
     }
@@ -50,4 +82,9 @@ public abstract class AbstractConfigurationSupportInternal implements BrooklynOb
         return set(key.getConfigKey(), val);
     }
 
+    /**
+     * @return An execution context for use by {@link #getNonBlocking(ConfigKey)}
+     */
+    @Nullable
+    protected abstract ExecutionContext getContext();
 }
