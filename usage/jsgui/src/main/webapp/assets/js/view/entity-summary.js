@@ -43,7 +43,7 @@ define([
                 this.$("div.catalogItemId").show();
             else
                 this.$("div.catalogItemId").hide();
-            
+
             this.options.tabView.configView = new EntityConfigView({
                 model:this.options.model,
                 tabView:this.options.tabView,

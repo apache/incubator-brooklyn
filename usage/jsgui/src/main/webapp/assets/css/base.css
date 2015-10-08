@@ -580,6 +580,15 @@ ol.tree {
 .entity_tree_node_wrapper.active .entity_tree_node {
     font-weight: bold;
 }
+.entity_tree_node_wrapper .indirection-icon {
+    opacity: 0.7;
+    margin-left: -5px;
+}
+.tree-box.indirect > .entity_tree_node_wrapper a {
+    font-style: italic !important;
+    color: #666;
+}
+
 #tree label {
 /* remove the folder, and align with + - icons */
 background: none;
