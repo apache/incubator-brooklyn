@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate.Builder;
@@ -33,7 +32,6 @@ import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,19 +65,8 @@ public class BrooklynEntityMatcher implements PdpMatcher {
             if (serviceType==null) throw new NullPointerException("Service must declare a type ("+service+")");
             BrooklynClassLoadingContext loader = BasicBrooklynCatalog.BrooklynLoaderTracker.getLoader();
             if (loader == null) loader = JavaBrooklynClassLoadingContext.create(mgmt);
-            if (BrooklynComponentTemplateResolver.Factory.supportsType(loader, serviceType))
+            if (BrooklynComponentTemplateResolver.Factory.newInstance(loader, serviceType).canResolve())
                 return serviceType;
-
-            String protocol = Urls.getProtocol(serviceType);
-            if (protocol != null) {
-                if (BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST.contains(protocol)) {
-                    return serviceType;
-                } else {
-                    log.debug("The reference '" + serviceType + "' looks like a URL (running the CAMP Brooklyn entity-matcher) but the protocol '" + 
-                            protocol + "' isn't white listed " + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + ". " +
-                            "Not recognized as catalog item or java item as well!");
-                }
-            }
         }
         return null;
     }

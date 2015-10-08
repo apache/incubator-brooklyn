@@ -596,6 +596,49 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testDeeplyNestedTypesDoesNotRecurse() throws Exception {
+        String symbolicName = "my.catalog.app.id.basic";
+        // Need to have a stand alone caller first so we can create an item to depend on it.
+        // After that replace it/insert a new version which completes the cycle
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName + ".caller",
+                "  version: " + TEST_VERSION + "pre",
+                "",
+                "services:",
+                "- type: org.apache.brooklyn.entity.stock.BasicEntity");
+
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName + ".callee",
+                "  version: " + TEST_VERSION,
+                "",
+                "services:",
+                "- type: " + symbolicName + ".caller");
+
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName + ".caller",
+                "  version: " + TEST_VERSION,
+                "",
+                "services:",
+                "- type: org.apache.brooklyn.entity.stock.BasicEntity",
+                // Being a child is important, triggers the case where
+                // we allow retrying with other transformers
+                // and thus breaking the recursive check.
+                "  brooklyn.children:",
+                "  - type: " + symbolicName + ".callee");
+
+        try {
+            createAndStartApplication(
+                    "services:",
+                    "- type: " + symbolicName + ".caller");
+        } catch (IllegalStateException e) {
+            assertTrue(e.toString().contains("recursive"), "Unexpected error message: "+e);
+        }
+    }
+
+    @Test
     public void testOsgiNotLeakingToParent() {
         addCatalogOSGiEntity(SIMPLE_ENTITY_TYPE);
         try {

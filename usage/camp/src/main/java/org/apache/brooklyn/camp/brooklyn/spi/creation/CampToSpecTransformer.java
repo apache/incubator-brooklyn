@@ -19,6 +19,7 @@
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
 import java.io.StringReader;
+import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
@@ -68,7 +69,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
             }
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
                 BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-                return ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
+                return ((AssemblyTemplateSpecInstantiator) instantiator).createApplicationSpec(at, camp, loader);
             } else {
                 // The unknown instantiator can create the app (Assembly), but not a spec.
                 // Currently, all brooklyn plans should produce the above.
@@ -94,8 +95,9 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item) {
-        return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item);
+    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) {
+        // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
+        return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item, encounteredTypes);
     }
 
     @Override

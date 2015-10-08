@@ -20,6 +20,7 @@ package org.apache.brooklyn.core.mgmt;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.annotation.Nullable;
@@ -55,6 +56,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -96,11 +98,15 @@ public class EntityManagementUtils {
         }).get();
     }
 
-    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, final CatalogItem<T, SpecT> item) {
+    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, CatalogItem<T, SpecT> item) {
+        return createCatalogSpec(mgmt, item, ImmutableSet.<String>of());
+    }
+
+    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
         return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, SpecT>() {
             @Override
             public SpecT apply(PlanToSpecTransformer input) {
-                return input.createCatalogSpec(item);
+                return input.createCatalogSpec(item, encounteredTypes);
             }
         }).get();
     }

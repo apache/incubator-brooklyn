@@ -19,6 +19,7 @@
 package org.apache.brooklyn.core.plan;
 
 import java.util.ServiceLoader;
+import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
@@ -56,6 +57,6 @@ public interface PlanToSpecTransformer extends ManagementContextInjectable {
      * implementations will typically look at the {@link CatalogItem#getCatalogItemType()} first.
      * <p>
      * should throw {@link PlanNotRecognizedException} if this transformer does not know what to do with the plan. */
-    <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item) throws PlanNotRecognizedException;
+    <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) throws PlanNotRecognizedException;
     
 }
