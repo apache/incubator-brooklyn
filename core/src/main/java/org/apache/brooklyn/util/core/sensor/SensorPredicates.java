@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.util.core.sensor;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.apache.brooklyn.api.sensor.Sensor;
 
 import com.google.common.base.Predicate;
@@ -28,13 +30,13 @@ public class SensorPredicates {
         // not instantiable
     }
     
-    public static Predicate<Sensor<?>> sensorNameEqualTo(String sensorName) {
-        return new SensorNameEquals(sensorName);
+    public static Predicate<Sensor<?>> nameEqualTo(String sensorName) {
+        return new SensorNameEquals(checkNotNull(sensorName, "sensorName"));
     }
 
     private static class SensorNameEquals implements Predicate<Sensor<?>> {
         
-        private String sensor;
+        private final String sensor;
 
         public SensorNameEquals(String sensor) {
             this.sensor = sensor;

@@ -200,7 +200,7 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
     private Sensor<?> getDestinationSensor(final Sensor<?> sourceSensor) {
         // sensor equality includes the type; we want just name-equality so will use predicate.
         Optional<? extends Sensor<?>> mappingSensor = Iterables.tryFind(sensorMapping.keySet(), 
-                SensorPredicates.sensorNameEqualTo(sourceSensor.getName()));
+                SensorPredicates.nameEqualTo(sourceSensor.getName()));
 
         return mappingSensor.isPresent() ? sensorMapping.get(mappingSensor.get()) : sourceSensor;
     }

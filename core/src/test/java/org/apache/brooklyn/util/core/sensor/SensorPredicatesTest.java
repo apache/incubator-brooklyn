@@ -31,8 +31,8 @@ public class SensorPredicatesTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testDisplayNameEqualTo() throws Exception {
         Sensor<Object> task = Sensors.newSensor(Object.class, "myname");
-        assertTrue(SensorPredicates.sensorNameEqualTo("myname").apply(task));
-        assertFalse(SensorPredicates.sensorNameEqualTo("wrong").apply(task));
+        assertTrue(SensorPredicates.nameEqualTo("myname").apply(task));
+        assertFalse(SensorPredicates.nameEqualTo("wrong").apply(task));
     }
     
 }

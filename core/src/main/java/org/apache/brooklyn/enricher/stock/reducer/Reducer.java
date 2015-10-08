@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.enricher.stock.reducer;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -35,6 +35,7 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.core.sensor.SensorPredicates;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.core.task.ValueResolver;
+import org.apache.brooklyn.util.text.StringFunctions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
 @SuppressWarnings("serial")
-public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEventListener<Object> {
+public class Reducer extends AbstractEnricher implements SensorEventListener<Object> {
 
     private static final Logger LOG = LoggerFactory.getLogger(Reducer.class);
 
@@ -63,9 +64,9 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
         "A map of parameters to pass into the reducer function");
    
     protected Entity producer;
-    protected List<AttributeSensor<S>> subscribedSensors;
-    protected Sensor<T> targetSensor;
-    protected Function<List<S>, T> reducerFunction;
+    protected List<AttributeSensor<?>> subscribedSensors;
+    protected Sensor<?> targetSensor;
+    protected Function<Iterable<?>, ?> reducerFunction;
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
@@ -74,12 +75,12 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
         Preconditions.checkNotNull(getConfig(SOURCE_SENSORS), "source sensors");
 
         this.producer = getConfig(PRODUCER) == null ? entity : getConfig(PRODUCER);
-        List<AttributeSensor<S>> sensorListTemp = Lists.newArrayList();
+        List<AttributeSensor<?>> sensorListTemp = Lists.newArrayList();
 
         for (Object sensorO : getConfig(SOURCE_SENSORS)) {
-            AttributeSensor<S> sensor = Tasks.resolving(sensorO).as(AttributeSensor.class).timeout(ValueResolver.REAL_QUICK_WAIT).context(producer).get();
+            AttributeSensor<?> sensor = Tasks.resolving(sensorO).as(AttributeSensor.class).timeout(ValueResolver.REAL_QUICK_WAIT).context(producer).get();
             Optional<? extends Sensor<?>> foundSensor = Iterables.tryFind(sensorListTemp, 
-                    SensorPredicates.sensorNameEqualTo(sensor.getName()));
+                    SensorPredicates.nameEqualTo(sensor.getName()));
             
             if(!foundSensor.isPresent()) {
                 sensorListTemp.add(sensor);
@@ -87,7 +88,7 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
         }
         
         String reducerName = config().get(REDUCER_FUNCTION_TRANSFORMATION);
-        Function<List<S>, T> reducerFunction = (Function) config().get(REDUCER_FUNCTION);
+        Function<Iterable<?>, ?> reducerFunction = (Function) config().get(REDUCER_FUNCTION);
         if(reducerFunction == null){
             Map<String, ?> parameters = config().get(PARAMETERS);
             reducerFunction = createReducerFunction(reducerName, parameters);
@@ -96,92 +97,42 @@ public abstract class Reducer<S, T> extends AbstractEnricher implements SensorEv
         this.reducerFunction = reducerFunction;
         Preconditions.checkState(sensorListTemp.size() > 0, "Nothing to reduce");
 
-        for (Sensor<S> sensor : sensorListTemp) {
+        for (Sensor<?> sensor : sensorListTemp) {
             subscribe(producer, sensor, this);
         }
 
         subscribedSensors = ImmutableList.copyOf(sensorListTemp);
     }
-
-    protected abstract Function<List<S>, T> createReducerFunction(String reducerName, Map<String, ?> parameters);
     
-    @SuppressWarnings("unchecked")
+    // Default implementation, subclasses should override
+    protected Function<Iterable<?>, ?> createReducerFunction(String reducerName, Map<String, ?> parameters){
+        if(Objects.equals(reducerName, "joiner")){
+            String separator = (String) parameters.get("separator");
+            return StringFunctions.joiner(separator == null ? ", " : separator);
+        }
+        
+        if (Objects.equals(reducerName, "formatString")){
+            String format = Preconditions.checkNotNull((String)parameters.get("format"), "format");
+            return StringFunctions.formatterForIterable(format);
+        }
+        throw new IllegalStateException("unknown function: " + reducerName);
+    }
+    
     @Override
     public void onEvent(SensorEvent<Object> event) {
-        Sensor<T> destinationSensor = (Sensor<T>) getConfig(TARGET_SENSOR);
+        Sensor<?> destinationSensor = getConfig(TARGET_SENSOR);
 
-        List<S> values = Lists.newArrayList();
+        List<Object> values = Lists.newArrayList();
 
-        for (AttributeSensor<S> sourceSensor : subscribedSensors) {
-            S resolvedSensorValue = entity.sensors().get(sourceSensor);
-            if (resolvedSensorValue == null) {
-                // only apply function if all values are resolved
-                return;
-            }
-
+        for (AttributeSensor<?> sourceSensor : subscribedSensors) {
+            Object resolvedSensorValue = entity.sensors().get(sourceSensor);
             values.add(resolvedSensorValue);
         }
-
         Object result = reducerFunction.apply(values);
 
         if (LOG.isTraceEnabled()) LOG.trace("enricher {} got {}, propagating via {} as {}",
                 new Object[] {this, event, entity, reducerFunction, destinationSensor});
 
-        emit((Sensor<T>)destinationSensor, result);
-    }
-   
-    public static class JoinerReducerFunction<A> implements Function<List<A>, String> {
-        
-        private Object separator;
-
-        public JoinerReducerFunction(Object separator) {
-            this.separator = (separator == null) ? ", " : separator;
-        }
-
-        @Override
-        public String apply(List<A> input) {
-            
-            StringBuilder sb = new StringBuilder();
-            Iterator<A> it = input.iterator();
-            while(it.hasNext()) {
-                sb.append(it.next().toString());
-                if(it.hasNext()){
-                    sb.append(separator);
-                }
-            }
-            return sb.toString();
-        }
-        
-    }
-
-    public static class JoinerFunction extends JoinerReducerFunction<String>{
-        
-        public JoinerFunction(Object separator) {
-            super(separator);
-        }
-    }
-
-    public static class ToStringReducerFunction<A> implements Function<List<A>, String> {
-
-        @Override
-        public String apply(List<A> input) {
-            return input.toString();
-        }
-        
-    }
-    
-    public static class FormatStringReducerFunction<T> implements Function<List<T>, String> {
-        
-        private String format;
-
-        public FormatStringReducerFunction(String format) {
-            this.format = Preconditions.checkNotNull(format, "format");
-        }
-
-        @Override
-        public String apply(List<T> input) {
-            return String.format(format, input.toArray());
-        }
-        
+        emit(destinationSensor, result);
     }
 }

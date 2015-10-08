@@ -19,7 +19,6 @@
 package org.apache.brooklyn.enricher.stock.reducer;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -30,8 +29,6 @@ import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.enricher.stock.Enrichers;
-import org.apache.brooklyn.enricher.stock.reducer.Reducer;
-import org.apache.brooklyn.enricher.stock.reducer.StringStringReducer;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -62,7 +59,7 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testBasicReducer(){
-        entity.addEnricher(EnricherSpec.create(StringStringReducer.class).configure(
+        entity.enrichers().add(EnricherSpec.create(Reducer.class).configure(
                 MutableMap.of(
                 Reducer.SOURCE_SENSORS, ImmutableList.of(STR1, STR2),
                 Reducer.PRODUCER, entity,
@@ -82,8 +79,8 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testReducingBuilderWithConcatenator() {
-        entity.addEnricher(Enrichers.builder()
-                .reducing(StringStringReducer.class, ImmutableList.of(STR1, STR2))
+        entity.enrichers().add(Enrichers.builder()
+                .reducing(Reducer.class, ImmutableList.<AttributeSensor<?>>of(STR1, STR2))
                 .from(entity)
                 .computing(new Concatenator())
                 .publishing(STR3)
@@ -101,8 +98,8 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testReducingBuilderWithLengthCalculator() {
-        entity.addEnricher(Enrichers.builder()
-                .reducing(StringIntegerReducer.class, ImmutableList.of(STR1, STR2))
+        entity.enrichers().add(Enrichers.builder()
+                .reducing(Reducer.class, ImmutableList.<AttributeSensor<?>>of(STR1, STR2))
                 .from(entity)
                 .computing(new LengthCalculator())
                 .publishing(INT1)
@@ -112,7 +109,7 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEquals(entity, INT1, null);
         
         entity.sensors().set(STR1, "foo");
-        EntityTestUtils.assertAttributeEqualsContinually(entity, INT1, null);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, INT1, 3);
 
         entity.sensors().set(STR2, "bar");
         EntityTestUtils.assertAttributeEqualsEventually(entity, INT1, 6);
@@ -120,8 +117,8 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testReducingBuilderWithJoinerFunction() {
-        entity.addEnricher(Enrichers.builder()
-                .reducing(StringStringReducer.class, ImmutableList.of(STR1, STR2))
+        entity.enrichers().add(Enrichers.builder()
+                .reducing(Reducer.class, ImmutableList.<AttributeSensor<?>>of(STR1, STR2))
                 .from(entity)
                 .computing("joiner", ImmutableMap.<String, Object>of("separator", "-"))
                 .publishing(STR3)
@@ -131,7 +128,7 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEquals(entity, STR3, null);
         
         entity.sensors().set(STR1, "foo");
-        EntityTestUtils.assertAttributeEqualsContinually(entity, STR3, null);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "foo-null");
 
         entity.sensors().set(STR2, "bar");
         EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "foo-bar");
@@ -139,8 +136,8 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testReducingBuilderWithJoinerFunctionWithDefaultParameter() {
-        entity.addEnricher(Enrichers.builder()
-            .reducing(StringStringReducer.class, ImmutableList.of(STR1, STR2))
+        entity.enrichers().add(Enrichers.builder()
+            .reducing(Reducer.class, ImmutableList.<AttributeSensor<?>>of(STR1, STR2))
             .from(entity)
             .computing("joiner")
             .publishing(STR3)
@@ -149,7 +146,7 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEquals(entity, STR3, null);
         
         entity.sensors().set(STR1, "foo");
-        EntityTestUtils.assertAttributeEqualsContinually(entity, STR3, null);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "foo, null");
 
         entity.sensors().set(STR2, "bar");
         EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "foo, bar");
@@ -158,8 +155,8 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testReducingBuilderWithJoinerFunctionAndUnusedParameter() {
         
-        entity.addEnricher(Enrichers.builder()
-            .reducing(StringStringReducer.class, ImmutableList.of(STR1, STR2))
+        entity.enrichers().add(Enrichers.builder()
+            .reducing(Reducer.class, ImmutableList.<AttributeSensor<?>>of(STR1, STR2))
             .from(entity)
             .computing("joiner", ImmutableMap.<String, Object>of("non.existent.parameter", "-"))
             .publishing(STR3)
@@ -168,7 +165,7 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
         EntityTestUtils.assertAttributeEquals(entity, STR3, null);
         
         entity.sensors().set(STR1, "foo");
-        EntityTestUtils.assertAttributeEqualsContinually(entity, STR3, null);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "foo, null");
 
         entity.sensors().set(STR2, "bar");
         EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "foo, bar");
@@ -176,18 +173,18 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testReducingBuilderWithFormatStringFunction() {
-        
-        entity.addEnricher(Enrichers.builder()
-            .reducing(StringStringReducer.class, ImmutableList.of(STR1, STR2))
+        entity.enrichers().add(Enrichers.builder()
+            .reducing(Reducer.class, ImmutableList.<AttributeSensor<?>>of(STR1, STR2))
             .from(entity)
             .computing("formatString", ImmutableMap.<String, Object>of("format", "hello, %s and %s"))
             .publishing(STR3)
             .build()
         );
+        
         EntityTestUtils.assertAttributeEquals(entity, STR3, null);
         
         entity.sensors().set(STR1, "foo");
-        EntityTestUtils.assertAttributeEqualsContinually(entity, STR3, null);
+        EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "hello, foo and null");
 
         entity.sensors().set(STR2, "bar");
         EntityTestUtils.assertAttributeEqualsEventually(entity, STR3, "hello, foo and bar");
@@ -196,8 +193,8 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testReducingBuilderWithNamedNonExistentFunction() {
         try { 
-            entity.addEnricher(Enrichers.builder()
-                .reducing(StringStringReducer.class, ImmutableList.of(STR1, STR2))
+            entity.enrichers().add(Enrichers.builder()
+                .reducing(Reducer.class, ImmutableList.<AttributeSensor<?>>of(STR1, STR2))
                 .from(entity)
                 .computing("unknown function name", ImmutableMap.<String, Object>of("separator", "-"))
                 .publishing(STR3)
@@ -224,18 +221,6 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
             }
             return result.toString();
         }
-    }
-    
-    public static class StringIntegerReducer extends Reducer<String, Integer> {
-        
-        public StringIntegerReducer() {}
-
-        @Override
-        protected Function<List<String>, Integer> createReducerFunction(
-                String reducerName, Map<String, ?> parameters) {
-            throw new IllegalStateException("unknown function: " + reducerName);
-        }
-        
     }
     
     private static class LengthCalculator implements Function<List<String>, Integer>{

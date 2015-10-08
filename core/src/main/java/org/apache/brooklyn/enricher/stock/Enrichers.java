@@ -173,8 +173,8 @@ public class Enrichers {
         public JoinerBuilder joining(AttributeSensor<?> source) {
             return new JoinerBuilder(source);
         }
-        public <S, T> ReducerBuilder<S, T> reducing(Class<? extends Reducer<S, T>> clazz, List<AttributeSensor<S>> sourceSensors) {
-            return new ReducerBuilder<S, T>(clazz, sourceSensors);
+        public  ReducerBuilder reducing(Class<? extends Reducer> clazz, List<AttributeSensor<?>> sourceSensors) {
+            return new ReducerBuilder(clazz, sourceSensors);
         }
     }
 
@@ -682,20 +682,20 @@ public class Enrichers {
         }
     }
 
-    protected abstract static class AbstractReducerBuilder<S, T, B extends AbstractReducerBuilder<S, T, B>> extends AbstractEnricherBuilder<B> {
-        protected AttributeSensor<T> publishing;
+    protected abstract static class AbstractReducerBuilder<B extends AbstractReducerBuilder<B>> extends AbstractEnricherBuilder<B> {
+        protected AttributeSensor<?> publishing;
         protected Entity fromEntity;
-        protected List<AttributeSensor<S>> reducing;
-        protected Function<List<S>, T> computing;
+        protected List<AttributeSensor<?>> reducing;
+        protected Function<? extends Iterable<?>, ?> computing;
         protected String functionName;
         private Map<String, Object> parameters;
 
-        public AbstractReducerBuilder(Class<? extends Reducer<S, T>> clazz, List<AttributeSensor<S>> val) {
+        public AbstractReducerBuilder(Class<? extends Reducer> clazz, List<AttributeSensor<?>> val) {
             super(checkNotNull(clazz));
             this.reducing = checkNotNull(val);
         }
         
-        public B publishing(AttributeSensor<T> val) {
+        public B publishing(AttributeSensor<?> val) {
             this.publishing =  checkNotNull(val);
             return self();
         }
@@ -705,7 +705,7 @@ public class Enrichers {
             return self();
         }
 
-        public B computing(Function<List<S>, T> val) {
+        public B computing(Function<? extends Iterable<?>, ?> val) {
             this.computing = checkNotNull(val);
             return self();
         }
@@ -790,8 +790,8 @@ public class Enrichers {
         }
     }
 
-    public static class ReducerBuilder<S, T> extends AbstractReducerBuilder<S, T, ReducerBuilder<S, T>> {
-        public ReducerBuilder(Class<? extends Reducer<S, T>> clazz, List<AttributeSensor<S>> val) {
+    public static class ReducerBuilder extends AbstractReducerBuilder<ReducerBuilder> {
+        public ReducerBuilder(Class<? extends Reducer> clazz, List<AttributeSensor<?>> val) {
             super(clazz, val);
         }
     }

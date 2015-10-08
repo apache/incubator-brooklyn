@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.util.text;
 
+import java.util.List;
+
 import javax.annotation.Nullable;
 
 import com.google.common.base.CaseFormat;
@@ -25,6 +27,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 
 public class StringFunctions {
 
@@ -64,6 +67,15 @@ public class StringFunctions {
         return new Function<Object[], String>() {
             public String apply(@Nullable Object[] input) {
                 return String.format(pattern, input);
+            }
+        };
+    }
+    
+    /** given e.g. "hello %s %s" returns a function which will insert an Iterable of two strings into that pattern */
+     public static Function<Iterable<?>, String> formatterForIterable(final String pattern) {
+        return new Function<Iterable<?>, String>() {
+            public String apply(@Nullable Iterable<?> input) {
+                return String.format(pattern, Iterables.toArray(input, Object.class));
             }
         };
     }
@@ -153,5 +165,9 @@ public class StringFunctions {
             }
         };
     }
+
+
+
+
 
 }
