@@ -126,7 +126,7 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
         public RestValueResolver renderAs(Object rendererHintSource) { this.rendererHintSource = rendererHintSource; return this; }
 
         public Object resolve() {
-            Object valueResult = getImmediateValue(valueToResolve, entity);
+            Object valueResult = getImmediateValue(valueToResolve, entity, timeout);
             if (valueResult==UNRESOLVED) valueResult = valueToResolve;
             if (rendererHintSource!=null && Boolean.FALSE.equals(raw)) {
                 valueResult = RendererHints.applyDisplayValueHintUnchecked(rendererHintSource, valueResult);
@@ -136,8 +136,14 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
         
         private static Object UNRESOLVED = "UNRESOLVED".toCharArray();
         
-        private static Object getImmediateValue(Object value, @Nullable Entity context) {
-            return Tasks.resolving(value).as(Object.class).defaultValue(UNRESOLVED).timeout(Duration.ZERO).context(context).swallowExceptions().get();
+        private static Object getImmediateValue(Object value, @Nullable Entity context, @Nullable Duration timeout) {
+            return Tasks.resolving(value)
+                    .as(Object.class)
+                    .defaultValue(UNRESOLVED)
+                    .timeout(timeout)
+                    .context(context)
+                    .swallowExceptions()
+                    .get();
         }
 
     }
