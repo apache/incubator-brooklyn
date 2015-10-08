@@ -216,12 +216,7 @@ public class BrooklynComponentTemplateResolver {
     }
 
     private String getJavaType() {
-        CatalogItem<Entity, EntitySpec<?>> item = typeResolver.getCatalogItem(this, type);
-        if (!isJavaTypePrefix() && item != null && item.getJavaType() != null) {
-            return item.getJavaType();
-        } else {
-            return typeResolver.getBrooklynType(type);
-        }
+        return typeResolver.getBrooklynType(type);
     }
 
     public <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredCatalogTypes, boolean canUseOtherTransformers) {
@@ -306,7 +301,7 @@ public class BrooklynComponentTemplateResolver {
         // Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
         // they are loaded as a simple java type, only taking the class name from the catalog item instead of the
         // type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
-        if (isJavaTypePrefix() || item == null || item.getJavaType() != null) {
+        if (isJavaTypePrefix() || item == null) {
             return createSpecFromJavaType();
 
         // Same as above case, but this time force java type loading (either as plain class or through an old-style
