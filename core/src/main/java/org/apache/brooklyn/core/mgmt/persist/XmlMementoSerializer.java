@@ -335,7 +335,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         @Override
         public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
             if (reader.hasMoreChildren()) {
-                Class<?> type = HierarchicalStreams.readClassType(reader, mapper);
+                Class<?> type = context.getRequiredType(); // TODO: check that this works as well ass HierarchicalStreams.readClasstype() below
+//                Class<?> type2 = HierarchicalStreams.readClassType(reader, mapper);
                 reader.moveDown();
                 Object result = context.convertAnother(null, type);
                 reader.moveUp();
