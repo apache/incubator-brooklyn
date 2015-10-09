@@ -34,6 +34,7 @@ import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
+import org.apache.brooklyn.util.core.sensor.SensorPredicates;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.core.task.ValueResolver;
 import org.slf4j.Logger;
@@ -198,12 +199,8 @@ public class Propagator extends AbstractEnricher implements SensorEventListener<
 
     private Sensor<?> getDestinationSensor(final Sensor<?> sourceSensor) {
         // sensor equality includes the type; we want just name-equality so will use predicate.
-        Optional<? extends Sensor<?>> mappingSensor = Iterables.tryFind(sensorMapping.keySet(), new Predicate<Sensor<?>>() {
-            @Override
-            public boolean apply(Sensor<?> sensor) {
-                return sourceSensor.getName().equals(sensor.getName());
-            }
-        });
+        Optional<? extends Sensor<?>> mappingSensor = Iterables.tryFind(sensorMapping.keySet(), 
+                SensorPredicates.nameEqualTo(sourceSensor.getName()));
 
         return mappingSensor.isPresent() ? sensorMapping.get(mappingSensor.get()) : sourceSensor;
     }

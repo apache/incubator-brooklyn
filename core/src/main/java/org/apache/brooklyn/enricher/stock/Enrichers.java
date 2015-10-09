@@ -33,6 +33,7 @@ import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
+import org.apache.brooklyn.enricher.stock.reducer.Reducer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -48,6 +49,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -170,6 +172,9 @@ public class Enrichers {
          **/
         public JoinerBuilder joining(AttributeSensor<?> source) {
             return new JoinerBuilder(source);
+        }
+        public  ReducerBuilder reducing(Class<? extends Reducer> clazz, List<AttributeSensor<?>> sourceSensors) {
+            return new ReducerBuilder(clazz, sourceSensors);
         }
     }
 
@@ -676,6 +681,62 @@ public class Enrichers {
                     .toString();
         }
     }
+
+    protected abstract static class AbstractReducerBuilder<B extends AbstractReducerBuilder<B>> extends AbstractEnricherBuilder<B> {
+        protected AttributeSensor<?> publishing;
+        protected Entity fromEntity;
+        protected List<AttributeSensor<?>> reducing;
+        protected Function<? extends Iterable<?>, ?> computing;
+        protected String functionName;
+        private Map<String, Object> parameters;
+
+        public AbstractReducerBuilder(Class<? extends Reducer> clazz, List<AttributeSensor<?>> val) {
+            super(checkNotNull(clazz));
+            this.reducing = checkNotNull(val);
+        }
+        
+        public B publishing(AttributeSensor<?> val) {
+            this.publishing =  checkNotNull(val);
+            return self();
+        }
+
+        public B from(Entity val) {
+            this.fromEntity = checkNotNull(val);
+            return self();
+        }
+
+        public B computing(Function<? extends Iterable<?>, ?> val) {
+            this.computing = checkNotNull(val);
+            return self();
+        }
+        
+        public B computing(String functionName) {
+            return computing(functionName, ImmutableMap.<String, Object>of());
+        }
+        
+        public B computing(String functionName, Map<String, Object> parameters) {
+            this.functionName = functionName;
+            this.parameters = parameters;
+            return self();
+        }
+
+        public EnricherSpec<?> build() {
+            return super.build().configure(MutableMap.builder()
+                    .put(Reducer.SOURCE_SENSORS, reducing)
+                    .put(Reducer.PRODUCER, fromEntity)
+                    .put(Reducer.TARGET_SENSOR, publishing)
+                    .putIfNotNull(Reducer.REDUCER_FUNCTION, computing)
+                    .putIfNotNull(Reducer.REDUCER_FUNCTION_TRANSFORMATION, functionName)
+                    .putIfNotNull(Reducer.PARAMETERS, parameters)
+                    .build()
+            );
+        }
+
+        @Override
+        protected String getDefaultUniqueTag() {
+            return "reducer:" + reducing.toString();
+        }
+    }
     
     public static class InitialBuilder extends AbstractInitialBuilder<InitialBuilder> {
     }
@@ -726,6 +787,12 @@ public class Enrichers {
     public static class JoinerBuilder extends AbstractJoinerBuilder<JoinerBuilder> {
         public JoinerBuilder(AttributeSensor<?> source) {
             super(source);
+        }
+    }
+
+    public static class ReducerBuilder extends AbstractReducerBuilder<ReducerBuilder> {
+        public ReducerBuilder(Class<? extends Reducer> clazz, List<AttributeSensor<?>> val) {
+            super(clazz, val);
         }
     }
 
