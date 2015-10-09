@@ -28,9 +28,11 @@ import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.resolve.interpret.PlanInterpretationNode;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.effector.EffectorTasks;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.util.core.task.BasicExecutionContext;
 import org.apache.brooklyn.util.core.task.DeferredSupplier;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,18 +61,18 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
     private static final long serialVersionUID = -8789624905412198233L;
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynDslDeferredSupplier.class);
-    
+
     // TODO json of this object should *be* this, not wrapped this ($brooklyn:literal is a bit of a hack, though it might work!)
     @JsonInclude
     @JsonProperty(value="$brooklyn:literal")
     // currently marked transient because it's only needed for logging
     private transient Object dsl = "(gone)";
-    
+
     public BrooklynDslDeferredSupplier() {
         PlanInterpretationNode sourceNode = BrooklynDslInterpreter.currentNode();
         dsl = sourceNode!=null ? sourceNode.getOriginalValue() : null;
     }
-    
+
     /** returns the current entity; for use in implementations of {@link #get()} */
     protected final static EntityInternal entity() {
         // rely on implicit ThreadLocal for now
@@ -82,15 +84,27 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
         try {
             if (log.isDebugEnabled())
                 log.debug("Queuing task to resolve "+dsl);
-            T result = Entities.submit(entity(), newTask()).get();
+
+            EntityInternal entity = (EntityInternal) BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
+            ExecutionContext exec =
+                    (entity != null) ? entity.getExecutionContext()
+                                     : BasicExecutionContext.getCurrentExecutionContext();
+            if (exec == null) {
+                throw new IllegalStateException("No execution context available to resolve " + dsl);
+            }
+
+            Task<T> task = newTask();
+            T result = exec.submit(task).get();
+
             if (log.isDebugEnabled())
                 log.debug("Resolved "+result+" from "+dsl);
             return result;
+
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
     }
-    
+
     @Override
     public abstract Task<T> newTask();
 
