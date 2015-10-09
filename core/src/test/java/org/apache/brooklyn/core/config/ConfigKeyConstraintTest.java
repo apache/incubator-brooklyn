@@ -27,6 +27,7 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.policy.Policy;
@@ -35,9 +36,12 @@ import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.objs.BrooklynObjectPredicate;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
@@ -46,6 +50,7 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
@@ -317,6 +322,28 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                     }
                 })
                 .build();
+    }
+
+    // Supplies an entity, a policy and a location.
+    @DataProvider(name = "brooklynObjects")
+    public Object[][] createBrooklynObjects() {
+        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), LocalManagementContextForTests.newInstance());
+        EntityRequiringConfigKeyInRange entity = app.createAndManageChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
+                .configure(EntityRequiringConfigKeyInRange.RANGE, 5));
+        Policy policy = entity.policies().add(PolicySpec.create(TestPolicy.class));
+        Location location = app.newSimulatedLocation();
+        return new Object[][]{{entity}, {policy}, {location}};
+    }
+
+    @Test(dataProvider = "brooklynObjects")
+    public void testCannotUpdateConfigToInvalidValue(BrooklynObject object) {
+        try {
+            object.config().set(EntityRequiringConfigKeyInRange.RANGE, -1);
+            fail("Expected exception when calling config().set with invalid value on " + object);
+        } catch (Exception e) {
+            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
+            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
+        }
     }
 
 }

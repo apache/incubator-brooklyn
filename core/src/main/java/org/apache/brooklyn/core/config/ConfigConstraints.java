@@ -19,13 +19,16 @@
 
 package org.apache.brooklyn.core.config;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct;
 import org.apache.brooklyn.core.objs.BrooklynObjectPredicate;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
@@ -74,6 +77,18 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
         }
     }
 
+    public static <T> void assertValid(Entity entity, ConfigKey<T> key, T value) {
+        if (!new EntityConfigConstraints(entity).isValueValid(key, value)) {
+            throw new ConstraintViolationException("Invalid value for " + key + " on " + entity + ": " + value);
+        }
+    }
+
+    public static <T> void assertValid(Location location, ConfigKey<T> key, T value) {
+        if (!new LocationConfigConstraints(location).isValueValid(key, value)) {
+            throw new ConstraintViolationException("Invalid value for " + key + " on " + location + ": " + value);
+        }
+    }
+
     private static String errorMessage(BrooklynObject object, Iterable<ConfigKey<?>> violations) {
         StringBuilder message = new StringBuilder("Error configuring ")
                 .append(object.getDisplayName())
@@ -97,10 +112,6 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
 
     abstract Iterable<ConfigKey<?>> getBrooklynObjectTypeConfigKeys();
 
-    public boolean isValid() {
-        return Iterables.isEmpty(getViolations());
-    }
-
     public Iterable<ConfigKey<?>> getViolations() {
         return validateAll();
     }
@@ -108,34 +119,37 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
     @SuppressWarnings("unchecked")
     private Iterable<ConfigKey<?>> validateAll() {
         List<ConfigKey<?>> violating = Lists.newLinkedList();
-        BrooklynObjectInternal.ConfigurationSupportInternal configInternal = getConfigurationSupportInternal();
-
         Iterable<ConfigKey<?>> configKeys = getBrooklynObjectTypeConfigKeys();
         LOG.trace("Checking config keys on {}: {}", getBrooklynObject(), configKeys);
         for (ConfigKey<?> configKey : configKeys) {
+            BrooklynObjectInternal.ConfigurationSupportInternal configInternal = getConfigurationSupportInternal();
             // getNonBlocking method coerces the value to the config key's type.
             Maybe<?> maybeValue = configInternal.getNonBlocking(configKey);
             if (maybeValue.isPresent()) {
-                Object value = maybeValue.get();
-                try {
-                    // Cast is safe because the author of the constraint on the config key had to
-                    // keep its type to Predicte<? super T>, where T is ConfigKey<T>.
-                    Predicate<Object> po = (Predicate<Object>) configKey.getConstraint();
-                    boolean isValid;
-                    if (po instanceof BrooklynObjectPredicate) {
-                        isValid = BrooklynObjectPredicate.class.cast(po).apply(value, brooklynObject);
-                    } else {
-                        isValid = po.apply(value);
-                    }
-                    if (!isValid) {
-                        violating.add(configKey);
-                    }
-                } catch (Exception e) {
-                    LOG.debug("Error checking constraint on " + configKey.getName(), e);
+                // Cast is safe because the author of the constraint on the config key had to
+                // keep its type to Predicte<? super T>, where T is ConfigKey<T>.
+                ConfigKey<Object> ck = (ConfigKey<Object>) configKey;
+                if (!isValueValid(ck, maybeValue.get())) {
+                    violating.add(configKey);
                 }
             }
         }
         return violating;
+    }
+
+    @SuppressWarnings("unchecked")
+    <V> boolean isValueValid(ConfigKey<V> configKey, V value) {
+        try {
+            Predicate<? super V> po = configKey.getConstraint();
+            if (po instanceof BrooklynObjectPredicate) {
+                return BrooklynObjectPredicate.class.cast(po).apply(value, brooklynObject);
+            } else {
+                return po.apply(value);
+            }
+        } catch (Exception e) {
+            LOG.debug("Error checking constraint on " + configKey.getName(), e);
+        }
+        return true;
     }
 
     private BrooklynObjectInternal.ConfigurationSupportInternal getConfigurationSupportInternal() {
@@ -165,6 +179,17 @@ public abstract class ConfigConstraints<T extends BrooklynObject> {
         @Override
         Iterable<ConfigKey<?>> getBrooklynObjectTypeConfigKeys() {
             return ((AbstractEntityAdjunct) getBrooklynObject()).getAdjunctType().getConfigKeys();
+        }
+    }
+
+    private static class LocationConfigConstraints extends ConfigConstraints<Location> {
+        public LocationConfigConstraints(Location brooklynObject) {
+            super(brooklynObject);
+        }
+
+        @Override
+        Iterable<ConfigKey<?>> getBrooklynObjectTypeConfigKeys() {
+            return Collections.emptyList();
         }
     }
 

@@ -58,6 +58,7 @@ import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.internal.EntityConfigMap;
@@ -1144,6 +1145,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
         @Override
         public <T> T set(ConfigKey<T> key, T val) {
+            ConfigConstraints.assertValid(AbstractEntity.this, key, val);
             return setConfigInternal(key, val);
         }
 

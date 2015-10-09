@@ -47,6 +47,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.internal.storage.Reference;
@@ -400,6 +401,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
         @Override
         public <T> T set(ConfigKey<T> key, T val) {
+            ConfigConstraints.assertValid(AbstractLocation.this, key, val);
             T result = configBag.put(key, val);
             onChanged();
             return result;

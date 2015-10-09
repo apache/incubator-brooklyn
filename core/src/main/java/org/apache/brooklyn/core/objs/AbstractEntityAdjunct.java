@@ -42,6 +42,7 @@ import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigMap;
+import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.Entities;
@@ -298,6 +299,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         @SuppressWarnings("unchecked")
         @Override
         public <T> T set(ConfigKey<T> key, T val) {
+            ConfigConstraints.assertValid(entity, key, val);
             if (entity != null && isRunning()) {
                 doReconfigureConfig(key, val);
             }
