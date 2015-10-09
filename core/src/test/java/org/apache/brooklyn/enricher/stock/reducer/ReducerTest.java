@@ -33,6 +33,7 @@ import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.StringFunctions;
 import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -202,8 +203,9 @@ public class ReducerTest extends BrooklynAppUnitTestSupport {
             );
             Asserts.fail("Expected exception when adding reducing enricher with unknown named function");
         } catch (Exception e) {
-            Throwable t = Exceptions.getFirstThrowableOfType(e, IllegalStateException.class);
-            Assert.assertNotNull(t);
+            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) {
+                throw e;
+            }
         }
     }
     

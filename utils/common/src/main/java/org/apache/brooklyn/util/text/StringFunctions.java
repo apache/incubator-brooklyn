@@ -75,7 +75,8 @@ public class StringFunctions {
      public static Function<Iterable<?>, String> formatterForIterable(final String pattern) {
         return new Function<Iterable<?>, String>() {
             public String apply(@Nullable Iterable<?> input) {
-                return String.format(pattern, Iterables.toArray(input, Object.class));
+                Object[] arr = (input == null) ? null : Iterables.toArray(input, Object.class);
+                return String.format(pattern, arr);
             }
         };
     }
@@ -165,9 +166,4 @@ public class StringFunctions {
             }
         };
     }
-
-
-
-
-
 }
