@@ -19,6 +19,8 @@
 # under the License.
 #
 
+$ErrorActionPreference = "Stop"
+
 $serviceName = "MongoDB${config['mongodb.instance.name']}"
 
 Stop-Service $serviceName

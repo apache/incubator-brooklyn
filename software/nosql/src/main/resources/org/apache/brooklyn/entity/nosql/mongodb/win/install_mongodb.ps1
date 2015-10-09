@@ -19,6 +19,8 @@
 # under the License.
 #
 
+$ErrorActionPreference = "Stop"
+
 $Path = "C:\InstallTemp"
 New-Item -ItemType Directory -Force -Path $Path
 

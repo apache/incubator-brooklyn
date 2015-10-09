@@ -21,6 +21,8 @@
 #netsh advfirewall firewall add rule name=MongoDB dir=in protocol=tcp action=allow localport=27017 remoteip=any profile=any
 #( Get-WmiObject -Namespace "root\Microsoft\SqlServer\ComputerManagement11" -Query "Select * from ServerNetworkProtocolProperty where ProtocolName='Tcp' and IPAddressName='IPAll' and PropertyName='TcpPort'" ).SetStringValue("27017")
 
+$ErrorActionPreference = "Stop"
+
 New-Item c:\data\db -type directory -force
 New-Item c:\data\log -type directory -force
 
