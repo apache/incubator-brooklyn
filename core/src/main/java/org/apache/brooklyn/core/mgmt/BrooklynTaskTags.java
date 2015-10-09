@@ -31,6 +31,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ExecutionManager;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.entitlement.EntitlementContext;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -155,6 +156,13 @@ public class BrooklynTaskTags extends TaskTags {
     
     public static Set<Task<?>> getTasksInEntityContext(ExecutionManager em, Entity e) {
         return em.getTasksWithTag(tagForContextEntity(e));
+    }
+
+    public static ManagementContext getManagementContext(Task<?> task) {
+        for (Object tag : task.getTags())
+            if ((tag instanceof ManagementContext))
+                return (ManagementContext) tag;
+        return null;
     }
 
     // ------------- stream tags -------------------------
