@@ -18,10 +18,10 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-#netsh advfirewall firewall add rule name=MongoDB dir=in protocol=tcp action=allow localport=27017 remoteip=any profile=any
-#( Get-WmiObject -Namespace "root\Microsoft\SqlServer\ComputerManagement11" -Query "Select * from ServerNetworkProtocolProperty where ProtocolName='Tcp' and IPAddressName='IPAll' and PropertyName='TcpPort'" ).SetStringValue("27017")
 
 $ErrorActionPreference = "Stop"
+
+netsh advfirewall firewall add rule name=MongoDB dir=in protocol=tcp action=allow localport=27017 remoteip=any profile=any
 
 New-Item c:\data\db -type directory -force
 New-Item c:\data\log -type directory -force
