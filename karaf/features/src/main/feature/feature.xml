@@ -22,15 +22,37 @@
     <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
     <repository>mvn:org.apache.karaf.features/spring/${karaf.version}/xml/features</repository>
   
-    <!-- TODO: complete the features set -->
-    <feature name="brooklyn-core" version="${project.version}" description="Brooklyn Core">
-        <bundle>mvn:org.apache.brooklyn/brooklyn-core/${project.version}</bundle>
-        <bundle>mvn:org.apache.brooklyn/brooklyn-api/${project.version}</bundle>
+    <feature name="brooklyn-utils-common" version="${project.version}" description="Brooklyn Common Utils">
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/${project.version}</bundle>
-        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-groovy/${project.version}</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-logback-includes/${project.version}</bundle>
-    
+
         <bundle dependency="true">mvn:com.google.guava/guava/${guava.version}</bundle>
+        <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/${groovy.version}</bundle>
+        <bundle dependency="true">mvn:commons-io/commons-io/${commons-io.version}</bundle>
+        <bundle dependency="true">mvn:org.slf4j/jul-to-slf4j/${slf4j.version}</bundle>
+        <bundle dependency="true">mvn:org.yaml/snakeyaml/${snakeyaml.version}</bundle>
+
+        <bundle dependency="true">mvn:ch.qos.logback/logback-classic/${logback.version}</bundle>
+        <bundle dependency="true">mvn:ch.qos.logback/logback-core/${logback.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-utils-groovy" version="${project.version}" description="Brooklyn Groovy Utils">
+        <feature>brooklyn-utils-common</feature>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/${project.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-api"  version="${project.version}" description="Brooklyn API">
+        <feature>brooklyn-utils-common</feature>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-api/${project.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-core" version="${project.version}" description="Brooklyn Core">
+        <feature>brooklyn-api</feature>
+
+        <bundle>mvn:org.apache.brooklyn/brooklyn-core/${project.version}</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rt-osgi/${project.version}</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-groovy/${project.version}</bundle>
+    
         <bundle dependency="true">mvn:com.google.code.gson/gson/${gson.version}</bundle>
         <bundle dependency="true">mvn:com.jayway.jsonpath/json-path/${jsonPath.version}</bundle>
         <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${fasterxml.jackson.version}</bundle>
@@ -39,11 +61,24 @@
         <bundle dependency="true">mvn:net.minidev/json-smart/${jsonSmart.version}</bundle>
         <bundle dependency="true">mvn:net.minidev/asm/${minidev.asm.version}</bundle>
         <bundle dependency="true">mvn:com.thoughtworks.xstream/xstream/${xstream.version}</bundle>
+        <bundle dependency="true">mvn:org.freemarker/freemarker/${freemarker.version}</bundle>
+        <bundle dependency="true">mvn:net.schmizz/sshj/${sshj.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jzlib/1.1.3_2</bundle> <!-- jzlib version is 1.1.3, but bundle is 1.1.3_2 -->
+        <bundle dependency="true">mvn:org.bouncycastle/bcprov-ext-jdk15on/${bouncycastle.version}</bundle>
+        <bundle dependency="true">mvn:org.bouncycastle/bcpkix-jdk15on/${bouncycastle.version}</bundle>
+        <bundle dependency="true">mvn:commons-codec/commons-codec/${commons-codec.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient.version}</bundle>
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-jaxrs/${jackson.version}</bundle>
 
         <!-- TODO: don't use wrap: -->
         <bundle dependency="true">wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle> <!-- from geoip -->
         <bundle dependency="true">wrap:mvn:com.maxmind.geoip2/geoip2/${maxmind.version}</bundle> <!-- from geoip2 -->
         <bundle dependency="true">wrap:mvn:xpp3/xpp3_min/1.1.4c</bundle> <!-- from com.thoughtworks.xstream/xstream -->
+        <bundle dependency="true">wrap:mvn:org.reflections/reflections/${reflections.version}</bundle>
     </feature>
   
     <feature name="brooklyn-commands"  version="${project.version}"  description="Brooklyn Shell Commands">
