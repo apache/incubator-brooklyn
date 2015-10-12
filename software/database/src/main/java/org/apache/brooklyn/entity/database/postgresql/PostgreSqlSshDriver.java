@@ -191,7 +191,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
 
         if (osName.equals("ubuntu")) return "echo skipping yum repo setup as this is not an rpm environment";
 
-        if (osName.equals("rhel")) osName = "redhat";
+        if (osName.equals("rhel") || osName.contains("red hat")) osName = "redhat";
         else if (osName.equals("centos")) osName = "centos";
         else if (osName.equals("sl") || osName.startsWith("scientific")) osName = "sl";
         else if (osName.equals("fedora")) osName = "fedora";
