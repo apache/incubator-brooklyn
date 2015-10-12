@@ -105,7 +105,7 @@ public class OsgiVersionMoreEntityTest {
     @Test
     public void testEntityProxy() throws Exception {
         File storageTempDir = Os.newTempDir("osgi-standalone");
-        Framework framework = Osgis.newFrameworkStarted(storageTempDir.getAbsolutePath(), true, null);
+        Framework framework = Osgis.getFramework(storageTempDir.getAbsolutePath(), true);
         
         try {
             ManagementContextInternal managementContext;
