@@ -777,13 +777,21 @@ define([
             }
         },
         getConfigMap:function() {
-            var map = {}
+            var that = this;
+            var map = {};
             $('.app-add-wizard-config-entry').each( function (index,elt) {
                 map[$('#key',elt).val()] = 
                     $('#checkboxValue',elt).length ? $('#checkboxValue',elt).is(':checked') :
-                    $('#value',elt).val()
+                    that.getConvertedConfigValue($('#value',elt).val())
             })
             return map;
+        },
+        getConvertedConfigValue:function (value) {
+            try {
+                return $.parseJSON(value);
+            } catch (e) {
+                return value;
+            }
         },
         selectionVersion:function (event) {
             this.model.spec.set("version", $(event.currentTarget).val())
