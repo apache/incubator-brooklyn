@@ -16,14 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.software.base.lifecycle;
+package org.apache.brooklyn.location.winrm;
 
+import java.io.InputStream;
 import java.util.Map;
 
-public interface NativeWindowsScriptRunner {
+/** Marks something which can run scripts. Called "Naive" because it hides too much of the complexity,
+ * about script execution and other command-related tasks (put, etc).
+ */
+public interface NaiveWindowsScriptRunner {
 
     /** Runs a command and returns the result code */
     int executeNativeCommand(Map flags, String windowsCommand, String summaryForLogging);
     int executePsCommand(Map flags, String powerShellCommand, String summaryForLogging);
-    Integer executeNativeOrPsCommand(Map flags, String regularCommand, String powershellCommand, String phase, Boolean allowNoOp);
+    Integer executeNativeOrPsCommand(Map flags, String regularCommand, String powershellCommand, String summaryForLogging, Boolean allowNoOp);
+
+    int copyTo(InputStream source, String destination);
 }

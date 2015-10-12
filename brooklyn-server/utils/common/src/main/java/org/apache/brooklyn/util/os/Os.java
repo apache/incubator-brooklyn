@@ -204,6 +204,17 @@ public class Os {
         return Urls.mergePaths(items);
     }
 
+    public static String mergePathsWin(String... items) {
+        char separatorChar = '\\';
+        StringBuilder result = new StringBuilder();
+        for (String item: items) {
+            if (Strings.isEmpty(item)) continue;
+            if (result.length() > 0 && !isSeparator(result.codePointAt(result.length()-1))) result.append(separatorChar);
+            result.append(item);
+        }
+        return result.toString();
+    }
+
     /** merges paths using forward slash as the "local OS file separator", because it is recognised on windows,
      * making paths more consistent and avoiding problems with backslashes being escaped.
      * empty segments are omitted. */

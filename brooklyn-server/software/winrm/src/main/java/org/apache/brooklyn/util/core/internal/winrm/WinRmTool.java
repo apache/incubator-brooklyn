@@ -67,7 +67,26 @@ public interface WinRmTool {
             1024);
 
     /**
-     * @deprecated since 0.9.0; use {@link #executeCommand(List)} to avoid ambiguity between native command and power shell.
+     * Executes a Native Windows command.
+     * It is creating a new Shell on the destination host each time it is being called.
+     * @param command
+     * @since 0.2
+     */
+    WinRmToolResponse executeCommand(String command);
+
+    /**
+     * Executes a Power Shell command.
+     * It is creating a new Shell on the destination host each time it is being called.
+     * @param psCommand
+     * @since 0.2
+     */
+    WinRmToolResponse executePsCommand(String psCommand);
+
+    /**
+     * Execute a list of Windows Native commands as one command.
+     * The method translates the list of commands to a single String command with a <code>"\r\n"</code> delimiter and a terminating one.
+     * @param commands
+     * @deprecated since 0.2; Use the {@link #executeCommand(String)} instead and transform your commands list explicitly
      */
     @Deprecated
     WinRmToolResponse executeScript(List<String> commands);
@@ -77,6 +96,13 @@ public interface WinRmTool {
      */
     WinRmToolResponse executeCommand(List<String> commands);
 
+    /**
+     * Execute a list of Power Shell commands as one command.
+     * The method translates the list of commands to a single String command with a <code>"\r\n"</code> delimiter and a terminating one.
+     * @param commands
+     * @deprecated since 0.2; Use the {@link #executePsCommand(String)} instead and transform your commands list explicitly
+     */
+    @Deprecated
     WinRmToolResponse executePs(List<String> commands);
     
     WinRmToolResponse copyToServer(InputStream source, String destination);

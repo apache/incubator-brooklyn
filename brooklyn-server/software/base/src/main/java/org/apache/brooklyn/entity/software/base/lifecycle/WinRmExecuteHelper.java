@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.TaskQueueingContext;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.location.winrm.NaiveWindowsScriptRunner;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.TaskBuilder;
 import org.apache.brooklyn.util.core.task.Tasks;
@@ -51,7 +52,7 @@ public class WinRmExecuteHelper {
 
     private Task<Integer> task;
 
-    protected final NativeWindowsScriptRunner runner;
+    protected final NaiveWindowsScriptRunner runner;
     public final String summary;
 
     private String command;
@@ -62,7 +63,7 @@ public class WinRmExecuteHelper {
     protected Predicate<? super Integer> resultCodeCheck = Predicates.alwaysTrue();
     protected ByteArrayOutputStream stdout, stderr, stdin;
 
-    public WinRmExecuteHelper(NativeWindowsScriptRunner runner, String summary) {
+    public WinRmExecuteHelper(NaiveWindowsScriptRunner runner, String summary) {
         this.runner = runner;
         this.summary = summary;
     }

@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.ImmutableList;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -36,9 +37,11 @@ import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.sensor.Sensors;
-import org.apache.brooklyn.entity.software.base.lifecycle.NativeWindowsScriptRunner;
 import org.apache.brooklyn.entity.software.base.lifecycle.WinRmExecuteHelper;
+import org.apache.brooklyn.location.winrm.NaiveWindowsScriptRunner;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmScriptTool;
 import org.apache.brooklyn.util.core.internal.winrm.WinRmTool;
 import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
 import org.apache.brooklyn.util.core.task.Tasks;
@@ -51,11 +54,10 @@ import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
-public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwareProcessDriver implements NativeWindowsScriptRunner {
+public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwareProcessDriver implements NaiveWindowsScriptRunner {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSoftwareProcessWinRmDriver.class);
 
     AttributeSensor<String> WINDOWS_USERNAME = Sensors.newStringSensor("windows.username",
@@ -175,7 +177,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         if (createParentDir) {
             createDirectory(getDirectory(target), "Creating resource directory");
         }
-        
+
         InputStream stream = null;
         try {
             Tasks.setBlockingDetails("retrieving resource "+source+" for copying across");
@@ -204,15 +206,15 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     }
 
     @Override
-    public Integer executeNativeOrPsCommand(Map flags, String regularCommand, String powerShellCommand, String phase, Boolean allowNoOp) {
+    public Integer executeNativeOrPsCommand(Map flags, String regularCommand, final String powerShellCommand, String summaryForLogging, Boolean allowNoOp) {
         if (Strings.isBlank(regularCommand) && Strings.isBlank(powerShellCommand)) {
             if (allowNoOp) {
                 return new WinRmToolResponse("", "", 0).getStatusCode();
             } else {
-                throw new IllegalStateException(String.format("Exactly one of cmd or psCmd must be set for %s of %s", phase, entity));
+                throw new IllegalStateException(String.format("Exactly one of cmd or psCmd must be set for %s of %s", summaryForLogging, entity));
             }
         } else if (!Strings.isBlank(regularCommand) && !Strings.isBlank(powerShellCommand)) {
-            throw new IllegalStateException(String.format("%s and %s cannot both be set for %s of %s", regularCommand, powerShellCommand, phase, entity));
+            throw new IllegalStateException(String.format("%s and %s cannot both be set for %s of %s", regularCommand, powerShellCommand, summaryForLogging, entity));
         }
 
         ByteArrayOutputStream stdIn = new ByteArrayOutputStream();
@@ -236,7 +238,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
 
         WinRmToolResponse response;
         if (Strings.isBlank(regularCommand)) {
-            response = getLocation().executePsScript(ImmutableList.of(powerShellCommand));
+            response = getLocation().executePsScript(powerShellCommand);
         } else {
             response = getLocation().executeCommand(ImmutableList.of(regularCommand));
         }
@@ -249,6 +251,24 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         return response.getStatusCode();
     }
 
+    public int executeNativeOrPsScript(Map flags, List<String> regularCommands, final List<String> powerShellCommands, String summaryForLogging, Boolean allowNoOp) {
+        if ((regularCommands == null || regularCommands.size() == 0) && (powerShellCommands == null || powerShellCommands.size() == 0)) {
+            if (allowNoOp) {
+                return new WinRmToolResponse("", "", 0).getStatusCode();
+            } else {
+                throw new IllegalStateException(String.format("Exactly one of cmd or psCmd must be set for %s", summaryForLogging));
+            }
+        }
+
+        MutableMap<String, Object> scriptProps = MutableMap.<String, Object>of(WinRmScriptTool.PROP_SUMMARY.getName(), summaryForLogging);
+        WinRmScriptTool scriptTool = new WinRmScriptTool(scriptProps, this);
+        if (regularCommands == null || regularCommands.size() == 0) {
+            return scriptTool.execPsScript(flags, powerShellCommands);
+        } else {
+            return scriptTool.execNativeScript(flags, regularCommands);
+        }
+    }
+
     private void writeToStream(ByteArrayOutputStream stream, String string) {
         try {
             stream.write(string.getBytes());
@@ -257,16 +277,28 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         }
     }
 
-    public int execute(List<String> script) {
+    public int execute(String script) {
         return getLocation().executeCommand(script).getStatusCode();
     }
 
-    public int executePsScriptNoRetry(List<String> psScript) {
-        return getLocation().executePsScript(ImmutableMap.of(WinRmTool.PROP_EXEC_TRIES, 1), psScript).getStatusCode();
+    public int executePsCommandNoRetry(String psCommand) {
+        return getLocation().executePsScript(ImmutableMap.of(WinRmTool.PROP_EXEC_TRIES, 1), ImmutableList.of(psCommand)).getStatusCode();
+    }
+
+    public int executeCommandNoRetry(String command) {
+        return getLocation().executeCommand(ImmutableMap.of(WinRmTool.PROP_EXEC_TRIES, 1), ImmutableList.of(command)).getStatusCode();
     }
 
     public int executePsScript(List<String> psScript) {
         return getLocation().executePsScript(psScript).getStatusCode();
+    }
+
+    public WinRmToolResponse executeCommand(String cmdCommand) {
+        return getLocation().executeCommand(cmdCommand);
+    }
+
+    public WinRmToolResponse executePsScript(String psCommand) {
+        return getLocation().executePsScript(psCommand);
     }
 
     public int copyTo(File source, String destination) {
@@ -278,12 +310,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     }
 
     public void rebootAndWait() {
-        try {
-            executePsScriptNoRetry(ImmutableList.of("Restart-Computer -Force"));
-        } catch (Exception e) {
-            // Restarting the computer will cause the command to fail; ignore the exception and continue
-            Exceptions.propagateIfFatal(e);
-        }
+        executePsCommandNoRetry("Restart-Computer -Force");
         waitForWinRmStatus(false, entity.getConfig(VanillaWindowsProcess.REBOOT_BEGUN_TIMEOUT));
         waitForWinRmStatus(true, entity.getConfig(VanillaWindowsProcess.REBOOT_COMPLETED_TIMEOUT)).getWithError();
     }
@@ -298,7 +325,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
             @Override
             public Boolean call() throws Exception {
                 try {
-                    return (execute(ImmutableList.of("hostname")) == 0) == requiredStatus;
+                    return (execute("hostname") == 0) == requiredStatus;
                 } catch (Exception e) {
                     return !requiredStatus;
                 }
