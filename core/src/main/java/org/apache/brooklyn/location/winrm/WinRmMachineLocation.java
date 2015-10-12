@@ -18,49 +18,50 @@
  */
 package org.apache.brooklyn.location.winrm;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import org.apache.brooklyn.api.location.MachineDetails;
-import org.apache.brooklyn.api.location.MachineLocation;
-import org.apache.brooklyn.api.location.OsDetails;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.core.location.AbstractLocation;
-import org.apache.brooklyn.core.location.access.PortForwardManager;
-import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
-
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.stream.Streams;
-import org.apache.brooklyn.util.time.Duration;
-import org.apache.brooklyn.util.time.Time;
-
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
+import org.apache.brooklyn.api.location.MachineDetails;
+import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.location.AbstractLocation;
+import org.apache.brooklyn.core.location.access.PortForwardManager;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.util.core.internal.winrm.NativeWindowsScriptRunner;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
+import javax.annotation.Nullable;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public class WinRmMachineLocation extends AbstractLocation implements MachineLocation, NativeWindowsScriptRunner {
 
     private static final Logger LOG = LoggerFactory.getLogger(WinRmMachineLocation.class);
 
@@ -149,16 +150,12 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         return (result == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(result);
     }
 
-    public WinRmToolResponse executeScript(String script) {
-        return executeScript(ImmutableList.of(script));
-    }
-
-    public WinRmToolResponse executeScript(List<String> script) {
+    public WinRmToolResponse executeCommand(Function<WinRmTool, WinRmToolResponse> callee) {
         int execTries = getRequiredConfig(EXEC_TRIES);
         Collection<Throwable> exceptions = Lists.newArrayList();
         for (int i = 0; i < execTries; i++) {
             try {
-                return executeScriptNoRetry(script);
+                return executeCommandNoRetry(callee);
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 if (i == (execTries+1)) {
@@ -174,43 +171,89 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         throw Exceptions.propagate("failed to execute shell script", exceptions);
     }
 
-    protected WinRmToolResponse executeScriptNoRetry(List<String> script) {
-        WinRmTool winRmTool = WinRmTool.connect(getHostAndPort(), getUser(), getPassword());
-        WinRmToolResponse response = winRmTool.executeScript(script);
-        return response;
-    }
+    @Override
+    public Integer executeNativeOrPsCommand(Map flags, String regularCommand, final String powerShellCommand, String summaryForLogging, Boolean allowNoOp) {
+        ByteArrayOutputStream stdIn = new ByteArrayOutputStream();
+        ByteArrayOutputStream stdOut = flags.get("out") != null ? (ByteArrayOutputStream)flags.get("out") : new ByteArrayOutputStream();
+        ByteArrayOutputStream stdErr = flags.get("err") != null ? (ByteArrayOutputStream)flags.get("err") : new ByteArrayOutputStream();
 
-    public WinRmToolResponse executePsScript(String psScript) {
-        return executePsScript(ImmutableList.of(psScript));
-    }
+        Task<?> currentTask = Tasks.current();
+        if (currentTask != null) {
+            if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDIN)==null) {
+                writeToStream(stdIn, Strings.isBlank(regularCommand) ? powerShellCommand : regularCommand);
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, stdIn));
+            }
 
-    public WinRmToolResponse executePsScript(List<String> psScript) {
-        int execTries = getRequiredConfig(EXEC_TRIES);
-        Collection<Throwable> exceptions = Lists.newArrayList();
-        for (int i = 0; i < execTries; i++) {
-            try {
-                return executePsScriptNoRetry(psScript);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                if (i == (execTries+1)) {
-                    LOG.info("Propagating WinRM exception (attempt "+(i+1)+" of "+execTries+")", e);
-                } else if (i == 0) {
-                    LOG.warn("Ignoring WinRM exception and retrying after 5 seconds (attempt "+(i+1)+" of "+execTries+")", e);
-                    Time.sleep(Duration.FIVE_SECONDS);
-                } else {
-                    LOG.debug("Ignoring WinRM exception and retrying after 5 seconds (attempt "+(i+1)+" of "+execTries+")", e);
-                    Time.sleep(Duration.FIVE_SECONDS);
-                }
-                exceptions.add(e);
+            if (BrooklynTaskTags.stream(currentTask, BrooklynTaskTags.STREAM_STDOUT)==null) {
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, stdOut));
+                flags.put("out", stdOut);
+                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, stdErr));
+                flags.put("err", stdErr);
             }
         }
-        throw Exceptions.propagate("failed to execute powershell script", exceptions);
+
+        WinRmToolResponse response;
+        if (Strings.isBlank(regularCommand)) {
+            response = executePsCommand(powerShellCommand);
+        } else {
+            response = executeCmdCommand(regularCommand);
+            // execute script
+        }
+
+        if (currentTask != null) {
+            writeToStream(stdOut, response.getStdOut());
+            writeToStream(stdErr, response.getStdErr());
+        }
+
+        return response.getStatusCode();
     }
 
-    public WinRmToolResponse executePsScriptNoRetry(List<String> psScript) {
+    private void writeToStream(ByteArrayOutputStream stream, String string) {
+        try {
+            stream.write(string.getBytes());
+        } catch (IOException e) {
+            LOG.warn("Problem populating one of the std streams for task of entity ", e);
+        }
+    }
+
+    private enum CommandType {
+        PS, CMD_COMMAND
+    }
+
+    private Function<WinRmTool, WinRmToolResponse> commandOf(final CommandType type, final String command) {
+        return new Function<WinRmTool, WinRmToolResponse>() {
+            @Override
+            public WinRmToolResponse apply(WinRmTool input) {
+                if (type.equals(CommandType.PS)) {
+                    return input.executePsCommand(command);
+                } else if (type.equals(CommandType.CMD_COMMAND)) {
+                    return input.executeCommand(command);
+                } else {
+                    return null;
+                }
+            }
+        };
+    }
+
+    private WinRmToolResponse executeCommandNoRetry(Function<WinRmTool, WinRmToolResponse> callee) {
         WinRmTool winRmTool = WinRmTool.connect(getHostAndPort(), getUser(), getPassword());
-        WinRmToolResponse response = winRmTool.executePs(psScript);
-        return response;
+        return callee.apply(winRmTool);
+    }
+
+    public WinRmToolResponse executeCmdCommand(String cmdCommand) {
+        return executeCommand(commandOf(CommandType.CMD_COMMAND, cmdCommand));
+    }
+
+    public WinRmToolResponse executePsCommand(String psCommand) {
+        return executeCommand(commandOf(CommandType.PS, psCommand));
+    }
+
+    public WinRmToolResponse executeCmdCommandNoRetry(String cmdCommand) {
+        return executeCommandNoRetry(commandOf(CommandType.CMD_COMMAND, cmdCommand));
+    }
+
+    public WinRmToolResponse executePsCommandNoRetry(String psCommand) {
+        return executeCommandNoRetry(commandOf(CommandType.PS, psCommand));
     }
 
     public int copyTo(File source, String destination) {
@@ -228,7 +271,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public int copyTo(InputStream source, String destination) {
-        executePsScript(ImmutableList.of("rm -ErrorAction SilentlyContinue " + destination));
+        executePsCommand("rm -ErrorAction SilentlyContinue " + destination);
         try {
             int chunkSize = getConfig(COPY_FILE_CHUNK_SIZE_BYTES);
             byte[] inputData = new byte[chunkSize];
@@ -241,9 +284,9 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
                 } else {
                     chunk = Arrays.copyOf(inputData, bytesRead);
                 }
-                executePsScript(ImmutableList.of("If ((!(Test-Path " + destination + ")) -or ((Get-Item '" + destination + "').length -eq " +
+                executePsCommand(Joiner.on("\r\n").join(ImmutableList.of("If ((!(Test-Path " + destination + ")) -or ((Get-Item '" + destination + "').length -eq " +
                         expectedFileSize + ")) {Add-Content -Encoding Byte -path " + destination +
-                        " -value ([System.Convert]::FromBase64String(\"" + new String(Base64.encodeBase64(chunk)) + "\"))}"));
+                        " -value ([System.Convert]::FromBase64String(\"" + new String(Base64.encodeBase64(chunk)) + "\"))}"), "copyFile"));
                 expectedFileSize += bytesRead;
             }
 

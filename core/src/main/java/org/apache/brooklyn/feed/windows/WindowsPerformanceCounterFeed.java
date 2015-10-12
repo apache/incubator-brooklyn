@@ -228,7 +228,7 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         @Override
         public T call() throws Exception {
             WinRmMachineLocation machine = EffectorTasks.getWinRmMachine(entity);
-            WinRmToolResponse response = machine.executePsScript(command);
+            WinRmToolResponse response = machine.executePsCommand(command);
             return (T)response;
         }
     }

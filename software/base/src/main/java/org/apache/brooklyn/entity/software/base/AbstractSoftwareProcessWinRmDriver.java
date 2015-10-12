@@ -18,19 +18,16 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 import org.apache.brooklyn.api.entity.EntityLocal;
-import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.sensor.Sensors;
-import org.apache.brooklyn.entity.software.base.lifecycle.NativeWindowsScriptRunner;
 import org.apache.brooklyn.entity.software.base.lifecycle.WinRmExecuteHelper;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.apache.brooklyn.util.core.internal.winrm.NativeWindowsScriptRunner;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.ReferenceWithError;
@@ -42,11 +39,8 @@ import org.python.core.PyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -76,7 +70,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         if (!Entities.isManaged(getEntity()))
             throw new IllegalStateException(getEntity() + " is no longer managed; cannot create script to run here (" + phase + ")");
 
-        WinRmExecuteHelper s = new WinRmExecuteHelper(this, phase + " " + elvis(entity, this));
+        WinRmExecuteHelper s = new WinRmExecuteHelper(getMachine(), phase + " " + elvis(entity, this));
         return s;
     }
 
@@ -147,16 +141,6 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     }
 
     @Override
-    public int executeNativeCommand(Map flags, String command, String phase) {
-        return executeNativeOrPsCommand(flags, command, null, phase, true);
-    }
-
-    @Override
-    public int executePsCommand(Map flags, String command, String phase) {
-        return executeNativeOrPsCommand(flags, null, command, phase, true);
-    }
-
-    @Override
     public String getRunDir() {
         // TODO: This needs to be tidied, and read from the appropriate flags (if set)
         return "$HOME\\brooklyn-managed-processes\\apps\\" + entity.getApplicationId() + "\\entities\\" + getEntityVersionLabel()+"_"+entity.getId();
@@ -198,73 +182,38 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
 
     @Override
     protected void createDirectory(String directoryName, String summaryForLogging) {
-        getLocation().executePsScript("New-Item -path \"" + directoryName + "\" -type directory -ErrorAction SilentlyContinue");
+        getLocation().executePsCommand("New-Item -path \"" + directoryName + "\" -type directory -ErrorAction SilentlyContinue");
     }
 
     @Override
-    public Integer executeNativeOrPsCommand(Map flags, String regularCommand, String powerShellCommand, String phase, Boolean allowNoOp) {
+    public Integer executeNativeOrPsCommand(Map flags, String regularCommand, final String powerShellCommand, String summaryForLogging, Boolean allowNoOp) {
         if (Strings.isBlank(regularCommand) && Strings.isBlank(powerShellCommand)) {
             if (allowNoOp) {
                 return new WinRmToolResponse("", "", 0).getStatusCode();
             } else {
-                throw new IllegalStateException(String.format("Exactly one of cmd or psCmd must be set for %s of %s", phase, entity));
+                throw new IllegalStateException(String.format("Exactly one of cmd or psCmd must be set for %s of %s", summaryForLogging, entity));
             }
         } else if (!Strings.isBlank(regularCommand) && !Strings.isBlank(powerShellCommand)) {
-            throw new IllegalStateException(String.format("%s and %s cannot both be set for %s of %s", regularCommand, powerShellCommand, phase, entity));
+            throw new IllegalStateException(String.format("%s and %s cannot both be set for %s of %s", regularCommand, powerShellCommand, summaryForLogging, entity));
         }
 
-        ByteArrayOutputStream stdIn = new ByteArrayOutputStream();
-        ByteArrayOutputStream stdOut = flags.get("out") != null ? (ByteArrayOutputStream)flags.get("out") : new ByteArrayOutputStream();
-        ByteArrayOutputStream stdErr = flags.get("err") != null ? (ByteArrayOutputStream)flags.get("err") : new ByteArrayOutputStream();
-
-        Task<?> currentTask = Tasks.current();
-        if (currentTask != null) {
-            if (BrooklynTaskTags.stream(Tasks.current(), BrooklynTaskTags.STREAM_STDIN)==null) {
-                writeToStream(stdIn, Strings.isBlank(regularCommand) ? powerShellCommand : regularCommand);
-                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDIN, stdIn));
-            }
-
-            if (BrooklynTaskTags.stream(currentTask, BrooklynTaskTags.STREAM_STDOUT)==null) {
-                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, stdOut));
-                flags.put("out", stdOut);
-                Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, stdErr));
-                flags.put("err", stdErr);
-            }
-        }
-
-        WinRmToolResponse response;
-        if (Strings.isBlank(regularCommand)) {
-            response = getLocation().executePsScript(ImmutableList.of(powerShellCommand));
-        } else {
-            response = getLocation().executeScript(ImmutableList.of(regularCommand));
-        }
-
-        if (currentTask != null) {
-            writeToStream(stdOut, response.getStdOut());
-            writeToStream(stdErr, response.getStdErr());
-        }
-
-        return response.getStatusCode();
+        return getLocation().executeNativeOrPsCommand(flags, regularCommand, powerShellCommand, summaryForLogging, allowNoOp);
     }
 
-    private void writeToStream(ByteArrayOutputStream stream, String string) {
-        try {
-            stream.write(string.getBytes());
-        } catch (IOException e) {
-            LOG.warn("Problem populating one of the std streams for task of entity " + getEntity(), e);
-        }
+    public WinRmToolResponse executeCmdCommand(String cmdCommand) {
+        return getLocation().executeCmdCommand(cmdCommand);
     }
 
-    public int execute(List<String> script) {
-        return getLocation().executeScript(script).getStatusCode();
+    public WinRmToolResponse executePsCommand(String psCommand) {
+        return getLocation().executePsCommand(psCommand);
     }
 
-    public int executePsScriptNoRetry(List<String> psScript) {
-        return getLocation().executePsScriptNoRetry(psScript).getStatusCode();
+    public WinRmToolResponse executeCmdCommandNoRetry(String cmdCommand) {
+        return getLocation().executeCmdCommandNoRetry(cmdCommand);
     }
 
-    public int executePsScript(List<String> psScript) {
-        return getLocation().executePsScript(psScript).getStatusCode();
+    public WinRmToolResponse executePsCommandNoRetry(String psCommand) {
+        return getLocation().executePsCommandNoRetry(psCommand);
     }
 
     public int copyTo(File source, String destination) {
@@ -277,7 +226,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
 
     public void rebootAndWait() {
         try {
-            executePsScriptNoRetry(ImmutableList.of("Restart-Computer -Force"));
+            getLocation().executePsCommandNoRetry("Restart-Computer -Force");
         } catch (PyException e) {
             // Restarting the computer will cause the command to fail; ignore the exception and continue
         }
@@ -295,7 +244,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
             @Override
             public Boolean call() throws Exception {
                 try {
-                    return (execute(ImmutableList.of("hostname")) == 0) == requiredStatus;
+                    return (getLocation().executeCmdCommand("hostname").getStatusCode() == 0) == requiredStatus;
                 } catch (Exception e) {
                     return !requiredStatus;
                 }
