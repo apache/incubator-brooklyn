@@ -218,7 +218,7 @@ public interface BrooklynNode extends SoftwareProcess, UsesJava {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @SetFromFlag("classpath")
-    public static final BasicAttributeSensorAndConfigKey<List<String>> CLASSPATH = new BasicAttributeSensorAndConfigKey(
+    public static final BasicAttributeSensorAndConfigKey<List> CLASSPATH = new BasicAttributeSensorAndConfigKey(
             List.class, "brooklynnode.classpath", "classpath to use, as list of URL entries", Lists.newArrayList());
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

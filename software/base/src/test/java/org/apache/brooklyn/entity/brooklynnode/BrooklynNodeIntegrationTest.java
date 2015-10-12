@@ -29,6 +29,7 @@ import java.lang.reflect.Proxy;
 import java.net.URI;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.api.effector.Effector;
@@ -274,14 +275,50 @@ services:
         Files.write(content, classpathEntry1, Charsets.UTF_8);
         Files.write(content, classpathEntry2, Charsets.UTF_8);
         File tempDir = Files.createTempDir();
-        File expectedFile1 = new File(new File(tempDir, "lib"), classpathEntry1.getName());
-        File expectedFile2 = new File(new File(tempDir, "lib"), classpathEntry2.getName());
+        File destDir = new File(new File(tempDir, "lib"), "dropins");
+        File expectedFile1 = new File(destDir, classpathEntry1.getName());
+        File expectedFile2 = new File(destDir, classpathEntry2.getName());
 
         try {
             BrooklynNode brooklynNode = app.createAndManageChild(newBrooklynNodeSpecForTest()
                     .configure(BrooklynNode.RUN_DIR, tempDir.getAbsolutePath())
                     .configure(BrooklynNode.CLASSPATH, ImmutableList.of(classpathEntry1.getAbsolutePath(), classpathEntry2.getAbsolutePath()))
                     );
+            app.start(locs);
+            log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
+
+            assertEquals(Files.readLines(expectedFile1, Charsets.UTF_8), ImmutableList.of(content));
+            assertEquals(Files.readLines(expectedFile2, Charsets.UTF_8), ImmutableList.of(content));
+        } finally {
+            expectedFile1.delete();
+            expectedFile2.delete();
+            tempDir.delete();
+            classpathEntry1.delete();
+            classpathEntry2.delete();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testCopiesClasspathEntriesInConfigKey2() throws Exception {
+        String content = "abc=def";
+        File classpathEntry1 = File.createTempFile("first", ".properties");
+        File classpathEntry2 = File.createTempFile("second", ".properties");
+        Files.write(content, classpathEntry1, Charsets.UTF_8);
+        Files.write(content, classpathEntry2, Charsets.UTF_8);
+        File tempDir = Files.createTempDir();
+        String testName1 = "test_" + classpathEntry1.getName();
+        File destDir = new File(new File(tempDir, "lib"), "dropins");
+        File expectedFile1 = new File(destDir, testName1);
+        String testName2 = "test_" + classpathEntry2.getName();
+        File expectedFile2 = new File(destDir, testName2);
+        Map entry1 = ImmutableMap.of("url", classpathEntry1.getAbsolutePath(), "filename", testName1);
+        Map entry2 = ImmutableMap.of("url", classpathEntry2.getAbsolutePath(), "filename", testName2);
+
+        try {
+            BrooklynNode brooklynNode = app.createAndManageChild(newBrooklynNodeSpecForTest()
+                            .configure(BrooklynNode.RUN_DIR, tempDir.getAbsolutePath())
+                            .configure(BrooklynNode.CLASSPATH, ImmutableList.of(entry1, entry2))
+            );
             app.start(locs);
             log.info("started "+app+" containing "+brooklynNode+" for "+JavaClassNames.niceClassAndMethod());
 
@@ -328,7 +365,7 @@ services:
             classpathEntry2.delete();
         }
     }
-    
+
     // TODO test that the classpath set above is actually used
 
     @Test(groups="Integration")
