@@ -245,7 +245,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
 
 
     /*
-           - type: org.apache.brooklyn.enricher.stock.Transformer
+        - type: org.apache.brooklyn.enricher.stock.Transformer
           brooklyn.config:
             enricher.sourceSensor: $brooklyn:sensor("mongodb.server.replicaSet.primary.endpoint")
             enricher.targetSensor: $brooklyn:sensor("justtheport")

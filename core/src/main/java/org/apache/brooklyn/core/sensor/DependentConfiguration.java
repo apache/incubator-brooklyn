@@ -68,6 +68,7 @@ import org.apache.brooklyn.util.exceptions.RuntimeTimeoutException;
 import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.StringFunctions;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
@@ -534,10 +535,11 @@ public class DependentConfiguration {
             String resolvedSource = resolveArgument(source, taskArgsIterator);
             String resolvedPattern = resolveArgument(pattern, taskArgsIterator);
             String resolvedReplacement = resolveArgument(replacement, taskArgsIterator);
-            return new RegexReplacer(resolvedPattern, resolvedReplacement).apply(resolvedSource);
+            return new StringFunctions.RegexReplacer(resolvedPattern, resolvedReplacement).apply(resolvedSource);
         }
     }
 
+    @Beta
     public static class RegexTransformerFunction implements Function<List<Object>, Function<String, String>> {
 
         private final Object pattern;
@@ -551,7 +553,7 @@ public class DependentConfiguration {
         @Override
         public Function<String, String> apply(List<Object> input) {
             Iterator<?> taskArgsIterator = input.iterator();
-            return new RegexReplacer(resolveArgument(pattern, taskArgsIterator), resolveArgument(replacement, taskArgsIterator));
+            return new StringFunctions.RegexReplacer(resolveArgument(pattern, taskArgsIterator), resolveArgument(replacement, taskArgsIterator));
         }
 
     }
@@ -574,24 +576,8 @@ public class DependentConfiguration {
         return String.valueOf(resolvedArgument);
     }
 
-    public static class RegexReplacer implements Function<String, String> {
 
-        private final String pattern;
-        private final String replacement;
-
-        public RegexReplacer(String pattern, String replacement) {
-            this.pattern = pattern;
-            this.replacement = replacement;
-        }
-
-        @Nullable
-        @Override
-        public String apply(@Nullable String s) {
-            return Strings.replaceAllRegex(s, pattern, replacement);
-        }
-    }
-
-    /** returns a task for parallel execution returning a list of values for the given sensor for the given entity list, 
+    /** returns a task for parallel execution returning a list of values for the given sensor for the given entity list,
      * optionally when the values satisfy a given readiness predicate (defaulting to groovy truth if not supplied) */
     public static <T> Task<List<T>> listAttributesWhenReady(AttributeSensor<T> sensor, Iterable<Entity> entities) {
         return listAttributesWhenReady(sensor, entities, GroovyJavaMethods.truthPredicate());

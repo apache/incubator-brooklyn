@@ -383,16 +383,33 @@ public class StringFunctions {
     }
     
     protected static class ConvertCaseFunction implements Function<String, String> {
-        private final CaseFormat src;
-        private final CaseFormat target;
+       private final CaseFormat src;
+       private final CaseFormat target;
 
-        public ConvertCaseFunction(CaseFormat src, CaseFormat target) {
-            this.src = src;
-            this.target = target;
+       public ConvertCaseFunction(CaseFormat src, CaseFormat target) {
+          this.src = src;
+          this.target = target;
+       }
+
+       @Override
+       public String apply(String input) {
+          return src.to(target, input);
+       }
+    }
+
+    public static class RegexReplacer implements Function<String, String> {
+        private final String pattern;
+        private final String replacement;
+
+        public RegexReplacer(String pattern, String replacement) {
+            this.pattern = pattern;
+            this.replacement = replacement;
         }
+
+        @Nullable
         @Override
-        public String apply(String input) {
-            return src.to(target, input);
+        public String apply(@Nullable String s) {
+            return Strings.replaceAllRegex(s, pattern, replacement);
         }
     }
 }
