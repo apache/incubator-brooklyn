@@ -26,6 +26,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +81,9 @@ import com.google.common.collect.Sets;
 public class PeriodicDeltaChangeListener implements ChangeListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(PeriodicDeltaChangeListener.class);
+
+    protected final AtomicLong checkpointLogCount = new AtomicLong();
+    private static final int INITIAL_LOG_WRITES = 5;
 
     private static class DeltaCollector {
         private Set<Location> locations = Sets.newLinkedHashSet();
@@ -386,7 +390,7 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
                 deltaCollector = new DeltaCollector();
             }
             
-            if (LOG.isDebugEnabled()) LOG.debug("Checkpointing delta of memento: "
+            if (LOG.isDebugEnabled() && shouldLogCheckpoint()) LOG.debug("Checkpointing delta of memento: "
                     + "updating entities={}, locations={}, policies={}, enrichers={}, catalog items={}; "
                     + "removing entities={}, locations={}, policies={}, enrichers={}, catalog items={}",
                     new Object[] {
@@ -497,5 +501,9 @@ public class PeriodicDeltaChangeListener implements ChangeListener {
     public PersistenceExceptionHandler getExceptionHandler() {
         return exceptionHandler;
     }
-    
+
+    protected boolean shouldLogCheckpoint() {
+        long logCount = checkpointLogCount.incrementAndGet();
+        return (logCount < INITIAL_LOG_WRITES) || (logCount % 1000 == 0);
+    }
 }
