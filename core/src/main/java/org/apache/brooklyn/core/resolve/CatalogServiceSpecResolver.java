@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
+package org.apache.brooklyn.core.resolve;
 
 import java.util.Set;
 
@@ -38,11 +38,9 @@ public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
     private static final Logger log = LoggerFactory.getLogger(CatalogServiceSpecResolver.class);
 
     private static final String RESOLVER_NAME = "catalog";
-    private final ServiceSpecResolver hardcodedResolver;
-    
+
     public CatalogServiceSpecResolver() {
         super(RESOLVER_NAME);
-        hardcodedResolver = new HardcodedCatalogServiceSpecResolver();
     }
 
     @Override
@@ -66,33 +64,31 @@ public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
     public EntitySpec<?> resolve(String type, BrooklynClassLoadingContext loader, Set<String> parentEncounteredTypes) {
         String localType = getLocalType(type);
         CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem(mgmt, localType);
-        if (item != null) {
-            checkUsable(item);
 
-            //Take the symbolicName part of the catalog item only for recursion detection to prevent
-            //cross referencing of different versions. Not interested in non-catalog item types.
-            //Prevent catalog items self-referencing even if explicitly different version.
-            boolean nonRecursiveCall = !parentEncounteredTypes.contains(item.getSymbolicName());
-            if (nonRecursiveCall) {
-                // Make a copy of the encountered types, so that we add the item being resolved for
-                // dependency items only. Siblings must not see we are resolving this item.
-                Set<String> encounteredTypes = ImmutableSet.<String>builder()
-                        .addAll(parentEncounteredTypes)
-                        .add(item.getSymbolicName())
-                        .build();
+        if (item == null) return null;
+        checkUsable(item);
 
-                // CatalogItem generics are just getting in the way, better get rid of them, we
-                // are casting anyway.
-                @SuppressWarnings({ "rawtypes" })
-                CatalogItem rawItem = item;
-                @SuppressWarnings({ "rawtypes", "unchecked" })
-                AbstractBrooklynObjectSpec rawSpec = EntityManagementUtils.createCatalogSpec(mgmt, rawItem, encounteredTypes);
-                return (EntitySpec<?>) rawSpec;
-            } else {
-                return null;
-            }
+        //Take the symbolicName part of the catalog item only for recursion detection to prevent
+        //cross referencing of different versions. Not interested in non-catalog item types.
+        //Prevent catalog items self-referencing even if explicitly different version.
+        boolean nonRecursiveCall = !parentEncounteredTypes.contains(item.getSymbolicName());
+        if (nonRecursiveCall) {
+            // Make a copy of the encountered types, so that we add the item being resolved for
+            // dependency items only. Siblings must not see we are resolving this item.
+            Set<String> encounteredTypes = ImmutableSet.<String>builder()
+                    .addAll(parentEncounteredTypes)
+                    .add(item.getSymbolicName())
+                    .build();
+
+            // CatalogItem generics are just getting in the way, better get rid of them, we
+            // are casting anyway.
+            @SuppressWarnings({ "rawtypes" })
+            CatalogItem rawItem = item;
+            @SuppressWarnings({ "rawtypes", "unchecked" })
+            AbstractBrooklynObjectSpec rawSpec = EntityManagementUtils.createCatalogSpec(mgmt, rawItem, encounteredTypes);
+            return (EntitySpec<?>) rawSpec;
         } else {
-            return hardcodedResolver.resolve(type, loader, parentEncounteredTypes);
+            return null;
         }
     }
 
@@ -107,12 +103,6 @@ public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
     protected CatalogItem<Entity,EntitySpec<?>> getCatalogItem(ManagementContext mgmt, String brooklynType) {
         brooklynType = DeserializingClassRenamesProvider.findMappedName(brooklynType);
         return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  brooklynType);
-    }
-
-    @Override
-    public void injectManagementContext(ManagementContext mgmt) {
-        super.injectManagementContext(mgmt);
-        hardcodedResolver.injectManagementContext(mgmt);
     }
 
 }

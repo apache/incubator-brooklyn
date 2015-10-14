@@ -36,8 +36,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
-import org.apache.brooklyn.camp.brooklyn.spi.creation.service.DelegatingServiceSpecResolver;
-import org.apache.brooklyn.camp.brooklyn.spi.creation.service.ServiceSpecResolver;
+import org.apache.brooklyn.camp.brooklyn.spi.creation.service.CampServiceSpecResolver;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolverAdaptor;
 import org.apache.brooklyn.camp.spi.AbstractResource;
@@ -51,6 +50,7 @@ import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
+import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -94,7 +94,7 @@ public class BrooklynComponentTemplateResolver {
         this.template = Maybe.fromNullable(optionalTemplate);
         this.yamlLoader = new BrooklynYamlTypeInstantiator.Factory(loader, this);
         this.type = type;
-        this.serviceSpecResolver = new DelegatingServiceSpecResolver(mgmt, getServiceTypeResolverOverrides());
+        this.serviceSpecResolver = new CampServiceSpecResolver(mgmt, getServiceTypeResolverOverrides());
     }
 
     // Deprecated because want to keep as much of the state private as possible
@@ -153,21 +153,21 @@ public class BrooklynComponentTemplateResolver {
 
         if (spec == null) {
             // Try to provide some troubleshooting details
-            String msgDetails = "";
+            final String msgDetails;
             CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, Strings.removeFromStart(type, "catalog:"));
+            String proto = Urls.getProtocol(type);
             if (item != null && encounteredCatalogTypes.contains(item.getSymbolicName())) {
                 msgDetails = "Cycle between catalog items detected, starting from " + type +
                         ". Other catalog items being resolved up the stack are " + encounteredCatalogTypes +
                         ". Tried loading it as a Java class instead but failed.";
+            } else if (proto != null) {
+                msgDetails = "The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
+                        proto + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
+                        "Not a catalog item or java type as well.";
             } else {
-                String proto = Urls.getProtocol(type);
-                if (proto != null) {
-                    msgDetails = "The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
-                            proto + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
-                            "Not a catalog item or java type as well.";
-                }
+                msgDetails = "No resolver knew how to handle it. Using resolvers: " + serviceSpecResolver;
             }
-            throw new IllegalStateException("Unable to create spec for type " + type + ". No resolver knew how to handle it. " + msgDetails);
+            throw new IllegalStateException("Unable to create spec for type " + type + ". " + msgDetails);
         }
 
         populateSpec(spec, encounteredCatalogTypes);

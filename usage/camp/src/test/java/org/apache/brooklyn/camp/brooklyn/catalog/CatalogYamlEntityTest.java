@@ -26,8 +26,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
@@ -42,6 +40,8 @@ import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
 
@@ -783,7 +783,16 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         Entity testEntity = Iterables.getOnlyElement(app.getChildren());
         assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
-    
+
+    @Test
+    public void testHardcodedCatalog() throws Exception {
+        createEntitySpec(
+                "services:",
+                "- type: cluster",
+                "- type: vanilla",
+                "- type: web-app-cluster");
+    }
+
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {
         addCatalogOSGiEntity(symbolicName, serviceType);
         String yaml = "name: simple-app-yaml\n" +

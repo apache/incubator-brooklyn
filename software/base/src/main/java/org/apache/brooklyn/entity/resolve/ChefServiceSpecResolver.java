@@ -16,12 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
+package org.apache.brooklyn.entity.resolve;
 
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.core.resolve.AbstractServiceSpecResolver;
 import org.apache.brooklyn.entity.chef.ChefConfig;
 import org.apache.brooklyn.entity.chef.ChefEntity;
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
+package org.apache.brooklyn.core.resolve;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,7 +27,6 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
@@ -47,17 +46,13 @@ public class DelegatingServiceSpecResolver extends AbstractServiceSpecResolver {
 
     private Collection<ServiceSpecResolver> resolvers;
 
-    public DelegatingServiceSpecResolver(@Nonnull ManagementContext mgmt, @Nonnull List<ServiceSpecResolver> overridingResolvers) {
+    public DelegatingServiceSpecResolver(@Nonnull List<ServiceSpecResolver> resolvers) {
         super(RESOLVER_NAME);
-        this.resolvers = ImmutableList.<ServiceSpecResolver>builder()
-                .addAll(overridingResolvers)
-                .addAll(ServiceLoader.load(ServiceSpecResolver.class))
-                .build();
-        for (ServiceSpecResolver resolver : resolvers) {
-            resolver.injectManagementContext(mgmt);
-        }
+        this.resolvers = resolvers;
+    }
 
-        injectManagementContext(mgmt);
+    protected static ImmutableList<ServiceSpecResolver> getRegisteredResolvers() {
+        return ImmutableList.copyOf(ServiceLoader.load(ServiceSpecResolver.class));
     }
 
     @Override
@@ -122,6 +117,11 @@ public class DelegatingServiceSpecResolver extends AbstractServiceSpecResolver {
                 Exceptions.create("ServiceSpecResolvers all failed", otherProblemsFromResolvers);
         }
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass() + "[" + resolvers + "]";
     }
 
 }

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
+package org.apache.brooklyn.core.resolve;
 
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -36,7 +36,6 @@ import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
  * The resolvers are loaded using the {@link ServiceLoader} mechanism, allowing external libraries
  * to add extra service type implementations that will be picked up at runtime.
  */
-// TODO Not CAMP specific, move to core, to be reused by other parsers
 public interface ServiceSpecResolver extends ManagementContextInjectable {
     /**
      * Uniquely identifies the resolver, can be used to address the same resolver at a later point in time.

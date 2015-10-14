@@ -23,6 +23,8 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.core.resolve.AbstractServiceSpecResolver;
+import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

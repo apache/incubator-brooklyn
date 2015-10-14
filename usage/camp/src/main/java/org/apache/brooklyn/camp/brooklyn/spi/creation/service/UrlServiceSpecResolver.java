@@ -26,11 +26,13 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.CampUtils;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.net.Urls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Specific to CAMP because linked plans are assumed to be CAMP format. No type discovery available. */
 public class UrlServiceSpecResolver implements ServiceSpecResolver {
     private static final Logger log = LoggerFactory.getLogger(UrlServiceSpecResolver.class);
 
