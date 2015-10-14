@@ -432,18 +432,18 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         }
     }
 
-    public List<String> getClasspath() {
-        List<String> classpath = getConfig(CLASSPATH);
+    public List getClasspath() {
+        List classpath = getConfig(CLASSPATH);
         if (classpath == null || classpath.isEmpty()) {
             classpath = getManagementContext().getConfig().getConfig(CLASSPATH);
         }
         return classpath;
     }
-    
+
     protected List<String> getEnabledHttpProtocols() {
         return getAttribute(ENABLED_HTTP_PROTOCOLS);
     }
-    
+
     protected boolean isHttpProtocolEnabled(String protocol) {
         List<String> protocols = getAttribute(ENABLED_HTTP_PROTOCOLS);
         for (String contender : protocols) {
@@ -457,7 +457,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        
+
         // TODO what sensors should we poll?
         ConfigToAttributes.apply(this);
 
@@ -512,7 +512,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             connectServiceUpIsRunning();
         }
     }
-    
+
     @Override
     protected void disconnectSensors() {
         super.disconnectSensors();
