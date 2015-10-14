@@ -20,8 +20,11 @@ package org.apache.brooklyn.config;
 
 import java.util.Collection;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.annotations.Beta;
+import com.google.common.base.Predicate;
 import com.google.common.reflect.TypeToken;
 
 /**
@@ -55,8 +58,8 @@ public interface ConfigKey<T> {
      * <p> 
      * This returns a "super" of T only in the case where T is generified, 
      * and in such cases it returns the Class instance for the unadorned T ---
-     * i.e. for List<String> this returns Class<List> ---
-     * this is of course because there is no actual Class<List<String>> instance.
+     * i.e. for List&lt;String&gt; this returns Class&lt;List&gt; ---
+     * this is of course because there is no actual Class&lt;List&lt;String&gt;&gt; instance.
      */
     Class<? super T> getType();
 
@@ -79,11 +82,25 @@ public interface ConfigKey<T> {
      * @return True if the configuration can be changed at runtime.
      */
     boolean isReconfigurable();
-    
+
     /**
      * @return The inheritance model, or <code>null</code> for the default in any context.
      */
     @Nullable ConfigInheritance getInheritance();
+
+    /**
+     * @return The predicate constraining the key's value.
+     */
+    @Beta
+    @Nonnull
+    Predicate<? super T> getConstraint();
+
+    /**
+     * @param value The value to test
+     * @return True if the given value is acceptable per the {@link #getConstraint constraints} on this key.
+     */
+    @Beta
+    boolean isValueValid(T value);
 
     /** Interface for elements which want to be treated as a config key without actually being one
      * (e.g. config attribute sensors).

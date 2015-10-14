@@ -15,7 +15,7 @@ Configuration is propagated when an application "goes live" (i.e. it becomes "ma
 Configuration values can be specified in a configuration file (``~/.brooklyn/brooklyn.properties``)
 to apply universally, and/or programmatically to a specific entity and its descendants 
 by calling `.configure(KEY, VALUE)` in the entity spec when creating it.
-There is also an ``entity.setConfig(KEY, VALUE)`` method.
+There is also an ``entity.config().set(KEY, VALUE)`` method.
 
 Additionally, many common configuration parameters are available as "flags" which can be supplied as Strings when constructing
 then entity, in the form
@@ -35,6 +35,6 @@ Sensors can be updated by the entity or associated tasks, and sensors from an en
 Effectors can be invoked by an entity's parent remotely, and the invoker is able to track the execution of that effector. Effectors can be invoked by other entities, but use this functionality with care to prevent too many managers!
 
 An entity consists of a Java interface (used when interacting with the entity) and a Java class. For resilience. it is recommended to store 
-the entity's state in attributes (see `getAttribute(AttributeKey)``). If internal fields can be used then the data will be lost on brooklyn 
+the entity's state in attributes (see ``getAttribute(AttributeKey)``). If internal fields can be used then the data will be lost on brooklyn
 restart, and may cause problems if the entity is to be moved to a different brooklyn management node.
 

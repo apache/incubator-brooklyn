@@ -45,6 +45,7 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.config.ConstraintViolationException;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.EntityPredicates;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
@@ -71,6 +72,7 @@ import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.UserFacingException;
 import org.apache.brooklyn.util.text.Strings;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -286,7 +288,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         try {
             Application app = EntityManagementUtils.createUnstarted(mgmt(), spec);
             CreationResult<Application,Void> result = EntityManagementUtils.start(app);
-            
+
             boolean isEntitled = Entitlements.isEntitled(
                     mgmt().getEntitlementManager(),
                     Entitlements.INVOKE_EFFECTOR,
@@ -301,9 +303,11 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
             URI ref = URI.create(app.getApplicationId());
             ResponseBuilder response = created(ref);
-            if (result.task() != null) 
+            if (result.task() != null)
                 response.entity(TaskTransformer.FROM_TASK.apply(result.task()));
             return response.build();
+        } catch (ConstraintViolationException e) {
+            throw new UserFacingException(e);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }

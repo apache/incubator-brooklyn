@@ -478,26 +478,37 @@ public class ResourceUtils {
         }
     }
 
-    /** allows failing-fast if URL cannot be read */
+    /** @see #checkUrlExists(String, String) */
     public String checkUrlExists(String url) {
         return checkUrlExists(url, null);
     }
-    
+
+    /**
+     * Throws if the given URL cannot be read.
+     * @param url The URL to test
+     * @param message An optional message to use for the exception thrown.
+     * @return The URL argument
+     * @see #getResourceFromUrl(String)
+     */
     public String checkUrlExists(String url, String message) {
         if (url==null) throw new NullPointerException("URL "+(message!=null ? message+" " : "")+"must not be null");
-        InputStream s;
+        InputStream s = null;
         try {
             s = getResourceFromUrl(url);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             throw new IllegalArgumentException("Unable to access URL "+(message!=null ? message : "")+": "+url, e);
+        } finally {
+            Streams.closeQuietly(s);
         }
-        Streams.closeQuietly(s); 
         return url;
     }
 
-    /** tests whether the url exists, returning true or false */
-    public boolean doesUrlExist(String url) {
+    /**
+     * @return True if the given URL can be read, false otherwise.
+     * @see #getResourceFromUrl(String)
+     */
+     public boolean doesUrlExist(String url) {
         InputStream s = null;
         try {
             s = getResourceFromUrl(url);

@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
@@ -37,6 +38,7 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.entity.AbstractApplication;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Entities;
@@ -56,6 +58,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -258,6 +261,20 @@ public class InternalEntityFactory extends InternalFactory {
             throw Exceptions.propagate(e);
         }
     }
+
+    /**
+     * Calls {@link ConfigConstraints#assertValid(Entity)} on the given entity and all of
+     * its descendants.
+     */
+    private void validateDescendantConfig(Entity e) {
+        Queue<Entity> queue = Lists.newLinkedList();
+        queue.add(e);
+        while (!queue.isEmpty()) {
+            Entity e1 = queue.poll();
+            ConfigConstraints.assertValid(e1);
+            queue.addAll(e1.getChildren());
+        }
+    }
     
     protected <T extends Entity> void initEntityAndDescendants(String entityId, final Map<String,Entity> entitiesByEntityId, final Map<String,EntitySpec<?>> specsByEntityId) {
         final Entity entity = entitiesByEntityId.get(entityId);
@@ -269,7 +286,11 @@ public class InternalEntityFactory extends InternalFactory {
                 + "and thus it should be already fully initialized.");
             return;
         }
-        
+
+        // Validate all config before attempting to manage any entity. Do this here rather
+        // than in manageRecursive so that rebind is unaffected.
+        validateDescendantConfig(entity);
+
         /* Marked transient so that the task is not needlessly kept around at the highest level.
          * Note that the task is not normally visible in the GUI, because 
          * (a) while it is running, the entity is parentless (and so not in the tree);
@@ -286,36 +307,36 @@ public class InternalEntityFactory extends InternalFactory {
             @Override
             public void run() {
                 ((AbstractEntity)entity).init();
-                
+
                 ((AbstractEntity)entity).addLocations(spec.getLocations());
 
                 for (EntityInitializer initializer: spec.getInitializers()) {
                     initializer.apply((EntityInternal)entity);
                 }
-                
+
                 for (Enricher enricher : spec.getEnrichers()) {
                     entity.enrichers().add(enricher);
                 }
-                
+
                 for (EnricherSpec<?> enricherSpec : spec.getEnricherSpecs()) {
                     entity.enrichers().add(policyFactory.createEnricher(enricherSpec));
                 }
-                
+
                 for (Policy policy : spec.getPolicies()) {
                     entity.policies().add((AbstractPolicy)policy);
                 }
-                
+
                 for (PolicySpec<?> policySpec : spec.getPolicySpecs()) {
                     entity.policies().add(policyFactory.createPolicy(policySpec));
                 }
-                                
+
                 for (Entity child: entity.getChildren()) {
                     // right now descendants are initialized depth-first (see the getUnchecked() call below)
                     // they could be done in parallel, but OTOH initializers should be very quick
                     initEntityAndDescendants(child.getId(), entitiesByEntityId, specsByEntityId);
                 }
             }
-        }).build()).getUnchecked();        
+        }).build()).getUnchecked();
     }
     
     /**

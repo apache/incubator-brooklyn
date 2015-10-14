@@ -65,7 +65,7 @@ import com.google.common.base.Stopwatch;
  * <p>
  * on unmanage it hits onManagementStoppingHere() then onManagementStopping().
  * <p>
- * When an entity's management migrates, it invoked onManagementStoppingHere() at the old location,
+ * When an entity's management migrates, it invokes onManagementStoppingHere() at the old location,
  * then onManagementStartingHere() at the new location.
  */
 public class EntityManagementSupport {
@@ -84,9 +84,6 @@ public class EntityManagementSupport {
     protected transient ManagementContext managementContext;
     protected transient SubscriptionContext subscriptionContext;
     protected transient ExecutionContext executionContext;
-    
-    // TODO the application
-    // (elaborate or remove ^^^ ? -AH, Sept 2014)
     
     protected final AtomicBoolean managementContextUsable = new AtomicBoolean(false);
     protected final AtomicBoolean currentlyDeployed = new AtomicBoolean(false);

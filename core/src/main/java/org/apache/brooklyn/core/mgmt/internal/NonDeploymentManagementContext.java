@@ -102,7 +102,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     private NonDeploymentLocationManager locationManager;
     private NonDeploymentAccessManager accessManager;
     private NonDeploymentUsageManager usageManager;
-    private EntitlementManager entitlementManager;;
 
     public NonDeploymentManagementContext(AbstractEntity entity, NonDeploymentManagementContextMode mode) {
         this.entity = checkNotNull(entity, "entity");
@@ -113,10 +112,6 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
         locationManager = new NonDeploymentLocationManager(null);
         accessManager = new NonDeploymentAccessManager(null);
         usageManager = new NonDeploymentUsageManager(null);
-        
-        // TODO might need to be some kind of "system" which can see that the system is running at this point
-        // though quite possibly we are entirely behind the auth-wall at this point
-        entitlementManager = Entitlements.minimal();
     }
 
     @Override
@@ -213,7 +208,15 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     
     @Override
     public Maybe<OsgiManager> getOsgiManager() {
-        return Maybe.absent();
+        switch (mode) {
+        case PRE_MANAGEMENT:
+        case MANAGEMENT_STARTING:
+        case MANAGEMENT_STARTED:
+            checkInitialManagementContextReal();
+            return initialManagementContext.getOsgiManager();
+        default:
+            return Maybe.absent("Entity " + entity + " is no longer managed; OSGi context no longer available");
+        }
     }
 
     @Override
@@ -335,7 +338,8 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     
     @Override
     public EntitlementManager getEntitlementManager() {
-        return entitlementManager;
+        checkInitialManagementContextReal();
+        return initialManagementContext.getEntitlementManager();
     }
     
     @Override

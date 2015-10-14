@@ -58,6 +58,7 @@ import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.internal.EntityConfigMap;
@@ -77,6 +78,7 @@ import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.internal.SubscriptionTracker;
 import org.apache.brooklyn.core.mgmt.rebind.BasicEntityRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
+import org.apache.brooklyn.core.objs.AbstractConfigurationSupportInternal;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct.AdjunctTagSupport;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
@@ -987,7 +989,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     /**
      * Direct use of this class is strongly discouraged. It will become private in a future release,
-     * once {@link #sensors()} is reverted to return {@link SensorsSupport} instead of
+     * once {@link #sensors()} is reverted to return {@link SensorSupport} instead of
      * {@link BasicSensorSupport}.
      */
     @Beta
@@ -1134,7 +1136,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
      */
     @Beta
     // TODO revert to private when config() is reverted to return ConfigurationSupportInternal
-    public class BasicConfigurationSupport implements ConfigurationSupportInternal {
+    public class BasicConfigurationSupport extends AbstractConfigurationSupportInternal {
 
         @Override
         public <T> T get(ConfigKey<T> key) {
@@ -1142,28 +1144,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
-        public <T> T get(HasConfigKey<T> key) {
-            return get(key.getConfigKey());
-        }
-
-        @Override
         public <T> T set(ConfigKey<T> key, T val) {
+            ConfigConstraints.assertValid(AbstractEntity.this, key, val);
             return setConfigInternal(key, val);
-        }
-
-        @Override
-        public <T> T set(HasConfigKey<T> key, T val) {
-            return set(key.getConfigKey(), val);
         }
 
         @Override
         public <T> T set(ConfigKey<T> key, Task<T> val) {
             return setConfigInternal(key, val);
-        }
-
-        @Override
-        public <T> T set(HasConfigKey<T> key, Task<T> val) {
-            return set(key.getConfigKey(), val);
         }
 
         @Override
@@ -1182,18 +1170,8 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         @Override
-        public Maybe<Object> getRaw(HasConfigKey<?> key) {
-            return getRaw(key.getConfigKey());
-        }
-
-        @Override
         public Maybe<Object> getLocalRaw(ConfigKey<?> key) {
             return configsInternal.getConfigRaw(key, false);
-        }
-
-        @Override
-        public Maybe<Object> getLocalRaw(HasConfigKey<?> key) {
-            return getLocalRaw(key.getConfigKey());
         }
 
         @Override
@@ -1238,7 +1216,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             
             getManagementSupport().getEntityChangeListener().onConfigChanged(key);
             return result;
+        }
 
+        @Override
+        protected ExecutionContext getContext() {
+            return AbstractEntity.this.getExecutionContext();
         }
     }
     
@@ -1551,8 +1533,6 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
      */
     protected ToStringHelper toStringHelper() {
         return Objects.toStringHelper(this).omitNullValues().add("id", getId());
-//            make output more concise by suppressing display name
-//            .add("name", getDisplayName());
     }
     
     // -------- INITIALIZATION --------------

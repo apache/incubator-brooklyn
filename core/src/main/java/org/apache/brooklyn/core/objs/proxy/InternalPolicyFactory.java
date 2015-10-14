@@ -20,13 +20,17 @@ package org.apache.brooklyn.core.objs.proxy;
 
 import java.util.Map;
 
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
@@ -98,15 +102,15 @@ public class InternalPolicyFactory extends InternalFactory {
         if (spec.getFlags().containsKey("parent")) {
             throw new IllegalArgumentException("Spec's flags must not contain parent; use spec.parent() instead for "+spec);
         }
-        
+
         try {
             Class<? extends T> clazz = spec.getType();
-            
+
             T pol = construct(clazz, spec.getFlags());
 
-            if (spec.getDisplayName()!=null)
+            if (spec.getDisplayName()!=null) {
                 ((AbstractPolicy)pol).setDisplayName(spec.getDisplayName());
-            
+            }
             if (spec.getCatalogItemId()!=null) {
                 ((AbstractPolicy)pol).setCatalogItemId(spec.getCatalogItemId());
             }
@@ -125,6 +129,7 @@ public class InternalPolicyFactory extends InternalFactory {
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 pol.config().set((ConfigKey)entry.getKey(), entry.getValue());
             }
+            ConfigConstraints.assertValid(pol);
             ((AbstractPolicy)pol).init();
             
             return pol;
@@ -166,6 +171,7 @@ public class InternalPolicyFactory extends InternalFactory {
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 enricher.config().set((ConfigKey)entry.getKey(), entry.getValue());
             }
+            ConfigConstraints.assertValid(enricher);
             ((AbstractEnricher)enricher).init();
             
             return enricher;
@@ -174,7 +180,7 @@ public class InternalPolicyFactory extends InternalFactory {
             throw Exceptions.propagate(e);
         }
     }
-    
+
     /**
      * Constructs a new-style policy (fails if no no-arg constructor).
      */
