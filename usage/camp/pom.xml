@@ -36,11 +36,6 @@
     <dependencies>
         
         <dependency>
-            <groupId>org.apache.brooklyn.camp</groupId>
-            <artifactId>camp-base</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
