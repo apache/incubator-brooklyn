@@ -46,6 +46,7 @@ import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
@@ -64,7 +65,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -188,10 +188,11 @@ public class BrooklynComponentTemplateResolver {
 
     @SuppressWarnings("unchecked")
     private <T extends Entity> void populateSpec(EntitySpec<T> spec, Set<String> encounteredCatalogTypes) {
-        String name, templateId=null, planId=null;
+        String name, source=null, templateId=null, planId=null;
         if (template.isPresent()) {
             name = template.get().getName();
             templateId = template.get().getId();
+            source = template.get().getSourceCode();
         } else {
             name = (String)attrs.getStringKey("name");
         }
@@ -210,6 +211,10 @@ public class BrooklynComponentTemplateResolver {
                 spec.child(childSpec);
             }
         }
+
+        if (source!=null)
+            spec.tag(BrooklynTags.newYamlSpecTag(source));
+
         if (!Strings.isBlank(name))
             spec.displayName(name);
         if (templateId != null)
