@@ -108,6 +108,7 @@
         <module>software/nosql</module>
         <module>software/database</module>
         <module>software/monitoring</module>
+        <module>software/winrm</module>
 
         <module>storage/hazelcast</module>
 

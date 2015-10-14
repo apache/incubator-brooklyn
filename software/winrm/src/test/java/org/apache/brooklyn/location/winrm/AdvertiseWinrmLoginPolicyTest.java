@@ -25,8 +25,6 @@ import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.winrm.AdvertiseWinrmLoginPolicy;
-import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 
 import com.google.common.collect.ImmutableList;
 
