@@ -16,7 +16,8 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-org.apache.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver
-org.apache.brooklyn.camp.brooklyn.spi.creation.service.CatalogServiceTypeResolver
-org.apache.brooklyn.camp.brooklyn.spi.creation.service.ChefServiceTypeResolver
-org.apache.brooklyn.camp.brooklyn.spi.creation.service.JavaServiceTypeResolver
+org.apache.brooklyn.camp.brooklyn.spi.creation.service.CatalogServiceSpecResolver
+org.apache.brooklyn.camp.brooklyn.spi.creation.service.ChefServiceSpecResolver
+org.apache.brooklyn.camp.brooklyn.spi.creation.service.HardcodedCatalogServiceSpecResolver
+org.apache.brooklyn.camp.brooklyn.spi.creation.service.JavaServiceSpecResolver
+org.apache.brooklyn.camp.brooklyn.spi.creation.service.UrlServiceSpecResolver

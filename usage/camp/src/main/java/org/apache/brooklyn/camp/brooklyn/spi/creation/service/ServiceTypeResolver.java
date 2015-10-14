@@ -37,7 +37,10 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateR
  *
  * @see BrooklynServiceTypeResolver
  * @see ChefServiceTypeResolver
+ * 
+ * @deprecated since 0.9.0, {@link ServiceSpecResolver} instead.
  */
+@Deprecated
 public interface ServiceTypeResolver {
 
     String DEFAULT_TYPE_PREFIX = "brooklyn";

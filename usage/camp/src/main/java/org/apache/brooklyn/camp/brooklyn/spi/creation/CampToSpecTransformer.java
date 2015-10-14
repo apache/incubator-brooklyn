@@ -76,19 +76,15 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
                 if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
                     if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
                         throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
-                    throw new IllegalArgumentException("Unrecognized application blueprint format: no services defined");
+                    throw new PlanNotRecognizedException("Unrecognized application blueprint format: no services defined");
                 }
                 // map this (expected) error to a nicer message
-                throw new IllegalArgumentException("Unrecognized application blueprint format");
+                throw new PlanNotRecognizedException("Unrecognized application blueprint format");
             }
         } catch (Exception e) {
-            if (e instanceof PlanNotRecognizedException) {
-                if (log.isTraceEnabled())
-                    log.debug("Failed to create entity from CAMP spec:\n" + plan, e);
-            } else {
-                if (log.isDebugEnabled())
-                    log.debug("Failed to create entity from CAMP spec:\n" + plan, e);
-            }
+            // TODO how do we figure out that the plan is not supported vs. invalid to wrap in a PlanNotRecognizedException?
+            if (log.isDebugEnabled())
+                log.debug("Failed to create entity from CAMP spec:\n" + plan, e);
             throw Exceptions.propagate(e);
         }
     }
@@ -96,6 +92,9 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) {
+        // Ignore old-style java type catalog items
+        if (item.getPlanYaml() == null) return null;
+
         // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
         return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item, encounteredTypes);
     }

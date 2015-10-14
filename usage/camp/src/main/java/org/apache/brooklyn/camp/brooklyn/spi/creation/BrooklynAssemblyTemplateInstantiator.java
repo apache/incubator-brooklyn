@@ -39,6 +39,7 @@ import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.entity.stock.BasicApplicationImpl;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,10 +72,11 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     }
 
     @Override
-    public List<EntitySpec<?>> createServiceSpecs(AssemblyTemplate template,
+    public List<EntitySpec<?>> createServiceSpecs(
+            AssemblyTemplate template,
             CampPlatform platform, BrooklynClassLoadingContext itemLoader,
             Set<String> encounteredCatalogTypes) {
-        return buildTemplateServicesAsSpecs(itemLoader, template, platform, encounteredCatalogTypes, true);
+        return buildTemplateServicesAsSpecs(itemLoader, template, platform, encounteredCatalogTypes);
     }
 
     @Override
@@ -88,7 +90,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
             loader, buildWrapperAppTemplate(template));
-        EntitySpec<? extends Application> app = resolver.resolveSpec(null, false);
+        EntitySpec<? extends Application> app = resolver.resolveSpec(MutableSet.<String>of());
         app.configure(EntityManagementUtils.WRAPPER_APP_MARKER, Boolean.TRUE);
 
         // first build the children into an empty shell app
@@ -124,13 +126,13 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return EntityManagementUtils.canPromoteWrappedApplication(app);
     }
 
-    private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, Set<String> encounteredCatalogTypes, boolean canUseOtherTransformers) {
+    private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, Set<String> encounteredCatalogTypes) {
         List<EntitySpec<?>> result = Lists.newArrayList();
 
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
-            EntitySpec<?> spec = entityResolver.resolveSpec(encounteredCatalogTypes, canUseOtherTransformers);
+            EntitySpec<?> spec = entityResolver.resolveSpec(encounteredCatalogTypes);
             result.add(spec);
         }
         return result;

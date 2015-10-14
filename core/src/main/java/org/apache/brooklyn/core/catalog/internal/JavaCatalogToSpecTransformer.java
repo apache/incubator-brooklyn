@@ -34,6 +34,11 @@ import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
+ * they are loaded as a simple java type, only taking the class name from the catalog item instead of the
+ * type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
+ */
 public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
     private static final Logger log = LoggerFactory.getLogger(JavaCatalogToSpecTransformer.class);
 
@@ -64,8 +69,12 @@ public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
             CatalogItem<T, SpecT> item, Set<String> encounteredTypes) throws PlanNotRecognizedException {
         if (item.getJavaType() != null) {
             log.warn("Deprecated functionality (since 0.9.0). Using old-style xml catalog items with java type attribute for " + item);
-            BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, item);
-            Class<?> type = loader.loadClass(item.getJavaType());
+            Class<?> type;
+            try {
+                type = mgmt.getCatalogClassLoader().loadClass(item.getJavaType());
+            } catch (ClassNotFoundException e) {
+                throw new IllegalStateException("Unable to load old-style java catalog item type " + item.getJavaType() + " for item " + item, e);
+            }
             AbstractBrooklynObjectSpec<?,?> spec;
             if (Entity.class.isAssignableFrom(type)) {
                 @SuppressWarnings("unchecked")

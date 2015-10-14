@@ -19,31 +19,24 @@
 package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
+import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.group.DynamicRegionsFabric;
 import org.apache.brooklyn.entity.java.VanillaJavaApp;
 import org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 import com.google.common.collect.ImmutableMap;
 
-/**
- * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code catalog:}
- * to Brooklyn {@link EntitySpec} instances.
- */
-public class CatalogServiceTypeResolver extends BrooklynServiceTypeResolver {
+public class HardcodedCatalogServiceSpecResolver extends AbstractServiceSpecResolver {
+    private static final String RESOLVER_NAME = "catalog";
 
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
-
-    // TODO currently a hardcoded list of aliases; would like that to come from mgmt somehow
     private static final Map<String, String> CATALOG_TYPES = ImmutableMap.<String, String>builder()
             .put("cluster", DynamicCluster.class.getName())
             .put("fabric", DynamicRegionsFabric.class.getName())
@@ -55,23 +48,48 @@ public class CatalogServiceTypeResolver extends BrooklynServiceTypeResolver {
             .build();
 
     // Allow catalog-type or CatalogType as service type string
-    private static final Converter<String, String> FMT = CaseFormat.LOWER_HYPHEN.converterTo(CaseFormat.UPPER_CAMEL);
+    private static final Converter<String, String> FMT = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_HYPHEN);
+
+    public HardcodedCatalogServiceSpecResolver() {
+        super(RESOLVER_NAME);
+    }
 
     @Override
-    public String getTypePrefix() { return "catalog"; }
+    protected boolean canResolve(String type, BrooklynClassLoadingContext loader) {
+        String localType = getLocalType(type);
+        String specType = getImplementation(localType);
+        return specType != null;
+    }
 
     @Override
-    public String getBrooklynType(String serviceType) {
-        String type = super.getBrooklynType(serviceType);
-        if (type == null) return null;
-
-        for (String check : CATALOG_TYPES.keySet()) {
-            if (type.equals(check) || type.equals(FMT.convert(check))) {
-                return CATALOG_TYPES.get(check);
-            }
+    public EntitySpec<?> resolve(String type, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
+        String localType = getLocalType(type);
+        String specType = getImplementation(localType);
+        if (specType != null) {
+            return buildSpec(specType);
+        } else {
+            return null;
         }
+    }
 
-        return type;
+    private String getImplementation(String type) {
+        String specType = CATALOG_TYPES.get(type);
+        if (specType != null) {
+            return specType;
+        } else {
+            return CATALOG_TYPES.get(FMT.convert(type));
+        }
+    }
+
+    private EntitySpec<?> buildSpec(String specType) {
+        // TODO is this hardcoded list deprecated? If so log a warning.
+        try {
+            @SuppressWarnings("unchecked")
+            Class<Entity> specClass = (Class<Entity>)mgmt.getCatalogClassLoader().loadClass(specType);
+            return EntitySpec.create(specClass);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Unable to load hardcoded catalog type " + specType, e);
+        }
     }
 
 }

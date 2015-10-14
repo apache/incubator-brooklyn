@@ -117,7 +117,7 @@ public class PlanToSpecFactory {
             // at least one thought he could do it
             log.debug("Plan could not be transformed; failure will be propagated (other transformers tried = "+transformersWhoDontSupport+"): "+otherProblemsFromTransformers);
             result = otherProblemsFromTransformers.size()==1 ? Exceptions.create(null, otherProblemsFromTransformers) :
-                Exceptions.create("Plan transformers all failed", otherProblemsFromTransformers);
+                Exceptions.create("All plan transformers failed", otherProblemsFromTransformers);
         } else {
             result = new PlanNotRecognizedException("Invalid plan; format could not be recognized, trying with: "+transformersWhoDontSupport);
         }
