@@ -294,7 +294,7 @@ public class ByonLocationResolverTest {
         Assert.assertEquals("/tmp/x", l.config().getBag().get(LocationConfigKeys.PRIVATE_KEY_FILE));
     }
 
-    @Test
+    // FIXME: move @Test to the brooklyn-software-winrm module
     public void testResolvesLocalTempDir() throws Exception {
         String localTempDir = Os.mergePaths(Os.tmp(), "testResolvesUsernameAtHost");
         brooklynProperties.put("brooklyn.location.byon.localTempDir", localTempDir);

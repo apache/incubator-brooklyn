@@ -51,7 +51,6 @@ import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -228,8 +227,9 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public T call() throws Exception {
-            WinRmMachineLocation machine = EffectorTasks.getWinRmMachine(entity);
+            WinRmMachineLocation machine = EffectorTasks.getMachine(entity, WinRmMachineLocation.class);
             WinRmToolResponse response = machine.executePsScript(command);
             return (T)response;
         }
