@@ -53,4 +53,12 @@ public class MathPredicatesTest {
         assertTrue(MathPredicates.lessThanOrEqual(2d).apply(1));
         assertTrue(MathPredicates.lessThanOrEqual(2d).apply(2));
     }
+    
+    @Test
+    public void testEqualsApproximately() throws Exception {
+        assertFalse(MathPredicates.equalsApproximately(2d).apply(3));
+        assertTrue(MathPredicates.equalsApproximately(2d).apply(2d));
+        assertTrue(MathPredicates.equalsApproximately(2d).apply(2.00000001d));
+        assertTrue(MathPredicates.equalsApproximately(2).apply(2.00000001d));
+    }
 }

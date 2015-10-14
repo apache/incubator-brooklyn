@@ -24,40 +24,81 @@ import java.util.Map;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 
+import org.apache.brooklyn.api.location.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Maps;
 
 public class JmxValueFunctions {
 
     private static final Logger log = LoggerFactory.getLogger(JmxValueFunctions.class);
-    
-    /**
-     * @return a closure that converts a TabularDataSupport to a map.
-     */
-    public static Function<TabularData, Map> tabularDataToMap() {
+
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Function<TabularData, Map> tabularDataToMapOld() {
+        // TODO PERSISTENCE WORKAROUND
         return new Function<TabularData, Map>() {
             @Override public Map apply(TabularData input) {
                 return tabularDataToMap(input);
             }};
     }
 
-    public static Function<TabularData, Map> tabularDataToMapOfMaps() {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Function<TabularData, Map> tabularDataToMapOfMapsOld() {
+        // TODO PERSISTENCE WORKAROUND
         return new Function<TabularData, Map>() {
             @Override public Map apply(TabularData input) {
                 return tabularDataToMapOfMaps(input);
             }};
     }
 
-    public static Function<CompositeData,Map> compositeDataToMap() {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Function<CompositeData,Map> compositeDataToMapOld() {
+        // TODO PERSISTENCE WORKAROUND
         return new Function<CompositeData, Map>() {
             @Override public Map apply(CompositeData input) {
                 return compositeDataToMap(input);
             }};
     }
     
+    /**
+     * @return a closure that converts a TabularDataSupport to a map.
+     */
+    public static Function<TabularData, Map> tabularDataToMap() {
+        return new TabularDataToMap();
+    }
+
+    protected static class TabularDataToMap implements Function<TabularData, Map> {
+        @Override public Map apply(TabularData input) {
+            return tabularDataToMap(input);
+        }
+    }
+
+    public static Function<TabularData, Map> tabularDataToMapOfMaps() {
+        return new TabularDataToMapOfMaps();
+    }
+    
+    protected static class TabularDataToMapOfMaps implements Function<TabularData, Map> {
+        @Override public Map apply(TabularData input) {
+            return tabularDataToMapOfMaps(input);
+        }
+    }
+
+    public static Function<CompositeData,Map> compositeDataToMap() {
+        return new CompositeDataToMap();
+    }
+
+    protected static class CompositeDataToMap implements Function<CompositeData, Map> {
+        @Override public Map apply(CompositeData input) {
+            return compositeDataToMap(input);
+        }
+    }
+
     public static Map tabularDataToMap(TabularData table) {
         Map<String, Object> result = Maps.newLinkedHashMap();
         for (Object entry : table.values()) {

@@ -25,9 +25,17 @@ import com.google.common.base.Predicate;
 
 public class JcloudsPredicates {
 
+    public static Predicate<ComputeMetadata> nodeInLocation(String regionId, boolean matchNullLocations) {
+        return new NodeInLocation(regionId, matchNullLocations);
+    }
+
+    /**
+     * @deprecated since 0.9.0; direct access strongly discouraged; will be made protected in future release;
+     *             use {@link JcloudsPredicates#nodeInLocation(String, boolean)}
+     */
     public static class NodeInLocation implements Predicate<ComputeMetadata> {
-        private String regionId;
-        private boolean matchNullLocations;
+        private final String regionId;
+        private final boolean matchNullLocations;
         public NodeInLocation(String regionId, boolean matchNullLocations) {
             this.regionId = regionId;
             this.matchNullLocations = matchNullLocations;
@@ -49,5 +57,4 @@ public class JcloudsPredicates {
             return !exclude;
         }
     }
-    
 }

@@ -43,7 +43,10 @@ import com.google.common.collect.Iterables;
 
 public class EntityFunctions {
 
-    public static <T> Function<Entity, T> attribute(final AttributeSensor<T> attribute) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of non-static inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static <T> Function<Entity, T> attributeOld(final AttributeSensor<T> attribute) {
+        // TODO PERSISTENCE WORKAROUND
         class GetEntityAttributeFunction implements Function<Entity, T> {
             @Override public T apply(Entity input) {
                 return (input == null) ? null : input.getAttribute(attribute);
@@ -52,7 +55,10 @@ public class EntityFunctions {
         return new GetEntityAttributeFunction();
     }
     
-    public static <T> Function<Entity, T> config(final ConfigKey<T> key) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of non-static inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static <T> Function<Entity, T> configOld(final ConfigKey<T> key) {
+        // TODO PERSISTENCE WORKAROUND
         class GetEntityConfigFunction implements Function<Entity, T> {
             @Override public T apply(Entity input) {
                 return (input == null) ? null : input.getConfig(key);
@@ -61,7 +67,10 @@ public class EntityFunctions {
         return new GetEntityConfigFunction();
     }
     
-    public static Function<Entity, String> displayName() {
+    /** @deprecated since 0.9.0 kept only to allow conversion of non-static inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Function<Entity, String> displayNameOld() {
+        // TODO PERSISTENCE WORKAROUND
         class GetEntityDisplayName implements Function<Entity, String> {
             @Override public String apply(Entity input) {
                 return (input == null) ? null : input.getDisplayName();
@@ -70,7 +79,10 @@ public class EntityFunctions {
         return new GetEntityDisplayName();
     }
     
-    public static Function<Identifiable, String> id() {
+    /** @deprecated since 0.9.0 kept only to allow conversion of non-static inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Function<Identifiable, String> idOld() {
+        // TODO PERSISTENCE WORKAROUND
         class GetIdFunction implements Function<Identifiable, String> {
             @Override public String apply(Identifiable input) {
                 return (input == null) ? null : input.getId();
@@ -79,10 +91,10 @@ public class EntityFunctions {
         return new GetIdFunction();
     }
 
-    /** returns a function which sets the given sensors on the entity passed in,
-     * with {@link Entities#UNCHANGED} and {@link Entities#REMOVE} doing those actions. */
-    public static Function<Entity,Void> settingSensorsConstant(final Map<AttributeSensor<?>,Object> values) {
-        checkNotNull(values, "values");
+    /** @deprecated since 0.9.0 kept only to allow conversion of non-static inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Function<Entity,Void> settingSensorsConstantOld(final Map<AttributeSensor<?>,Object> values) {
+        // TODO PERSISTENCE WORKAROUND
         class SettingSensorsConstantFunction implements Function<Entity, Void> {
             @SuppressWarnings({ "unchecked", "rawtypes" })
             @Override public Void apply(Entity input) {
@@ -104,14 +116,10 @@ public class EntityFunctions {
         return new SettingSensorsConstantFunction();
     }
 
-    /** as {@link #settingSensorsConstant(Map)} but as a {@link Runnable} */
-    public static Runnable settingSensorsConstant(final Entity entity, final Map<AttributeSensor<?>,Object> values) {
-        checkNotNull(entity, "entity");
-        checkNotNull(values, "values");
-        return Functionals.runnable(Suppliers.compose(settingSensorsConstant(values), Suppliers.ofInstance(entity)));
-    }
-
-    public static <K,V> Function<Entity, Void> updatingSensorMapEntry(final AttributeSensor<Map<K,V>> mapSensor, final K key, final Supplier<? extends V> valueSupplier) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of non-static inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static <K,V> Function<Entity, Void> updatingSensorMapEntryOld(final AttributeSensor<Map<K,V>> mapSensor, final K key, final Supplier<? extends V> valueSupplier) {
+        // TODO PERSISTENCE WORKAROUND
         class UpdatingSensorMapEntryFunction implements Function<Entity, Void> {
             @Override public Void apply(Entity input) {
                 ServiceStateLogic.updateMapSensorEntry((EntityLocal)input, mapSensor, key, valueSupplier.get());
@@ -120,11 +128,11 @@ public class EntityFunctions {
         }
         return new UpdatingSensorMapEntryFunction();
     }
-    public static <K,V> Runnable updatingSensorMapEntry(final Entity entity, final AttributeSensor<Map<K,V>> mapSensor, final K key, final Supplier<? extends V> valueSupplier) {
-        return Functionals.runnable(Suppliers.compose(updatingSensorMapEntry(mapSensor, key, valueSupplier), Suppliers.ofInstance(entity)));
-    }
 
-    public static Supplier<Collection<Application>> applications(final ManagementContext mgmt) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of non-static inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Supplier<Collection<Application>> applicationsOld(final ManagementContext mgmt) {
+        // TODO PERSISTENCE WORKAROUND
         class AppsSupplier implements Supplier<Collection<Application>> {
             @Override
             public Collection<Application> get() {
@@ -134,6 +142,136 @@ public class EntityFunctions {
         return new AppsSupplier();
     }
     
+    public static <T> Function<Entity, T> attribute(AttributeSensor<T> attribute) {
+        return new GetEntityAttributeFunction<T>(checkNotNull(attribute, "attribute"));
+    }
+
+    protected static class GetEntityAttributeFunction<T> implements Function<Entity, T> {
+        private final AttributeSensor<T> attribute;
+        protected GetEntityAttributeFunction(AttributeSensor<T> attribute) {
+            this.attribute = attribute;
+        }
+        @Override public T apply(Entity input) {
+            return (input == null) ? null : input.getAttribute(attribute);
+        }
+    };
+
+    public static <T> Function<Entity, T> config(ConfigKey<T> key) {
+        return new GetEntityConfigFunction<T>(checkNotNull(key, "key"));
+    }
+
+    protected static class GetEntityConfigFunction<T> implements Function<Entity, T> {
+        private final ConfigKey<T> key;
+
+        protected GetEntityConfigFunction(ConfigKey<T> key) {
+            this.key = key;
+        }
+
+        @Override public T apply(Entity input) {
+            return (input == null) ? null : input.getConfig(key);
+        }
+    };
+
+    public static Function<Entity, String> displayName() {
+        return GetEntityDisplayName.INSTANCE;
+    }
+
+    protected static class GetEntityDisplayName implements Function<Entity, String> {
+        public static final GetEntityDisplayName INSTANCE = new GetEntityDisplayName();
+        @Override public String apply(Entity input) {
+            return (input == null) ? null : input.getDisplayName();
+        }
+    };
+
+    public static Function<Identifiable, String> id() {
+        return GetIdFunction.INSTANCE;
+    }
+    
+    protected static class GetIdFunction implements Function<Identifiable, String> {
+        public static final GetIdFunction INSTANCE = new GetIdFunction();
+        @Override public String apply(Identifiable input) {
+            return (input == null) ? null : input.getId();
+        }
+    };
+
+
+    /** returns a function which sets the given sensors on the entity passed in,
+     * with {@link Entities#UNCHANGED} and {@link Entities#REMOVE} doing those actions. */
+    public static Function<Entity,Void> settingSensorsConstant(final Map<AttributeSensor<?>,Object> values) {
+        return new SettingSensorsConstantFunction(checkNotNull(values, "values"));
+    }
+
+    protected static class SettingSensorsConstantFunction implements Function<Entity, Void> {
+        private final Map<AttributeSensor<?>, Object> values;
+
+        protected SettingSensorsConstantFunction(Map<AttributeSensor<?>, Object> values) {
+            this.values = values;
+        }
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        @Override public Void apply(Entity input) {
+            for (Map.Entry<AttributeSensor<?>,Object> entry : values.entrySet()) {
+                AttributeSensor sensor = (AttributeSensor)entry.getKey();
+                Object value = entry.getValue();
+                if (value==Entities.UNCHANGED) {
+                    // nothing
+                } else if (value==Entities.REMOVE) {
+                    ((EntityInternal)input).sensors().remove(sensor);
+                } else {
+                    value = TypeCoercions.coerce(value, sensor.getTypeToken());
+                    ((EntityInternal)input).sensors().set(sensor, value);
+                }
+            }
+            return null;
+        }
+    }
+
+    /** as {@link #settingSensorsConstant(Map)} but as a {@link Runnable} */
+    public static Runnable settingSensorsConstant(final Entity entity, final Map<AttributeSensor<?>,Object> values) {
+        checkNotNull(entity, "entity");
+        checkNotNull(values, "values");
+        return Functionals.runnable(Suppliers.compose(settingSensorsConstant(values), Suppliers.ofInstance(entity)));
+    }
+
+    public static <K,V> Function<Entity, Void> updatingSensorMapEntry(final AttributeSensor<Map<K,V>> mapSensor, final K key, final Supplier<? extends V> valueSupplier) {
+        return new UpdatingSensorMapEntryFunction<K,V>(mapSensor, key, valueSupplier);
+    }
+    
+    protected static class UpdatingSensorMapEntryFunction<K, V> implements Function<Entity, Void> {
+        private final AttributeSensor<Map<K, V>> mapSensor;
+        private final K key;
+        private final Supplier<? extends V> valueSupplier;
+
+        public UpdatingSensorMapEntryFunction(AttributeSensor<Map<K, V>> mapSensor, K key, Supplier<? extends V> valueSupplier) {
+            this.mapSensor = mapSensor;
+            this.key = key;
+            this.valueSupplier = valueSupplier;
+        }
+        @Override public Void apply(Entity input) {
+            ServiceStateLogic.updateMapSensorEntry((EntityLocal)input, mapSensor, key, valueSupplier.get());
+            return null;
+        }
+    }
+
+    public static <K,V> Runnable updatingSensorMapEntry(final Entity entity, final AttributeSensor<Map<K,V>> mapSensor, final K key, final Supplier<? extends V> valueSupplier) {
+        return Functionals.runnable(Suppliers.compose(updatingSensorMapEntry(mapSensor, key, valueSupplier), Suppliers.ofInstance(entity)));
+    }
+
+    public static Supplier<Collection<Application>> applications(ManagementContext mgmt) {
+        return new AppsSupplier(checkNotNull(mgmt, "mgmt"));
+    }
+    
+    protected static class AppsSupplier implements Supplier<Collection<Application>> {
+        private final ManagementContext mgmt;
+
+        public AppsSupplier(ManagementContext mgmt) {
+            this.mgmt = mgmt;
+        }
+        @Override
+        public Collection<Application> get() {
+            return mgmt.getApplications();
+        }
+    }
+
     public static Function<Entity, Location> locationMatching(Predicate<? super Location> filter) {
         return new LocationMatching(filter);
     }
