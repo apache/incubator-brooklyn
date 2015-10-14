@@ -117,8 +117,8 @@ public interface EntityApi {
             @ApiError(code = 404, reason = "Could not find application or entity")
     })
     public List<TaskSummary> listTasks(
-            @ApiParam(value = "Entity ID or name", required = true) @PathParam("application") String applicationId,
-            @ApiParam(value = "Application ID or name", required = true) @PathParam("entity") String entityId);
+            @ApiParam(value = "Application ID or name", required = true) @PathParam("application") String applicationId,
+            @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") String entityId);
 
     @GET
     @Path("/{entity}/activities/{task}")
@@ -146,8 +146,8 @@ public interface EntityApi {
             @ApiError(code = 404, reason = "Could not find application or entity")
     })
     public List<Object> listTags(
-            @ApiParam(value = "Entity ID or name", required = true) @PathParam("application") String applicationId,
-            @ApiParam(value = "Application ID or name", required = true) @PathParam("entity") String entityId);
+            @ApiParam(value = "Application ID or name", required = true) @PathParam("application") String applicationId,
+            @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") String entityId);
 
     @POST
     @ApiOperation(
