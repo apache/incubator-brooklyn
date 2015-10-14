@@ -42,9 +42,7 @@ import org.apache.brooklyn.core.location.NamedLocationResolver;
 import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;
@@ -331,28 +329,6 @@ public class ByonLocationResolverTest {
         SshMachineLocation location1 = (SshMachineLocation)provisioner.obtain(ImmutableMap.of());
         Assert.assertEquals("myuser", location1.getUser());
         Assert.assertEquals("1.1.1.1", location1.getAddress().getHostAddress());
-    }
-
-    @DataProvider(name = "windowsOsFamilies")
-    public Object[][] getWindowsOsFamilies() {
-        return new Object[][]{{"windows"}, {"WINDOWS"}, {"wInDoWs"}};
-    }
-
-    @Test(dataProvider = "windowsOsFamilies")
-    public void testWindowsMachines(String osFamily) throws Exception {
-        brooklynProperties.put("brooklyn.location.byon.user", "myuser");
-        brooklynProperties.put("brooklyn.location.byon.password", "mypassword");
-        String spec = "byon";
-        Map<String, ?> flags = ImmutableMap.of(
-                "hosts", ImmutableList.of("1.1.1.1", "2.2.2.2"),
-                "osFamily", osFamily
-        );
-        MachineProvisioningLocation<MachineLocation> provisioner = resolve(spec, flags);
-        WinRmMachineLocation location = (WinRmMachineLocation) provisioner.obtain(ImmutableMap.of());
-
-        assertEquals(location.config().get(WinRmMachineLocation.USER), "myuser");
-        assertEquals(location.config().get(WinRmMachineLocation.PASSWORD), "mypassword");
-        assertEquals(location.config().get(WinRmMachineLocation.ADDRESS).getHostAddress(), "1.1.1.1");
     }
 
     @Test
