@@ -27,19 +27,18 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
-import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.rt.felix.EmbeddedFelixFramework;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -47,14 +46,15 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.osgi.VersionedName;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import org.apache.brooklyn.util.osgi.OsgiUtils;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
@@ -71,43 +71,6 @@ public class Osgis {
     private static final String EXTENSION_PROTOCOL = "system";
     private static final Set<String> SYSTEM_BUNDLES = MutableSet.of();
 
-    public static class VersionedName {
-        private final String symbolicName;
-        private final Version version;
-        public VersionedName(Bundle b) {
-            this.symbolicName = b.getSymbolicName();
-            this.version = b.getVersion();
-        }
-        public VersionedName(String symbolicName, Version version) {
-            this.symbolicName = symbolicName;
-            this.version = version;
-        }
-        @Override public String toString() {
-            return symbolicName + ":" + Strings.toString(version);
-        }
-        public boolean equals(String sn, String v) {
-            return symbolicName.equals(sn) && (version == null && v == null || version != null && version.toString().equals(v));
-        }
-        public boolean equals(String sn, Version v) {
-            return symbolicName.equals(sn) && (version == null && v == null || version != null && version.equals(v));
-        }
-        public String getSymbolicName() {
-            return symbolicName;
-        }
-        public Version getVersion() {
-            return version;
-        }
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(symbolicName, version);
-        }
-        @Override
-        public boolean equals(Object other) {
-            if (!(other instanceof VersionedName)) return false;
-            VersionedName o = (VersionedName) other;
-            return Objects.equal(symbolicName, o.symbolicName) && Objects.equal(version, o.version);
-        }
-    }
     
     public static class BundleFinder {
         protected final Framework framework;
@@ -135,7 +98,7 @@ public class Osgis {
             if (Strings.isBlank(symbolicNameOptionallyWithVersion))
                 return this;
             
-            Maybe<VersionedName> nv = parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
+            Maybe<VersionedName> nv = OsgiUtils.parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
             if (nv.isAbsent())
                 throw new IllegalArgumentException("Cannot parse symbolic-name:version string '"+symbolicNameOptionallyWithVersion+"'");
 
@@ -356,31 +319,14 @@ public class Osgis {
             final ServiceReference<?> ref = ctx.getServiceReference(Framework.class);
             ctx.ungetService(ref);
         } else {
-            // not running inside OSGi container
-            try {
-                if (framework!=null) {
-                    framework.stop();
-                    framework.waitForStop(0); // 0 means indefinite
-                }
-            } catch (BundleException | InterruptedException e) {
-                throw Exceptions.propagate(e);
-            }
+            EmbeddedFelixFramework.stopFramework(framework);
         }
     }
+
 
     /** Tells if Brooklyn is running in an OSGi environment or not. */
     public static boolean isBrooklynInsideFramework() {
         return FrameworkUtil.getBundle(Framework.class) != null;
-    }
-
-    public static String getVersionedId(Bundle b) {
-        return b.getSymbolicName() + ":" + b.getVersion();
-    }
-
-    public static String getVersionedId(Manifest manifest) {
-        Attributes atts = manifest.getMainAttributes();
-        return atts.getValue(Constants.BUNDLE_SYMBOLICNAME) + ":" +
-            atts.getValue(Constants.BUNDLE_VERSION);
     }
 
     /**
@@ -452,9 +398,9 @@ public class Osgis {
         if (manifest == null) {
             throw new IllegalStateException("Missing manifest file in bundle or not a jar file.");
         }
-        String versionedId = getVersionedId(manifest);
+        String versionedId = OsgiUtils.getVersionedId(manifest);
         for (Bundle installedBundle : framework.getBundleContext().getBundles()) {
-            if (versionedId.equals(getVersionedId(installedBundle))) {
+            if (versionedId.equals(OsgiUtils.getVersionedId(installedBundle))) {
                 if (SYSTEM_BUNDLES.contains(versionedId)) {
                     LOG.debug("Already have system bundle "+versionedId+" from "+installedBundle+"/"+installedBundle.getLocation()+" when requested "+url+"; not installing");
                     // "System bundles" (ie things on the classpath) cannot be overridden
@@ -479,27 +425,4 @@ public class Osgis {
                 EXTENSION_PROTOCOL.equals(Urls.getProtocol(location));
     }
 
-    /** Takes a string which might be of the form "symbolic-name" or "symbolic-name:version" (or something else entirely)
-     * and returns a VersionedName. The versionedName.getVersion() will be null if if there was no version in the input
-     * (or returning {@link Maybe#absent()} if not valid, with a suitable error message). */
-    public static Maybe<VersionedName> parseOsgiIdentifier(String symbolicNameOptionalWithVersion) {
-        if (Strings.isBlank(symbolicNameOptionalWithVersion))
-            return Maybe.absent("OSGi identifier is blank");
-        
-        String[] parts = symbolicNameOptionalWithVersion.split(":");
-        if (parts.length>2)
-            return Maybe.absent("OSGi identifier has too many parts; max one ':' symbol");
-        
-        Version v = null;
-        if (parts.length == 2) {
-            try {
-                v = Version.parseVersion(parts[1]);
-            } catch (IllegalArgumentException e) {
-                return Maybe.absent("OSGi identifier has invalid version string ("+e.getMessage()+")");
-            }
-        }
-        
-        return Maybe.of(new VersionedName(parts[0], v));
-    }
-    
 }

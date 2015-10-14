@@ -245,6 +245,10 @@
         <module>utils/jmx/jmxrmi-agent</module>
         <module>utils/test-support</module>
         <module>utils/rest-swagger</module>
+
+        <module>utils/rt-osgi</module>
+        <module>utils/rt-felix</module>
+
     </modules>
 
 </project>

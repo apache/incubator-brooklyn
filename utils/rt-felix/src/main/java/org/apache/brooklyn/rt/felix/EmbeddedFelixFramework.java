@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.brooklyn.util.core.osgi;
+package org.apache.brooklyn.rt.felix;
 
+import com.google.common.base.Stopwatch;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -26,26 +27,23 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-
-
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.ReferenceWithError;
+import org.apache.brooklyn.util.osgi.OsgiUtils;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.apache.felix.framework.FrameworkFactory;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
-import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.core.ResourceUtils;
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.exceptions.ReferenceWithError;
-import org.apache.brooklyn.util.time.Duration;
-import org.apache.brooklyn.util.time.Time;
-
-import com.google.common.base.Stopwatch;
-import java.util.Set;
-import org.apache.brooklyn.util.collections.MutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +69,7 @@ public class EmbeddedFelixFramework {
      */
 
     public static FrameworkFactory newFrameworkFactory() {
-        URL url = Osgis.class.getClassLoader().getResource(
+        URL url = EmbeddedFelixFramework.class.getClassLoader().getResource(
                 "META-INF/services/org.osgi.framework.launch.FrameworkFactory");
         if (url != null) {
             try {
@@ -117,12 +115,25 @@ public class EmbeddedFelixFramework {
         return framework;
     }
 
+        public static void stopFramework(Framework framework) throws RuntimeException {
+        try {
+            if (framework != null) {
+                framework.stop();
+                framework.waitForStop(0);
+            }
+        } catch (BundleException | InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    /* --- helper functions */
+
     private static void installBootBundles(Framework framework) {
         Stopwatch timer = Stopwatch.createStarted();
-        LOG.debug("Installing OSGi boot bundles from "+Osgis.class.getClassLoader()+"...");
+        LOG.debug("Installing OSGi boot bundles from "+EmbeddedFelixFramework.class.getClassLoader()+"...");
         Enumeration<URL> resources;
         try {
-            resources = Osgis.class.getClassLoader().getResources(MANIFEST_PATH);
+            resources = EmbeddedFelixFramework.class.getClassLoader().getResources(MANIFEST_PATH);
         } catch (IOException e) {
             throw Exceptions.propagate(e);
         }
@@ -130,14 +141,14 @@ public class EmbeddedFelixFramework {
         Map<String, Bundle> installedBundles = getInstalledBundlesById(bundleContext);
         while(resources.hasMoreElements()) {
             URL url = resources.nextElement();
-            ReferenceWithError<?> installResult = installExtensionBundle(bundleContext, url, installedBundles, Osgis.getVersionedId(framework));
+            ReferenceWithError<?> installResult = installExtensionBundle(bundleContext, url, installedBundles, OsgiUtils.getVersionedId(framework));
             if (installResult.hasError() && !installResult.masksErrorIfPresent()) {
                 // it's reported as a critical error, so warn here
                 LOG.warn("Unable to install manifest from "+url+": "+installResult.getError(), installResult.getError());
             } else {
                 Object result = installResult.getWithoutError();
                 if (result instanceof Bundle) {
-                    String v = Osgis.getVersionedId( (Bundle)result );
+                    String v = OsgiUtils.getVersionedId( (Bundle)result );
                     SYSTEM_BUNDLES.add(v);
                     if (installResult.hasError()) {
                         LOG.debug(installResult.getError().getMessage()+(result!=null ? " ("+result+"/"+v+")" : ""));
@@ -156,7 +167,7 @@ public class EmbeddedFelixFramework {
         Map<String, Bundle> installedBundles = new HashMap<String, Bundle>();
         Bundle[] bundles = bundleContext.getBundles();
         for (Bundle b : bundles) {
-            installedBundles.put(Osgis.getVersionedId(b), b);
+            installedBundles.put(OsgiUtils.getVersionedId(b), b);
         }
         return installedBundles;
     }
@@ -177,8 +188,8 @@ public class EmbeddedFelixFramework {
             if (!isValidBundle(manifest))
                 return ReferenceWithError.newInstanceMaskingError(null, new IllegalArgumentException("Resource at "+manifestUrl+" is not an OSGi bundle: no valid manifest"));
 
-            String versionedId = Osgis.getVersionedId(manifest);
-            URL bundleUrl = ResourceUtils.getContainerUrl(manifestUrl, MANIFEST_PATH);
+            String versionedId = OsgiUtils.getVersionedId(manifest);
+            URL bundleUrl = OsgiUtils.getContainerUrl(manifestUrl, MANIFEST_PATH);
 
             Bundle existingBundle = installedBundles.get(versionedId);
             if (existingBundle != null) {

@@ -52,7 +52,7 @@ import org.apache.brooklyn.core.mgmt.classloading.OsgiBrooklynClassLoadingContex
 import org.apache.brooklyn.core.mgmt.ha.OsgiManager;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.util.core.ResourceUtils;
-import org.apache.brooklyn.util.core.osgi.ManifestHelper;
+import org.apache.brooklyn.rt.felix.ManifestHelper;
 import org.apache.brooklyn.util.core.osgi.Osgis;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.mgmt.osgi;
+package org.apache.brooklyn.util.osgi;
 
 /**
  * Many OSGi tests require OSGi bundles (of course). Test bundles have been collected here

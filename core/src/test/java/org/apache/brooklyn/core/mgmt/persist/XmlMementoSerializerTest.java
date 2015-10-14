@@ -48,7 +48,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogItemDtoAbstract;
 import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.SimulatedLocation;
-import org.apache.brooklyn.core.mgmt.osgi.OsgiTestResources;
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;

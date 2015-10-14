@@ -69,6 +69,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+import org.apache.brooklyn.util.osgi.OsgiUtils;
 
 public class ResourceUtils {
     
@@ -559,36 +560,7 @@ public class ResourceUtils {
     }
 
     public static URL getContainerUrl(URL url, String resourceInThatDir) {
-        //Switching from manual parsing of jar: and file: URLs to java provided functionality.
-        //The old code was breaking on any Windows path and instead of fixing it, using
-        //the provided Java APIs seemed like the better option since they are already tested
-        //on multiple platforms.
-        boolean isJar = "jar".equals(url.getProtocol());
-        if(isJar) {
-            try {
-                //let java handle the parsing of jar URL, no network connection is established.
-                //Strips the jar protocol:
-                //  jar:file:/<path to jar>!<resourceInThatDir>
-                //  becomes
-                //  file:/<path to jar>
-                JarURLConnection connection = (JarURLConnection) url.openConnection();
-                url = connection.getJarFileURL();
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        } else {
-            //Remove the trailing resouceInThatDir path from the URL, thus getting the parent folder.
-            String path = url.toString();
-            int i = path.indexOf(resourceInThatDir);
-            if (i==-1) throw new IllegalStateException("Resource path ("+resourceInThatDir+") not in url substring ("+url+")");
-            String parent = path.substring(0, i);
-            try {
-                url = new URL(parent);
-            } catch (MalformedURLException e) {
-                throw new IllegalStateException("Resource ("+resourceInThatDir+") found at invalid URL parent (" + parent + ")", e);
-            }
-        }
-        return url;
+        return OsgiUtils.getContainerUrl(url, resourceInThatDir);
     }
     
     /** @deprecated since 0.7.0 use {@link Streams#readFullyString(InputStream) */ @Deprecated

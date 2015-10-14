@@ -18,34 +18,29 @@
  */
 package org.apache.brooklyn.core.mgmt.osgi;
 
-import java.io.File;
-import java.io.IOException;
 
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.osgi.OsgiTestBase;
 import org.apache.brooklyn.util.core.osgi.Osgis;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.maven.MavenArtifact;
 import org.apache.brooklyn.util.maven.MavenRetriever;
 import org.apache.brooklyn.util.net.Urls;
-import org.apache.brooklyn.util.os.Os;
-import org.apache.commons.io.FileUtils;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 /** 
  * Tests some assumptions about OSGi behaviour, in standalone mode (not part of brooklyn).
  * See {@link OsgiTestResources} for description of test resources.
  */
-public class OsgiStandaloneTest {
+public class OsgiStandaloneTest extends OsgiTestBase {
 
     private static final Logger log = LoggerFactory.getLogger(OsgiStandaloneTest.class);
 
@@ -57,28 +52,6 @@ public class OsgiStandaloneTest {
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_NAME = "org.apache.brooklyn.test.resources.osgi.brooklyn-test-osgi-entities";
     public static final String BROOKLYN_TEST_OSGI_ENTITIES_VERSION = "0.1.0";
 
-    protected Framework framework = null;
-    private File storageTempDir;
-
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() throws Exception {
-        storageTempDir = Os.newTempDir("osgi-standalone");
-        framework = Osgis.getFramework(storageTempDir.getAbsolutePath(), true);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws BundleException, IOException, InterruptedException {
-        tearDownOsgiFramework(framework, storageTempDir);
-    }
-
-    public static void tearDownOsgiFramework(Framework framework, File storageTempDir) throws BundleException, InterruptedException, IOException {
-        Osgis.ungetFramework(framework);
-        framework = null;
-        if (storageTempDir!=null) {
-            FileUtils.deleteDirectory(storageTempDir);
-            storageTempDir = null;
-        }
-    }
 
     protected Bundle install(String url) throws BundleException {
         try {
