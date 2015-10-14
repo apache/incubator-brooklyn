@@ -463,7 +463,28 @@ public class JcloudsLocationSecurityGroupCustomizer extends BasicJcloudsLocation
         Callable<SecurityGroup> callable = new Callable<SecurityGroup>() {
             @Override
             public SecurityGroup call() throws Exception {
-                return securityApi.addIpPermission(permission, group);
+                try {
+                    return securityApi.addIpPermission(permission, group);
+                } catch (AWSResponseException e) {
+                    if ("InvalidPermission.Duplicate".equals(e.getError().getCode())) {
+                        // already exists
+                        LOG.info("Permission already exists for security group; continuing (logging underlying exception at debug): permission="+permission+"; group="+group);
+                        LOG.debug("Permission already exists for security group; continuing: permission="+permission+"; group="+group, e);
+                        return null;
+                    } else {
+                        throw e;
+                    }
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    if (e.toString().contains("InvalidPermission.Duplicate")) {
+                        // belt-and-braces, in case 
+                        // already exists
+                        LOG.info("Permission already exists for security group; continuing (but unexpected exception type): permission="+permission+"; group="+group, e);
+                        return null;
+                    } else {
+                        throw Exceptions.propagate(e);
+                    }
+                }
             }
         };
         return runOperationWithRetry(callable);
