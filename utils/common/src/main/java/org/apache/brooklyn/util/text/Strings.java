@@ -284,7 +284,7 @@ public class Strings {
         return result.toString();
     }
 
-    /** REGEX replacement -- explicit method name for reabaility, doing same as {@link String#replaceAll(String, String)}. */
+    /** REGEX replacement -- explicit method name for readability, doing same as {@link String#replaceAll(String, String)}. */
     public static String replaceAllRegex(String source, String pattern, String replacement) {
         return source.replaceAll(pattern, replacement);
     }

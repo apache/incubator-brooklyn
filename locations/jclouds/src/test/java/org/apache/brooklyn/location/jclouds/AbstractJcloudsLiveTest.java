@@ -81,14 +81,7 @@ public class AbstractJcloudsLiveTest {
         List<Exception> exceptions = Lists.newArrayList();
         try {
             if (machines != null) {
-                for (JcloudsSshMachineLocation machine : machines) {
-                    try {
-                        releaseMachine(machine);
-                    } catch (Exception e) {
-                        LOG.warn("Error releasing machine "+machine+"; continuing...", e);
-                        exceptions.add(e);
-                    }
-                }
+                exceptions.addAll(releaseMachineSafely(machines));
                 machines.clear();
             }
         } finally {
@@ -115,7 +108,7 @@ public class AbstractJcloudsLiveTest {
         return LocalManagementContextForTests.builder(true).useDefaultProperties().build();
     }
     
-    protected void stripBrooklynProperties(BrooklynProperties props) {
+    protected static void stripBrooklynProperties(BrooklynProperties props) {
         // remove all location properties except for identity and credential
         // (so key, scripts, etc settings don't interfere with tests) 
         for (String key : ImmutableSet.copyOf(props.asMapWithStringKeys().keySet())) {
@@ -154,6 +147,20 @@ public class AbstractJcloudsLiveTest {
         assertNotNull(jcloudsLocation);
         machines.remove(machine);
         jcloudsLocation.release(machine);
+    }
+    
+    protected List<Exception> releaseMachineSafely(Iterable<? extends JcloudsSshMachineLocation> machines) {
+        List<Exception> exceptions = Lists.newArrayList();
+        
+        for (JcloudsSshMachineLocation machine : machines) {
+            try {
+                releaseMachine(machine);
+            } catch (Exception e) {
+                LOG.warn("Error releasing machine "+machine+"; continuing...", e);
+                exceptions.add(e);
+            }
+        }
+        return exceptions;
     }
 
     protected void suspendMachine(MachineLocation machine) {
