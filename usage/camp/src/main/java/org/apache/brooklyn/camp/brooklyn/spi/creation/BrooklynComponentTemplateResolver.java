@@ -179,15 +179,9 @@ public class BrooklynComponentTemplateResolver {
 
     private List<ServiceSpecResolver> getServiceTypeResolverOverrides() {
         List<ServiceSpecResolver> overrides = new ArrayList<>();
-        if (type.indexOf(':') != -1) {
-            String prefix = Splitter.on(":").splitToList(type).get(0);
-            ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class,
-                    mgmt.getCatalogClassLoader());
-            for (ServiceTypeResolver resolver : loader) {
-               if (prefix.equals(resolver.getTypePrefix())) {
-                   overrides.add(new ServiceTypeResolverAdaptor(this, resolver));
-               }
-            }
+        ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class, mgmt.getCatalogClassLoader());
+        for (ServiceTypeResolver resolver : loader) {
+           overrides.add(new ServiceTypeResolverAdaptor(this, resolver));
         }
         return overrides;
     }

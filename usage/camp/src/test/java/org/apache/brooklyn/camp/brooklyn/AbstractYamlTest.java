@@ -144,7 +144,7 @@ public abstract class AbstractYamlTest {
         return app;
     }
 
-    protected EntitySpec<?> createEntitySpec(String... yaml) {
+    protected EntitySpec<?> createAppEntitySpec(String... yaml) {
         return EntityManagementUtils.createEntitySpecForApplication(mgmt(), joinLines(yaml));
     }
 

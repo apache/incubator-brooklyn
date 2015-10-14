@@ -20,6 +20,7 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
@@ -28,7 +29,7 @@ import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import groovy.xml.Entity;
+import com.google.common.base.Splitter;
 
 @SuppressWarnings("deprecation")
 public class ServiceTypeResolverAdaptor extends AbstractServiceSpecResolver {
@@ -44,7 +45,12 @@ public class ServiceTypeResolverAdaptor extends AbstractServiceSpecResolver {
 
     @Override
     public boolean accepts(String type, BrooklynClassLoadingContext loader) {
-        return true;
+        if (type.indexOf(':') != -1) {
+            String prefix = Splitter.on(":").splitToList(type).get(0);
+            return prefix.equals(serviceTypeResolver.getTypePrefix());
+        } else {
+            return false;
+        }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })

@@ -786,7 +786,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
     @Test
     public void testHardcodedCatalog() throws Exception {
-        createEntitySpec(
+        createAppEntitySpec(
                 "services:",
                 "- type: cluster",
                 "- type: vanilla",

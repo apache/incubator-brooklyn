@@ -51,7 +51,7 @@ public abstract class AbstractServiceSpecResolver implements ServiceSpecResolver
     }
 
     protected String getLocalType(String type) {
-        return Strings.removeFromStart(type, prefix);
+        return Strings.removeFromStart(type, prefix).trim();
     }
 
     @Override
