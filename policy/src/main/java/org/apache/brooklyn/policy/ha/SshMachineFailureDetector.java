@@ -67,7 +67,7 @@ public class SshMachineFailureDetector extends AbstractFailureDetector {
 
     @Override
     protected CalculatedStatus calculateStatus() {
-        Maybe<SshMachineLocation> sshMachineOption = Machines.findUniqueSshMachineLocation(entity.getLocations());
+        Maybe<SshMachineLocation> sshMachineOption = Machines.findUniqueMachineLocation(entity.getLocations(), SshMachineLocation.class);
         if (sshMachineOption.isPresent()) {
             SshMachineLocation sshMachine = sshMachineOption.get();
             try {

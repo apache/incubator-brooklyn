@@ -159,7 +159,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     
     @SuppressWarnings({ "unchecked", "deprecation" })
     protected void startWithChefSoloAsync() {
-        String baseDir = MachineLifecycleEffectorTasks.resolveOnBoxDir(entity(), Machines.findUniqueSshMachineLocation(entity().getLocations()).get());
+        String baseDir = MachineLifecycleEffectorTasks.resolveOnBoxDir(entity(), Machines.findUniqueMachineLocation(entity().getLocations(), SshMachineLocation.class).get());
         String installDir = Urls.mergePaths(baseDir, "installs/chef");
         
         @SuppressWarnings("rawtypes")
