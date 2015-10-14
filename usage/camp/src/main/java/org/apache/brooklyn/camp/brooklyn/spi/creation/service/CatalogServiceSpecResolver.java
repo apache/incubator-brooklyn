@@ -32,6 +32,8 @@ import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableSet;
+
 public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
     private static final Logger log = LoggerFactory.getLogger(CatalogServiceSpecResolver.class);
 
@@ -61,7 +63,7 @@ public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
     }
 
     @Override
-    public EntitySpec<?> resolve(String type, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
+    public EntitySpec<?> resolve(String type, BrooklynClassLoadingContext loader, Set<String> parentEncounteredTypes) {
         String localType = getLocalType(type);
         CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem(mgmt, localType);
         if (item != null) {
@@ -70,9 +72,15 @@ public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
             //Take the symbolicName part of the catalog item only for recursion detection to prevent
             //cross referencing of different versions. Not interested in non-catalog item types.
             //Prevent catalog items self-referencing even if explicitly different version.
-            boolean firstOccurrence = encounteredTypes.add(item.getSymbolicName());
-            boolean nonRecursiveCall = firstOccurrence;
+            boolean nonRecursiveCall = !parentEncounteredTypes.contains(item.getSymbolicName());
             if (nonRecursiveCall) {
+                // Make a copy of the encountered types, so that we add the item being resolved for
+                // dependency items only. Siblings must not see we are resolving this item.
+                Set<String> encounteredTypes = ImmutableSet.<String>builder()
+                        .addAll(parentEncounteredTypes)
+                        .add(item.getSymbolicName())
+                        .build();
+
                 // CatalogItem generics are just getting in the way, better get rid of them, we
                 // are casting anyway.
                 @SuppressWarnings({ "rawtypes" })
@@ -84,7 +92,7 @@ public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
                 return null;
             }
         } else {
-            return hardcodedResolver.resolve(type, loader, encounteredTypes);
+            return hardcodedResolver.resolve(type, loader, parentEncounteredTypes);
         }
     }
 

@@ -670,6 +670,27 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testRecursiveCheckForDepenentsOnly() throws Exception {
+        String symbolicName = "my.catalog.app.id.basic";
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName,
+                "  version: " + TEST_VERSION,
+                "",
+                "services:",
+                "- type: org.apache.brooklyn.entity.stock.BasicEntity");
+
+        createAndStartApplication(
+                "services:",
+                "- type: " + ver(symbolicName),
+                "  brooklyn.children:",
+                "  - type: " + ver(symbolicName),
+                "- type: " + ver(symbolicName),
+                "  brooklyn.children:",
+                "  - type: " + ver(symbolicName));
+    }
+
+    @Test
     public void testOsgiNotLeakingToParent() {
         addCatalogOSGiEntity(SIMPLE_ENTITY_TYPE);
         try {

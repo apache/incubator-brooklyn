@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
@@ -64,6 +65,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -150,13 +152,22 @@ public class BrooklynComponentTemplateResolver {
         EntitySpec<?> spec = serviceSpecResolver.resolve(type, loader, encounteredCatalogTypes);
 
         if (spec == null) {
-            String proto = Urls.getProtocol(type);
-            if (proto != null) {
-                log.debug("The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
-                        proto + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
-                        "Not a catalog item or java type as well.");
+            // Try to provide some troubleshooting details
+            String msgDetails = "";
+            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, Strings.removeFromStart(type, "catalog:"));
+            if (item != null && encounteredCatalogTypes.contains(item.getSymbolicName())) {
+                msgDetails = "Cycle between catalog items detected, starting from " + type +
+                        ". Other catalog items being resolved up the stack are " + encounteredCatalogTypes +
+                        ". Tried loading it as a Java class instead but failed.";
+            } else {
+                String proto = Urls.getProtocol(type);
+                if (proto != null) {
+                    msgDetails = "The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
+                            proto + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
+                            "Not a catalog item or java type as well.";
+                }
             }
-            throw new IllegalStateException("Unable to create spec for type " + type + ". No resolver knew how to handle it.");
+            throw new IllegalStateException("Unable to create spec for type " + type + ". No resolver knew how to handle it. " + msgDetails);
         }
 
         populateSpec(spec, encounteredCatalogTypes);
@@ -352,7 +363,7 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(MutableSet.<String>of());
+                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(ImmutableSet.<String>of());
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);
