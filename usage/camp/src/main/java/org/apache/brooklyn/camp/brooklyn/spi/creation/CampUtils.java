@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
@@ -41,9 +39,9 @@ import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
+import org.apache.brooklyn.core.resolve.ResolveUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
@@ -110,16 +108,7 @@ public class CampUtils {
         }
 
         String versionedId = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "policy_type", "policyType", "type"), "policy type");
-        PolicySpec<? extends Policy> spec;
-        CatalogItem<?, ?> policyItem = CatalogUtils.getCatalogItemOptionalVersion(loader.getManagementContext(), versionedId);
-        if (policyItem != null && !encounteredCatalogTypes.contains(policyItem.getSymbolicName())) {
-            if (policyItem.getCatalogItemType() != CatalogItemType.POLICY) {
-                throw new IllegalStateException("Non-policy catalog item in policy context: " + policyItem);
-            }
-            spec = (PolicySpec<? extends Policy>) CampCatalogUtils.createSpec(loader.getManagementContext(), policyItem, encounteredCatalogTypes);
-        } else {
-            spec = PolicySpec.create(loader.loadClass(versionedId, Policy.class));
-        }
+        PolicySpec<? extends Policy> spec = ResolveUtils.resolveSpec(versionedId, loader, encounteredCatalogTypes);
         Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
         if (brooklynConfig != null) {
             spec.configure(brooklynConfig);
@@ -152,29 +141,7 @@ public class CampUtils {
 
         String type = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "location_type", "locationType", "type"), "location type");
         Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
-        Maybe<Class<? extends Location>> javaClass = loader.tryLoadClass(type, Location.class);
-        if (javaClass.isPresent()) {
-            LocationSpec<?> spec = LocationSpec.create(javaClass.get());
-            if (brooklynConfig != null) {
-                spec.configure(brooklynConfig);
-            }
-            return spec;
-        } else {
-            Maybe<Location> loc = loader.getManagementContext().getLocationRegistry().resolve(type, false, brooklynConfig);
-            if (loc.isPresent()) {
-                // TODO extensions?
-                Map<String, Object> locConfig = ((ConfigurationSupportInternal)loc.get().config()).getBag().getAllConfig();
-                Class<? extends Location> locType = loc.get().getClass();
-                Set<Object> locTags = loc.get().tags().getTags();
-                String locDisplayName = loc.get().getDisplayName();
-                return LocationSpec.create(locType)
-                        .configure(locConfig)
-                        .displayName(locDisplayName)
-                        .tags(locTags);
-            } else {
-                throw new IllegalStateException("No class or resolver found for location type "+type);
-            }
-        }
+        return ResolveUtils.resolveLocationSpec(type, brooklynConfig, loader);
     }
 
     public static DeploymentPlan makePlanFromYaml(ManagementContext mgmt, String yaml) {
