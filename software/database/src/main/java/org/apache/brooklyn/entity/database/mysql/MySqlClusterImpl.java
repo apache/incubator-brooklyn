@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.entity.database.mysql;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -35,10 +35,8 @@ import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.entity.Attributes;
-import org.apache.brooklyn.core.entity.EntityInternal;
-import org.apache.brooklyn.core.entity.EntityPredicates;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceNotUpLogic;
-import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
@@ -57,7 +55,6 @@ import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
-import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -67,23 +64,21 @@ import com.google.common.reflect.TypeToken;
 
 // https://dev.mysql.com/doc/refman/5.7/en/replication-howto.html
 
-// TODO Bootstrap slave from dump for the case where the binary log is purged
-// TODO Promote slave to master
+// TODO Filter dump by database/table, currently all tables are replicated
 // TODO SSL connection between master and slave
-// TODO DB credentials littered all over the place in file system
+// TODO Promote slave to master
 public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster {
     private static final AttributeSensor<Boolean> NODE_REPLICATION_INITIALIZED = Sensors.newBooleanSensor("mysql.replication_initialized");
 
     private static final String MASTER_CONFIG_URL = "classpath:///org/apache/brooklyn/entity/database/mysql/mysql_master.conf";
     private static final String SLAVE_CONFIG_URL = "classpath:///org/apache/brooklyn/entity/database/mysql/mysql_slave.conf";
-    private static final int MASTER_SERVER_ID = 1;
-    private static final Predicate<Entity> IS_MASTER = EntityPredicates.configEqualTo(MySqlNode.MYSQL_SERVER_ID, MASTER_SERVER_ID);
+    protected static final int MASTER_SERVER_ID = 1;
 
     @SuppressWarnings("serial")
     private static final AttributeSensor<Supplier<Integer>> SLAVE_NEXT_SERVER_ID = Sensors.newSensor(new TypeToken<Supplier<Integer>>() {},
             "mysql.slave.next_server_id", "Returns the ID of the next slave server");
     @SuppressWarnings("serial")
-    private static final AttributeSensor<Map<String, String>> SLAVE_ID_ADDRESS_MAPPING = Sensors.newSensor(new TypeToken<Map<String, String>>() {},
+    protected static final AttributeSensor<Map<String, String>> SLAVE_ID_ADDRESS_MAPPING = Sensors.newSensor(new TypeToken<Map<String, String>>() {},
             "mysql.slave.id_address_mapping", "Maps slave entity IDs to SUBNET_ADDRESS, so the address is known at member remove time.");
 
     @Override
@@ -111,6 +106,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
         subscriptions().subscribe(this, MEMBER_REMOVED, new MemberRemovedListener());
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     protected void initEnrichers() {
         super.initEnrichers();
@@ -124,8 +120,8 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
         enrichers().add(Enrichers.builder()
                 .aggregating(MySqlNode.DATASTORE_URL)
                 .publishing(SLAVE_DATASTORE_URL_LIST)
-                .computing(Functions.<Collection<String>>identity())
-                .entityFilter(Predicates.not(IS_MASTER))
+                .computing((Function)Functions.identity())
+                .entityFilter(Predicates.not(MySqlClusterUtils.IS_MASTER))
                 .fromMembers()
                 .build());
 
@@ -145,7 +141,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                 .computing(IfFunctions.ifPredicate(CollectionFunctionals.notEmpty())
                         .apply(CollectionFunctionals.firstElement())
                         .defaultValue(null))
-                .entityFilter(IS_MASTER)
+                .entityFilter(MySqlClusterUtils.IS_MASTER)
                 .build());
     }
 
@@ -158,13 +154,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
 
         final EntitySpec<?> memberSpec = super.getMemberSpec();
         if (memberSpec != null) {
-            if (!isKeyConfigured(memberSpec, MySqlNode.TEMPLATE_CONFIGURATION_URL.getConfigKey())) {
-                return EntitySpec.create(memberSpec)
-                        .configure(MySqlNode.MYSQL_SERVER_ID, MASTER_SERVER_ID)
-                        .configure(MySqlNode.TEMPLATE_CONFIGURATION_URL, MASTER_CONFIG_URL);
-            } else {
-                return memberSpec;
-            }
+            return applyDefaults(memberSpec, Suppliers.ofInstance(MASTER_SERVER_ID), MASTER_CONFIG_URL);
         }
 
         return EntitySpec.create(MySqlNode.class)
@@ -184,6 +174,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
 
         return EntitySpec.create(MySqlNode.class)
                 .displayName("MySql Slave")
+                // Slave server IDs will not be linear because getMemberSpec not always results in createNode (result discarded)
                 .configure(MySqlNode.MYSQL_SERVER_ID, serverIdSupplier.get())
                 .configure(MySqlNode.TEMPLATE_CONFIGURATION_URL, SLAVE_CONFIG_URL);
     }
@@ -211,9 +202,10 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
 
     @Override
     protected Entity createNode(Location loc, Map<?, ?> flags) {
-        Entity node = super.createNode(loc, flags);
-        if (!IS_MASTER.apply(node)) {
-            ServiceNotUpLogic.updateNotUpIndicator((EntityLocal)node, MySqlSlave.SLAVE_HEALTHY, "Replication not started");
+        MySqlNode node = (MySqlNode) super.createNode(loc, flags);
+        if (!MySqlClusterUtils.IS_MASTER.apply(node)) {
+            EntityLocal localNode = (EntityLocal) node;
+            ServiceNotUpLogic.updateNotUpIndicator(localNode, MySqlSlave.SLAVE_HEALTHY, "Replication not started");
 
             addFeed(FunctionFeed.builder()
                 .entity((EntityLocal)node)
@@ -221,7 +213,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                 .poll(FunctionPollConfig.forSensor(MySqlSlave.SLAVE_HEALTHY)
                         .callable(new SlaveStateCallable(node))
                         .checkSuccess(StringPredicates.isNonBlank())
-                        .onSuccess(new SlaveStateParser(node))
+                        .onSuccess(new SlaveStateParser(localNode))
                         .setOnFailure(false)
                         .description("Polls SHOW SLAVE STATUS"))
                 .build());
@@ -235,15 +227,15 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
     }
 
     public static class SlaveStateCallable implements Callable<String> {
-        private Entity slave;
-        public SlaveStateCallable(Entity slave) {
+        private MySqlNode slave;
+        public SlaveStateCallable(MySqlNode slave) {
             this.slave = slave;
         }
 
         @Override
         public String call() throws Exception {
             if (Boolean.TRUE.equals(slave.getAttribute(MySqlNode.SERVICE_PROCESS_IS_RUNNING))) {
-                return slave.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of("commands", "SHOW SLAVE STATUS \\G")).asTask().getUnchecked();
+                return MySqlClusterUtils.executeSqlOnNode(slave, "SHOW SLAVE STATUS \\G");
             } else {
                 return null;
             }
@@ -252,9 +244,9 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
     }
 
     public static class SlaveStateParser implements Function<String, Boolean> {
-        private Entity slave;
+        private EntityLocal slave;
 
-        public SlaveStateParser(Entity slave) {
+        public SlaveStateParser(EntityLocal slave) {
             this.slave = slave;
         }
 
@@ -281,38 +273,67 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
 
     // ============= Member Init =============
 
-    // The task is executed in inessential context (event handler) so
-    // not visible in tasks UI. Better make it visible so the user can
-    // see failures, currently accessible only from logs.
-    private static final class InitReplicationTask implements Runnable {
-        private final MySqlCluster cluster;
-        private final MySqlNode node;
+    // The task is executed separately from the start effector, so failing here
+    // will not fail the start effector as well, but it will eventually time out
+    // because replication is not started.
+    // Would be nice to be able to plug in to the entity lifecycle!
 
-        private InitReplicationTask(MySqlCluster cluster, MySqlNode node) {
+    private static final class NodeRunningListener implements SensorEventListener<Boolean> {
+        private MySqlCluster cluster;
+        private Semaphore lock = new Semaphore(1);
+
+        public NodeRunningListener(MySqlCluster cluster) {
             this.cluster = cluster;
-            this.node = node;
+        }
+
+        @Override
+        public void onEvent(SensorEvent<Boolean> event) {
+            final MySqlNode node = (MySqlNode) event.getSource();
+            if (Boolean.TRUE.equals(event.getValue()) &&
+                    // We are interested in SERVICE_PROCESS_IS_RUNNING only while haven't come online yet.
+                    // Probably will get several updates while replication is initialized so an additional
+                    // check is needed whether we have already seen this.
+                    Boolean.FALSE.equals(node.getAttribute(MySqlNode.SERVICE_UP)) &&
+                    !Boolean.TRUE.equals(node.getAttribute(NODE_REPLICATION_INITIALIZED))) {
+
+                // Events executed sequentially so no need to synchronize here.
+                ((EntityLocal)node).setAttribute(NODE_REPLICATION_INITIALIZED, Boolean.TRUE);
+
+                final Runnable nodeInitTaskBody;
+                if (MySqlClusterUtils.IS_MASTER.apply(node)) {
+                    nodeInitTaskBody = new InitMasterTaskBody(cluster, node);
+                } else {
+                    nodeInitTaskBody = new InitSlaveTaskBody(cluster, node, lock);
+                }
+
+                DynamicTasks.submitTopLevelTask(TaskBuilder.builder()
+                        .displayName("setup master-slave replication")
+                        .body(nodeInitTaskBody)
+                        .tag(BrooklynTaskTags.tagForContextEntity(node))
+                        .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
+                        .build(),
+                        node);
+            }
+        }
+
+    }
+    
+    private static class InitMasterTaskBody implements Runnable {
+        private MySqlNode master;
+        private MySqlCluster cluster;
+        public InitMasterTaskBody(MySqlCluster cluster, MySqlNode master) {
+            this.cluster = cluster;
+            this.master = master;
         }
 
         @Override
         public void run() {
-            Integer serverId = node.getConfig(MySqlNode.MYSQL_SERVER_ID);
-            if (serverId == MASTER_SERVER_ID) {
-                initMaster(node);
-            } else if (serverId > MASTER_SERVER_ID) {
-                initSlave(node);
-            }
-        }
-
-        private void initMaster(MySqlNode master) {
-            String binLogInfo = executeScriptOnNode(master, "FLUSH TABLES WITH READ LOCK;SHOW MASTER STATUS \\G UNLOCK TABLES;");
+            String binLogInfo = MySqlClusterUtils.executeSqlOnNode(master, "FLUSH TABLES WITH READ LOCK;SHOW MASTER STATUS \\G UNLOCK TABLES;");
             Map<String, String> status = MySqlRowParser.parseSingle(binLogInfo);
             String file = status.get("File");
-            if (file != null) {
-                ((EntityInternal)master).sensors().set(MySqlMaster.MASTER_LOG_FILE, file);
-            }
             String position = status.get("Position");
-            if (position != null) {
-                ((EntityInternal)master).sensors().set(MySqlMaster.MASTER_LOG_POSITION, new Integer(position));
+            if (file != null && position != null) {
+                cluster.sensors().set(MySqlCluster.REPLICATION_LAST_SLAVE_SNAPSHOT, new ReplicationSnapshot(null, null, file, Integer.parseInt(position)));
             }
 
             //NOTE: Will be executed on each start, analogously to the standard CREATION_SCRIPT config
@@ -331,71 +352,6 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                 return contents;
             return null;
         }
-        
-        private void initSlave(MySqlNode slave) {
-            MySqlNode master = (MySqlNode) Iterables.find(cluster.getMembers(), IS_MASTER);
-            String masterLogFile = validateSqlParam(getAttributeBlocking(master, MySqlMaster.MASTER_LOG_FILE));
-            Integer masterLogPos = getAttributeBlocking(master, MySqlMaster.MASTER_LOG_POSITION);
-            String masterAddress = validateSqlParam(master.getAttribute(MySqlNode.SUBNET_ADDRESS));
-            Integer masterPort = master.getAttribute(MySqlNode.MYSQL_PORT);
-            String slaveAddress = validateSqlParam(slave.getAttribute(MySqlNode.SUBNET_ADDRESS));
-            String username = validateSqlParam(cluster.getConfig(SLAVE_USERNAME));
-            String password = validateSqlParam(cluster.getAttribute(SLAVE_PASSWORD));
-
-            executeScriptOnNode(master, String.format(
-                    "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';\n" +
-                    "GRANT REPLICATION SLAVE ON *.* TO '%s'@'%s';\n",
-                    username, slaveAddress, password, username, slaveAddress));
-
-            String slaveCmd = String.format(
-                    "CHANGE MASTER TO " +
-                        "MASTER_HOST='%s', " +
-                        "MASTER_PORT=%d, " +
-                        "MASTER_USER='%s', " +
-                        "MASTER_PASSWORD='%s', " +
-                        "MASTER_LOG_FILE='%s', " +
-                        "MASTER_LOG_POS=%d;\n" +
-                    "START SLAVE;\n",
-                    masterAddress, masterPort, username, password, masterLogFile, masterLogPos);
-            executeScriptOnNode(slave, slaveCmd);
-
-            cluster.getAttribute(SLAVE_ID_ADDRESS_MAPPING).put(slave.getId(), slave.getAttribute(MySqlNode.SUBNET_ADDRESS));
-        }
-
-        private <T> T getAttributeBlocking(Entity masterNode, AttributeSensor<T> att) {
-            return DynamicTasks.queue(DependentConfiguration.attributeWhenReady(masterNode, att)).getUnchecked();
-        }
-
-    }
-
-    private static final class NodeRunningListener implements SensorEventListener<Boolean> {
-        private MySqlCluster cluster;
-
-        public NodeRunningListener(MySqlCluster cluster) {
-            this.cluster = cluster;
-        }
-
-        @Override
-        public void onEvent(SensorEvent<Boolean> event) {
-            final MySqlNode node = (MySqlNode) event.getSource();
-            if (Boolean.TRUE.equals(event.getValue()) &&
-                    // We are interested in SERVICE_PROCESS_IS_RUNNING only while haven't come online yet.
-                    // Probably will get several updates while replication is initialized so an additional
-                    // check is needed whether we have already seen this.
-                    Boolean.FALSE.equals(node.getAttribute(MySqlNode.SERVICE_UP)) &&
-                    !Boolean.TRUE.equals(node.getAttribute(NODE_REPLICATION_INITIALIZED))) {
-
-                // Events executed sequentially so no need to synchronize here.
-                node.sensors().set(NODE_REPLICATION_INITIALIZED, Boolean.TRUE);
-
-                DynamicTasks.queueIfPossible(TaskBuilder.builder()
-                        .displayName("Configure master-slave replication on node")
-                        .body(new InitReplicationTask(cluster, node))
-                        .build())
-                    .orSubmitAsync(node);
-            }
-        }
-
     }
 
     // ============= Member Remove =============
@@ -407,46 +363,12 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
             Entity node = event.getValue();
             String slaveAddress = cluster.getAttribute(SLAVE_ID_ADDRESS_MAPPING).remove(node.getId());
             if (slaveAddress != null) {
-                DynamicTasks.queueIfPossible(TaskBuilder.builder()
-                        .displayName("Remove slave access")
-                        .body(new RemoveSlaveConfigTask(cluster, slaveAddress))
-                        .build())
-                    .orSubmitAsync(cluster);
+                // Could already be gone if stopping the entire app - let it throw an exception
+                MySqlNode master = (MySqlNode) Iterables.find(cluster.getMembers(), MySqlClusterUtils.IS_MASTER);
+                String username = MySqlClusterUtils.validateSqlParam(cluster.getConfig(SLAVE_USERNAME));
+                MySqlClusterUtils.executeSqlOnNodeAsync(master, String.format("DROP USER '%s'@'%s';", username, slaveAddress));
             }
         }
-    }
-
-    public class RemoveSlaveConfigTask implements Runnable {
-        private MySqlCluster cluster;
-        private String slaveAddress;
-
-        public RemoveSlaveConfigTask(MySqlCluster cluster, String slaveAddress) {
-            this.cluster = cluster;
-            this.slaveAddress = validateSqlParam(slaveAddress);
-        }
-
-        @Override
-        public void run() {
-            // Could already be gone if stopping the entire app - let it throw an exception
-            MySqlNode master = (MySqlNode) Iterables.find(cluster.getMembers(), IS_MASTER);
-            String username = validateSqlParam(cluster.getConfig(SLAVE_USERNAME));
-            executeScriptOnNode(master, String.format("DROP USER '%s'@'%s';", username, slaveAddress));
-        }
-
-    }
-
-    // Can't call node.executeScript directly, need to change execution context, so use an effector task
-    private static String executeScriptOnNode(MySqlNode node, String commands) {
-        return node.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of(MySqlNode.EXECUTE_SCRIPT_COMMANDS, commands)).getUnchecked();
-    }
-
-    private static String validateSqlParam(String config) {
-        // Don't go into escape madness, just deny any suspicious strings.
-        // Would be nice to use prepared statements, but not worth pulling in the extra dependencies.
-        if (config.contains("'") && config.contains("\\")) {
-            throw new IllegalStateException("User provided string contains illegal SQL characters: " + config);
-        }
-        return config;
     }
 
 }

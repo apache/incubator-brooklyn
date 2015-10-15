@@ -33,18 +33,18 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.entity.database.DatastoreMixins;
-import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.core.effector.EffectorTasks;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.BasicOsDetails.OsVersions;
+import org.apache.brooklyn.entity.database.DatastoreMixins;
+import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.io.FileUtil;
@@ -57,6 +57,8 @@ import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -165,11 +167,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         boolean hasCreationScript = copyDatabaseCreationScript();
         timer.waitForExpiryUnchecked();
 
-        DynamicTasks.queue(
-            SshEffectorTasks.ssh(
-                "cd "+getRunDir(),
-                getBaseDir()+"/bin/mysqladmin --defaults-file="+getConfigFile()+" --password= password "+getPassword()
-            ).summary("setting password"));
+        changePassword("", getPassword());
 
         if (hasCreationScript)
             executeScriptFromInstalledFileAsync("creation-script.sql").asTask().getUnchecked();
@@ -177,6 +175,16 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // not sure necessary to stop then subsequently launch, but seems safest
         // (if skipping, use a flag in launch to indicate we've just launched it)
         stop();
+    }
+
+    @Override
+    public void changePassword(String oldPass, String newPass) {
+        DynamicTasks.queue(
+            SshEffectorTasks.ssh(
+                "cd "+getRunDir(),
+                getBaseDir()+"/bin/mysqladmin --defaults-file="+getConfigFile()+" --password=" + oldPass + " password "+newPass)
+            .summary("setting password")
+            .requiringExitCodeZero());
     }
 
     protected void copyDatabaseConfigScript() {
@@ -264,13 +272,26 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return executeScriptFromInstalledFileAsync(filename);
     }
 
+    @Override
     public ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer) {
+        SshMachineLocation machine = EffectorTasks.getSshMachine(entity);
         return DynamicTasks.queue(
-                SshEffectorTasks.ssh(
+                SshTasks.newSshExecTaskFactory(machine, 
                                 "cd "+getRunDir(),
                                 getBaseDir()+"/bin/mysql --defaults-file="+getConfigFile()+" < "+filenameAlreadyInstalledAtServer)
                         .requiringExitCodeZero()
                         .summary("executing datastore script "+filenameAlreadyInstalledAtServer));
+    }
+
+    @Override
+    public ProcessTaskWrapper<Integer> dumpDatabase(String additionalOptions, String dumpDestination) {
+        SshMachineLocation machine = EffectorTasks.getSshMachine(entity);
+        return DynamicTasks.queue(
+                SshTasks.newSshExecTaskFactory(machine, 
+                                "cd "+getRunDir(),
+                                getBaseDir()+"/bin/mysqldump --defaults-file="+getConfigFile()+" "+additionalOptions+" > "+dumpDestination)
+                        .requiringExitCodeZero()
+                        .summary("Dumping database to " + dumpDestination));
     }
 
 }

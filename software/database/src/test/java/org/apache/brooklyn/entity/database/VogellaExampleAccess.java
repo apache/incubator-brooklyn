@@ -123,11 +123,11 @@ public class VogellaExampleAccess {
 
     private void writeMetaData(ResultSet resultSet) throws SQLException {
         // Get some metadata from the database
-        log.info("The columns in the table are: ");
+        log.debug("The columns in the table are: ");
 
-        log.info("Table: " + resultSet.getMetaData().getTableName(1));
+        log.debug("Table: " + resultSet.getMetaData().getTableName(1));
         for (int i = 1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-            log.info("Column " + i + " " + resultSet.getMetaData().getColumnName(i));
+            log.debug("Column " + i + " " + resultSet.getMetaData().getColumnName(i));
         }
     }
 
@@ -138,11 +138,11 @@ public class VogellaExampleAccess {
             String date = row.get(2);
             String summary = row.get(3);
             String comment = row.get(4);
-            log.info("User: " + user);
-            log.info("Website: " + website);
-            log.info("Summary: " + summary);
-            log.info("Date: " + date);
-            log.info("Comment: " + comment);
+            log.debug("User: " + user);
+            log.debug("Website: " + website);
+            log.debug("Summary: " + summary);
+            log.debug("Date: " + date);
+            log.debug("Comment: " + comment);
         }
     }
 
