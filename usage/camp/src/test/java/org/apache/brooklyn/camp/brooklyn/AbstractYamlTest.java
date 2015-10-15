@@ -23,15 +23,15 @@ import java.io.StringReader;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
-import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -142,6 +142,10 @@ public abstract class AbstractYamlTest {
         Entities.dumpInfo(app);
         
         return app;
+    }
+
+    protected EntitySpec<?> createAppEntitySpec(String... yaml) {
+        return EntityManagementUtils.createEntitySpecForApplication(mgmt(), joinLines(yaml));
     }
 
     protected void addCatalogItems(Iterable<String> catalogYaml) {

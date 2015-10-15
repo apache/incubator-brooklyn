@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,16 +30,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
-import org.apache.brooklyn.camp.brooklyn.spi.creation.service.BrooklynServiceTypeResolver;
+import org.apache.brooklyn.camp.brooklyn.spi.creation.service.CampServiceSpecResolver;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolver;
+import org.apache.brooklyn.camp.brooklyn.spi.creation.service.ServiceTypeResolverAdaptor;
 import org.apache.brooklyn.camp.spi.AbstractResource;
 import org.apache.brooklyn.camp.spi.ApplicationComponentTemplate;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
@@ -46,31 +46,26 @@ import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
-import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.objs.proxy.InternalEntityFactory;
+import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableSet;
-import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.FlagUtils.FlagConfigKeyAndValueRecord;
 import org.apache.brooklyn.util.core.task.Tasks;
-import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
-import org.apache.brooklyn.util.javalang.Reflections;
+import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -78,6 +73,7 @@ import com.google.common.collect.Maps;
  * This generates instances of a template resolver that use a {@link ServiceTypeResolver}
  * to parse the {@code serviceType} line in the template.
  */
+@SuppressWarnings("deprecation")  // Because of ServiceTypeResolver
 public class BrooklynComponentTemplateResolver {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynComponentTemplateResolver.class);
@@ -88,50 +84,28 @@ public class BrooklynComponentTemplateResolver {
     private final Maybe<AbstractResource> template;
     private final BrooklynYamlTypeInstantiator.Factory yamlLoader;
     private final String type;
-    private final ServiceTypeResolver typeResolver;
     private final AtomicBoolean alreadyBuilt = new AtomicBoolean(false);
+    private final EntitySpecResolver serviceSpecResolver;
 
-    public BrooklynComponentTemplateResolver(BrooklynClassLoadingContext loader, ConfigBag attrs, AbstractResource optionalTemplate, String type, ServiceTypeResolver typeResolver) {
+    private BrooklynComponentTemplateResolver(BrooklynClassLoadingContext loader, ConfigBag attrs, AbstractResource optionalTemplate, String type) {
         this.loader = loader;
         this.mgmt = loader.getManagementContext();
         this.attrs = ConfigBag.newInstanceCopying(attrs);
         this.template = Maybe.fromNullable(optionalTemplate);
         this.yamlLoader = new BrooklynYamlTypeInstantiator.Factory(loader, this);
         this.type = type;
-        this.typeResolver = typeResolver;
+        this.serviceSpecResolver = new CampServiceSpecResolver(mgmt, getServiceTypeResolverOverrides());
     }
 
-    public BrooklynClassLoadingContext getLoader() { return loader; }
-    public ManagementContext getManagementContext() { return mgmt; }
-    public ConfigBag getAttrs() { return attrs; }
-    public Maybe<AbstractResource> getTemplate() { return template; }
-    public BrooklynYamlTypeInstantiator.Factory getYamlLoader() { return yamlLoader; }
-    public ServiceTypeResolver getServiceTypeResolver() { return typeResolver; }
-    public String getDeclaredType() { return type; }
-    public Boolean isAlreadyBuilt() { return alreadyBuilt.get(); }
+    // Deprecated because want to keep as much of the state private as possible
+    // Can't remove them because used by ServiceTypeResolver implementations
+    /** @deprecated since 0.9.0 */
+    @Deprecated public ManagementContext getManagementContext() { return mgmt; }
+    @Deprecated public ConfigBag getAttrs() { return attrs; }
+    @Deprecated public BrooklynYamlTypeInstantiator.Factory getYamlLoader() { return yamlLoader; }
+    @Deprecated public String getDeclaredType() { return type; }
 
     public static class Factory {
-
-        /** returns resolver type based on the service type, inspecting the arguments in order to determine the service type */
-        private static ServiceTypeResolver computeResolverType(BrooklynClassLoadingContext context, String knownServiceType, AbstractResource optionalTemplate, ConfigBag attrs) {
-            String type = getDeclaredType(knownServiceType, optionalTemplate, attrs);
-            return findService(context, type);
-        }
-
-        // TODO This could be extended to support multiple prefixes per resolver and a 'best-match' algorithm
-        protected static ServiceTypeResolver findService(BrooklynClassLoadingContext context, String type) {
-            if (type.indexOf(':') != -1) {
-                String prefix = Splitter.on(":").splitToList(type).get(0);
-                ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class,
-                        context.getManagementContext().getCatalogClassLoader());
-                for (ServiceTypeResolver resolver : loader) {
-                   if (prefix.equals(resolver.getTypePrefix())) {
-                       return resolver;
-                   }
-                }
-            }
-            return null;
-        }
 
         public static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext context, Map<String, ?> childAttrs) {
             return newInstance(context, ConfigBag.newInstance(childAttrs), null);
@@ -146,14 +120,11 @@ public class BrooklynComponentTemplateResolver {
         }
 
         private static BrooklynComponentTemplateResolver newInstance(BrooklynClassLoadingContext context, ConfigBag attrs, AbstractResource optionalTemplate) {
-            ServiceTypeResolver typeResolver = computeResolverType(context, null, optionalTemplate, attrs);
             String type = getDeclaredType(null, optionalTemplate, attrs);
-            if (typeResolver == null) // use default
-                typeResolver = new BrooklynServiceTypeResolver();
-            return new BrooklynComponentTemplateResolver(context, attrs, optionalTemplate, type, typeResolver);
+            return new BrooklynComponentTemplateResolver(context, attrs, optionalTemplate, type);
         }
 
-        public static String getDeclaredType(String knownServiceType, AbstractResource optionalTemplate, @Nullable ConfigBag attrs) {
+        private static String getDeclaredType(String knownServiceType, AbstractResource optionalTemplate, @Nullable ConfigBag attrs) {
             String type = knownServiceType;
             if (type==null && optionalTemplate!=null) {
                 type = optionalTemplate.getType();
@@ -168,156 +139,60 @@ public class BrooklynComponentTemplateResolver {
         private static String extractServiceTypeAttribute(@Nullable ConfigBag attrs) {
             return BrooklynYamlTypeInstantiator.InstantiatorFromKey.extractTypeName("service", attrs).orNull();
         }
-
-        public static boolean supportsType(BrooklynClassLoadingContext context, String serviceType) {
-            ServiceTypeResolver typeResolver = computeResolverType(context, serviceType, null, null);
-            if (typeResolver != null) return true;
-            return newInstance(context, serviceType).canResolve();
-        }
     }
 
-    protected boolean canResolve() {
-        CatalogItem<Entity, EntitySpec<?>> item = typeResolver.getCatalogItem(this, type);
-        if (item == null) {
-            return loader.tryLoadClass(getJavaType(), Entity.class).isPresent();
-        }
-        
-        if (item.isDisabled()) {
-            log.warn("Disallowed attempt to use disabled catalog item "+item.getId());
-            return false;
-        } else if (item.isDeprecated()) {
-            log.warn("Use of deprecated catalog item "+item.getId());
-        }
-        return true;
+    public boolean canResolve() {
+        return serviceSpecResolver.accepts(type, loader);
     }
 
-    /** returns the entity class, if needed in contexts which scan its statics for example */
-    protected Class<? extends Entity> loadEntityClass() {
-        Maybe<Class<? extends Entity>> result = tryLoadEntityClass();
-        if (result.isAbsent())
-            throw new IllegalStateException("Could not find "+typeResolver.getBrooklynType(type), ((Maybe.Absent<?>)result).getException());
-        return result.get();
-    }
-
-    /** tries to load the Java entity class */
-    protected Maybe<Class<? extends Entity>> tryLoadEntityClass() {
-        return loader.tryLoadClass(getJavaType(), Entity.class);
-    }
-
-    // TODO Generalise to have other prefixes (e.g. explicit "catalog:" etc)?
-    protected boolean isJavaTypePrefix() {
-        return type != null && (type.toLowerCase().startsWith("java:") || type.toLowerCase().startsWith("brooklyn:java:"));
-    }
-
-    protected String getJavaType() {
-        CatalogItem<Entity, EntitySpec<?>> item = typeResolver.getCatalogItem(this, type);
-        if (!isJavaTypePrefix() && item != null && item.getJavaType() != null) {
-            return item.getJavaType();
-        } else {
-            return typeResolver.getBrooklynType(type);
-        }
-    }
-
-    /** resolves the spec, updating the loader if a catalog item is loaded */
-    @SuppressWarnings("unchecked")
-    protected <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredCatalogTypes, boolean canUseOtherTransformers) {
+    public <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredCatalogTypes) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
 
-        CatalogItem<Entity, EntitySpec<?>> item = getServiceTypeResolver().getCatalogItem(this, getDeclaredType());
-        try {
-            EntitySpec<T> spec = createSpec(item, encounteredCatalogTypes);
-            populateSpec(spec);
-            return spec;
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            
-            // maybe it requires a different transformer? TODO better would be to know this from a transformer type on the catalog item type
-            if (item!=null && canUseOtherTransformers) {
-                log.debug("Could not resolve child "+item+" as CAMP; trying other transformers: "+e);
-                // should only be called when resolving children. and encountered types should probably be empty. 
-                return (EntitySpec<T>) EntityManagementUtils.createCatalogSpec(mgmt, (CatalogItem) item);
+        EntitySpec<?> spec = serviceSpecResolver.resolve(type, loader, encounteredCatalogTypes);
+
+        if (spec == null) {
+            // Try to provide some troubleshooting details
+            final String msgDetails;
+            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, Strings.removeFromStart(type, "catalog:"));
+            String proto = Urls.getProtocol(type);
+            if (item != null && encounteredCatalogTypes.contains(item.getSymbolicName())) {
+                msgDetails = "Cycle between catalog items detected, starting from " + type +
+                        ". Other catalog items being resolved up the stack are " + encounteredCatalogTypes +
+                        ". Tried loading it as a Java class instead but failed.";
+            } else if (proto != null) {
+                msgDetails = "The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
+                        proto + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
+                        "It's also neither a catalog item nor a java type.";
             } else {
-                throw Exceptions.propagate(e);
+                msgDetails = "No resolver knew how to handle it. Using resolvers: " + serviceSpecResolver;
             }
+            throw new IllegalStateException("Unable to create spec for type " + type + ". " + msgDetails);
         }
+
+        populateSpec(spec, encounteredCatalogTypes);
+
+        @SuppressWarnings("unchecked")
+        EntitySpec<T> typedSpec = (EntitySpec<T>) spec;
+        return typedSpec;
     }
 
-    @SuppressWarnings({ "unchecked" })
-    protected <T extends Entity> EntitySpec<T> createSpec(CatalogItem<Entity, EntitySpec<?>> item, Set<String> encounteredCatalogTypes) {
-        if (item == null) {
-            // ignore; presumably a java type or some such?
-        } else if (item.isDisabled()) {
-            throw new IllegalStateException("Illegal use of disabled catalog item "+item.getSymbolicName()+":"+item.getVersion());
-        } else if (item.isDeprecated()) {
-            log.warn("Use of deprecated catalog item "+item.getSymbolicName()+":"+item.getVersion());
+    private List<EntitySpecResolver> getServiceTypeResolverOverrides() {
+        List<EntitySpecResolver> overrides = new ArrayList<>();
+        ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class, mgmt.getCatalogClassLoader());
+        for (ServiceTypeResolver resolver : loader) {
+           overrides.add(new ServiceTypeResolverAdaptor(this, resolver));
         }
-        
-        if (encounteredCatalogTypes==null) encounteredCatalogTypes = MutableSet.of();
-        
-        //Take the symbolicName part of the catalog item only for recursion detection to prevent
-        //cross referencing of different versions. Not interested in non-catalog item types.
-        //Prevent catalog items self-referencing even if explicitly different version.
-        boolean firstOccurrence = (item == null || encounteredCatalogTypes.add(item.getSymbolicName()));
-        boolean recursiveButTryJava = !firstOccurrence;
-
-        // Load a java class from current loader if explicit java prefix, or if no item, or if item is legacy / 
-        // old-style catalog item (item != null && item.getJavaType() != null).
-        // Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
-        // they are loaded as a simple java type, only taking the class name from the catalog item instead of the
-        // type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
-        if (isJavaTypePrefix() || item == null || item.getJavaType() != null) {
-            return createSpecFromJavaType();
-
-        // Same as above case, but this time force java type loading (either as plain class or through an old-style
-        // catalog item, since we have already loaded a class item with the same name as the type value.
-        } else if (recursiveButTryJava) {
-            if (tryLoadEntityClass().isAbsent()) {
-                throw new IllegalStateException("Recursive reference to " + item + " (and cannot be resolved as a Java type)");
-            }
-            return createSpecFromJavaType();
-
-        // Only case that's left is a catalog item with CAMP YAML content - try to parse it recursively
-        // including its OSGi bundles in the loader classpath.
-        } else {
-            // TODO if it isn't camp it will throw. better would be to know the transformers type for the item!
-
-            EntitySpec<?> spec = BrooklynAssemblyTemplateInstantiator.resolveCatalogYamlReferenceCampSpec(getCampPlatform(), item, encounteredCatalogTypes);
-            spec.catalogItemId(item.getId());
-            
-            return (EntitySpec<T>)spec;
-        }
+        return overrides;
     }
-    
+
     @SuppressWarnings("unchecked")
-    protected <T extends Entity> EntitySpec<T> createSpecFromJavaType() {
-        Class<T> type = (Class<T>) loadEntityClass();
-        
-        EntitySpec<T> spec;
-        if (type.isInterface()) {
-            spec = EntitySpec.create(type);
-        } else {
-            // If this is a concrete class, particularly for an Application class, we want the proxy
-            // to expose all interfaces it implements.
-            @SuppressWarnings("rawtypes")
-            Class interfaceclazz = (Application.class.isAssignableFrom(type)) ? Application.class : Entity.class;
-            List<Class<?>> additionalInterfaceClazzes = Reflections.getAllInterfaces(type);
-            spec = EntitySpec.create(interfaceclazz).impl(type).additionalInterfaces(additionalInterfaceClazzes);
-        }
-        spec.catalogItemId(CatalogUtils.getCatalogItemIdFromLoader(loader));
-        if (template.isPresent() && template.get().getSourceCode()!=null)
-            spec.tag(BrooklynTags.newYamlSpecTag(template.get().getSourceCode()));
-
-        return spec;
-    }
-
-    //called from BrooklynAssemblyTemplateInstantiator as well
-    @SuppressWarnings("unchecked")
-    protected <T extends Entity> void populateSpec(EntitySpec<T> spec) {
-        String name, templateId=null, planId=null;
+    private <T extends Entity> void populateSpec(EntitySpec<T> spec, Set<String> encounteredCatalogTypes) {
+        String name, source=null, templateId=null, planId=null;
         if (template.isPresent()) {
             name = template.get().getName();
             templateId = template.get().getId();
+            source = template.get().getSourceCode();
         } else {
             name = (String)attrs.getStringKey("name");
         }
@@ -327,18 +202,19 @@ public class BrooklynComponentTemplateResolver {
 
         Object childrenObj = attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
         if (childrenObj != null) {
-            // Creating a new set of encounteredCatalogTypes means that this won't check things recursively;
-            // but we are looking at children so we probably *should* be resetting the recursive list we've looked at;
-            // (but see also, a previous comment here which suggested otherwise? - Apr 2015)
-            Set<String> encounteredCatalogTypes = MutableSet.of();
-
             Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                EntitySpec<? extends Entity> childSpec = BrooklynAssemblyTemplateInstantiator.resolveCampSpec(getCampPlatform(), ResourceUtils.create(this), entityResolver, encounteredCatalogTypes, true);
+                // encounteredCatalogTypes must contain the items currently being loaded (the dependency chain),
+                // but not parent items in this catalog item already resolved.
+                EntitySpec<? extends Entity> childSpec = entityResolver.resolveSpec(encounteredCatalogTypes);
                 spec.child(childSpec);
             }
         }
+
+        if (source!=null)
+            spec.tag(BrooklynTags.newYamlSpecTag(source));
+
         if (!Strings.isBlank(name))
             spec.displayName(name);
         if (templateId != null)
@@ -350,35 +226,19 @@ public class BrooklynComponentTemplateResolver {
         if (childLocations != null)
             spec.locations(childLocations);
 
-        typeResolver.decorateSpec(this, spec);
+        decorateSpec(spec);
+    }
+
+    private <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
+        new BrooklynEntityDecorationResolver.PolicySpecResolver(yamlLoader).decorate(spec, attrs);
+        new BrooklynEntityDecorationResolver.EnricherSpecResolver(yamlLoader).decorate(spec, attrs);
+        new BrooklynEntityDecorationResolver.InitializerResolver(yamlLoader).decorate(spec, attrs);
+
         configureEntityConfig(spec);
     }
 
-    /** returns new *uninitialised* entity, with just a few of the pieces from the spec;
-     * initialisation occurs soon after, in {@link #initEntity(ManagementContext, Entity, EntitySpec)},
-     * inside an execution context and after entity ID's are recognised
-     */
-    protected <T extends Entity> T newEntity(EntitySpec<T> spec) {
-        Class<? extends T> entityImpl = (spec.getImplementation() != null) ? spec.getImplementation() : mgmt.getEntityManager().getEntityTypeRegistry().getImplementedBy(spec.getType());
-        InternalEntityFactory entityFactory = ((ManagementContextInternal)mgmt).getEntityFactory();
-        T entity = entityFactory.constructEntity(entityImpl, spec);
-
-        String planId = (String)spec.getConfig().get(BrooklynCampConstants.PLAN_ID);
-        if (planId != null) {
-            entity.config().set(BrooklynCampConstants.PLAN_ID, planId);
-        }
-
-        if (spec.getLocations().size() > 0) {
-            ((AbstractEntity)entity).addLocations(spec.getLocations());
-        }
-
-        if (spec.getParent() != null) entity.setParent(spec.getParent());
-
-        return entity;
-    }
-
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected void configureEntityConfig(EntitySpec<?> spec) {
+    private void configureEntityConfig(EntitySpec<?> spec) {
         // first take *recognised* flags and config keys from the top-level, and put them in the bag (of brooklyn.config)
         // attrs will contain only brooklyn.xxx properties when coming from BrooklynEntityMatcher.
         // Any top-level flags will go into "brooklyn.flags". When resolving a spec from $brooklyn:entitySpec
@@ -442,7 +302,7 @@ public class BrooklynComponentTemplateResolver {
         return allKeys;
     }
 
-    protected static class SpecialFlagsTransformer implements Function<Object, Object> {
+    private static class SpecialFlagsTransformer implements Function<Object, Object> {
         protected final ManagementContext mgmt;
         /* TODO find a way to make do without loader here?
          * it is not very nice having to serialize it; but serialization of BLCL is now relatively clean.
@@ -458,6 +318,7 @@ public class BrooklynComponentTemplateResolver {
             this.loader = loader;
             mgmt = loader.getManagementContext();
         }
+        @Override
         public Object apply(Object input) {
             if (input instanceof Map)
                 return transformSpecialFlags((Map<?, ?>)input);
@@ -501,7 +362,7 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(null, false);
+                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(ImmutableSet.<String>of());
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);
@@ -510,15 +371,5 @@ public class BrooklynComponentTemplateResolver {
 
             return flag;
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    protected List<Map<String, Object>> getChildren(Map<String, Object> attrs) {
-        if (attrs==null) return null;
-        return (List<Map<String, Object>>) attrs.get(BrooklynCampReservedKeys.BROOKLYN_CHILDREN);
-    }
-
-    private CampPlatform getCampPlatform() {
-        return CampCatalogUtils.getCampPlatform(mgmt);
     }
 }

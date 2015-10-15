@@ -21,7 +21,6 @@ package org.apache.brooklyn.core.catalog.internal;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +49,6 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.AggregateClassLoader;
 import org.apache.brooklyn.util.javalang.LoadedClassLoader;
-import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
@@ -327,30 +325,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             }
         }
 
-        // revert to legacy mechanism
-        SpecT spec = null;
-        Method method;
-        try {
-            method = Reflections.findMethod(specType, "create", Class.class);
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            throw new IllegalStateException("Unsupported creation of spec type "+specType+"; it must have a public static create(Class) method", e);            
-        }
-        try {
-            if (loadedItem.getJavaType()!=null) {
-                @SuppressWarnings("unchecked")
-                SpecT specT = (SpecT) method.invoke(null, loadedItem.loadJavaClass(mgmt));
-                spec = specT;
-            }
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            throw new IllegalStateException("Error creating "+specType+" "+loadedItem.getJavaType()+": "+e, e);
-        }
-
-        if (spec==null) 
-            throw new IllegalStateException("No known mechanism to create instance of "+item);
-
-        return spec;
+        throw new IllegalStateException("No known mechanism to create instance of "+item);
     }
 
     @SuppressWarnings("unchecked")
@@ -1101,6 +1076,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             serializer = new CatalogXmlSerializer();
     }
 
+    @Override
     @Deprecated
     public CatalogItem<?,?> getCatalogItemForType(String typeName) {
         final CatalogItem<?,?> resultI;

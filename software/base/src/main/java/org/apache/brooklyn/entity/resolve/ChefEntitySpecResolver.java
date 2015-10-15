@@ -16,23 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
+package org.apache.brooklyn.entity.resolve;
+
+import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.core.resolve.entity.AbstractEntitySpecResolver;
+import org.apache.brooklyn.entity.chef.ChefConfig;
+import org.apache.brooklyn.entity.chef.ChefEntity;
 
-/**
- * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code java:}
- * to Brooklyn {@link EntitySpec} instances.
- */
-public class JavaServiceTypeResolver extends BrooklynServiceTypeResolver {
+public class ChefEntitySpecResolver extends AbstractEntitySpecResolver {
+    private static final String RESOLVER_NAME = "chef";
 
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
+    public ChefEntitySpecResolver() {
+        super(RESOLVER_NAME);
+    }
 
     @Override
-    public String getTypePrefix() { return "java"; }
-    
+    public EntitySpec<?> resolve(String type, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
+        return EntitySpec.create(ChefEntity.class)
+                .configure(ChefConfig.CHEF_COOKBOOK_PRIMARY_NAME, getLocalType(type));
+    }
+
 }

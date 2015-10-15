@@ -19,6 +19,7 @@
 package org.apache.brooklyn.core.plan;
 
 import java.io.StringReader;
+import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -74,7 +75,7 @@ public class XmlPlanToSpecTransformer implements PlanToSpecTransformer {
 
     @SuppressWarnings({ "unchecked" })
     @Override
-    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item) {
+    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) {
         if (item.getPlanYaml()==null) throw new PlanNotRecognizedException("Plan is null");
         if (item.getCatalogItemType()==CatalogItemType.ENTITY) {
             return (SpecT)toEntitySpec(parseXml(item.getPlanYaml()), 1);

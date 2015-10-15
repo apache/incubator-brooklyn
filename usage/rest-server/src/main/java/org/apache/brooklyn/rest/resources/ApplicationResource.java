@@ -372,8 +372,8 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         } catch (IllegalStateException e) {
             // An IllegalArgumentException for creating the entity spec gets wrapped in a ISE.
             // But we want to return a 400 rather than 500, so ensure we throw IAE.
-            if (e.getCause() != null && Exceptions.getFirstInteresting(e.getCause()) instanceof IllegalArgumentException) {
-                IllegalArgumentException iae = (IllegalArgumentException) Exceptions.getFirstInteresting(e.getCause());
+            IllegalArgumentException iae = (IllegalArgumentException) Exceptions.getFirstThrowableOfType(e.getCause(), IllegalArgumentException.class);
+            if (iae != null) {
                 throw new IllegalArgumentException("Cannot create spec for app: "+iae.getMessage(), e);
             } else {
                 throw e;

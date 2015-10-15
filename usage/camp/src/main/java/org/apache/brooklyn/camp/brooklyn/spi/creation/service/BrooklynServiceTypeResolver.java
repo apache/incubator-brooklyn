@@ -25,10 +25,10 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
-import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityDecorationResolver;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
+import org.apache.brooklyn.core.resolve.entity.AbstractEntitySpecResolver;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,10 @@ import org.slf4j.LoggerFactory;
 /**
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code brooklyn:}
  * to Brooklyn {@link EntitySpec} instances.
+ * 
+ * @deprecated since 0.9.0, use {@link AbstractEntitySpecResolver} instead
  */
+@Deprecated
 public class BrooklynServiceTypeResolver implements ServiceTypeResolver {
 
     @SuppressWarnings("unused")
@@ -50,9 +53,7 @@ public class BrooklynServiceTypeResolver implements ServiceTypeResolver {
 
     @Override
     public String getBrooklynType(String serviceType) {
-        String type = Strings.removeFromStart(serviceType, getTypePrefix() + ":").trim();
-        if (type == null) return null;
-        return type;
+        return Strings.removeFromStart(serviceType, getTypePrefix() + ":").trim();
     }
 
     @Nullable
@@ -68,9 +69,6 @@ public class BrooklynServiceTypeResolver implements ServiceTypeResolver {
 
     @Override
     public <T extends Entity> void decorateSpec(BrooklynComponentTemplateResolver resolver, EntitySpec<T> spec) {
-        new BrooklynEntityDecorationResolver.PolicySpecResolver(resolver.getYamlLoader()).decorate(spec, resolver.getAttrs());
-        new BrooklynEntityDecorationResolver.EnricherSpecResolver(resolver.getYamlLoader()).decorate(spec, resolver.getAttrs());
-        new BrooklynEntityDecorationResolver.InitializerResolver(resolver.getYamlLoader()).decorate(spec, resolver.getAttrs());
     }
 
     protected CatalogItem<Entity,EntitySpec<?>> getCatalogItemImpl(ManagementContext mgmt, String brooklynType) {

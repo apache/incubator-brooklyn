@@ -209,6 +209,8 @@ public class BrooklynRestResourceUtils {
 
     @SuppressWarnings({ "unchecked", "deprecation" })
     public Application create(ApplicationSpec spec) {
+        log.warn("Using deprecated functionality (as of 0.9.0), ApplicationSpec style (pre CAMP plans). " +
+                    "Transition to actively supported spec plans.");
         log.debug("REST creating application instance for {}", spec);
         
         if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, spec)) {

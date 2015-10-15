@@ -18,44 +18,37 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
-import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
-import org.apache.brooklyn.entity.chef.ChefConfig;
-import org.apache.brooklyn.entity.chef.ChefEntity;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.util.text.Strings;
 
-/**
- * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code chef:}
- * to Brooklyn {@link EntitySpec} instances.
- */
-public class ChefServiceTypeResolver extends BrooklynServiceTypeResolver {
+@SuppressWarnings("deprecation")
+public class TestServiceTypeResolver implements ServiceTypeResolver {
 
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(ServiceTypeResolver.class);
+    private static final String PREFIX = "test-resolver";
 
     @Override
-    public String getTypePrefix() { return "chef"; }
+    public String getTypePrefix() {
+        return PREFIX;
+    }
 
     @Override
     public String getBrooklynType(String serviceType) {
-        return ChefEntity.class.getName();
+        return Strings.removeFromStart(serviceType, PREFIX + ":");
     }
 
-    /** Chef items are not in the catalog. */
+    @SuppressWarnings("unchecked")
     @Override
     public CatalogItem<Entity, EntitySpec<?>> getCatalogItem(BrooklynComponentTemplateResolver resolver, String serviceType) {
-        return null;
+        return (CatalogItem<Entity, EntitySpec<?>>) CatalogUtils.getCatalogItemOptionalVersion(resolver.getManagementContext(), getBrooklynType(serviceType));
     }
 
     @Override
     public <T extends Entity> void decorateSpec(BrooklynComponentTemplateResolver resolver, EntitySpec<T> spec) {
-        spec.configure(ChefConfig.CHEF_COOKBOOK_PRIMARY_NAME, Strings.removeFromStart(resolver.getDeclaredType(), "chef:"));
-        super.decorateSpec(resolver, spec);
+        spec.configure("resolver", TestServiceTypeResolver.class);
     }
-    
+
 }

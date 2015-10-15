@@ -26,8 +26,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
@@ -42,6 +40,8 @@ import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
 
@@ -596,6 +596,101 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testIndirectRecursionFails() throws Exception {
+        String symbolicName = "my.catalog.app.id.basic";
+        // Need to have a stand alone caller first so we can create an item to depend on it.
+        // After that replace it/insert a new version which completes the cycle
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName + ".caller",
+                "  version: " + TEST_VERSION + "pre",
+                "",
+                "services:",
+                "- type: org.apache.brooklyn.entity.stock.BasicEntity");
+
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName + ".callee",
+                "  version: " + TEST_VERSION,
+                "",
+                "services:",
+                "- type: " + symbolicName + ".caller");
+
+        try {
+            addCatalogItems(
+                    "brooklyn.catalog:",
+                    "  id: " + symbolicName + ".caller",
+                    "  version: " + TEST_VERSION,
+                    "",
+                    "services:",
+                    "- type: " + symbolicName + ".callee");
+            fail();
+        } catch (IllegalStateException e) {
+            assertTrue(e.toString().contains("recursive"), "Unexpected error message: "+e);
+        }
+    }
+
+    @Test
+    public void testChildItemsDoNotRecurse() throws Exception {
+        String symbolicName = "my.catalog.app.id.basic";
+        // Need to have a stand alone caller first so we can create an item to depend on it.
+        // After that replace it/insert a new version which completes the cycle
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName + ".caller",
+                "  version: " + TEST_VERSION + "pre",
+                "",
+                "services:",
+                "- type: org.apache.brooklyn.entity.stock.BasicEntity");
+
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName + ".callee",
+                "  version: " + TEST_VERSION,
+                "",
+                "services:",
+                "- type: " + symbolicName + ".caller");
+
+        try {
+            addCatalogItems(
+                    "brooklyn.catalog:",
+                    "  id: " + symbolicName + ".caller",
+                    "  version: " + TEST_VERSION,
+                    "",
+                    "services:",
+                    "- type: org.apache.brooklyn.entity.stock.BasicEntity",
+                    // Being a child is important, triggers the case where
+                    // we allow retrying with other transformers.
+                    "  brooklyn.children:",
+                    "  - type: " + symbolicName + ".callee");
+            fail();
+        } catch (IllegalStateException e) {
+            assertTrue(e.toString().contains("recursive"), "Unexpected error message: "+e);
+        }
+    }
+
+    @Test
+    public void testRecursiveCheckForDepenentsOnly() throws Exception {
+        String symbolicName = "my.catalog.app.id.basic";
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + symbolicName,
+                "  version: " + TEST_VERSION,
+                "",
+                "services:",
+                "- type: org.apache.brooklyn.entity.stock.BasicEntity");
+
+        createAndStartApplication(
+                "services:",
+                "- type: " + ver(symbolicName),
+                "  brooklyn.children:",
+                "  - type: " + ver(symbolicName),
+                "- type: " + ver(symbolicName),
+                "  brooklyn.children:",
+                "  - type: " + ver(symbolicName));
+    }
+
+    @Test
     public void testOsgiNotLeakingToParent() {
         addCatalogOSGiEntity(SIMPLE_ENTITY_TYPE);
         try {
@@ -688,7 +783,16 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         Entity testEntity = Iterables.getOnlyElement(app.getChildren());
         assertEquals(testEntity.config().get(TestEntity.CONF_NAME), testName);
     }
-    
+
+    @Test
+    public void testHardcodedCatalog() throws Exception {
+        createAppEntitySpec(
+                "services:",
+                "- type: cluster",
+                "- type: vanilla",
+                "- type: web-app-cluster");
+    }
+
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {
         addCatalogOSGiEntity(symbolicName, serviceType);
         String yaml = "name: simple-app-yaml\n" +
