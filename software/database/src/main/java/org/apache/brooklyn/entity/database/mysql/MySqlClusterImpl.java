@@ -208,12 +208,12 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
             ServiceNotUpLogic.updateNotUpIndicator(localNode, MySqlSlave.SLAVE_HEALTHY, "Replication not started");
 
             addFeed(FunctionFeed.builder()
-                .entity((EntityLocal)node)
+                .entity(localNode)
                 .period(Duration.FIVE_SECONDS)
                 .poll(FunctionPollConfig.forSensor(MySqlSlave.SLAVE_HEALTHY)
                         .callable(new SlaveStateCallable(node))
                         .checkSuccess(StringPredicates.isNonBlank())
-                        .onSuccess(new SlaveStateParser(localNode))
+                        .onSuccess(new SlaveStateParser(node))
                         .setOnFailure(false)
                         .description("Polls SHOW SLAVE STATUS"))
                 .build());
@@ -244,9 +244,9 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
     }
 
     public static class SlaveStateParser implements Function<String, Boolean> {
-        private EntityLocal slave;
+        private Entity slave;
 
-        public SlaveStateParser(EntityLocal slave) {
+        public SlaveStateParser(Entity slave) {
             this.slave = slave;
         }
 
@@ -297,7 +297,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
                     !Boolean.TRUE.equals(node.getAttribute(NODE_REPLICATION_INITIALIZED))) {
 
                 // Events executed sequentially so no need to synchronize here.
-                ((EntityLocal)node).setAttribute(NODE_REPLICATION_INITIALIZED, Boolean.TRUE);
+                node.sensors().set(NODE_REPLICATION_INITIALIZED, Boolean.TRUE);
 
                 final Runnable nodeInitTaskBody;
                 if (MySqlClusterUtils.IS_MASTER.apply(node)) {
