@@ -60,15 +60,10 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     public EntitySpec<? extends Application> createApplicationSpec(String plan) {
         try {
             CampPlatform camp = CampCatalogUtils.getCampPlatform(mgmt);
-            AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(plan) );
-            AssemblyTemplateInstantiator instantiator;
-            try {
-                instantiator = at.getInstantiator().newInstance();
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
-            }
+            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
+            AssemblyTemplate at = CampUtils.registerDeploymentPlan(plan, loader, camp);
+            AssemblyTemplateInstantiator instantiator = CampUtils.getInstantiator(at);
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
                 return ((AssemblyTemplateSpecInstantiator) instantiator).createApplicationSpec(at, camp, loader);
             } else {
                 // The unknown instantiator can create the app (Assembly), but not a spec.

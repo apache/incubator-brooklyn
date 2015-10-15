@@ -57,22 +57,29 @@ public class CampUtils {
     public static List<EntitySpec<?>> createServiceSpecs(String plan, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
         CampPlatform camp = getCampPlatform(loader.getManagementContext());
 
-        AssemblyTemplate at;
-        BrooklynLoaderTracker.setLoader(loader);
-        try {
-            at = camp.pdp().registerDeploymentPlan(new StringReader(plan));
-        } finally {
-            BrooklynLoaderTracker.unsetLoader(loader);
-        }
-
-        try {
-            AssemblyTemplateInstantiator instantiator = at.getInstantiator().newInstance();
-            if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                return ((AssemblyTemplateSpecInstantiator)instantiator).createServiceSpecs(at, camp, loader, encounteredTypes);
-            }
+        AssemblyTemplate at = registerDeploymentPlan(plan, loader, camp);
+        AssemblyTemplateInstantiator instantiator = getInstantiator(at);
+        if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
+            return ((AssemblyTemplateSpecInstantiator)instantiator).createServiceSpecs(at, camp, loader, encounteredTypes);
+        } else {
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
+        }
+    }
+
+    public static AssemblyTemplateInstantiator getInstantiator(AssemblyTemplate at) {
+        try {
+            return at.getInstantiator().newInstance();
         } catch (Exception e) {
             throw Exceptions.propagate(e);
+        }
+    }
+
+    public static AssemblyTemplate registerDeploymentPlan(String plan, BrooklynClassLoadingContext loader, CampPlatform camp) {
+        BrooklynLoaderTracker.setLoader(loader);
+        try {
+            return camp.pdp().registerDeploymentPlan(new StringReader(plan));
+        } finally {
+            BrooklynLoaderTracker.unsetLoader(loader);
         }
     }
 
