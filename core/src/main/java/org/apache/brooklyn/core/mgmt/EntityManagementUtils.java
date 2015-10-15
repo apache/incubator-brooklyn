@@ -103,6 +103,9 @@ public class EntityManagementUtils {
     }
 
     public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
+        if (encounteredTypes.contains(item.getSymbolicName())) {
+            throw new IllegalStateException("Already encountered types " + encounteredTypes + " must not contain catalog item being resolver " + item.getSymbolicName());
+        }
         return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, SpecT>() {
             @Override
             public SpecT apply(PlanToSpecTransformer input) {

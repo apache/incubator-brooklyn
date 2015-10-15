@@ -163,7 +163,7 @@ public class BrooklynComponentTemplateResolver {
             } else if (proto != null) {
                 msgDetails = "The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
                         proto + " isn't white listed (" + BrooklynCampConstants.YAML_URL_PROTOCOL_WHITELIST + "). " +
-                        "Not a catalog item or java type as well.";
+                        "It's also neither a catalog item nor a java type.";
             } else {
                 msgDetails = "No resolver knew how to handle it. Using resolvers: " + serviceSpecResolver;
             }
@@ -226,10 +226,10 @@ public class BrooklynComponentTemplateResolver {
         if (childLocations != null)
             spec.locations(childLocations);
 
-        decoreateSpec(spec);
+        decorateSpec(spec);
     }
 
-    private <T extends Entity> void decoreateSpec(EntitySpec<T> spec) {
+    private <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
         new BrooklynEntityDecorationResolver.PolicySpecResolver(yamlLoader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.EnricherSpecResolver(yamlLoader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.InitializerResolver(yamlLoader).decorate(spec, attrs);

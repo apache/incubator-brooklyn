@@ -50,6 +50,18 @@ public interface ServiceSpecResolver extends ManagementContextInjectable {
 
     /**
      * Create a spec for the service type
+     * 
+     * @param type - the string representation which should be converted to an EntitySpec
+     * @param loader - use it to load any Java classes
+     * @param encounteredTypes - an immutable set of the items which are currently being resolved up the stack,
+     *        used to prevent cycles. Implementations should not try to resolve the type if the symbolicName is
+     *        already contained in here. When resolving a type add it to a copy of the list before
+     *        passing the new instance down the stack. See {@link CatalogServiceSpecResolver} for example usage.
+     *
+     * @return The {@link EntitySpec} corresponding to the passed {@code type} argument, possibly pre-configured
+     *         based on the information contained in {@code type}. Return {@code null} value to indicate that
+     *         the implementation doesn't know how to convert {@code type} to an {@link EntitySpec}. Throw an
+     *         exception if {@code type} looks like a supported value, but can't be loaded.
      */
     @Nullable EntitySpec<?> resolve(String type, BrooklynClassLoadingContext loader, Set<String> encounteredTypes);
 }

@@ -54,7 +54,7 @@ public class UrlServiceSpecResolver implements ServiceSpecResolver {
         try {
             yaml = ResourceUtils.create(this).getResourceAsString(type);
         } catch (Exception e) {
-            log.warn("AssemblyTemplate type " + type + " which looks like a URL can't be fetched.", e);
+            log.warn("AssemblyTemplate type " + type + " looks like a URL that can't be fetched.", e);
             return null;
         }
         // Referenced specs are expected to be CAMP format as well.

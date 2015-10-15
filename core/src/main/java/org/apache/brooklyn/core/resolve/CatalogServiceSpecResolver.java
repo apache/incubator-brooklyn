@@ -73,19 +73,12 @@ public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
         //Prevent catalog items self-referencing even if explicitly different version.
         boolean nonRecursiveCall = !parentEncounteredTypes.contains(item.getSymbolicName());
         if (nonRecursiveCall) {
-            // Make a copy of the encountered types, so that we add the item being resolved for
-            // dependency items only. Siblings must not see we are resolving this item.
-            Set<String> encounteredTypes = ImmutableSet.<String>builder()
-                    .addAll(parentEncounteredTypes)
-                    .add(item.getSymbolicName())
-                    .build();
-
             // CatalogItem generics are just getting in the way, better get rid of them, we
             // are casting anyway.
             @SuppressWarnings({ "rawtypes" })
             CatalogItem rawItem = item;
             @SuppressWarnings({ "rawtypes", "unchecked" })
-            AbstractBrooklynObjectSpec rawSpec = EntityManagementUtils.createCatalogSpec(mgmt, rawItem, encounteredTypes);
+            AbstractBrooklynObjectSpec rawSpec = EntityManagementUtils.createCatalogSpec(mgmt, rawItem, parentEncounteredTypes);
             return (EntitySpec<?>) rawSpec;
         } else {
             return null;

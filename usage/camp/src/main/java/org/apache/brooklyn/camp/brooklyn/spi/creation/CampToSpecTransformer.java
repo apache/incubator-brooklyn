@@ -93,7 +93,12 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     @Override
     public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) {
         // Ignore old-style java type catalog items
-        if (item.getPlanYaml() == null) return null;
+        if (item.getPlanYaml() == null) {
+            throw new PlanNotRecognizedException("Old style catalog item " + item + " not supported.");
+        }
+        if (encounteredTypes.contains(item.getSymbolicName())) {
+            throw new IllegalStateException("Already encountered types " + encounteredTypes + " must not contain catalog item being resolver " + item.getSymbolicName());
+        }
 
         // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
         return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item, encounteredTypes);
