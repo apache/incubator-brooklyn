@@ -42,6 +42,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
 public class BailOutJcloudsLocation extends JcloudsLocation {
@@ -81,7 +83,7 @@ public class BailOutJcloudsLocation extends JcloudsLocation {
         if (Boolean.TRUE.equals(getConfig(BUILD_TEMPLATE))) {
             template = super.buildTemplate(computeService, config);
         }
-        throw BAIL_OUT_FOR_TESTING;
+        throw new RuntimeException(BAIL_OUT_FOR_TESTING);
     }
 
     public Template getTemplate() {
@@ -100,8 +102,14 @@ public class BailOutJcloudsLocation extends JcloudsLocation {
         try {
             obtain(flags);
         } catch (Exception e) {
-            if (e == BAIL_OUT_FOR_TESTING || e.getCause() == BAIL_OUT_FOR_TESTING
-                    || (e instanceof CompoundRuntimeException && ((CompoundRuntimeException) e).getAllCauses().contains(BAIL_OUT_FOR_TESTING))) {
+            boolean found = Iterables.tryFind(Throwables.getCausalChain(e), Predicates.<Throwable>equalTo(e)).isPresent();
+            if (!found && e instanceof CompoundRuntimeException) {
+                for (Throwable cause : ((CompoundRuntimeException) e).getAllCauses()) {
+                    found = Iterables.tryFind(Throwables.getCausalChain(cause), Predicates.<Throwable>equalTo(e)).isPresent();
+                    if (found) break;
+                }
+            }
+            if (found) {
                 test.apply(lastConfigBag);
             } else {
                 throw Exceptions.propagate(e);
