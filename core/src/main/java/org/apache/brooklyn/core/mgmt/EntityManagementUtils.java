@@ -79,7 +79,6 @@ public class EntityManagementUtils {
     /** creates an application from the given app spec, managed by the given management context */
     public static <T extends Application> T createUnstarted(ManagementContext mgmt, EntitySpec<T> spec) {
         T app = mgmt.getEntityManager().createEntity(spec);
-        Entities.startManagement(app, mgmt);
         return app;
     }
 
@@ -188,7 +187,6 @@ public class EntityManagementUtils {
         final List<Entity> children = MutableList.of();
         for (EntitySpec<?> spec: specs) {
             Entity child = (Entity)parent.addChild(spec);
-            Entities.manage(child);
             children.add(child);
         }
 

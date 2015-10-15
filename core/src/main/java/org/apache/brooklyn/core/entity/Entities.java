@@ -49,6 +49,7 @@ import org.apache.brooklyn.api.entity.drivers.EntityDriver;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.mgmt.EntityManager;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.LocationManager;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -695,7 +696,7 @@ public class Entities {
      * (after the application is started) */
     public static void start(Entity e, Collection<? extends Location> locations) {
         if (!isManaged(e) && !manage(e)) {
-            log.warn("Using discouraged mechanism to start management -- Entities.start(Application, Locations) -- caller should create and use the preferred management context");
+            log.warn("Using deprecated discouraged mechanism to start management -- Entities.start(Application, Locations) -- caller should create and use the preferred management context");
             startManagement(e);
         }
         if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.START,
@@ -871,8 +872,18 @@ public class Entities {
      *
      * @throws IllegalStateException if {@literal e} is an {@link Application}.
      * @see #startManagement(Entity)
+     * 
+     * @deprecated since 0.9.0; entities are automatically managed when created via {@link Entity#addChild(EntitySpec)},
+     *             or with {@link EntityManager#createEntity(EntitySpec)} (it is strongly encouraged to include the parent
+     *             if using the latter for anything but a top-level app).
      */
+    @Deprecated
     public static boolean manage(Entity e) {
+        if (Entities.isManaged(e)) {
+            return true; // no-op
+        }
+        
+        log.warn("Deprecated use of Entities.manage(Entity), for unmanaged entity "+e);
         Entity o = e.getParent();
         Entity eum = e; // Highest unmanaged ancestor
         if (o==null) throw new IllegalArgumentException("Can't manage "+e+" because it is an orphan");
@@ -901,9 +912,15 @@ public class Entities {
      * <p>
      * <b>NOTE</b> This method may change, but is provided as a stop-gap to prevent ad-hoc things
      * being done in the code which are even more likely to break!
+     * 
+     * @deprecated since 0.9.0; entities are automatically managed when created via {@link Entity#addChild(EntitySpec)},
+     *             or with {@link EntityManager#createEntity(EntitySpec)}.
      */
+    @Deprecated
     @Beta
     public static ManagementContext startManagement(Entity e) {
+        log.warn("Deprecated use of Entities.startManagement(Entity), for entity "+e);
+        
         Entity o = e;
         Entity eum = e; // Highest unmanaged ancestor
         while (o.getParent()!=null) {
@@ -929,11 +946,24 @@ public class Entities {
      * Starts managing the given (unmanaged) app, using the given management context.
      *
      * @see #startManagement(Entity)
+     * 
+     * @deprecated since 0.9.0; entities are automatically managed when created with 
+     *             {@link EntityManager#createEntity(EntitySpec)}. For top-level apps, use code like
+     *             {@code managementContext.getEntityManager().createEntity(EntitySpec.create(...))}.
      */
+    @Deprecated
     public static ManagementContext startManagement(Application app, ManagementContext mgmt) {
+        log.warn("Deprecated use of Entities.startManagement(Application, ManagementContext), for app "+app);
+        
         if (isManaged(app)) {
-            throw new IllegalStateException("Application "+app+" is already managed, so can't set brooklyn properties");
+            if (app.getManagementContext() == mgmt) {
+                // no-op; app was presumably auto-managed
+                return mgmt;
+            } else {
+                throw new IllegalStateException("Application "+app+" is already managed by "+app.getManagementContext()+", so cannot be managed by "+mgmt);
+            }
         }
+
         mgmt.getEntityManager().manage(app);
         return mgmt;
     }
@@ -943,8 +973,15 @@ public class Entities {
      * management context.
      *
      * @see #startManagement(Entity)
+     * 
+     * @deprecated since 0.9.0; entities are automatically managed when created via {@link Entity#addChild(EntitySpec)},
+     *             or with {@link EntityManager#createEntity(EntitySpec)}. For top-level apps, use code like
+     *             {@code managementContext.getEntityManager().createEntity(EntitySpec.create(...))}.
      */
+    @Deprecated
     public static ManagementContext startManagement(Application app, BrooklynProperties props) {
+        log.warn("Deprecated use of Entities.startManagement(Application, BrooklynProperties), for app "+app);
+        
         if (isManaged(app)) {
             throw new IllegalStateException("Application "+app+" is already managed, so can't set brooklyn properties");
         }

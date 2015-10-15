@@ -72,7 +72,6 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
                 log.debug("creating zookeeper using custom spec for {}", this);
             }
             zookeeper = addChild(zookeeperSpec);
-            if (Entities.isManaged(this)) Entities.manage(zookeeper);
             sensors().set(ZOOKEEPER, zookeeper);
         }
 
@@ -87,7 +86,6 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
         // We add the zookeeper configuration to the KafkaBroker specification here
         DynamicCluster cluster = addChild(EntitySpec.create(DynamicCluster.class)
                 .configure("memberSpec", EntitySpec.create(brokerSpec).configure(KafkaBroker.ZOOKEEPER, zookeeper)));
-        if (Entities.isManaged(this)) Entities.manage(cluster);
         sensors().set(CLUSTER, cluster);
         
         connectSensors();

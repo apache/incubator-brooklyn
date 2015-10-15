@@ -76,7 +76,6 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
 
     public RabbitQueue createQueue(Map properties) {
         RabbitQueue result = addChild(EntitySpec.create(RabbitQueue.class).configure(properties));
-        Entities.manage(result);
         result.create();
         return result;
     }

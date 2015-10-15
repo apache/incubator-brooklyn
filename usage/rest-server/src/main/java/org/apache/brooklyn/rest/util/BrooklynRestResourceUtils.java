@@ -50,6 +50,9 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
+import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent;
+import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent.Scope;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.entity.AbstractEntity;
@@ -268,14 +271,13 @@ public class BrooklynRestResourceUtils {
                 } else if (Application.class.isAssignableFrom(clazz)) {
                     org.apache.brooklyn.api.entity.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO, catalogItemId);
                     configureRenderingMetadata(spec, coreSpec);
-                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
                     for (EntitySpec entitySpec : entities) {
                         log.info("REST creating instance for entity {}", entitySpec.getType());
-                        instance.addChild(mgmt.getEntityManager().createEntity(toCoreEntitySpec(entitySpec)));
+                        coreSpec.child(toCoreEntitySpec(entitySpec));
                     }
 
                     log.info("REST placing '{}' under management", spec.getName() != null ? spec.getName() : spec);
-                    Entities.startManagement(instance, mgmt);
+                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
 
                 } else if (Entity.class.isAssignableFrom(clazz)) {
                     if (entities.size() > 0)
@@ -284,19 +286,17 @@ public class BrooklynRestResourceUtils {
                     org.apache.brooklyn.api.entity.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO, catalogItemId);
                     configureRenderingMetadata(spec, coreSpec);
 
-                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
-
-                    Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(clazz, name, configO, catalogItemId));
-                    instance.addChild(soleChild);
-                    instance.enrichers().add(Enrichers.builder()
+                    coreSpec.child(toCoreEntitySpec(clazz, name, configO, catalogItemId)
+                            .configure(BrooklynCampConstants.PLAN_ID, "soleChildId"));
+                    coreSpec.enricher(Enrichers.builder()
                             .propagatingAllBut(Attributes.SERVICE_UP, Attributes.SERVICE_NOT_UP_INDICATORS, 
                                     Attributes.SERVICE_STATE_ACTUAL, Attributes.SERVICE_STATE_EXPECTED, 
                                     Attributes.SERVICE_PROBLEMS)
-                            .from(soleChild)
+                            .from(new DslComponent(Scope.CHILD, "soleChildId").newTask())
                             .build());
 
                     log.info("REST placing '{}' under management", spec.getName());
-                    Entities.startManagement(instance, mgmt);
+                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
 
                 } else {
                     throw new IllegalArgumentException("Class " + clazz + " must extend one of ApplicationBuilder, Application or Entity");
