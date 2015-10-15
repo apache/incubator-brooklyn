@@ -34,8 +34,6 @@ import com.google.common.collect.Iterables;
 
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation.LocalhostMachine;
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.net.HasNetworkAddresses;
 
@@ -102,15 +100,11 @@ public class Machines {
     }
     
     public static Maybe<MachineLocation> findUniqueMachineLocation(Iterable<? extends Location> locations) {
-        return findUniqueElement(locations, MachineLocation.class);
+        return findUniqueMachineLocation(locations, MachineLocation.class);
     }
 
-    public static Maybe<SshMachineLocation> findUniqueSshMachineLocation(Iterable<? extends Location> locations) {
-        return findUniqueElement(locations, SshMachineLocation.class);
-    }
-
-    public static Maybe<WinRmMachineLocation> findUniqueWinRmMachineLocation(Iterable<? extends Location> locations) {
-        return findUniqueElement(locations, WinRmMachineLocation.class);
+    public static <T extends MachineLocation> Maybe<T> findUniqueMachineLocation(Iterable<? extends Location> locations, Class<T> clazz) {
+        return findUniqueElement(locations, clazz);
     }
 
     public static Maybe<String> findSubnetHostname(Iterable<? extends Location> ll) {

@@ -66,7 +66,7 @@ public class Locations {
     
     /** as {@link Machines#findUniqueSshMachineLocation(Iterable)} */
     public static Maybe<SshMachineLocation> findUniqueSshMachineLocation(Iterable<? extends Location> locations) {
-        return Machines.findUniqueSshMachineLocation(locations);
+        return Machines.findUniqueMachineLocation(locations, SshMachineLocation.class);
     }
 
     /** if no locations are supplied, returns locations on the entity, or in the ancestors, until it finds a non-empty set,

@@ -33,8 +33,6 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.feed.windows.WindowsPerformanceCounterFeed;
-import org.apache.brooklyn.feed.windows.WindowsPerformanceCounterPollConfig;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;

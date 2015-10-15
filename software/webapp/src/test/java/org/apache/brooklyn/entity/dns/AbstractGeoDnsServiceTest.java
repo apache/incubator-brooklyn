@@ -220,7 +220,7 @@ public class AbstractGeoDnsServiceTest {
             if (includeServiceUp)
                 ((EntityInternal)e).sensors().set(Attributes.SERVICE_UP, true);
             
-            SshMachineLocation l = Machines.findUniqueSshMachineLocation(e.getLocations()).get();
+            SshMachineLocation l = Machines.findUniqueMachineLocation(e.getLocations(), SshMachineLocation.class).get();
             if (includeAddress)
                 ((EntityInternal)e).sensors().set(Attributes.ADDRESS, l.getAddress().getHostAddress());
             String h = (String) l.config().getBag().getStringKey("hostname");

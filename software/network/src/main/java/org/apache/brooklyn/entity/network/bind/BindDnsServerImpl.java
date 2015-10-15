@@ -224,7 +224,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
             for (Map.Entry<String, Entity> e : hostnameToEntity.entries()) {
                 String domainName = e.getKey();
-                Maybe<SshMachineLocation> location = Machines.findUniqueSshMachineLocation(e.getValue().getLocations());
+                Maybe<SshMachineLocation> location = Machines.findUniqueMachineLocation(e.getValue().getLocations(), SshMachineLocation.class);
                 if (!location.isPresent()) {
                     LOG.debug("Member {} of {} does not have an SSH location so will not be configured", e.getValue(), this);
                     continue;
@@ -255,7 +255,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     }
 
     protected void configureResolver(Entity entity) {
-        Maybe<SshMachineLocation> machine = Machines.findUniqueSshMachineLocation(entity.getLocations());
+        Maybe<SshMachineLocation> machine = Machines.findUniqueMachineLocation(entity.getLocations(), SshMachineLocation.class);
         if (machine.isPresent()) {
             if (getConfig(REPLACE_RESOLV_CONF)) {
                 machine.get().copyTo(new StringReader(getConfig(RESOLV_CONF_TEMPLATE)), "/etc/resolv.conf");

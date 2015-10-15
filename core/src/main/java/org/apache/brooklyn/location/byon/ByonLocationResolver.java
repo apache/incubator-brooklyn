@@ -34,8 +34,6 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.core.location.AbstractLocationResolver;
 import org.apache.brooklyn.core.mgmt.internal.LocalLocationManager;
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
@@ -72,9 +70,14 @@ public class ByonLocationResolver extends AbstractLocationResolver {
 
     public static final ConfigKey<String> OS_FAMILY = ConfigKeys.newStringConfigKey("osFamily", "OS Family of the machine, either windows or linux", "linux");
 
-    public static final Map<String, Class<? extends MachineLocation>> OS_TO_MACHINE_LOCATION_TYPE = ImmutableMap.<String, Class<? extends MachineLocation>>of(
-            "windows", WinRmMachineLocation.class,
-            "linux", SshMachineLocation.class);
+    /**
+     * @todo Reimplement via a registry:
+     * {@link org.apache.brooklyn.location.winrm.WinRmMachineLocation}
+     * {@link org.apache.brooklyn.location.ssh.SshMachineLocation}
+     */
+    public static final Map<String, String> OS_TO_MACHINE_LOCATION_TYPE = ImmutableMap.of(
+            "windows", "org.apache.brooklyn.location.winrm.WinRmMachineLocation",
+            "linux", "org.apache.brooklyn.location.ssh.SshMachineLocation");
 
     @Override
     public String getPrefix() {
@@ -207,7 +210,12 @@ public class ByonLocationResolver extends AbstractLocationResolver {
     }
 
     private Class<? extends MachineLocation> getLocationClass(String osFamily) {
-        return osFamily == null ? null : OS_TO_MACHINE_LOCATION_TYPE.get(osFamily.toLowerCase(Locale.ENGLISH));
+        try {
+            if (osFamily != null) {
+                return Class.forName(OS_TO_MACHINE_LOCATION_TYPE.get(osFamily.toLowerCase(Locale.ENGLISH))).asSubclass(MachineLocation.class);
+            }
+        } catch (ClassNotFoundException ex) {}
+        return null;
     }
 
     protected LocationSpec<? extends MachineLocation> parseMachine(String val, Class<? extends MachineLocation> locationClass, Map<String, ?> defaults, String specForErrMsg) {

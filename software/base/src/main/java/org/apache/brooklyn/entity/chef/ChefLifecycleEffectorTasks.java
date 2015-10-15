@@ -29,6 +29,7 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.util.collections.Jsonya;
@@ -159,7 +160,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     
     @SuppressWarnings({ "unchecked", "deprecation" })
     protected void startWithChefSoloAsync() {
-        String baseDir = MachineLifecycleEffectorTasks.resolveOnBoxDir(entity(), Machines.findUniqueSshMachineLocation(entity().getLocations()).get());
+        String baseDir = MachineLifecycleEffectorTasks.resolveOnBoxDir(entity(), Machines.findUniqueMachineLocation(entity().getLocations(), SshMachineLocation.class).get());
         String installDir = Urls.mergePaths(baseDir, "installs/chef");
         
         @SuppressWarnings("rawtypes")
