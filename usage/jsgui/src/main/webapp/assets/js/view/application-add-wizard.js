@@ -85,6 +85,13 @@ define([
         if (entity.config && _.size(entity.config)) result["brooklyn.config"] = entity.config;
         return result;
     }
+    function getConvertedConfigValue(value) {
+        try {
+            return $.parseJSON(value);
+        } catch (e) {
+            return value;
+        }
+    }
     
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
@@ -510,7 +517,7 @@ define([
         getConfigMap:function (root) {
             var map = {}
             $('.app-add-wizard-config-entry',root).each( function (index,elt) {
-                map[$('#key',elt).val()] = $('#value',elt).val()
+                map[$('#key',elt).val()] = getConvertedConfigValue($('#value',elt).val())
             })
             return map;
         },
@@ -777,21 +784,13 @@ define([
             }
         },
         getConfigMap:function() {
-            var that = this;
             var map = {};
             $('.app-add-wizard-config-entry').each( function (index,elt) {
                 map[$('#key',elt).val()] = 
                     $('#checkboxValue',elt).length ? $('#checkboxValue',elt).is(':checked') :
-                    that.getConvertedConfigValue($('#value',elt).val())
+                    getConvertedConfigValue($('#value',elt).val())
             })
             return map;
-        },
-        getConvertedConfigValue:function (value) {
-            try {
-                return $.parseJSON(value);
-            } catch (e) {
-                return value;
-            }
         },
         selectionVersion:function (event) {
             this.model.spec.set("version", $(event.currentTarget).val())
