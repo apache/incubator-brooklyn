@@ -30,10 +30,12 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.test.entity.TestApplicationImpl;
-import org.testng.Assert;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.test.Asserts;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -79,13 +81,11 @@ public class ApplicationTest {
 
     @Test
     public void testAppInAppTest() throws IOException {
-        TestApplicationImpl app = new TestApplicationImpl();
-        ManagementContext mgmt = Entities.startManagement(app);
+        ManagementContext mgmt = LocalManagementContextForTests.newInstance();
         try {
-            Entity e2 = app.addChild(new TestApplicationImpl());
-            Entities.manage(e2);
-            if (mgmt.getApplications().size()!=1)
-                Assert.fail("Apps in Apps should not be listed at top level: "+mgmt.getApplications());
+            TestApplication app = mgmt.getEntityManager().createEntity(org.apache.brooklyn.api.entity.EntitySpec.create(TestApplication.class));
+            TestApplication e2 = app.addChild(org.apache.brooklyn.api.entity.EntitySpec.create(TestApplication.class));
+            Asserts.assertEqualsIgnoringOrder(mgmt.getApplications(), ImmutableList.of(app));
         } finally {
             Entities.destroyAll(mgmt);
         }

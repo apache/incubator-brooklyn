@@ -212,8 +212,8 @@ public class EntityAutomanagedTest extends BrooklynAppUnitTestSupport {
         try {
             Entities.manage(child);
             fail("Managed deleted entity "+child+" in "+mgmt);
-        } catch (IllegalStateException e) {
-            if (!(e.toString().contains("No concrete entity known"))) throw e;
+        } catch (IllegalArgumentException e) {
+            if (!(e.toString().contains("Can't manage"))) throw e;
         }
     }
     

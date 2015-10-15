@@ -187,7 +187,6 @@ public class VanillaSoftwareProcessAndChildrenIntegrationTest {
             );
         p2 = p1.addChild(EntitySpec.create(VanillaSoftwareProcess.class)
             .configure(VanillaSoftwareProcess.LAUNCH_COMMAND, childCmd));
-        Entities.manage(p2);
         
         log.info("testing "+JavaClassNames.callerNiceClassAndMethod(1)+", using "+p1+" and "+p2);
     }

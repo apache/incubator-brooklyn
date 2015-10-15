@@ -53,12 +53,11 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
         super(flags);
     }
 
+    // TODO Deprecate this; no longer needed - can always use {@link #addChild(EntitySpec)}
     @Override
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec) {
         if (!getManagementSupport().isDeployed()) throw new IllegalStateException("Entity "+this+" not managed");
-        T child = addChild(spec);
-        getEntityManager().manage(child);
-        return child;
+        return addChild(spec);
     }
     
     @Override

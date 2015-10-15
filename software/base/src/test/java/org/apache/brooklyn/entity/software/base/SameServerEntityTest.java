@@ -64,8 +64,6 @@ public class SameServerEntityTest {
     public void testUsesSameMachineLocationForEachChild() throws Exception {
         Entity child1 = entity.addChild(EntitySpec.create(TestEntity.class));
         Entity child2 = entity.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(child1);
-        Entities.manage(child2);
         
         app.start(ImmutableList.of(loc));
         

@@ -52,7 +52,6 @@ public class RebindDynamicGroupTest extends RebindTestFixtureWithApp {
 
         // And should detect new members that match the filter
         final MyEntity newE2 = newApp.createAndManageChild(EntitySpec.create(MyEntity.class));
-        Entities.manage(newE2);
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {

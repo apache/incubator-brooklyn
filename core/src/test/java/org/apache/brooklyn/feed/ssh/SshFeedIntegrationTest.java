@@ -200,14 +200,11 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
                         .build();
                 }
             }));
-        Time.sleep(Duration.seconds(2));
-        // would be nice to hook in and assert no errors
-        Assert.assertEquals(entity2.getAttribute(SENSOR_STRING), null);
-        Entities.manage(entity2);
-        Time.sleep(Duration.seconds(2));
-        Assert.assertEquals(entity2.getAttribute(SENSOR_STRING), null);
+
+        // TODO would be nice to hook in and assert no errors
+        EntityTestUtils.assertAttributeEqualsContinually(entity2, SENSOR_STRING, null);
+
         entity2.sensors().set(Attributes.SERVICE_UP, true);
-    
         EntityTestUtils.assertAttributeEventually(entity2, SENSOR_STRING, StringPredicates.containsLiteral("hello"));
     }
 

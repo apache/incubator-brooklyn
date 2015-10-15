@@ -268,7 +268,6 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testAggregatingGroupSum() {
         TestEntity child1 = group.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(child1);
         group.addMember(entity);
         group.addMember(entity2);
         group.enrichers().add(Enrichers.builder()
@@ -288,9 +287,7 @@ public class EnrichersTest extends BrooklynAppUnitTestSupport {
     public void testAggregatingChildrenSum() {
         group.addMember(entity);
         TestEntity child1 = group.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(child1);
         TestEntity child2 = group.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(child2);
         group.enrichers().add(Enrichers.builder()
                 .aggregating(NUM1)
                 .publishing(NUM2)

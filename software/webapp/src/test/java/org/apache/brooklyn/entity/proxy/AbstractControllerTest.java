@@ -104,7 +104,6 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testUpdateCalledWhenChildHostnameAndPortChanges() throws Exception {
         TestEntity child = cluster.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(child);
         cluster.addMember(child);
 
         List<Collection<String>> u = Lists.newArrayList(controller.getUpdates());
@@ -213,7 +212,6 @@ public class AbstractControllerTest extends BrooklynAppUnitTestSupport {
         controller.start(Arrays.asList(loc));
         
         TestEntity child = cluster.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(child);
         cluster.addMember(child);
 
         List<Collection<String>> u = Lists.newArrayList(controller.getUpdates());

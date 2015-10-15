@@ -44,7 +44,6 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
     @Test
     public void testRebindChildSimple() throws Exception {
         TestEntity c1 = origApp.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(c1);
         AbstractEntity c1r = Entities.deproxy(c1);
         
         doPartialRebindOfIds(c1.getId());
@@ -59,7 +58,6 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
     @Test
     public void testRebindParentSimple() throws Exception {
         TestEntity c1 = origApp.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(c1);
         
         AbstractEntity origAppr = Entities.deproxy(origApp);
         
@@ -82,7 +80,6 @@ public class ActivePartialRebindTest extends RebindTestFixtureWithApp {
     @Test(groups="Integration")
     public void testRebindCheckingMemoryLeak() throws Exception {
         TestEntity c1 = origApp.addChild(EntitySpec.create(TestEntity.class));
-        Entities.manage(c1);
         c1.config().set(TestEntity.CONF_NAME, Strings.makeRandomId(1000000));
         
         gcAndLog("before");

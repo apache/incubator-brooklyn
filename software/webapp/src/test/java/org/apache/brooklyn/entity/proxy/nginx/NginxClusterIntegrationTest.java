@@ -134,12 +134,10 @@ public class NginxClusterIntegrationTest extends BrooklynAppLiveTestSupport {
                 .configure("initialSize", 1)
                 .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(getTestWar())));
 
-        UrlMapping urlMapping = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping urlMapping = urlMappings.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", "/hello-world($|/.*)")
-                .configure("target", c1)
-                .parent(urlMappings));
-        Entities.manage(urlMapping);
+                .configure("target", c1));
         
         loadBalancerCluster = app.createAndManageChild(EntitySpec.create(LoadBalancerCluster.class)
                 .configure("urlMappings", urlMappings)

@@ -99,7 +99,6 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         StartableApplication result = origManagementContext.getEntityManager().createEntity(EntitySpec.create(StartableApplication.class)
                 .impl(WebClusterDatabaseExampleApp.class)
                 .configure(DynamicCluster.INITIAL_SIZE, 2));
-        Entities.startManagement(result, origManagementContext);
         return result;
     }
     

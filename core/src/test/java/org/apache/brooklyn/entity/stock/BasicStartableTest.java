@@ -78,7 +78,6 @@ public class BasicStartableTest {
     @Test
     public void testSetsLocations() throws Exception {
         startable = app.addChild(EntitySpec.create(BasicStartable.class));
-        Entities.startManagement(startable);
         app.start(ImmutableList.of(loc1, loc2));
         
         assertEqualsIgnoringOrder(startable.getLocations(), ImmutableSet.of(loc1, loc2));
@@ -89,7 +88,6 @@ public class BasicStartableTest {
         startable = app.addChild(EntitySpec.create(BasicStartable.class));
         entity = startable.addChild(EntitySpec.create(TestEntity.class));
         entity2 = startable.addChild(EntitySpec.create(TestEntity.class));
-        Entities.startManagement(startable);
         app.start(ImmutableList.of(loc1, loc2));
         
         assertEqualsIgnoringOrder(entity.getLocations(), ImmutableSet.of(loc1, loc2));
@@ -122,7 +120,6 @@ public class BasicStartableTest {
                 .configure(BasicStartable.LOCATIONS_FILTER, filter));
         entity = startable.addChild(EntitySpec.create(TestEntity.class).displayName("1"));
         entity2 = startable.addChild(EntitySpec.create(TestEntity.class).displayName("2"));
-        Entities.startManagement(startable);
         app.start(ImmutableList.of(loc1, loc2));
         
         assertEqualsIgnoringOrder(entity.getLocations(), ImmutableSet.of(loc1));
@@ -142,7 +139,6 @@ public class BasicStartableTest {
         startable = app.addChild(EntitySpec.create(BasicStartable.class)
                 .configure(BasicStartable.LOCATIONS_FILTER, filter));
         BasicEntity entity = startable.addChild(EntitySpec.create(BasicEntity.class));
-        Entities.startManagement(startable);
         app.start(ImmutableList.of(loc1, loc2));
         
         assertEqualsIgnoringOrder(entity.getLocations(), ImmutableSet.of());
@@ -156,7 +152,6 @@ public class BasicStartableTest {
         managementContext.getSubscriptionContext(startable)
                 .subscribe(startable, Attributes.SERVICE_STATE_ACTUAL, listener);
 
-        Entities.startManagement(startable);
         app.start(ImmutableList.of(loc1));
         app.stop();
 

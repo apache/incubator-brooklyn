@@ -88,7 +88,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
     public void test_monitorMySql() throws Exception {
         SameServerEntity sameServerEntity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class));
         MySqlNode mySqlNode = sameServerEntity.addChild(EntitySpec.create(MySqlNode.class));
-        Entities.manage(mySqlNode);
+
         Function<String, Map<String, Object>> controlFileSubstitutionsFunction = new Function<String, Map<String, Object>>() {
             public Map<String, Object> apply(String input) {
                 return ImmutableMap.<String, Object>of("targetPidFile", input);
@@ -99,7 +99,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
                 .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode,
                         SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction));
         final MonitNode monitNode = sameServerEntity.addChild(monitSpec);
-        Entities.manage(monitNode);
+
         app.start(ImmutableSet.of(loc));
         LOG.info("Monit and MySQL started");
         EntityTestUtils.assertAttributeEqualsEventually(monitNode, MonitNode.MONIT_TARGET_PROCESS_STATUS, "Running");
@@ -145,7 +145,7 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
             .configure(MySqlNode.INSTALL_DIR, mySqlInstallDir)
             .configure(MySqlNode.RUN_DIR, mySqlRunDir)
             .configure(MySqlNode.DATA_DIR, mySqlDataDir));
-        Entities.manage(mySqlNode);
+
         Function<String, Map<String, Object>> controlFileSubstitutionsFunction = new Function<String, Map<String, Object>>() {
             public Map<String, Object> apply(String input) {
                 return ImmutableMap.<String, Object>of(
@@ -158,12 +158,11 @@ public class MonitIntegrationTest extends BrooklynAppLiveTestSupport {
             }
         };
         
-        EntitySpec<MonitNode> monitSpec = EntitySpec.create(MonitNode.class)
+        final MonitNode monitNode = sameServerEntity.addChild(EntitySpec.create(MonitNode.class)
                 .configure(MonitNode.CONTROL_FILE_URL, "classpath:///org/apache/brooklyn/entity/monitoring/monit/monitmysqlwithrestart.monitrc")
                 .configure(MonitNode.CONTROL_FILE_SUBSTITUTIONS, DependentConfiguration.valueWhenAttributeReady(mySqlNode,
-                        SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction));
-        final MonitNode monitNode = sameServerEntity.addChild(monitSpec);
-        Entities.manage(monitNode);
+                        SoftwareProcess.PID_FILE, controlFileSubstitutionsFunction)));
+
         app.start(ImmutableSet.of(loc));
         LOG.info("Monit and MySQL started");
         final String[] initialPid = {""};
