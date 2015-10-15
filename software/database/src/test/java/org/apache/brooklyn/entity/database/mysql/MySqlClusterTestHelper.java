@@ -22,9 +22,12 @@ import static org.testng.Assert.assertEquals;
 
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.database.VogellaExampleAccess;
+import org.apache.brooklyn.entity.database.mysql.MySqlCluster.MySqlMaster;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -32,12 +35,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
-import org.apache.brooklyn.entity.database.VogellaExampleAccess;
-import org.apache.brooklyn.entity.database.mysql.MySqlCluster.MySqlMaster;
 
 /**
  * Runs a slightly modified version of the popular Vogella MySQL tutorial,
@@ -87,12 +88,19 @@ public class MySqlClusterTestHelper {
     }
 
     public static void test(TestApplication app, Location location, EntitySpec<MySqlCluster> clusterSpec) throws Exception {
-        MySqlCluster mysql = app.createAndManageChild(clusterSpec);
-        app.start(ImmutableList.of(location));
-        log.info("MySQL started");
+        MySqlCluster cluster = initCluster(app, location, clusterSpec);
+        MySqlNode master = (MySqlNode) cluster.getAttribute(MySqlCluster.FIRST);
+        MySqlNode slave = (MySqlNode) Iterables.find(cluster.getMembers(), Predicates.not(Predicates.<Entity>equalTo(master)));
+        //TODO test failing import doesn't abort
+        assertEquals(cluster.getMembers().size(), 2);
+        assertEquals(cluster.getAttribute(MySqlCluster.SLAVE_DATASTORE_URL_LIST).size(), 1);
+        assertEquals(cluster.getAttribute(MySqlNode.DATASTORE_URL), master.getAttribute(MySqlNode.DATASTORE_URL));
+        assertReplication(master, slave);
+    }
 
-        VogellaExampleAccess masterDb = new VogellaExampleAccess("com.mysql.jdbc.Driver", mysql.getAttribute(MySqlNode.DATASTORE_URL));
-        VogellaExampleAccess slaveDb = new VogellaExampleAccess("com.mysql.jdbc.Driver", Iterables.getOnlyElement(mysql.getAttribute(MySqlCluster.SLAVE_DATASTORE_URL_LIST)));
+    public static void assertReplication(MySqlNode master, MySqlNode slave) throws ClassNotFoundException, Exception {
+        VogellaExampleAccess masterDb = new VogellaExampleAccess("com.mysql.jdbc.Driver", master.getAttribute(MySqlNode.DATASTORE_URL));
+        VogellaExampleAccess slaveDb = new VogellaExampleAccess("com.mysql.jdbc.Driver", slave.getAttribute(MySqlNode.DATASTORE_URL));
         masterDb.connect();
         slaveDb.connect();
 
@@ -106,6 +114,17 @@ public class MySqlClusterTestHelper {
         slaveDb.close();
 
         log.info("Ran vogella MySQL example -- SUCCESS");
+    }
+
+    public static MySqlCluster initCluster(TestApplication app, Location location, EntitySpec<MySqlCluster> spec) {
+        MySqlCluster mysql = app.createAndManageChild(spec);
+        app.start(ImmutableList.of(location));
+        log.info("MySQL started");
+        return mysql;
+    }
+
+    public static String execSql(MySqlNode node, String cmd) {
+        return node.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of("commands", cmd)).asTask().getUnchecked();
     }
 
     private static void assertSlave(final VogellaExampleAccess masterDb, final VogellaExampleAccess slaveDb, final int recordCnt) throws Exception {
