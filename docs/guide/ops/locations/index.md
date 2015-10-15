@@ -8,6 +8,7 @@ children:
 - { section: BYON }
 - cloud-credentials.md
 - more-locations.md
+- location-customizers.md
 - ssh-keys.md
 ---
 
@@ -430,6 +431,7 @@ provisioned. See `FixedListMachineProvisioningLocation.MACHINE_CHOOSER`.
 
 ### Other Location Topics
 
-* [More Locations](more-locations.html)
-* [SSH Keys](ssh-keys.html)
 * [Cloud Credentials](cloud-credentials.html)
+* [More Locations](more-locations.html)
+* [Location Customizers](location-customizers.html)
+* [SSH Keys](ssh-keys.html)
