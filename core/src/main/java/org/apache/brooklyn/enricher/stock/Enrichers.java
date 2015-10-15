@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
@@ -493,6 +494,7 @@ public class Enrichers {
         protected final Boolean propagatingAll;
         protected final Iterable<? extends Sensor<?>> propagatingAllBut;
         protected Entity fromEntity;
+        protected Task<? extends Entity> fromEntitySupplier;
         
         public AbstractPropagatorBuilder(Map<? extends Sensor<?>, ? extends Sensor<?>> vals) {
             super(Propagator.class);
@@ -520,6 +522,10 @@ public class Enrichers {
             this.fromEntity = checkNotNull(val);
             return self();
         }
+        public B from(Task<? extends Entity> val) {
+            this.fromEntitySupplier = checkNotNull(val);
+            return self();
+        }
         @Override
         protected String getDefaultUniqueTag() {
             List<String> summary = MutableList.of();
@@ -539,11 +545,15 @@ public class Enrichers {
                 summary.add("ALL_BUT:"+com.google.common.base.Joiner.on(",").join(allBut));
             }
             
-            return "propagating["+fromEntity.getId()+":"+com.google.common.base.Joiner.on(",").join(summary)+"]";
+            // TODO What to use as the entity id if using fromEntitySupplier? 
+            String fromId = (fromEntity != null) ? fromEntity.getId() : fromEntitySupplier.getId();
+            
+            return "propagating["+fromId+":"+com.google.common.base.Joiner.on(",").join(summary)+"]";
         }
         public EnricherSpec<? extends Enricher> build() {
             return super.build().configure(MutableMap.builder()
                             .putIfNotNull(Propagator.PRODUCER, fromEntity)
+                            .putIfNotNull(Propagator.PRODUCER, fromEntitySupplier)
                             .putIfNotNull(Propagator.SENSOR_MAPPING, propagating)
                             .putIfNotNull(Propagator.PROPAGATING_ALL, propagatingAll)
                             .putIfNotNull(Propagator.PROPAGATING_ALL_BUT, propagatingAllBut)
@@ -555,6 +565,7 @@ public class Enrichers {
             return Objects.toStringHelper(this)
                     .omitNullValues()
                     .add("fromEntity", fromEntity)
+                    .add("fromEntitySupplier", fromEntitySupplier)
                     .add("propagating", propagating)
                     .add("propagatingAll", propagatingAll)
                     .add("propagatingAllBut", propagatingAllBut)
