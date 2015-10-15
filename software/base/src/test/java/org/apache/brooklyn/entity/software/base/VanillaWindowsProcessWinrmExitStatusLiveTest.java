@@ -34,6 +34,7 @@ import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.software.base.test.location.WindowsTestFixture;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -145,6 +146,23 @@ public class VanillaWindowsProcessWinrmExitStatusLiveTest {
         LOG.info("stopping entity");
         EntityTestUtils.assertAttributeEqualsEventually(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STOPPED);
         EntityTestUtils.assertAttributeEqualsEventually(entity, Attributes.SERVICE_UP, false);
+    }
+
+    @Test(groups = "Live")//, expectedExceptions = IllegalStateException.class, expectedExceptionsMessageRegExp = "Execution failed, invalid result 1")
+    public void testExecPsWithExitCodesWithMultiLineCommands() throws Throwable {
+        try {
+            VanillaWindowsProcess entity = app.createAndManageChild(EntitySpec.create(VanillaWindowsProcess.class)
+                    .configure(
+                            VanillaWindowsProcess.INSTALL_POWERSHELL_COMMAND,
+                        "exit 1")
+                    .configure(VanillaWindowsProcess.LAUNCH_POWERSHELL_COMMAND, "Write-Host launch")
+                    .configure(VanillaWindowsProcess.CHECK_RUNNING_POWERSHELL_COMMAND, "Write-Host checkrunning")
+                    .configure(VanillaWindowsProcess.STOP_POWERSHELL_COMMAND, "Write-Host stop"));
+
+            app.start(ImmutableList.of(machine));
+        } catch (Exception e) {
+            throw Exceptions.getFirstInteresting(e);
+        }
     }
 
     @Test(groups = "Live")

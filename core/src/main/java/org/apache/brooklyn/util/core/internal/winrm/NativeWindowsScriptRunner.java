@@ -16,14 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.software.base.lifecycle;
+package org.apache.brooklyn.util.core.internal.winrm;
 
 import java.util.Map;
 
 public interface NativeWindowsScriptRunner {
 
     /** Runs a command and returns the result code */
-    int executeNativeCommand(Map flags, String windowsCommand, String summaryForLogging);
-    int executePsCommand(Map flags, String powerShellCommand, String summaryForLogging);
-    Integer executeNativeOrPsCommand(Map flags, String regularCommand, String powershellCommand, String phase, Boolean allowNoOp);
+    Integer executeNativeOrPsCommand(Map flags, String regularCommand, String powershellCommand, String summaryForLogging, Boolean allowNoOp);
 }
