@@ -21,24 +21,24 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 import java.util.List;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.resolve.DelegatingServiceSpecResolver;
-import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
+import org.apache.brooklyn.core.resolve.entity.DelegatingEntitySpecResolver;
+import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
 
 import com.google.common.collect.ImmutableList;
 
-public class CampServiceSpecResolver extends DelegatingServiceSpecResolver {
+public class CampServiceSpecResolver extends DelegatingEntitySpecResolver {
 
-    public CampServiceSpecResolver(ManagementContext mgmt, List<ServiceSpecResolver> overridingResolvers) {
+    public CampServiceSpecResolver(ManagementContext mgmt, List<EntitySpecResolver> overridingResolvers) {
         super(getCampResolvers(mgmt, overridingResolvers));
     }
 
-    private static List<ServiceSpecResolver> getCampResolvers(ManagementContext mgmt, List<ServiceSpecResolver> overridingResolvers) {
-        List<ServiceSpecResolver> resolvers = ImmutableList.<ServiceSpecResolver>builder()
+    private static List<EntitySpecResolver> getCampResolvers(ManagementContext mgmt, List<EntitySpecResolver> overridingResolvers) {
+        List<EntitySpecResolver> resolvers = ImmutableList.<EntitySpecResolver>builder()
                 .addAll(overridingResolvers)
                 .addAll(getRegisteredResolvers())
                 .add(new UrlServiceSpecResolver())
                 .build();
-        for (ServiceSpecResolver resolver : resolvers) {
+        for (EntitySpecResolver resolver : resolvers) {
             resolver.injectManagementContext(mgmt);
         }
         return resolvers;

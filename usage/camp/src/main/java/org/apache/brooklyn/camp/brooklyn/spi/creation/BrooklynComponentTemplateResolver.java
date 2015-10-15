@@ -51,7 +51,7 @@ import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
-import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
+import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -85,7 +85,7 @@ public class BrooklynComponentTemplateResolver {
     private final BrooklynYamlTypeInstantiator.Factory yamlLoader;
     private final String type;
     private final AtomicBoolean alreadyBuilt = new AtomicBoolean(false);
-    private final ServiceSpecResolver serviceSpecResolver;
+    private final EntitySpecResolver serviceSpecResolver;
 
     private BrooklynComponentTemplateResolver(BrooklynClassLoadingContext loader, ConfigBag attrs, AbstractResource optionalTemplate, String type) {
         this.loader = loader;
@@ -177,8 +177,8 @@ public class BrooklynComponentTemplateResolver {
         return typedSpec;
     }
 
-    private List<ServiceSpecResolver> getServiceTypeResolverOverrides() {
-        List<ServiceSpecResolver> overrides = new ArrayList<>();
+    private List<EntitySpecResolver> getServiceTypeResolverOverrides() {
+        List<EntitySpecResolver> overrides = new ArrayList<>();
         ServiceLoader<ServiceTypeResolver> loader = ServiceLoader.load(ServiceTypeResolver.class, mgmt.getCatalogClassLoader());
         for (ServiceTypeResolver resolver : loader) {
            overrides.add(new ServiceTypeResolverAdaptor(this, resolver));

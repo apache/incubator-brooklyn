@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.resolve;
+package org.apache.brooklyn.core.resolve.entity;
 
 import java.util.Set;
 
@@ -25,13 +25,13 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.util.text.Strings;
 
-public abstract class AbstractServiceSpecResolver implements ServiceSpecResolver {
+public abstract class AbstractEntitySpecResolver implements EntitySpecResolver {
     private static final String PREFIX_DELIMITER = ":";
     protected final String name;
     protected final String prefix;
     protected ManagementContext mgmt;
 
-    public AbstractServiceSpecResolver(String name) {
+    public AbstractEntitySpecResolver(String name) {
         this.name = name;
         this.prefix = name + PREFIX_DELIMITER;
     }

@@ -24,15 +24,15 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.core.resolve.AbstractServiceSpecResolver;
-import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
+import org.apache.brooklyn.core.resolve.entity.AbstractEntitySpecResolver;
+import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Splitter;
 
 @SuppressWarnings("deprecation")
-public class ServiceTypeResolverAdaptor extends AbstractServiceSpecResolver {
+public class ServiceTypeResolverAdaptor extends AbstractEntitySpecResolver {
     private static final Logger log = LoggerFactory.getLogger(ServiceTypeResolverAdaptor.class);
     private ServiceTypeResolver serviceTypeResolver;
     private BrooklynComponentTemplateResolver resolver;
@@ -60,7 +60,7 @@ public class ServiceTypeResolverAdaptor extends AbstractServiceSpecResolver {
         String brooklynType = serviceTypeResolver.getBrooklynType(type);
         Class<? extends Entity> javaType = loader.loadClass(brooklynType, Entity.class);
         if (!javaType.isInterface()) {
-            log.warn("Using " + ServiceTypeResolver.class.getSimpleName() + " with a non-interface type - this usage is not supported. Use " + ServiceSpecResolver.class.getSimpleName() + " instead.");
+            log.warn("Using " + ServiceTypeResolver.class.getSimpleName() + " with a non-interface type - this usage is not supported. Use " + EntitySpecResolver.class.getSimpleName() + " instead.");
         }
         EntitySpec<?> spec = EntitySpec.create((Class)javaType);
         serviceTypeResolver.decorateSpec(resolver, spec);

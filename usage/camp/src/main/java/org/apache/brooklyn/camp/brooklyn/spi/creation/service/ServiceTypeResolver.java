@@ -24,7 +24,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateResolver;
-import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
+import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
 
 /**
  * Resolves and decorates {@link EntitySpec entity specifications} based on the {@code serviceType} in a template.
@@ -39,7 +39,7 @@ import org.apache.brooklyn.core.resolve.ServiceSpecResolver;
  * @see BrooklynServiceTypeResolver
  * @see ChefServiceTypeResolver
  * 
- * @deprecated since 0.9.0, {@link ServiceSpecResolver} instead.
+ * @deprecated since 0.9.0, {@link EntitySpecResolver} instead.
  */
 @Deprecated
 public interface ServiceTypeResolver {

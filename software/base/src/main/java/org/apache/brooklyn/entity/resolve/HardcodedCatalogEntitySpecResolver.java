@@ -24,7 +24,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.core.resolve.AbstractServiceSpecResolver;
+import org.apache.brooklyn.core.resolve.entity.AbstractEntitySpecResolver;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.group.DynamicRegionsFabric;
@@ -35,7 +35,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 import com.google.common.collect.ImmutableMap;
 
-public class HardcodedCatalogServiceSpecResolver extends AbstractServiceSpecResolver {
+public class HardcodedCatalogEntitySpecResolver extends AbstractEntitySpecResolver {
     private static final String RESOLVER_NAME = "catalog";
 
     private static final Map<String, String> CATALOG_TYPES = ImmutableMap.<String, String>builder()
@@ -51,7 +51,7 @@ public class HardcodedCatalogServiceSpecResolver extends AbstractServiceSpecReso
     // Allow catalog-type or CatalogType as service type string
     private static final Converter<String, String> FMT = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_HYPHEN);
 
-    public HardcodedCatalogServiceSpecResolver() {
+    public HardcodedCatalogEntitySpecResolver() {
         super(RESOLVER_NAME);
     }
 

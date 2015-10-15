@@ -22,14 +22,14 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.core.resolve.AbstractServiceSpecResolver;
+import org.apache.brooklyn.core.resolve.entity.AbstractEntitySpecResolver;
 import org.apache.brooklyn.entity.chef.ChefConfig;
 import org.apache.brooklyn.entity.chef.ChefEntity;
 
-public class ChefServiceSpecResolver extends AbstractServiceSpecResolver {
+public class ChefEntitySpecResolver extends AbstractEntitySpecResolver {
     private static final String RESOLVER_NAME = "chef";
 
-    public ChefServiceSpecResolver() {
+    public ChefEntitySpecResolver() {
         super(RESOLVER_NAME);
     }
 

@@ -28,7 +28,7 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynComponentTemplateR
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
-import org.apache.brooklyn.core.resolve.AbstractServiceSpecResolver;
+import org.apache.brooklyn.core.resolve.entity.AbstractEntitySpecResolver;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * This converts {@link PlatformComponentTemplate} instances whose type is prefixed {@code brooklyn:}
  * to Brooklyn {@link EntitySpec} instances.
  * 
- * @deprecated since 0.9.0, use {@link AbstractServiceSpecResolver} instead
+ * @deprecated since 0.9.0, use {@link AbstractEntitySpecResolver} instead
  */
 @Deprecated
 public class BrooklynServiceTypeResolver implements ServiceTypeResolver {

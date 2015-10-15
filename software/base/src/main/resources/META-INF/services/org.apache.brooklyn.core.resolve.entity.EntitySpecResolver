@@ -16,5 +16,5 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-org.apache.brooklyn.entity.resolve.ChefServiceSpecResolver
-org.apache.brooklyn.entity.resolve.HardcodedCatalogServiceSpecResolver
+org.apache.brooklyn.entity.resolve.ChefEntitySpecResolver
+org.apache.brooklyn.entity.resolve.HardcodedCatalogEntitySpecResolver

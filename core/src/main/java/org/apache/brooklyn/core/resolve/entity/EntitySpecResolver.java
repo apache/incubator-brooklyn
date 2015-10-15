@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.resolve;
+package org.apache.brooklyn.core.resolve.entity;
 
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -36,7 +36,7 @@ import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
  * The resolvers are loaded using the {@link ServiceLoader} mechanism, allowing external libraries
  * to add extra service type implementations that will be picked up at runtime.
  */
-public interface ServiceSpecResolver extends ManagementContextInjectable {
+public interface EntitySpecResolver extends ManagementContextInjectable {
     /**
      * Uniquely identifies the resolver, can be used to address the same resolver at a later point in time.
      * For implementations: this usually matches the service type prefix, but not required.
@@ -56,7 +56,7 @@ public interface ServiceSpecResolver extends ManagementContextInjectable {
      * @param encounteredTypes - an immutable set of the items which are currently being resolved up the stack,
      *        used to prevent cycles. Implementations should not try to resolve the type if the symbolicName is
      *        already contained in here. When resolving a type add it to a copy of the list before
-     *        passing the new instance down the stack. See {@link CatalogServiceSpecResolver} for example usage.
+     *        passing the new instance down the stack. See {@link CatalogEntitySpecResolver} for example usage.
      *
      * @return The {@link EntitySpec} corresponding to the passed {@code type} argument, possibly pre-configured
      *         based on the information contained in {@code type}. Return {@code null} value to indicate that

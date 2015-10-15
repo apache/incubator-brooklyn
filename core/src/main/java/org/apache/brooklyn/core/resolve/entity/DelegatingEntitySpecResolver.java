@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.resolve;
+package org.apache.brooklyn.core.resolve.entity;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,24 +35,24 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
 
-public class DelegatingServiceSpecResolver extends AbstractServiceSpecResolver {
+public class DelegatingEntitySpecResolver extends AbstractEntitySpecResolver {
     private static final String RESOLVER_PREFIX_CATALOG = "catalog:";
 
     private static final String RESOLVER_PREFIX_JAVA = "java:";
 
-    private static final Logger log = LoggerFactory.getLogger(DelegatingServiceSpecResolver.class);
+    private static final Logger log = LoggerFactory.getLogger(DelegatingEntitySpecResolver.class);
 
     private static final String RESOLVER_NAME = "brooklyn";
 
-    private Collection<ServiceSpecResolver> resolvers;
+    private Collection<EntitySpecResolver> resolvers;
 
-    public DelegatingServiceSpecResolver(@Nonnull List<ServiceSpecResolver> resolvers) {
+    public DelegatingEntitySpecResolver(@Nonnull List<EntitySpecResolver> resolvers) {
         super(RESOLVER_NAME);
         this.resolvers = resolvers;
     }
 
-    protected static ImmutableList<ServiceSpecResolver> getRegisteredResolvers() {
-        return ImmutableList.copyOf(ServiceLoader.load(ServiceSpecResolver.class));
+    protected static ImmutableList<EntitySpecResolver> getRegisteredResolvers() {
+        return ImmutableList.copyOf(ServiceLoader.load(EntitySpecResolver.class));
     }
 
     @Override
@@ -63,7 +63,7 @@ public class DelegatingServiceSpecResolver extends AbstractServiceSpecResolver {
     }
 
     private boolean accepts(String prefix, String type, BrooklynClassLoadingContext loader) {
-        for (ServiceSpecResolver resolver : resolvers) {
+        for (EntitySpecResolver resolver : resolvers) {
             String localType = getLocalType(type);
             if (resolver.accepts(prefix + localType, loader)) {
                 return true;
@@ -88,14 +88,14 @@ public class DelegatingServiceSpecResolver extends AbstractServiceSpecResolver {
     }
 
     private EntitySpec<?> resolve(
-            Collection<ServiceSpecResolver> resolvers,
+            Collection<EntitySpecResolver> resolvers,
             String localType,
             BrooklynClassLoadingContext loader,
             Set<String> encounteredTypes) {
         Collection<String> resolversWhoDontSupport = new ArrayList<String>();
         Collection<Exception> otherProblemsFromResolvers = new ArrayList<Exception>();
 
-        for (ServiceSpecResolver resolver : resolvers) {
+        for (EntitySpecResolver resolver : resolvers) {
             if (resolver.accepts(localType, loader)) {
                 try {
                     EntitySpec<?> spec = resolver.resolve(localType, loader, encounteredTypes);

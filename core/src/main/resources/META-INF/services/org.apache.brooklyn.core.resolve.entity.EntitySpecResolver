@@ -16,5 +16,5 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-org.apache.brooklyn.core.resolve.CatalogServiceSpecResolver
-org.apache.brooklyn.core.resolve.JavaServiceSpecResolver
+org.apache.brooklyn.core.resolve.entity.CatalogEntitySpecResolver
+org.apache.brooklyn.core.resolve.entity.JavaEntitySpecResolver

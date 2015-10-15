@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.resolve;
+package org.apache.brooklyn.core.resolve.entity;
 
 import java.util.List;
 import java.util.Set;
@@ -29,10 +29,10 @@ import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.Reflections;
 
-public class JavaServiceSpecResolver extends AbstractServiceSpecResolver{
+public class JavaEntitySpecResolver extends AbstractEntitySpecResolver{
     private static final String RESOLVER_NAME = "java";
 
-    public JavaServiceSpecResolver() {
+    public JavaEntitySpecResolver() {
         super(RESOLVER_NAME);
     }
 

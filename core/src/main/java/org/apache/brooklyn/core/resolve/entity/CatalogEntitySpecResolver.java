@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.resolve;
+package org.apache.brooklyn.core.resolve.entity;
 
 import java.util.Set;
 
@@ -32,14 +32,12 @@ import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableSet;
-
-public class CatalogServiceSpecResolver extends AbstractServiceSpecResolver {
-    private static final Logger log = LoggerFactory.getLogger(CatalogServiceSpecResolver.class);
+public class CatalogEntitySpecResolver extends AbstractEntitySpecResolver {
+    private static final Logger log = LoggerFactory.getLogger(CatalogEntitySpecResolver.class);
 
     private static final String RESOLVER_NAME = "catalog";
 
-    public CatalogServiceSpecResolver() {
+    public CatalogEntitySpecResolver() {
         super(RESOLVER_NAME);
     }
 
