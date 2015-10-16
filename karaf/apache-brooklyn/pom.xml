@@ -114,6 +114,7 @@
             <bootFeature>wrap</bootFeature>
             <!-- brooklyn features -->
             <bootFeature>brooklyn-core</bootFeature>
+            <bootFeature>brooklyn-rest-api</bootFeature>
           </bootFeatures>
         </configuration>
       </plugin>
