@@ -161,6 +161,10 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
     ConfigKey<Integer> NUM_AVAILABILITY_ZONES = ConfigKeys.newIntegerConfigKey(
             "dynamiccluster.numAvailabilityZones", "number of availability zones to use (will attempt to auto-discover this number)");
 
+    @SetFromFlag("clusterMemberId")
+    ConfigKey<Integer> CLUSTER_MEMBER_ID = ConfigKeys.newIntegerConfigKey(
+            "cluster.member.id", "The unique ID number (sequential) of a member of a cluster");
+
     AttributeSensor<List<Location>> SUB_LOCATIONS = new BasicAttributeSensor<List<Location>>(
             new TypeToken<List<Location>>() {},
             "dynamiccluster.subLocations", "Locations for each availability zone to use");
