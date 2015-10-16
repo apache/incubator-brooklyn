@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.location.OsDetails;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.effector.EffectorTasks;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Attributes;
@@ -44,6 +45,7 @@ import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -163,18 +165,32 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         // launch, then we will configure it
         launch();
 
-        CountdownTimer timer = Duration.seconds(20).countdownTimer();
-        boolean hasCreationScript = copyDatabaseCreationScript();
-        timer.waitForExpiryUnchecked();
+        // Wrap in inessential task to allow the stop step to execute even if any of the nested
+        // tasks fail - poor man's try-catch for tasks.
+        Task<Void> configTask = DynamicTasks.<Void>queue("execute scripts", new Runnable() {
+            @Override
+            public void run() {
+                Tasks.markInessential();
+                CountdownTimer timer = Duration.seconds(20).countdownTimer();
+                boolean hasCreationScript = copyDatabaseCreationScript();
+                timer.waitForExpiryUnchecked();
 
-        changePassword("", getPassword());
+                changePassword("", getPassword());
 
-        if (hasCreationScript)
-            executeScriptFromInstalledFileAsync("creation-script.sql").asTask().getUnchecked();
+                if (hasCreationScript)
+                    executeScriptFromInstalledFileAsync("creation-script.sql").asTask().getUnchecked();
+            }
+        });
 
         // not sure necessary to stop then subsequently launch, but seems safest
         // (if skipping, use a flag in launch to indicate we've just launched it)
         stop();
+
+        // Fail if any of the tasks above failed, they are marked inessential so the
+        // errors don't propagate automatically.
+        if (configTask.isError()) {
+            configTask.getUnchecked();
+        }
     }
 
     @Override
