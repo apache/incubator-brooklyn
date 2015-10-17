@@ -30,11 +30,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.sensor.AttributeMap;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -53,16 +54,17 @@ public class AttributeMapTest {
     final int NUM_TASKS = Math.min(500 * Runtime.getRuntime().availableProcessors(), 1000);
 
     Application app;
-    TestEntityImpl entity;
+    TestEntity entity;
+    TestEntityImpl entityImpl;
     AttributeMap map;
     ExecutorService executor;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         app = TestApplication.Factory.newManagedInstanceForTests();
-        entity = new TestEntityImpl(app);
-        map = new AttributeMap(entity, Collections.synchronizedMap(MutableMap.<Collection<String>,Object>of()));
-        Entities.manage(entity);
+        TestEntity entity = app.addChild(EntitySpec.create(TestEntity.class));
+        entityImpl = (TestEntityImpl) Entities.deproxy(entity);
+        map = new AttributeMap(entityImpl, Collections.synchronizedMap(MutableMap.<Collection<String>,Object>of()));
         executor = Executors.newCachedThreadPool();
     }
     
@@ -189,7 +191,7 @@ public class AttributeMapTest {
         AttributeSensor<Integer> childSensor = Sensors.newIntegerSensor("a.b", "");
         
         final RecordingSensorEventListener<Object> listener = new RecordingSensorEventListener<>();
-        entity.subscriptions().subscribe(entity, sensor, listener);
+        entityImpl.subscriptions().subscribe(entityImpl, sensor, listener);
         
         map.modify(childSensor, Functions.constant(Maybe.<Integer>absent()));
         

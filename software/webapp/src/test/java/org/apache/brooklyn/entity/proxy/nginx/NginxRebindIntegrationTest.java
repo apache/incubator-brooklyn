@@ -34,7 +34,6 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
@@ -238,12 +237,10 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("war", getTestWar()))
                 .configure("initialSize", 1)); 
 
-        UrlMapping origMapping = origApp.getManagementContext().getEntityManager().createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping origMapping = origUrlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
                 .configure("target", origServerPool)
-                .configure("rewrites", ImmutableList.of(new UrlRewriteRule("/foo/(.*)", "/$1")))
-                .parent(origUrlMappingsGroup));
-        Entities.manage(origMapping);
+                .configure("rewrites", ImmutableList.of(new UrlRewriteRule("/foo/(.*)", "/$1"))));
         
         NginxController origNginx = origApp.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("domain", "localhost")

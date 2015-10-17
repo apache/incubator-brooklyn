@@ -177,8 +177,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         app.config().set(HelloEntity.MY_NAME, "Bob");
         
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
-        HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class).parent(dad));
-        Entities.manage(son);
+        HelloEntity son = dad.addChild(EntitySpec.create(HelloEntity.class));
         
         //config is inherited
         assertEquals("Bob", app.getConfig(HelloEntity.MY_NAME));
@@ -195,13 +194,11 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         app.config().set(HelloEntity.MY_NAME, "Bob");
         
         final HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
-        final HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
-                .parent(dad)
+        final HelloEntity son = dad.addChild(EntitySpec.create(HelloEntity.class)
                 .configure(HelloEntity.MY_NAME, attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME
                         /* third param is closure; defaults to groovy truth (see google), but could be e.g.
                            , { it!=null && it.length()>0 && it!="Jebediah" }
                          */ )));
-        Entities.manage(son);
         
         app.start(ImmutableList.of(loc));
          
@@ -247,13 +244,11 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         app.config().set(HelloEntity.MY_NAME, "Bob");
         
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
-        HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
-                .parent(dad)
+        HelloEntity son = dad.addChild(EntitySpec.create(HelloEntity.class)
                 .configure(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME), new Function<String,String>() {
                     public String apply(String input) {
                         return input+input.charAt(input.length()-1)+"y";
                     }})));
-        Entities.manage(son);
         
         app.start(ImmutableList.of(loc));
         ((EntityLocal)dad).sensors().set(HelloEntity.FAVOURITE_NAME, "Dan");
@@ -266,13 +261,11 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         // the unnecessary (HelloEntity) cast is required as a work-around to an IntelliJ issue that prevents Brooklyn from launching from the IDE
-        HelloEntity son = (HelloEntity)entityManager.createEntity(EntitySpec.create(HelloEntity.class)
-                .parent(dad)
+        HelloEntity son = (HelloEntity) dad.addChild(EntitySpec.create(HelloEntity.class)
                 .configure(HelloEntity.MY_NAME, transform(attributeWhenReady(dad, HelloEntity.FAVOURITE_NAME, (Closure)null), new Function<String,String>() {
                     public String apply(String input) {
                         return input+input.charAt(input.length()-1)+"y";
                     }})));
-        Entities.manage(son);
         
         app.start(ImmutableList.of(loc));
         ((EntityLocal)dad).sensors().set(HelloEntity.FAVOURITE_NAME, "Dan");

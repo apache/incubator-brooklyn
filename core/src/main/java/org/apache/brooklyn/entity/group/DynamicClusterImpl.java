@@ -293,7 +293,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             QuarantineGroup quarantineGroup = getAttribute(QUARANTINE_GROUP);
             if (quarantineGroup==null || !Entities.isManaged(quarantineGroup)) {
                 quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
-                Entities.manage(quarantineGroup);
                 sensors().set(QUARANTINE_GROUP, quarantineGroup);
             }
         }
@@ -770,12 +769,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] { this, getId(), createFlags });
         }
 
+        // TODO should refactor to have a createNodeSpec; and spec should support initial sensor values 
         Entity entity = createNode(loc, createFlags);
 
         entity.sensors().set(CLUSTER_MEMBER, true);
         entity.sensors().set(CLUSTER, this);
 
+        // Continue to call manage(), because some uses of NodeFactory (in tests) still instantiate the
+        // entity via its constructor
         Entities.manage(entity);
+        
         addMember(entity);
         return entity;
     }

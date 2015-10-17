@@ -152,7 +152,6 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                         DelegateEntity child = addChild(EntitySpec.create(DelegateEntity.class)
                                 .configure(DelegateEntity.DELEGATE_ENTITY, member)
                                 .displayName(String.format(nameFormat, member.getDisplayName())));
-                        Entities.manage(child);
                     }
                 }
 

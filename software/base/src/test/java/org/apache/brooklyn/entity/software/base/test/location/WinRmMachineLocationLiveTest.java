@@ -101,6 +101,9 @@ public class WinRmMachineLocationLiveTest {
         
         loc = WindowsTestFixture.setUpWindowsLocation(mgmt);
         machine = loc.obtain(ImmutableMap.of());
+        
+        LOG.info("PROVISIONED: "+machine.getAddress()+":"+machine.config().get(WinRmMachineLocation.WINRM_PORT)
+                +", "+machine.getUser()+":"+machine.config().get(WinRmMachineLocation.PASSWORD));
     }
     
     @AfterClass(alwaysRun=true)

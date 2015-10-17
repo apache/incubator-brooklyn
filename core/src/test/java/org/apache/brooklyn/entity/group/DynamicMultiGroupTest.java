@@ -85,8 +85,6 @@ public class DynamicMultiGroupTest {
         EntitySpec<TestEntity> childSpec = EntitySpec.create(TestEntity.class);
         TestEntity child1 = group.addChild(EntitySpec.create(childSpec).displayName("child1"));
         TestEntity child2 = group.addChild(EntitySpec.create(childSpec).displayName("child2"));
-        Entities.manage(child1);
-        Entities.manage(child2);
 
         checkDistribution(group, dmg, childSpec, child1, child2);
     }
@@ -104,8 +102,6 @@ public class DynamicMultiGroupTest {
         EntitySpec<TestEntity> childSpec = EntitySpec.create(TestEntity.class);
         TestEntity child1 = group.addChild(EntitySpec.create(childSpec).displayName("child1"));
         TestEntity child2 = group.addChild(EntitySpec.create(childSpec).displayName("child2"));
-        Entities.manage(child1);
-        Entities.manage(child2);
         
         checkDistribution(group, dmg, childSpec, child1, child2);
     }
@@ -186,7 +182,6 @@ public class DynamicMultiGroupTest {
 
         // Add new child 3, associated with new bucket C
         final TestEntity child3 = group.addChild(EntitySpec.create(childSpec).displayName("child3"));
-        Entities.manage(child3);
         child3.sensors().set(SENSOR, "bucketC");
         Asserts.succeedsEventually(new Runnable() {
             public void run() {

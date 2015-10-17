@@ -348,9 +348,7 @@ public class DynamicFabricTest extends BrooklynAppUnitTestSupport {
 
         fabric.start(ImmutableList.of(loc1));
         
-        BasicEntity extraChild = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(BasicEntity.class)
-                .parent(fabric));
-        Entities.manage(extraChild);
+        BasicEntity extraChild = fabric.addChild(EntitySpec.create(BasicEntity.class));
 
         fabric.stop();
     }

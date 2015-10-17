@@ -126,7 +126,6 @@ public class EntityConfigMapUsageTest extends BrooklynAppUnitTestSupport {
         TestEntity entity = app.addChild(EntitySpec.create(TestEntity.class));
         ((EntityLocal)entity).config().set(strKey, "aval");
         ((EntityLocal)entity).config().set(intKey, 2);
-        Entities.manage(entity);
         
         assertEquals(entity.getConfig(strKey), "aval");
         assertEquals(entity.getConfig(intKey), (Integer)2);
@@ -137,7 +136,6 @@ public class EntityConfigMapUsageTest extends BrooklynAppUnitTestSupport {
         TestEntity parent = app.addChild(EntitySpec.create(TestEntity.class)
                 .configure(strKey, "aval"));
         ((EntityLocal)parent).config().set(intKey, 2);
-        Entities.manage(parent);
         TestEntity entity = parent.createAndManageChild(EntitySpec.create(TestEntity.class));
         
         assertEquals(entity.getConfig(strKey), "aval");
@@ -169,17 +167,15 @@ public class EntityConfigMapUsageTest extends BrooklynAppUnitTestSupport {
         TestEntity entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
                 .configure(strKey, "aval"));
         ((EntityLocal)entity).config().set(strKey, "diffval");
-        Entities.manage(entity);
         
         assertEquals(entity.getConfig(strKey), "diffval");
     }
 
     @Test
-    public void testConfigSetOnParentInheritedByExistingChildrenBeforeStarted() throws Exception {
+    public void testConfigSetOnParentInheritedByExistingChildren() throws Exception {
         TestEntity parent = app.addChild(EntitySpec.create(TestEntity.class));
         TestEntity entity = parent.createChild(EntitySpec.create(TestEntity.class));
         ((EntityLocal)parent).config().set(strKey,"aval");
-        Entities.manage(entity);
         
         assertEquals(entity.getConfig(strKey), "aval");
     }

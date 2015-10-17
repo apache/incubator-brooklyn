@@ -63,7 +63,11 @@ import com.google.common.annotations.Beta;
  * </pre>
  * 
  * @author aled
+ * 
+ * @deprecated since 0.9.0; use {@link EntitySpec} and {@link EntityManager#createEntity(EntitySpec)}, having 
+ *             added the children to the spec etc.
  */
+@Deprecated
 @Beta
 public abstract class ApplicationBuilder {
 
@@ -213,8 +217,8 @@ public abstract class ApplicationBuilder {
         }
         try {
             checkNotManaged();
-            this.app = managementContext.getEntityManager().createEntity(appSpec);
             this.managementContext = managementContext;
+            this.app = managementContext.getEntityManager().createEntity(appSpec);
             doBuild();
             Entities.startManagement(app, managementContext);
             managed = true;
