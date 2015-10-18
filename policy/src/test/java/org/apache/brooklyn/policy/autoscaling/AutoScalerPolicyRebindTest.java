@@ -68,7 +68,7 @@ public class AutoScalerPolicyRebindTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testRestoresAutoScalerConfig() throws Exception {
-        origCluster.addPolicy(AutoScalerPolicy.builder()
+        origCluster.policies().add(AutoScalerPolicy.builder()
                 .name("myname")
                 .metric(METRIC_SENSOR)
                 .entityWithMetric(origCluster)
@@ -88,7 +88,7 @@ public class AutoScalerPolicyRebindTest extends RebindTestFixtureWithApp {
         
         TestApplication newApp = rebind();
         DynamicCluster newCluster = (DynamicCluster) Iterables.getOnlyElement(newApp.getChildren());
-        AutoScalerPolicy newPolicy = (AutoScalerPolicy) Iterables.getOnlyElement(newCluster.getPolicies());
+        AutoScalerPolicy newPolicy = (AutoScalerPolicy) Iterables.getOnlyElement(newCluster.policies());
 
         assertEquals(newPolicy.getDisplayName(), "myname");
         assertEquals(newPolicy.getConfig(AutoScalerPolicy.METRIC), METRIC_SENSOR);
@@ -110,7 +110,7 @@ public class AutoScalerPolicyRebindTest extends RebindTestFixtureWithApp {
     @Test
     public void testAutoScalerResizesAfterRebind() throws Exception {
         origCluster.start(ImmutableList.of(origLoc));
-        origCluster.addPolicy(AutoScalerPolicy.builder()
+        origCluster.policies().add(AutoScalerPolicy.builder()
                 .name("myname")
                 .metric(METRIC_SENSOR)
                 .entityWithMetric(origCluster)
@@ -125,10 +125,10 @@ public class AutoScalerPolicyRebindTest extends RebindTestFixtureWithApp {
 
         assertEquals(newCluster.getCurrentSize(), (Integer)1);
         
-        ((EntityInternal)newCluster).setAttribute(METRIC_SENSOR, 1000);
+        ((EntityInternal)newCluster).sensors().set(METRIC_SENSOR, 1000);
         EntityTestUtils.assertGroupSizeEqualsEventually(newCluster, 3);
         
-        ((EntityInternal)newCluster).setAttribute(METRIC_SENSOR, 1);
+        ((EntityInternal)newCluster).sensors().set(METRIC_SENSOR, 1);
         EntityTestUtils.assertGroupSizeEqualsEventually(newCluster, 1);
     }
 }

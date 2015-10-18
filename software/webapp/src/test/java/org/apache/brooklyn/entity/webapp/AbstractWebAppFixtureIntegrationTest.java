@@ -369,11 +369,10 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         SubscriptionHandle subscriptionHandle = null;
-        SubscriptionContext subContext = ((EntityInternal)entity).getSubscriptionContext();
 
         try {
             final List<SensorEvent> events = new CopyOnWriteArrayList<SensorEvent>();
-            subscriptionHandle = subContext.subscribe(entity, WebAppService.REQUESTS_PER_SECOND_IN_WINDOW, new SensorEventListener<Double>() {
+            subscriptionHandle = entity.subscriptions().subscribe(entity, WebAppService.REQUESTS_PER_SECOND_IN_WINDOW, new SensorEventListener<Double>() {
                 public void onEvent(SensorEvent<Double> event) {
                     log.info("publishesRequestsPerSecondMetricRepeatedly.onEvent: {}", event);
                     events.add(event);
@@ -395,7 +394,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
                     }
                 }});
         } finally {
-            if (subscriptionHandle != null) subContext.unsubscribe(subscriptionHandle);
+            if (subscriptionHandle != null) entity.subscriptions().unsubscribe(subscriptionHandle);
             entity.stop();
         }
     }
@@ -438,7 +437,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
-        ((EntityLocal)entity).setConfig(JavaWebAppService.ROOT_WAR, resource.toString());
+        ((EntityLocal)entity).config().set(JavaWebAppService.ROOT_WAR, resource.toString());
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
         
         //tomcat may need a while to unpack everything
@@ -460,7 +459,7 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         URL resource = getClass().getClassLoader().getResource(war);
         assertNotNull(resource);
         
-        ((EntityLocal)entity).setConfig(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.toString()));
+        ((EntityLocal)entity).config().set(JavaWebAppService.NAMED_WARS, ImmutableList.of(resource.toString()));
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
 
         Asserts.succeedsEventually(MutableMap.of("timeout", 60*1000), new Runnable() {

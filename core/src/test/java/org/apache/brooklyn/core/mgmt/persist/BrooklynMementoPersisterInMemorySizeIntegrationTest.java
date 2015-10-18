@@ -76,7 +76,7 @@ public class BrooklynMementoPersisterInMemorySizeIntegrationTest extends Brookly
         Assert.assertTrue(out1<30*1000, "should have written less than 30k, wrote "+out1);
         Assert.assertTrue(filesOut1<30, "should have written fewer than 30 files, wrote "+out1);
         
-        ((EntityInternal)app).setAttribute(TestEntity.NAME, "hello world");
+        ((EntityInternal)app).sensors().set(TestEntity.NAME, "hello world");
         if (forceDelay) Time.sleep(Duration.FIVE_SECONDS);
         else recorder.blockUntilDataWrittenExceeds(out1+10, Duration.FIVE_SECONDS);
         localManagementContext.getRebindManager().waitForPendingComplete(Duration.FIVE_SECONDS, canTrigger);
@@ -89,7 +89,7 @@ public class BrooklynMementoPersisterInMemorySizeIntegrationTest extends Brookly
         Assert.assertTrue(out2<50*1000, "should have written less than 50k, wrote "+out1);
         Assert.assertTrue(filesOut2<40, "should have written fewer than 40 files, wrote "+out1);
         
-        ((EntityInternal)entity).setAttribute(TestEntity.NAME, Identifiers.makeRandomId(bigBlockSize));
+        ((EntityInternal)entity).sensors().set(TestEntity.NAME, Identifiers.makeRandomId(bigBlockSize));
         if (forceDelay) Time.sleep(Duration.FIVE_SECONDS);
         else recorder.blockUntilDataWrittenExceeds(out2+bigBlockSize, Duration.FIVE_SECONDS);
         localManagementContext.getRebindManager().waitForPendingComplete(Duration.FIVE_SECONDS, canTrigger);

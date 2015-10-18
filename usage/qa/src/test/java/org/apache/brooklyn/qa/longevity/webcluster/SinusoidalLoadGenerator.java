@@ -72,7 +72,7 @@ public class SinusoidalLoadGenerator extends AbstractEnricher {
                 try {
                     long time = System.currentTimeMillis();
                     double val = getRequiredConfig(SIN_AMPLITUDE) * (1 + Math.sin( (1.0*time) / getRequiredConfig(SIN_PERIOD_MS) * Math.PI * 2  - Math.PI/2 )) / 2;
-                    entity.setAttribute(getRequiredConfig(TARGET), val);
+                    entity.sensors().set(getRequiredConfig(TARGET), val);
                 } catch (Throwable t) {
                     LOG.warn("Error generating sinusoidal-load metric", t);
                     throw Throwables.propagate(t);

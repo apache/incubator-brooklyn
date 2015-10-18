@@ -64,7 +64,7 @@ public class HighAvailabilityManagerInMemoryTest extends HighAvailabilityManager
         TestApplication app = TestApplication.Factory.newManagedInstanceForTests(managementContext);
         
         LocalhostMachineProvisioningLocation l = app.newLocalhostProvisioningLocation();
-        l.setConfig(TestEntity.CONF_NAME, "sample1");
+        l.config().set(TestEntity.CONF_NAME, "sample1");
         Assert.assertEquals(l.getConfig(TestEntity.CONF_NAME), "sample1");
         
         SshMachineLocation l2 = l.obtain();

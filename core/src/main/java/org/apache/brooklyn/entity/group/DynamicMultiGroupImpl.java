@@ -92,7 +92,7 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
     @Override
     public void init() {
         super.init();
-        setAttribute(BUCKETS, ImmutableMap.<String, BasicGroup>of());
+        sensors().set(BUCKETS, ImmutableMap.<String, BasicGroup>of());
         connectScanner();
     }
 
@@ -196,7 +196,7 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
             }
 
             // Save the bucket mappings
-            setAttribute(BUCKETS, ImmutableMap.copyOf(buckets));
+            sensors().set(BUCKETS, ImmutableMap.copyOf(buckets));
         }
     }
 

@@ -64,14 +64,14 @@ public class EntityPredicatesTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testAttributeEqualTo() throws Exception {
-        entity.setAttribute(TestEntity.NAME, "myname");
+        entity.sensors().set(TestEntity.NAME, "myname");
         assertTrue(EntityPredicates.attributeEqualTo(TestEntity.NAME, "myname").apply(entity));
         assertFalse(EntityPredicates.attributeEqualTo(TestEntity.NAME, "wrongname").apply(entity));
     }
     
     @Test
     public void testConfigEqualTo() throws Exception {
-        entity.setConfig(TestEntity.CONF_NAME, "myname");
+        entity.config().set(TestEntity.CONF_NAME, "myname");
         assertTrue(EntityPredicates.configEqualTo(TestEntity.CONF_NAME, "myname").apply(entity));
         assertFalse(EntityPredicates.configEqualTo(TestEntity.CONF_NAME, "wrongname").apply(entity));
     }

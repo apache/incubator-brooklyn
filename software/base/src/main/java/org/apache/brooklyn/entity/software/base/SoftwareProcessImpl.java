@@ -108,7 +108,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
     protected void setProvisioningLocation(MachineProvisioningLocation val) {
         if (getAttribute(PROVISIONING_LOCATION) != null) throw new IllegalStateException("Cannot change provisioning location: existing="+getAttribute(PROVISIONING_LOCATION)+"; new="+val);
-        setAttribute(PROVISIONING_LOCATION, val);
+        sensors().set(PROVISIONING_LOCATION, val);
     }
     
     protected MachineProvisioningLocation getProvisioningLocation() {
@@ -140,8 +140,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         super.initEnrichers();
         ServiceNotUpLogic.updateNotUpIndicator(this, SERVICE_PROCESS_IS_RUNNING, "No information yet on whether this service is running");
         // add an indicator above so that if is_running comes through, the map is cleared and an update is guaranteed
-        addEnricher(EnricherSpec.create(UpdatingNotUpFromServiceProcessIsRunning.class).uniqueTag("service-process-is-running-updating-not-up"));
-        addEnricher(EnricherSpec.create(ServiceNotUpDiagnosticsCollector.class).uniqueTag("service-not-up-diagnostics-collector"));
+        enrichers().add(EnricherSpec.create(UpdatingNotUpFromServiceProcessIsRunning.class).uniqueTag("service-process-is-running-updating-not-up"));
+        enrichers().add(EnricherSpec.create(ServiceNotUpDiagnosticsCollector.class).uniqueTag("service-not-up-diagnostics-collector"));
     }
     
     /**
@@ -157,8 +157,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             if (!(entity instanceof SoftwareProcess)) {
                 throw new IllegalArgumentException("Expected SoftwareProcess, but got entity "+entity);
             }
-            subscribe(entity, Attributes.SERVICE_UP, this);
-            onUpdated();
+            subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, Attributes.SERVICE_STATE_ACTUAL, this);
+            subscriptions().subscribe(ImmutableMap.of("notifyOfInitialValue", true), entity, Attributes.SERVICE_UP, this);
         }
 
         @Override
@@ -168,8 +168,14 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
 
         protected void onUpdated() {
             Boolean up = entity.getAttribute(SERVICE_UP);
+            Lifecycle state = entity.getAttribute(SERVICE_STATE_ACTUAL);
             if (up == null || up) {
-                entity.setAttribute(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
+                entity.sensors().set(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
+            } else if (state == null || state == Lifecycle.CREATED) {
+                // not yet started; do nothing
+            } else if (state == Lifecycle.STOPPING || state == Lifecycle.STOPPED || state == Lifecycle.DESTROYED) {
+                // stopping/stopped, so expect not to be up; get rid of the diagnostics.
+                entity.sensors().set(ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, ImmutableMap.<String, Object>of());
             } else {
                 ((SoftwareProcess)entity).populateServiceNotUpDiagnostics();
             }
@@ -214,8 +220,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         @Override
         public void setEntity(EntityLocal entity) {
             super.setEntity(entity);
-            subscribe(entity, SERVICE_PROCESS_IS_RUNNING, this);
-            subscribe(entity, Attributes.SERVICE_UP, this);
+            subscriptions().subscribe(entity, SERVICE_PROCESS_IS_RUNNING, this);
+            subscriptions().subscribe(entity, Attributes.SERVICE_UP, this);
             onUpdated();
         }
 
@@ -305,8 +311,8 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         if (serviceProcessIsRunning != null) serviceProcessIsRunning.stop();
         // set null so the SERVICE_UP enricher runs (possibly removing it), then remove so everything is removed
         // TODO race because the is-running check may be mid-task
-        setAttribute(SERVICE_PROCESS_IS_RUNNING, null);
-        removeAttribute(SERVICE_PROCESS_IS_RUNNING);
+        sensors().set(SERVICE_PROCESS_IS_RUNNING, null);
+        sensors().remove(SERVICE_PROCESS_IS_RUNNING);
     }
 
     /**
@@ -333,7 +339,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         // TODO Is there a race where disconnectSensors could leave a task of the feeds still running
         // which could set serviceProcessIsRunning to true again before the task completes and the feed
         // is fully terminated?
-        setAttribute(SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, false);
+        sensors().set(SoftwareProcess.SERVICE_PROCESS_IS_RUNNING, false);
     }
 
     /**
@@ -399,10 +405,10 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         Lifecycle state = getAttribute(SERVICE_STATE_ACTUAL);
         if (state == null || state == Lifecycle.CREATED) {
             // Expect this is a normal start() sequence (i.e. start() will subsequently be called)
-            setAttribute(SERVICE_UP, false);
+            sensors().set(SERVICE_UP, false);
             ServiceStateLogic.setExpectedState(this, Lifecycle.CREATED);
             // force actual to be created because this is expected subsequently
-            setAttribute(SERVICE_STATE_ACTUAL, Lifecycle.CREATED);
+            sensors().set(SERVICE_STATE_ACTUAL, Lifecycle.CREATED);
         }
     }
     

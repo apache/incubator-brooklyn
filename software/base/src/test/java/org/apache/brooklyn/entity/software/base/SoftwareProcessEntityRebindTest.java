@@ -101,7 +101,7 @@ public class SoftwareProcessEntityRebindTest extends BrooklynAppUnitTestSupport 
     public void testCreatesDriverAfterRebind() throws Exception {
         origE = app.createAndManageChild(EntitySpec.create(MyService.class));
         //the entity skips enricher initialization, do it explicitly
-        origE.addEnricher(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
+        origE.enrichers().add(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
 
         MyProvisioningLocation origLoc = mgmt.getLocationManager().createLocation(LocationSpec.create(MyProvisioningLocation.class)
                 .displayName("mylocname"));
@@ -121,7 +121,7 @@ public class SoftwareProcessEntityRebindTest extends BrooklynAppUnitTestSupport 
     public void testDoesNotCreateDriverAfterRebind() throws Exception {
         origE = app.createAndManageChild(EntitySpec.create(MyService.class));
         //the entity skips enricher initialization, do it explicitly
-        origE.addEnricher(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
+        origE.enrichers().add(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
         
         MyProvisioningLocation origLoc = mgmt.getLocationManager().createLocation(LocationSpec.create(MyProvisioningLocation.class)
                 .displayName("mylocname"));

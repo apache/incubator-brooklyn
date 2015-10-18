@@ -150,8 +150,8 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         MockItemEntity item1 = newItem(app, containerA, "1", 0);
         MockItemEntity item2 = newItem(app, containerA, "2", 0);
 
-        ((EntityLocal)item1).setAttribute(MockItemEntity.TEST_METRIC, 40);
-        ((EntityLocal)item2).setAttribute(MockItemEntity.TEST_METRIC, 40);
+        item1.sensors().set(MockItemEntity.TEST_METRIC, 40);
+        item2.sensors().set(MockItemEntity.TEST_METRIC, 40);
         
         assertWorkratesEventually(
                 ImmutableList.of(containerA, containerB), 
@@ -305,7 +305,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testModelIncludesItemsAndContainersStartedBeforePolicyCreated() {
-        pool.removePolicy(policy);
+        pool.policies().remove(policy);
         policy.destroy();
         
         // Set-up containers and items.
@@ -313,7 +313,7 @@ public class LoadBalancingPolicyTest extends AbstractLoadBalancingPolicyTest {
         newItem(app, containerA, "1", 10);
 
         policy = new LoadBalancingPolicy(MutableMap.of(), TEST_METRIC, model);
-        pool.addPolicy(policy);
+        pool.policies().add(policy);
         
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {

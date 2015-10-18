@@ -517,25 +517,25 @@ public class CassandraNodeImpl extends SoftwareProcessImpl implements CassandraN
     protected void connectEnrichers(Duration windowPeriod) {
         JavaAppUtils.connectJavaAppServerPolicies(this);
 
-        addEnricher(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, READ_COMPLETED, READS_PER_SECOND_LAST));
-        addEnricher(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, WRITE_COMPLETED, WRITES_PER_SECOND_LAST));
+        enrichers().add(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, READ_COMPLETED, READS_PER_SECOND_LAST));
+        enrichers().add(TimeWeightedDeltaEnricher.<Long>getPerSecondDeltaEnricher(this, WRITE_COMPLETED, WRITES_PER_SECOND_LAST));
         
         if (windowPeriod!=null) {
-            addEnricher(new RollingTimeWindowMeanEnricher<Long>(this, THRIFT_PORT_LATENCY, 
+            enrichers().add(new RollingTimeWindowMeanEnricher<Long>(this, THRIFT_PORT_LATENCY, 
                     THRIFT_PORT_LATENCY_IN_WINDOW, windowPeriod));
-            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, READS_PER_SECOND_LAST, 
+            enrichers().add(new RollingTimeWindowMeanEnricher<Double>(this, READS_PER_SECOND_LAST, 
                     READS_PER_SECOND_IN_WINDOW, windowPeriod));
-            addEnricher(new RollingTimeWindowMeanEnricher<Double>(this, WRITES_PER_SECOND_LAST, 
+            enrichers().add(new RollingTimeWindowMeanEnricher<Double>(this, WRITES_PER_SECOND_LAST, 
                     WRITES_PER_SECOND_IN_WINDOW, windowPeriod));
         }
         
         // service-up checks
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+        enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
                 .from(THRIFT_PORT_LATENCY)
                 .computing(Functionals.ifEquals(-1L).value("Thrift latency polling failed") )
                 .build());
         
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+        enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
                 .from(SERVICE_UP_JMX)
                 .computing(Functionals.ifEquals(false).value("JMX reports not up") )
                 .build());

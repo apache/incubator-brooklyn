@@ -54,7 +54,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
         Entities.dumpInfo(app);
 
         Assert.assertEquals(app.getPolicies().size(), 1);
-        Policy policy = app.getPolicies().iterator().next();
+        Policy policy = app.policies().iterator().next();
         Assert.assertTrue(policy instanceof TestPolicy);
         Assert.assertEquals(policy.getConfig(TestPolicy.CONF_NAME), "Name from YAML");
         Assert.assertEquals(policy.getConfig(TestPolicy.CONF_FROM_FUNCTION), "$brooklyn: is a fun place");
@@ -77,7 +77,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity child = app.getChildren().iterator().next();
         Assert.assertEquals(child.getPolicies().size(), 1);
-        Policy policy = child.getPolicies().iterator().next();
+        Policy policy = child.policies().iterator().next();
         Assert.assertNotNull(policy);
         Assert.assertTrue(policy instanceof TestPolicy, "policy=" + policy + "; type=" + policy.getClass());
         Assert.assertEquals(policy.getConfig(TestPolicy.CONF_NAME), "Name from YAML");
@@ -118,7 +118,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
             }
         }, Predicates.<Integer> equalTo(1));
         
-        Policy policy = child.getPolicies().iterator().next();
+        Policy policy = child.policies().iterator().next();
         Assert.assertTrue(policy instanceof TestPolicy);
         Assert.assertEquals(policy.getConfig(TestPolicy.TEST_ATTRIBUTE_SENSOR), TestEntity.NAME);
     }
@@ -201,7 +201,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
     
     private Policy getPolicy(Entity entity) {
         Assert.assertEquals(entity.getPolicies().size(), 1);
-        Policy policy = entity.getPolicies().iterator().next();
+        Policy policy = entity.policies().iterator().next();
         Assert.assertTrue(policy instanceof TestReferencingPolicy);
         return policy;
     }

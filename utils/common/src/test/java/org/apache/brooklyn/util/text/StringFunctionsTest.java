@@ -18,9 +18,11 @@
  */
 package org.apache.brooklyn.util.text;
 
-import org.apache.brooklyn.util.text.StringFunctions;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.google.common.base.CaseFormat;
+import com.google.common.collect.ImmutableList;
 
 public class StringFunctionsTest {
 
@@ -37,6 +39,19 @@ public class StringFunctionsTest {
     @Test
     public static void testFormatterForArray() {
         Assert.assertEquals(StringFunctions.formatterForArray("Hello %s").apply(new Object[] { "World" }), "Hello World");
+        Assert.assertEquals(StringFunctions.formatterForArray("Hello").apply(new Object[0]), "Hello");
+    }
+    
+    @Test
+    public static void testFormatterForArrayMulti() {
+        Assert.assertEquals(StringFunctions.formatterForArray("1 %s 2 %s").apply(new Object[] {"val1", "val2"}), "1 val1 2 val2");
+    }
+
+    @Test
+    public static void testFormatterForIterable() {
+        Assert.assertEquals(StringFunctions.formatterForIterable("Hello %s").apply(ImmutableList.of("World")), "Hello World");
+        Assert.assertEquals(StringFunctions.formatterForIterable("Hello").apply(ImmutableList.of()), "Hello");
+        Assert.assertEquals(StringFunctions.formatterForIterable("Hello").apply(null), "Hello");
     }
     
     @Test
@@ -54,4 +69,28 @@ public class StringFunctionsTest {
         Assert.assertEquals(StringFunctions.toUpperCase().apply("Hello World"), "HELLO WORLD");
     }
     
+    @Test
+    public static void testConvertCase() {
+        Assert.assertEquals(StringFunctions.convertCase(CaseFormat.UPPER_UNDERSCORE, CaseFormat.UPPER_CAMEL).apply("HELLO_WORLD"), "HelloWorld");
+    }
+    
+    @Test
+    public static void testJoiner() {
+        Assert.assertEquals(StringFunctions.joiner(",").apply(ImmutableList.of("a", "b", "c")), "a,b,c");
+    }
+    
+    @Test
+    public static void testJoinerForArray() {
+        Assert.assertEquals(StringFunctions.joinerForArray(",").apply(new Object[] {"a", "b", "c"}), "a,b,c");
+    }
+    
+    @Test
+    public static void testLength() {
+        Assert.assertEquals(StringFunctions.length().apply("abc"), (Integer)3);
+    }
+    
+    @Test
+    public static void testTrim() {
+        Assert.assertEquals(StringFunctions.trim().apply(" abc "), "abc");
+    }
 }

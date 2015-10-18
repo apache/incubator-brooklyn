@@ -187,8 +187,8 @@ public class PortForwardManagerRebindTest extends RebindTestFixtureWithApp {
             
             if (getConfig(PORT_FORWARD_MANAGER) == null) {
                 PortForwardManager pfm = (PortForwardManager) getManagementContext().getLocationRegistry().resolve("portForwardManager(scope=global)");
-                setAttribute(PORT_FORWARD_MANAGER_LIVE, pfm);
-                setConfig(PORT_FORWARD_MANAGER, pfm);
+                sensors().set(PORT_FORWARD_MANAGER_LIVE, pfm);
+                config().set(PORT_FORWARD_MANAGER, pfm);
             }
         }
     }

@@ -116,14 +116,14 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     @Test
     public void testDslAttributeWhenReady() throws Exception {
         Entity testEntity = entityWithAttributeWhenReady();
-        ((EntityInternal)testEntity).setAttribute(Sensors.newStringSensor("foo"), "bar");
+        ((EntityInternal)testEntity).sensors().set(Sensors.newStringSensor("foo"), "bar");
         Assert.assertEquals(getConfigInTask(testEntity, TestEntity.CONF_NAME), "bar");
     }
 
     @Test
     public void testDslAttributeWhenReadyRebind() throws Exception {
         Entity testEntity = entityWithAttributeWhenReady();
-        ((EntityInternal)testEntity).setAttribute(Sensors.newStringSensor("foo"), "bar");
+        ((EntityInternal)testEntity).sensors().set(Sensors.newStringSensor("foo"), "bar");
         Application app2 = rebind(testEntity.getApplication());
         Entity e2 = Iterables.getOnlyElement( app2.getChildren() );
         

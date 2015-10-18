@@ -35,7 +35,7 @@ import org.apache.brooklyn.core.mgmt.internal.EffectorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.task.DynamicSequentialTask;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
@@ -199,6 +199,24 @@ public class EffectorTasks {
         return Reflections.cast(t, type);
     }
 
+    /** Finds a unique {@link MachineLocation} attached to the entity
+     * where this task is running
+     * @throws NullPointerException if {@link #findEntity()} fails
+     * @throws IllegalStateException if call to {@link #getSshMachine(Entity)} fails */
+    public static <T extends MachineLocation> T findMachine(Class<T> clazz) {
+        return getMachine(findEntity(), clazz);
+    }
+
+    /** Finds a unique {@link MachineLocation} attached to the supplied entity
+     * @throws IllegalStateException if there is not a unique such {@link SshMachineLocation} */
+    public static <T extends MachineLocation> T getMachine(Entity entity, Class<T> clazz) {
+        try {
+            return Machines.findUniqueMachineLocation(entity.getLocations(), clazz).get();
+        } catch (Exception e) {
+            throw new IllegalStateException("Entity "+entity+" (in "+Tasks.current()+") requires a single " + clazz.getName() + ", but has "+entity.getLocations(), e);
+        }
+    }
+
     /** Finds a unique {@link SshMachineLocation} attached to the entity 
      * where this task is running
      * @throws NullPointerException if {@link #findEntity()} fails
@@ -210,20 +228,7 @@ public class EffectorTasks {
     /** Finds a unique {@link SshMachineLocation} attached to the supplied entity 
      * @throws IllegalStateException if there is not a unique such {@link SshMachineLocation} */
     public static SshMachineLocation getSshMachine(Entity entity) {
-        try {
-            return Machines.findUniqueSshMachineLocation(entity.getLocations()).get();
-        } catch (Exception e) {
-            throw new IllegalStateException("Entity "+entity+" (in "+Tasks.current()+") requires a single SshMachineLocation, but has "+entity.getLocations(), e);
-        }
+        return getMachine(entity, SshMachineLocation.class);
     }
 
-    /** Finds a unique {@link WinRmMachineLocation} attached to the supplied entity
-     * @throws IllegalStateException if there is not a unique such {@link WinRmMachineLocation} */
-    public static WinRmMachineLocation getWinRmMachine(Entity entity) {
-        try {
-            return Machines.findUniqueWinRmMachineLocation(entity.getLocations()).get();
-        } catch (Exception e) {
-            throw new IllegalStateException("Entity "+entity+" (in "+Tasks.current()+") requires a single WinRmMachineLocation, but has "+entity.getLocations(), e);
-        }
-    }
 }

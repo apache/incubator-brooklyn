@@ -61,7 +61,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
     @Override
     public void init() {
         super.init();
-        setAttribute(RUNNING, true);
+        sensors().set(RUNNING, true);
     }
     
     @Override
@@ -93,7 +93,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
 
     @Override
     public void stop() {
-        setAttribute(RUNNING, false);
+        sensors().set(RUNNING, false);
         if (setChangeListener != null) {
             ((ManagementContextInternal) getManagementContext()).removeEntitySetListener(setChangeListener);
         }
@@ -107,7 +107,7 @@ public class DynamicGroupImpl extends AbstractGroupImpl implements DynamicGroup 
                     if (filter.apply(event)) onEntityChanged(event.getSource());
                 }
             };
-        subscribe(producer, sensor, listener);
+        subscriptions().subscribe(producer, sensor, listener);
     }
 
     @Override

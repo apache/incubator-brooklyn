@@ -175,7 +175,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
                         // but that does not play nicely if installing dists other than brooklyn
                         // (such as what is built by our artifact)  
                         format("cp -R %s/* .", getExpandedInstallDir()),
-                        "mkdir -p ./lib/")
+                        "mkdir -p ./lib/dropins/")
                 .execute();
         
         SshMachineLocation machine = getMachine();
@@ -244,26 +244,45 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
             machine.copyTo(MutableMap.of("permissions", "0600"), resource.getResourceFromUrl(localResource), resolvedRemotePath);
         }
 
-        for (String entry : getEntity().getClasspath()) {
+        for (Object entry : getEntity().getClasspath()) {
+            String filename = null;
+            String url = null;
+
+            if (entry instanceof String) {
+                url = (String) entry;
+            } else {
+                if (entry instanceof Map) {
+                    url = (String) ((Map) entry).get("url");
+                    filename = (String) ((Map) entry).get("filename");
+                }
+            }
+            checkNotNull(url, "url");
+
             // If a local folder, then create archive from contents first
-            if (Urls.isDirectory(entry)) {
-                File jarFile = ArchiveBuilder.jar().addDirContentsAt(new File(entry), "").create();
-                entry = jarFile.getAbsolutePath();
+            if (Urls.isDirectory(url)) {
+                File jarFile = ArchiveBuilder.jar().addDirContentsAt(new File(url), "").create();
+                url = jarFile.getAbsolutePath();
             }
 
-            // Determine filename
-            String destFile = entry.contains("?") ? entry.substring(0, entry.indexOf('?')) : entry;
-            destFile = destFile.substring(destFile.lastIndexOf('/') + 1);
-
-            ArchiveUtils.deploy(MutableMap.<String, Object>of(), entry, machine, getRunDir(), Os.mergePaths(getRunDir(), "lib"), destFile);
+            if (filename == null) {
+                // Determine filename
+                filename = getFilename(url);
+            }
+            ArchiveUtils.deploy(MutableMap.<String, Object>of(), url, machine, getRunDir(), Os.mergePaths(getRunDir(), "lib", "dropins"), filename);
         }
-        
+
         String cmd = entity.getConfig(BrooklynNode.EXTRA_CUSTOMIZATION_SCRIPT);
         if (Strings.isNonBlank(cmd)) {
             DynamicTasks.queueIfPossible( SshEffectorTasks.ssh(cmd).summary("Bespoke BrooklynNode customization script")
                 .requiringExitCodeZero() )
                 .orSubmitAndBlock(getEntity());
         }
+    }
+
+    private String getFilename(String url) {
+        String destFile = url.contains("?") ? url.substring(0, url.indexOf('?')) : url;
+        destFile = destFile.substring(destFile.lastIndexOf('/') + 1);
+        return destFile;
     }
 
     @SuppressWarnings("deprecation")

@@ -61,7 +61,7 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         super.init();
         
         // defaulting to randomized subdomains makes deploying multiple applications easier
-        if (getConfig(RANDOMIZE_SUBDOMAIN_NAME)==null) setConfig(RANDOMIZE_SUBDOMAIN_NAME, true); 
+        if (getConfig(RANDOMIZE_SUBDOMAIN_NAME)==null) config().set(RANDOMIZE_SUBDOMAIN_NAME, true); 
         
         Boolean trustAll = getConfig(SSL_TRUST_ALL);
         if (Boolean.TRUE.equals(trustAll)) {
@@ -109,9 +109,9 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         
         String fullDomain = smartSubdomainName+"."+primaryDomainName;
         log.info("GeoScaling service will configure redirection for '"+fullDomain+"' domain");
-        setAttribute(GEOSCALING_ACCOUNT, username);
-        setAttribute(MANAGED_DOMAIN, fullDomain);
-        setAttribute(HOSTNAME, getHostname());
+        sensors().set(GEOSCALING_ACCOUNT, username);
+        sensors().set(MANAGED_DOMAIN, fullDomain);
+        sensors().set(HOSTNAME, getHostname());
         
         isConfigured = true;
         
@@ -177,14 +177,14 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
             smartSubdomain.configure(PROVIDE_CITY_INFO, script);
             if (targetHosts.isEmpty()) {
                 setServiceState(Lifecycle.CREATED);
-                setAttribute(ROOT_URL, null);
-                setAttribute(MAIN_URI, null);
+                sensors().set(ROOT_URL, null);
+                sensors().set(MAIN_URI, null);
             } else {
                 setServiceState(Lifecycle.RUNNING);
                 String domain = getAttribute(MANAGED_DOMAIN);
                 if (!Strings.isEmpty(domain)) {
-                    setAttribute(ROOT_URL, "http://"+domain+"/");
-                    setAttribute(MAIN_URI, URI.create("http://"+domain+"/"));
+                    sensors().set(ROOT_URL, "http://"+domain+"/");
+                    sensors().set(MAIN_URI, URI.create("http://"+domain+"/"));
                 }
             }
         } else {

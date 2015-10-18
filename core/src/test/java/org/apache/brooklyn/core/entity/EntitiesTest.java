@@ -65,13 +65,13 @@ public class EntitiesTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testAttributeSupplier() throws Exception {
-        entity.setAttribute(TestEntity.NAME, "myname");
+        entity.sensors().set(TestEntity.NAME, "myname");
         assertEquals(Entities.attributeSupplier(entity, TestEntity.NAME).get(), "myname");
     }
     
     @Test
     public void testAttributeSupplierUsingTuple() throws Exception {
-        entity.setAttribute(TestEntity.NAME, "myname");
+        entity.sensors().set(TestEntity.NAME, "myname");
         assertEquals(Entities.attributeSupplier(EntityAndAttribute.supplier(entity, TestEntity.NAME)).get(), "myname");
     }
     
@@ -94,7 +94,7 @@ public class EntitiesTest extends BrooklynAppUnitTestSupport {
                 }
             });
             
-            entity.setAttribute(TestEntity.NAME, "myname");
+            entity.sensors().set(TestEntity.NAME, "myname");
             t.join(TIMEOUT_MS);
             assertFalse(t.isAlive());
             assertEquals(result.get(), "myname");

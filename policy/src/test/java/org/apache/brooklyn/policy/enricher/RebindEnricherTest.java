@@ -63,12 +63,12 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testDeltaEnricher() throws Exception {
-        origApp.addEnricher(new DeltaEnricher<Integer>(origApp, INT_METRIC, INT_METRIC2));
+        origApp.enrichers().add(new DeltaEnricher<Integer>(origApp, INT_METRIC, INT_METRIC2));
         
         TestApplication newApp = rebind();
 
-        newApp.setAttribute(INT_METRIC, 1);
-        newApp.setAttribute(INT_METRIC, 10);
+        newApp.sensors().set(INT_METRIC, 1);
+        newApp.sensors().set(INT_METRIC, 10);
         EntityTestUtils.assertAttributeEqualsEventually(newApp, INT_METRIC2, 9);
     }
 
@@ -81,17 +81,17 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         webServer.play();
         URL baseUrl = webServer.getUrl("/");
 
-        origApp.addEnricher(HttpLatencyDetector.builder()
+        origApp.enrichers().add(HttpLatencyDetector.builder()
                 .rollup(Duration.of(50, TimeUnit.MILLISECONDS))
                 .period(Duration.of(10, TimeUnit.MILLISECONDS))
                 .url(baseUrl)
                 .build());
-        origApp.setAttribute(Attributes.SERVICE_UP, true);
+        origApp.sensors().set(Attributes.SERVICE_UP, true);
         
         TestApplication newApp = rebind();
 
-        newApp.setAttribute(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT, null);
-        newApp.setAttribute(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW, null);
+        newApp.sensors().set(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT, null);
+        newApp.sensors().set(HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW, null);
 
         EntityTestUtils.assertAttributeEventuallyNonNull(newApp, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT);
         EntityTestUtils.assertAttributeEventuallyNonNull(newApp, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_IN_WINDOW);
@@ -99,29 +99,29 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testRollingMeanEnricher() throws Exception {
-        origApp.addEnricher(new RollingMeanEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, 2));
+        origApp.enrichers().add(new RollingMeanEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, 2));
         
         TestApplication newApp = rebind();
 
-        newApp.setAttribute(INT_METRIC, 10);
+        newApp.sensors().set(INT_METRIC, 10);
         EntityTestUtils.assertAttributeEqualsEventually(newApp, DOUBLE_METRIC, 10d);
     }
 
     @Test
     public void testRollingTimeWindowMeanEnricher() throws Exception {
-        origApp.addEnricher(new RollingTimeWindowMeanEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, Duration.of(10, TimeUnit.MILLISECONDS)));
+        origApp.enrichers().add(new RollingTimeWindowMeanEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, Duration.of(10, TimeUnit.MILLISECONDS)));
         
         TestApplication newApp = rebind();
 
-        newApp.setAttribute(INT_METRIC, 10);
+        newApp.sensors().set(INT_METRIC, 10);
         Time.sleep(Duration.millis(10));
-        newApp.setAttribute(INT_METRIC, 10);
+        newApp.sensors().set(INT_METRIC, 10);
         EntityTestUtils.assertAttributeEqualsEventually(newApp, DOUBLE_METRIC, 10d);
     }
     
     @Test
     public void testTimeFractionDeltaEnricher() throws Exception {
-        origApp.addEnricher(new TimeFractionDeltaEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, TimeUnit.MILLISECONDS));
+        origApp.enrichers().add(new TimeFractionDeltaEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, TimeUnit.MILLISECONDS));
         
         final TestApplication newApp = rebind();
 
@@ -130,14 +130,14 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         Asserts.succeedsEventually(new Runnable() {
             private int counter;
             public void run() {
-                newApp.setAttribute(INT_METRIC, counter++);
+                newApp.sensors().set(INT_METRIC, counter++);
                 assertNotNull(newApp.getAttribute(DOUBLE_METRIC));
             }});
     }
     
     @Test
     public void testTimeWeightedDeltaEnricher() throws Exception {
-        origApp.addEnricher(new TimeWeightedDeltaEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, 1000));
+        origApp.enrichers().add(new TimeWeightedDeltaEnricher<Integer>(origApp, INT_METRIC, DOUBLE_METRIC, 1000));
         
         final TestApplication newApp = rebind();
 
@@ -146,7 +146,7 @@ public class RebindEnricherTest extends RebindTestFixtureWithApp {
         Asserts.succeedsEventually(new Runnable() {
             private int counter;
             public void run() {
-                newApp.setAttribute(INT_METRIC, counter++);
+                newApp.sensors().set(INT_METRIC, counter++);
                 assertNotNull(newApp.getAttribute(DOUBLE_METRIC));
             }});
     }

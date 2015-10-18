@@ -94,7 +94,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         final AtomicReference<SensorEvent<?>> evt = new AtomicReference<SensorEvent<?>>();
         final CountDownLatch latch = new CountDownLatch(1);
         
-        app.getSubscriptionContext().subscribe(h, HelloEntity.AGE, new SensorEventListener<Integer>() {
+        app.subscriptions().subscribe(h, HelloEntity.AGE, new SensorEventListener<Integer>() {
             @Override public void onEvent(SensorEvent<Integer> event) {
                 evt.set(event);
                 latch.countDown();
@@ -121,7 +121,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         app.start(ImmutableList.of(loc));
         
         final AtomicReference<SensorEvent<?>> evt = new AtomicReference<SensorEvent<?>>();
-        app.getSubscriptionContext().subscribe(h, HelloEntity.ITS_MY_BIRTHDAY, new SensorEventListener<Object>() {
+        app.subscriptions().subscribe(h, HelloEntity.ITS_MY_BIRTHDAY, new SensorEventListener<Object>() {
             @Override public void onEvent(SensorEvent<Object> event) {
                 evt.set(event);
                 synchronized (evt) {
@@ -149,7 +149,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         final List<Integer> data = Lists.newArrayList();
         final CountDownLatch latch = new CountDownLatch(5);
         
-        app.getSubscriptionContext().subscribe(h, HelloEntity.AGE, new SensorEventListener<Integer>() {
+        app.subscriptions().subscribe(h, HelloEntity.AGE, new SensorEventListener<Integer>() {
             @Override public void onEvent(SensorEvent<Integer> event) {
                 data.add(event.getValue());
                 Time.sleep((int)(20*Math.random()));
@@ -163,7 +163,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         }
         assertTrue(latch.await(5000, TimeUnit.MILLISECONDS));
 
-        app.getSubscriptionContext().unsubscribeAll();
+        app.subscriptions().unsubscribeAll();
         h.setAge(6);
         long totalTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         
@@ -174,7 +174,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
 
     @Test
     public void testConfigSetFromAttribute() {
-        app.setConfig(HelloEntity.MY_NAME, "Bob");
+        app.config().set(HelloEntity.MY_NAME, "Bob");
         
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class).parent(dad));
@@ -186,13 +186,13 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         assertEquals("Bob", son.getConfig(HelloEntity.MY_NAME));
         
         //attributes are not
-        app.setAttribute(HelloEntity.FAVOURITE_NAME, "Carl");
+        app.sensors().set(HelloEntity.FAVOURITE_NAME, "Carl");
         assertEquals("Carl", app.getAttribute(HelloEntity.FAVOURITE_NAME));
         assertEquals(null, dad.getAttribute(HelloEntity.FAVOURITE_NAME));
     }
     @Test
     public void testConfigSetFromAttributeWhenReady() throws Exception {
-        app.setConfig(HelloEntity.MY_NAME, "Bob");
+        app.config().set(HelloEntity.MY_NAME, "Bob");
         
         final HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         final HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
@@ -230,7 +230,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
             assertEquals(null, sonsConfig[0]);
             for (Task tt : ((EntityInternal)dad).getExecutionContext().getTasks()) { log.info("task at dad:  {}, {}", tt, tt.getStatusDetail(false)); }
             for (Task tt : ((EntityInternal)son).getExecutionContext().getTasks()) { log.info("task at son:  {}, {}", tt, tt.getStatusDetail(false)); }
-            ((EntityLocal)dad).setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
+            ((EntityLocal)dad).sensors().set(HelloEntity.FAVOURITE_NAME, "Dan");
             if (!s1.tryAcquire(2, TimeUnit.SECONDS)) fail("race mismatch, missing permits");
         }
         log.info("dad: "+dad.getAttribute(HelloEntity.FAVOURITE_NAME));
@@ -244,7 +244,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testConfigSetFromAttributeWhenReadyTransformations() {
-        app.setConfig(HelloEntity.MY_NAME, "Bob");
+        app.config().set(HelloEntity.MY_NAME, "Bob");
         
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         HelloEntity son = entityManager.createEntity(EntitySpec.create(HelloEntity.class)
@@ -256,13 +256,13 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         Entities.manage(son);
         
         app.start(ImmutableList.of(loc));
-        ((EntityLocal)dad).setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
+        ((EntityLocal)dad).sensors().set(HelloEntity.FAVOURITE_NAME, "Dan");
         assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny");
     }
     
     @Test
     public void testConfigSetFromAttributeWhenReadyNullTransformations() {
-        app.setConfig(HelloEntity.MY_NAME, "Bob");
+        app.config().set(HelloEntity.MY_NAME, "Bob");
         
         HelloEntity dad = app.createAndManageChild(EntitySpec.create(HelloEntity.class));
         // the unnecessary (HelloEntity) cast is required as a work-around to an IntelliJ issue that prevents Brooklyn from launching from the IDE
@@ -275,7 +275,7 @@ public class LocalEntitiesTest extends BrooklynAppUnitTestSupport {
         Entities.manage(son);
         
         app.start(ImmutableList.of(loc));
-        ((EntityLocal)dad).setAttribute(HelloEntity.FAVOURITE_NAME, "Dan");
+        ((EntityLocal)dad).sensors().set(HelloEntity.FAVOURITE_NAME, "Dan");
         assertEquals(son.getConfig(HelloEntity.MY_NAME), "Danny");
     }
 

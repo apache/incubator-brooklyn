@@ -103,7 +103,7 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTra
             // don't assume current=zero because then things like requestCount->requestsPerSecond is negative!
             // instead assume same as last time, so delta == 0
             double deltaPostProcessed = postProcessor.apply(0d);
-            entity.setAttribute((AttributeSensor<Double>)target, deltaPostProcessed);
+            entity.sensors().set((AttributeSensor<Double>)target, deltaPostProcessed);
             if (LOG.isTraceEnabled()) LOG.trace("set {} to {}, {} -> {} at {}", new Object[] {this, deltaPostProcessed, lastValue, current, eventTime});
             return;
         }
@@ -117,7 +117,7 @@ public class TimeWeightedDeltaEnricher<T extends Number> extends AbstractTypeTra
                 if (eventTime == lastTime) duration = 0.1; // 0.1 of a millisecond is a relatively small number: 
                 double delta = (current.doubleValue() - lastValue.doubleValue()) / (duration / unitMillis);
                 double deltaPostProcessed = postProcessor.apply(delta);
-                entity.setAttribute((AttributeSensor<Double>)target, deltaPostProcessed);
+                entity.sensors().set((AttributeSensor<Double>)target, deltaPostProcessed);
                 if (LOG.isTraceEnabled()) LOG.trace("set {} to {}, {} -> {} at {}", new Object[] {this, deltaPostProcessed, lastValue, current, eventTime}); 
             }
             lastValue = current;

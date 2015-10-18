@@ -48,6 +48,18 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
         public boolean isNamed();
     }
 
+    /**
+     * @throws UnsupportedOperationException; config not supported for catalog items
+     */
+    @Override
+    ConfigurationSupport config();
+
+    /**
+     * @throws UnsupportedOperationException; subscriptions are not supported for catalog items
+     */
+    @Override
+    SubscriptionSupport subscriptions();
+    
     @Deprecated
     public static interface CatalogItemLibraries {
         Collection<String> getBundles();

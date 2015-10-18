@@ -98,7 +98,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {
             AttributeSensor<? extends Number> t = es.get(0);
             AttributeSensor<? extends Number> total = es.get(1);
-            addEnricher(Enrichers.builder()
+            enrichers().add(Enrichers.builder()
                     .aggregating(t)
                     .publishing(total)
                     .fromMembers()
@@ -111,7 +111,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
             AttributeSensor<Number> t = (AttributeSensor<Number>) es.get(0);
             @SuppressWarnings("unchecked")
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
-            addEnricher(Enrichers.builder()
+            enrichers().add(Enrichers.builder()
                     .aggregating(t)
                     .publishing(average)
                     .fromMembers()
@@ -187,7 +187,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         // TODO support for atomic sensor update (should be part of standard tooling; NB there is some work towards this, according to @aledsage)
         Set<String> deployedWars = MutableSet.copyOf(getAttribute(DEPLOYED_WARS));
         deployedWars.add(targetName);
-        setAttribute(DEPLOYED_WARS, deployedWars);
+        sensors().set(DEPLOYED_WARS, deployedWars);
     }
     
     @Override
@@ -213,7 +213,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         // Update attribute
         Set<String> deployedWars = MutableSet.copyOf(getAttribute(DEPLOYED_WARS));
         deployedWars.remove( FILENAME_TO_WEB_CONTEXT_MAPPER.convertDeploymentTargetNameToContext(targetName) );
-        setAttribute(DEPLOYED_WARS, deployedWars);
+        sensors().set(DEPLOYED_WARS, deployedWars);
     }
 
     static void addToWarsByContext(Entity entity, String url, String targetName) {
@@ -222,7 +222,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
         synchronized (entity) {
             Map<String,String> newWarsMap = MutableMap.copyOf(entity.getConfig(WARS_BY_CONTEXT));
             newWarsMap.put(targetName, url);
-            ((EntityInternal)entity).setConfig(WARS_BY_CONTEXT, newWarsMap);
+            entity.config().set(WARS_BY_CONTEXT, newWarsMap);
         }
     }
 
@@ -235,7 +235,7 @@ public class DynamicWebAppClusterImpl extends DynamicClusterImpl implements Dyna
             if (url==null) {
                 return false;
             }
-            ((EntityInternal)entity).setConfig(WARS_BY_CONTEXT, newWarsMap);
+            entity.config().set(WARS_BY_CONTEXT, newWarsMap);
             return true;
         }
     }

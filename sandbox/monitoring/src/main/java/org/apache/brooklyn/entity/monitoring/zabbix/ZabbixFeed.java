@@ -394,7 +394,7 @@ public class ZabbixFeed extends AbstractFeed {
                     String hostId = result.get("hostids").getAsJsonArray().get(0).getAsString();
                     // Update the registered status if not set
                     if (registered.compareAndSet(false, true)) {
-                        entity.setAttribute(ZabbixMonitored.ZABBIX_AGENT_HOSTID, hostId);
+                        entity.sensors().set(ZabbixMonitored.ZABBIX_AGENT_HOSTID, hostId);
                         log.info("zabbix registered host as id {}", hostId);
                     }
                 } else {

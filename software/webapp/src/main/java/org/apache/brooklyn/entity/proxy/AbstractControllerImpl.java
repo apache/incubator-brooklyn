@@ -104,7 +104,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     @Override
     public void init() {
         super.init();
-        setAttribute(SERVER_POOL_TARGETS, ImmutableMap.<Entity, String>of());
+        sensors().set(SERVER_POOL_TARGETS, ImmutableMap.<Entity, String>of());
     }
     
     protected void addServerPoolMemberTrackingPolicy() {
@@ -116,7 +116,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             LOG.debug("Call to addServerPoolMemberTrackingPolicy when serverPoolMemberTrackingPolicy already exists, removing and re-adding, in {}", this);
             removeServerPoolMemberTrackingPolicy();
         }
-        for (Policy p: getPolicies()) {
+        for (Policy p: policies()) {
             if (p instanceof ServerPoolMemberTrackerPolicy) {
                 // TODO want a more elegant idiom for this!
                 LOG.info(this+" picking up "+p+" as the tracker (already set, often due to rebind)");
@@ -135,7 +135,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             sensorsToTrack = ImmutableSet.<AttributeSensor<?>>of(hostnameSensor, portSensor);
         }
         
-        serverPoolMemberTrackerPolicy = addPolicy(PolicySpec.create(ServerPoolMemberTrackerPolicy.class)
+        serverPoolMemberTrackerPolicy = policies().add(PolicySpec.create(ServerPoolMemberTrackerPolicy.class)
                 .displayName("Controller targets tracker")
                 .configure("group", serverPool)
                 .configure("sensorsToTrack", sensorsToTrack));
@@ -155,12 +155,12 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         }
 
         LOG.info("Resetting {}, server pool targets {}", new Object[] {this, serverPoolTargets});
-        setAttribute(SERVER_POOL_TARGETS, serverPoolTargets);
+        sensors().set(SERVER_POOL_TARGETS, serverPoolTargets);
     }
     
     protected void removeServerPoolMemberTrackingPolicy() {
         if (serverPoolMemberTrackerPolicy != null) {
-            removePolicy(serverPoolMemberTrackerPolicy);
+            policies().remove(serverPoolMemberTrackerPolicy);
         }
     }
     
@@ -311,9 +311,9 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
 
         ConfigToAttributes.apply(this);
 
-        setAttribute(PROTOCOL, inferProtocol());
-        setAttribute(MAIN_URI, URI.create(inferUrl()));
-        setAttribute(ROOT_URL, inferUrl());
+        sensors().set(PROTOCOL, inferProtocol());
+        sensors().set(MAIN_URI, URI.create(inferUrl()));
+        sensors().set(ROOT_URL, inferUrl());
  
         checkNotNull(getPortNumberSensor(), "no sensor configured to infer port number");
     }
@@ -500,7 +500,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             Map<K, V> oldMap = entity.getAttribute(attribute);
             Map<K, V> newMap = MutableMap.copyOf(oldMap);
             V oldVal = newMap.put(key, value);
-            ((EntityInternal)entity).setAttribute(attribute, newMap);
+            ((EntityInternal)entity).sensors().set(attribute, newMap);
             return oldVal;
         }
         
@@ -508,7 +508,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
             Map<K, V> oldMap = entity.getAttribute(attribute);
             Map<K, V> newMap = MutableMap.copyOf(oldMap);
             V oldVal = newMap.remove(key);
-            ((EntityInternal)entity).setAttribute(attribute, newMap);
+            ((EntityInternal)entity).sensors().set(attribute, newMap);
             return oldVal;
         }
     }

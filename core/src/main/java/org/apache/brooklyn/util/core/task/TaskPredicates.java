@@ -27,12 +27,20 @@ import com.google.common.base.Predicates;
 
 public class TaskPredicates {
 
+    /** @deprecated since 0.9.0; use {@link #displayNameSatisfies(Predicate)} */
     public static Predicate<Task<?>> displayNameMatches(Predicate<? super String> matcher) {
+        return displayNameSatisfies(matcher);
+    }
+    
+    /**
+     * @since 0.9.0
+     */
+    public static Predicate<Task<?>> displayNameSatisfies(Predicate<? super String> matcher) {
         return new DisplayNameMatches(matcher);
     }
     
     public static Predicate<Task<?>> displayNameEqualTo(String name) {
-        return displayNameMatches(Predicates.equalTo(name));
+        return displayNameSatisfies(Predicates.equalTo(name));
     }
     
     private static class DisplayNameMatches implements Predicate<Task<?>> {

@@ -86,14 +86,14 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     public void init() {
         super.init();
 
-        subscribe(this, Attributes.SERVICE_UP, new SensorEventListener<Boolean>() {
+        subscriptions().subscribe(this, Attributes.SERVICE_UP, new SensorEventListener<Boolean>() {
             @Override
             public void onEvent(SensorEvent<Boolean> booleanSensorEvent) {
                 if (Boolean.TRUE.equals(booleanSensorEvent.getValue())) {
                     Integer webPort = getAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT);
                     Preconditions.checkNotNull(webPort, CouchbaseNode.COUCHBASE_WEB_ADMIN_PORT+" not set for %s; is an acceptable port available?", this);
                     String hostAndPort = BrooklynAccessUtils.getBrooklynAccessibleAddress(CouchbaseNodeImpl.this, webPort).toString();
-                    setAttribute(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL, URI.create(format("http://%s", hostAndPort)));
+                    sensors().set(CouchbaseNode.COUCHBASE_WEB_ADMIN_URL, URI.create(format("http://%s", hostAndPort)));
                 }
             }
         });

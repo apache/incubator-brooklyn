@@ -84,7 +84,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
         measureAndAssert("updateAttributeWithManyPublishedOneSubscriber", numIterations, minRatePerSec,
                 new Runnable() {
                     public void run() {
-                        entity.setAttribute(TestEntity.SEQUENCE, (iter.getAndIncrement()));
+                        entity.sensors().set(TestEntity.SEQUENCE, (iter.getAndIncrement()));
                     }
                 },
                 new Runnable() {
@@ -121,7 +121,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
         measureAndAssert("updateAttributeWithManyListeners", numIterations, minRatePerSec,
                 new Runnable() {
                     @Override public void run() {
-                        entity.setAttribute(TestEntity.SEQUENCE, (iter.getAndIncrement()));
+                        entity.sensors().set(TestEntity.SEQUENCE, (iter.getAndIncrement()));
                     }},
                 new Runnable() {
                         public void run() {
@@ -157,7 +157,7 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
         
         measureAndAssert("updateAttributeWithUnrelatedListeners", numIterations, minRatePerSec, new Runnable() {
             @Override public void run() {
-                entity.setAttribute(TestEntity.SEQUENCE, (iter.incrementAndGet()));
+                entity.sensors().set(TestEntity.SEQUENCE, (iter.incrementAndGet()));
             }});
         
         if (exception.get() != null) {

@@ -27,7 +27,7 @@
         "bootstrap":"js/libs/bootstrap",
         "jquery-form":"js/libs/jquery.form",
         "jquery-datatables":"js/libs/jquery.dataTables",
-        "jquery-slideto":"js/libs/jquery.slideto.min",
+        "jquery-slideto":"js/util/jquery.slideto",
         "jquery-wiggle":"js/libs/jquery.wiggle.min",
         "jquery-ba-bbq":"js/libs/jquery.ba-bbq.min",
         "moment":"js/libs/moment",
@@ -35,7 +35,7 @@
         "brooklyn":"js/util/brooklyn",
         "brooklyn-view":"js/util/brooklyn-view",
         "brooklyn-utils":"js/util/brooklyn-utils",
-        "datatables-extensions":"js/libs/dataTables.extensions",
+        "datatables-extensions":"js/util/dataTables.extensions",
         "googlemaps":"view/googlemaps",
         // async deliberately excluded
         "text":"js/libs/text",

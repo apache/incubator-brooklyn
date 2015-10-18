@@ -41,7 +41,7 @@ public class EntitySuppliers {
         }
         
         @Override public SshMachineLocation get() {
-            return Machines.findUniqueSshMachineLocation(entity.getLocations()).get();
+            return Machines.findUniqueMachineLocation(entity.getLocations(), SshMachineLocation.class).get();
         }
     }
 }

@@ -25,7 +25,7 @@ public class HelloEntityImpl extends AbstractGroupImpl implements HelloEntity {
 
     @Override
     public void setAge(Integer age) {
-        setAttribute(AGE, age);
-        emit(ITS_MY_BIRTHDAY, null);
+        sensors().set(AGE, age);
+        sensors().emit(ITS_MY_BIRTHDAY, null);
     }
 }

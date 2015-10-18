@@ -171,9 +171,9 @@ public class BrooklynPersistenceUtils {
             result.entity(instance.getId(), serializer.toString(newObjectMemento(instance)));
             for (Feed instanceAdjunct: ((EntityInternal)instance).feeds().getFeeds())
                 result.feed(instanceAdjunct.getId(), serializer.toString(newObjectMemento(instanceAdjunct)));
-            for (Enricher instanceAdjunct: instance.getEnrichers())
+            for (Enricher instanceAdjunct: instance.enrichers())
                 result.enricher(instanceAdjunct.getId(), serializer.toString(newObjectMemento(instanceAdjunct)));
-            for (Policy instanceAdjunct: instance.getPolicies())
+            for (Policy instanceAdjunct: instance.policies())
                 result.policy(instanceAdjunct.getId(), serializer.toString(newObjectMemento(instanceAdjunct)));
         }
         for (CatalogItem<?,?> instance: mgmt.getCatalog().getCatalogItems())

@@ -73,7 +73,7 @@ public class BasicStartableImpl extends AbstractEntity implements BasicStartable
                     t.getUnchecked();
                 }
             }
-            setAttribute(Attributes.SERVICE_UP, true);
+            sensors().set(Attributes.SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
@@ -84,7 +84,7 @@ public class BasicStartableImpl extends AbstractEntity implements BasicStartable
     @Override
     public void stop() {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
-        setAttribute(SERVICE_UP, false);
+        sensors().set(SERVICE_UP, false);
         try {
             StartableMethods.stop(this);
             ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);

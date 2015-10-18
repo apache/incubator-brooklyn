@@ -72,7 +72,7 @@ public class StormImpl extends SoftwareProcessImpl implements Storm {
         Time.sleep(Duration.TEN_SECONDS);
 
         if (getRole() == Role.UI) {
-            setAttribute(STORM_UI_URL, "http://"+getAttribute(Attributes.HOSTNAME)+":"+getAttribute(UI_PORT)+"/");
+            sensors().set(STORM_UI_URL, "http://"+getAttribute(Attributes.HOSTNAME)+":"+getAttribute(UI_PORT)+"/");
         }
 
         if (((JavaSoftwareProcessDriver)getDriver()).isJmxEnabled()) {

@@ -129,7 +129,7 @@ public class RollingTimeWindowMeanEnricher<T extends Number> extends AbstractTyp
                 // by default require a high value
 
                 // TODO would be nice to include timestamp, etc
-                entity.setAttribute((AttributeSensor<Double>)target, average.value); 
+                entity.sensors().set((AttributeSensor<Double>)target, average.value); 
             }
         }
     }

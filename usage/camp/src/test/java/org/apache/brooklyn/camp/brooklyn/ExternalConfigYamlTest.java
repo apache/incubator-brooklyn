@@ -24,16 +24,20 @@ import static org.testng.Assert.fail;
 import java.io.StringReader;
 import java.util.Map;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.external.AbstractExternalConfigSupplier;
 import org.apache.brooklyn.core.config.external.ExternalConfigSupplier;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.python.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -70,6 +74,42 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
         waitForApplicationTasks(app);
 
         assertEquals(app.getConfig(MY_CONFIG_KEY), "myval");
+    }
+
+    // FIXME fails currently - see comment at ConfigBag.get; fix at AbstractLocation.BasicConfigurationSupport to enable this?
+//    at org.apache.brooklyn.util.core.config.ConfigBag.coerceFirstNonNullKeyValue(ConfigBag.java:464)
+//    at org.apache.brooklyn.util.core.config.ConfigBag.get(ConfigBag.java:458)
+//    at org.apache.brooklyn.util.core.config.ConfigBag.get(ConfigBag.java:345)
+//    at org.apache.brooklyn.core.location.AbstractLocation$BasicConfigurationSupport.get(AbstractLocation.java:364)    @Test
+    @Test(groups="WIP")
+    public void testExternalisedLocationConfigReferencedFromYaml() throws Exception {
+        ConfigKey<String> MY_CONFIG_KEY = ConfigKeys.newStringConfigKey("my.config.key");
+        
+        String yaml = Joiner.on("\n").join(
+            "services:",
+            "- type: org.apache.brooklyn.core.test.entity.TestApplication",
+            "location:",
+            "  localhost:",
+            "    my.config.key: $brooklyn:external(\"myprovider\", \"mykey\")");
+        
+        TestApplication app = (TestApplication) createAndStartApplication(new StringReader(yaml));
+        waitForApplicationTasks(app);
+        assertEquals(Iterables.getOnlyElement( app.getLocations() ).config().get(MY_CONFIG_KEY), "myval");
+    }
+    
+    @Test(groups="Integration")
+    public void testExternalisedLocationConfigSetViaProvisioningPropertiesReferencedFromYaml() throws Exception {
+        String yaml = Joiner.on("\n").join(
+            "services:",
+            "- type: "+EmptySoftwareProcess.class.getName(),
+            "  provisioning.properties:",
+            "    credential: $brooklyn:external(\"myprovider\", \"mykey\")",
+            "location: localhost");
+        
+        Entity app = createAndStartApplication(new StringReader(yaml));
+        waitForApplicationTasks(app);
+        Entity entity = Iterables.getOnlyElement( app.getChildren() );
+        assertEquals(Iterables.getOnlyElement( entity.getLocations() ).config().get(CloudLocationConfig.ACCESS_CREDENTIAL), "myval");
     }
     
     @Test

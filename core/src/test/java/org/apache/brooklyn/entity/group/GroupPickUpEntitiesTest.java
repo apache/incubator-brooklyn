@@ -55,7 +55,7 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
         super.setUp();
         group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         
-        group.addPolicy(PolicySpec.create(FindUpServicesWithNameBob.class));
+        group.policies().add(PolicySpec.create(FindUpServicesWithNameBob.class));
     }
 
     @Test
@@ -67,8 +67,8 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
 
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 0);
 
-        e1.setAttribute(Startable.SERVICE_UP, true);
-        e1.setAttribute(TestEntity.NAME, "bob");
+        e1.sensors().set(Startable.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.NAME, "bob");
 
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 1);
         Asserts.assertEqualsIgnoringOrder(group.getAttribute(BasicGroup.GROUP_MEMBERS), ImmutableList.of(e1));
@@ -79,12 +79,12 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
         Assert.assertEquals(group.getMembers().size(), 1);
         Assert.assertTrue(group.getMembers().contains(e1));
 
-        e2.setAttribute(Startable.SERVICE_UP, true);
-        e2.setAttribute(TestEntity.NAME, "fred");
+        e2.sensors().set(Startable.SERVICE_UP, true);
+        e2.sensors().set(TestEntity.NAME, "fred");
 
         EntityTestUtils.assertAttributeEquals(group, BasicGroup.GROUP_SIZE, 1);
 
-        e2.setAttribute(TestEntity.NAME, "BOB");
+        e2.sensors().set(TestEntity.NAME, "BOB");
         EntityTestUtils.assertAttributeEqualsEventually(group, BasicGroup.GROUP_SIZE, 2);
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
@@ -113,7 +113,7 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
         public void setEntity(EntityLocal entity) {
             assert entity instanceof Group;
             super.setEntity(entity);
-            subscribe(null, Startable.SERVICE_UP, handler);
+            subscriptions().subscribe(null, Startable.SERVICE_UP, handler);
             for (Entity e : ((EntityInternal) entity).getManagementContext().getEntityManager().getEntities()) {
                 if (Objects.equal(e.getApplicationId(), entity.getApplicationId()))
                     updateMembership(e);
@@ -143,7 +143,7 @@ public class GroupPickUpEntitiesTest extends BrooklynAppUnitTestSupport {
         @Override
         public void setEntity(EntityLocal entity) {
             super.setEntity(entity);
-            subscribe(null, TestEntity.NAME, handler);
+            subscriptions().subscribe(null, TestEntity.NAME, handler);
         }
 
         @Override

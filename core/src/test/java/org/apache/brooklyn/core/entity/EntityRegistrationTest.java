@@ -58,11 +58,11 @@ public class EntityRegistrationTest extends BrooklynAppUnitTestSupport {
         added = Lists.newCopyOnWriteArrayList();
         removed = Lists.newCopyOnWriteArrayList();
         
-        app.subscribe(app, AbstractEntity.CHILD_ADDED, new SensorEventListener<Entity>() {
+        app.subscriptions().subscribe(app, AbstractEntity.CHILD_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 added.add(event.getValue());
             }});
-        app.subscribe(app, AbstractEntity.CHILD_REMOVED, new SensorEventListener<Entity>() {
+        app.subscriptions().subscribe(app, AbstractEntity.CHILD_REMOVED, new SensorEventListener<Entity>() {
                 @Override public void onEvent(SensorEvent<Entity> event) {
                     removed.add(event.getValue());
                 }});

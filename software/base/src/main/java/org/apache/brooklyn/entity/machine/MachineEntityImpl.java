@@ -146,7 +146,7 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
     }
 
     public SshMachineLocation getMachine() {
-        return Machines.findUniqueSshMachineLocation(getLocations()).get();
+        return Machines.findUniqueMachineLocation(getLocations(), SshMachineLocation.class).get();
     }
 
     @Override

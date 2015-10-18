@@ -84,9 +84,9 @@ public class ServiceRestarterTest {
     @Test
     public void testRestartsOnFailure() throws Exception {
         policy = new ServiceRestarter(new ConfigBag().configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
-        e1.addPolicy(policy);
+        e1.policies().add(policy);
         
-        e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        e1.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -97,9 +97,9 @@ public class ServiceRestarterTest {
     @Test(groups="Integration") // Has a 1 second wait
     public void testDoesNotRestartsWhenHealthy() throws Exception {
         policy = new ServiceRestarter(new ConfigBag().configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
-        e1.addPolicy(policy);
+        e1.policies().add(policy);
         
-        e1.emit(HASensors.ENTITY_RECOVERED, new FailureDescriptor(e1, "not a failure"));
+        e1.sensors().emit(HASensors.ENTITY_RECOVERED, new FailureDescriptor(e1, "not a failure"));
         
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
@@ -111,12 +111,12 @@ public class ServiceRestarterTest {
     public void testEmitsFailureEventWhenRestarterFails() throws Exception {
         final FailingEntity e2 = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
                 .configure(FailingEntity.FAIL_ON_RESTART, true));
-        app.subscribe(e2, ServiceRestarter.ENTITY_RESTART_FAILED, eventListener);
+        app.subscriptions().subscribe(e2, ServiceRestarter.ENTITY_RESTART_FAILED, eventListener);
 
         policy = new ServiceRestarter(new ConfigBag().configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
-        e2.addPolicy(policy);
+        e2.policies().add(policy);
 
-        e2.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e2, "simulate failure"));
+        e2.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e2, "simulate failure"));
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -132,14 +132,14 @@ public class ServiceRestarterTest {
     public void testDoesNotSetOnFireOnFailure() throws Exception {
         final FailingEntity e2 = app.createAndManageChild(EntitySpec.create(FailingEntity.class)
                 .configure(FailingEntity.FAIL_ON_RESTART, true));
-        app.subscribe(e2, ServiceRestarter.ENTITY_RESTART_FAILED, eventListener);
+        app.subscriptions().subscribe(e2, ServiceRestarter.ENTITY_RESTART_FAILED, eventListener);
 
         policy = new ServiceRestarter(new ConfigBag()
                 .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED)
                 .configure(ServiceRestarter.SET_ON_FIRE_ON_FAILURE, false));
-        e2.addPolicy(policy);
+        e2.policies().add(policy);
 
-        e2.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e2, "simulate failure"));
+        e2.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e2, "simulate failure"));
         
         Asserts.succeedsContinually(new Runnable() {
             @Override public void run() {
@@ -168,16 +168,16 @@ public class ServiceRestarterTest {
                         return null;
                     }}));
         
-        e2.addPolicy(PolicySpec.create(ServiceRestarter.class)
+        e2.policies().add(PolicySpec.create(ServiceRestarter.class)
                 .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
-        e2.subscribe(e2, TestEntity.SEQUENCE, eventListener);
+        e2.subscriptions().subscribe(e2, TestEntity.SEQUENCE, eventListener);
 
         // Cause failure, and wait for entity.restart to be blocking
-        e2.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        e2.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
         assertTrue(inRestartLatch.await(TIMEOUT_MS, TimeUnit.MILLISECONDS));
         
         // Expect other notifications to continue to get through
-        e2.setAttribute(TestEntity.SEQUENCE, 1);
+        e2.sensors().set(TestEntity.SEQUENCE, 1);
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
                 assertEquals(Iterables.getOnlyElement(events).getValue(), 1);

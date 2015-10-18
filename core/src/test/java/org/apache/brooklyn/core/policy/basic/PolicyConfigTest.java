@@ -50,7 +50,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
                 .put("strKey", "aval")
                 .put("intKey", 2)
                 .build());
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "aval");
         assertEquals(policy.getConfig(MyPolicy.INT_KEY), (Integer)2);
@@ -64,7 +64,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
         MyPolicy policy = new MyPolicy(MutableMap.builder()
                 .put(differentKey, "aval")
                 .build());
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(differentKey), null);
         assertEquals(policy.getPolicyType().getConfigKey(differentKey.getName()), null);
@@ -76,7 +76,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
                 .put(MyPolicy.STR_KEY, "aval")
                 .put(MyPolicy.INT_KEY, 2)
                 .build());
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "aval");
         assertEquals(policy.getConfig(MyPolicy.INT_KEY), (Integer)2);
@@ -89,7 +89,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
         MyPolicy policy = new MyPolicy(MutableMap.builder()
                 .put(MyPolicy.INT_KEY_WITH_DEFAULT, 0)
                 .build());
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(MyPolicy.INT_KEY_WITH_DEFAULT), (Integer)0);
     }
@@ -99,7 +99,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
         MyPolicy policy = new MyPolicy(MutableMap.builder()
                 .put(MyPolicy.STR_KEY_WITH_DEFAULT, null)
                 .build());
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY_WITH_DEFAULT), null);
     }
@@ -109,7 +109,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
         MyPolicy policy = new MyPolicy();
         policy.config().set(MyPolicy.STR_KEY, "aval");
         policy.config().set(MyPolicy.INT_KEY, 2);
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "aval");
         assertEquals(policy.getConfig(MyPolicy.INT_KEY), (Integer)2);
@@ -121,7 +121,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
                 .put(MyPolicy.STR_KEY, "aval")
                 .build());
         policy.config().set(MyPolicy.STR_KEY, "diffval");
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY), "diffval");
     }
@@ -131,7 +131,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
         MyPolicy policy = new MyPolicy(MutableMap.builder()
                 .put(MyPolicy.STR_KEY, "origval")
                 .build());
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         try {
             policy.config().set(MyPolicy.STR_KEY,"newval");
@@ -146,7 +146,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testConfigReturnsDefaultValueIfNotSet() throws Exception {
         MyPolicy policy = new MyPolicy();
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(MyPolicy.STR_KEY_WITH_DEFAULT), "str key default");
     }
@@ -157,7 +157,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
         MyPolicy policy = new MyPolicy(MutableMap.builder()
                 .put(TestEntity.CONF_NAME, DependentConfiguration.whenDone(Callables.returning("aval")))
                 .build());
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         assertEquals(policy.getConfig(TestEntity.CONF_NAME), "aval");
     }
@@ -176,7 +176,7 @@ public class PolicyConfigTest extends BrooklynAppUnitTestSupport {
                             }
                         }}))
                 .build());
-        app.addPolicy(policy);
+        app.policies().add(policy);
         
         Thread t = new Thread(new Runnable() {
                 public void run() {

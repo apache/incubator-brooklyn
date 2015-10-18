@@ -65,7 +65,7 @@ public interface Policy extends EntityAdjunct, Rebindable, Configurable {
     <T> T getConfig(ConfigKey<T> key);
     
     /**
-     * @deprecated since 0.7.0; use {@link #config()}, such as {@code policy.config().setConfig(key, val)}
+     * @deprecated since 0.7.0; use {@link #config()}, such as {@code policy.config().set(key, val)}
      */
     @Deprecated
     <T> T setConfig(ConfigKey<T> key, T val);

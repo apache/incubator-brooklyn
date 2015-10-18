@@ -80,7 +80,7 @@ public class ServiceFailureDetectorTest {
         managementContext = new LocalManagementContextForTests();
         app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         e1 = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        e1.addEnricher(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
+        e1.enrichers().add(ServiceStateLogic.newEnricherForServiceStateFromProblemsAndUp());
         
         app.getManagementContext().getSubscriptionManager().subscribe(e1, HASensors.ENTITY_FAILED, eventListener);
         app.getManagementContext().getSubscriptionManager().subscribe(e1, HASensors.ENTITY_RECOVERED, eventListener);
@@ -94,10 +94,10 @@ public class ServiceFailureDetectorTest {
     @Test(groups="Integration") // Has a 1 second wait
     public void testNotNotifiedOfFailuresForHealthy() throws Exception {
         // Create members before and after the policy is registered, to test both scenarios
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
         
         assertNoEventsContinually();
         assertEquals(e1.getAttribute(TestEntity.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING);
@@ -105,14 +105,14 @@ public class ServiceFailureDetectorTest {
     
     @Test
     public void testNotifiedOfFailure() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
         
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         
         assertEquals(events.size(), 0, "events="+events);
         
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
 
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(e1), null);
         assertEquals(events.size(), 1, "events="+events);
@@ -121,9 +121,9 @@ public class ServiceFailureDetectorTest {
     
     @Test
     public void testNotifiedOfFailureOnProblem() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
         
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         
         assertEquals(events.size(), 0, "events="+events);
@@ -137,8 +137,8 @@ public class ServiceFailureDetectorTest {
     
     @Test
     public void testNotifiedOfFailureOnStateOnFire() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.ON_FIRE);
 
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(e1), null);
@@ -148,18 +148,18 @@ public class ServiceFailureDetectorTest {
     
     @Test
     public void testNotifiedOfRecovery() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
         
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         // Make the entity fail
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
 
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(e1), null);
         EntityTestUtils.assertAttributeEqualsEventually(e1, TestEntity.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
 
         // And make the entity recover
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         assertHasEventEventually(HASensors.ENTITY_RECOVERED, Predicates.<Object>equalTo(e1), null);
         assertEquals(events.size(), 2, "events="+events);
         EntityTestUtils.assertAttributeEqualsEventually(e1, TestEntity.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
@@ -167,9 +167,9 @@ public class ServiceFailureDetectorTest {
     
     @Test
     public void testNotifiedOfRecoveryFromProblems() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
         
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         // Make the entity fail
         ServiceProblemsLogic.updateProblemsIndicator(e1, "test", "foo");
@@ -187,10 +187,10 @@ public class ServiceFailureDetectorTest {
     
     @Test(groups="Integration") // Has a 1 second wait
     public void testEmitsEntityFailureOnlyIfPreviouslyUp() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
         
         // Make the entity fail
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
 
         EntityTestUtils.assertAttributeEqualsEventually(e1, TestEntity.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
@@ -199,10 +199,10 @@ public class ServiceFailureDetectorTest {
     
     @Test
     public void testDisablingPreviouslyUpRequirementForEntityFailed() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class)
             .configure(ServiceFailureDetector.ENTITY_FAILED_ONLY_IF_PREVIOUSLY_UP, false));
         
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
 
         EntityTestUtils.assertAttributeEqualsEventually(e1, TestEntity.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
@@ -211,29 +211,29 @@ public class ServiceFailureDetectorTest {
     
     @Test
     public void testDisablingOnFire() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class)
             .configure(ServiceFailureDetector.SERVICE_ON_FIRE_STABILIZATION_DELAY, Duration.PRACTICALLY_FOREVER));
         
         // Make the entity fail
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         EntityTestUtils.assertAttributeEqualsEventually(e1, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
 
         assertEquals(e1.getAttribute(TestEntity.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING);
     }
     
     @Test(groups="Integration") // Has a 1 second wait
     public void testOnFireAfterDelay() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class)
             .configure(ServiceFailureDetector.SERVICE_ON_FIRE_STABILIZATION_DELAY, Duration.ONE_SECOND));
         
         // Make the entity fail
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         EntityTestUtils.assertAttributeEqualsEventually(e1, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
 
         assertEquals(e1.getAttribute(TestEntity.SERVICE_STATE_ACTUAL), Lifecycle.RUNNING);
         Time.sleep(Duration.millis(100));
@@ -243,12 +243,12 @@ public class ServiceFailureDetectorTest {
     
     @Test(groups="Integration") // Has a 1 second wait
     public void testOnFailureDelayFromProblemAndRecover() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class)
             .configure(ServiceFailureDetector.SERVICE_ON_FIRE_STABILIZATION_DELAY, Duration.ONE_SECOND)
             .configure(ServiceFailureDetector.ENTITY_RECOVERED_STABILIZATION_DELAY, Duration.ONE_SECOND));
         
         // Set the entity to healthy
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         EntityTestUtils.assertAttributeEqualsEventually(e1, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         
@@ -272,23 +272,23 @@ public class ServiceFailureDetectorTest {
     
     @Test(groups="Integration") // Has a 1 second wait
     public void testAttendsToServiceState() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
         
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         // not counted as failed because not expected to be running
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
 
         assertNoEventsContinually();
     }
 
     @Test(groups="Integration") // Has a 1 second wait
     public void testOnlyReportsFailureIfRunning() throws Exception {
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
         
         // Make the entity fail
         ServiceStateLogic.setExpectedState(e1, Lifecycle.STARTING);
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
 
         assertNoEventsContinually();
     }
@@ -296,9 +296,9 @@ public class ServiceFailureDetectorTest {
     @Test
     public void testReportsFailureWhenAlreadyDownOnRegisteringPolicy() throws Exception {
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
-        e1.setAttribute(TestEntity.SERVICE_UP, false);
+        e1.sensors().set(TestEntity.SERVICE_UP, false);
 
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class)
             .configure(ServiceFailureDetector.ENTITY_FAILED_ONLY_IF_PREVIOUSLY_UP, false));
 
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(e1), null);
@@ -308,7 +308,7 @@ public class ServiceFailureDetectorTest {
     public void testReportsFailureWhenAlreadyOnFireOnRegisteringPolicy() throws Exception {
         ServiceStateLogic.setExpectedState(e1, Lifecycle.ON_FIRE);
 
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class)
             .configure(ServiceFailureDetector.ENTITY_FAILED_ONLY_IF_PREVIOUSLY_UP, false));
 
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(e1), null);
@@ -318,11 +318,11 @@ public class ServiceFailureDetectorTest {
     public void testRepublishedFailure() throws Exception {
         Duration republishPeriod = Duration.millis(100);
 
-        e1.addEnricher(EnricherSpec.create(ServiceFailureDetector.class)
+        e1.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class)
                 .configure(ServiceFailureDetector.ENTITY_FAILED_REPUBLISH_TIME, republishPeriod));
             
         // Set the entity to healthy
-        e1.setAttribute(TestEntity.SERVICE_UP, true);
+        e1.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(e1, Lifecycle.RUNNING);
         EntityTestUtils.assertAttributeEqualsEventually(e1, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
         

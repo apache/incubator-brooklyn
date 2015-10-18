@@ -260,11 +260,11 @@ public class OsgiVersionMoreEntityTest {
                 OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY,
                 TEST_VERSION,
                 BROOKLYN_TEST_OSGI_ENTITIES_URL);
-        me.addPolicy(getPolicySpec(cp));
+        me.policies().add(getPolicySpec(cp));
         
         Assert.assertEquals(me.getPolicies().size(), 1, "Wrong number of policies: "+me.getPolicies());
         
-        String catalogItemId = Iterables.getOnlyElement( me.getPolicies() ).getCatalogItemId();
+        String catalogItemId = Iterables.getOnlyElement( me.policies() ).getCatalogItemId();
         Assert.assertNotNull(catalogItemId);
         // must be the actual source bundle
         Assert.assertFalse(catalogItemId.equals(me.getCatalogItemId()), "catalog item id is: "+catalogItemId);
@@ -311,7 +311,7 @@ public class OsgiVersionMoreEntityTest {
         assertV2EffectorCall(me);
         Assert.assertEquals(me.getPolicies().size(), 1, "Wrong number of policies: "+me.getPolicies());
         
-        String catalogItemId = Iterables.getOnlyElement( me.getPolicies() ).getCatalogItemId();
+        String catalogItemId = Iterables.getOnlyElement( me.policies() ).getCatalogItemId();
         Assert.assertNotNull(catalogItemId);
         // allow either me's bundle (more) or the actual source bundle
         Assert.assertTrue(catalogItemId.equals(me.getCatalogItemId()) || catalogItemId.startsWith("brooklyn-test-osgi-entities"));

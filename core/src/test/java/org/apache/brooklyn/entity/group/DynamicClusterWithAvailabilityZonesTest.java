@@ -76,7 +76,7 @@ public class DynamicClusterWithAvailabilityZonesTest extends BrooklynAppUnitTest
 
     @Test
     public void testPicksCorrectNumSubLocations() throws Exception {
-        ((EntityLocal)cluster).setConfig(DynamicCluster.NUM_AVAILABILITY_ZONES, 2);
+        ((EntityLocal)cluster).config().set(DynamicCluster.NUM_AVAILABILITY_ZONES, 2);
         cluster.start(ImmutableList.of(loc));
         List<Location> subLocations = cluster.getAttribute(DynamicCluster.SUB_LOCATIONS);
         List<String> subLocationNames = getLocationNames(subLocations);
@@ -85,7 +85,7 @@ public class DynamicClusterWithAvailabilityZonesTest extends BrooklynAppUnitTest
     
     @Test
     public void testPicksCorrectNamedSubLocations() throws Exception {
-        ((EntityLocal)cluster).setConfig(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone2", "zone4"));
+        ((EntityLocal)cluster).config().set(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone2", "zone4"));
         cluster.start(ImmutableList.of(loc));
         List<Location> subLocations = cluster.getAttribute(DynamicCluster.SUB_LOCATIONS);
         List<String> subLocationNames = getLocationNames(subLocations);
@@ -94,7 +94,7 @@ public class DynamicClusterWithAvailabilityZonesTest extends BrooklynAppUnitTest
     
     @Test
     public void testSpreadsEntitiesAcrossZonesEvenly() throws Exception {
-        ((EntityLocal)cluster).setConfig(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
+        ((EntityLocal)cluster).config().set(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
         cluster.start(ImmutableList.of(loc));
         
         cluster.resize(4);
@@ -112,7 +112,7 @@ public class DynamicClusterWithAvailabilityZonesTest extends BrooklynAppUnitTest
     
     @Test
     public void testReplacesEntityInSameZone() throws Exception {
-        ((EntityLocal)cluster).setConfig(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
+        ((EntityLocal)cluster).config().set(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
         cluster.start(ImmutableList.of(loc));
         
         cluster.resize(4);
@@ -144,9 +144,9 @@ public class DynamicClusterWithAvailabilityZonesTest extends BrooklynAppUnitTest
             }
         };
         
-        ((EntityLocal)cluster).setConfig(DynamicCluster.ZONE_FAILURE_DETECTOR, new ProportionalZoneFailureDetector(2, Duration.ONE_HOUR, 0.9, ticker));
-        ((EntityLocal)cluster).setConfig(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
-        ((EntityLocal)cluster).setConfig(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
+        ((EntityLocal)cluster).config().set(DynamicCluster.ZONE_FAILURE_DETECTOR, new ProportionalZoneFailureDetector(2, Duration.ONE_HOUR, 0.9, ticker));
+        ((EntityLocal)cluster).config().set(DynamicCluster.AVAILABILITY_ZONE_NAMES, ImmutableList.of("zone1", "zone2"));
+        ((EntityLocal)cluster).config().set(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
                 .configure(FailingEntity.FAIL_ON_START_CONDITION, failurePredicate));
         cluster.start(ImmutableList.of(loc));
         

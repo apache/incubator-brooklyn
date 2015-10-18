@@ -77,13 +77,13 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testServiceRestarterWorksAfterRebind() throws Exception {
-        origEntity.addPolicy(PolicySpec.create(ServiceRestarter.class)
+        origEntity.policies().add(PolicySpec.create(ServiceRestarter.class)
                 .configure(ServiceRestarter.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
         
         TestApplication newApp = rebind();
         final TestEntity newEntity = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
         
-        newEntity.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(origEntity, "simulate failure"));
+        newEntity.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(origEntity, "simulate failure"));
         
         Asserts.succeedsEventually(new Runnable() {
             @Override public void run() {
@@ -99,7 +99,7 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
                 .configure(DynamicCluster.INITIAL_SIZE, 3));
         origApp.start(ImmutableList.<Location>of(origLoc));
 
-        origCluster.addPolicy(PolicySpec.create(ServiceReplacer.class)
+        origCluster.policies().add(PolicySpec.create(ServiceReplacer.class)
                 .configure(ServiceReplacer.FAILURE_SENSOR_TO_MONITOR, HASensors.ENTITY_FAILED));
 
         // rebind
@@ -113,7 +113,7 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
         newApp.getManagementContext().getSubscriptionManager().subscribe(e1, HASensors.ENTITY_FAILED, eventListener);
         newApp.getManagementContext().getSubscriptionManager().subscribe(e1, HASensors.ENTITY_RECOVERED, eventListener);
         
-        e1.emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
+        e1.sensors().emit(HASensors.ENTITY_FAILED, new FailureDescriptor(e1, "simulate failure"));
         
         // Expect e1 to be replaced
         Asserts.succeedsEventually(new Runnable() {
@@ -132,7 +132,7 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testServiceFailureDetectorWorksAfterRebind() throws Exception {
-        origEntity.addEnricher(EnricherSpec.create(ServiceFailureDetector.class));
+        origEntity.enrichers().add(EnricherSpec.create(ServiceFailureDetector.class));
 
         // rebind
         TestApplication newApp = rebind();
@@ -140,11 +140,11 @@ public class HaPolicyRebindTest extends RebindTestFixtureWithApp {
 
         newApp.getManagementContext().getSubscriptionManager().subscribe(newEntity, HASensors.ENTITY_FAILED, eventListener);
 
-        newEntity.setAttribute(TestEntity.SERVICE_UP, true);
+        newEntity.sensors().set(TestEntity.SERVICE_UP, true);
         ServiceStateLogic.setExpectedState(newEntity, Lifecycle.RUNNING);
         
         // trigger the failure
-        newEntity.setAttribute(TestEntity.SERVICE_UP, false);
+        newEntity.sensors().set(TestEntity.SERVICE_UP, false);
 
         assertHasEventEventually(HASensors.ENTITY_FAILED, Predicates.<Object>equalTo(newEntity), null);
         assertEquals(events.size(), 1, "events="+events);

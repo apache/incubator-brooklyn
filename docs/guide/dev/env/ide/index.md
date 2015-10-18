@@ -105,7 +105,7 @@ Tips from Netbeans users wanted!
 To debug Brooklyn, create a launch configuration which launches the ``BrooklynJavascriptGuiLauncher`` class. NOTE: You may
 need to add additional projects or folders to the classpath of the run configuration (e.g. add the brooklyn-software-nosql
 project if you wish to deploy a MongoDBServer). You will also need to ensure that the working directory is set to the jsgui
-folder. For IntelliJ, you can set the 'Working directory' of the Run/Debug Configuration to ``$MODULE_DIR/../jsgui``. For
+folder. For IntelliJ, you can set the 'Working directory' of the Run/Debug Configuration to ``$MODULE_DIR$/../jsgui``. For
 Eclipse, use the default option of ``${workspace_loc:brooklyn-jsgui}``.
 
 To debug the jsgui (the Brooklyn web console), you will need to build Brooklyn with -DskipOptimization to prevent the build from minifying the javascript.

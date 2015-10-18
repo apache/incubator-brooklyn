@@ -88,7 +88,7 @@ public class JmxSupport implements UsesJmx {
     }
 
     <T> void setConfig(ConfigKey<T> key, T value) {
-        ((EntityLocal)getEntity()).setConfig(key, value);
+        ((EntityLocal)getEntity()).config().set(key, value);
     }
 
     public Maybe<SshMachineLocation> getMachine() {
@@ -141,7 +141,7 @@ public class JmxSupport implements UsesJmx {
                 }
             }
 
-            ((EntityLocal)entity).setConfig(JMX_AGENT_MODE, jmxAgentMode);
+            ((EntityLocal)entity).config().set(JMX_AGENT_MODE, jmxAgentMode);
         }
 
         if (isSecure && jmxAgentMode!=JmxAgentModes.JMXMP) {
@@ -152,7 +152,7 @@ public class JmxSupport implements UsesJmx {
     }
 
     public void setJmxUrl() {
-        ((EntityInternal)entity).setAttribute(JMX_URL, getJmxUrl());
+        ((EntityInternal)entity).sensors().set(JMX_URL, getJmxUrl());
     }
 
     public String getJmxUrl() {
@@ -189,13 +189,13 @@ public class JmxSupport implements UsesJmx {
                     log.warn("Ignoring JMX_PORT "+jmxRemotePort+" when configuring agentless JMX on "+getEntity()+"; will use RMI_REGISTRY_PORT "+rmiRegistryPort);
                 }
                 jmxRemotePort = rmiRegistryPort;
-                ((EntityLocal)getEntity()).setAttribute(JMX_PORT, jmxRemotePort);
+                ((EntityLocal)getEntity()).sensors().set(JMX_PORT, jmxRemotePort);
             }
         } else {
             if (jmxRemotePort==null || jmxRemotePort<=0) {
                 throw new IllegalStateException("Invalid JMX_PORT "+jmxRemotePort+" and RMI_REGISTRY_PORT "+rmiRegistryPort+" when configuring JMX "+getJmxAgentMode()+" on "+getEntity());
             }
-            ((EntityLocal)getEntity()).setAttribute(RMI_REGISTRY_PORT, jmxRemotePort);
+            ((EntityLocal)getEntity()).sensors().set(RMI_REGISTRY_PORT, jmxRemotePort);
         }
         return jmxRemotePort;
     }
@@ -213,7 +213,7 @@ public class JmxSupport implements UsesJmx {
         String result = getEntity().getAttribute(JMX_AGENT_LOCAL_PATH);
         if (Strings.isNonBlank(result)) return result;
         result = getJmxAgentJarDestinationFilePathDefault();
-        ((EntityInternal)getEntity()).setAttribute(JMX_AGENT_LOCAL_PATH, result);
+        ((EntityInternal)getEntity()).sensors().set(JMX_AGENT_LOCAL_PATH, result);
         return result;
     }
     

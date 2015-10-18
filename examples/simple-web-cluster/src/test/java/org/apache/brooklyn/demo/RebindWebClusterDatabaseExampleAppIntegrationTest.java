@@ -160,7 +160,7 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         WebAppMonitor monitor = newWebAppMonitor(clusterUrl, 200);
 
         // expect auto-scaler policy to be there, and to be functional (e.g. can trigger resize)
-        AutoScalerPolicy autoScalerPolicy = (AutoScalerPolicy) Iterables.find(webCluster.getPolicies(), Predicates.instanceOf(AutoScalerPolicy.class));
+        AutoScalerPolicy autoScalerPolicy = (AutoScalerPolicy) Iterables.find(webCluster.policies(), Predicates.instanceOf(AutoScalerPolicy.class));
         
         autoScalerPolicy.config().set(AutoScalerPolicy.MIN_POOL_SIZE, 3);
         EntityTestUtils.assertGroupSizeEqualsEventually(web, 3);
@@ -177,8 +177,8 @@ public class RebindWebClusterDatabaseExampleAppIntegrationTest extends RebindTes
         }
 
         // expect enrichers to be there
-        Iterables.find(web.getEnrichers(), Predicates.instanceOf(HttpLatencyDetector.class));
-        Iterable<Enricher> propagatorEnrichers = Iterables.filter(web.getEnrichers(), Predicates.instanceOf(Propagator.class));
+        Iterables.find(web.enrichers(), Predicates.instanceOf(HttpLatencyDetector.class));
+        Iterable<Enricher> propagatorEnrichers = Iterables.filter(web.enrichers(), Predicates.instanceOf(Propagator.class));
         assertEquals(Iterables.size(propagatorEnrichers), 3, "propagatorEnrichers="+propagatorEnrichers);
 
         // Check we see evidence of the enrichers having an effect.

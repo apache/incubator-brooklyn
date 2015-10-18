@@ -94,7 +94,7 @@ public class TimeFractionDeltaEnricher<T extends Number> extends AbstractTypeTra
             } else {
                 long duration = eventTimestamp - lastTimestamp;
                 double fraction = toNanos(current.doubleValue() - lastValue.doubleValue(), nanosPerOrigUnit) / TimeUnit.MILLISECONDS.toNanos(duration);
-                entity.setAttribute((AttributeSensor<Double>)target, fraction);
+                entity.sensors().set((AttributeSensor<Double>)target, fraction);
                 if (LOG.isTraceEnabled()) LOG.trace("set {} to {}, {} -> {} at {} (previous at {})", 
                         new Object[] {this, fraction, lastValue, current, eventTimestamp, lastTimestamp}); 
             }

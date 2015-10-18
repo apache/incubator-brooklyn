@@ -184,8 +184,8 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
 
         httpFeed = httpFeedBuilder.build();
 
-        addEnricher(Enrichers.builder().combining(NODE_GETS, NODE_PUTS).computingSum().publishing(NODE_OPS).build());
-        addEnricher(Enrichers.builder().combining(NODE_GETS_TOTAL, NODE_PUTS_TOTAL).computingSum().publishing(NODE_OPS_TOTAL).build());
+        enrichers().add(Enrichers.builder().combining(NODE_GETS, NODE_PUTS).computingSum().publishing(NODE_OPS).build());
+        enrichers().add(Enrichers.builder().combining(NODE_GETS_TOTAL, NODE_PUTS_TOTAL).computingSum().publishing(NODE_OPS_TOTAL).build());
         WebAppServiceMethods.connectWebAppServerPolicies(this);
     }
 

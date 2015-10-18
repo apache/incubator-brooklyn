@@ -71,7 +71,7 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
 
     public void setBrokerUrl() {
         String urlFormat = "amqp://guest:guest@%s:%d/%s";
-        setAttribute(BROKER_URL, format(urlFormat, getAttribute(HOSTNAME), getAttribute(AMQP_PORT), getAttribute(VIRTUAL_HOST_NAME)));
+        sensors().set(BROKER_URL, format(urlFormat, getAttribute(HOSTNAME), getAttribute(AMQP_PORT), getAttribute(VIRTUAL_HOST_NAME)));
     }
 
     public RabbitQueue createQueue(Map properties) {
@@ -95,7 +95,7 @@ public class RabbitBrokerImpl extends SoftwareProcessImpl implements RabbitBroke
         setBrokerUrl();
 
         if (getEnableManagementPlugin()) {
-            setAttribute(MANAGEMENT_URL, format("http://%s:%s/", getAttribute(HOSTNAME), getAttribute(MANAGEMENT_PORT)));
+            sensors().set(MANAGEMENT_URL, format("http://%s:%s/", getAttribute(HOSTNAME), getAttribute(MANAGEMENT_PORT)));
         }
     }
 

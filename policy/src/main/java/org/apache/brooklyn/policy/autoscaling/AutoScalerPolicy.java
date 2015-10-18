@@ -648,11 +648,11 @@ public class AutoScalerPolicy extends AbstractPolicy {
         
         if (getMetric() != null) {
             Entity entityToSubscribeTo = (getEntityWithMetric() != null) ? getEntityWithMetric() : entity;
-            subscribe(entityToSubscribeTo, getMetric(), metricEventHandler);
+            subscriptions().subscribe(entityToSubscribeTo, getMetric(), metricEventHandler);
         }
-        subscribe(poolEntity, getPoolColdSensor(), utilizationEventHandler);
-        subscribe(poolEntity, getPoolHotSensor(), utilizationEventHandler);
-        subscribe(poolEntity, getPoolOkSensor(), utilizationEventHandler);
+        subscriptions().subscribe(poolEntity, getPoolColdSensor(), utilizationEventHandler);
+        subscriptions().subscribe(poolEntity, getPoolHotSensor(), utilizationEventHandler);
+        subscriptions().subscribe(poolEntity, getPoolOkSensor(), utilizationEventHandler);
     }
     
     private ThreadFactory newThreadFactory() {
@@ -974,7 +974,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
                     .maxUnbounded(unboundedSustainedMaxPoolSize)
                     .timeWindow(timeWindowSize)
                     .build();
-            entity.emit(maxSizeReachedSensor, event);
+            entity.sensors().emit(maxSizeReachedSensor, event);
             
         } else if (valsSummary.max > maxAllowedPoolSize) {
             // We temporarily wanted to be bigger than the max allowed; check back later to see if consistent

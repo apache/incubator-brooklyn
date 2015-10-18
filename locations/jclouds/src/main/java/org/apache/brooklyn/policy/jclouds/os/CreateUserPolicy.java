@@ -95,7 +95,7 @@ public class CreateUserPolicy extends AbstractPolicy implements SensorEventListe
 
     public void setEntity(EntityLocal entity) {
         super.setEntity(entity);
-        subscribe(entity, AbstractEntity.LOCATION_ADDED, this);
+        subscriptions().subscribe(entity, AbstractEntity.LOCATION_ADDED, this);
     }
 
     @Override
@@ -175,6 +175,6 @@ public class CreateUserPolicy extends AbstractPolicy implements SensorEventListe
             }
         }
         
-        ((EntityLocal)entity).setAttribute(VM_USER_CREDENTIALS, creds);
+        ((EntityLocal)entity).sensors().set(VM_USER_CREDENTIALS, creds);
     }
 }

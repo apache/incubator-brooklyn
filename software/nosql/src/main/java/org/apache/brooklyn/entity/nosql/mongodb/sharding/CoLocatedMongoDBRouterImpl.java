@@ -63,7 +63,7 @@ public class CoLocatedMongoDBRouterImpl extends SameServerEntityImpl implements 
         router.sensors().set(MongoDBAuthenticationMixins.ROOT_PASSWORD, router.config().get(MongoDBAuthenticationMixins.ROOT_PASSWORD));
         router.sensors().set(MongoDBAuthenticationMixins.ROOT_USERNAME, router.config().get(MongoDBAuthenticationMixins.ROOT_USERNAME));
         router.sensors().set(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE, router.config().get(MongoDBAuthenticationMixins.AUTHENTICATION_DATABASE));
-        addEnricher(Enrichers.builder().propagating(MongoDBRouter.PORT).from(router).build());
+        enrichers().add(Enrichers.builder().propagating(MongoDBRouter.PORT).from(router).build());
         
         super.doStart(locations);
         sensors().set(Startable.SERVICE_UP, true);

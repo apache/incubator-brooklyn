@@ -61,7 +61,7 @@ public class ConditionalSuspendPolicy extends AbstractPolicy {
     }
 
     private void subscribe() {
-        subscribe(entity, getConfig(SUSPEND_SENSOR), new SensorEventListener<Object>() {
+        subscriptions().subscribe(entity, getConfig(SUSPEND_SENSOR), new SensorEventListener<Object>() {
             @Override public void onEvent(final SensorEvent<Object> event) {
                 if (isRunning()) {
                     Policy target = getTargetPolicy();
@@ -71,7 +71,7 @@ public class ConditionalSuspendPolicy extends AbstractPolicy {
             }
 
         });
-        subscribe(entity, getConfig(RESUME_SENSOR), new SensorEventListener<Object>() {
+        subscriptions().subscribe(entity, getConfig(RESUME_SENSOR), new SensorEventListener<Object>() {
             @Override public void onEvent(final SensorEvent<Object> event) {
                 if (isRunning()) {
                     Policy target = getTargetPolicy();
@@ -87,7 +87,7 @@ public class ConditionalSuspendPolicy extends AbstractPolicy {
         if (target instanceof Policy) {
             return (Policy)target;
         } else if (target instanceof String) {
-            for (Policy policy : entity.getPolicies()) {
+            for (Policy policy : entity.policies()) {
                 // No way to set config values for keys NOT declared in the policy,
                 // so must use displayName as a generally available config value.
                 if (target.equals(policy.getDisplayName()) || target.equals(policy.getClass().getName())) {

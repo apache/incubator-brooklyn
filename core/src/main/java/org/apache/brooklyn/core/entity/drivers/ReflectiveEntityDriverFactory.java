@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.paas.PaasLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -192,7 +191,12 @@ public class ReflectiveEntityDriverFactory {
         @Override
         public <D extends EntityDriver> String inferDriverClassName(DriverDependentEntity<D> entity, Class<D> driverInterface, Location location) {
             String driverInterfaceName = driverInterface.getName();
-            if (!(location instanceof WinRmMachineLocation)) return null;
+            // TODO: use a proper registry later on
+            try {
+                if (!Class.forName("org.apache.brooklyn.location.winrm.WinRmMachineLocation").isInstance(location)) return null;
+            } catch (ClassNotFoundException ex) {
+                return null;
+            }
             if (!driverInterfaceName.endsWith("Driver")) {
                 throw new IllegalArgumentException(String.format("Driver name [%s] doesn't end with 'Driver'; cannot auto-detect WinRmDriver class name", driverInterfaceName));
             }

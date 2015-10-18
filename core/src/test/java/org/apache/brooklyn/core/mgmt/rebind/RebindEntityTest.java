@@ -154,7 +154,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
     public void testRestoresEntityDependentConfigCompleted() throws Exception {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class)
                 .configure("myconfig", DependentConfiguration.attributeWhenReady(origApp, TestApplication.MY_ATTRIBUTE)));
-        origApp.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        origApp.sensors().set(TestApplication.MY_ATTRIBUTE, "myval");
         origE.getConfig(MyEntity.MY_CONFIG); // wait for it to be done
         
         newApp = rebind();
@@ -169,7 +169,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         
         newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
-        newApp.setAttribute(TestApplication.MY_ATTRIBUTE, "myval");
+        newApp.sensors().set(TestApplication.MY_ATTRIBUTE, "myval");
         
         assertEquals(newE.getConfig(MyEntity.MY_CONFIG), "myval");
     }
@@ -179,7 +179,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         AttributeSensor<String> myCustomAttribute = Sensors.newStringSensor("my.custom.attribute");
         
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
-        origE.setAttribute(myCustomAttribute, "myval");
+        origE.sensors().set(myCustomAttribute, "myval");
         
         newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
@@ -247,7 +247,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         newApp = rebind();
         MyEntity2 newE = (MyEntity2) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity2.class));
         
-        newApp.setAttribute(TestApplication.MY_ATTRIBUTE, "mysensorval");
+        newApp.sensors().set(TestApplication.MY_ATTRIBUTE, "mysensorval");
         Asserts.eventually(Suppliers.ofInstance(newE.getEvents()), Predicates.<List<String>>equalTo(ImmutableList.of("mysensorval")));
         Assert.assertEquals(newE, origE);
     }
@@ -257,7 +257,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         MyEntity origOtherE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
         MyEntityReffingOthers origE = origApp.createAndManageChild(EntitySpec.create(MyEntityReffingOthers.class)
                 .configure("entityRef", origOtherE));
-        origE.setAttribute(MyEntityReffingOthers.ENTITY_REF_SENSOR, origOtherE);
+        origE.sensors().set(MyEntityReffingOthers.ENTITY_REF_SENSOR, origOtherE);
         
         newApp = rebind();
         MyEntityReffingOthers newE = (MyEntityReffingOthers) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityReffingOthers.class));
@@ -274,7 +274,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         reffer.obj = origE;
         reffer.entity = origE;
         reffer.myEntity = origE;
-        origApp.setConfig(TestEntity.CONF_OBJECT, reffer);
+        origApp.config().set(TestEntity.CONF_OBJECT, reffer);
 
         newApp = rebind();
         MyEntity newE = (MyEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntity.class));
@@ -294,7 +294,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         ReffingEntity reffer = new ReffingEntity();
         reffer.group = origE;
         reffer.resizable = origE;
-        origApp.setConfig(TestEntity.CONF_OBJECT, reffer);
+        origApp.config().set(TestEntity.CONF_OBJECT, reffer);
 
         newApp = rebind();
         MyEntityWithMultipleInterfaces newE = (MyEntityWithMultipleInterfaces) Iterables.find(newApp.getChildren(), Predicates.instanceOf(MyEntityWithMultipleInterfaces.class));
@@ -343,7 +343,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         MyLocation origLoc = new MyLocation();
         MyEntityReffingOthers origE = origApp.createAndManageChild(EntitySpec.create(MyEntityReffingOthers.class)
                 .configure("locationRef", origLoc));
-        origE.setAttribute(MyEntityReffingOthers.LOCATION_REF_SENSOR, origLoc);
+        origE.sensors().set(MyEntityReffingOthers.LOCATION_REF_SENSOR, origLoc);
         origApp.start(ImmutableList.of(origLoc));
         
         newApp = rebind();
@@ -527,7 +527,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testRebindPreservesInheritedConfig() throws Exception {
-        origApp.setConfig(MyEntity.MY_CONFIG, "myValInSuper");
+        origApp.config().set(MyEntity.MY_CONFIG, "myValInSuper");
         origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
 
         // rebind: inherited config is preserved
@@ -569,17 +569,17 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         final TestEntity newE = (TestEntity) Iterables.find(newApp.getChildren(), Predicates.instanceOf(TestEntity.class));
         final TestEntity newChildE = (TestEntity) Iterables.find(newE.getChildren(), Predicates.instanceOf(TestEntity.class));
 
-        assertEquals(newE.getAllConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
-        assertEquals(newE.getLocalConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
+        assertEquals(newE.config().getBag().getStringKey("myunmatchedkey"), "myunmatchedval");
+        assertEquals(newE.config().getLocalBag().getStringKey("myunmatchedkey"), "myunmatchedval");
         
-        assertEquals(newChildE.getAllConfigBag().getStringKey("myunmatchedkey"), "myunmatchedval");
-        assertFalse(newChildE.getLocalConfigBag().containsKey("myunmatchedkey"));
+        assertEquals(newChildE.config().getBag().getStringKey("myunmatchedkey"), "myunmatchedval");
+        assertFalse(newChildE.config().getLocalBag().containsKey("myunmatchedkey"));
     }
 
     @Test
     public void testRebindPersistsNullAttribute() throws Exception {
         MyEntity origE = origApp.createAndManageChild(EntitySpec.create(MyEntity.class));
-        origE.setAttribute(MyEntity.MY_SENSOR, null);
+        origE.sensors().set(MyEntity.MY_SENSOR, null);
 
         assertNull(origE.getAttribute(MyEntity.MY_SENSOR));
 
@@ -596,7 +596,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         final AttributeSensor<String> MY_DYNAMIC_SENSOR = new BasicAttributeSensor<String>(
                 String.class, sensorName, sensorDescription);
 
-        origApp.setAttribute(MY_DYNAMIC_SENSOR, "myval");
+        origApp.sensors().set(MY_DYNAMIC_SENSOR, "myval");
         assertEquals(origApp.getEntityType().getSensor(sensorName).getDescription(), sensorDescription);
 
         newApp = rebind();
@@ -617,7 +617,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         Semaphore unrebindableObject = new Semaphore(1) {
         };
         
-        origApp.setAttribute(MY_DYNAMIC_SENSOR, unrebindableObject);
+        origApp.sensors().set(MY_DYNAMIC_SENSOR, unrebindableObject);
         assertEquals(origApp.getAttribute(MY_DYNAMIC_SENSOR), unrebindableObject);
 
         newApp = rebind();
@@ -832,7 +832,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
         @Override
         public void onManagementStarting() {
             if (getConfig(SUBSCRIBE)) {
-                subscribe(getApplication(), TestApplication.MY_ATTRIBUTE, new SensorEventListener<String>() {
+                subscriptions().subscribe(getApplication(), TestApplication.MY_ATTRIBUTE, new SensorEventListener<String>() {
                     @Override public void onEvent(SensorEvent<String> event) {
                         events.add(event.getValue());
                     }
@@ -905,7 +905,7 @@ public class RebindEntityTest extends RebindTestFixtureWithApp {
             }
 
             if (getConfig(PUBLISH) != null) {
-                setAttribute(MY_SENSOR, getConfig(PUBLISH));
+                sensors().set(MY_SENSOR, getConfig(PUBLISH));
             }
 
             if (latching) {

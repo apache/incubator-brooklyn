@@ -206,11 +206,11 @@ public class MementosGenerators {
             builder.children.add(child.getId()); 
         }
         
-        for (Policy policy : entity.getPolicies()) {
+        for (Policy policy : entity.policies()) {
             builder.policies.add(policy.getId()); 
         }
         
-        for (Enricher enricher : entity.getEnrichers()) {
+        for (Enricher enricher : entity.enrichers()) {
             builder.enrichers.add(enricher.getId()); 
         }
         

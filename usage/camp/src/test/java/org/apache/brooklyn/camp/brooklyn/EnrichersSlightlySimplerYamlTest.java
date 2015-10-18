@@ -63,14 +63,14 @@ public class EnrichersSlightlySimplerYamlTest extends AbstractYamlTest {
         Iterator<Entity> li = leafs.iterator();
         
         Entity e1 = li.next();
-        ((EntityInternal)e1).setAttribute(Sensors.newStringSensor("ip"), "127.0.0.1");
+        ((EntityInternal)e1).sensors().set(Sensors.newStringSensor("ip"), "127.0.0.1");
         EntityTestUtils.assertAttributeEqualsEventually(e1, Sensors.newStringSensor("url"), "http://127.0.0.1/");
         EntityTestUtils.assertAttributeEqualsEventually(e1, Attributes.MAIN_URI, URI.create("http://127.0.0.1/"));
 
         int i=2;
         while (li.hasNext()) {
             Entity ei = li.next();
-            ((EntityInternal)ei).setAttribute(Sensors.newStringSensor("ip"), "127.0.0."+i);
+            ((EntityInternal)ei).sensors().set(Sensors.newStringSensor("ip"), "127.0.0."+i);
             i++;
         }
         
@@ -105,22 +105,22 @@ public class EnrichersSlightlySimplerYamlTest extends AbstractYamlTest {
         EntityInternal dwac = (EntityInternal) srv0.getParent();
         EntityInternal cdwac = (EntityInternal) dwac.getParent();
         
-        srv0.setAttribute(Sensors.newDoubleSensor("my.load"), 20.0);
+        srv0.sensors().set(Sensors.newDoubleSensor("my.load"), 20.0);
         
         EntityTestUtils.assertAttributeEventually(dwac, Sensors.newSensor(Double.class, "my.load.averaged"),
             MathPredicates.equalsApproximately(20));
         EntityTestUtils.assertAttributeEventually(cdwac, Sensors.newSensor(Double.class, "my.load.averaged"),
             MathPredicates.equalsApproximately(20));
 
-        srv0.setAttribute(Sensors.newDoubleSensor("my.load"), null);
+        srv0.sensors().set(Sensors.newDoubleSensor("my.load"), null);
         EntityTestUtils.assertAttributeEventually(cdwac, Sensors.newSensor(Double.class, "my.load.averaged"),
             Predicates.isNull());
 
-        ((EntityInternal) appservers.get(1)).setAttribute(Sensors.newDoubleSensor("my.load"), 10.0);
-        ((EntityInternal) appservers.get(2)).setAttribute(Sensors.newDoubleSensor("my.load"), 20.0);
+        ((EntityInternal) appservers.get(1)).sensors().set(Sensors.newDoubleSensor("my.load"), 10.0);
+        ((EntityInternal) appservers.get(2)).sensors().set(Sensors.newDoubleSensor("my.load"), 20.0);
         EntityTestUtils.assertAttributeEventually(cdwac, Sensors.newSensor(Double.class, "my.load.averaged"),
             MathPredicates.equalsApproximately(15));
-        srv0.setAttribute(Sensors.newDoubleSensor("my.load"), 0.0);
+        srv0.sensors().set(Sensors.newDoubleSensor("my.load"), 0.0);
         EntityTestUtils.assertAttributeEventually(cdwac, Sensors.newSensor(Double.class, "my.load.averaged"),
             MathPredicates.equalsApproximately(10));
     }

@@ -41,9 +41,5 @@ $pass = '${attribute['windows.password']}'
 $secpasswd = ConvertTo-SecureString $pass -AsPlainText -Force
 $mycreds = New-Object System.Management.Automation.PSCredential ($($env:COMPUTERNAME + "\Administrator"), $secpasswd)
 
-Invoke-Command -ComputerName localhost -credential $mycreds -scriptblock {
-    param($driveLetter)
-    Start-Process ( $driveLetter + "setup.exe") -ArgumentList "/ConfigurationFile=C:\ConfigurationFile.ini" -RedirectStandardOutput "C:\sqlout.txt" -RedirectStandardError "C:\sqlerr.txt" -Wait
-} -Authentication CredSSP -argumentlist $driveLetter
-
-## Process complete
+$process = Start-Process ( $driveLetter + "setup.exe") -ArgumentList "/ConfigurationFile=C:\ConfigurationFile.ini" -Credential $mycreds -RedirectStandardOutput "C:\sqlout.txt" -RedirectStandardError "C:\sqlerr.txt" -Wait -PassThru
+exit $process.ExitCode

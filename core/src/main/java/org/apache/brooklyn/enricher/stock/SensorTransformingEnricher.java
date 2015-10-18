@@ -60,9 +60,9 @@ public class SensorTransformingEnricher<T,U> extends AbstractTypeTransformingEnr
     public void onEvent(SensorEvent event) {
         if (accept((T)event.getValue())) {
             if (target instanceof AttributeSensor)
-                entity.setAttribute((AttributeSensor)target, compute((T)event.getValue()));
+                entity.sensors().set((AttributeSensor)target, compute((T)event.getValue()));
             else 
-                entity.emit(target, compute((T)event.getValue()));
+                entity.sensors().emit(target, compute((T)event.getValue()));
         }
     }
 

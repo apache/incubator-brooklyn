@@ -22,498 +22,346 @@
  */
 define([
     "underscore", "jquery", "backbone", "view/viewutils",
-    "model/app-tree", "./entity-details", "model/entity-summary", "model/application",
-    "text!tpl/apps/tree-item.html", "text!tpl/apps/tree-empty.html", "text!tpl/apps/details.html", "text!tpl/apps/entity-not-found.html"
+    "model/app-tree", "text!tpl/apps/tree-item.html", "text!tpl/apps/tree-empty.html"
 ], function (_, $, Backbone, ViewUtils,
-             AppTree, EntityDetailsView, EntitySummary, Application,
-             TreeItemHtml, TreeEmptyHtml, EntityDetailsEmptyHtml, EntityNotFoundHtml) {
+             AppTree, TreeItemHtml, EmptyTreeHtml) {
 
-    var treeViewTemplate = _.template(TreeItemHtml),
-        notFoundTemplate = _.template(EntityNotFoundHtml);
+    var emptyTreeTemplate = _.template(EmptyTreeHtml);
+    var treeItemTemplate = _.template(TreeItemHtml);
 
-    
-    var ApplicationTreeView = Backbone.View.extend({
-        template: treeViewTemplate,
+    var findAllTreeboxes = function(id, $scope) {
+        return $('.tree-box[data-entity-id="' + id + '"]', $scope);
+    };
+
+    var findRootTreebox = function(id) {
+        return $('.lozenge-app-tree-wrapper').children('.tree-box[data-entity-id="' + id + '"]', this.$el);
+    };
+
+    var findChildTreebox = function(id, $parentTreebox) {
+        return $parentTreebox.children('.node-children').children('.tree-box[data-entity-id="' + id + '"]');
+    };
+
+    var findMasterTreebox = function(id, $scope) {
+        return $('.tree-box[data-entity-id="' + id + '"]:not(.indirect)', $scope);
+    };
+
+    var createEntityTreebox = function(id, name, $domParent, depth, indirect) {
+        // Tildes in sort key force entities with no name to bottom of list (z < ~).
+        var sortKey = (name ? name.toLowerCase() : "~~~") + "     " + id.toLowerCase();
+
+        // Create the wrapper.
+        var $treebox = $(
+                '<div data-entity-id="'+id+'" data-sort-key="'+sortKey+'" data-depth="'+depth+'" ' +
+                'class="tree-box toggler-group' +
+                    (indirect ? " indirect" : "") +
+                    (depth == 0 ? " outer" : " inner " + (depth % 2 ? " depth-odd" : " depth-even")+
+                    (depth == 1 ? " depth-first" : "")) + '">'+
+                '<div class="entity_tree_node_wrapper"></div>'+
+                '<div class="node-children toggler-target hide"></div>'+
+                '</div>');
+
+        // Insert into the passed DOM parent, maintaining sort order relative to siblings: name then id.
+        var placed = false;
+        var contender = $(".toggler-group", $domParent).first();
+        while (contender.length && !placed) {
+            var contenderKey = contender.data("sort-key");
+            if (sortKey < contenderKey) {
+                contender.before($treebox);
+                placed = true;
+            } else {
+                contender = contender.next(".toggler-group", $domParent);
+            }
+        }
+        if (!placed) {
+            $domParent.append($treebox);
+        }
+        return $treebox;
+    };
+
+    var getOrCreateApplicationTreebox = function(id, name, treeView) {
+        var $treebox = findRootTreebox(id);
+        if (!$treebox.length) {
+            var $insertionPoint = $('.lozenge-app-tree-wrapper', treeView.$el);
+            if (!$insertionPoint.length) {
+                // entire view must be created
+                treeView.$el.html(
+                        '<div class="navbar_main_wrapper treeloz">'+
+                        '<div id="tree-list" class="navbar_main treeloz">'+
+                        '<div class="lozenge-app-tree-wrapper">'+
+                        '</div></div></div>');
+                $insertionPoint = $('.lozenge-app-tree-wrapper', treeView.$el);
+            }
+            $treebox = createEntityTreebox(id, name, $insertionPoint, 0, false);
+        }
+        return $treebox;
+    };
+
+    var getOrCreateChildTreebox = function(id, name, isIndirect, $parentTreebox) {
+        var $treebox = findChildTreebox(id, $parentTreebox);
+        if (!$treebox.length) {
+            $treebox = createEntityTreebox(id, name, $parentTreebox.children('.node-children'), $parentTreebox.data("depth") + 1, isIndirect);
+        }
+        return $treebox;
+    };
+
+    var updateTreeboxContent = function(entity, $treebox, treeView) {
+        var $newContent = $(treeView.template({
+            id: entity.get('id'),
+            parentId:  entity.get('parentId'),
+            model: entity,
+            statusIconUrl: ViewUtils.computeStatusIconInfo(entity.get("serviceUp"), entity.get("serviceState")).url,
+            indirect: $treebox.hasClass('indirect'),
+        }));
+
+        var $wrapper = $treebox.children('.entity_tree_node_wrapper');
+
+        // Preserve old display status (just chevron direction at present).
+        if ($wrapper.find('.tree-node-state').hasClass('icon-chevron-down')) {
+            $newContent.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down');
+        }
+
+        $wrapper.html($newContent);
+        addEventsToNode($treebox, treeView);
+    };
+
+    var addEventsToNode = function($node, treeView) {
+        // show the "light-popup" (expand / expand all / etc) menu
+        // if user hovers for 500ms. surprising there is no option for this (hover delay).
+        // also, annoyingly, clicks around the time the animation starts don't seem to get handled
+        // if the click is in an overlapping reason; this is why we position relative top: 12px in css
+        $('.light-popup', $node).parent().parent().hover(
+                function(parent) {
+                    treeView.cancelHoverTimer();
+                    treeView.hoverTimer = setTimeout(function() {
+                        var menu = $(parent.currentTarget).find('.light-popup');
+                        menu.show();
+                    }, 500);
+                },
+                function(parent) {
+                    treeView.cancelHoverTimer();
+                    $('.light-popup').hide();
+                }
+        );
+    };
+
+    var selectTreebox = function(id, $treebox, treeView) {
+        $('.entity_tree_node_wrapper').removeClass('active');
+        $treebox.children('.entity_tree_node_wrapper').addClass('active');
+
+        var entity = treeView.collection.get(id);
+        if (entity) {
+            treeView.selectedEntityId = id;
+            treeView.trigger('entitySelected', entity);
+        }
+    };
+
+
+    return Backbone.View.extend({
+        template: treeItemTemplate,
         hoverTimer: null,
 
-        events:{
-            'click span.entity_tree_node .tree-change':'treeChange',
-            'click span.entity_tree_node':'displayEntity'
+        events: {
+            'click span.entity_tree_node .tree-change': 'treeChange',
+            'click span.entity_tree_node': 'nodeClicked'
         },
-        
-        initialize:function () {
-            this.collection.on('all', this.modelEvent, this)
-            this.collection.on('change', this.modelChange, this)
-            this.collection.on('remove', this.modelRemove, this)
-            this.collection.on('add', this.modelAdd, this)
-            this.collection.on('reset', this.renderFull, this)
+
+        initialize: function() {
+            this.collection.on('add', this.entityAdded, this);
+            this.collection.on('change', this.entityChanged, this);
+            this.collection.on('remove', this.entityRemoved, this);
+            this.collection.on('reset', this.renderFull, this);
             _.bindAll(this);
         },
 
-        beforeClose:function () {
-            this.collection.off("reset", this.renderFull)
-            if (this.detailsView) this.detailsView.close()
+        beforeClose: function() {
+            this.collection.off("reset", this.renderFull);
         },
-        
-        modelChange: function (child) {
-            this.updateNode(child.id)
-        },
-        modelAdd: function (child) {
-            this.updateNode(child.id)
-        },
-        modelRemove: function (child) {
-            this.removeNode(child.id)
-        },
-        modelEvent: function (eventName, event, x) {
-            if (/^change/i.test(eventName) || eventName == "remove" || eventName == "add" ||
-                    eventName == "reset" ||
-                    // above are handled; below is no-op
-                    eventName == "sync" || eventName == "request")
-                return;
 
-            if (eventName == "error") {
-                log("model error in application-tree - has the internet vanished?")
-                // ignore; app-explorer should clear the view
-                return;
+        entityAdded: function(entity) {
+            // Called when the full entity model is fetched into our collection, at which time we can replace
+            // the empty contents of any placeholder tree nodes (.tree-box) that were created earlier.
+            // The entity may have multiple 'treebox' views (in the case of group members).
+
+            // If the new entity is an application, we must create its placeholder in the DOM.
+            if (!entity.get('parentId')) {
+                var $treebox = getOrCreateApplicationTreebox(entity.id, entity.get('name'), this);
+
+                // Select the new app if there's no current selection.
+                if (!this.selectedEntityId)
+                    selectTreebox(entity.id, $treebox, this);
             }
-            
-            // don't think we get other events, but just in case:
-            log("unhandled model event")
-            log(eventName)
-            log(event)
-            log(x)
+
+            this.entityChanged(entity);
         },
 
-        removeNode: function(id) {
-            $('#'+id, this.$el).parent().remove()
-            // collection seems sometimes to have children nodes;
-            // not sure why, but that's okay for now
-            if (this.collection.getApplications().length==0)
-//            if (this.collection.isEmpty() || $('lozenge-app-tree-wrapper').length==0)
+        entityChanged: function(entity) {
+            // The entity may have multiple 'treebox' views (in the case of group members).
+            var that = this;
+            findAllTreeboxes(entity.id).each(function() {
+                var $treebox = $(this);
+                updateTreeboxContent(entity, $treebox, that);
+            });
+        },
+
+        entityRemoved: function(entity) {
+            // The entity may have multiple 'treebox' views (in the case of group members).
+            findAllTreeboxes(entity.id, this.$el).remove();
+            // Collection seems sometimes to retain children of the removed node;
+            // not sure why, but that's okay for now.
+            if (this.collection.getApplications().length == 0)
                 this.renderFull();
         },
-        
-        updateNode: function(id, parentId, isApp) {
-            var that = this;
-            var nModel = that.collection.get(id);
-            var node = $('#'+id, that.$el)
-            
-            if (!isApp) {
-                // autodiscover whether this is an app, looking at the model and the tree
-                // (at least one should be available -- probably always the former, but...)
-                if (nModel) { isApp = (id == nModel.get('applicationId')); }
-                else if (!isApp && node && node.parent().data('depth')==0) isApp = true;
-            }
 
-            if (!isApp && !parentId && nModel)
-                parentId = nModel.get('parentId');
-            if (!isApp && !parentId && node)
-                parentId = node.closest("entity_tree_node_wrapper").data('parentId');
-            if (!isApp && !parentId) {
-                log("no parentId yet available for "+id+"; skipping;")
-                return false;                
-            }
-            
-            var statusIconUrl = nModel
-                ? ViewUtils.computeStatusIconInfo(nModel.get("serviceUp"),nModel.get("serviceState")).url
-                : null;
-
-            var newNode = this.template({
-                id:id,
-                parentId:parentId,
-                model:nModel,
-                statusIconUrl:statusIconUrl
-            })
-
-            if (!node.length) {
-                // node does not exist, so add it
-                var parentsChildren, depth;
-                
-                if (isApp) {
-                    parentsChildren = $('.lozenge-app-tree-wrapper', that.$el);
-                    if (!parentsChildren.length) {
-                        // entire view must be created
-                        that.$el.html(
-                                '<div class="navbar_main_wrapper treeloz">'+
-                                '<div id="tree-list" class="navbar_main treeloz">'+
-                                '<div class="lozenge-app-tree-wrapper">'+
-                                '</div></div></div>');
-                        parentsChildren = $('.lozenge-app-tree-wrapper', that.$el);
-                    }
-                    depth = 0;
-                } else {
-                    var parent = $('#'+parentId, that.$el)
-                    if (!parent.length) {
-                        // see if we can load the parent
-                        if (this.updateNode(parentId)) {
-                            parent = $('#'+parentId, that.$el);
-                            if (!parent.length) {
-                                log("no parent element yet available for "+id+" ("+parentId+") after parent load; skipping")
-                                return false;                                
-                            }
-                        } else {
-                            log("no parent element yet available for "+id+" ("+parentId+"); skipping")
-                            return false;
-                        }
-                    }
-                    parentsChildren = $(parent.parent().children('.node-children'));
-                    depth = parent.parent().data("depth")+1
-                }
-
-                // add it, with surrounding html, in parent's node-children child
-                // tildes in sortKey force entities with no name to bottom of list (z < ~).
-                var entityName = nModel && nModel.get("name")
-                        ? nModel.get("name")
-                        : this.collection.getEntityNameFromId(id);
-                var sortKey = (entityName ? entityName.toLowerCase() : "~~~") + "     " + id.toLowerCase();
-                var newNodeWrapper = $(
-                        '<div data-sort-key="'+sortKey+'" class="toggler-group tree-box '+
-                            (depth==0 ? "outer" : "inner "+(depth%2==1 ? "depth-odd" : "depth-even")+
-                                (depth==1 ? " depth-first" : "")) + '" data-depth="'+depth+'">'+
-                        '<div id="'+id+'" class="entity_tree_node_wrapper"></div>'+
-                        '<div class="toggler-target hide node-children"></div>'+
-                        '</div>')
-                $('#'+id, newNodeWrapper).html(newNode);
-
-                // Maintain entities sorted by name, then id.
-                var placed = false;
-                var contender = $(".toggler-group", parentsChildren).first();
-                while (contender.length && !placed) {
-                    var contenderKey = contender.data("sort-key");
-                    if (sortKey < contenderKey) {
-                        contender.before(newNodeWrapper);
-                        placed = true;
-                    } else {
-                        contender = contender.next(".toggler-group", parentsChildren);
-                    }
-                }
-                if (!placed) {
-                    parentsChildren.append(newNodeWrapper);
-                }
-                this.addEventsToNode(parentsChildren)
-            } else {
-                // updating
-                var $node = $(node),
-                    $newNode = $(newNode);
-                
-                // preserve old display status (just chevron direction at present)
-                if ($node.find('.tree-node-state').hasClass('icon-chevron-down')) {
-                    $newNode.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down')
-                    // and if visible, see if any children have been added
-                    var children = nModel.get("children");
-                    var newChildren = []
-                    _.each(children, function(child) {
-                        var childId = child.id;
-                        if (!that.collection.get(childId)) {
-                            newChildren.push(childId);
-                        }
-                    })
-                    if (newChildren.length) {
-                        // reload if new child ID we don't recognise
-                        this.collection.includeEntities(newChildren);
-                        this.collection.fetch()
-                    }
-                }
-
-                $(node).html($newNode)
-                this.addEventsToNode($(node))
-            }
-            return true
+        nodeClicked: function(event) {
+            var $treebox = $(event.currentTarget).closest('.tree-box');
+            var id = $treebox.data('entityId');
+            selectTreebox(id, $treebox, this);
+            return false;
         },
-        
-        renderFull:function () {
-            var that = this
-            this.$el.empty()
+
+        selectEntity: function(id) {
+            var $treebox = findMasterTreebox(id, this.$el);
+            selectTreebox(id, $treebox, this);
+        },
+
+        renderFull: function() {
+            var that = this;
+            this.$el.empty();
 
             // Display tree and highlight the selected entity.
-            if (this.collection.getApplications().length==0) {
-                that.$el.append(_.template(TreeEmptyHtml))
+            if (this.collection.getApplications().length == 0) {
+                this.$el.append(emptyTreeTemplate());
+
             } else {
                 _.each(this.collection.getApplications(), function(appId) {
-                    that.updateNode(appId, null, true);
-                });
-                
-                _.each(this.collection.getNonApplications(), function(id) {
-                    that.updateNode(id);
+                    var entity = that.collection.get(appId);
+                    var $treebox = getOrCreateApplicationTreebox(entity.id, entity.name, that);
+                    updateTreeboxContent(entity, $treebox, that);
                 });
             }
-            
-            this.highlightEntity();
 
-            // Render the details for the selected entity.
-            if (this.detailsView) {
-                this.detailsView.render()
-            } else {
-                // if nothing selected, select the first application
-                if (!this.collection.isEmpty()) {
-                    var app0 = this.collection.first().id;
-                    _.defer(function () {
-                        if (!that.selectedEntityId)
-                            that.displayEntityId(app0, app0)
-                    });
-                } else {
-                    _.defer(function() {
-                        $("div#details").html(_.template(EntityDetailsEmptyHtml));
-                        $("div#details").find("a[href='#summary']").tab('show')
-                    })
-                }
+            // Select the first app if there's no current selection.
+            if (!this.selectedEntityId) {
+                var firstApp = _.first(this.collection.getApplications());
+                if (firstApp)
+                    this.selectEntity(firstApp);
             }
-            return this
+            return this;
         },
 
-        addEventsToNode: function($node) {
-            var that = this;
-            
-            // prevent default click-handling
-            // don't think this is needed, 18 Sep 2013; but leaving for a few weeks just in case
-//            $('a', $node).click(function(e) { e.preventDefault(); })
-            
-            // show the "light-popup" (expand / expand all / etc) menu
-            // if user hovers for 500ms. surprising there is no option for this (hover delay).
-            // also, annoyingly, clicks around the time the animation starts don't seem to get handled
-            // if the click is in an overlapping reason; this is why we position relative top: 12px in css
-            $('.light-popup', $node).parent().parent().hover(
-                    function (parent) {
-                        that.cancelHoverTimer();
-                        that.hoverTimer = setTimeout(function() {
-                            var menu = $(parent.currentTarget).find('.light-popup')
-                            menu.show()
-                        }, 500);
-                    },
-                    function (parent) {
-                        that.cancelHoverTimer();
-                        var menu = $(parent.currentTarget).find('.light-popup')
-                        menu.hide()
-                        // hide all others too
-                        $('.light-popup').hide()
-                    })
-        },
         cancelHoverTimer: function() {
-            var that = this;
-            if (that.hoverTimer!=null) {
-                clearTimeout(that.hoverTimer);
-                that.hoverTimer = null;
-            }            
-        },
-
-        displayEntity: function(event) {
-            if (event.metaKey || event.shiftKey)
-                // trying to open in a new tab, do not act on it here!
-                return;
-            event.preventDefault();
-            var nodeSpan = $(event.currentTarget)
-            var nodeA = $(event.currentTarget).children('a').first()
-            var entityId = nodeSpan.parent().attr("id"),
-                href = nodeA.attr('href'),
-                tab = (this.detailsView)
-                    ? this.detailsView.$el.find(".tab-pane.active").attr("id")
-                    : undefined;
-            if (href) {
-                if (tab) {
-                    href = href+"/"+tab
-                    stateId = entityId+"/"+tab
-                    this.preselectTab(tab)
-                }
-                Backbone.history.navigate(href);
-                this.displayEntityId(entityId, nodeSpan.data("app-id"));
-            } else {
-                log("no a.href in clicked target")
-                log(nodeSpan)
+            if (this.hoverTimer != null) {
+                clearTimeout(this.hoverTimer);
+                this.hoverTimer = null;
             }
-        },
-        displayEntityId:function (id, appName, afterLoad) {
-            var that = this;
-            this.highlightEntity(id)
-
-            var entityLoadFailed = function() {
-                return that.displayEntityNotFound(id);
-            };
-
-            if (appName === undefined) {
-                appName = $("#span-"+id).data("app-id")
-            }
-            if (appName === undefined) {
-                if (!afterLoad) {
-                    // try a reload if given an ID we don't recognise
-                    this.collection.includeEntities([id]);
-                    this.collection.fetch({
-                        success: function() { _.defer(function() { that.displayEntityId(id, appName, true); }); },
-                        error: function() { _.defer(function() { that.displayEntityId(id, appName, true); }); }
-                    });
-                    ViewUtils.fadeToIndicateInitialLoad($("div#details"))
-                    return;
-                } else {
-                    // no such app
-                    entityLoadFailed();
-                    return; 
-                }
-            }
-            
-            var app = new Application.Model(),
-                entitySummary = new EntitySummary.Model;
-
-            app.url = "/v1/applications/" + appName
-            entitySummary.url = "/v1/applications/" + appName + "/entities/" + id;
-
-            // in case the server response time is low, fade out while it refreshes
-            // (since we can't show updated details until we've retrieved app + entity details)
-            ViewUtils.fadeToIndicateInitialLoad($("div#details"))
-            
-            $.when(app.fetch(), entitySummary.fetch())
-                .done(function() {
-                    that.showDetails(app, entitySummary);
-                })
-                .fail(entityLoadFailed);
-        },
-
-        displayEntityNotFound: function(id) {
-            $("div#details").html(notFoundTemplate({"id": id}));
-            ViewUtils.cancelFadeOnceLoaded($("div#details"))
         },
 
         treeChange: function(event) {
             var $target = $(event.currentTarget);
             var $treeBox = $target.closest('.tree-box');
             if ($target.hasClass('tr-expand')) {
-                this.showChildrenOf($treeBox, false)
+                this.showChildrenOf($treeBox, false);
             } else if ($target.hasClass('tr-expand-all')) {
-                this.showChildrenOf($treeBox, true)
+                this.showChildrenOf($treeBox, true);
             } else if ($target.hasClass('tr-collapse')) {
-                this.hideChildrenOf($treeBox, false)
+                this.hideChildrenOf($treeBox, false);
             } else if ($target.hasClass('tr-collapse-all')) {
-                this.hideChildrenOf($treeBox, true)
+                this.hideChildrenOf($treeBox, true);
             } else {
                 // default - toggle
                 if ($treeBox.children('.node-children').is(':visible')) {
-                    this.hideChildrenOf($treeBox, false)
+                    this.hideChildrenOf($treeBox, false);
                 } else {
-                    this.showChildrenOf($treeBox, false)
+                    this.showChildrenOf($treeBox, false);
                 }
             }
             // hide the popup menu
             this.cancelHoverTimer();
-            $('.light-popup').hide()
+            $('.light-popup').hide();
             // don't let other events interfere
-            return false
+            return false;
         },
-        hideChildrenOf: function($treeBox, recurse) {
-            var that = this;
-            if (recurse) {
-                $treeBox.children('.node-children').children().each(function (index, childBox) {
-                    that.hideChildrenOf($(childBox), recurse)
-                })
-            }
-            $treeBox.children('.node-children').slideUp(300)
-            $treeBox.children('.entity_tree_node_wrapper').find('.tree-node-state').removeClass('icon-chevron-down').addClass('icon-chevron-right')
-        },
-        showChildrenOf: function($treeBox, recurse) {
-            var that = this;
-            var idToExpand = $treeBox.children('.entity_tree_node_wrapper').attr('id');
+
+        showChildrenOf: function($treeBox, recurse, excludedEntityIds) {
+            excludedEntityIds = excludedEntityIds || [];
+            var idToExpand = $treeBox.data('entityId');
+            var $wrapper = $treeBox.children('.entity_tree_node_wrapper');
+            var $childContainer = $treeBox.children('.node-children');
             var model = this.collection.get(idToExpand);
-            if (model==null) {
+            if (model == null) {
                 // not yet loaded; parallel thread should load
                 return;
             }
-            var children = model.get('children');
+
+            var that = this;
+            var children = model.get('children'); // entity summaries: {id: ..., name: ...}
+            var renderChildrenAsIndirect = $treeBox.hasClass("indirect");
             _.each(children, function(child) {
-                var id = child.id;
-                if (!$('#'+id, that.$el).length)
-                    // load, but only if necessary
-                    that.updateNode(id, idToExpand) 
-            })
-            if (this.collection.includeEntities(children)) {
+                var $treebox = getOrCreateChildTreebox(child.id, child.name, renderChildrenAsIndirect, $treeBox);
+                var model = that.collection.get(child.id);
+                if (model) {
+                    updateTreeboxContent(model, $treebox, that);
+                }
+            });
+            var members = model.get('members'); // entity summaries: {id: ..., name: ...}
+            _.each(members, function(member) {
+                var $treebox = getOrCreateChildTreebox(member.id, member.name, true, $treeBox);
+                var model = that.collection.get(member.id);
+                if (model) {
+                    updateTreeboxContent(model, $treebox, that);
+                }
+            });
+
+            // Avoid infinite recursive expansion using a "taboo list" of indirect entities already expanded in this
+            // operation. Example: a group that contains itself or one of its own ancestors. Such cycles can only
+            // originate via "indirect" subordinates.
+            var expandIfNotExcluded = function($treebox, excludedEntityIds, defer) {
+                if ($treebox.hasClass('indirect')) {
+                    var id = $treebox.data('entityId');
+                    if (_.contains(excludedEntityIds, id))
+                        return;
+                    excludedEntityIds.push(id);
+                }
+                var doExpand = function() { that.showChildrenOf($treebox, recurse, excludedEntityIds); };
+                if (defer) _.defer(doExpand);
+                else doExpand();
+            };
+
+            if (this.collection.includeEntities(_.union(children, members))) {
                 // we have to load entities before we can proceed
                 this.collection.fetch({
                     success: function() {
                         if (recurse) {
-                            $treeBox.children('.node-children').children().each(function (index, childBox) {
-                                _.defer( function() { that.showChildrenOf($(childBox), recurse) } );
-                            })
-                        }                        
+                            $childContainer.children('.tree-box').each(function () {
+                                expandIfNotExcluded($(this), excludedEntityIds, true);
+                            });
+                        }
                     }
-                })
+                });
             }
-            $treeBox.children('.node-children').slideDown(300)
-            $treeBox.children('.entity_tree_node_wrapper').find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down')            
+
+            $childContainer.slideDown(300);
+            $wrapper.find('.tree-node-state').removeClass('icon-chevron-right').addClass('icon-chevron-down');
             if (recurse) {
-                $treeBox.children('.node-children').children().each(function (index, childBox) {
-                    that.showChildrenOf($(childBox), recurse)
-                })
+                $childContainer.children('.tree-box').each(function () {
+                    expandIfNotExcluded($(this), excludedEntityIds, false);
+                });
             }
         },
-        
-        /**
-         * Causes the tab with the given name to be selected automatically when
-         * the view is next rendered.
-         */
-        preselectTab: function(tab, tabDetails) {
-            this.currentTab = tab
-            this.currentTabDetails = tabDetails;
+
+        hideChildrenOf: function($treeBox, recurse) {
+            var $wrapper = $treeBox.children('.entity_tree_node_wrapper');
+            var $childContainer = $treeBox.children('.node-children');
+            if (recurse) {
+                var that = this;
+                $childContainer.children('.tree-box').each(function () {
+                    that.hideChildrenOf($(this), recurse);
+                });
+            }
+            $childContainer.slideUp(300);
+            $wrapper.find('.tree-node-state').removeClass('icon-chevron-down').addClass('icon-chevron-right');
         },
 
-        showDetails: function(app, entitySummary) {
-            var self = this;
-            ViewUtils.cancelFadeOnceLoaded($("div#details"))
-            
-            var whichTab = this.currentTab
-            if (whichTab === undefined) {
-                whichTab = "summary";
-                if (this.detailsView) {
-                    whichTab = this.detailsView.$el.find(".tab-pane.active").attr("id");
-                    this.detailsView.close()
-                }
-            }
-            if (this.detailsView) {
-                this.detailsView.close()
-            }
-            this.detailsView = new EntityDetailsView({
-                model:entitySummary,
-                application:app,
-                appRouter:this.options.appRouter,
-                preselectTab:whichTab,
-                preselectTabDetails:this.currentTabDetails,
-            });
-            
-            this.detailsView.on("entity.expunged", function() {
-                self.preselectTab("summary");
-                var id = self.selectedEntityId;
-                var model = self.collection.get(id);
-                if (model && model.get("parentId")) {
-                    self.displayEntityId(model.get("parentId"));
-                } else if (self.collection) {
-                    self.displayEntityId(self.collection.first().id);
-                } else if (id) {
-                    self.displayEntityNotFound(id);
-                } else {
-                    self.displayEntityNotFound("?");
-                }
-                self.collection.fetch();
-            });
-            this.detailsView.render( $("div#details") );
-        },
+    });
 
-        highlightEntity:function (id) {
-            if (id) this.selectedEntityId = id
-            else id = this.selectedEntityId
-            
-            $(".entity_tree_node_wrapper").removeClass("active")
-            if (id) {
-                var $selectedNode = $(".entity_tree_node_wrapper#"+id);
-                // make this node active
-                $selectedNode.addClass("active")
-                
-                // open the parent nodes if needed
-                var $nodeToOpenInParent = $selectedNode;
-                while ($nodeToOpenInParent.length && !$nodeToOpenInParent.is(':visible')) {
-                    $nodeToOpenInParent = $nodeToOpenInParent.closest('.node-children').closest('.tree-box');
-                    this.showChildrenOf($nodeToOpenInParent)
-                }
-                
-                // if we want to auto-expand the children of the selected node:
-//              this.showChildrenOf($selectedNode.closest('.tree-box'), false)
-            }
-        }
-    })
-
-    return ApplicationTreeView
-})
+});

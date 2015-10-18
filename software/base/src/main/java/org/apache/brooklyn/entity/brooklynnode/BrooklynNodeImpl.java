@@ -78,6 +78,7 @@ import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
@@ -431,18 +432,18 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
         }
     }
 
-    public List<String> getClasspath() {
-        List<String> classpath = getConfig(CLASSPATH);
+    public List getClasspath() {
+        List classpath = getConfig(CLASSPATH);
         if (classpath == null || classpath.isEmpty()) {
             classpath = getManagementContext().getConfig().getConfig(CLASSPATH);
         }
         return classpath;
     }
-    
+
     protected List<String> getEnabledHttpProtocols() {
         return getAttribute(ENABLED_HTTP_PROTOCOLS);
     }
-    
+
     protected boolean isHttpProtocolEnabled(String protocol) {
         List<String> protocols = getAttribute(ENABLED_HTTP_PROTOCOLS);
         for (String contender : protocols) {
@@ -456,7 +457,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        
+
         // TODO what sensors should we poll?
         ConfigToAttributes.apply(this);
 
@@ -473,7 +474,7 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
             // web-console is not enabled
             webConsoleUri = null;
         }
-        setAttribute(WEB_CONSOLE_URI, webConsoleUri);
+        sensors().set(WEB_CONSOLE_URI, webConsoleUri);
 
         if (webConsoleUri != null) {
             httpFeed = HttpFeed.builder()
@@ -498,15 +499,20 @@ public class BrooklynNodeImpl extends SoftwareProcessImpl implements BrooklynNod
                 // TODO when updating the map, if it would change from empty to empty on a successful run (see in nginx)
                 ServiceNotUpLogic.updateNotUpIndicator(this, WEB_CONSOLE_ACCESSIBLE, "No response from the web console yet");
             }
-            addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+            enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
                 .from(WEB_CONSOLE_ACCESSIBLE)
                 .computing(Functionals.ifNotEquals(true).value("URL where Brooklyn listens is not answering correctly") )
                 .build());
+
+            addEnricher(Enrichers.builder().transforming(WEB_CONSOLE_ACCESSIBLE)
+                    .computing(Functions.identity())
+                    .publishing(SERVICE_PROCESS_IS_RUNNING)
+                    .build());
         } else {
             connectServiceUpIsRunning();
         }
     }
-    
+
     @Override
     protected void disconnectSensors() {
         super.disconnectSensors();

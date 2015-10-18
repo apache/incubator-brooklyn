@@ -103,7 +103,7 @@ public class ServiceRestarter extends AbstractPolicy {
         
         super.setEntity(entity);
         
-        subscribe(entity, getConfig(FAILURE_SENSOR_TO_MONITOR), new SensorEventListener<Object>() {
+        subscriptions().subscribe(entity, getConfig(FAILURE_SENSOR_TO_MONITOR), new SensorEventListener<Object>() {
                 @Override public void onEvent(final SensorEvent<Object> event) {
                     // Must execute in another thread - if we called entity.restart in the event-listener's thread
                     // then we'd block all other events being delivered to this entity's other subscribers.
@@ -157,6 +157,6 @@ public class ServiceRestarter extends AbstractPolicy {
         if (getConfig(SET_ON_FIRE_ON_FAILURE)) {
             ServiceStateLogic.setExpectedState(entity, Lifecycle.ON_FIRE);
         }
-        entity.emit(ENTITY_RESTART_FAILED, new FailureDescriptor(entity, msg));
+        entity.sensors().emit(ENTITY_RESTART_FAILED, new FailureDescriptor(entity, msg));
     }
 }

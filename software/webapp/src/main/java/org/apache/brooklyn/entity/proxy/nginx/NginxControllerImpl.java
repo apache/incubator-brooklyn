@@ -140,7 +140,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
             // gate with the above check to prevent flashing on ON_FIRE during rebind (this is invoked on rebind as well as during start)
             ServiceNotUpLogic.updateNotUpIndicator(this, NGINX_URL_ANSWERS_NICELY, "No response from nginx yet");
         }
-        addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+        enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
             .uniqueTag("not-up-unless-url-answers")
             .from(NGINX_URL_ANSWERS_NICELY)
             .computing(Functionals.ifNotEquals(true).value("URL where nginx listens is not answering correctly (with expected header)") )
@@ -151,26 +151,26 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
         Group urlMappings = getConfig(URL_MAPPINGS);
         if (urlMappings!=null && urlMappingsMemberTrackerPolicy==null) {
             // Listen to the targets of each url-mapping changing
-            targetAddressesHandler = subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, new SensorEventListener<Collection<String>>() {
+            targetAddressesHandler = subscriptions().subscribeToMembers(urlMappings, UrlMapping.TARGET_ADDRESSES, new SensorEventListener<Collection<String>>() {
                     @Override public void onEvent(SensorEvent<Collection<String>> event) {
                         updateNeeded();
                     }
                 });
 
             // Listen to url-mappings being added and removed
-            urlMappingsMemberTrackerPolicy = addPolicy(PolicySpec.create(UrlMappingsMemberTrackerPolicy.class)
+            urlMappingsMemberTrackerPolicy = policies().add(PolicySpec.create(UrlMappingsMemberTrackerPolicy.class)
                     .configure("group", urlMappings));
         }
     }
 
     protected void removeUrlMappingsMemberTrackerPolicy() {
         if (urlMappingsMemberTrackerPolicy != null) {
-            removePolicy(urlMappingsMemberTrackerPolicy);
+            policies().remove(urlMappingsMemberTrackerPolicy);
             urlMappingsMemberTrackerPolicy = null;
         }
         Group urlMappings = getConfig(URL_MAPPINGS);
         if (urlMappings!=null && targetAddressesHandler!=null) {
-            unsubscribe(urlMappings, targetAddressesHandler);
+            subscriptions().unsubscribe(urlMappings, targetAddressesHandler);
             targetAddressesHandler = null;
         }
     }
@@ -193,7 +193,7 @@ public class NginxControllerImpl extends AbstractControllerImpl implements Nginx
     protected void postStop() {
         // TODO don't want stop to race with the last poll.
         super.postStop();
-        setAttribute(SERVICE_UP, false);
+        sensors().set(SERVICE_UP, false);
     }
 
     @Override

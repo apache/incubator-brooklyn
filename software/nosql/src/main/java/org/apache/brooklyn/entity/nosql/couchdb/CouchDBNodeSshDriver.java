@@ -48,7 +48,7 @@ public class CouchDBNodeSshDriver extends AbstractSoftwareProcessSshDriver imple
     public CouchDBNodeSshDriver(CouchDBNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
 
-        entity.setAttribute(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
+        entity.sensors().set(Attributes.LOG_FILE_LOCATION, getLogFileLocation());
     }
 
     public String getLogFileLocation() { return Os.mergePathsUnix(getRunDir(), "couchdb.log"); }

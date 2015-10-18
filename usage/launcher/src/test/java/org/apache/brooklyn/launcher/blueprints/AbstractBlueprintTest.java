@@ -19,12 +19,14 @@
 package org.apache.brooklyn.launcher.blueprints;
 
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Collection;
 
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -37,17 +39,21 @@ import org.apache.brooklyn.core.mgmt.persist.FileBasedObjectStore;
 import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.launcher.BrooklynLauncher;
+import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
+import org.apache.brooklyn.launcher.camp.BrooklynCampPlatformLauncher;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
-import org.apache.brooklyn.launcher.BrooklynLauncher;
-import org.apache.brooklyn.launcher.SimpleYamlLauncherForTests;
-import org.apache.brooklyn.launcher.camp.BrooklynCampPlatformLauncher;
+
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 public abstract class AbstractBlueprintTest {
 
@@ -107,6 +113,32 @@ public abstract class AbstractBlueprintTest {
         }
     }
 
+    protected void runCatalogTest(String catalogFile, Reader yamlApp) throws Exception {
+        runCatalogTest(catalogFile, yamlApp, Predicates.alwaysTrue());
+    }
+    
+    protected void runCatalogTest(String catalogFile, Reader yamlApp, Predicate<? super Application> assertion) throws Exception {
+        Reader catalogInput = Streams.reader(new ResourceUtils(this).getResourceFromUrl(catalogFile));
+        String catalogContent = Streams.readFully(catalogInput);
+        Iterable<? extends CatalogItem<?, ?>> items = launcher.getManagementContext().getCatalog().addItems(catalogContent);
+        
+        try {
+            final Application app = launcher.launchAppYaml(yamlApp);
+            
+            assertNoFires(app);
+            assertTrue(assertion.apply(app));
+            
+            Application newApp = rebind();
+            assertNoFires(newApp);
+            assertTrue(assertion.apply(app));
+            
+        } finally {
+            for (CatalogItem<?, ?> item : items) {
+                launcher.getManagementContext().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
+            }
+        }
+    }
+    
     protected void runTest(String yamlFile) throws Exception {
         final Application app = launcher.launchAppYaml(yamlFile);
         

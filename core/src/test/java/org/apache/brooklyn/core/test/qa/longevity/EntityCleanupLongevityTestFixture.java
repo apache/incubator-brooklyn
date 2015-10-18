@@ -164,11 +164,11 @@ public abstract class EntityCleanupLongevityTestFixture {
     protected TestApplication newApp() {
         final TestApplication result = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         TestEntity entity = result.createAndManageChild(EntitySpec.create(TestEntity.class));
-        result.subscribe(entity, TestEntity.NAME, new SensorEventListener<String>() {
+        result.subscriptions().subscribe(entity, TestEntity.NAME, new SensorEventListener<String>() {
             @Override public void onEvent(SensorEvent<String> event) {
-                result.setAttribute(TestApplication.MY_ATTRIBUTE, event.getValue());
+                result.sensors().set(TestApplication.MY_ATTRIBUTE, event.getValue());
             }});
-        entity.setAttribute(TestEntity.NAME, "myname");
+        entity.sensors().set(TestEntity.NAME, "myname");
         return result;
     }
 }

@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
@@ -40,6 +41,8 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.google.common.reflect.TypeToken;
@@ -75,7 +78,8 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
             .description(key.getDescription())
             .defaultValue(key.getDefaultValue())
             .reconfigurable(key.isReconfigurable())
-            .inheritance(key.getInheritance());
+            .inheritance(key.getInheritance())
+            .constraint(key.getConstraint());
     }
 
     public static class Builder<T> {
@@ -84,6 +88,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         private String description;
         private T defaultValue;
         private boolean reconfigurable;
+        private Predicate<? super T> constraint = Predicates.alwaysTrue();
         private ConfigInheritance inheritance;
         
         public Builder<T> name(String val) {
@@ -107,6 +112,10 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         public Builder<T> inheritance(ConfigInheritance val) {
             this.inheritance = val; return this;
         }
+        @Beta
+        public Builder<T> constraint(Predicate<? super T> constraint) {
+            this.constraint = checkNotNull(constraint, "constraint"); return this;
+        }
         public BasicConfigKey<T> build() {
             return new BasicConfigKey<T>(this);
         }
@@ -119,6 +128,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     private T defaultValue;
     private boolean reconfigurable;
     private ConfigInheritance inheritance;
+    private Predicate<? super T> constraint;
 
     // FIXME In groovy, fields were `public final` with a default constructor; do we need the gson?
     public BasicConfigKey() { /* for gson */ }
@@ -152,6 +162,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         
         this.defaultValue = defaultValue;
         this.reconfigurable = false;
+        this.constraint = Predicates.alwaysTrue();
     }
 
     protected BasicConfigKey(Builder<T> builder) {
@@ -162,8 +173,12 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.defaultValue = builder.defaultValue;
         this.reconfigurable = builder.reconfigurable;
         this.inheritance = builder.inheritance;
+        // Note: it's intentionally possible to have default values that are not valid
+        // per the configured constraint. If validity were checked here any class that
+        // contained a weirdly-defined config key would fail to initialise.
+        this.constraint = checkNotNull(builder.constraint, "constraint");
     }
-    
+
     /** @see ConfigKey#getName() */
     @Override public String getName() { return name; }
 
@@ -187,16 +202,36 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         return defaultValue != null;
     }
 
+    /** @see ConfigKey#isReconfigurable() */
     @Override
     public boolean isReconfigurable() {
         return reconfigurable;
     }
     
+    /** @see ConfigKey#getInheritance() */
     @Override @Nullable
     public ConfigInheritance getInheritance() {
         return inheritance;
     }
-    
+
+    /** @see ConfigKey#getConstraint() */
+    @Override @Nonnull
+    public Predicate<? super T> getConstraint() {
+        return constraint;
+    }
+
+    /** @see ConfigKey#isValueValid(T) */
+    @Override
+    public boolean isValueValid(T value) {
+        // The likeliest source of an exception is a constraint from Guava that expects a non-null input.
+        try {
+            return getConstraint().apply(value);
+        } catch (Exception e) {
+            log.debug("Suppressing exception when testing validity of " + this, e);
+            return false;
+        }
+    }
+
     /** @see ConfigKey#getNameParts() */
     @Override public Collection<String> getNameParts() {
         return Lists.newArrayList(dots.split(name));

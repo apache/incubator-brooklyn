@@ -19,6 +19,7 @@
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
 import java.io.StringReader;
+import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
@@ -59,43 +60,43 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     public EntitySpec<? extends Application> createApplicationSpec(String plan) {
         try {
             CampPlatform camp = CampCatalogUtils.getCampPlatform(mgmt);
-            AssemblyTemplate at = camp.pdp().registerDeploymentPlan( new StringReader(plan) );
-            AssemblyTemplateInstantiator instantiator;
-            try {
-                instantiator = at.getInstantiator().newInstance();
-            } catch (Exception e) {
-                throw Exceptions.propagate(e);
-            }
+            BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
+            AssemblyTemplate at = CampUtils.registerDeploymentPlan(plan, loader, camp);
+            AssemblyTemplateInstantiator instantiator = CampUtils.getInstantiator(at);
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-                return ((AssemblyTemplateSpecInstantiator) instantiator).createSpec(at, camp, loader, true);
+                return ((AssemblyTemplateSpecInstantiator) instantiator).createApplicationSpec(at, camp, loader);
             } else {
                 // The unknown instantiator can create the app (Assembly), but not a spec.
                 // Currently, all brooklyn plans should produce the above.
                 if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
                     if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
                         throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
-                    throw new IllegalArgumentException("Unrecognized application blueprint format: no services defined");
+                    throw new PlanNotRecognizedException("Unrecognized application blueprint format: no services defined");
                 }
                 // map this (expected) error to a nicer message
-                throw new IllegalArgumentException("Unrecognized application blueprint format");
+                throw new PlanNotRecognizedException("Unrecognized application blueprint format");
             }
         } catch (Exception e) {
-            if (e instanceof PlanNotRecognizedException) {
-                if (log.isTraceEnabled())
-                    log.debug("Failed to create entity from CAMP spec:\n" + plan, e);
-            } else {
-                if (log.isDebugEnabled())
-                    log.debug("Failed to create entity from CAMP spec:\n" + plan, e);
-            }
+            // TODO how do we figure out that the plan is not supported vs. invalid to wrap in a PlanNotRecognizedException?
+            if (log.isDebugEnabled())
+                log.debug("Failed to create entity from CAMP spec:\n" + plan, e);
             throw Exceptions.propagate(e);
         }
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item) {
-        return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item);
+    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) {
+        // Ignore old-style java type catalog items
+        if (item.getPlanYaml() == null) {
+            throw new PlanNotRecognizedException("Old style catalog item " + item + " not supported.");
+        }
+        if (encounteredTypes.contains(item.getSymbolicName())) {
+            throw new IllegalStateException("Already encountered types " + encounteredTypes + " must not contain catalog item being resolver " + item.getSymbolicName());
+        }
+
+        // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
+        return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item, encounteredTypes);
     }
 
     @Override

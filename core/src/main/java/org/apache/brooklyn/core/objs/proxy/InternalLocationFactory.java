@@ -116,7 +116,7 @@ public class InternalLocationFactory extends InternalFactory {
             }
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
-                ((AbstractLocation)loc).setConfig((ConfigKey)entry.getKey(), entry.getValue());
+                ((AbstractLocation)loc).config().set((ConfigKey)entry.getKey(), entry.getValue());
             }
             for (Entry<Class<?>, Object> entry : spec.getExtensions().entrySet()) {
                 ((LocationInternal)loc).addExtension((Class)entry.getKey(), entry.getValue());

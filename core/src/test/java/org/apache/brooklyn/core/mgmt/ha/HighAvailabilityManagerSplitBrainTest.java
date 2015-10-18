@@ -327,7 +327,7 @@ public class HighAvailabilityManagerSplitBrainTest {
         // create
         TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), n1.mgmt);
         app.start(ImmutableList.<Location>of());
-        app.setAttribute(TestApplication.MY_ATTRIBUTE, "hello");
+        app.sensors().set(TestApplication.MY_ATTRIBUTE, "hello");
         
         assertEquals(n1.mgmt.getApplications().size(), 1);
         assertEquals(n2.mgmt.getApplications().size(), 0);

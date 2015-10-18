@@ -67,8 +67,8 @@ public class BasicDownloadsRegistryTest {
 
     @Test
     public void testUsesDownloadUrlAttribute() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "acme.com/version=${version},type=${type},simpletype=${simpletype}");
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.sensors().set(Attributes.DOWNLOAD_URL, "acme.com/version=${version},type=${type},simpletype=${simpletype}");
         String expectedFilename = String.format("version=%s,type=%s,simpletype=%s", "myversion", TestEntity.class.getName(), "TestEntity");
         
         String expectedLocalRepo = String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", "TestEntity", "myversion", expectedFilename);
@@ -79,8 +79,8 @@ public class BasicDownloadsRegistryTest {
     
     @Test
     public void testUsesDownloadAddonUrlsAttribute() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myentityversion");
-        entity.setAttribute(Attributes.DOWNLOAD_ADDON_URLS, ImmutableMap.of("myaddon", "acme.com/addon=${addon},version=${addonversion},type=${type},simpletype=${simpletype}"));
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myentityversion");
+        entity.sensors().set(Attributes.DOWNLOAD_ADDON_URLS, ImmutableMap.of("myaddon", "acme.com/addon=${addon},version=${addonversion},type=${type},simpletype=${simpletype}"));
         String expectedFilename = String.format("addon=%s,version=%s,type=%s,simpletype=%s", "myaddon", "myaddonversion", TestEntity.class.getName(), "TestEntity");
         
         String expectedLocalRepo = String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", "TestEntity", "myentityversion", expectedFilename);
@@ -92,7 +92,7 @@ public class BasicDownloadsRegistryTest {
     
     @Test
     public void testDefaultResolverSubstitutesDownloadUrlFailsIfVersionMissing() throws Exception {
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "version=${version}");
+        entity.sensors().set(Attributes.DOWNLOAD_URL, "version=${version}");
         try {
             DownloadResolver result = managementContext.getEntityDownloadsManager().newDownloader(driver);
             fail("Should have failed, but got "+result);
@@ -106,8 +106,8 @@ public class BasicDownloadsRegistryTest {
         BrooklynProperties managementProperties = managementContext.getBrooklynProperties();
         managementProperties.put("brooklyn.downloads.all.url", "http://fromprops/${version}.allprimary");
         managementProperties.put("brooklyn.downloads.all.fallbackurl", "http://fromfallback/${version}.allfallback");
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "http://fromattrib/${version}.default");
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.sensors().set(Attributes.DOWNLOAD_URL, "http://fromattrib/${version}.default");
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
         String expectedFilename = "myversion.allprimary";
 
         String expectedLocalRepo = String.format("file://$HOME/.brooklyn/repository/%s/%s/%s", "TestEntity", "myversion", expectedFilename);
@@ -123,8 +123,8 @@ public class BasicDownloadsRegistryTest {
 
     @Test
     public void testInfersFilenameFromDownloadUrl() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "http://myhost.com/myfile-${version}.tar.gz");
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.sensors().set(Attributes.DOWNLOAD_URL, "http://myhost.com/myfile-${version}.tar.gz");
 
         DownloadResolver actual = managementContext.getEntityDownloadsManager().newDownloader(driver);
         assertEquals(actual.getFilename(), "myfile-myversion.tar.gz");
@@ -132,8 +132,8 @@ public class BasicDownloadsRegistryTest {
     
     @Test
     public void testInfersAddonFilenameFromDownloadUrl() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
-        entity.setAttribute(Attributes.DOWNLOAD_ADDON_URLS, ImmutableMap.of("myaddon", "http://myhost.com/myfile-${addonversion}.tar.gz"));
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.sensors().set(Attributes.DOWNLOAD_ADDON_URLS, ImmutableMap.of("myaddon", "http://myhost.com/myfile-${addonversion}.tar.gz"));
 
         DownloadResolver actual = managementContext.getEntityDownloadsManager().newDownloader(driver, "myaddon", ImmutableMap.of("addonversion", "myaddonversion"));
         assertEquals(actual.getFilename(), "myfile-myaddonversion.tar.gz");
@@ -141,8 +141,8 @@ public class BasicDownloadsRegistryTest {
     
     @Test
     public void testCanOverrideFilenameFromDownloadUrl() throws Exception {
-        entity.setConfig(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
-        entity.setAttribute(Attributes.DOWNLOAD_URL, "http://myhost.com/download/");
+        entity.config().set(BrooklynConfigKeys.SUGGESTED_VERSION, "myversion");
+        entity.sensors().set(Attributes.DOWNLOAD_URL, "http://myhost.com/download/");
 
         DownloadResolver actual = managementContext.getEntityDownloadsManager().newDownloader(driver, ImmutableMap.of("filename", "overridden.filename.tar.gz"));
         assertEquals(actual.getFilename(), "overridden.filename.tar.gz");

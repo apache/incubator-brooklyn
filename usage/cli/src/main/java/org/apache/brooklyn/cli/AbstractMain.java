@@ -33,19 +33,22 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.cli.Main.LaunchCommand;
 import org.apache.brooklyn.core.BrooklynVersion;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import org.apache.brooklyn.util.exceptions.FatalRuntimeException;
 import org.apache.brooklyn.util.exceptions.UserFacingException;
+import org.apache.brooklyn.util.text.KeyValueParser;
 import org.apache.brooklyn.util.text.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
@@ -117,7 +120,7 @@ public abstract class AbstractMain {
                     .add("verbose", verbose)
                     .add("quiet", quiet);
         }
-
+        
         @Override
         public String toString() {
             return string().toString();
@@ -148,6 +151,34 @@ public abstract class AbstractMain {
         public ToStringHelper string() {
             return super.string()
                     .add("arguments", arguments);
+        }
+    }
+    
+    /** superclass which reads `-D` system property definitions and applies them
+     * <p>
+     * useful when scripting, e.g. where brooklyn.sh encodes `java o.a.b.Main "$@"` 
+     * but we want the caller to be able to pass system properties
+     */
+    public static abstract class BrooklynCommandWithSystemDefines extends BrooklynCommandCollectingArgs {
+        @Option(type = OptionType.GLOBAL, name = { "-D" }, description = "Set java system property")
+        public List<String> defines1;
+
+        @Option(name = { "-D" }, description = "Set java system property")
+        public List<String> defines2;
+
+        public List<String> getDefines() { return MutableList.copyOf(defines1).appendAll(defines2); }
+        public Map<String,String> getDefinesAsMap() { return KeyValueParser.parseMap(Strings.join(getDefines(),",")); }
+        public void applyDefinesAsSystemProperties() { System.getProperties().putAll(getDefinesAsMap()); }
+        
+        public ToStringHelper string() {
+            return super.string()
+                    .add("defines", getDefines());
+        }
+        
+        @Override
+        public Void call() throws Exception {
+            applyDefinesAsSystemProperties();
+            return null;
         }
     }
 

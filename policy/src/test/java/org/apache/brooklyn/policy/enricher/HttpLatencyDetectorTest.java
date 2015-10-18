@@ -76,9 +76,9 @@ public class HttpLatencyDetectorTest {
     
     @Test(groups="Integration")
     public void testPollsUrl() throws Exception {
-        entity.setAttribute(TestEntity.SERVICE_UP, true);
+        entity.sensors().set(TestEntity.SERVICE_UP, true);
         
-        entity.addEnricher(HttpLatencyDetector.builder()
+        entity.enrichers().add(HttpLatencyDetector.builder()
                 .url(baseUrl)
                 .rollup(500, TimeUnit.MILLISECONDS)
                 .period(100, TimeUnit.MILLISECONDS)
@@ -89,7 +89,7 @@ public class HttpLatencyDetectorTest {
     
     @Test(groups="Integration")
     public void testWaitsForSensorThenPolls() throws Exception {
-        entity.addEnricher(HttpLatencyDetector.builder()
+        entity.enrichers().add(HttpLatencyDetector.builder()
                 .url(TEST_URL)
                 .noServiceUp()
                 .rollup(500, TimeUnit.MILLISECONDS)
@@ -102,15 +102,15 @@ public class HttpLatencyDetectorTest {
                 entity, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT, null);
         
         // gets value after url is set, and gets rolling average
-        entity.setAttribute(TEST_URL, baseUrl.toString());
+        entity.sensors().set(TEST_URL, baseUrl.toString());
         assertLatencyAttributesNonNull(entity);
     }
 
     @Test(groups="Integration")
     public void testGetsSensorIfAlredySetThenPolls() throws Exception {
-        entity.setAttribute(TEST_URL, baseUrl.toString());
+        entity.sensors().set(TEST_URL, baseUrl.toString());
         
-        entity.addEnricher(HttpLatencyDetector.builder()
+        entity.enrichers().add(HttpLatencyDetector.builder()
                 .url(TEST_URL)
                 .noServiceUp()
                 .rollup(500, TimeUnit.MILLISECONDS)
@@ -122,9 +122,9 @@ public class HttpLatencyDetectorTest {
 
     @Test(groups="Integration")
     public void testWaitsForServiceUp() throws Exception {
-        entity.setAttribute(TestEntity.SERVICE_UP, false);
+        entity.sensors().set(TestEntity.SERVICE_UP, false);
         
-        entity.addEnricher(HttpLatencyDetector.builder()
+        entity.enrichers().add(HttpLatencyDetector.builder()
                 .url(baseUrl)
                 .period(100, TimeUnit.MILLISECONDS)
                 .build());
@@ -135,7 +135,7 @@ public class HttpLatencyDetectorTest {
                 entity, HttpLatencyDetector.REQUEST_LATENCY_IN_SECONDS_MOST_RECENT, null);
         
         // gets value after url is set, and gets rolling average
-        entity.setAttribute(TestEntity.SERVICE_UP, true);
+        entity.sensors().set(TestEntity.SERVICE_UP, true);
         assertLatencyAttributesNonNull(entity); 
     }
     

@@ -106,13 +106,13 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
         checkNotNull(getConfig(HOSTNAME_SENSOR), "%s requires value for %s", getClass().getName(), HOSTNAME_SENSOR);
         DynamicGroup entities = addChild(EntitySpec.create(DynamicGroup.class)
                 .configure(DynamicGroup.ENTITY_FILTER, getEntityFilter()));
-        setAttribute(ENTITIES, entities);
-        setAttribute(A_RECORDS, ImmutableMap.<String, String>of());
-        setAttribute(CNAME_RECORDS, ImmutableMultimap.<String, String>of());
-        setAttribute(PTR_RECORDS, ImmutableMap.<String, String>of());
-        setAttribute(ADDRESS_MAPPINGS, ImmutableMultimap.<String, String>of());
+        sensors().set(ENTITIES, entities);
+        sensors().set(A_RECORDS, ImmutableMap.<String, String>of());
+        sensors().set(CNAME_RECORDS, ImmutableMultimap.<String, String>of());
+        sensors().set(PTR_RECORDS, ImmutableMap.<String, String>of());
+        sensors().set(ADDRESS_MAPPINGS, ImmutableMultimap.<String, String>of());
         synchronized (serialMutex) {
-            setAttribute(SERIAL, System.currentTimeMillis());
+            sensors().set(SERIAL, System.currentTimeMillis());
         }
     }
 
@@ -156,12 +156,12 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     protected void preStart() {
         String reverse = getConfig(REVERSE_LOOKUP_NETWORK);
         if (Strings.isBlank(reverse)) reverse = getAttribute(ADDRESS);
-        setAttribute(REVERSE_LOOKUP_CIDR, new Cidr(reverse + "/24"));
+        sensors().set(REVERSE_LOOKUP_CIDR, new Cidr(reverse + "/24"));
         String reverseLookupDomain = Joiner.on('.').join(Iterables.skip(Lists.reverse(Lists.newArrayList(
                 Splitter.on('.').split(reverse))), 1)) + ".in-addr.arpa";
-        setAttribute(REVERSE_LOOKUP_DOMAIN, reverseLookupDomain);
+        sensors().set(REVERSE_LOOKUP_DOMAIN, reverseLookupDomain);
 
-        addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("Address tracker")
                 .configure(AbstractMembershipTrackingPolicy.SENSORS_TO_TRACK, ImmutableSet.<Sensor<?>>of(getConfig(HOSTNAME_SENSOR)))
                 .configure(AbstractMembershipTrackingPolicy.GROUP, getEntities()));
@@ -224,7 +224,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
 
             for (Map.Entry<String, Entity> e : hostnameToEntity.entries()) {
                 String domainName = e.getKey();
-                Maybe<SshMachineLocation> location = Machines.findUniqueSshMachineLocation(e.getValue().getLocations());
+                Maybe<SshMachineLocation> location = Machines.findUniqueMachineLocation(e.getValue().getLocations(), SshMachineLocation.class);
                 if (!location.isPresent()) {
                     LOG.debug("Member {} of {} does not have an SSH location so will not be configured", e.getValue(), this);
                     continue;
@@ -244,10 +244,10 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
                     aRecordToCnames.put(ipToARecord.get(address), domainName);
                 }
             }
-            setAttribute(A_RECORDS, ImmutableMap.copyOf(ipToARecord.inverse()));
-            setAttribute(PTR_RECORDS, ImmutableMap.copyOf(octetToName));
-            setAttribute(CNAME_RECORDS, Multimaps.unmodifiableMultimap(aRecordToCnames));
-            setAttribute(ADDRESS_MAPPINGS, Multimaps.unmodifiableMultimap(ipToAllNames));
+            sensors().set(A_RECORDS, ImmutableMap.copyOf(ipToARecord.inverse()));
+            sensors().set(PTR_RECORDS, ImmutableMap.copyOf(octetToName));
+            sensors().set(CNAME_RECORDS, Multimaps.unmodifiableMultimap(aRecordToCnames));
+            sensors().set(ADDRESS_MAPPINGS, Multimaps.unmodifiableMultimap(ipToAllNames));
 
             // Update Bind configuration files and restart the service
             getDriver().updateBindConfiguration();
@@ -255,7 +255,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     }
 
     protected void configureResolver(Entity entity) {
-        Maybe<SshMachineLocation> machine = Machines.findUniqueSshMachineLocation(entity.getLocations());
+        Maybe<SshMachineLocation> machine = Machines.findUniqueMachineLocation(entity.getLocations(), SshMachineLocation.class);
         if (machine.isPresent()) {
             if (getConfig(REPLACE_RESOLV_CONF)) {
                 machine.get().copyTo(new StringReader(getConfig(RESOLV_CONF_TEMPLATE)), "/etc/resolv.conf");
@@ -303,7 +303,7 @@ public class BindDnsServerImpl extends SoftwareProcessImpl implements BindDnsSer
     public long getSerial() {
         synchronized (serialMutex) {
             long next = getAttribute(SERIAL) + 1;
-            setAttribute(SERIAL, next);
+            sensors().set(SERIAL, next);
             return next;
         }
     }

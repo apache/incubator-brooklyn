@@ -46,10 +46,10 @@ public class PrefixAndIdEnricher extends AbstractEnricher {
     @Override
     public void setEntity(final EntityLocal entity) {
         super.setEntity(entity);
-        subscribe(entity, getConfig(MONITOR), new SensorEventListener<Object>() {
+        subscriptions().subscribe(entity, getConfig(MONITOR), new SensorEventListener<Object>() {
             @Override
             public void onEvent(SensorEvent<Object> event) {
-                entity.setAttribute(SENSOR, getConfig(PREFIX) + entity.getId());
+                entity.sensors().set(SENSOR, getConfig(PREFIX) + entity.getId());
             }
         });
     }

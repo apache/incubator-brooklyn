@@ -61,7 +61,7 @@ public abstract class QpidDestinationImpl extends JMSDestinationImpl implements 
         // But tricky for if brooklyn were distributed
         try {
             if (virtualHost == null) virtualHost = getConfig(QpidBroker.VIRTUAL_HOST_NAME);
-            setAttribute(QpidBroker.VIRTUAL_HOST_NAME, virtualHost);
+            sensors().set(QpidBroker.VIRTUAL_HOST_NAME, virtualHost);
             virtualHostManager = new ObjectName(format("org.apache.qpid:type=VirtualHost.VirtualHostManager,VirtualHost=\"%s\"", virtualHost));
             jmxHelper = new JmxHelper((EntityLocal)getParent());
         } catch (MalformedObjectNameException e) {

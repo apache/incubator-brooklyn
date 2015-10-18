@@ -143,20 +143,20 @@ public class DynamicToyMySqlEntityBuilder {
                 }
 
                 // and set the PID
-                entity().setAttribute(Attributes.PID, 
+                entity().sensors().set(Attributes.PID, 
                         Integer.parseInt(DynamicTasks.queue(SshEffectorTasks.ssh("cat "+dir(entity)+"/*/data/*.pid")).block().getStdout().trim()));
                 
                 // TODO Without this, tests fail because nothing else sets serviceUp!
                 // Really should set this with a Feed that checks pid periodically.
                 // Should this instead be using SERVICE_NOT_UP_INDICATORS?
-                entity().setAttribute(Attributes.SERVICE_UP, true);
+                entity().sensors().set(Attributes.SERVICE_UP, true);
             }
 
             @Override
             protected String stopProcessesAtMachine() {
                 // TODO Where is best place to set? 
                 // Really should set this with a Feed that checks pid periodically.
-                entity().setAttribute(Attributes.SERVICE_UP, false);
+                entity().sensors().set(Attributes.SERVICE_UP, false);
                 
                 Integer pid = entity().getAttribute(Attributes.PID);
                 if (pid==null) {

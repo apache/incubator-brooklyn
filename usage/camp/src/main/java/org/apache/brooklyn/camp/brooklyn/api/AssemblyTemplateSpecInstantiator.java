@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.camp.brooklyn.api;
 
+import java.util.List;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
@@ -29,7 +30,13 @@ import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 
 public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
 
-    EntitySpec<? extends Application> createSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, boolean autoUnwrapIfAppropriate);
-    EntitySpec<?> createNestedSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext itemLoader, Set<String> encounteredCatalogTypes);
-    
+    /**
+     * Gets the single item returned by {@link #createServiceSpecs}
+     * and wraps it in an Application if needed, applying top-level
+     * attributes and locations to the root entity.
+     */
+    EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader);
+    /** Returns specs for each item in the services list */
+    List<EntitySpec<?>> createServiceSpecs(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext itemLoader, Set<String> encounteredCatalogTypes);
+
 }

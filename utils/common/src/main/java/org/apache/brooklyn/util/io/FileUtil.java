@@ -40,6 +40,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Set;
 
 public class FileUtil {
 
@@ -47,61 +53,42 @@ public class FileUtil {
 
     private static boolean loggedSetFilePermissionsWarning = false;
     
-    // When we move to java 7, we can use Files.setPosixFilePermissions
+    private static final FilePermissions permissions600 = new FilePermissions(0600);
+    private static final FilePermissions permissions700 = new FilePermissions(0700);
+
     public static void setFilePermissionsTo700(File file) throws IOException {
         file.createNewFile();
-        boolean setRead = file.setReadable(false, false) & file.setReadable(true, true);
-        boolean setWrite = file.setWritable(false, false) & file.setWritable(true, true);
-        boolean setExec = file.setExecutable(false, false) & file.setExecutable(true, true);
-        
-        if (setRead && setWrite && setExec) {
+        try {
+            permissions700.apply(file);
             if (LOG.isTraceEnabled()) LOG.trace("Set permissions to 700 for file {}", file.getAbsolutePath());
-        } else {
-            if (loggedSetFilePermissionsWarning) {
-                if (LOG.isTraceEnabled()) LOG.trace("Failed to set permissions to 700 for file {}: setRead={}, setWrite={}, setExecutable={}",
-                        new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
-            } else {
-                if (Os.isMicrosoftWindows()) {
-                    if (LOG.isDebugEnabled()) LOG.debug("Failed to set permissions to 700 for file {}; expected behaviour on Windows; setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
-                            new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
-                } else {
-                    LOG.warn("Failed to set permissions to 700 for file {}: setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
-                            new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
-                }
-                loggedSetFilePermissionsWarning = true;
-            }
+        } catch (IOException ex) {
+            logSetFilePermissionsFailure("700", file, ex);
         }
     }
-    
-    // When we move to java 7, we can use Files.setPosixFilePermissions
+
     public static void setFilePermissionsTo600(File file) throws IOException {
         file.createNewFile();
-        file.setExecutable(false, false);
-        file.setReadable(false, false);
-        file.setWritable(false, false);
-        file.setReadable(true, true);
-        file.setWritable(true, true);
-        
-        boolean setRead = file.setReadable(false, false) & file.setReadable(true, true);
-        boolean setWrite = file.setWritable(false, false) & file.setWritable(true, true);
-        boolean setExec = file.setExecutable(false, false);
-        
-        if (setRead && setWrite && setExec) {
+        try {
+            permissions600.apply(file);
             if (LOG.isTraceEnabled()) LOG.trace("Set permissions to 600 for file {}", file.getAbsolutePath());
+        } catch (IOException ex) {
+            logSetFilePermissionsFailure("600", file, ex);
+        }
+    }
+
+    private static void logSetFilePermissionsFailure(final String permissions, File file, IOException ex) {
+        if (loggedSetFilePermissionsWarning) {
+            if (LOG.isTraceEnabled()) LOG.trace("Failed to set permissions to {} for file {}: {}",
+                    new Object[] {permissions, file.getAbsolutePath(), ex});
         } else {
-            if (loggedSetFilePermissionsWarning) {
-                if (LOG.isTraceEnabled()) LOG.trace("Failed to set permissions to 600 for file {}: setRead={}, setWrite={}, setExecutable={}",
-                        new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
+            if (Os.isMicrosoftWindows()) {
+                if (LOG.isDebugEnabled()) LOG.debug("Failed to set permissions to {} for file {}; expected behaviour on Windows; {}; subsequent failures (on any file) will be logged at trace",
+                        new Object[] {permissions, file.getAbsolutePath(), ex});
             } else {
-                if (Os.isMicrosoftWindows()) {
-                    if (LOG.isDebugEnabled()) LOG.debug("Failed to set permissions to 600 for file {}; expected behaviour on Windows; setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
-                            new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
-                } else {
-                    LOG.warn("Failed to set permissions to 600 for file {}: setRead={}, setWrite={}, setExecutable={}; subsequent failures (on any file) will be logged at trace",
-                            new Object[] {file.getAbsolutePath(), setRead, setWrite, setExec});
-                }
-                loggedSetFilePermissionsWarning = true;
+                LOG.warn("Failed to set permissions to {} for file {}: {}; subsequent failures (on any file) will be logged at trace",
+                        new Object[] {permissions, file.getAbsolutePath(), ex});
             }
+            loggedSetFilePermissionsWarning = true;
         }
     }
     

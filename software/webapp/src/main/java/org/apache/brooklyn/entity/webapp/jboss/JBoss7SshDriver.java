@@ -145,7 +145,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
         String managementPassword = getManagementPassword();
         if (Strings.isBlank(managementPassword)) {
             LOG.debug(this+" has no password specified for "+JBoss7Server.MANAGEMENT_PASSWORD.getName()+"; using a random string");
-            entity.setConfig(JBoss7Server.MANAGEMENT_PASSWORD, Strings.makeRandomId(8));
+            entity.config().set(JBoss7Server.MANAGEMENT_PASSWORD, Strings.makeRandomId(8));
         }
         String hashedPassword = hashPassword(getManagementUsername(), getManagementPassword(), MANAGEMENT_REALM);
 
@@ -196,7 +196,7 @@ public class JBoss7SshDriver extends JavaWebAppSshDriver implements JBoss7Driver
 
     @Override
     public void launch() {
-        entity.setAttribute(JBoss7Server.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
+        entity.sensors().set(JBoss7Server.PID_FILE, Os.mergePathsUnix(getRunDir(), PID_FILENAME));
 
         // We wait for evidence of JBoss running because, using SshCliTool,
         // we saw the ssh session return before the JBoss process was fully running

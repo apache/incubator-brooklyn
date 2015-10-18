@@ -68,7 +68,7 @@ public class EntityPreManagementTest {
     public void testSetSensorBeforeManaged() {
         TestEntity e = entityManager.createEntity(EntitySpec.create(TestEntity.class));
 
-        e.setAttribute(Attributes.HOSTNAME, "martian.martian");
+        e.sensors().set(Attributes.HOSTNAME, "martian.martian");
         Assert.assertEquals(e.getAttribute(Attributes.HOSTNAME), "martian.martian");
         
         Assert.assertFalse(e.getManagementSupport().isManagementContextReal());
@@ -79,11 +79,11 @@ public class EntityPreManagementTest {
         TestEntity e = entityManager.createEntity(EntitySpec.create(TestEntity.class));
         final List events = new ArrayList();
         
-        e.addPolicy(new AbstractPolicy() {
+        e.policies().add(new AbstractPolicy() {
             @Override
             public void setEntity(EntityLocal entity) {
                 super.setEntity(entity);
-                subscribe(entity, Attributes.HOSTNAME, new SensorEventListener() {
+                subscriptions().subscribe(entity, Attributes.HOSTNAME, new SensorEventListener() {
                     @Override
                     public void onEvent(SensorEvent event) {
                         events.add(event);
@@ -92,7 +92,7 @@ public class EntityPreManagementTest {
             }
         });
         
-        e.setAttribute(Attributes.HOSTNAME, "martian.martian");
+        e.sensors().set(Attributes.HOSTNAME, "martian.martian");
         Assert.assertEquals(e.getAttribute(Attributes.HOSTNAME), "martian.martian");
         
         if (!events.isEmpty()) Assert.fail("Shouldn't have events yet: "+events);
@@ -115,11 +115,11 @@ public class EntityPreManagementTest {
         app = entityManager.createEntity(EntitySpec.create(TestApplication.class));
         final List events = new ArrayList();
         
-        app.addPolicy(new AbstractPolicy() {
+        app.policies().add(new AbstractPolicy() {
             @Override
             public void setEntity(EntityLocal entity) {
                 super.setEntity(entity);
-                subscribe(entity, Attributes.HOSTNAME, new SensorEventListener() {
+                subscriptions().subscribe(entity, Attributes.HOSTNAME, new SensorEventListener() {
                     @Override
                     public void onEvent(SensorEvent event) {
                         events.add(event);
@@ -128,7 +128,7 @@ public class EntityPreManagementTest {
             }
         });
         
-        app.setAttribute(Attributes.HOSTNAME, "martian.martian");
+        app.sensors().set(Attributes.HOSTNAME, "martian.martian");
         Assert.assertEquals(app.getAttribute(Attributes.HOSTNAME), "martian.martian");
         
         if (!events.isEmpty()) Assert.fail("Shouldn't have events yet: "+events);

@@ -59,7 +59,7 @@ class DeltaEnrichersTests {
     @Test
     public void testDeltaEnricher() {
         DeltaEnricher delta = new DeltaEnricher<Integer>(producer, intSensor, deltaSensor)
-        producer.addEnricher(delta)
+        producer.enrichers().add(delta)
         
         delta.onEvent(intSensor.newEvent(producer, 0))
         delta.onEvent(intSensor.newEvent(producer, 0))
@@ -76,7 +76,7 @@ class DeltaEnrichersTests {
     public void testMonospaceTimeWeightedDeltaEnricher() {
         TimeWeightedDeltaEnricher delta = 
             TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(producer, intSensor, deltaSensor)
-        producer.addEnricher(delta)
+        producer.enrichers().add(delta)
         
         delta.onEvent(intSensor.newEvent(producer, 0), 0)
         assertEquals(producer.getAttribute(deltaSensor), null)
@@ -94,7 +94,7 @@ class DeltaEnrichersTests {
     public void testVariableTimeWeightedDeltaEnricher() {
         TimeWeightedDeltaEnricher delta = 
             TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(producer, intSensor, deltaSensor)
-        producer.addEnricher(delta)
+        producer.enrichers().add(delta)
         
         delta.onEvent(intSensor.newEvent(producer, 0), 0)
         delta.onEvent(intSensor.newEvent(producer, 0), 2000)
@@ -112,7 +112,7 @@ class DeltaEnrichersTests {
     @Test
     public void testPostProcessorCalledForDeltaEnricher() {
         TimeWeightedDeltaEnricher delta = new TimeWeightedDeltaEnricher(producer, intSensor, deltaSensor, 1000, {it+123})
-        producer.addEnricher(delta)
+        producer.enrichers().add(delta)
         
         delta.onEvent(intSensor.newEvent(producer, 0), 0)
         delta.onEvent(intSensor.newEvent(producer, 0), 1000)

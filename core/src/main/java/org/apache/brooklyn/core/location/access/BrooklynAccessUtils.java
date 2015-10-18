@@ -39,8 +39,7 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.net.Cidr;
 import org.apache.brooklyn.util.text.Strings;
-import org.python.google.common.base.Predicates;
-import org.python.google.common.collect.Iterables;
+import com.google.common.collect.Iterables;
 
 import com.google.common.base.Supplier;
 import com.google.common.net.HostAndPort;

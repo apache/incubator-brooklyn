@@ -210,11 +210,11 @@ public class FunctionFeedTest extends BrooklynAppUnitTestSupport {
         final List<Integer> ints = new CopyOnWriteArrayList<Integer>();
         final List<String> strings = new CopyOnWriteArrayList<String>();
         
-        entity.subscribe(entity, SENSOR_INT, new SensorEventListener<Integer>() {
+        entity.subscriptions().subscribe(entity, SENSOR_INT, new SensorEventListener<Integer>() {
                 @Override public void onEvent(SensorEvent<Integer> event) {
                     ints.add(event.getValue());
                 }});
-        entity.subscribe(entity, SENSOR_STRING, new SensorEventListener<String>() {
+        entity.subscriptions().subscribe(entity, SENSOR_STRING, new SensorEventListener<String>() {
                 @Override public void onEvent(SensorEvent<String> event) {
                     strings.add(event.getValue());
                 }});

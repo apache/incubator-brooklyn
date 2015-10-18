@@ -70,17 +70,17 @@ public class BrooklynMetricsImpl extends AbstractEntity implements BrooklynMetri
         LocalSubscriptionManager subsManager = (LocalSubscriptionManager) (managementContext != null ? managementContext.getSubscriptionManager() : null);
         
         if (managementContext != null) {
-            setAttribute(TOTAL_EFFECTORS_INVOKED, ((ManagementContextInternal)managementContext).getTotalEffectorInvocations());
+            sensors().set(TOTAL_EFFECTORS_INVOKED, ((ManagementContextInternal)managementContext).getTotalEffectorInvocations());
         }
         if (execManager != null) {
-            setAttribute(TOTAL_TASKS_SUBMITTED, execManager.getTotalTasksSubmitted());
-            setAttribute(NUM_INCOMPLETE_TASKS, execManager.getNumIncompleteTasks());
-            setAttribute(NUM_ACTIVE_TASKS, execManager.getNumActiveTasks());
+            sensors().set(TOTAL_TASKS_SUBMITTED, execManager.getTotalTasksSubmitted());
+            sensors().set(NUM_INCOMPLETE_TASKS, execManager.getNumIncompleteTasks());
+            sensors().set(NUM_ACTIVE_TASKS, execManager.getNumActiveTasks());
         }
         if (subsManager != null) {
-            setAttribute(TOTAL_EVENTS_PUBLISHED, subsManager.getTotalEventsPublished());
-            setAttribute(TOTAL_EVENTS_DELIVERED, subsManager.getTotalEventsDelivered());
-            setAttribute(NUM_SUBSCRIPTIONS, subsManager.getNumSubscriptions());
+            sensors().set(TOTAL_EVENTS_PUBLISHED, subsManager.getTotalEventsPublished());
+            sensors().set(TOTAL_EVENTS_DELIVERED, subsManager.getTotalEventsDelivered());
+            sensors().set(NUM_SUBSCRIPTIONS, subsManager.getNumSubscriptions());
         }
     }
 }

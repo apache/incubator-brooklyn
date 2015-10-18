@@ -44,7 +44,7 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
         
         // Because can have multiple children (similar to groups/clusters/apps), need to
         // monitor their health and indicate this has failed if any of them have failed.
-        addEnricher(ServiceStateLogic.newEnricherFromChildren()
+        enrichers().add(ServiceStateLogic.newEnricherFromChildren()
                 .configure(ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK, QuorumCheck.QuorumChecks.all()));
     }
     

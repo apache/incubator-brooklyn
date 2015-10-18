@@ -63,7 +63,7 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
     
     @Override
     public <T> SubscriptionHandle subscribeToMembers(Group parent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
-        return getSubscriptionContext().subscribeToMembers(parent, sensor, listener);
+        return subscriptions().subscribeToMembers(parent, sensor, listener);
     }
 
     @Override

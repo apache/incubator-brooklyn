@@ -95,8 +95,8 @@ public class CheckpointEntityTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testPersistsOnExplicitCheckpointOfEntity() throws Exception {
-        origE.setConfig(MyEntity.MY_CONFIG, "mynewval");
-        origE.setAttribute(MyEntity.MY_SENSOR, "mysensorval");
+        origE.config().set(MyEntity.MY_CONFIG, "mynewval");
+        origE.sensors().set(MyEntity.MY_SENSOR, "mysensorval");
         
         // Assert persisted the modified config/attributes
         newApp = rebind();

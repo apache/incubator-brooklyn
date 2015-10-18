@@ -137,7 +137,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     
     @Override
     public void init() {
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .aggregating(MongoDBAuthenticationMixins.ROOT_USERNAME)
                 .publishing(MongoDBAuthenticationMixins.ROOT_USERNAME)
                 .fromMembers()
@@ -345,12 +345,12 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     public void start(Collection<? extends Location> locations) {
         // Promises that all the cluster's members have SERVICE_UP true on returning.
         super.start(locations);
-        policy = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        policy = policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName(getName() + " membership tracker")
                 .configure("group", this));
 
         for (AttributeSensor<Long> sensor: SENSORS_TO_SUM)
-            addEnricher(Enrichers.builder()
+            enrichers().add(Enrichers.builder()
                     .aggregating(sensor)
                     .publishing(sensor)
                     .fromMembers()
@@ -361,7 +361,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
         
         // FIXME would it be simpler to have a *subscription* on four or five sensors on allMembers, including SERVICE_UP
         // (which we currently don't check), rather than an enricher, and call to an "update" method?
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .aggregating(MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
                 .publishing(MongoDBServer.REPLICA_SET_PRIMARY_ENDPOINT)
                 .fromMembers()
@@ -380,7 +380,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                         }})
                 .build());
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .aggregating(MongoDBServer.MONGO_SERVER_ENDPOINT)
                 .publishing(REPLICA_SET_ENDPOINTS)
                 .fromMembers()
@@ -398,13 +398,13 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
                         }})
                 .build());
         
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .transforming(REPLICA_SET_ENDPOINTS)
                 .publishing(DATASTORE_URL)
                 .computing(new EndpointsToDatastoreUrlMapper(this))
                 .build());
 
-        subscribeToMembers(this, MongoDBServer.IS_PRIMARY_FOR_REPLICA_SET, new SensorEventListener<Boolean>() {
+        subscriptions().subscribeToMembers(this, MongoDBServer.IS_PRIMARY_FOR_REPLICA_SET, new SensorEventListener<Boolean>() {
             @Override public void onEvent(SensorEvent<Boolean> event) {
                 if (Boolean.TRUE == event.getValue())
                     sensors().set(PRIMARY_ENTITY, (MongoDBServer)event.getSource());

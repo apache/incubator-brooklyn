@@ -59,7 +59,7 @@ public class JmxSupportTest {
 
     public void testJmxmpJarExistence() {
         app = TestApplication.Factory.newManagedInstanceForTests();
-        app.setConfig(JmxSupport.JMX_AGENT_MODE, JmxAgentModes.JMXMP);
+        app.config().set(JmxSupport.JMX_AGENT_MODE, JmxAgentModes.JMXMP);
         JmxSupport support = new JmxSupport(app, null);
         
         Assert.assertEquals(support.getJmxAgentJarMavenArtifact().getArtifactId(),
@@ -72,7 +72,7 @@ public class JmxSupportTest {
     public void testJmxrmiJarExistence() {
         app = TestApplication.Factory.newManagedInstanceForTests();
         JmxSupport support = new JmxSupport(app, null);
-        app.setConfig(JmxSupport.JMX_AGENT_MODE, JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
+        app.config().set(JmxSupport.JMX_AGENT_MODE, JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
         
         Assert.assertEquals(support.getJmxAgentJarMavenArtifact().getArtifactId(),
                 "brooklyn-jmxrmi-agent");
@@ -98,7 +98,7 @@ public class JmxSupportTest {
     @Test(groups="Integration")
     public void testJmxmpJarHostedValidity() {
         app = TestApplication.Factory.newManagedInstanceForTests();
-        app.setConfig(JmxSupport.JMX_AGENT_MODE, JmxAgentModes.JMXMP);
+        app.config().set(JmxSupport.JMX_AGENT_MODE, JmxAgentModes.JMXMP);
         JmxSupport support = new JmxSupport(app, null);
 
         // make sure we get a valid jar, big enough (no redirect, and classifier correclty set for this!)
@@ -110,7 +110,7 @@ public class JmxSupportTest {
     public void testJmxrmiJarHostedValidity() {
         app = TestApplication.Factory.newManagedInstanceForTests();
         JmxSupport support = new JmxSupport(app, null);
-        app.setConfig(JmxSupport.JMX_AGENT_MODE, JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
+        app.config().set(JmxSupport.JMX_AGENT_MODE, JmxAgentModes.JMX_RMI_CUSTOM_AGENT);
         
         // make sure we get a valid jar, big enough (no redirect)
         checkValidArchive(MavenRetriever.hostedUrl(support.getJmxAgentJarMavenArtifact()), 4000);

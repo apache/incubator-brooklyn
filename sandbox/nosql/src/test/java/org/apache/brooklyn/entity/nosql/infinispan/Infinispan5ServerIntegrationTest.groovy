@@ -90,7 +90,7 @@ class Infinispan5ServerIntegrationTest {
         Application app = new TestApplicationImpl();
         try {
             final Infinispan5Server infini = new Infinispan5Server(parent:app)
-            infini.setConfig(Infinispan5Server.PORT.getConfigKey(), DEFAULT_PORT)
+            infini.config().set(Infinispan5Server.PORT.getConfigKey(), DEFAULT_PORT)
             infini.start([ new LocalhostMachineProvisioningLocation(name:'london') ])
             
             executeUntilSucceeds {

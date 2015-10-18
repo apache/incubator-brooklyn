@@ -392,7 +392,7 @@ public class FlagUtils {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static void setConfig(Object objectOfField, ConfigKey<?> key, Object value, SetFromFlag optionalAnnotation) {
         if (objectOfField instanceof Configurable) {
-            ((Configurable)objectOfField).setConfig((ConfigKey)key, value);
+            ((Configurable)objectOfField).config().set((ConfigKey)key, value);
             return;
         } else {
             if (optionalAnnotation==null) {

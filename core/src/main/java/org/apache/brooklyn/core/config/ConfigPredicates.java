@@ -23,13 +23,20 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.util.guava.SerializablePredicate;
+import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.WildcardGlobs;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
+@SuppressWarnings("serial")
 public class ConfigPredicates {
 
-    public static Predicate<ConfigKey<?>> startingWith(final String prefix) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<ConfigKey<?>> startingWithOld(final String prefix) {
+        // TODO PERSISTENCE WORKAROUND
         return new Predicate<ConfigKey<?>>() {
             @Override
             public boolean apply(@Nullable ConfigKey<?> input) {
@@ -38,7 +45,10 @@ public class ConfigPredicates {
         };
     }
 
-    public static Predicate<ConfigKey<?>> matchingGlob(final String glob) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<ConfigKey<?>> matchingGlobOld(final String glob) {
+        // TODO PERSISTENCE WORKAROUND
         return new Predicate<ConfigKey<?>>() {
             @Override
             public boolean apply(@Nullable ConfigKey<?> input) {
@@ -47,7 +57,10 @@ public class ConfigPredicates {
         };
     }
 
-    public static Predicate<ConfigKey<?>> matchingRegex(final String regex) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<ConfigKey<?>> matchingRegexOld(final String regex) {
+        // TODO PERSISTENCE WORKAROUND
         final Pattern p = Pattern.compile(regex);
         return new Predicate<ConfigKey<?>>() {
             @Override
@@ -57,7 +70,10 @@ public class ConfigPredicates {
         };
     }
 
-    public static Predicate<ConfigKey<?>> nameMatching(final Predicate<String> filter) {
+    /** @deprecated since 0.9.0 kept only to allow conversion of anonymous inner classes */
+    @SuppressWarnings("unused") @Deprecated 
+    private static Predicate<ConfigKey<?>> nameMatchingOld(final Predicate<String> filter) {
+        // TODO PERSISTENCE WORKAROUND
         return new Predicate<ConfigKey<?>>() {
             @Override
             public boolean apply(@Nullable ConfigKey<?> input) {
@@ -65,5 +81,77 @@ public class ConfigPredicates {
             }
         };
     }
+
+    /** @deprecated since 0.9.0; use {@link #nameStartsWith(String)} */
+    public static Predicate<ConfigKey<?>> startingWith(final String prefix) {
+        return nameStartsWith(prefix);
+    }
+
+    /** @deprecated since 0.9.0; use {@link #nameMatchesGlob(String)} */
+    public static Predicate<ConfigKey<?>> matchingGlob(final String glob) {
+        return nameMatchesGlob(glob);
+    }
+
+    /** @deprecated since 0.9.0; use {@link #nameMatchesRegex(String)} */
+    public static Predicate<ConfigKey<?>> matchingRegex(final String regex) {
+        return nameMatchesRegex(regex);
+    }
+
+    /** @deprecated since 0.9.0; use {@link #nameSatisfies(Predicate)} */
+    public static Predicate<ConfigKey<?>> nameMatching(final Predicate<String> filter) {
+        return nameSatisfies(filter);
+    }
+
+    /**
+     * @since 0.9.0
+     */
+    public static Predicate<ConfigKey<?>> nameStartsWith(final String prefix) {
+        return nameSatisfies(StringPredicates.startsWith(prefix));
+    }
+
+    /**
+     * @since 0.9.0
+     */
+    public static Predicate<ConfigKey<?>> nameMatchesGlob(final String glob) {
+        return nameSatisfies(StringPredicates.matchesGlob(glob));
+    }
+
+    /**
+     * @since 0.9.0
+     */
+    public static Predicate<ConfigKey<?>> nameMatchesRegex(final String regex) {
+        return nameSatisfies(StringPredicates.matchesRegex(regex));
+    }
+
+    /**
+     * @since 0.9.0
+     */
+    public static Predicate<ConfigKey<?>> nameEqualTo(final String val) {
+        return nameSatisfies(Predicates.equalTo(val));
+    }
     
+    /**
+     * @since 0.9.0
+     */
+    public static Predicate<ConfigKey<?>> nameSatisfies(final Predicate<? super String> condition) {
+        return new NameSatisfies(condition);
+    }
+    
+    /**
+     * @since 0.9.0
+     */
+    protected static class NameSatisfies implements SerializablePredicate<ConfigKey<?>> {
+        protected final Predicate<? super String> condition;
+        protected NameSatisfies(Predicate<? super String> condition) {
+            this.condition = condition;
+        }
+        @Override
+        public boolean apply(@Nullable ConfigKey<?> input) {
+            return (input != null) && condition.apply(input.getName());
+        }
+        @Override
+        public String toString() {
+            return "displayNameSatisfies("+condition+")";
+        }
+    }
 }

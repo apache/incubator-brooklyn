@@ -125,9 +125,9 @@ public class EntityDynamicType extends BrooklynDynamicType<Entity, AbstractEntit
         Effector<?> oldEffector = effectors.put(newEffector.getName(), newEffector);
         invalidateSnapshot();
         if (oldEffector!=null)
-            instance.emit(AbstractEntity.EFFECTOR_CHANGED, newEffector.getName());
+            instance.sensors().emit(AbstractEntity.EFFECTOR_CHANGED, newEffector.getName());
         else
-            instance.emit(AbstractEntity.EFFECTOR_ADDED, newEffector.getName());
+            instance.sensors().emit(AbstractEntity.EFFECTOR_ADDED, newEffector.getName());
     }
 
     /**
@@ -158,7 +158,7 @@ public class EntityDynamicType extends BrooklynDynamicType<Entity, AbstractEntit
         Effector<?> removed = effectors.remove(effector.getName());
         invalidateSnapshot();
         if (removed != null) {
-            instance.emit(AbstractEntity.EFFECTOR_REMOVED, removed.getName());
+            instance.sensors().emit(AbstractEntity.EFFECTOR_REMOVED, removed.getName());
         }
     }
 
@@ -184,7 +184,7 @@ public class EntityDynamicType extends BrooklynDynamicType<Entity, AbstractEntit
     public void addSensor(Sensor<?> newSensor) {
         sensors.put(newSensor.getName(), newSensor);
         invalidateSnapshot();
-        instance.emit(AbstractEntity.SENSOR_ADDED, newSensor);
+        instance.sensors().emit(AbstractEntity.SENSOR_ADDED, newSensor);
     }
     
     /**
@@ -199,7 +199,7 @@ public class EntityDynamicType extends BrooklynDynamicType<Entity, AbstractEntit
     public void addSensorIfAbsent(Sensor<?> newSensor) {
         Sensor<?> prev = addSensorIfAbsentWithoutPublishing(newSensor);
         if (prev == null) {
-            instance.emit(AbstractEntity.SENSOR_ADDED, newSensor);
+            instance.sensors().emit(AbstractEntity.SENSOR_ADDED, newSensor);
         }
     }
     
@@ -218,7 +218,7 @@ public class EntityDynamicType extends BrooklynDynamicType<Entity, AbstractEntit
         Sensor<?> result = sensors.remove(sensorName);
         if (result != null) {
             invalidateSnapshot();
-            instance.emit(AbstractEntity.SENSOR_REMOVED, result);
+            instance.sensors().emit(AbstractEntity.SENSOR_REMOVED, result);
         }
         return result;
     }

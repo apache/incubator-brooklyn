@@ -18,10 +18,20 @@
  */
 package org.apache.brooklyn.api.objs;
 
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.mgmt.SubscriptionContext;
+import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
+import org.apache.brooklyn.api.mgmt.SubscriptionManager;
+import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.api.sensor.SensorEventListener;
+
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
 /**
@@ -53,7 +63,13 @@ public interface BrooklynObject extends Identifiable, Configurable {
      * and they should be amenable to our persistence (on-disk serialization) and our JSON serialization in the REST API.
      */
     TagSupport tags();
-    
+
+    /**
+     * Subscriptions are the mechanism for receiving notifications of sensor-events (e.g. attribute-changed) from 
+     * other entities.
+     */
+    SubscriptionSupport subscriptions();
+
     public interface TagSupport {
         /**
          * @return An immutable copy of the set of tags on this entity. 
@@ -69,5 +85,60 @@ public interface BrooklynObject extends Identifiable, Configurable {
         boolean addTags(@Nonnull Iterable<?> tags);
         
         boolean removeTag(@Nonnull Object tag);
+    }
+    
+    @Beta
+    public interface SubscriptionSupport {
+        /**
+         * Allow us to subscribe to data from a {@link Sensor} on another entity.
+         * 
+         * @return a subscription id which can be used to unsubscribe
+         *
+         * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
+         */
+        @Beta
+        <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
+     
+        /**
+         * Allow us to subscribe to data from a {@link Sensor} on another entity.
+         * 
+         * @return a subscription id which can be used to unsubscribe
+         *
+         * @see SubscriptionManager#subscribe(Map, Entity, Sensor, SensorEventListener)
+         */
+        @Beta
+        <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener);
+
+        /** @see SubscriptionManager#subscribeToChildren(Map, Entity, Sensor, SensorEventListener) */
+        @Beta
+        <T> SubscriptionHandle subscribeToChildren(Entity parent, Sensor<T> sensor, SensorEventListener<? super T> listener);
+     
+        /** @see SubscriptionManager#subscribeToMembers(Group, Sensor, SensorEventListener) */
+        @Beta
+        <T> SubscriptionHandle subscribeToMembers(Group group, Sensor<T> sensor, SensorEventListener<? super T> listener);
+
+        /**
+         * Unsubscribes from the given producer.
+         *
+         * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+         */
+        @Beta
+        boolean unsubscribe(Entity producer);
+
+        /**
+         * Unsubscribes the given handle.
+         *
+         * @see SubscriptionContext#unsubscribe(SubscriptionHandle)
+         */
+        @Beta
+        boolean unsubscribe(Entity producer, SubscriptionHandle handle);
+        
+        /**
+         * Unsubscribes the given handle.
+         * 
+         * It is (currently) more efficient to also pass in the producer -
+         * see {@link SubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)} 
+         */
+        boolean unsubscribe(SubscriptionHandle handle);
     }
 }

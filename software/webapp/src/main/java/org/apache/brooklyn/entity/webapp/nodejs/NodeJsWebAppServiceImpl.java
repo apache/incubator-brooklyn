@@ -81,8 +81,8 @@ public class NodeJsWebAppServiceImpl extends SoftwareProcessImpl implements Node
     protected void postStop() {
         super.postStop();
 
-        setAttribute(REQUESTS_PER_SECOND_LAST, 0D);
-        setAttribute(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
+        sensors().set(REQUESTS_PER_SECOND_LAST, 0D);
+        sensors().set(REQUESTS_PER_SECOND_IN_WINDOW, 0D);
     }
 
     @Override

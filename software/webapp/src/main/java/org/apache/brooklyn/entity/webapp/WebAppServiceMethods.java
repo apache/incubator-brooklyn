@@ -42,17 +42,17 @@ public class WebAppServiceMethods implements WebAppServiceConstants {
     }
 
     public static void connectWebAppServerPolicies(EntityLocal entity, Duration windowPeriod) {
-        entity.addEnricher(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(entity, REQUEST_COUNT, REQUESTS_PER_SECOND_LAST));
+        entity.enrichers().add(TimeWeightedDeltaEnricher.<Integer>getPerSecondDeltaEnricher(entity, REQUEST_COUNT, REQUESTS_PER_SECOND_LAST));
 
         if (windowPeriod!=null) {
-            entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity, REQUESTS_PER_SECOND_LAST,
+            entity.enrichers().add(new RollingTimeWindowMeanEnricher<Double>(entity, REQUESTS_PER_SECOND_LAST,
                     REQUESTS_PER_SECOND_IN_WINDOW, windowPeriod));
         }
 
-        entity.addEnricher(new TimeFractionDeltaEnricher<Integer>(entity, TOTAL_PROCESSING_TIME, PROCESSING_TIME_FRACTION_LAST, TimeUnit.MILLISECONDS));
+        entity.enrichers().add(new TimeFractionDeltaEnricher<Integer>(entity, TOTAL_PROCESSING_TIME, PROCESSING_TIME_FRACTION_LAST, TimeUnit.MILLISECONDS));
 
         if (windowPeriod!=null) {
-            entity.addEnricher(new RollingTimeWindowMeanEnricher<Double>(entity, PROCESSING_TIME_FRACTION_LAST,
+            entity.enrichers().add(new RollingTimeWindowMeanEnricher<Double>(entity, PROCESSING_TIME_FRACTION_LAST,
                     PROCESSING_TIME_FRACTION_IN_WINDOW, windowPeriod));
         }
 

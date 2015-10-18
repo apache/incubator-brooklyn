@@ -51,58 +51,58 @@ public class SensorPropagatingEnricherDeprecatedTest extends BrooklynAppUnitTest
     
     @Test
     public void testPropagatesSpecificSensor() {
-        app.addEnricher(SensorPropagatingEnricher.newInstanceListeningTo(entity, TestEntity.NAME));
+        app.enrichers().add(SensorPropagatingEnricher.newInstanceListeningTo(entity, TestEntity.NAME));
 
         // name propagated
-        entity.setAttribute(TestEntity.NAME, "foo");
+        entity.sensors().set(TestEntity.NAME, "foo");
         EntityTestUtils.assertAttributeEqualsEventually(app, TestEntity.NAME, "foo");
         
         // sequence not propagated
-        entity.setAttribute(TestEntity.SEQUENCE, 2);
+        entity.sensors().set(TestEntity.SEQUENCE, 2);
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 100), app, TestEntity.SEQUENCE, null);
     }
     
     @Test
     public void testPropagatesAllSensors() {
-        app.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensors(entity));
+        app.enrichers().add(SensorPropagatingEnricher.newInstanceListeningToAllSensors(entity));
 
         // all attributes propagated
-        entity.setAttribute(TestEntity.NAME, "foo");
-        entity.setAttribute(TestEntity.SEQUENCE, 2);
+        entity.sensors().set(TestEntity.NAME, "foo");
+        entity.sensors().set(TestEntity.SEQUENCE, 2);
         
         EntityTestUtils.assertAttributeEqualsEventually(app, TestEntity.NAME, "foo");
         EntityTestUtils.assertAttributeEqualsEventually(app, TestEntity.SEQUENCE, 2);
         
         // notification-sensor propagated
         final AtomicReference<Integer> notif = new AtomicReference<Integer>();
-        app.subscribe(app, TestEntity.MY_NOTIF, new SensorEventListener<Integer>() {
+        app.subscriptions().subscribe(app, TestEntity.MY_NOTIF, new SensorEventListener<Integer>() {
                 @Override public void onEvent(SensorEvent<Integer> event) {
                     notif.set(event.getValue());
                 }});
-        entity.emit(TestEntity.MY_NOTIF, 7);
+        entity.sensors().emit(TestEntity.MY_NOTIF, 7);
         Asserts.eventually(AtomicReferences.supplier(notif), Predicates.equalTo(7));
     }
     
     @Test
     public void testPropagatesAllBut() {
-        app.addEnricher(SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(entity, TestEntity.SEQUENCE)) ;
+        app.enrichers().add(SensorPropagatingEnricher.newInstanceListeningToAllSensorsBut(entity, TestEntity.SEQUENCE)) ;
 
         // name propagated
-        entity.setAttribute(TestEntity.NAME, "foo");
+        entity.sensors().set(TestEntity.NAME, "foo");
         EntityTestUtils.assertAttributeEqualsEventually(app, TestEntity.NAME, "foo");
         
         // sequence not propagated
-        entity.setAttribute(TestEntity.SEQUENCE, 2);
+        entity.sensors().set(TestEntity.SEQUENCE, 2);
         EntityTestUtils.assertAttributeEqualsContinually(MutableMap.of("timeout", 100), app, TestEntity.SEQUENCE, null);
     }
     
     @Test
     public void testPropagatingAsDifferentSensor() {
         final AttributeSensor<String> ANOTHER_ATTRIBUTE = Sensors.newStringSensor("another.attribute", "");
-        app.addEnricher(SensorPropagatingEnricher.newInstanceRenaming(entity, ImmutableMap.of(TestEntity.NAME, ANOTHER_ATTRIBUTE)));
+        app.enrichers().add(SensorPropagatingEnricher.newInstanceRenaming(entity, ImmutableMap.of(TestEntity.NAME, ANOTHER_ATTRIBUTE)));
 
         // name propagated as different attribute
-        entity.setAttribute(TestEntity.NAME, "foo");
+        entity.sensors().set(TestEntity.NAME, "foo");
         EntityTestUtils.assertAttributeEqualsEventually(app, ANOTHER_ATTRIBUTE, "foo");
     }
 }

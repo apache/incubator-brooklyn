@@ -21,6 +21,10 @@ Once one node is running as `MASTER`, other nodes start in either `STANDBY` or `
   As with the standby node, if a hot-standby node detects that the master fails,
   it will be a candidate for promotion to master.
 
+* In `HOT_BACKUP` mode, a Brooklyn instance will read and make available the live state of
+  entities, as a read-only copy. However this node is not able to become master,
+  so it can safely be used to test compatibility across different versions.
+
 To explicitly specify what HA mode a node should be in, the following CLI options are available
 for the parameter `--highAvailability`:
 
@@ -29,6 +33,7 @@ for the parameter `--highAvailability`:
 * `master`: will startup as master; if there is already a master then fails immediately
 * `standby`: will start up as lukewarm standby; if there is not already a master then fails immediately
 * `hot_standby`: will start up as hot standby; if there is not already a master then fails immediately
+* `hot_backup`: will start up as hot backup; this can be done even if there is not already a master; this node will not be a master 
 
 The REST API offers live detection and control of the HA mode,
 including setting priority to control which nodes will be promoted on master failure:

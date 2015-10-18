@@ -92,8 +92,8 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
     @Override
     public void init() {
         super.init();
-        setAttribute(GROUP_SIZE, 0);
-        setAttribute(GROUP_MEMBERS, ImmutableList.<Entity>of());
+        sensors().set(GROUP_SIZE, 0);
+        sensors().set(GROUP_MEMBERS, ImmutableList.<Entity>of());
     }
 
     @Override
@@ -124,15 +124,15 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
             // FIXME do not set sensors on members; possibly we don't need FIRST at all, just look at the first in MEMBERS, and take care to guarantee order there
             Entity first = getAttribute(FIRST);
             if (first == null) {
-                ((EntityLocal) member).setAttribute(FIRST_MEMBER, true);
-                ((EntityLocal) member).setAttribute(FIRST, member);
-                setAttribute(FIRST, member);
+                ((EntityLocal) member).sensors().set(FIRST_MEMBER, true);
+                ((EntityLocal) member).sensors().set(FIRST, member);
+                sensors().set(FIRST, member);
             } else {
                 if (first.equals(member) || first.equals(member.getAttribute(FIRST))) {
                     // do nothing (rebinding)
                 } else {
-                    ((EntityLocal) member).setAttribute(FIRST_MEMBER, false);
-                    ((EntityLocal) member).setAttribute(FIRST, first);
+                    ((EntityLocal) member).sensors().set(FIRST_MEMBER, false);
+                    ((EntityLocal) member).sensors().set(FIRST, first);
                 }
             }
 
@@ -140,10 +140,10 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
             boolean changed = addMemberInternal(member);
             if (changed) {
                 log.debug("Group {} got new member {}", this, member);
-                setAttribute(GROUP_SIZE, getCurrentSize());
-                setAttribute(GROUP_MEMBERS, getMembers());
+                sensors().set(GROUP_SIZE, getCurrentSize());
+                sensors().set(GROUP_MEMBERS, getMembers());
                 // emit after the above so listeners can use getMembers() and getCurrentSize()
-                emit(MEMBER_ADDED, member);
+                sensors().emit(MEMBER_ADDED, member);
 
                 if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
                     Optional<Entity> result = Iterables.tryFind(getChildren(), Predicates.equalTo(member));
@@ -180,14 +180,14 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
             if (changed) {
                 log.debug("Group {} lost member {}", this, member);
                 // TODO ideally the following are all synched
-                setAttribute(GROUP_SIZE, getCurrentSize());
-                setAttribute(GROUP_MEMBERS, getMembers());
+                sensors().set(GROUP_SIZE, getCurrentSize());
+                sensors().set(GROUP_MEMBERS, getMembers());
                 if (member.equals(getAttribute(FIRST))) {
                     // TODO should we elect a new FIRST ?  as is the *next* will become first.  could we do away with FIRST altogether?
-                    setAttribute(FIRST, null);
+                    sensors().set(FIRST, null);
                 }
                 // emit after the above so listeners can use getMembers() and getCurrentSize()
-                emit(MEMBER_REMOVED, member);
+                sensors().emit(MEMBER_REMOVED, member);
 
                 if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
                     Optional<Entity> result = Iterables.tryFind(getChildren(), new Predicate<Entity>() {

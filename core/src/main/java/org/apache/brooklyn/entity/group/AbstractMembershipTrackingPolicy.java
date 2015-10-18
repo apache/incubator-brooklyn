@@ -167,12 +167,12 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         BrooklynLogging.log(LOG, BrooklynLogging.levelDebugOrTraceIfReadOnly(group),
             "Subscribing to group "+group+", for memberAdded, memberRemoved, and {}", getSensorsToTrack());
         
-        subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(group, DynamicGroup.MEMBER_ADDED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 onEntityEvent(EventType.ENTITY_ADDED, event.getValue());
             }
         });
-        subscribe(group, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
+        subscriptions().subscribe(group, DynamicGroup.MEMBER_REMOVED, new SensorEventListener<Entity>() {
             @Override public void onEvent(SensorEvent<Entity> event) {
                 entitySensorCache.remove(event.getSource().getId());
                 onEntityEvent(EventType.ENTITY_REMOVED, event.getValue());
@@ -180,7 +180,7 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
         });
 
         for (Sensor<?> sensor : getSensorsToTrack()) {
-            subscribeToMembers(group, sensor, new SensorEventListener<Object>() {
+            subscriptions().subscribeToMembers(group, sensor, new SensorEventListener<Object>() {
                 @Override public void onEvent(SensorEvent<Object> event) {
                     boolean notifyOnDuplicates = getRequiredConfig(NOTIFY_ON_DUPLICATES);
                     String entityId = event.getSource().getId();
@@ -212,7 +212,7 @@ public abstract class AbstractMembershipTrackingPolicy extends AbstractPolicy {
 
     protected void unsubscribeFromGroup() {
         Group group = getGroup();
-        if (getSubscriptionTracker() != null && group != null) unsubscribe(group);
+        if (getSubscriptionTracker() != null && group != null) subscriptions().unsubscribe(group);
     }
 
     /** All entity events pass through this method. Default impl delegates to onEntityXxxx methods, whose default behaviours are no-op.

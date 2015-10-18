@@ -111,7 +111,7 @@ public class BrooklynEntityMirrorIntegrationTest {
         
         String catalogItemId = "test-catalog-item:1.0";
         String catalogItemIdGA = "test-catalog-item:1.0-GA";
-        serverApp.setAttribute(TestApplication.MY_ATTRIBUTE, "austria");
+        serverApp.sensors().set(TestApplication.MY_ATTRIBUTE, "austria");
         serverApp.setCatalogItemId(catalogItemId);
 
         String serviceId = serverApp.getId();
@@ -127,7 +127,7 @@ public class BrooklynEntityMirrorIntegrationTest {
         assertTrue(mirror.getAttribute(BrooklynEntityMirror.MIRROR_SUMMARY) != null, "entity summary is null");
         log.info("Sensors mirrored are: "+((EntityInternal)mirror).getAllAttributes());
         
-        serverApp.setAttribute(TestApplication.MY_ATTRIBUTE, "bermuda");
+        serverApp.sensors().set(TestApplication.MY_ATTRIBUTE, "bermuda");
         serverApp.setCatalogItemId(catalogItemIdGA);
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "bermuda");
         EntityTestUtils.assertAttributeEqualsEventually(mirror, BrooklynEntityMirror.MIRROR_CATALOG_ITEM_ID, catalogItemIdGA);
@@ -148,7 +148,7 @@ public class BrooklynEntityMirrorIntegrationTest {
         // check auth is required
         HttpTestUtils.assertHttpStatusCodeEquals(getBaseUri(), 401);
         
-        serverApp.setAttribute(TestApplication.MY_ATTRIBUTE, "austria");
+        serverApp.sensors().set(TestApplication.MY_ATTRIBUTE, "austria");
 
         String serviceId = serverApp.getId();
         Entity mirror = localApp.addChild(EntitySpec.create(BrooklynEntityMirror.class)
@@ -163,7 +163,7 @@ public class BrooklynEntityMirrorIntegrationTest {
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "austria");
         log.info("Sensors mirrored are: "+((EntityInternal)mirror).getAllAttributes());
         
-        serverApp.setAttribute(TestApplication.MY_ATTRIBUTE, "bermuda");
+        serverApp.sensors().set(TestApplication.MY_ATTRIBUTE, "bermuda");
         EntityTestUtils.assertAttributeEqualsEventually(mirror, TestApplication.MY_ATTRIBUTE, "bermuda");
 
         serverApp.stop();

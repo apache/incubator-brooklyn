@@ -184,7 +184,7 @@ public class HotStandbyTest {
         app.setDisplayName("First App");
         app.start(MutableList.<Location>of());
         app.config().set(TestEntity.CONF_NAME, "first-app");
-        app.setAttribute(TestEntity.SEQUENCE, 3);
+        app.sensors().set(TestEntity.SEQUENCE, 3);
         
         forcePersistNow(n1);
         return app;
@@ -233,7 +233,7 @@ public class HotStandbyTest {
         assertEquals(appRO.getAttribute(TestEntity.SEQUENCE), (Integer)3);
 
         try {
-            ((TestApplication)appRO).setAttribute(TestEntity.SEQUENCE, 4);
+            ((TestApplication)appRO).sensors().set(TestEntity.SEQUENCE, 4);
             Assert.fail("Should not have allowed sensor to be set");
         } catch (Exception e) {
             Assert.assertTrue(e.toString().toLowerCase().contains("read-only"), "Error message did not contain expected text: "+e);
@@ -256,7 +256,7 @@ public class HotStandbyTest {
 
         app.setDisplayName("First App Renamed");
         app.config().set(TestEntity.CONF_NAME, "first-app-renamed");
-        app.setAttribute(TestEntity.SEQUENCE, 4);
+        app.sensors().set(TestEntity.SEQUENCE, 4);
 
         appRO = expectRebindSequenceNumber(n1, n2, app, 4, true);
         assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 1);
@@ -267,7 +267,7 @@ public class HotStandbyTest {
 
         app.setDisplayName("First App");
         app.config().set(TestEntity.CONF_NAME, "first-app-restored");
-        app.setAttribute(TestEntity.SEQUENCE, 5);
+        app.sensors().set(TestEntity.SEQUENCE, 5);
         
         appRO = expectRebindSequenceNumber(n1, n2, app, 5, true);
         assertEquals(n2.mgmt.getEntityManager().getEntities().size(), 1);
@@ -302,7 +302,7 @@ public class HotStandbyTest {
         TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
         app2.config().set(TestEntity.CONF_NAME, "second-app");
         
-        app.setAttribute(TestEntity.SEQUENCE, 4);
+        app.sensors().set(TestEntity.SEQUENCE, 4);
         appRO = expectRebindSequenceNumber(n1, n2, app, 4, immediate);
         
         assertEquals(appRO.getChildren().size(), 1);
@@ -322,7 +322,7 @@ public class HotStandbyTest {
         Entities.unmanage(child);
         Entities.unmanage(app2);
         
-        app.setAttribute(TestEntity.SEQUENCE, 5);
+        app.sensors().set(TestEntity.SEQUENCE, 5);
         appRO = expectRebindSequenceNumber(n1, n2, app, 5, immediate);
         
         EntityTestUtils.assertAttributeEqualsEventually(appRO, TestEntity.SEQUENCE, 5);
@@ -540,7 +540,7 @@ public class HotStandbyTest {
         Assert.assertNotNull(app2RO);
         assertEquals(app2RO.getConfig(TestEntity.CONF_NAME), "second-app");
         try {
-            ((TestApplication)app2RO).setAttribute(TestEntity.SEQUENCE, 4);
+            ((TestApplication)app2RO).sensors().set(TestEntity.SEQUENCE, 4);
             Assert.fail("Should not have allowed sensor to be set");
         } catch (Exception e) {
             Assert.assertTrue(e.toString().toLowerCase().contains("read-only"), "Error message did not contain expected text: "+e);
@@ -561,7 +561,7 @@ public class HotStandbyTest {
         Application app2B = n2.mgmt.lookup(app2.getId(), Application.class);
         Assert.assertNotNull(app2B);
         assertEquals(app2B.getConfig(TestEntity.CONF_NAME), "second-app");
-        ((TestApplication)app2B).setAttribute(TestEntity.SEQUENCE, 4);
+        ((TestApplication)app2B).sensors().set(TestEntity.SEQUENCE, 4);
         
         forcePersistNow(n2);
         forceRebindNow(n1);

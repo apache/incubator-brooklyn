@@ -160,9 +160,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (config().getRaw(UP_QUORUM_CHECK).isAbsent() && getConfig(INITIAL_SIZE)==0) {
             // if initial size is 0 then override up check to allow zero if empty
             config().set(UP_QUORUM_CHECK, QuorumChecks.atLeastOneUnlessEmpty());
-            setAttribute(SERVICE_UP, true);
+            sensors().set(SERVICE_UP, true);
         } else {
-            setAttribute(SERVICE_UP, false);
+            sensors().set(SERVICE_UP, false);
         }
         super.initEnrichers();
         // override previous enricher so that only members are checked
@@ -271,7 +271,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         if (isAvailabilityZoneEnabled()) {
-            setAttribute(SUB_LOCATIONS, findSubLocations(loc));
+            sensors().set(SUB_LOCATIONS, findSubLocations(loc));
         }
 
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
@@ -294,7 +294,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             if (quarantineGroup==null || !Entities.isManaged(quarantineGroup)) {
                 quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
                 Entities.manage(quarantineGroup);
-                setAttribute(QUARANTINE_GROUP, quarantineGroup);
+                sensors().set(QUARANTINE_GROUP, quarantineGroup);
             }
         }
 
@@ -351,7 +351,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                     new Object[] { this, currentSize, initialQuorumSize, initialSize });
         }
 
-        for (Policy it : getPolicies()) {
+        for (Policy it : policies()) {
             it.resume();
         }
     }
@@ -397,7 +397,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     public void stop() {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         try {
-            for (Policy it : getPolicies()) { it.suspend(); }
+            for (Policy it : policies()) { it.suspend(); }
 
             // run shrink without mutex to make things stop even if starting,
             int size = getCurrentSize();
@@ -553,8 +553,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         Set<Location> newlyFailed = Sets.difference(failed, oldFailedSubLocations);
         Set<Location> newlyRecovered = Sets.difference(oldFailedSubLocations, failed);
-        setAttribute(FAILED_SUB_LOCATIONS, failed);
-        setAttribute(SUB_LOCATIONS, result);
+        sensors().set(FAILED_SUB_LOCATIONS, failed);
+        sensors().set(SUB_LOCATIONS, result);
         if (newlyFailed.size() > 0) {
             LOG.warn("Detected probably zone failures for {}: {}", this, newlyFailed);
         }
@@ -712,7 +712,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     protected void quarantineFailedNodes(Collection<Entity> failedEntities) {
         for (Entity entity : failedEntities) {
-            emit(ENTITY_QUARANTINED, entity);
+            sensors().emit(ENTITY_QUARANTINED, entity);
             getQuarantineGroup().addMember(entity);
             removeMember(entity);
         }
@@ -772,8 +772,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
         Entity entity = createNode(loc, createFlags);
 
-        ((EntityLocal) entity).setAttribute(CLUSTER_MEMBER, true);
-        ((EntityLocal) entity).setAttribute(CLUSTER, this);
+        entity.sensors().set(CLUSTER_MEMBER, true);
+        entity.sensors().set(CLUSTER, this);
 
         Entities.manage(entity);
         addMember(entity);

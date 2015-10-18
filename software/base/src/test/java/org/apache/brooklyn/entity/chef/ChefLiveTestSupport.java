@@ -93,7 +93,7 @@ public class ChefLiveTestSupport extends BrooklynAppLiveTestSupport {
     }
 
     public static void installBrooklynChefHostedConfig(Entity entity) {
-        ((EntityInternal)entity).setConfig(ChefConfig.KNIFE_CONFIG_FILE, ChefLiveTestSupport.installBrooklynChefHostedConfig());
+        ((EntityInternal)entity).config().set(ChefConfig.KNIFE_CONFIG_FILE, ChefLiveTestSupport.installBrooklynChefHostedConfig());
     }
 
 }

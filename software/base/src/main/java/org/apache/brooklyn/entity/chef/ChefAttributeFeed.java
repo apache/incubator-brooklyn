@@ -352,13 +352,13 @@ public class ChefAttributeFeed extends AbstractFeed {
                     }
                 }
                 if (elementForSensor != null) {
-                    entity.setAttribute((AttributeSensor)sensor, TypeCoercions.coerce(elementForSensor.getAsString(), sensor.getTypeToken()));
+                    entity.sensors().set((AttributeSensor)sensor, TypeCoercions.coerce(elementForSensor.getAsString(), sensor.getTypeToken()));
                 } else {
                     log.debug("Entity {}: no Chef attribute matching {}; setting sensor {} to null", new Object[]{
                             entity.getDisplayName(),
                             chefAttributeName,
                             sensor.getName()});
-                    entity.setAttribute(sensor, null);
+                    entity.sensors().set(sensor, null);
                 }
             }
         }
@@ -383,7 +383,7 @@ public class ChefAttributeFeed extends AbstractFeed {
             for (AttributeSensor<?> attribute : chefAttributeSensors.values()) {
                 if (!attribute.getName().startsWith(CHEF_ATTRIBUTE_PREFIX))
                     continue;
-                entity.setAttribute(attribute, null);
+                entity.sensors().set(attribute, null);
             }
         }
 
@@ -393,7 +393,7 @@ public class ChefAttributeFeed extends AbstractFeed {
             for (AttributeSensor<?> attribute : chefAttributeSensors.values()) {
                 if (!attribute.getName().startsWith(CHEF_ATTRIBUTE_PREFIX))
                     continue;
-                entity.setAttribute(attribute, null);
+                entity.sensors().set(attribute, null);
             }
         }
         

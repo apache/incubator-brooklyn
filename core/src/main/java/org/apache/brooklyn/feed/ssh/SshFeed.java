@@ -202,7 +202,7 @@ public class SshFeed extends AbstractFeed {
     /** @deprecated since 0.7.0, use static convenience on {@link Locations} */
     @Deprecated
     public static SshMachineLocation getMachineOfEntity(Entity entity) {
-        return Machines.findUniqueSshMachineLocation(entity.getLocations()).orNull();
+        return Machines.findUniqueMachineLocation(entity.getLocations(), SshMachineLocation.class).orNull();
     }
 
     /**

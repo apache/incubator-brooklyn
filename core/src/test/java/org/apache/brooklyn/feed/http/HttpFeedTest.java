@@ -367,9 +367,9 @@ public class HttpFeedTest extends BrooklynAppUnitTestSupport {
                 .poll(HttpPollConfig.forMultiple()
                     .onSuccess(new Function<HttpToolResponse,Void>() {
                         public Void apply(HttpToolResponse response) {
-                            entity.setAttribute(SENSOR_INT, response.getResponseCode());
+                            entity.sensors().set(SENSOR_INT, response.getResponseCode());
                             if (response.getResponseCode()==200)
-                                entity.setAttribute(SENSOR_STRING, response.getContentAsString());
+                                entity.sensors().set(SENSOR_STRING, response.getContentAsString());
                             return null;
                         }
                     })

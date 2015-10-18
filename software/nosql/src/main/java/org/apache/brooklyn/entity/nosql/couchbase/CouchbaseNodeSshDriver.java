@@ -333,7 +333,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
 
     @Override
     public void rebalance() {
-        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "explicitly started");
+        entity.sensors().set(CouchbaseNode.REBALANCE_STATUS, "explicitly started");
         newScript("rebalance")
                 .body.append(
                 couchbaseCli("rebalance") + getCouchbaseHostnameAndCredentials())
@@ -358,7 +358,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                        }
                 ).run();
 
-        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "waiting for completion");
+        entity.sensors().set(CouchbaseNode.REBALANCE_STATUS, "waiting for completion");
         // Wait until the Couchbase node finishes the re-balancing
         Task<Boolean> reBalance = TaskBuilder.<Boolean>builder()
                 .displayName("Waiting until node is rebalancing")
@@ -387,18 +387,18 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 .orSubmitAndBlock()
                 .andWaitForSuccess();
         if (completed) {
-            entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "completed");
+            entity.sensors().set(CouchbaseNode.REBALANCE_STATUS, "completed");
             ServiceStateLogic.ServiceNotUpLogic.clearNotUpIndicator(getEntity(), "rebalancing");
             log.info("Rebalanced cluster via primary node {}", getEntity());
         } else {
-            entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "timed out");
+            entity.sensors().set(CouchbaseNode.REBALANCE_STATUS, "timed out");
             ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(getEntity(), "rebalancing", "rebalance did not complete within time limit");
             log.warn("Timeout rebalancing cluster via primary node {}", getEntity());
         }
     }
 
     private Iterable<HostAndPort> getNodesHostAndPort() {
-        Group group = Iterables.getFirst(getEntity().getGroups(), null);
+        Group group = Iterables.getFirst(getEntity().groups(), null);
         if (group == null) return Lists.newArrayList();
         return Iterables.transform(group.getAttribute(CouchbaseCluster.COUCHBASE_CLUSTER_UP_NODES),
                 new Function<Entity, HostAndPort>() {
@@ -447,7 +447,7 @@ public class CouchbaseNodeSshDriver extends AbstractSoftwareProcessSshDriver imp
                 " --server-add-password=" + BashStringEscapes.wrapBash(password))
                 .failOnNonZeroResultCode()
                 .execute();
-        entity.setAttribute(CouchbaseNode.REBALANCE_STATUS, "triggered as part of server-add");
+        entity.sensors().set(CouchbaseNode.REBALANCE_STATUS, "triggered as part of server-add");
     }
 
     @Override

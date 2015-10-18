@@ -29,6 +29,7 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.util.collections.Jsonya;
@@ -159,7 +160,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
     
     @SuppressWarnings({ "unchecked", "deprecation" })
     protected void startWithChefSoloAsync() {
-        String baseDir = MachineLifecycleEffectorTasks.resolveOnBoxDir(entity(), Machines.findUniqueSshMachineLocation(entity().getLocations()).get());
+        String baseDir = MachineLifecycleEffectorTasks.resolveOnBoxDir(entity(), Machines.findUniqueMachineLocation(entity().getLocations(), SshMachineLocation.class).get());
         String installDir = Urls.mergePaths(baseDir, "installs/chef");
         
         @SuppressWarnings("rawtypes")
@@ -243,7 +244,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (!result) {
             log.warn("No way to check whether "+entity()+" is running; assuming yes");
         }
-        entity().setAttribute(SoftwareProcess.SERVICE_UP, true);
+        entity().sensors().set(SoftwareProcess.SERVICE_UP, true);
     }
     
     protected boolean tryCheckStartPid() {
@@ -256,7 +257,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         }
 
         // and set the PID
-        entity().setAttribute(Attributes.PID, 
+        entity().sensors().set(Attributes.PID, 
                 Integer.parseInt(DynamicTasks.queue(SshEffectorTasks.ssh("cat "+getPidFile()).runAsRoot()).block().getStdout().trim()));
         return true;
     }
@@ -353,7 +354,7 @@ public class ChefLifecycleEffectorTasks extends MachineLifecycleEffectorTasks im
         if (DynamicTasks.queue(SshEffectorTasks.isPidRunning(pid).runAsRoot()).get()) {
             throw new IllegalStateException("Process for "+entity()+" in "+pid+" still running after kill");
         }
-        entity().setAttribute(Attributes.PID, null);
+        entity().sensors().set(Attributes.PID, null);
         return true;
     }
 

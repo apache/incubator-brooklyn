@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
@@ -103,6 +105,9 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
 
     private boolean started = false;
     private volatile boolean running = true;
+
+    protected final AtomicLong checkpointLogCount = new AtomicLong();
+    private static final int INITIAL_LOG_WRITES = 5;
     
     @VisibleForTesting
     /** allows, when testing, to be able to override file times / blobstore times with time from the ticker */
@@ -270,7 +275,7 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
         default:
             throw new IllegalStateException("Unknown state for master-change: "+delta.getMasterChange());
         }
-        if (LOG.isDebugEnabled()) LOG.debug("Checkpointed delta of manager-memento in "+Time.makeTimeStringRounded(stopwatch)+": "+delta);
+        if (LOG.isDebugEnabled() && shouldLogCheckpoint()) LOG.debug("Checkpointed delta of manager-memento in "+Time.makeTimeStringRounded(stopwatch)+": "+delta);
     }
 
     private void persistMaster(String nodeId, String optionalExpectedId) {
@@ -349,6 +354,11 @@ public class ManagementPlaneSyncRecordPersisterToObjectStore implements Manageme
             writer = nodeWriters.get(nodeId);
         }
         return writer;
+    }
+
+    protected boolean shouldLogCheckpoint() {
+        long logCount = checkpointLogCount.incrementAndGet();
+        return (logCount < INITIAL_LOG_WRITES) || (logCount % 1000 == 0);
     }
 
 }

@@ -106,7 +106,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         
     @Override
     public void setServiceState(Lifecycle state) {
-        setAttribute(HOSTNAME, getHostname());
+        sensors().set(HOSTNAME, getHostname());
         ServiceStateLogic.setExpectedState(this, state);
         if (state==Lifecycle.RUNNING)
             ServiceNotUpLogic.clearNotUpIndicator(this, SERVICE_STATE_ACTUAL);
@@ -130,7 +130,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         }
         endTracker();
         log.debug("Initializing tracker for "+this+", following "+targetEntityProvider);
-        tracker = addPolicy(PolicySpec.create(MemberTrackingPolicy.class)
+        tracker = policies().add(PolicySpec.create(MemberTrackingPolicy.class)
                 .displayName("GeoDNS targets tracker")
                 .configure("sensorsToTrack", ImmutableSet.of(HOSTNAME, ADDRESS, Attributes.MAIN_URI, WebAppService.ROOT_URL))
                 .configure("group", targetEntityProvider));
@@ -139,7 +139,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     
     protected synchronized void endTracker() {
         if (tracker == null || targetEntityProvider==null) return;
-        removePolicy(tracker);
+        policies().remove(tracker);
         tracker = null;
     }
     
@@ -298,7 +298,7 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
         reconfigureService(new LinkedHashSet<HostGeoInfo>(m.values()));
         
         if (log.isDebugEnabled()) log.debug("Targets being set as "+entityIdToAddress);
-        setAttribute(TARGETS, entityIdToAddress);
+        sensors().set(TARGETS, entityIdToAddress);
     }
     
     protected String inferHostname(Entity entity) {

@@ -54,7 +54,7 @@ public class DynamicWebAppFabricImpl extends DynamicFabricImpl implements Dynami
         for (List<? extends AttributeSensor<? extends Number>> es : summingEnricherSetup) {
             AttributeSensor<? extends Number> t = es.get(0);
             AttributeSensor<? extends Number> total = es.get(1);
-            addEnricher(Enrichers.builder()
+            enrichers().add(Enrichers.builder()
                     .aggregating(t)
                     .publishing(total)
                     .fromMembers()
@@ -69,7 +69,7 @@ public class DynamicWebAppFabricImpl extends DynamicFabricImpl implements Dynami
             AttributeSensor<Double> average = (AttributeSensor<Double>) es.get(1);
             
             // TODO This needs to respond to changes in FABRIC_SIZE as well, to recalculate
-            addEnricher(Enrichers.builder()
+            enrichers().add(Enrichers.builder()
                     .transforming(t)
                     .publishing(average)
                     .computing(new Function<Number, Double>() {

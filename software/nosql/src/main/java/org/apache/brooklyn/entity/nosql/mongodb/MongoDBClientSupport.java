@@ -22,7 +22,6 @@ import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
-import org.apache.brooklyn.util.exceptions.ReferenceWithError;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
 import org.bson.BSONObject;
@@ -59,6 +58,20 @@ public class MongoDBClientSupport {
     private String authenticationDatabase;
 
     private MongoClient client() {
+        return baseClient(connectionOptions);
+    }
+
+    private MongoClient fastClient() {
+        MongoClientOptions fastConnectionOptions = MongoClientOptions.builder()
+                .connectTimeout(1000 * 10)
+                .maxWaitTime(1000 * 10)
+                .serverSelectionTimeout(1000 * 10)
+                .build();
+
+        return baseClient(fastConnectionOptions);
+    }
+
+    private MongoClient baseClient(MongoClientOptions connectionOptions) {
         if (usesAuthentication) {
             MongoCredential credential = MongoCredential.createMongoCRCredential(username, authenticationDatabase, password.toCharArray());
             return new MongoClient(address, ImmutableList.of(credential), connectionOptions);
@@ -125,6 +138,7 @@ public class MongoDBClientSupport {
         try {
             final DB db = client.getDB(database);
             final CommandResult[] status = new CommandResult[1];
+
             // The mongoDB client can occasionally fail to connect. Try up to 5 times to run the command
             boolean commandResult = Repeater.create().backoff(Duration.ONE_SECOND, 1.5, null).limitIterationsTo(5)
                     .until(new Callable<Boolean>() {
@@ -134,7 +148,7 @@ public class MongoDBClientSupport {
                                 status[0] = db.command(command);
                                 return true;
                             } catch (Exception e) {
-                                LOG.warn("Command " + command + " on " + getServerAddress() + " failed", e);
+                                LOG.warn("Command " + command + " on " + address.getHost() + " failed", e);
                                 return false;
                             }
                         }
@@ -173,13 +187,19 @@ public class MongoDBClientSupport {
     }
     
     public boolean ping() {
-        DBObject ping = new BasicDBObject("ping", "1");
+        MongoClient client = fastClient();
+        DBObject command = new BasicDBObject("ping", "1");
+        final DB db = client.getDB("admin");
+
         try {
-            runDBCommand("admin", ping);
+            CommandResult status = db.command(command);
+            return status.ok();
         } catch (MongoException e) {
-            return false;
+            LOG.warn("Pinging server {} failed with {}", address.getHost(), e);
+        } finally {
+            client.close();
         }
-        return true;
+        return false;
     }
 
     public boolean initializeReplicaSet(String replicaSetName, Integer id) {

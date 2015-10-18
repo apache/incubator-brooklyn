@@ -76,7 +76,7 @@ public class RestMockSimpleEntity extends SoftwareProcessImpl {
             @EffectorParam(name="param2") Integer param2) {
         log.info("Invoked sampleEffector("+param1+","+param2+")");
         String result = ""+param1+param2;
-        setAttribute(SAMPLE_SENSOR, result);
+        sensors().set(SAMPLE_SENSOR, result);
         return result;
     }
 

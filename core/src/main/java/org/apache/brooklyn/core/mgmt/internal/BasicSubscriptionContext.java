@@ -19,7 +19,6 @@
 package org.apache.brooklyn.core.mgmt.internal;
 
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.mapOf;
-import groovy.lang.Closure;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -41,6 +40,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+
+import groovy.lang.Closure;
 
 /**
  * A {@link SubscriptionContext} for an entity or other user of a {@link SubscriptionManager}.
@@ -70,7 +71,7 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     }
     
     @SuppressWarnings("rawtypes")
-    public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags, Entity producer, Sensor<T> sensor, Closure c) {
+    public <T> SubscriptionHandle subscribe(Map<String, ?> newFlags, Entity producer, Sensor<T> sensor, Closure c) {
         return subscribe(newFlags, producer, sensor, toSensorEventListener(c));        
     }
 
@@ -80,7 +81,7 @@ public class BasicSubscriptionContext implements SubscriptionContext {
     }
     
     @Override
-    public <T> SubscriptionHandle subscribe(Map<String, Object> newFlags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+    public <T> SubscriptionHandle subscribe(Map<String, ?> newFlags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
         Map<String,Object> subscriptionFlags = Maps.newLinkedHashMap(flags);
         if (newFlags != null) subscriptionFlags.putAll(newFlags);
         return manager.subscribe(subscriptionFlags, producer, sensor, listener);

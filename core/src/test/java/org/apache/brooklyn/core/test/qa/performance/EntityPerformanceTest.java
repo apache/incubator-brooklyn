@@ -71,7 +71,7 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         
         measureAndAssert("updateAttribute", numIterations, minRatePerSec, new Runnable() {
             public void run() {
-                entity.setAttribute(TestEntity.SEQUENCE, i.getAndIncrement());
+                entity.sensors().set(TestEntity.SEQUENCE, i.getAndIncrement());
             }});
     }
 
@@ -82,14 +82,14 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         final AtomicInteger i = new AtomicInteger();
         final AtomicInteger lastVal = new AtomicInteger();
         
-        app.subscribe(entity, TestEntity.SEQUENCE, new SensorEventListener<Integer>() {
+        app.subscriptions().subscribe(entity, TestEntity.SEQUENCE, new SensorEventListener<Integer>() {
                 @Override public void onEvent(SensorEvent<Integer> event) {
                     lastVal.set(event.getValue());
                 }});
         
         measureAndAssert("updateAttributeWithListener", numIterations, minRatePerSec, new Runnable() {
             public void run() {
-                entity.setAttribute(TestEntity.SEQUENCE, (i.getAndIncrement()));
+                entity.sensors().set(TestEntity.SEQUENCE, (i.getAndIncrement()));
             }});
         
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {

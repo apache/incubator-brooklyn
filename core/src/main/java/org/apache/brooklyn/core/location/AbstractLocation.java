@@ -29,17 +29,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.mgmt.ExecutionContext;
+import org.apache.brooklyn.api.mgmt.SubscriptionContext;
+import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
 import org.apache.brooklyn.api.objs.Configurable;
+import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.internal.storage.Reference;
@@ -50,17 +58,20 @@ import org.apache.brooklyn.core.location.internal.LocationDynamicType;
 import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.mgmt.internal.LocalLocationManager;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.internal.SubscriptionTracker;
 import org.apache.brooklyn.core.mgmt.rebind.BasicLocationRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.core.objs.AbstractConfigurationSupportInternal;
 import org.apache.brooklyn.util.collections.SetFromLiveMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
 import com.google.common.base.Splitter;
@@ -110,7 +121,12 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     private BasicConfigurationSupport config = new BasicConfigurationSupport();
     
+    private BasicSubscriptionSupport subscriptions = new BasicSubscriptionSupport();
+    
     private ConfigBag configBag = new ConfigBag();
+
+    /** not for direct access; refer to as 'subscriptionTracker' via getter so that it is initialized */
+    protected transient SubscriptionTracker _subscriptionTracker;
 
     private volatile boolean managed;
 
@@ -354,10 +370,19 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
     @Override
     public ConfigurationSupportInternal config() {
-        return config ;
+        return config;
     }
 
-    private class BasicConfigurationSupport implements ConfigurationSupportInternal {
+    // the concrete type rather than an interface is returned because Groovy subclasses
+    // complain (incorrectly) if we return SubscriptionSupportInternal
+    // TODO revert to SubscriptionSupportInternal when groovy subclasses work without this (eg new groovy version)
+    @Override
+    @Beta
+    public BasicSubscriptionSupport subscriptions() {
+        return subscriptions;
+    }
+
+    private class BasicConfigurationSupport extends AbstractConfigurationSupportInternal {
 
         @Override
         public <T> T get(ConfigKey<T> key) {
@@ -375,30 +400,15 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
 
         @Override
-        public <T> T get(HasConfigKey<T> key) {
-            return get(key.getConfigKey());
-        }
-
-        @Override
         public <T> T set(ConfigKey<T> key, T val) {
+            ConfigConstraints.assertValid(AbstractLocation.this, key, val);
             T result = configBag.put(key, val);
             onChanged();
             return result;
         }
 
         @Override
-        public <T> T set(HasConfigKey<T> key, T val) {
-            return set(key.getConfigKey(), val);
-        }
-
-        @Override
         public <T> T set(ConfigKey<T> key, Task<T> val) {
-            // TODO Support for locations
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public <T> T set(HasConfigKey<T> key, Task<T> val) {
             // TODO Support for locations
             throw new UnsupportedOperationException();
         }
@@ -424,19 +434,9 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         }
 
         @Override
-        public Maybe<Object> getRaw(HasConfigKey<?> key) {
-            return getRaw(key.getConfigKey());
-        }
-
-        @Override
         public Maybe<Object> getLocalRaw(ConfigKey<?> key) {
             if (hasConfig(key, false)) return Maybe.of(getLocalBag().getStringKey(key.getName()));
             return Maybe.absent();
-        }
-
-        @Override
-        public Maybe<Object> getLocalRaw(HasConfigKey<?> key) {
-            return getLocalRaw(key.getConfigKey());
         }
 
         @Override
@@ -475,6 +475,67 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
         private ConfigInheritance getDefaultInheritance() {
             return ConfigInheritance.ALWAYS;
+        }
+
+        @Override
+        protected ExecutionContext getContext() {
+            return AbstractLocation.this.getManagementContext().getServerExecutionContext();
+        }
+    }
+    
+    public class BasicSubscriptionSupport implements SubscriptionSupportInternal {
+        @Override
+        public <T> SubscriptionHandle subscribe(Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribe(producer, sensor, listener);
+        }
+
+        @Override
+        public <T> SubscriptionHandle subscribe(Map<String, ?> flags, Entity producer, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribe(flags, producer, sensor, listener);
+        }
+
+        @Override
+        public <T> SubscriptionHandle subscribeToMembers(Group producerGroup, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribeToMembers(producerGroup, sensor, listener);
+        }
+
+        @Override
+        public <T> SubscriptionHandle subscribeToChildren(Entity producerParent, Sensor<T> sensor, SensorEventListener<? super T> listener) {
+            return getSubscriptionTracker().subscribeToChildren(producerParent, sensor, listener);
+        }
+        
+        @Override
+        public boolean unsubscribe(Entity producer) {
+            return getSubscriptionTracker().unsubscribe(producer);
+        }
+
+        @Override
+        public boolean unsubscribe(Entity producer, SubscriptionHandle handle) {
+            return getSubscriptionTracker().unsubscribe(producer, handle);
+        }
+
+        @Override
+        public boolean unsubscribe(SubscriptionHandle handle) {
+            return getSubscriptionTracker().unsubscribe(handle);
+        }
+
+        @Override
+        public void unsubscribeAll() {
+            getSubscriptionTracker().unsubscribeAll();
+        }
+
+        protected SubscriptionTracker getSubscriptionTracker() {
+            synchronized (AbstractLocation.this) {
+                if (_subscriptionTracker!=null) return _subscriptionTracker;
+                _subscriptionTracker = new SubscriptionTracker(newSubscriptionContext());
+                return _subscriptionTracker;
+            }
+        }
+        
+        private SubscriptionContext newSubscriptionContext() {
+            synchronized (AbstractLocation.this) {
+                return getManagementContext().getSubscriptionContext(AbstractLocation.this);
+            }
         }
     }
     

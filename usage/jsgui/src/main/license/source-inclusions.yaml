@@ -20,10 +20,10 @@
 # extras file for org.heneveld.license-audit-maven-plugin
 # listing projects from which *source* files are included
 
-- id: jquery.js
-- id: sizzle.js
-- id: Swagger JS
-- id: Swagger UI
+- id: jquery-core
+- id: swagger
+- id: swagger-ui
+- id: jquery.wiggle.min.js
 - id: require.js
 - id: require.js/r.js
 - id: backbone.js
@@ -34,7 +34,7 @@
 - id: jquery.ba-bbq.js
 - id: moment.js
 - id: ZeroClipboard
-- id: dataTables.js
+- id: jquery.dataTables
 - id: js-uri
 - id: js-yaml.js
 - id: jquery.form.js

@@ -244,7 +244,7 @@ public class ByonLocationsYamlTest extends AbstractYamlTest {
         FixedListMachineProvisioningLocation<MachineLocation> loc = (FixedListMachineProvisioningLocation<MachineLocation>) Iterables.get(app.getLocations(), 0);
         
         // Machine should have been given the inbound-ports
-        SshMachineLocation machine = Machines.findUniqueSshMachineLocation(entity.getLocations()).get();
+        SshMachineLocation machine = Machines.findUniqueMachineLocation(entity.getLocations(), SshMachineLocation.class).get();
         Asserts.assertEqualsIgnoringOrder((Iterable<?>)machine.config().get(CloudLocationConfig.INBOUND_PORTS), ImmutableList.of(22, 1024));
         
         // Stop the entity; should release the machine

@@ -118,7 +118,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
             Object newValue = ((Map.Entry)entry).getValue();
             
             AttributeSensor sensor = findSensor(entity, sensorName);
-            entity.setAttribute(sensor, newValue);
+            entity.sensors().set(sensor, newValue);
         }
     }
     
@@ -134,7 +134,7 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
         AttributeSensor sensor = findSensor(entity, sensorName);
         if (log.isDebugEnabled())
             log.debug("REST user "+Entitlements.getEntitlementContext()+" setting sensor "+sensorName+" to "+newValue);
-        entity.setAttribute(sensor, newValue);
+        entity.sensors().set(sensor, newValue);
     }
     
     @Override

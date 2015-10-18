@@ -45,7 +45,7 @@ public class LocallyResizableEntity extends AbstractEntity implements Resizable 
     public LocallyResizableEntity (Entity parent, TestCluster tc) {
         super(parent);
         this.cluster = tc;
-        setAttribute(Startable.SERVICE_UP, true);
+        sensors().set(Startable.SERVICE_UP, true);
     }
     
     @Override

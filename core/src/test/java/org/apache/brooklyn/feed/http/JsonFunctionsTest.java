@@ -20,10 +20,9 @@ package org.apache.brooklyn.feed.http;
 
 import java.util.NoSuchElementException;
 
-import org.apache.brooklyn.feed.http.JsonFunctions;
 import org.apache.brooklyn.util.collections.Jsonya;
-import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.Jsonya.Navigator;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.testng.Assert;
@@ -78,12 +77,18 @@ public class JsonFunctionsTest {
         Assert.assertTrue(m.isAbsent());
     }
 
-    @Test(expectedExceptions=Exception.class)
-    public void testWalkMWrong2() {
-        Maybe<JsonElement> m = JsonFunctions.walkM("europe", "spain", "barcelona").apply( Maybe.of( europeMap()) );
+    @Test(expectedExceptions=IllegalStateException.class)
+    public void testCastMWhenAbsent() {
+//        Maybe<JsonElement> m = JsonFunctions.walkM("europe", "spain", "barcelona").apply( Maybe.of( europeMap()) );
+        Maybe<JsonElement> m = Maybe.absent();
         JsonFunctions.castM(String.class).apply(m);
     }
 
+    @Test(expectedExceptions=UnsupportedOperationException.class)
+    public void testCastMWrong() {
+        Maybe<JsonElement> m = JsonFunctions.walkM("europe", "france").apply( Maybe.of( europeMap()) );
+        JsonFunctions.castM(String.class).apply(m);
+    }
     
     @Test
     public void testWalkN() {

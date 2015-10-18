@@ -47,7 +47,7 @@ public abstract class RabbitDestination extends AbstractEntity implements AmqpEx
         
         exchange = (getConfig(EXCHANGE_NAME) != null) ? getConfig(EXCHANGE_NAME) : getDefaultExchangeName();
         virtualHost = getConfig(RabbitBroker.VIRTUAL_HOST_NAME);
-        setAttribute(RabbitBroker.VIRTUAL_HOST_NAME, virtualHost);
+        sensors().set(RabbitBroker.VIRTUAL_HOST_NAME, virtualHost);
         
         machine = (SshMachineLocation) Iterables.find(getParent().getLocations(), Predicates.instanceOf(SshMachineLocation.class));
         shellEnvironment = getParent().getShellEnvironment();

@@ -122,7 +122,7 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         }
 
         // Take interesting details from STATUS.
-        subscribe(this, STATUS_BSON, new SensorEventListener<BasicBSONObject>() {
+        subscriptions().subscribe(this, STATUS_BSON, new SensorEventListener<BasicBSONObject>() {
                 @Override public void onEvent(SensorEvent<BasicBSONObject> event) {
                     BasicBSONObject map = event.getValue();
                     if (map != null && !map.isEmpty()) {

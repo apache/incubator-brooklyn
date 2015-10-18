@@ -60,4 +60,14 @@ public class TaskPredicatesTest extends BrooklynAppUnitTestSupport {
         assertTrue(TaskPredicates.displayNameMatches(Predicates.equalTo("myname")).apply(task));
         assertFalse(TaskPredicates.displayNameMatches(Predicates.equalTo("wrong")).apply(task));
     }
+    
+    @Test
+    public void testDisplayNameSatisfies() throws Exception {
+        Task<Object> task = execManager.submit(TaskBuilder.builder()
+                .body(Callables.<Object>returning("val"))
+                .displayName("myname")
+                .build());
+        assertTrue(TaskPredicates.displayNameSatisfies(Predicates.equalTo("myname")).apply(task));
+        assertFalse(TaskPredicates.displayNameSatisfies(Predicates.equalTo("wrong")).apply(task));
+    }
 }

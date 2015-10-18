@@ -22,6 +22,7 @@ import static org.apache.brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
 import groovy.lang.GroovyClassLoader;
 
+import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ import java.util.concurrent.Future;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
@@ -120,10 +123,10 @@ public class BrooklynRestResourceUtils {
     public Policy getPolicy(Entity entity, String policy) {
         if (policy==null) return null;
 
-        for (Policy p: entity.getPolicies()) {
+        for (Policy p: entity.policies()) {
             if (policy.equals(p.getId())) return p;
         }
-        for (Policy p: entity.getPolicies()) {
+        for (Policy p: entity.policies()) {
             if (policy.equals(p.getDisplayName())) return p;
         }
         
@@ -206,6 +209,8 @@ public class BrooklynRestResourceUtils {
 
     @SuppressWarnings({ "unchecked", "deprecation" })
     public Application create(ApplicationSpec spec) {
+        log.warn("Using deprecated functionality (as of 0.9.0), ApplicationSpec style (pre CAMP plans). " +
+                    "Transition to actively supported spec plans.");
         log.debug("REST creating application instance for {}", spec);
         
         if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, spec)) {
@@ -283,7 +288,7 @@ public class BrooklynRestResourceUtils {
 
                     Entity soleChild = mgmt.getEntityManager().createEntity(toCoreEntitySpec(clazz, name, configO, catalogItemId));
                     instance.addChild(soleChild);
-                    instance.addEnricher(Enrichers.builder()
+                    instance.enrichers().add(Enrichers.builder()
                             .propagatingAllBut(Attributes.SERVICE_UP, Attributes.SERVICE_NOT_UP_INDICATORS, 
                                     Attributes.SERVICE_STATE_ACTUAL, Attributes.SERVICE_STATE_EXPECTED, 
                                     Attributes.SERVICE_PROBLEMS)
@@ -444,9 +449,13 @@ public class BrooklynRestResourceUtils {
         if (mgmt.getEntitlementManager().isEntitled(Entitlements.getEntitlementContext(),
                 Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(entity, 
                     StringAndArgument.of("expunge", MutableMap.of("release", release))))) {
+            Map<String, Object> flags = MutableMap.<String, Object>of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
+                    + entity.getDisplayName() + " (" + entity + ")");
+            if (Entitlements.getEntitlementContext() != null) {
+                flags.put("tags", MutableSet.of(BrooklynTaskTags.tagForEntitlement(Entitlements.getEntitlementContext())));
+            }
             return mgmt.getExecutionManager().submit(
-                    MutableMap.of("displayName", "expunging " + entity, "description", "REST call to expunge entity "
-                            + entity.getDisplayName() + " (" + entity + ")"), new Runnable() {
+                    flags, new Runnable() {
                         @Override
                         public void run() {
                             if (release)

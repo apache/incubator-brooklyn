@@ -55,7 +55,7 @@ public class SolrServerImpl extends SoftwareProcessImpl implements SolrServer {
         HostAndPort hp = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getSolrPort());
 
         String solrUri = String.format("http://%s:%d/solr", hp.getHostText(), hp.getPort());
-        setAttribute(Attributes.MAIN_URI, URI.create(solrUri));
+        sensors().set(Attributes.MAIN_URI, URI.create(solrUri));
 
         httpFeed = HttpFeed.builder()
                 .entity(this)

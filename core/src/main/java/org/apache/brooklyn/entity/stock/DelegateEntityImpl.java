@@ -36,14 +36,14 @@ public class DelegateEntityImpl extends AbstractEntity implements DelegateEntity
         Preconditions.checkNotNull(delegate, "delegate");
 
         // Propagate all sensors from the delegate entity
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagatingAll()
                 .from(delegate)
                 .build());
 
         // Publish the entity as an attribute for linking
-        setAttribute(DELEGATE_ENTITY, delegate);
-        setAttribute(DELEGATE_ENTITY_LINK, EntityUrl.entityUrl().apply(delegate));
+        sensors().set(DELEGATE_ENTITY, delegate);
+        sensors().set(DELEGATE_ENTITY_LINK, EntityUrl.entityUrl().apply(delegate));
     }
 }
 

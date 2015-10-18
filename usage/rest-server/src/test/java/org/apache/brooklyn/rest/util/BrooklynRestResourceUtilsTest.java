@@ -181,7 +181,7 @@ public class BrooklynRestResourceUtilsTest {
         subapp.setDisplayName("subapp");
         
         TestEntityImpl subentity = new TestEntityImpl(MutableMap.of("displayName", "subentity"), subapp);
-        subentity.addPolicy(new MyPolicy(MutableMap.of("name", "mypolicy")));
+        subentity.policies().add(new MyPolicy(MutableMap.of("name", "mypolicy")));
         subentity.getApplication(); // force this to be cached
         
         app.addChild(subapp);

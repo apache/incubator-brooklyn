@@ -106,8 +106,8 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
     @Override
     public void postLaunch() {
         String rootUrl = inferRootUrl();
-        entity.setAttribute(Attributes.MAIN_URI, URI.create(rootUrl));
-        entity.setAttribute(WebAppService.ROOT_URL, rootUrl);
+        entity.sensors().set(Attributes.MAIN_URI, URI.create(rootUrl));
+        entity.sensors().set(WebAppService.ROOT_URL, rootUrl);
     }
 
     /** 

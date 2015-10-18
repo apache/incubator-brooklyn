@@ -75,7 +75,7 @@ public class RedisClusterImpl extends AbstractEntity implements RedisCluster {
                 .configure(SoftwareProcess.CUSTOMIZE_LATCH, DependentConfiguration.attributeWhenReady(master, Attributes.SERVICE_UP))));
         sensors().set(SLAVES, slaves);
 
-        addEnricher(Enrichers.builder()
+        enrichers().add(Enrichers.builder()
                 .propagating(RedisStore.HOSTNAME, RedisStore.ADDRESS, RedisStore.SUBNET_HOSTNAME, RedisStore.SUBNET_ADDRESS, RedisStore.REDIS_PORT)
                 .from(master)
                 .build());
