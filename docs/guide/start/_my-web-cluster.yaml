@@ -1,6 +1,9 @@
 name: My Web Cluster
 
-location: localhost
+location:
+  jclouds:aws-ec2:
+    identity: ABCDEFGHIJKLMNOPQRST
+    credential: s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
 
 services:
 
