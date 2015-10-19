@@ -64,7 +64,6 @@ import com.google.common.reflect.TypeToken;
 
 // https://dev.mysql.com/doc/refman/5.7/en/replication-howto.html
 
-// TODO Filter dump by database/table, currently all tables are replicated
 // TODO SSL connection between master and slave
 // TODO Promote slave to master
 public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster {

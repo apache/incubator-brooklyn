@@ -42,6 +42,7 @@ import org.apache.brooklyn.util.ssh.BashCommands;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
@@ -96,6 +97,29 @@ public class MySqlClusterIntegrationTest extends BrooklynAppLiveTestSupport {
             MySqlNode thirdSlave = (MySqlNode) Iterables.getOnlyElement(cluster.invoke(MySqlCluster.RESIZE_BY_DELTA, ImmutableMap.of("delta", 1)).getUnchecked());
             assertEquals(cluster.getAttribute(MySqlCluster.REPLICATION_LAST_SLAVE_SNAPSHOT).getEntityId(), secondSlave.getId());
             MySqlClusterTestHelper.assertReplication(master, thirdSlave);
+        } finally {
+            cleanData();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testReplicationDatabaseFiltering() throws Exception {
+        try {
+            Location loc = getLocation();
+            EntitySpec<MySqlCluster> clusterSpec = EntitySpec.create(MySqlCluster.class)
+                    .configure(MySqlMaster.MASTER_CREATION_SCRIPT_CONTENTS, MySqlClusterTestHelper.CREATION_SCRIPT)
+                    .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.<String, Object>of("skip-name-resolve",""))
+                    .configure(MySqlCluster.SLAVE_REPLICATE_DO_DB, ImmutableList.of("feedback", "items", "mysql"))
+                    .configure(MySqlCluster.SLAVE_REPLICATE_DUMP_DB, ImmutableList.of("feedback", "items", "mysql"));
+
+            MySqlCluster cluster = MySqlClusterTestHelper.initCluster(app, loc, clusterSpec);
+            MySqlNode master = (MySqlNode) cluster.getAttribute(MySqlCluster.FIRST);
+            purgeLogs(cluster, master);
+
+            // test dump replication from master
+            MySqlNode slave = (MySqlNode) Iterables.getOnlyElement(cluster.invoke(MySqlCluster.RESIZE_BY_DELTA, ImmutableMap.of("delta", 1)).getUnchecked());
+            assertEquals(cluster.getAttribute(MySqlCluster.REPLICATION_LAST_SLAVE_SNAPSHOT).getEntityId(), master.getId());
+            MySqlClusterTestHelper.assertReplication(master, slave, "db_filter_test");
         } finally {
             cleanData();
         }

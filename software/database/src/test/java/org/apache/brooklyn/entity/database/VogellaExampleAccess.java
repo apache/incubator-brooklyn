@@ -18,13 +18,22 @@
  */
 package org.apache.brooklyn.entity.database;
 
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-
-import java.sql.*;
-import java.util.List;
 
 /**
  * Basic JDBC Access test Class, based on the Vogella MySQL tutorial
@@ -73,9 +82,13 @@ public class VogellaExampleAccess {
     }
 
     public List<List<String>> readDataBase() throws Exception {
+        return read("SELECT myuser, webpage, datum, summary, COMMENTS from COMMENTS");
+    }
+
+    public List<List<String>> read(String sql) throws SQLException {
         List<List<String>> results = Lists.newArrayList();
         // Result set get the result of the SQL query
-        ResultSet resultSet = statement.executeQuery("SELECT myuser, webpage, datum, summary, COMMENTS from COMMENTS");
+        ResultSet resultSet = statement.executeQuery(sql);
         // ResultSet is initially before the first data set
         while (resultSet.next()) {
             List<String> row = Lists.newArrayList();
@@ -106,6 +119,23 @@ public class VogellaExampleAccess {
 
         writeResultSet(readDataBase());
         preparedStatement.close();
+    }
+    public void execute(String cata, String sql, Object... args) throws Exception {
+        String prevCata = connect.getCatalog();
+        if (cata != null) {
+            connect.setCatalog(cata);
+        }
+        PreparedStatement preparedStatement = connect.prepareStatement(sql);
+        for (int i = 1; i <= args.length; i++) {
+            preparedStatement.setObject(i, args[i-1]);
+        }
+        preparedStatement.executeUpdate();
+
+        writeResultSet(readDataBase());
+        preparedStatement.close();
+        if (cata != null) {
+            connect.setCatalog(prevCata);
+        }
     }
 
     // Remove again the insert comment added by modifyDataBase()
@@ -144,6 +174,15 @@ public class VogellaExampleAccess {
             log.debug("Date: " + date);
             log.debug("Comment: " + comment);
         }
+    }
+
+    public Set<String> getSchemas() throws SQLException {
+        ResultSet rs = statement.executeQuery("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA");
+        Set<String> dbs = new HashSet<String>();
+        while (rs.next()) {
+            dbs.add(rs.getString(1));
+        }
+        return dbs;
     }
 
     // You should always close the statement and connection
