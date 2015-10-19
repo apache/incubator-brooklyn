@@ -19,6 +19,7 @@
 package org.apache.brooklyn.entity.database.mysql;
 
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +51,13 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.ssh.BashCommands;
 import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.util.text.StringEscapes.BashStringEscapes;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.base.Strings;
@@ -64,7 +67,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 public class InitSlaveTaskBody implements Runnable {
-    private static final String SNAPSHOT_DUMP_OPTIONS = "--skip-lock-tables --single-transaction --flush-logs --hex-blob -A";
+    private static final String SNAPSHOT_DUMP_OPTIONS = "--skip-lock-tables --single-transaction --flush-logs --hex-blob";
 
     private static final Logger log = LoggerFactory.getLogger(InitSlaveTaskBody.class);
 
@@ -260,7 +263,7 @@ public class InitSlaveTaskBody implements Runnable {
 
     private Future<ReplicationSnapshot> createMasterReplicationSnapshot(final MySqlNode master, final String dumpName) {
         log.info("MySql cluster " + cluster + ": generating new replication snapshot on master node " + master + " with name " + dumpName);
-        String dumpOptions = SNAPSHOT_DUMP_OPTIONS + " --master-data=2";
+        String dumpOptions = SNAPSHOT_DUMP_OPTIONS + " --master-data=2" + getDumpDatabases(master);
         ImmutableMap<String, String> params = ImmutableMap.of(
                 ExportDumpEffector.PATH.getName(), dumpName,
                 ExportDumpEffector.ADDITIONAL_OPTIONS.getName(), dumpOptions);
@@ -284,11 +287,21 @@ public class InitSlaveTaskBody implements Runnable {
         });
     }
 
+    private String getDumpDatabases(MySqlNode node) {
+        // The config will be inherited from the cluster
+        Collection<String> dumpDbs = node.config().get(MySqlCluster.SLAVE_REPLICATE_DUMP_DB);
+        if (dumpDbs != null && !dumpDbs.isEmpty()) {
+            return " --databases " + Joiner.on(' ').join(Iterables.transform(dumpDbs, BashStringEscapes.wrapBash()));
+        } else {
+            return " --all-databases";
+        }
+    }
+
     private Future<ReplicationSnapshot> createSlaveReplicationSnapshot(final MySqlNode slave, final String dumpName) {
         MySqlClusterUtils.executeSqlOnNodeAsync(slave, "STOP SLAVE SQL_THREAD;");
         try {
             log.info("MySql cluster " + cluster + ": generating new replication snapshot on slave node " + slave + " with name " + dumpName);
-            String dumpOptions = SNAPSHOT_DUMP_OPTIONS;
+            String dumpOptions = SNAPSHOT_DUMP_OPTIONS + getDumpDatabases(slave);
             ImmutableMap<String, String> params = ImmutableMap.of(
                     ExportDumpEffector.PATH.getName(), dumpName,
                     ExportDumpEffector.ADDITIONAL_OPTIONS.getName(), dumpOptions);

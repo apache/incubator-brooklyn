@@ -19,8 +19,10 @@
 package org.apache.brooklyn.entity.database.mysql;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -70,7 +72,20 @@ public class MySqlClusterTestHelper {
             "        PRIMARY KEY (ID)",
             "    );",
             "",
-            "INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );"
+            "INSERT INTO COMMENTS values (default, 'lars', 'myemail@gmail.com','http://www.vogella.de', '2009-09-14 10:33:11', 'Summary','My first comment' );",
+            "",
+            "CREATE DATABASE items;",
+            "GRANT ALL PRIVILEGES ON items.* TO 'sqluser'@'localhost';",
+            "GRANT ALL PRIVILEGES ON items.* TO 'sqluser'@'%';",
+            "FLUSH PRIVILEGES;",
+            "",
+            "USE items;",
+            "CREATE TABLE INVENTORY (MYUSER VARCHAR(30) NOT NULL);",
+            "INSERT INTO INVENTORY values ('lars');",
+            "",
+            "CREATE DATABASE db_filter_test;",
+            "USE db_filter_test;",
+            "CREATE TABLE FILTERED (id INT NOT NULL AUTO_INCREMENT, PRIMARY KEY (ID));"
             ));
 
     public static void test(TestApplication app, Location location) throws Exception {
@@ -91,14 +106,13 @@ public class MySqlClusterTestHelper {
         MySqlCluster cluster = initCluster(app, location, clusterSpec);
         MySqlNode master = (MySqlNode) cluster.getAttribute(MySqlCluster.FIRST);
         MySqlNode slave = (MySqlNode) Iterables.find(cluster.getMembers(), Predicates.not(Predicates.<Entity>equalTo(master)));
-        //TODO test failing import doesn't abort
         assertEquals(cluster.getMembers().size(), 2);
         assertEquals(cluster.getAttribute(MySqlCluster.SLAVE_DATASTORE_URL_LIST).size(), 1);
         assertEquals(cluster.getAttribute(MySqlNode.DATASTORE_URL), master.getAttribute(MySqlNode.DATASTORE_URL));
         assertReplication(master, slave);
     }
 
-    public static void assertReplication(MySqlNode master, MySqlNode slave) throws ClassNotFoundException, Exception {
+    public static void assertReplication(MySqlNode master, MySqlNode slave, String... notReplicatedSchemas) throws ClassNotFoundException, Exception {
         VogellaExampleAccess masterDb = new VogellaExampleAccess("com.mysql.jdbc.Driver", master.getAttribute(MySqlNode.DATASTORE_URL));
         VogellaExampleAccess slaveDb = new VogellaExampleAccess("com.mysql.jdbc.Driver", slave.getAttribute(MySqlNode.DATASTORE_URL));
         masterDb.connect();
@@ -106,9 +120,16 @@ public class MySqlClusterTestHelper {
 
         assertSlave(masterDb, slaveDb, 1);
         masterDb.modifyDataBase();
+        masterDb.execute("items", "INSERT INTO INVENTORY values (?);", "Test");
         assertSlave(masterDb, slaveDb, 2);
         masterDb.revertDatabase();
+        masterDb.execute("items", "delete from INVENTORY where myuser= ?;", "Test");
         assertSlave(masterDb, slaveDb, 1);
+
+        Set<String> dbSchemas = slaveDb.getSchemas();
+        for (String schema : notReplicatedSchemas) {
+            assertFalse(dbSchemas.contains(schema), "Database " + schema + " exists on slave");
+        }
 
         masterDb.close();
         slaveDb.close();
@@ -123,22 +144,24 @@ public class MySqlClusterTestHelper {
         return mysql;
     }
 
-    public static String execSql(MySqlNode node, String cmd) {
-        return node.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of("commands", cmd)).asTask().getUnchecked();
-    }
-
     private static void assertSlave(final VogellaExampleAccess masterDb, final VogellaExampleAccess slaveDb, final int recordCnt) throws Exception {
         Asserts.succeedsEventually(new Runnable() {
+            private static final String QUERY = "SELECT C.myuser, webpage, datum, summary, COMMENTS from COMMENTS as C INNER JOIN items.INVENTORY as I ON C.MYUSER=I.MYUSER";
             @Override
             public void run() {
                 try {
-                    List<List<String>> masterResult = masterDb.readDataBase();
+                    List<List<String>> masterResult = masterDb.read(QUERY);
                     assertEquals(masterResult.size(), recordCnt);
-                    assertEquals(masterResult, slaveDb.readDataBase());
+                    assertEquals(masterResult, slaveDb.read(QUERY));
                 } catch (Exception e) {
                     throw Exceptions.propagate(e);
                 }
             }
         });
     }
+
+    public static String execSql(MySqlNode node, String cmd) {
+        return node.invoke(MySqlNode.EXECUTE_SCRIPT, ImmutableMap.of("commands", cmd)).asTask().getUnchecked();
+    }
+
 }
