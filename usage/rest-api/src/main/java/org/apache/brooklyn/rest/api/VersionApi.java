@@ -19,7 +19,7 @@
 package org.apache.brooklyn.rest.api;
 
 import org.apache.brooklyn.swagger.annotations.Apidoc;
-import com.wordnik.swagger.core.ApiOperation;
+import io.swagger.annotations.ApiOperation;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -37,6 +37,7 @@ public interface VersionApi {
 
   @GET
   @ApiOperation(value = "Return version identifier information for this Brooklyn instance; deprecated, use /server/version", 
-          responseClass = "String", multiValueResponse = false)
+          response = String.class,
+          responseContainer = "List")
   public String getVersion();
 }

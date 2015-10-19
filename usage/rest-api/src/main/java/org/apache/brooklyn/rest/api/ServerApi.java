@@ -39,10 +39,10 @@ import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;
 
 import com.google.common.annotations.Beta;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path("/v1/server")
 @Apidoc("Server")
@@ -79,7 +79,9 @@ public interface ServerApi {
 
     @GET
     @Path("/version")
-    @ApiOperation(value = "Return version identifier information for this Brooklyn instance", responseClass = "String", multiValueResponse = false)
+    @ApiOperation(value = "Return version identifier information for this Brooklyn instance", 
+            response = String.class,
+            responseContainer = "List")
     public VersionSummary getVersion();
 
     @GET
@@ -101,8 +103,8 @@ public interface ServerApi {
     @GET
     @Path("/status")
     @ApiOperation(value = "Returns the status of this Brooklyn instance [DEPRECATED; see ../ha/state]",
-            responseClass = "String",
-            multiValueResponse = false)
+            response = String.class,
+            responseContainer = "List")
     public String getStatus();
 
     @GET
@@ -113,10 +115,10 @@ public interface ServerApi {
     @GET
     @Path("/config/{configKey}")
     @ApiOperation(value = "Get the value of the specified config key from brooklyn properties")
-    @ApiErrors(value = {
+    @ApiResponses(value = {
             // TODO: This should probably return a 404 if the key is not present, and should return a predictable
             // value if the value is not set. Behaviour should be consistent with EntityConfigApi.get()
-            @ApiError(code = 204, reason = "Could not find config key")
+            @ApiResponse(code = 204, message = "Could not find config key")
     })
     public String getConfig(
             @ApiParam(value = "Config key ID", required = true)
@@ -126,7 +128,7 @@ public interface ServerApi {
     @GET
     @Path("/highAvailability")
     @ApiOperation(value = "Returns the status of all Brooklyn instances in the management plane [DEPRECATED; see ../ha/states]",
-            responseClass = "org.apache.brooklyn.rest.domain.HighAvailabilitySummary")
+            response = org.apache.brooklyn.rest.domain.HighAvailabilitySummary.class)
     public HighAvailabilitySummary getHighAvailability();
     
     @GET
@@ -149,7 +151,7 @@ public interface ServerApi {
     @GET
     @Path("/ha/states")
     @ApiOperation(value = "Returns the HA states and detail for all nodes in this management plane",
-            responseClass = "org.apache.brooklyn.rest.domain.HighAvailabilitySummary")
+            response = org.apache.brooklyn.rest.domain.HighAvailabilitySummary.class)
     public HighAvailabilitySummary getHighAvailabilityPlaneStates();
 
     @POST
@@ -197,7 +199,8 @@ public interface ServerApi {
     @GET
     @Path("/user")
     @ApiOperation(value = "Return user information for this Brooklyn instance", 
-            responseClass = "String", multiValueResponse = false)
+            response = String.class,
+            responseContainer = "List")
     public String getUser(); 
 
 }

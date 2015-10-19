@@ -20,10 +20,10 @@ package org.apache.brooklyn.rest.api;
 
 import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.PolicyConfigSummary;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -39,10 +39,10 @@ public interface PolicyConfigApi {
 
     @GET
     @ApiOperation(value = "Fetch the config keys for a specific policy",
-            responseClass = "org.apache.brooklyn.rest.domain.ConfigSummary",
-            multiValueResponse = true)
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity or policy")
+            response = org.apache.brooklyn.rest.domain.ConfigSummary.class,
+            responseContainer = "List")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity or policy")
     })
     public List<PolicyConfigSummary> list(
             @ApiParam(value = "Application ID or name", required = true)
@@ -67,9 +67,9 @@ public interface PolicyConfigApi {
 
     @GET
     @Path("/{config}")
-    @ApiOperation(value = "Fetch config value", responseClass = "Object")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity, policy or config key")
+    @ApiOperation(value = "Fetch config value", response = Object.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity, policy or config key")
     })
     public String get(
             @ApiParam(value = "Application ID or name", required = true)
@@ -85,8 +85,8 @@ public interface PolicyConfigApi {
     @POST
     @Path("/{config}/set")
     @ApiOperation(value = "Sets the given config on this policy")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity, policy or config key")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity, policy or config key")
     })
     public Response set(
             @ApiParam(value = "Application ID or name", required = true)
@@ -103,8 +103,8 @@ public interface PolicyConfigApi {
     @POST
     @Path("/{config}")
     @ApiOperation(value = "Sets the given config on this policy")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity, policy or config key")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity, policy or config key")
     })
     public Response set(
             @ApiParam(value = "Application ID or name", required = true)

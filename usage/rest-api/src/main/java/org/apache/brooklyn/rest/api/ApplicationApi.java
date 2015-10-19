@@ -41,10 +41,10 @@ import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path("/v1/applications")
 @Apidoc("Applications")
@@ -74,7 +74,7 @@ public interface ApplicationApi {
     @GET
     @ApiOperation(
             value = "Fetch list of applications, as ApplicationSummary objects",
-            responseClass = "org.apache.brooklyn.rest.domain.ApplicationSummary"
+            response = org.apache.brooklyn.rest.domain.ApplicationSummary.class
     )
     public List<ApplicationSummary> list(
             @ApiParam(value = "Regular expression to filter by", required = false)
@@ -91,10 +91,10 @@ public interface ApplicationApi {
     @Path("/{application}")
     @ApiOperation(
             value = "Fetch a specific application",
-            responseClass = "org.apache.brooklyn.rest.domain.ApplicationSummary"
+            response = org.apache.brooklyn.rest.domain.ApplicationSummary.class
     )
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application not found")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application not found")
     })
     public ApplicationSummary get(
             @ApiParam(
@@ -108,11 +108,11 @@ public interface ApplicationApi {
             "text/yaml", "text/x-yaml", "application/yaml"})
     @ApiOperation(
             value = "Create and start a new application from YAML",
-            responseClass = "org.apache.brooklyn.rest.domain.TaskSummary"
+            response = org.apache.brooklyn.rest.domain.TaskSummary.class
     )
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Undefined entity or location"),
-            @ApiError(code = 412, reason = "Application already registered")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Undefined entity or location"),
+            @ApiResponse(code = 412, message = "Application already registered")
     })
     public Response createFromYaml(
             @ApiParam(
@@ -128,11 +128,11 @@ public interface ApplicationApi {
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN})
     @ApiOperation(
             value = "Create and start a new application from miscellaneous types, including JSON either new CAMP format or legacy AppSpec format",
-            responseClass = "org.apache.brooklyn.rest.domain.TaskSummary"
+            response = org.apache.brooklyn.rest.domain.TaskSummary.class
     )
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Undefined entity or location"),
-            @ApiError(code = 412, reason = "Application already registered")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Undefined entity or location"),
+            @ApiResponse(code = 412, message = "Application already registered")
     })
     public Response createPoly(
             @ApiParam(
@@ -145,11 +145,11 @@ public interface ApplicationApi {
     @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
     @ApiOperation(
             value = "Create and start a new application from form URL-encoded contents (underlying type autodetected)",
-            responseClass = "org.apache.brooklyn.rest.domain.TaskSummary"
+            response = org.apache.brooklyn.rest.domain.TaskSummary.class
     )
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Undefined entity or location"),
-            @ApiError(code = 412, reason = "Application already registered")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Undefined entity or location"),
+            @ApiResponse(code = 412, message = "Application already registered")
     })
     public Response createFromForm(
             @ApiParam(
@@ -162,10 +162,10 @@ public interface ApplicationApi {
     @Path("/{application}")
     @ApiOperation(
             value = "Delete a specified application",
-            responseClass = "org.apache.brooklyn.rest.domain.TaskSummary"
+            response = org.apache.brooklyn.rest.domain.TaskSummary.class
     )
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application not found")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application not found")
     })
     public Response delete(
             @ApiParam(
@@ -180,11 +180,11 @@ public interface ApplicationApi {
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_OCTET_STREAM, MediaType.TEXT_PLAIN})
     @ApiOperation(
             value = "Create and start a new application from miscellaneous types, including JSON either new CAMP format or legacy AppSpec format",
-            responseClass = "org.apache.brooklyn.rest.domain.TaskSummary"
+            response = org.apache.brooklyn.rest.domain.TaskSummary.class
     )
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Undefined entity or location"),
-            @ApiError(code = 412, reason = "Application already registered")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Undefined entity or location"),
+            @ApiResponse(code = 412, message = "Application already registered")
     })
     @Path("/createLegacy")
     @Deprecated
@@ -193,9 +193,9 @@ public interface ApplicationApi {
     @GET
     @Path("/{application}/descendants")
     @ApiOperation(value = "Fetch entity info for all (or filtered) descendants",
-            responseClass = "org.apache.brooklyn.rest.domain.EntitySummary")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application or entity missing")
+            response = org.apache.brooklyn.rest.domain.EntitySummary.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application or entity missing")
     })
     public List<EntitySummary> getDescendants(
             @ApiParam(value = "Application ID or name", required = true)
@@ -207,8 +207,8 @@ public interface ApplicationApi {
     @GET
     @Path("/{application}/descendants/sensor/{sensor}")
             @ApiOperation(value = "Fetch values of a given sensor for all (or filtered) descendants")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application or entity missing")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application or entity missing")
     })
     public Map<String,Object> getDescendantsSensor(
             @ApiParam(value = "Application ID or name", required = true)

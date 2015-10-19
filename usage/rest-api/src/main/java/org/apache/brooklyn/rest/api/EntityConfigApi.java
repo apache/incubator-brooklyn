@@ -34,10 +34,10 @@ import javax.ws.rs.core.MediaType;
 import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
 
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path("/v1/applications/{application}/entities/{entity}/config")
 @Apidoc("Entity Config")
@@ -47,10 +47,10 @@ public interface EntityConfigApi {
 
     @GET
     @ApiOperation(value = "Fetch the config keys for a specific application entity",
-            responseClass = "org.apache.brooklyn.rest.domain.ConfigSummary",
-            multiValueResponse = true)
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity")
+            response = org.apache.brooklyn.rest.domain.ConfigSummary.class,
+            responseContainer = "List")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity")
     })
     public List<EntityConfigSummary> list(
             @ApiParam(value = "Application ID or name", required = true)
@@ -74,9 +74,9 @@ public interface EntityConfigApi {
     //To call this endpoint set the Accept request field e.g curl -H "Accept: application/json" ...
     @GET
     @Path("/{config}")
-    @ApiOperation(value = "Fetch config value (json)", responseClass = "Object")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or config key")
+    @ApiOperation(value = "Fetch config value (json)", response = Object.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or config key")
     })
     @Produces(MediaType.APPLICATION_JSON)
     public Object get(
@@ -92,9 +92,9 @@ public interface EntityConfigApi {
     // if user requests plain value we skip some json post-processing
     @GET
     @Path("/{config}")
-    @ApiOperation(value = "Fetch config value (text/plain)", responseClass = "Object")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or config key")
+    @ApiOperation(value = "Fetch config value (text/plain)", response = Object.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or config key")
     })
     @Produces(MediaType.TEXT_PLAIN)
     public String getPlain(
@@ -109,8 +109,8 @@ public interface EntityConfigApi {
 
     @POST
     @ApiOperation(value = "Manually set multiple config values")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity")
     })
     @SuppressWarnings("rawtypes")
     public void setFromMap(
@@ -126,8 +126,8 @@ public interface EntityConfigApi {
     @POST
     @Path("/{config}")
     @ApiOperation(value = "Manually set a config value")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or config key")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or config key")
     })
     public void set(
             @ApiParam(value = "Application ID or name", required = true)

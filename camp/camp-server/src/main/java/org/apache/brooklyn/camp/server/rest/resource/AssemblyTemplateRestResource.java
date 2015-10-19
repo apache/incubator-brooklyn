@@ -37,8 +37,8 @@ import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path(AssemblyTemplateRestResource.URI_PATH)
 @Apidoc("Assembly Template resources")
@@ -51,7 +51,7 @@ public class AssemblyTemplateRestResource extends AbstractCampRestResource {
 
     @Path("/{id}")
     @ApiOperation(value = "Get a specific assembly template",
-            responseClass = AssemblyTemplateDto.CLASS_NAME)
+            response = AssemblyTemplateDto.class)
     @GET
     public AssemblyTemplateDto get(
             @ApiParam(value = "ID of item being retrieved", required = true)

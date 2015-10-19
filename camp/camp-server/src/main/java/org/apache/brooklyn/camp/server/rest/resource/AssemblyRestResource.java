@@ -26,8 +26,8 @@ import javax.ws.rs.Produces;
 import org.apache.brooklyn.camp.server.dto.AssemblyDto;
 import org.apache.brooklyn.swagger.annotations.Apidoc;
 
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path(AssemblyRestResource.URI_PATH)
 @Apidoc("Assembly resources")
@@ -40,7 +40,7 @@ public class AssemblyRestResource extends AbstractCampRestResource {
 
     @Path("/{id}")
     @ApiOperation(value = "Get a specific assembly",
-            responseClass = AssemblyDto.CLASS_NAME)
+            response = AssemblyDto.class)
     @GET
     public AssemblyDto get(
             @ApiParam(value = "ID of item being retrieved", required = true)

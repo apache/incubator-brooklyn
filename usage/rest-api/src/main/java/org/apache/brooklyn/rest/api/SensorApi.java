@@ -35,10 +35,10 @@ import javax.ws.rs.core.MediaType;
 import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path("/v1/applications/{application}/entities/{entity}/sensors")
 @Apidoc("Entity Sensors")
@@ -48,10 +48,10 @@ public interface SensorApi {
 
     @GET
     @ApiOperation(value = "Fetch the sensor list for a specific application entity",
-            responseClass = "org.apache.brooklyn.rest.domain.SensorSummary",
-            multiValueResponse = true)
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity")
+            response = org.apache.brooklyn.rest.domain.SensorSummary.class,
+            responseContainer = "List")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity")
     })
     public List<SensorSummary> list(
             @ApiParam(value = "Application ID or name", required = true)
@@ -72,9 +72,9 @@ public interface SensorApi {
 
     @GET
     @Path("/{sensor}")
-    @ApiOperation(value = "Fetch sensor value (json)", responseClass = "Object")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+    @ApiOperation(value = "Fetch sensor value (json)", response = Object.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or sensor")
     })
     public Object get(
             @ApiParam(value = "Application ID or name", required = true)
@@ -89,9 +89,9 @@ public interface SensorApi {
     // this method is used if user has requested plain (ie not converting to json)
     @GET
     @Path("/{sensor}")
-    @ApiOperation(value = "Fetch sensor value (text/plain)", responseClass = "String")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+    @ApiOperation(value = "Fetch sensor value (text/plain)", response = String.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or sensor")
     })
     @Produces(MediaType.TEXT_PLAIN)
     public String getPlain(
@@ -106,8 +106,8 @@ public interface SensorApi {
 
     @POST
     @ApiOperation(value = "Manually set multiple sensor values")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity")
     })
     @SuppressWarnings("rawtypes")
     public void setFromMap(
@@ -121,8 +121,8 @@ public interface SensorApi {
     @POST
     @Path("/{sensor}")
     @ApiOperation(value = "Manually set a sensor value")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or sensor")
     })
     public void set(
             @ApiParam(value = "Application ID or name", required = true)
@@ -137,8 +137,8 @@ public interface SensorApi {
     @DELETE
     @Path("/{sensor}")
     @ApiOperation(value = "Manually clear a sensor value")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or sensor")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or sensor")
     })
     public void delete(
             @ApiParam(value = "Application ID or name", required = true)

@@ -26,8 +26,8 @@ import javax.ws.rs.Produces;
 import org.apache.brooklyn.camp.server.dto.PlatformComponentDto;
 import org.apache.brooklyn.swagger.annotations.Apidoc;
 
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path(PlatformComponentRestResource.URI_PATH)
 @Apidoc("Platform Component resources")
@@ -38,7 +38,7 @@ public class PlatformComponentRestResource extends AbstractCampRestResource {
 
     @Path("/{id}")
     @ApiOperation(value = "Get a specific platform component",
-            responseClass = PlatformComponentDto.CLASS_NAME)
+            response = PlatformComponentDto.class)
     @GET
     public PlatformComponentDto get(
             @ApiParam(value = "ID of item being retrieved", required = true)

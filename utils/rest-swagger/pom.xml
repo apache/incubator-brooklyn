@@ -37,12 +37,6 @@
 
     <dependencies>
     
-        <!-- need this to get the right ServletConfig as used elsewhere :( -->
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-        </dependency>
-
         <!-- ATTN: this moves jersey-server from 1.7 to 1.12 -->
         <dependency>
             <groupId>com.sun.jersey</groupId>
@@ -82,8 +76,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.wordnik</groupId>
-            <artifactId>swagger-core_2.9.1</artifactId>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-core</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
@@ -92,8 +86,8 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.wordnik</groupId>
-            <artifactId>swagger-jaxrs_2.9.1</artifactId>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-jaxrs</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>javax.servlet</groupId>
@@ -105,6 +99,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
     </dependencies>
     
 </project>

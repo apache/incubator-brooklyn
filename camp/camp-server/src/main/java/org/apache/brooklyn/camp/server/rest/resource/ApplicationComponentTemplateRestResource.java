@@ -26,8 +26,8 @@ import javax.ws.rs.Produces;
 import org.apache.brooklyn.camp.server.dto.ApplicationComponentTemplateDto;
 import org.apache.brooklyn.swagger.annotations.Apidoc;
 
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path(ApplicationComponentTemplateRestResource.URI_PATH)
 @Apidoc("Application Component Template resources")
@@ -38,7 +38,7 @@ public class ApplicationComponentTemplateRestResource extends AbstractCampRestRe
 
     @Path("/{id}")
     @ApiOperation(value = "Get a specific application component template",
-        responseClass = ApplicationComponentTemplateDto.CLASS_NAME)
+        response = ApplicationComponentTemplateDto.class)
     @GET
     public ApplicationComponentTemplateDto get(
             @ApiParam(value = "ID of item being retrieved", required = true)

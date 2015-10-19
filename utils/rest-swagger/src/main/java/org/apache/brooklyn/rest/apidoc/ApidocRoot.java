@@ -20,11 +20,11 @@ package org.apache.brooklyn.rest.apidoc;
 
 import java.util.List;
 
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
-import com.wordnik.swagger.core.Documentation;
+import io.swagger.core.Documentation;
 
 @JsonIgnoreProperties({
     "com$wordnik$swagger$core$Documentation$$apis",

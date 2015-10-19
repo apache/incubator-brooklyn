@@ -36,8 +36,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.wordnik</groupId>
-            <artifactId>swagger-core_2.9.1</artifactId>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
         </dependency>
     </dependencies>
 

@@ -40,14 +40,14 @@ import javax.ws.rs.core.UriInfo;
 
 import com.google.common.collect.ImmutableList;
 import com.sun.jersey.api.core.ResourceConfig;
-import com.wordnik.swagger.core.Api;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.Documentation;
-import com.wordnik.swagger.core.DocumentationEndPoint;
-import com.wordnik.swagger.jaxrs.ConfigReader;
-import com.wordnik.swagger.jaxrs.HelpApi;
-import com.wordnik.swagger.jaxrs.JaxrsApiReader;
-import com.wordnik.swagger.jaxrs.JaxrsApiSpecParser;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.core.Documentation;
+import io.swagger.core.DocumentationEndPoint;
+import io.swagger.jaxrs.ConfigReader;
+import io.swagger.jaxrs.HelpApi;
+import io.swagger.jaxrs.JaxrsApiReader;
+import io.swagger.jaxrs.JaxrsApiSpecParser;
 
 @Produces({"application/json"})
 /** create a concrete subclass for this annotated with the Path where
@@ -125,7 +125,8 @@ abstract public class ApidocResource {
     
     @GET
     @ApiOperation(value = "Returns list of all available API resource endpoints", 
-        responseClass = "ApidocRoot", multiValueResponse = true)
+        response = ApidocRoot.class,
+        responseContainer = "List")
     public Response getAllApis(
             @Context ResourceConfig rc,
             @Context HttpHeaders headers,
@@ -207,7 +208,8 @@ abstract public class ApidocResource {
     @GET
     @Path("/{resource}")
     @ApiOperation(value = "Returns detail on the given API resource endpoint", 
-        responseClass = "DocumentationEndPoint", multiValueResponse = true)
+        response  = DocumentationEndPoint.class,
+        responseContainer = "List")
     public Response details(
             @Context ResourceConfig rc, 
             @Context HttpHeaders headers, 

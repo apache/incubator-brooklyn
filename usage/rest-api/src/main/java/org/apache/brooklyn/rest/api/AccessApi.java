@@ -31,8 +31,9 @@ import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.AccessSummary;
 
 import com.google.common.annotations.Beta;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Beta
 @Path("/v1/access")
@@ -49,7 +50,7 @@ public interface AccessApi {
     @GET
     @ApiOperation(
             value = "Fetch access control summary",
-            responseClass = "org.apache.brooklyn.rest.domain.AccessSummary"
+            response = org.apache.brooklyn.rest.domain.AccessSummary.class
             )
     public AccessSummary get();
 

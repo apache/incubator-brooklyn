@@ -130,6 +130,11 @@
             <artifactId>brooklyn-utils-rest-swagger</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-swagger-annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
@@ -152,10 +157,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.wordnik</groupId>
-            <artifactId>swagger-core_2.9.1</artifactId>
         </dependency>
         
         <!-- TODO have a camp.log / logging module -->

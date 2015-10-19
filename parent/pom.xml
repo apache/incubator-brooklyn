@@ -183,6 +183,16 @@
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${fasterxml.jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${fasterxml.jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${fasterxml.jackson.version}</version>
             </dependency>
@@ -192,8 +202,18 @@
                 <version>${fasterxml.jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.wordnik</groupId>
-                <artifactId>swagger-core_2.9.1</artifactId>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-jaxb-annotations</artifactId>
+                <version>${fasterxml.jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-core</artifactId>
                 <version>${swagger.version}</version>
                 <exclusions>
                     <exclusion>
@@ -203,8 +223,8 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.wordnik</groupId>
-                <artifactId>swagger-jaxrs_2.9.1</artifactId>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-jaxrs</artifactId>
                 <version>${swagger.version}</version>
             </dependency>
             <dependency>

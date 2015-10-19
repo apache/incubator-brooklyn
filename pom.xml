@@ -99,7 +99,7 @@
         <guava.version>17.0</guava.version>
         <xstream.version>1.4.7</xstream.version>
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
-        <fasterxml.jackson.version>2.4.2</fasterxml.jackson.version>  <!-- more recent jackson, but not compatible with old annotations! -->
+        <fasterxml.jackson.version>2.4.5</fasterxml.jackson.version>  <!-- more recent jackson, but not compatible with old annotations! -->
         <jersey.version>1.18.1</jersey.version>
         <httpclient.version>4.4.1</httpclient.version>
         <commons-lang3.version>3.1</commons-lang3.version>
@@ -110,7 +110,7 @@
         <!-- Ordinary dependencies -->
         <testng.version>6.8.8</testng.version>
         <mockito.version>1.10.8</mockito.version>
-        <swagger.version>1.0.1</swagger.version>
+        <swagger.version>1.5.3</swagger.version>
         <jansi.version>1.2.1</jansi.version>
         <gson.version>2.3</gson.version>
         <ivy.version>2.2.0</ivy.version>
