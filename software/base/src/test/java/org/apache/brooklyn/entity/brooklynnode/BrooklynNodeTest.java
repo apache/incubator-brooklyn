@@ -23,6 +23,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
+import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
 import org.apache.brooklyn.api.location.Location;
@@ -31,9 +32,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.feed.ConfigToAttributes;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
-import org.apache.brooklyn.entity.brooklynnode.BrooklynNodeImpl;
-import org.apache.brooklyn.entity.brooklynnode.BrooklynNodeSshDriver;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -45,8 +44,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
-
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
 public class BrooklynNodeTest {
 
@@ -96,12 +93,12 @@ public class BrooklynNodeTest {
     private void runTestGeneratesCorrectDownloadUrl(String version, String expectedUrl) throws Exception {
         // TODO Using BrooklynNodeImpl directly, because want to instantiate a BroolynNodeSshDriver.
         //      Really want to make that easier to test, without going through "wrong" code path for creating entity.
-        BrooklynNodeImpl entity = new BrooklynNodeImpl();
-        entity.config().set(BrooklynNode.SUGGESTED_VERSION, version);
-        entity.setParent(app);
-        Entities.manage(entity);
-        ConfigToAttributes.apply(entity);
-        BrooklynNodeSshDriver driver = new BrooklynNodeSshDriver(entity, loc);
+        BrooklynNode entity = app.addChild(EntitySpec.create(BrooklynNode.class)
+                .configure(BrooklynNode.SUGGESTED_VERSION, version));
+        BrooklynNodeImpl entityImpl = (BrooklynNodeImpl) Entities.deproxy(entity);
+        
+        ConfigToAttributes.apply((EntityLocal)entity);
+        BrooklynNodeSshDriver driver = new BrooklynNodeSshDriver(entityImpl, loc);
         
         DownloadResolver resolver = Entities.newDownloader(driver);
         List<String> urls = resolver.getTargets();
@@ -113,7 +110,6 @@ public class BrooklynNodeTest {
     @Test(groups = "Integration")
     public void testUnmanageOnStop() throws Exception {
         final BrooklynNode node = app.addChild(EntitySpec.create(BrooklynNode.class).impl(SlowStopBrooklynNode.class));
-        Entities.manage(node);
         assertTrue(Entities.isManaged(node), "Entity " + node + " must be managed.");
         node.invoke(Startable.STOP, ImmutableMap.<String,Object>of()).asTask().getUnchecked();
         //The UnmanageTask will unblock after the STOP effector completes, so we are competing with it here.

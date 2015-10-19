@@ -24,9 +24,6 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
@@ -41,11 +38,16 @@ import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.objs.proxy.EntityProxy;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -174,23 +176,22 @@ public class BrooklynRestResourceUtilsTest {
     public void testNestedApplications() {
         // hierarchy is: app -> subapp -> subentity (where subentity has a policy)
         
-        SampleNoOpApplication app = new SampleNoOpApplication();
-        app.setDisplayName("app");
+        Application app = managementContext.getEntityManager().createEntity(org.apache.brooklyn.api.entity.EntitySpec.create(TestApplication.class)
+                .displayName("app")
+                .child(org.apache.brooklyn.api.entity.EntitySpec.create(TestApplication.class)
+                        .displayName("subapp")
+                        .child(org.apache.brooklyn.api.entity.EntitySpec.create(TestEntity.class)
+                                .displayName("subentity")
+                                .policy(org.apache.brooklyn.api.policy.PolicySpec.create(MyPolicy.class)
+                                        .displayName("mypolicy")))));
+
+        Application subapp = (Application) Iterables.getOnlyElement(app.getChildren());
+        TestEntity subentity = (TestEntity) Iterables.getOnlyElement(subapp.getChildren());
         
-        SampleNoOpApplication subapp = new SampleNoOpApplication();
-        subapp.setDisplayName("subapp");
-        
-        TestEntityImpl subentity = new TestEntityImpl(MutableMap.of("displayName", "subentity"), subapp);
-        subentity.policies().add(new MyPolicy(MutableMap.of("name", "mypolicy")));
-        subentity.getApplication(); // force this to be cached
-        
-        app.addChild(subapp);
-        Entities.startManagement(app, managementContext);
-        
-        EntityLocal subappRetrieved = util.getEntity(app.getId(), subapp.getId());
+        Entity subappRetrieved = util.getEntity(app.getId(), subapp.getId());
         assertEquals(subappRetrieved.getDisplayName(), "subapp");
         
-        EntityLocal subentityRetrieved = util.getEntity(app.getId(), subentity.getId());
+        Entity subentityRetrieved = util.getEntity(app.getId(), subentity.getId());
         assertEquals(subentityRetrieved.getDisplayName(), "subentity");
         
         Policy subappPolicy = util.getPolicy(app.getId(), subentity.getId(), "mypolicy");
@@ -207,6 +208,8 @@ public class BrooklynRestResourceUtilsTest {
     }
     
     public static class MyPolicy extends AbstractPolicy {
+        public MyPolicy() {
+        }
         public MyPolicy(Map<String, ?> flags) {
             super(flags);
         }

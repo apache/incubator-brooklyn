@@ -90,14 +90,12 @@ public class QpidBrokerImpl extends JMSBrokerImpl<QpidQueue, QpidTopic> implemen
     
     public QpidQueue createQueue(Map properties) {
         QpidQueue result = addChild(EntitySpec.create(QpidQueue.class).configure(properties));
-        Entities.manage(result);
         result.create();
         return result;
     }
 
     public QpidTopic createTopic(Map properties) {
         QpidTopic result = addChild(EntitySpec.create(QpidTopic.class).configure(properties));
-        Entities.manage(result);
         result.create();
         return result;
     }

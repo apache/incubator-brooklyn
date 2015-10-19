@@ -298,7 +298,6 @@ public class HotStandbyTest {
         // test additions - new child, new app
         
         TestEntity child = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
-        Entities.manage(child);
         TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
         app2.config().set(TestEntity.CONF_NAME, "second-app");
         
@@ -477,7 +476,6 @@ public class HotStandbyTest {
         assertUsedMemoryMaxDelta("Standby created", DELTA);
         
         TestEntity lastChild = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
-        Entities.manage(lastChild);
         forcePersistNow(n1);
         forceRebindNow(n2);
         assertUsedMemoryMaxDelta("Child created and rebinded once", DELTA);
@@ -488,7 +486,6 @@ public class HotStandbyTest {
                 usedMemory.removeLast();
             }
             TestEntity newChild = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
-            Entities.manage(newChild);
             Entities.unmanage(lastChild);
             lastChild = newChild;
             
@@ -523,7 +520,6 @@ public class HotStandbyTest {
         HaMgmtNode n2 = createHotStandby(Duration.PRACTICALLY_FOREVER);
 
         TestEntity child = app.addChild(EntitySpec.create(TestEntity.class).configure(TestEntity.CONF_NAME, "first-child"));
-        Entities.manage(child);
         TestApplication app2 = TestApplication.Factory.newManagedInstanceForTests(n1.mgmt);
         app2.config().set(TestEntity.CONF_NAME, "second-app");
 

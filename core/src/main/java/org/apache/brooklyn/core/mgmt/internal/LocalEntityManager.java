@@ -144,7 +144,11 @@ public class LocalEntityManager implements EntityManagerInternal {
         try {
             T entity = entityFactory.createEntity(spec);
             Entity proxy = ((AbstractEntity)entity).getProxy();
-            return (T) checkNotNull(proxy, "proxy for entity %s, spec %s", entity, spec);
+            checkNotNull(proxy, "proxy for entity %s, spec %s", entity, spec);
+            
+            manage(entity);
+            
+            return (T) proxy;
         } catch (Throwable e) {
             log.warn("Failed to create entity using spec "+spec+" (rethrowing)", e);
             throw Exceptions.propagate(e);

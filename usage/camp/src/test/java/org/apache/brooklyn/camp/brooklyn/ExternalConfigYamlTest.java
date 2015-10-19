@@ -54,49 +54,44 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
         props.put("brooklyn.external.myprovider", MyExternalConfigSupplier.class.getName());
         props.put("brooklyn.external.myprovider.mykey", "myval");
         props.put("brooklyn.external.myproviderWithoutMapArg", MyExternalConfigSupplierWithoutMapArg.class.getName());
-        
+
         return LocalManagementContextForTests.builder(true)
                 .useProperties(props)
                 .build();
     }
-    
+
     @Test
     public void testExternalisedConfigReferencedFromYaml() throws Exception {
         ConfigKey<String> MY_CONFIG_KEY = ConfigKeys.newStringConfigKey("my.config.key");
-        
+
         String yaml = Joiner.on("\n").join(
             "services:",
             "- serviceType: org.apache.brooklyn.core.test.entity.TestApplication",
             "  brooklyn.config:",
             "    my.config.key: $brooklyn:external(\"myprovider\", \"mykey\")");
-        
+
         TestApplication app = (TestApplication) createAndStartApplication(new StringReader(yaml));
         waitForApplicationTasks(app);
 
         assertEquals(app.getConfig(MY_CONFIG_KEY), "myval");
     }
 
-    // FIXME fails currently - see comment at ConfigBag.get; fix at AbstractLocation.BasicConfigurationSupport to enable this?
-//    at org.apache.brooklyn.util.core.config.ConfigBag.coerceFirstNonNullKeyValue(ConfigBag.java:464)
-//    at org.apache.brooklyn.util.core.config.ConfigBag.get(ConfigBag.java:458)
-//    at org.apache.brooklyn.util.core.config.ConfigBag.get(ConfigBag.java:345)
-//    at org.apache.brooklyn.core.location.AbstractLocation$BasicConfigurationSupport.get(AbstractLocation.java:364)    @Test
-    @Test(groups="WIP")
+    @Test
     public void testExternalisedLocationConfigReferencedFromYaml() throws Exception {
         ConfigKey<String> MY_CONFIG_KEY = ConfigKeys.newStringConfigKey("my.config.key");
-        
+
         String yaml = Joiner.on("\n").join(
             "services:",
             "- type: org.apache.brooklyn.core.test.entity.TestApplication",
             "location:",
             "  localhost:",
             "    my.config.key: $brooklyn:external(\"myprovider\", \"mykey\")");
-        
+
         TestApplication app = (TestApplication) createAndStartApplication(new StringReader(yaml));
         waitForApplicationTasks(app);
         assertEquals(Iterables.getOnlyElement( app.getLocations() ).config().get(MY_CONFIG_KEY), "myval");
     }
-    
+
     @Test(groups="Integration")
     public void testExternalisedLocationConfigSetViaProvisioningPropertiesReferencedFromYaml() throws Exception {
         String yaml = Joiner.on("\n").join(
@@ -105,23 +100,23 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
             "  provisioning.properties:",
             "    credential: $brooklyn:external(\"myprovider\", \"mykey\")",
             "location: localhost");
-        
+
         Entity app = createAndStartApplication(new StringReader(yaml));
         waitForApplicationTasks(app);
         Entity entity = Iterables.getOnlyElement( app.getChildren() );
         assertEquals(Iterables.getOnlyElement( entity.getLocations() ).config().get(CloudLocationConfig.ACCESS_CREDENTIAL), "myval");
     }
-    
+
     @Test
     public void testExternalisedConfigFromSupplierWithoutMapArg() throws Exception {
         ConfigKey<String> MY_CONFIG_KEY = ConfigKeys.newStringConfigKey("my.config.key");
-        
+
         String yaml = Joiner.on("\n").join(
             "services:",
             "- serviceType: org.apache.brooklyn.core.test.entity.TestApplication",
             "  brooklyn.config:",
             "    my.config.key: $brooklyn:external(\"myproviderWithoutMapArg\", \"mykey\")");
-        
+
         TestApplication app = (TestApplication) createAndStartApplication(new StringReader(yaml));
         waitForApplicationTasks(app);
 
@@ -132,7 +127,7 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
     public void testWhenExternalisedConfigSupplierDoesNotExist() throws Exception {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put("brooklyn.external.myprovider", "wrong.classname.DoesNotExist");
-        
+
         try {
             LocalManagementContextForTests.builder(true)
                     .useProperties(props)
@@ -144,12 +139,12 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
             }
         }
     }
-    
+
     @Test
     public void testWhenExternalisedConfigSupplierDoesNotHavingRightConstructor() throws Exception {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put("brooklyn.external.myprovider", MyExternalConfigSupplierWithWrongConstructor.class.getName());
-        
+
         try {
             LocalManagementContext mgmt2 = LocalManagementContextForTests.builder(true)
                     .useProperties(props)
@@ -162,45 +157,46 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
             }
         }
     }
-    
+
     @Override
     protected Logger getLogger() {
         return log;
     }
-    
+
     public static class MyExternalConfigSupplier extends AbstractExternalConfigSupplier {
         private final Map<String, String> conf;
-        
+
         public MyExternalConfigSupplier(ManagementContext mgmt, String name, Map<String, String> conf) {
             super(mgmt, name);
             this.conf = conf;
         }
-        
+
         @Override public String get(String key) {
             return conf.get(key);
         }
     }
-    
+
     public static class MyExternalConfigSupplierWithoutMapArg extends AbstractExternalConfigSupplier {
         public MyExternalConfigSupplierWithoutMapArg(ManagementContext mgmt, String name) {
             super(mgmt, name);
         }
-        
+
         @Override public String get(String key) {
             return key.equals("mykey") ? "myHardcodedVal" : null;
         }
     }
-    
+
     public static class MyExternalConfigSupplierWithWrongConstructor implements ExternalConfigSupplier {
         public MyExternalConfigSupplierWithWrongConstructor(double d) {
         }
-        
+
         @Override public String getName() {
             return "myname";
         }
-        
+
         @Override public String get(String key) {
             return null;
         }
     }
+
 }

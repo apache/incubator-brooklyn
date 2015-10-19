@@ -309,7 +309,7 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
                 }
 
             } else if (v instanceof DeferredSupplier<?>) {
-                final Object vf = v;
+                final DeferredSupplier<?> ds = (DeferredSupplier<?>) v;
 
                 if ((!Boolean.FALSE.equals(embedResolutionInTask) && (exec!=null || timeout!=null)) || Boolean.TRUE.equals(embedResolutionInTask)) {
                     if (exec==null)
@@ -318,16 +318,16 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
                     Callable<Object> callable = new Callable<Object>() {
                         public Object call() throws Exception {
                             try {
-                                Tasks.setBlockingDetails("Retrieving "+vf);
-                                return ((DeferredSupplier<?>) vf).get();
+                                Tasks.setBlockingDetails("Retrieving "+ds);
+                                return ds.get();
                             } finally {
                                 Tasks.resetBlockingDetails();
                             }
                         } };
                     String description = getDescription();
-                    TaskBuilder<Object> vb = Tasks.<Object>builder().body(callable).displayName("Resolving dependent value").description(description);
-                    if (isTransientTask) vb.tag(BrooklynTaskTags.TRANSIENT_TASK_TAG);
-                    Task<Object> vt = exec.submit(vb.build());
+                    TaskBuilder<Object> tb = Tasks.<Object>builder().body(callable).displayName("Resolving dependent value").description(description);
+                    if (isTransientTask) tb.tag(BrooklynTaskTags.TRANSIENT_TASK_TAG);
+                    Task<Object> vt = exec.submit(tb.build());
                     // TODO to handle immediate resolution, it would be nice to be able to submit 
                     // so it executes in the current thread,
                     // or put a marker in the target thread or task while it is running that the task 
@@ -340,8 +340,8 @@ public class ValueResolver<T> implements DeferredSupplier<T> {
                     
                 } else {
                     try {
-                        Tasks.setBlockingDetails("Retrieving (non-task) "+vf);
-                        v = ((DeferredSupplier<?>) vf).get();
+                        Tasks.setBlockingDetails("Retrieving (non-task) "+ds);
+                        v = ((DeferredSupplier<?>) ds).get();
                     } finally {
                         Tasks.resetBlockingDetails();
                     }

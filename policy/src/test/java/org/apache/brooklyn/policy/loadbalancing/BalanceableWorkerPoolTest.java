@@ -96,7 +96,6 @@ public class BalanceableWorkerPoolTest {
         
         BalanceableWorkerPool pool2 = app.createAndManageChild(EntitySpec.create(BalanceableWorkerPool.class));
         pool2.setContents(resizable, itemGroup);
-        Entities.manage(pool2);
         
         pool2.resize(123);
         assertEquals(resizable.getCurrentSize(), (Integer) 123);

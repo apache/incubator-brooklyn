@@ -125,35 +125,29 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
-        UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u0 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
-                .configure("target", c0)
-                .parent(urlMappingsGroup));
-        Entities.manage(u0);
+                .configure("target", c0));
         
         //cluster 1 at localhost2 /hello-world/
         DynamicCluster c1 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(getTestWar())));
-        UrlMapping u1 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u1 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost2")
                 .configure("path", "/hello-world($|/.*)")
-                .configure("target", c1)
-                .parent(urlMappingsGroup));
-        Entities.manage(u1);
+                .configure("target", c1));
 
         // cluster 2 at localhost3 /c2/  and mapping /hello/xxx to /hello/new xxx
         DynamicCluster c2 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+")));
-        UrlMapping u2 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u2 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost3")
                 .configure("path", "/c2($|/.*)")
                 .configure("target", c2)
-                .configure("rewrites", ImmutableList.of(new UrlRewriteRule("(.*/|)(hello/)(.*)", "$1$2new $3").setBreak()))
-                .parent(urlMappingsGroup));
-        Entities.manage(u2);
+                .configure("rewrites", ImmutableList.of(new UrlRewriteRule("(.*/|)(hello/)(.*)", "$1$2new $3").setBreak())));
         // FIXME rewrite not a config
         
         app.start(ImmutableList.of(localLoc));
@@ -208,22 +202,18 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster c0 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+")));
-        UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u0 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", "/atC0($|/.*)")
-                .configure("target", c0)
-                .parent(urlMappingsGroup));
-        Entities.manage(u0);
+                .configure("target", c0));
 
         DynamicCluster c1 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+")));
-        UrlMapping u1 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u1 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", "/atC1($|/.*)")
-                .configure("target", c1)
-                .parent(urlMappingsGroup));
-        Entities.manage(u1);
+                .configure("target", c1));
 
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("domain", "localhost")
@@ -262,11 +252,9 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
-        UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u0 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost2")
-                .configure("target", c0)
-                .parent(urlMappingsGroup));
-        Entities.manage(u0);
+                .configure("target", c0));
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("domain", "localhost")
@@ -301,11 +289,9 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.NAMED_WARS, ImmutableList.of(getTestWar())));
-        UrlMapping u1 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u1 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
-                .configure("target", c1)
-                .parent(urlMappingsGroup));
-        Entities.manage(u1);
+                .configure("target", c1));
         
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("serverPool", coreCluster)
@@ -338,15 +324,13 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
-        UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u0 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
-                .configure("target", c0)
-                .parent(urlMappingsGroup));
+                .configure("target", c0));
         u0.addRewrite("/goodbye/al(.*)", "/hello/al$1");
         u0.addRewrite(new UrlRewriteRule("/goodbye(|/.*)$", "/hello$1").setBreak());
         u0.addRewrite("(.*)/hello/al(.*)", "$1/hello/Big Al$2");
         u0.addRewrite("/hello/an(.*)", "/hello/Sir An$1");
-        Entities.manage(u0);
 
         app.start(ImmutableList.of(localLoc));
         final int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT);
@@ -391,11 +375,9 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
-        final UrlMapping u1 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        final UrlMapping u1 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
-                .configure("target", c1)
-                .parent(urlMappingsGroup));
-        Entities.manage(u1);
+                .configure("target", c1));
         
         app.start(ImmutableList.of(localLoc));
         int port = nginx.getAttribute(NginxController.PROXY_HTTP_PORT);
@@ -455,12 +437,10 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
         DynamicCluster c0 = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+")));
-        UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u0 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost")
                 .configure("path", "/atC0($|/.*)")
-                .configure("target", c0)
-                .parent(urlMappingsGroup));
-        Entities.manage(u0);
+                .configure("target", c0));
 
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("cluster", nullCluster)
@@ -497,11 +477,9 @@ public class NginxUrlMappingIntegrationTest extends BrooklynAppLiveTestSupport {
                 .configure("initialSize", 1)
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(Tomcat8Server.class).configure("httpPort", "8100+"))
                 .configure(JavaWebAppService.ROOT_WAR, getTestWar()));
-        UrlMapping u0 = entityManager.createEntity(EntitySpec.create(UrlMapping.class)
+        UrlMapping u0 = urlMappingsGroup.addChild(EntitySpec.create(UrlMapping.class)
                 .configure("domain", "localhost1")
-                .configure("target", c0)
-                .parent(urlMappingsGroup));
-        Entities.manage(u0);
+                .configure("target", c0));
 
         nginx = app.createAndManageChild(EntitySpec.create(NginxController.class)
                 .configure("urlMappings", urlMappingsGroup));

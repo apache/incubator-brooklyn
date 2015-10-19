@@ -174,13 +174,13 @@ public class BrooklynNodeUpgradeEffectorBody extends EffectorBody<Void> {
 
         //force this to start as hot-standby
         // TODO alternatively could use REST API as in BrooklynClusterUpgradeEffectorBody
+        // TODO Want better way to append to the config (so can do it all in the spec)
         String launchParameters = dryRunChild.getConfig(BrooklynNode.EXTRA_LAUNCH_PARAMETERS);
         if (Strings.isBlank(launchParameters)) launchParameters = "";
         else launchParameters += " ";
         launchParameters += "--highAvailability "+HighAvailabilityMode.HOT_STANDBY;
         ((EntityInternal)dryRunChild).config().set(BrooklynNode.EXTRA_LAUNCH_PARAMETERS, launchParameters);
 
-        Entities.manage(dryRunChild);
         final String dryRunNodeUid = dryRunChild.getId();
         ((EntityInternal)dryRunChild).setDisplayName("Dry-Run Upgraded Brooklyn Node ("+dryRunNodeUid+")");
 

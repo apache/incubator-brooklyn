@@ -66,8 +66,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
         EntitySpec<? extends Application> spec = createApplicationSpec(template, platform, loader);
         Application instance = mgmt.getEntityManager().createEntity(spec);
-        log.info("CAMP placing '{}' under management", instance);
-        Entities.startManagement(instance, mgmt);
+        log.info("CAMP created '{}'", instance);
         return instance;
     }
 

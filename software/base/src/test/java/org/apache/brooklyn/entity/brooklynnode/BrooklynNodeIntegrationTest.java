@@ -644,7 +644,6 @@ services:
         Entity mirror = brooklynNode.addChild(EntitySpec.create(BrooklynEntityMirror.class)
                 .configure(BrooklynEntityMirror.MIRRORED_ENTITY_URL, entityUrl)
                 .configure(BrooklynEntityMirror.MIRRORED_ENTITY_ID, id));
-        Entities.manage(mirror);
 
         assertEquals(brooklynNode.getChildren().size(), 1);
         return brooklynNode;
