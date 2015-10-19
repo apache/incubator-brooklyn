@@ -76,7 +76,7 @@ The keys `loginUser` and either `loginUser.password` or `loginUser.privateKeyFil
 Brooklyn to use specific credentials for the initial login to a cloud-provisioned machine.
 
 (This custom login is particularly useful when using a custom image templates where the cloud-side account 
-management logic is not enabled. For example, a vCD template can have guest customization that will change
+management logic is not enabled. For example, a vCloud (vCD) template can have guest customization that will change
 the root password. This setting tells AMP to only use the given password, rather than the initial 
 randomly generated password that vCD returns. Without this property, there is a race for such templates:
 does Brooklyn manage to create the admin user before the guest customization changes the login and reboots,
