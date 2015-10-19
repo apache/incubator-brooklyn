@@ -226,15 +226,15 @@ copied to `${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}`:
     svn up
     cd -
 
-    # main website, relative to / 
-    _build/build.sh website-root --install
-    
-    # latest guide, relative to /v/latest/
-    _build/build.sh guide-latest --install
-    
-    # versioned guide, relative to /v/<version>/
+    # versioned guide, safe for snapshots, relative to /v/<version>/
     _build/build.sh guide-version --install
 
+    # main website, if desired, relative to / 
+    _build/build.sh website-root --install
+    
+    # this version as the latest guide, if desired, relative to /v/latest/
+    _build/build.sh guide-latest --install
+    
 (If HTML-Proofer find failures, then fix the links etc. Unfortunately, the javadoc build 
 gives a lot of warnings. Fixing those is not part of this activity).
 
