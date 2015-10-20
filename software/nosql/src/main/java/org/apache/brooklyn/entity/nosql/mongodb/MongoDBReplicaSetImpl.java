@@ -137,6 +137,7 @@ public class MongoDBReplicaSetImpl extends DynamicClusterImpl implements MongoDB
     
     @Override
     public void init() {
+        super.init();
         enrichers().add(Enrichers.builder()
                 .aggregating(MongoDBAuthenticationMixins.ROOT_USERNAME)
                 .publishing(MongoDBAuthenticationMixins.ROOT_USERNAME)
