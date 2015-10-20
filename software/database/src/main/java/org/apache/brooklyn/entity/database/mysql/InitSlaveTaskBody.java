@@ -39,6 +39,7 @@ import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.EntityPredicates;
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.database.mysql.MySqlNode.ExportDumpEffector;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
@@ -245,7 +246,10 @@ public class InitSlaveTaskBody implements Runnable {
             } catch (InterruptedException e) {
                 throw Exceptions.propagate(e);
             }
-            ReplicationSnapshot replicationSnapshot = getAttributeBlocking(cluster, MySqlCluster.REPLICATION_LAST_SLAVE_SNAPSHOT);
+            ReplicationSnapshot replicationSnapshot = getReplicationInfoMasterConfig();
+            if (replicationSnapshot == null) {
+                replicationSnapshot = getAttributeBlocking(cluster, MySqlCluster.REPLICATION_LAST_SLAVE_SNAPSHOT);
+            }
             if (!isReplicationInfoValid(replicationSnapshot)) {
                 final MySqlNode snapshotNode = getSnapshotNode();
                 final String dumpName = getDumpUniqueId() + ".sql";
@@ -259,6 +263,30 @@ public class InitSlaveTaskBody implements Runnable {
         } finally {
             lock.release();
         }
+    }
+
+    /**
+     * Rebind backwards compatibility
+     * @deprecated since 0.9.0
+     */
+    @Deprecated
+    private ReplicationSnapshot getReplicationInfoMasterConfig() {
+        Entity master = getMaster();
+        AttributeSensor<String> MASTER_LOG_FILE = Sensors.newStringSensor(
+                "mysql.master.log_file", "The binary log file master is writing to");
+        AttributeSensor<Integer> MASTER_LOG_POSITION = Sensors.newIntegerSensor(
+                "mysql.master.log_position", "The position in the log file to start replication");
+
+        String logFile = master.sensors().get(MASTER_LOG_FILE);
+        Integer logPos = master.sensors().get(MASTER_LOG_POSITION);
+        if(logFile != null && logPos != null) {
+            ReplicationSnapshot replicationSnapshot = new ReplicationSnapshot(null, null, logFile, logPos);
+            cluster.sensors().set(MySqlCluster.REPLICATION_LAST_SLAVE_SNAPSHOT, replicationSnapshot);
+            master.sensors().set(MASTER_LOG_FILE, null);
+            master.sensors().set(MASTER_LOG_POSITION, null);
+            return replicationSnapshot;
+        }
+        return null;
     }
 
     private Future<ReplicationSnapshot> createMasterReplicationSnapshot(final MySqlNode master, final String dumpName) {
