@@ -19,7 +19,6 @@
 package org.apache.brooklyn.policy.jclouds.os;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -36,6 +35,7 @@ import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import static org.apache.brooklyn.util.ssh.BashCommands.sbinPath;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.jclouds.compute.config.AdminAccessConfiguration;
 import org.jclouds.scriptbuilder.functions.InitAdminAccess;
@@ -151,14 +151,14 @@ public class CreateUserPolicy extends AbstractPolicy implements SensorEventListe
         String cmd = adminAccess.render(scriptOsFamily);
 
         // Exec command to create the user
-        int result = machine.execScript(ImmutableMap.of(SshTool.PROP_RUN_AS_ROOT.getName(), true), "create-user-"+user, ImmutableList.of(cmd), getEnv());
+        int result = machine.execScript(ImmutableMap.of(SshTool.PROP_RUN_AS_ROOT.getName(), true), "create-user-"+user, ImmutableList.of(cmd), ImmutableMap.of("PATH", sbinPath()));
         if (result != 0) {
             throw new IllegalStateException("Failed to auto-generate user, using command "+cmd);
         }
 
         // Exec command to grant password-access to sshd (which may have been disabled earlier).
         cmd = new SshdConfig(ImmutableMap.of("PasswordAuthentication", "yes")).render(scriptOsFamily);
-        result = machine.execScript(ImmutableMap.of(SshTool.PROP_RUN_AS_ROOT.getName(), true), "create-user-"+user, ImmutableList.of(cmd), getEnv());
+        result = machine.execScript(ImmutableMap.of(SshTool.PROP_RUN_AS_ROOT.getName(), true), "create-user-"+user, ImmutableList.of(cmd), ImmutableMap.of("PATH", sbinPath()));
         if (result != 0) {
             throw new IllegalStateException("Failed to enable ssh-login-with-password, using command "+cmd);
         }
@@ -170,18 +170,12 @@ public class CreateUserPolicy extends AbstractPolicy implements SensorEventListe
                             user+" ALL = (ALL) NOPASSWD:ALL\n"+
                             "END_OF_JCLOUDS_FILE\n",
                     "chmod 0440 /etc/sudoers");
-            result = machine.execScript(ImmutableMap.of(SshTool.PROP_RUN_AS_ROOT.getName(), true), "add-user-to-sudoers-"+user, cmds, getEnv());
+            result = machine.execScript(ImmutableMap.of(SshTool.PROP_RUN_AS_ROOT.getName(), true), "add-user-to-sudoers-"+user, cmds, ImmutableMap.of("PATH", sbinPath()));
             if (result != 0) {
                 throw new IllegalStateException("Failed to auto-generate user, using command "+cmds);
             }
         }
         
         ((EntityLocal)entity).sensors().set(VM_USER_CREDENTIALS, creds);
-    }
-
-    private Map<String, String> getEnv() {
-        final String SBIN_PATH = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
-
-        return ImmutableMap.<String, String>of("PATH", SBIN_PATH);
     }
 }
