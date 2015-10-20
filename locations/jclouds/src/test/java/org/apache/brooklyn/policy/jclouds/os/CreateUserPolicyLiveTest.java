@@ -58,9 +58,19 @@ public class CreateUserPolicyLiveTest extends BrooklynAppLiveTestSupport {
     
     @Test(groups="Live")
     @SuppressWarnings("unchecked")
-    public void testLiveCreatesUser() throws Exception {
+    public void testLiveCreatesUserOnCentos() throws Exception {
         String locSpec = "jclouds:softlayer:ams01";
         ImmutableMap<String, String> locArgs = ImmutableMap.of("imageId", "CENTOS_6_64");
+        Location loc = mgmt.getLocationRegistry().resolve(locSpec, locArgs);
+        runTestCreatesUser((MachineProvisioningLocation<SshMachineLocation>) loc);
+    }
+    
+    @Test(groups="Live")
+    @SuppressWarnings("unchecked")
+    public void testLiveCreatesUserOnSuse() throws Exception {
+        // No SUSE images on Softlayer, so test on AWS
+        String locSpec = "jclouds:aws-ec2:us-east-1";
+        ImmutableMap<String, String> locArgs = ImmutableMap.of("imageId", "us-east-1/ami-8dd105e6", "loginUser", "ec2-user");
         Location loc = mgmt.getLocationRegistry().resolve(locSpec, locArgs);
         runTestCreatesUser((MachineProvisioningLocation<SshMachineLocation>) loc);
     }
