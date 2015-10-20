@@ -27,15 +27,15 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation.LocalhostMachine;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.net.HasNetworkAddresses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
-
-import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation.LocalhostMachine;
-import org.apache.brooklyn.util.guava.Maybe;
-import org.apache.brooklyn.util.net.HasNetworkAddresses;
 
 /** utilities for working with MachineLocations */
 public class Machines {
@@ -98,7 +98,16 @@ public class Machines {
             return Maybe.absent(new IllegalStateException("No instances of "+type+" available (in "+items+")"));
         return Maybe.of(result);
     }
-    
+
+    /**
+     * @deprecated since 0.9.0; see {@link #findUniqueMachineLocation(Iterable, Class)}, 
+     *             e.g. {@code findUniqueMachineLocation(locations, SshMachineLocation.class)}
+     */
+    @Deprecated
+    public static Maybe<SshMachineLocation> findUniqueSshMachineLocation(Iterable<? extends Location> locations) {
+        return findUniqueMachineLocation(locations, SshMachineLocation.class);
+    }
+
     public static Maybe<MachineLocation> findUniqueMachineLocation(Iterable<? extends Location> locations) {
         return findUniqueMachineLocation(locations, MachineLocation.class);
     }
