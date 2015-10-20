@@ -19,6 +19,9 @@ We can explore the management hierarchy of the application, which will show us t
 
 Clicking on the "My Web" entity will show the "Summary" tab,
 giving a very high level of what that component is doing. 
+Click on each of the child components in turn for more detail on that component. 
+Note that the cluster of web servers includes a "quarantine group", to which members of the 
+cluster that fail will be added. These are excluded from the load-balancer's targets.
 
 ![Exploring My Web.](images/my-web.png)
 
