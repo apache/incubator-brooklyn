@@ -12,7 +12,7 @@ We can explore the management hierarchy of the application, which will show us t
  * My Web Cluster (A `BasicApplication`)
      * My DB (A `MySqlNode`)
      * My Web (A `ControlledDynamicWebAppCluster`)
-        * Cluster of JBoss7 Servers (A `DynamicWebAppCluster`)
+        * Cluster of TomcatServer (A `DynamicWebAppCluster`)
         * NginxController (An `NginxController`)
 
 
@@ -48,8 +48,10 @@ Now click on the "Sensors" tab:
 these data feeds drive the real-time picture of the application.
 As you navigate in the tree at the left, you can see more targeted statistics coming in in real-time.
 
-Explore the sensors and the tree to find a URL where the webapp we just deployed is running
-and open that in a new tab. Quickly return to the "Sensors" tab and observe the requests-per-second sensor increase.  
+Explore the sensors and the tree to find the URL where the _NginxController_ for the webapp we just deployed is running. This can be found in '**My Web Cluster** -> **My Web** -> **NginxController** -> **_main.uri_**'.
+
+Quickly return to the **‘Brooklyn JS REST client’** web browser
+tab showing the "Sensors" and observe the '**My Web Cluster** -> **My Web** -> **Cluster of TomcatServer** -> **_webapp.reqs.perSec.last_**' sensor value increase.  
 
 
 
