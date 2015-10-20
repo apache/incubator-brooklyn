@@ -138,7 +138,11 @@ public class BashCommands {
 //    }
 
     public static String addSbinPathCommand() {
-        return "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
+        return "export PATH=" + sbinPath();
+    }
+
+    public static String sbinPath() {
+        return "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
     }
 
     /** executes a command, then as user tees the output to the given file. 
