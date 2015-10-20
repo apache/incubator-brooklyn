@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.swagger.annotations.Apidoc;
+import io.swagger.annotations.Api;
 import org.apache.brooklyn.rest.domain.PolicyConfigSummary;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/policies/{policy}/config")
-@Apidoc("Entity Policy Config")
+@Api(value = "org.apache.brooklyn.rest.api.PolicyConfigApi", description = "Entity Policy Config")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface PolicyConfigApi {

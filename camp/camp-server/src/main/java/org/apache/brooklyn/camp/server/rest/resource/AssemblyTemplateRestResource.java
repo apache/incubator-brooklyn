@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.camp.server.rest.resource;
 
+import io.swagger.annotations.Api;
 import java.net.URI;
 
 import javax.ws.rs.GET;
@@ -34,14 +35,13 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.camp.server.dto.AssemblyTemplateDto;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
-import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path(AssemblyTemplateRestResource.URI_PATH)
-@Apidoc("Assembly Template resources")
+@Api(value = "org.apache.brooklyn.camp.server.rest.resource.AssemblyTemplateRestResource", description = "Assembly Template resources")
 @Produces("application/json")
 public class AssemblyTemplateRestResource extends AbstractCampRestResource {
 

@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.LocationSpec;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 
@@ -43,7 +43,7 @@ import io.swagger.annotations.ApiParam;
 
 @SuppressWarnings("deprecation")
 @Path("/v1/locations")
-@Apidoc("Locations")
+@Api(value = "org.apache.brooklyn.rest.api.LocationApi", description = "Locations")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface LocationApi {

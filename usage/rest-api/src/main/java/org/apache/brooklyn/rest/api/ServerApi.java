@@ -34,18 +34,18 @@ import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityMode;
 import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
-import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;
 
 import com.google.common.annotations.Beta;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path("/v1/server")
-@Apidoc("Server")
+@Api(value = "org.apache.brooklyn.rest.api.ServerApi", description = "Server")
 @Produces(MediaType.APPLICATION_JSON)
 @Beta
 public interface ServerApi {

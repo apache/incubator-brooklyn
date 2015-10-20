@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.swagger.annotations.Apidoc;
+import io.swagger.annotations.Api;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/effectors")
-@Apidoc("Entity Effectors")
+@Api(value = "org.apache.brooklyn.rest.api.EffectorApi", description = "Entity Effectors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface EffectorApi {

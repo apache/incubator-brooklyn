@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
+import io.swagger.annotations.Api;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
@@ -28,7 +29,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.UsageStatistics;
 
 import io.swagger.annotations.ApiResponse;
@@ -37,7 +37,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path("/v1/usage")
-@Apidoc("Usage")
+@Api(value = "org.apache.brooklyn.rest.api.UsageApi", description = "Usage")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface UsageApi {

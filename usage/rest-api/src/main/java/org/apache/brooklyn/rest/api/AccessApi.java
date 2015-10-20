@@ -27,7 +27,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.AccessSummary;
 
 import com.google.common.annotations.Beta;
@@ -37,7 +36,7 @@ import io.swagger.annotations.ApiParam;
 
 @Beta
 @Path("/v1/access")
-@Apidoc("Access Control")
+@Api(value = "org.apache.brooklyn.rest.api.AccessApi", description = "Access Control")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface AccessApi {

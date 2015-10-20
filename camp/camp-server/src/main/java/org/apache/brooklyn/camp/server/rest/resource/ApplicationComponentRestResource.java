@@ -18,19 +18,19 @@
  */
 package org.apache.brooklyn.camp.server.rest.resource;
 
+import io.swagger.annotations.Api;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 import org.apache.brooklyn.camp.server.dto.ApplicationComponentDto;
-import org.apache.brooklyn.swagger.annotations.Apidoc;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path(ApplicationComponentRestResource.URI_PATH)
-@Apidoc("Application Component resources")
+@Api(value = "org.apache.brooklyn.camp.server.rest.resource.ApplicationComponentRestResource", description = "Application Component resources")
 @Produces("application/json")
 public class ApplicationComponentRestResource extends AbstractCampRestResource {
 

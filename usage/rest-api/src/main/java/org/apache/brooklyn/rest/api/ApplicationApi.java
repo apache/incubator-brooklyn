@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,6 @@ import javax.ws.rs.core.Response;
 
 import org.codehaus.jackson.JsonNode;
 
-import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.EntitySummary;
@@ -47,7 +47,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path("/v1/applications")
-@Apidoc("Applications")
+@Api(value = "org.apache.brooklyn.rest.api.ApplicationApi", description = "Applications")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface ApplicationApi {

@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.camp.server.rest.resource;
 
+import io.swagger.annotations.Api;
 import javax.ws.rs.Path;
 
-import org.apache.brooklyn.swagger.annotations.Apidoc;
 
 @Path(ApidocRestResource.API_URI_PATH)
-@Apidoc("Web API Documentation")
+@Api(value = "org.apache.brooklyn.camp.server.rest.resource.ApidocRestResource", description = "Web API Documentation")
 public class ApidocRestResource extends org.apache.brooklyn.rest.apidoc.ApidocResource {
 
     public static final String API_URI_PATH = PlatformRestResource.CAMP_URI_PATH + "/apidoc";

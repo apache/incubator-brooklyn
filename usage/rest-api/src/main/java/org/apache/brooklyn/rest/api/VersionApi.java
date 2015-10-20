@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.swagger.annotations.Apidoc;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 import javax.ws.rs.Consumes;
@@ -28,7 +28,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("/v1/version")
-@Apidoc("Version")
+@Api(value = "org.apache.brooklyn.rest.api.VersionApi", description = "Version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 /** @deprecated since 0.7.0; use /v1/server/version */
