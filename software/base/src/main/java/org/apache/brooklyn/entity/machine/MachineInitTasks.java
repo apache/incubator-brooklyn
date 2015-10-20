@@ -18,12 +18,15 @@
  */
 package org.apache.brooklyn.entity.machine;
 
+import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,19 +108,24 @@ public class MachineInitTasks {
                 iptablesRules.add(IptablesCommands.saveIptablesRules());
             }
             List<String> batch = Lists.newArrayList();
+
+            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+            ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDOUT, outStream));
+            Tasks.addTagDynamically(BrooklynTaskTags.tagForStreamSoft(BrooklynTaskTags.STREAM_STDERR, errStream));
             // Some entities, such as Riak (erlang based) have a huge range of ports, which leads to a script that
             // is too large to run (fails with a broken pipe). Batch the rules into batches of 50
             for (String rule : iptablesRules) {
                 batch.add(rule);
                 if (batch.size() == 50) {
-                    machine.execCommands("Inserting iptables rules, 50 command batch", batch);
+                    machine.execCommands(ImmutableMap.of("out", outStream, "err", errStream), "Inserting iptables rules, 50 command batch", batch);
                     batch.clear();
                 }
             }
             if (batch.size() > 0) {
-                machine.execCommands("Inserting iptables rules", batch);
+                machine.execCommands(ImmutableMap.of("out", outStream, "err", errStream), "Inserting iptables rules", batch);
             }
-            machine.execCommands("List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
+            machine.execCommands(ImmutableMap.of("out", outStream, "err", errStream), "List iptables rules", ImmutableList.of(IptablesCommands.listIptablesRule()));
         }
     }
 
