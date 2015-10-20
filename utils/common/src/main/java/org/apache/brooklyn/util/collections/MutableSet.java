@@ -118,6 +118,11 @@ public class MutableSet<V> extends LinkedHashSet<V> {
 
         public Builder() {}
 
+        public Builder<V> addIfNotNull(V value) {
+            if (value != null) result.add(value);
+            return this;
+        }
+
         public Builder<V> add(V value) {
             result.add(value);
             return this;
