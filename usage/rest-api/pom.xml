@@ -82,9 +82,8 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-swagger-annotations</artifactId>
-            <version>${project.version}</version>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
