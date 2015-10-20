@@ -170,7 +170,15 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public void init() {
         super.init();
-        sensors().set(NEXT_CLUSTER_MEMBER_ID, new NextClusterMemberIdSupplier());
+        initialiseMemberId();
+    }
+
+    private void initialiseMemberId() {
+        synchronized (mutex) {
+            if (sensors().get(NEXT_CLUSTER_MEMBER_ID) == null) {
+                sensors().set(NEXT_CLUSTER_MEMBER_ID, new NextClusterMemberIdSupplier());
+            }
+        }
     }
 
     @Override
@@ -778,11 +786,13 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     @Override
-    public Entity addNode(Location loc, Map<?,?> extraFlags) {
-        Map<?,?> createFlags = MutableMap.builder()
+    public Entity addNode(Location loc, Map<?, ?> extraFlags) {
+        // In case subclasses are foolish and do not call super.init() when overriding.
+        initialiseMemberId();
+        Map<?, ?> createFlags = MutableMap.builder()
                 .putAll(getCustomChildFlags())
                 .putAll(extraFlags)
-                .put(CLUSTER_MEMBER_ID, getAttribute(NEXT_CLUSTER_MEMBER_ID).get())
+                .put(CLUSTER_MEMBER_ID, sensors().get(NEXT_CLUSTER_MEMBER_ID).get())
                 .build();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] { this, getId(), createFlags });
@@ -797,7 +807,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         // Continue to call manage(), because some uses of NodeFactory (in tests) still instantiate the
         // entity via its constructor
         Entities.manage(entity);
-        
+
         addMember(entity);
         return entity;
     }
