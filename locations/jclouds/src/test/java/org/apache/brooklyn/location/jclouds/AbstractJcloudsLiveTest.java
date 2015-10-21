@@ -60,6 +60,9 @@ public class AbstractJcloudsLiveTest {
     public static final String SOFTLAYER_PROVIDER = "softlayer";
     public static final String SOFTLAYER_AMS01_REGION_NAME = "ams01";
     
+    public static final String GCE_PROVIDER = "google-compute-engine";
+    public static final String GCE_USCENTRAL_REGION_NAME = "us-central1-a";
+    
     protected BrooklynProperties brooklynProperties;
     protected LocalManagementContext managementContext;
     
