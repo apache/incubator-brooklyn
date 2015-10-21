@@ -18,93 +18,92 @@
  */
 package org.apache.brooklyn.util.collections;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 @Test
-public class MutableListTest {
+public class MutableSetTest {
 
     public void testBuilderAddArray() throws Exception {
-        List<Object> vals = MutableList.builder().addAll(new Object[] {1,2,3}).build();
-        Assert.assertEquals(vals, ImmutableList.of(1,2,3));
+        Set<Object> vals = MutableSet.builder().addAll(new Object[] {1,2,3}).build();
+        Assert.assertEquals(vals, ImmutableSet.of(1,2,3));
     }
     
     public void testBuilderAddVarargs() throws Exception {
-        List<Object> vals = MutableList.builder().add(1,2,3).build();
-        Assert.assertEquals(vals, ImmutableList.of(1,2,3));
+        Set<Object> vals = MutableSet.builder().add(1,2,3).build();
+        Assert.assertEquals(vals, ImmutableSet.of(1,2,3));
     }
     
     public void testBuilderAddIfNotNull() throws Exception {
-        List<Object> vals = MutableList.builder().addIfNotNull(1).addIfNotNull(null).build();
-        Assert.assertEquals(vals, ImmutableList.of(1));
+        Set<Object> vals = MutableSet.builder().addIfNotNull(1).addIfNotNull(null).build();
+        Assert.assertEquals(vals, ImmutableSet.of(1));
     }
     
     public void testBuilderAddIterable() throws Exception {
-        List<Object> vals = MutableList.builder().addAll(ImmutableList.of(1,2)).addAll(ImmutableList.of(2,3)).build();
-        Assert.assertEquals(vals, ImmutableList.of(1,2,2,3));
+        Set<Object> vals = MutableSet.builder().addAll(ImmutableSet.of(1,2)).addAll(ImmutableSet.of(2,3)).build();
+        Assert.assertEquals(vals, ImmutableSet.of(1,2,3));
     }
     
     public void testBuilderAddIterator() throws Exception {
-        List<Object> vals = MutableList.builder().addAll(ImmutableList.of(1,2).iterator()).build();
-        Assert.assertEquals(vals, ImmutableList.of(1,2));
+        Set<Object> vals = MutableSet.builder().addAll(ImmutableSet.of(1,2).iterator()).build();
+        Assert.assertEquals(vals, ImmutableSet.of(1,2));
     }
     
     public void testBuilderRemoval() throws Exception {
-        List<Object> vals = MutableList.builder()
+        Set<Object> vals = MutableSet.builder()
                 .add(1,2,3)
                 .remove(2)
                 .add(4)
                 .build();
-        Assert.assertEquals(vals, ImmutableList.of(1,3,4));
+        Assert.assertEquals(vals, ImmutableSet.of(1,3,4));
     }
     
     public void testBuilderRemoveAll() throws Exception {
-        List<Object> vals = MutableList.builder()
+        Set<Object> vals = MutableSet.builder()
                 .add(1,2,3)
-                .removeAll(ImmutableList.of(2,3))
+                .removeAll(ImmutableSet.of(2,3))
                 .add(4)
                 .build();
-        Assert.assertEquals(vals, ImmutableList.of(1,4));
+        Assert.assertEquals(vals, ImmutableSet.of(1,4));
     }
     
     public void testEqualsExact() {
-        List<Object> a = MutableList.<Object>of("a", 1, "b", false);
-        List<Object> b = MutableList.<Object>of("a", 1, "b", false);
+        Set<Object> a = MutableSet.<Object>of("a", 1, "b", false);
+        Set<Object> b = MutableSet.<Object>of("a", 1, "b", false);
         Assert.assertEquals(a, b);
     }
     
-    public void testNotEqualsUnordered() {
-        List<Object> a = MutableList.<Object>of("a", 1, "b", false);
-        List<Object> b = MutableList.<Object>of("b", false, "a", 1);
-        Assert.assertNotEquals(a, b);
+    public void testEqualsUnordered() {
+        Set<Object> a = MutableSet.<Object>of("a", 1, "b", false);
+        Set<Object> b = MutableSet.<Object>of("b", false, "a", 1);
+        Assert.assertEquals(a, b);
     }
 
     public void testEqualsDifferentTypes() {
-        List<Object> a = MutableList.<Object>of("a", 1, "b", false);
-        List<Object> b = Arrays.<Object>asList("a", 1, "b", false);
+        Set<?> a = MutableSet.<Object>of("a", 1, "b", false);
+        Set<?> b = ImmutableSet.of("a", 1, "b", false);
         Assert.assertEquals(a, b);
         Assert.assertEquals(b, a);
     }
 
     public void testEqualsDifferentTypes2() {
-        List<Object> a = MutableList.<Object>of("http");
-        List<String> b = Arrays.<String>asList("http");
+        Set<Object> a = MutableSet.<Object>of("http");
+        Set<?> b = ImmutableSet.of("http");
         Assert.assertEquals(a, b);
         Assert.assertEquals(b, a);
     }
 
     public void testContainingNullAndUnmodifiable() {
-        MutableList<Object> x = MutableList.<Object>of("x", null);
+        MutableSet<Object> x = MutableSet.<Object>of("x", null);
         Assert.assertTrue(x.contains(null));
         
-        List<Object> x1 = x.asUnmodifiable();
-        List<Object> x2 = x.asUnmodifiableCopy();
-        List<Object> x3 = x.asImmutableCopy();
+        Set<Object> x1 = x.asUnmodifiable();
+        Set<Object> x2 = x.asUnmodifiableCopy();
+        Set<Object> x3 = x.asImmutableCopy();
         
         x.remove(null);
         Assert.assertFalse(x.contains(null));
