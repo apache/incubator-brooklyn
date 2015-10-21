@@ -546,6 +546,10 @@ public class BasicExecutionManager implements ExecutionManager {
 
     @SuppressWarnings("unchecked")
     protected <T> Task<T> submitNewTask(final Map<?,?> flags, final Task<T> task) {
+        if (log.isTraceEnabled()) log.trace("Submitting task {} ({}), with flags {}, and tags {}, job {}", 
+                new Object[] {task.getId(), task, flags, task.getTags(), 
+                (task instanceof TaskInternal ? ((TaskInternal<T>)task).getJob() : "<unavailable>")});
+        
         if (task instanceof ScheduledTask)
             return (Task<T>) submitNewScheduledTask(flags, (ScheduledTask)task);
         
