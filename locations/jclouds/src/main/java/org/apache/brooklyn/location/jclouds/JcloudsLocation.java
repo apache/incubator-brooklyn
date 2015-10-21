@@ -2515,8 +2515,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         LoginCredentials nodeCreds = node.getCredentials();
         String nodeUser = nodeCreds.getUser();
         String loginUserOverride = setup.get(LOGIN_USER);
-        Set<String> users = MutableSet.<String>builder().add(nodeUser).add(loginUserOverride).build();
-        
+        Set<String> users = MutableSet.of();
+
+        if (Strings.isNonBlank(nodeUser)) {
+            users.add(nodeUser);
+        }
+
+        if (Strings.isNonBlank(loginUserOverride)) {
+            users.add(loginUserOverride);
+        }
+
         // See https://issues.apache.org/jira/browse/BROOKLYN-186
         // Handle where jclouds gives us the wrong login user (!) and both a password + ssh key.
         // Try all the permutations to find the one that works.
