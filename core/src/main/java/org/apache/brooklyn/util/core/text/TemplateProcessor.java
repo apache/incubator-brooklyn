@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.util.core.text;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +35,7 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.sensor.Sensors;
@@ -115,6 +118,11 @@ public class TemplateProcessor {
         return processTemplateContents(templateContents, new EntityAndMapTemplateModel(managementContext, extraSubstitutions));
     }
 
+    /** Processes template contents according to {@link EntityAndMapTemplateModel}. */
+    public static String processTemplateContents(String templateContents, Location location, Map<String,? extends Object> extraSubstitutions) {
+        return processTemplateContents(templateContents, new LocationAndMapTemplateModel((LocationInternal)location, extraSubstitutions));
+    }
+
     /**
      * A Freemarker {@link TemplateHashModel} which will correctly handle entries of the form "a.b" in this map,
      * matching against template requests for "${a.b}".
@@ -181,7 +189,7 @@ public class TemplateProcessor {
     
     /** FreeMarker {@link TemplateHashModel} which resolves keys inside the given entity or management context.
      * Callers are required to include dots for dot-separated keys.
-     * Freemarker will only due this when in inside bracket notation in an outer map, as in <code>${outer['a.b.']}</code>; 
+     * Freemarker will only do this when in inside bracket notation in an outer map, as in <code>${outer['a.b.']}</code>; 
      * as a result this is intended only for use by {@link EntityAndMapTemplateModel} where 
      * a caller has used bracked notation, as in <code>${mgmt['key.subkey']}</code>. */
     protected static final class EntityConfigTemplateModel implements TemplateHashModel {
@@ -189,13 +197,87 @@ public class TemplateProcessor {
         protected final ManagementContext mgmt;
 
         protected EntityConfigTemplateModel(EntityInternal entity) {
-            this.entity = entity;
+            this.entity = checkNotNull(entity, "entity");
             this.mgmt = entity.getManagementContext();
         }
 
-        protected EntityConfigTemplateModel(ManagementContext mgmt) {
-            this.entity = null;
-            this.mgmt = mgmt;
+        @Override
+        public boolean isEmpty() { return false; }
+
+        @Override
+        public TemplateModel get(String key) throws TemplateModelException {
+            try {
+                Object result = entity.getConfig(ConfigKeys.builder(Object.class).name(key).build());
+                
+                if (result==null)
+                    result = mgmt.getConfig().getConfig(ConfigKeys.builder(Object.class).name(key).build());
+                
+                if (result!=null)
+                    return wrapAsTemplateModel( result );
+                
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                throw new IllegalStateException("Error accessing config '"+key+"'"+" on "+entity+": "+e, e);
+            }
+            
+            return null;
+        }
+        
+        @Override
+        public String toString() {
+            return getClass().getName()+"["+entity+"]";
+        }
+    }
+
+    /** FreeMarker {@link TemplateHashModel} which resolves keys inside the given management context.
+     * Callers are required to include dots for dot-separated keys.
+     * Freemarker will only do this when in inside bracket notation in an outer map, as in <code>${outer['a.b.']}</code>; 
+     * as a result this is intended only for use by {@link EntityAndMapTemplateModel} where 
+     * a caller has used bracked notation, as in <code>${mgmt['key.subkey']}</code>. */
+    protected static final class MgmtConfigTemplateModel implements TemplateHashModel {
+        protected final ManagementContext mgmt;
+
+        protected MgmtConfigTemplateModel(ManagementContext mgmt) {
+            this.mgmt = checkNotNull(mgmt, "mgmt");
+        }
+
+        @Override
+        public boolean isEmpty() { return false; }
+
+        @Override
+        public TemplateModel get(String key) throws TemplateModelException {
+            try {
+                Object result = mgmt.getConfig().getConfig(ConfigKeys.builder(Object.class).name(key).build());
+                
+                if (result!=null)
+                    return wrapAsTemplateModel( result );
+                
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                throw new IllegalStateException("Error accessing config '"+key+"': "+e, e);
+            }
+            
+            return null;
+        }
+        
+        @Override
+        public String toString() {
+            return getClass().getName()+"["+mgmt+"]";
+        }
+    }
+    
+    /** FreeMarker {@link TemplateHashModel} which resolves keys inside the given location.
+     * Callers are required to include dots for dot-separated keys.
+     * Freemarker will only do this when in inside bracket notation in an outer map, as in <code>${outer['a.b.']}</code>; 
+     * as a result this is intended only for use by {@link LocationAndMapTemplateModel} where 
+     * a caller has used bracked notation, as in <code>${mgmt['key.subkey']}</code>. */
+    protected static final class LocationConfigTemplateModel implements TemplateHashModel {
+        protected final LocationInternal location;
+        protected final ManagementContext mgmt;
+
+        protected LocationConfigTemplateModel(LocationInternal location) {
+            this.location = checkNotNull(location, "location");
+            this.mgmt = location.getManagementContext();
         }
 
         @Override
@@ -206,8 +288,8 @@ public class TemplateProcessor {
             try {
                 Object result = null;
                 
-                if (entity!=null)
-                    result = entity.getConfig(ConfigKeys.builder(Object.class).name(key).build());
+                result = location.getConfig(ConfigKeys.builder(Object.class).name(key).build());
+                
                 if (result==null && mgmt!=null)
                     result = mgmt.getConfig().getConfig(ConfigKeys.builder(Object.class).name(key).build());
                 
@@ -217,7 +299,7 @@ public class TemplateProcessor {
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 throw new IllegalStateException("Error accessing config '"+key+"'"
-                    + (entity!=null ? " on "+entity : "")+": "+e, e);
+                    + (location!=null ? " on "+location : "")+": "+e, e);
             }
             
             return null;
@@ -225,7 +307,7 @@ public class TemplateProcessor {
         
         @Override
         public String toString() {
-            return getClass().getName()+"["+entity+"]";
+            return getClass().getName()+"["+location+"]";
         }
     }
 
@@ -311,10 +393,10 @@ public class TemplateProcessor {
                 if (entity!=null)
                     return new EntityConfigTemplateModel(entity);
                 else
-                    return new EntityConfigTemplateModel(mgmt);
+                    return new MgmtConfigTemplateModel(mgmt);
             }
             if ("mgmt".equals(key)) {
-                return new EntityConfigTemplateModel(mgmt);
+                return new MgmtConfigTemplateModel(mgmt);
             }
 
             if ("driver".equals(key) && driver!=null)
@@ -348,6 +430,63 @@ public class TemplateProcessor {
         @Override
         public String toString() {
             return getClass().getName()+"["+(entity!=null ? entity : mgmt)+"]";
+        }
+    }
+
+    /**
+     * Provides access to config on an entity or management context, using
+     * <code>${config['entity.config.key']}</code> or <code>${mgmt['brooklyn.properties.key']}</code> notation,
+     * and also allowing access to <code>getX()</code> methods on entity (interface) or driver
+     * using <code>${entity.x}</code> or <code><${driver.x}</code>.
+     * Optional extra properties can be supplied, treated as per {@link DotSplittingTemplateModel}.
+     */
+    protected static final class LocationAndMapTemplateModel implements TemplateHashModel {
+        protected final LocationInternal location;
+        protected final ManagementContext mgmt;
+        protected final DotSplittingTemplateModel extraSubstitutionsModel;
+
+        protected LocationAndMapTemplateModel(LocationInternal location, Map<String,? extends Object> extraSubstitutions) {
+            this.location = checkNotNull(location, "location");
+            this.mgmt = location.getManagementContext();
+            this.extraSubstitutionsModel = new DotSplittingTemplateModel(extraSubstitutions);
+        }
+
+        @Override
+        public boolean isEmpty() { return false; }
+
+        @Override
+        public TemplateModel get(String key) throws TemplateModelException {
+            if (extraSubstitutionsModel.contains(key))
+                return wrapAsTemplateModel( extraSubstitutionsModel.get(key) );
+
+            if ("location".equals(key))
+                return wrapAsTemplateModel( location );
+            if ("config".equals(key)) {
+                return new LocationConfigTemplateModel(location);
+            }
+            if ("mgmt".equals(key)) {
+                return new MgmtConfigTemplateModel(mgmt);
+            }
+
+            if (mgmt!=null) {
+                // TODO deprecated in 0.7.0, remove after next version
+                // ie not supported to access global props without qualification
+                Object result = mgmt.getConfig().getConfig(ConfigKeys.builder(Object.class).name(key).build());
+                if (result!=null) { 
+                    log.warn("Deprecated access of global brooklyn.properties value for "+key+"; should be qualified with 'mgmt.'");
+                    return wrapAsTemplateModel( result );
+                }
+            }
+            
+            if ("javaSysProps".equals(key))
+                return wrapAsTemplateModel( System.getProperties() );
+
+            return null;
+        }
+        
+        @Override
+        public String toString() {
+            return getClass().getName()+"["+location+"]";
         }
     }
 

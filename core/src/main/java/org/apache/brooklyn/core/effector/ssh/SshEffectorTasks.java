@@ -200,6 +200,13 @@ public class SshEffectorTasks {
         }
     }
 
+    /**
+     * @since 0.9.0
+     */
+    public static SshEffectorTaskFactory<Integer> ssh(SshMachineLocation machine, String ...commands) {
+        return new SshEffectorTaskFactory<Integer>(machine, commands);
+    }
+
     public static SshEffectorTaskFactory<Integer> ssh(String ...commands) {
         return new SshEffectorTaskFactory<Integer>(commands);
     }
