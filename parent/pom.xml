@@ -140,7 +140,6 @@
         <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
         <jetty-orbit-javax-servlet.version>3.0.0.v201112011016</jetty-orbit-javax-servlet.version>
         <jcommander.version>1.27</jcommander.version>
-        <xml-apis.version>1.0.b2</xml-apis.version>
         <jsr250-api.version>1.0</jsr250-api.version>
         <guice.version>3.0</guice.version>
         <javax-inject.version>1</javax-inject.version>
@@ -344,11 +343,6 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
                 <version>${httpclient.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>xml-apis</groupId>
-                <artifactId>xml-apis</artifactId>
-                <version>${xml-apis.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>
