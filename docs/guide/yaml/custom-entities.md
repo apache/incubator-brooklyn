@@ -97,6 +97,7 @@ so that the `$message` we passed above gets logged and reported back:
       - type: org.apache.brooklyn.core.sensor.ssh.SshCommandSensor
         brooklyn.config:
           name: output.last
+          period: 1s
           command: tail -1 server-input
 
 This is still a simple example, but worth going through carefully.
