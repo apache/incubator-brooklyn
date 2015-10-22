@@ -72,11 +72,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-utils-groovy</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-policy</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -100,10 +95,6 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
