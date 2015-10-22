@@ -124,6 +124,11 @@ public class Exceptions {
         return (T) Iterables.tryFind(getCausalChain(from), instanceOf(clazz)).orNull();
     }
 
+    /** returns the first exception that matches the filter, or null */
+    public static Throwable getFirstThrowableMatching(Throwable from, Predicate<? super Throwable> filter) {
+        return Iterables.tryFind(getCausalChain(from), filter).orNull();
+    }
+
     /** returns the first exception in the call chain which is not of common uninteresting types
      * (ie excluding ExecutionException and PropagatedRuntimeExceptions); 
      * or the original throwable if all are uninteresting 
