@@ -28,7 +28,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("/v1/version")
-@Api(value = "org.apache.brooklyn.rest.api.VersionApi", description = "Version")
+@Api("Version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 /** @deprecated since 0.7.0; use /v1/server/version */

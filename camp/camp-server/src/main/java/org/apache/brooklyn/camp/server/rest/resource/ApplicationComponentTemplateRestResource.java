@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path(ApplicationComponentTemplateRestResource.URI_PATH)
-@Api(value = "org.apache.brooklyn.camp.server.rest.resource.ApplicationComponentTemplateRestResource", description = "Application Component Template resources")
+@Api("Application Component Template resources")
 @Produces("application/json")
 public class ApplicationComponentTemplateRestResource extends AbstractCampRestResource {
 

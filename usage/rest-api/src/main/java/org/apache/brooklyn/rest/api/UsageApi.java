@@ -37,7 +37,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path("/v1/usage")
-@Api(value = "org.apache.brooklyn.rest.api.UsageApi", description = "Usage")
+@Api("Usage")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface UsageApi {

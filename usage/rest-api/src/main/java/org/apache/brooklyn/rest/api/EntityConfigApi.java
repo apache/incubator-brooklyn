@@ -40,7 +40,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path("/v1/applications/{application}/entities/{entity}/config")
-@Api(value = "org.apache.brooklyn.rest.api.EntityConfigApi", description = "Entity Config")
+@Api("Entity Config")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface EntityConfigApi {

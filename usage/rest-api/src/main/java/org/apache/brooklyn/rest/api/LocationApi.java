@@ -43,7 +43,7 @@ import io.swagger.annotations.ApiParam;
 
 @SuppressWarnings("deprecation")
 @Path("/v1/locations")
-@Api(value = "org.apache.brooklyn.rest.api.LocationApi", description = "Locations")
+@Api("Locations")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface LocationApi {

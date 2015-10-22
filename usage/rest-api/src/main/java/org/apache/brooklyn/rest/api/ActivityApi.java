@@ -32,7 +32,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 @Path("/v1/activities")
-@Api(value = "org.apache.brooklyn.rest.api.ActivityApi", description = "Activities")
+@Api("Activities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface ActivityApi {

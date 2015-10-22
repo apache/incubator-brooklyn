@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/policies")
-@Api(value = "org.apache.brooklyn.rest.api.PolicyApi", description = "Entity Policies")
+@Api("Entity Policies")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface PolicyApi {

@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/effectors")
-@Api(value = "org.apache.brooklyn.rest.api.EffectorApi", description = "Entity Effectors")
+@Api("Entity Effectors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface EffectorApi {

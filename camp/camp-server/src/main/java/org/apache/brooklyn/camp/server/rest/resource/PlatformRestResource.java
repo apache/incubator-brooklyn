@@ -43,7 +43,7 @@ import io.swagger.annotations.ApiOperation;
 //import io.brooklyn.camp.rest.apidoc.Apidoc;
 
 @Path(PlatformRestResource.CAMP_URI_PATH)
-@Api(value = "org.apache.brooklyn.camp.server.rest.resource.PlatformRestResource", description = "Platform (root)")
+@Api("Platform (root)")
 @Produces("application/json")
 public class PlatformRestResource extends AbstractCampRestResource {
 

@@ -41,7 +41,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path("/v1/applications/{application}/entities/{entity}/sensors")
-@Api(value = "org.apache.brooklyn.rest.api.SensorApi", description = "Entity Sensors")
+@Api("Entity Sensors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface SensorApi {

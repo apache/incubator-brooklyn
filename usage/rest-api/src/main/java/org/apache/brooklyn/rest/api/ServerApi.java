@@ -45,7 +45,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path("/v1/server")
-@Api(value = "org.apache.brooklyn.rest.api.ServerApi", description = "Server")
+@Api("Server")
 @Produces(MediaType.APPLICATION_JSON)
 @Beta
 public interface ServerApi {

@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities")
-@Api(value = "org.apache.brooklyn.rest.api.EntityApi", description = "Entities")
+@Api("Entities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface EntityApi {

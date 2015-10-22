@@ -23,7 +23,7 @@ import javax.ws.rs.Path;
 
 
 @Path(ApidocRestResource.API_URI_PATH)
-@Api(value = "org.apache.brooklyn.camp.server.rest.resource.ApidocRestResource", description = "Web API Documentation")
+@Api("Web API Documentation")
 public class ApidocRestResource extends org.apache.brooklyn.rest.apidoc.ApiListingResource {
 
     public static final String API_URI_PATH = PlatformRestResource.CAMP_URI_PATH + "/apidoc";

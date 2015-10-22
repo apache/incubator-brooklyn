@@ -36,7 +36,7 @@ import io.swagger.annotations.ApiParam;
 
 @Beta
 @Path("/v1/access")
-@Api(value = "org.apache.brooklyn.rest.api.AccessApi", description = "Access Control")
+@Api("Access Control")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface AccessApi {

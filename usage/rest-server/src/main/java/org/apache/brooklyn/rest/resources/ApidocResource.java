@@ -24,7 +24,7 @@ import javax.ws.rs.Path;
 /**
  * @author Ciprian Ciubotariu <cheepeero@gmx.net>
  */
-@Api(value = "org.apache.brooklyn.rest.resources.ApidocResource", description = "API Documentation")
+@Api("API Documentation")
 @Path("/v1/apidoc")
 public class ApidocResource extends org.apache.brooklyn.rest.apidoc.ApiListingResource {
 

@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Path(AssemblyRestResource.URI_PATH)
-@Api(value = "org.apache.brooklyn.camp.server.rest.resource.AssemblyRestResource", description = "Assembly resources")
+@Api("Assembly resources")
 @Produces("application/json")
 public class AssemblyRestResource extends AbstractCampRestResource {
 
