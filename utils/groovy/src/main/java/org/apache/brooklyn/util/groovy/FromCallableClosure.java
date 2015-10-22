@@ -18,13 +18,21 @@
  */
 package org.apache.brooklyn.util.groovy;
 
-/** Maven Central requires javadoc to promote as a release. This seemed to happen when this was built by maven as a bundle,
- * but now that it is built as a jar it does not. This class exists only to provide that javadoc.
- * <p>
- * Note the groovy code does javadoc but the maven build is not picking it up. It *is* generated as part of the site build.
- */
-public class JavadocDummy {
+import java.util.concurrent.Callable;
 
-    private JavadocDummy() {}
-    
+import groovy.lang.Closure;
+
+public class FromCallableClosure<T> extends Closure<T> {
+    private static final long serialVersionUID = 1L;
+    private Callable<T> job;
+
+    public FromCallableClosure(Class<GroovyJavaMethods> owner, Callable<T> job) {
+        super(owner, owner);
+        this.job = job;
+    }
+
+    public T doCall() throws Exception {
+        return job.call();
+    }
+
 }
