@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.ssh.BashCommands.sbinPath;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1643,7 +1644,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         sshLoc = new SshMachineLocation(sshProps);
                     }
     
-                    int exitcode = sshLoc.execScript(execProps, "create-user", commands);
+                    // BROOKLYN-188: for SUSE, need to specify the path (for groupadd, useradd, etc)
+                    Map<String, ?> env = ImmutableMap.of("PATH", sbinPath());
+                    
+                    int exitcode = sshLoc.execScript(execProps, "create-user", commands, env);
+
                     if (exitcode != 0) {
                         LOG.warn("exit code {} when creating user for {}; usage may subsequently fail", exitcode, node);
                     }
