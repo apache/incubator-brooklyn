@@ -43,6 +43,7 @@ import org.apache.brooklyn.rest.util.FormMapProvider;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 
 import com.google.common.collect.Iterables;
+import io.swagger.jaxrs.listing.SwaggerSerializers;
 
 @SuppressWarnings("deprecation")
 public class BrooklynRestApi {
@@ -69,6 +70,7 @@ public class BrooklynRestApi {
 
     public static Iterable<Object> getApidocResources() {
         List<Object> resources = new ArrayList<Object>();
+        resources.add(new SwaggerSerializers());
         resources.add(new ApidocResource());
         return resources;
     }

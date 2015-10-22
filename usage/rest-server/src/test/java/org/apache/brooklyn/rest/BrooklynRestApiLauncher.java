@@ -100,7 +100,8 @@ public class BrooklynRestApiLauncher {
             RequestTaggingFilter.class,
             BrooklynPropertiesSecurityFilter.class,
             LoggingFilter.class,
-            HaMasterCheckFilter.class);
+            HaMasterCheckFilter.class,
+            SwaggerFilter.class);
 
     private boolean forceUseOfDefaultCatalogWithJavaClassPath = false;
     private Class<? extends SecurityProvider> securityProvider;
@@ -309,7 +310,7 @@ public class BrooklynRestApiLauncher {
     }
 
     public static void main(String[] args) throws Exception {
-        startRestResourcesViaWebXml();
+        startRestResourcesViaFilter();
         log.info("Press Ctrl-C to quit.");
     }
 
