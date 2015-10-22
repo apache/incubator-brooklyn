@@ -16,26 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.database
+package org.apache.brooklyn.entity.database;
 
-import org.apache.brooklyn.core.config.BasicConfigKey
-
-/**
- * Intended to represent a SQL relational database service.
- *
- * TODO work in progress
- */
-public interface Database {
-    BasicConfigKey<String> SQL_VERSION = [ String, "database.sql.version", "SQL version" ]
-
-    Collection<Schema> getSchemas();
-
-    void createSchema(String name, Map properties);
-
-    void addSchema(Schema schema);
-
-    void removeSchema(String schemaName);
-}
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 
 /**
  * Intended to represent a SQL database schema.
@@ -43,11 +27,11 @@ public interface Database {
  * TODO work in progress
  */
 public interface Schema {
-    BasicConfigKey<String> SCHEMA_NAME = [ String, "database.schema", "Database schema name" ]
+    ConfigKey<String> SCHEMA_NAME = ConfigKeys.newStringConfigKey("database.schema", "Database schema name");
 
     void create();
-    
+
     void remove();
-    
+
     String getName();
 }

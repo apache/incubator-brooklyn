@@ -16,27 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.enricher.stock
+package org.apache.brooklyn.enricher.stock;
 
-import java.util.concurrent.Callable
+import java.util.Arrays;
+import java.util.concurrent.Callable;
 
-import org.apache.brooklyn.api.entity.EntitySpec
-import org.apache.brooklyn.api.sensor.AttributeSensor
-import org.apache.brooklyn.core.test.entity.TestApplication
-import org.apache.brooklyn.core.test.entity.TestEntity
-import org.apache.brooklyn.enricher.stock.SensorTransformingEnricher;
-import org.apache.brooklyn.core.entity.Entities
-import org.apache.brooklyn.core.location.SimulatedLocation
-import org.apache.brooklyn.core.sensor.BasicAttributeSensor
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.location.SimulatedLocation;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensor;
+import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.util.collections.MutableMap
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.testng.Assert
-import org.testng.annotations.AfterMethod
-import org.testng.annotations.BeforeMethod
-import org.testng.annotations.Test
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
+import com.google.common.base.Function;
+
+@SuppressWarnings("deprecation")
 public class TransformingEnricherDeprecatedTest {
 
     public static final Logger log = LoggerFactory.getLogger(TransformingEnricherDeprecatedTest.class);
@@ -66,18 +69,24 @@ public class TransformingEnricherDeprecatedTest {
     
     @Test
     public void testTransformingEnricher() throws InterruptedException {
-        final SensorTransformingEnricher e1 = new SensorTransformingEnricher<Integer,Long>(intSensorA, target, 
-            { 2*it });
+        final SensorTransformingEnricher<Integer, Long> e1 = new SensorTransformingEnricher<Integer,Long>(intSensorA, target, new DoubleFn());
         
         producer.sensors().set(intSensorA, 3);
         //ensure previous values get picked up
         producer.enrichers().add(e1);
 
-        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), 
-                new Callable<Object>() { public Object call() {
+        Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Callable<Object>() { 
+                @Override
+                public Object call() {
                     Assert.assertEquals(producer.getAttribute(target), (Long)((long)6));
                     return null;
                 }});
+    }
 
+    private static class DoubleFn implements Function<Integer, Long> {
+        @Override
+        public Long apply(Integer i) {
+            return ((long)i)*2;
+        }
     }
 }

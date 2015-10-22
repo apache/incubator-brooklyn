@@ -121,18 +121,6 @@
                     </instructions>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <inherited>true</inherited>
-                <executions>
-                    <execution>
-                        <id>default-testCompile</id>
-                        <configuration>
-                            <compilerId>groovy-eclipse-compiler</compilerId>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             
             <plugin>
                 <!-- we publish the BOM in case anyone wants to access it directly.

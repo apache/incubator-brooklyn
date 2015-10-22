@@ -23,8 +23,8 @@
     <packaging>jar</packaging>
     <name>Brooklyn Policies</name>
     <description>
-		General policies and enrichers for managing entities
-	</description>
+        General policies and enrichers for managing entities
+    </description>
 
     <parent>
         <groupId>org.apache.brooklyn</groupId>
@@ -42,10 +42,6 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
@@ -96,21 +92,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <inherited>true</inherited>
-                <executions>
-                    <execution>
-                        <id>default-testCompile</id>
-                        <configuration>
-                            <compilerId>groovy-eclipse-compiler</compilerId>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>
