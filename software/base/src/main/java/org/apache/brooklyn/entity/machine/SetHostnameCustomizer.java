@@ -20,6 +20,8 @@ package org.apache.brooklyn.entity.machine;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import java.util.Arrays;
+
 import org.apache.brooklyn.api.location.BasicMachineLocationCustomizer;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.config.ConfigKey;
@@ -38,8 +40,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 
 /**
  * Sets the hostname on an ssh'able machine. Currently only CentOS and RHEL are supported.
@@ -86,6 +91,12 @@ public class SetHostnameCustomizer extends BasicMachineLocationCustomizer {
             "hostname.local.address",
             "Host address, as known on the local box. Config is set on the location.");
     
+    public static final ConfigKey<Predicate<? super MachineLocation>> MACHINE_FILTER = ConfigKeys.newConfigKey(
+            new TypeToken<Predicate<? super MachineLocation>>() {},
+            "machineFilter",
+            "A filter to say which machines this should be applied to",
+            Predicates.instanceOf(SshMachineLocation.class));
+    
     private final ConfigBag config;
 
     public SetHostnameCustomizer(ConfigBag config) {
@@ -95,11 +106,23 @@ public class SetHostnameCustomizer extends BasicMachineLocationCustomizer {
     
     @Override
     public void customize(MachineLocation machine) {
-        String localHostname = setLocalHostname((SshMachineLocation) machine);
-        machine.config().set(LOCAL_HOSTNAME, localHostname);
+        if (config.get(MACHINE_FILTER).apply(machine)) {
+            log.info("SetHostnameCustomizer setting hostname on "+machine);
+        } else {
+            log.info("SetHostnameCustomizer ignoring non-ssh machine "+machine);
+            return;
+        }
 
-        String localIp = execHostnameMinusI((SshMachineLocation) machine);
-        machine.config().set(LOCAL_IP, localIp);
+        try {
+            String localHostname = setLocalHostname((SshMachineLocation) machine);
+            machine.config().set(LOCAL_HOSTNAME, localHostname);
+    
+            String localIp = execHostnameMinusI((SshMachineLocation) machine);
+            machine.config().set(LOCAL_IP, localIp);
+        } catch (Exception e) {
+            log.info("SetHostnameCustomizer failed to set hostname on "+machine+" (rethrowing)", e);
+            throw e;
+        }
     }
 
     protected String generateHostname(SshMachineLocation machine) {
@@ -200,6 +223,11 @@ public class SetHostnameCustomizer extends BasicMachineLocationCustomizer {
     protected ProcessTaskWrapper<Integer> exec(SshMachineLocation machine, boolean asRoot, String... cmds) {
         SshEffectorTaskFactory<Integer> taskFactory = SshEffectorTasks.ssh(machine, cmds);
         if (asRoot) taskFactory.runAsRoot();
-        return DynamicTasks.queue(taskFactory).block();
+        ProcessTaskWrapper<Integer> result = DynamicTasks.queue(taskFactory).block();
+        if (result.get() != 0) {
+            throw new IllegalStateException("SetHostnameCustomizer got exit code "+result.get()+" executing on machine "+machine
+                    +"; cmds="+Arrays.asList(cmds)+"; stdout="+result.getStdout()+"; stderr="+result.getStderr());
+        }
+        return result;
     }
 }
