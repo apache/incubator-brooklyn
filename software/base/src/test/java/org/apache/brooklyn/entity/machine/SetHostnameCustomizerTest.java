@@ -20,6 +20,9 @@ package org.apache.brooklyn.entity.machine;
 
 import static org.testng.Assert.assertEquals;
 
+import java.net.InetAddress;
+import java.util.Set;
+
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
@@ -28,6 +31,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 public class SetHostnameCustomizerTest extends BrooklynAppUnitTestSupport {
 
@@ -63,5 +67,21 @@ public class SetHostnameCustomizerTest extends BrooklynAppUnitTestSupport {
                 .configure("address", "4.3.2.1"));
         
         assertEquals(customizer.generateHostname(machine), "ip-4-3-2-1-"+machine.getId());
+    }
+    
+    @Test
+    public void testGeneratedHostnameIfNoIps() throws Exception {
+        SshMachineLocation machine = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocationWithNoPublicIps.class)
+                .configure("address", "4.3.2.1"));
+        
+        assertEquals(customizer.generateHostname(machine), "ip-none-"+machine.getId());
+    }
+    public static class SshMachineLocationWithNoPublicIps extends SshMachineLocation {
+        public SshMachineLocationWithNoPublicIps() {
+        }
+        @Override
+        public Set<String> getPublicAddresses() {
+            return ImmutableSet.<String>of();
+        }
     }
 }

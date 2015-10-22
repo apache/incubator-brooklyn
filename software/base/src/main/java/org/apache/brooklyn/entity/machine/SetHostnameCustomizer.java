@@ -68,9 +68,13 @@ public class SetHostnameCustomizer extends BasicMachineLocationCustomizer {
             "hostname.templated",
             "The hostname template, to be resolved and then set on the machine (if non-null). "
                     +"Assumed to be in free-marker format.",
-            "ip-"
-                    + "${((location.privateAddresses[0]??)?string("
-                            + "location.privateAddresses[0]!'X', location.publicAddresses[0]))"
+            "ip-${("
+                    + "(location.privateAddresses[0]??)?string("
+                            + "location.privateAddresses[0]!'X', "
+                            + "(location.publicAddresses[0]??)?string("
+                                    + "location.publicAddresses[0]!'X', "
+                                    + "\"none\"))"
+                    + ")"
                     + "?replace(\".\",\"-\")}"
                     + "-${location.id}");
 
