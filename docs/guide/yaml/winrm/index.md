@@ -152,7 +152,7 @@ When you have a command inside the powershell script which want to report its no
 please consider adding a check for its exit code after it.
 Example:
 
-    C:\install.exe
+    & "C:\install.exe"
     If ($lastexitcode -ne 0) {
         exit $lastexitcode
     }
@@ -283,10 +283,7 @@ became this:
     $secpasswd = ConvertTo-SecureString $pass -AsPlainText -Force
     $mycreds = New-Object System.Management.Automation.PSCredential ($($env:COMPUTERNAME + "\Administrator"), $secpasswd)
 
-    Invoke-Command -ComputerName localhost -credential $mycreds -scriptblock {
-        param($driveLetter)
-        Start-Process ( $driveLetter + "setup.exe") -ArgumentList "/ConfigurationFile=C:\ConfigurationFile.ini" -RedirectStandardOutput "C:\sqlout.txt" -RedirectStandardError "C:\sqlerr.txt" -Wait
-    } -Authentication CredSSP -argumentlist $driveLetter
+    Start-Process ( $driveLetter + "setup.exe") -ArgumentList "/ConfigurationFile=C:\ConfigurationFile.ini" -Credential $mycreds -RedirectStandardOutput "C:\sqlout.txt" -RedirectStandardError "C:\sqlerr.txt" -Wait
 
 The `$pass=` line simply reads the Windows password from the entity before the script is copied to the server. This is
 then encrypted on the next line before being used to create a new credential object. Then, rather than calling the executable
