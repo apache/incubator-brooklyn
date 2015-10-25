@@ -16,38 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.database
+package org.apache.brooklyn.util.groovy;
 
-import org.apache.brooklyn.core.config.BasicConfigKey
+import groovy.lang.Closure;
 
-/**
- * Intended to represent a SQL relational database service.
- *
- * TODO work in progress
- */
-public interface Database {
-    BasicConfigKey<String> SQL_VERSION = [ String, "database.sql.version", "SQL version" ]
+import java.util.concurrent.Callable;
 
-    Collection<Schema> getSchemas();
+import org.codehaus.groovy.runtime.ScriptBytecodeAdapter;
 
-    void createSchema(String name, Map properties);
+public class FromRunnableClosure<T> extends Closure<T> {
+    private static final long serialVersionUID = 1L;
+    private Runnable job;
 
-    void addSchema(Schema schema);
+    public FromRunnableClosure(Class<GroovyJavaMethods> owner, Runnable job) {
+        super(owner, owner);
+        this.job = job;
+    }
 
-    void removeSchema(String schemaName);
-}
+    @SuppressWarnings("unchecked")
+    public T doCall() throws Throwable {
+        if (ScriptBytecodeAdapter.isCase(job, Callable.class)) {
+            return ((Callable<T>)job).call();
+        } else {
+            job.run();
+            return null;
+        }
+    }
 
-/**
- * Intended to represent a SQL database schema.
- *
- * TODO work in progress
- */
-public interface Schema {
-    BasicConfigKey<String> SCHEMA_NAME = [ String, "database.schema", "Database schema name" ]
-
-    void create();
-    
-    void remove();
-    
-    String getName();
 }

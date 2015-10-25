@@ -16,30 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.util.core;
+package org.apache.brooklyn.entity.database;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Collection;
+import java.util.Map;
 
-import org.apache.brooklyn.core.internal.BrooklynInitialization;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 
-/** @deprecated since 0.7.0 use {@link BrooklynInitialization} */
-public class BrooklynLanguageExtensions {
+/**
+ * Intended to represent a SQL relational database service.
+ *
+ * TODO work in progress
+ */
+public interface Database {
+    ConfigKey<String> SQL_VERSION = ConfigKeys.newStringConfigKey("database.sql.version", "SQL version");
 
-    private BrooklynLanguageExtensions() {}
-    
-    private static AtomicBoolean done = new AtomicBoolean(false);
-    
-    public synchronized static void reinit() {
-        done.set(false);
-        init();
-    }
-    
-    /** performs the language extensions required for this project */
-    public synchronized static void init() {
-        if (done.getAndSet(true)) return;
-        BrooklynInitialization.initPortRanges();
-    }
-    
-    static { BrooklynInitialization.initLegacyLanguageExtensions(); }
-    
+    Collection<Schema> getSchemas();
+
+    void createSchema(String name, Map properties);
+
+    void addSchema(Schema schema);
+
+    void removeSchema(String schemaName);
 }

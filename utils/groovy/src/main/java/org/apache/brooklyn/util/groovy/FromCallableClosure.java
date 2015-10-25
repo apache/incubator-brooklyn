@@ -18,32 +18,21 @@
  */
 package org.apache.brooklyn.util.groovy;
 
-import static java.util.concurrent.TimeUnit.*
-import static org.testng.Assert.*
+import java.util.concurrent.Callable;
 
-import groovy.time.TimeDuration
+import groovy.lang.Closure;
 
-import org.testng.annotations.BeforeMethod
-import org.testng.annotations.Test
+public class FromCallableClosure<T> extends Closure<T> {
+    private static final long serialVersionUID = 1L;
+    private Callable<T> job;
 
-/**
- * Test the operation of the {@link TimeExtras} class.
- * 
- * TODO clarify test purpose
- */
-public class TimeExtrasTest {
-    @BeforeMethod
-    public void setUp() throws Exception {
-        TimeExtras.init();
+    public FromCallableClosure(Class<GroovyJavaMethods> owner, Callable<T> job) {
+        super(owner, owner);
+        this.job = job;
     }
 
-    @Test
-    public void testMultiplyTimeDurations() {
-        assertEquals(new TimeDuration(6).toMilliseconds(), (new TimeDuration(3)*2).toMilliseconds());
+    public T doCall() throws Exception {
+        return job.call();
     }
 
-    @Test
-    public void testAddTimeDurations() {
-        assertEquals(new TimeDuration(0,2,5,0).toMilliseconds(), (5*SECONDS + 2*MINUTES).toMilliseconds());
-    }
 }

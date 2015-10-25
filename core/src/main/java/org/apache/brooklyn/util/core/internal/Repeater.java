@@ -30,7 +30,6 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.groovy.TimeExtras;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
@@ -85,8 +84,6 @@ public class Repeater {
     // to use idiomatic java
     
     private static final Logger log = LoggerFactory.getLogger(Repeater.class);
-
-    static { TimeExtras.init(); }
 
     @SetFromFlag
     private String description;

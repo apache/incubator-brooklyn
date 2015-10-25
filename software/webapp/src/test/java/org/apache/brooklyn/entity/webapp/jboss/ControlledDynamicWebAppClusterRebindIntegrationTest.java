@@ -41,7 +41,6 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster;
 import org.apache.brooklyn.test.WebAppMonitor;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
-import org.apache.brooklyn.util.groovy.TimeExtras;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -57,8 +56,6 @@ import com.google.common.io.Files;
 public class ControlledDynamicWebAppClusterRebindIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(ControlledDynamicWebAppClusterRebindIntegrationTest.class);
     
-    static { TimeExtras.init(); }
-
     private LocalhostMachineProvisioningLocation localhostProvisioningLocation;
     private TestApplication origApp;
     private TestApplication newApp;

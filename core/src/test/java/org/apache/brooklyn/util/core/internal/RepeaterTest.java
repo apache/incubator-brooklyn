@@ -16,117 +16,112 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.util.core.internal
+package org.apache.brooklyn.util.core.internal;
 
-import static java.util.concurrent.TimeUnit.*
-import static org.testng.Assert.*
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.testng.annotations.Test
-import org.apache.brooklyn.util.core.internal.Repeater
-import org.apache.brooklyn.util.groovy.TimeExtras;
 import org.apache.brooklyn.util.time.Duration;
+import org.testng.annotations.Test;
 
-import com.google.common.base.Stopwatch
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.Callables;
 
+@SuppressWarnings("deprecation")
 public class RepeaterTest {
-    static { TimeExtras.init() }
 
     @Test
     public void sanityTest() {
         new Repeater("Sanity test")
             .repeat()
-            .until { true }
-            .every(10 * MILLISECONDS);
+            .until(Callables.returning(true))
+            .every(Duration.millis(10));
     }
 
     @Test
     public void sanityTestDescription() {
         new Repeater()
             .repeat()
-            .until { true }
-            .every(10 * MILLISECONDS);
+            .until(Callables.returning(true))
+            .every(Duration.millis(10));
     }
 
     @Test
     public void sanityTestBuilder() {
         Repeater.create("Sanity test")
             .repeat()
-            .until { true }
-            .every(10 * MILLISECONDS);
+            .until(Callables.returning(true))
+            .every(Duration.millis(10));
     }
 
     @Test
     public void sanityTestBuilderDescription() {
         Repeater.create()
             .repeat()
-            .until { true }
-            .every(10 * MILLISECONDS);
+            .until(Callables.returning(true))
+            .every(Duration.millis(10));
     }
 
-    @Test(expectedExceptions = [ NullPointerException.class ])
+    @Test(expectedExceptions = NullPointerException.class)
     public void repeatFailsIfClosureIsNull() {
         new Repeater("repeatFailsIfClosureIsNull").repeat((Callable<?>)null);
-        fail "Expected exception was not thrown"
     }
 
     @Test
     public void repeatSucceedsIfClosureIsNonNull() {
-        new Repeater("repeatSucceedsIfClosureIsNonNull").repeat { true };
+        new Repeater("repeatSucceedsIfClosureIsNonNull").repeat(Callables.returning(true));
     }
 
-    @Test(expectedExceptions = [ NullPointerException.class ])
+    @Test(expectedExceptions = NullPointerException.class)
     public void untilFailsIfClosureIsNull() {
         new Repeater("untilFailsIfClosureIsNull").until(null);
-        fail "Expected exception was not thrown"
     }
 
     @Test
     public void untilSucceedsIfClosureIsNonNull() {
-        new Repeater("untilSucceedsIfClosureIsNonNull").until { true };
+        new Repeater("untilSucceedsIfClosureIsNonNull").until(Callables.returning(true));
     }
 
-    @Test(expectedExceptions = [ IllegalArgumentException.class ])
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void everyFailsIfPeriodIsZero() {
-        new Repeater("everyFailsIfPeriodIsZero").every(0 * MILLISECONDS);
-        fail "Expected exception was not thrown"
+        new Repeater("everyFailsIfPeriodIsZero").every(Duration.ZERO);
     }
 
-    @Test(expectedExceptions = [ IllegalArgumentException.class ])
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void everyFailsIfPeriodIsNegative() {
-        new Repeater("everyFailsIfPeriodIsNegative").every(-1 * MILLISECONDS);
-        fail "Expected exception was not thrown"
+        new Repeater("everyFailsIfPeriodIsNegative").every(Duration.millis(-1));
     }
 
-    @Test(expectedExceptions = [ NullPointerException.class ])
+    @Test(expectedExceptions = NullPointerException.class)
     public void everyFailsIfUnitsIsNull() {
         new Repeater("everyFailsIfUnitsIsNull").every(10, null);
-        fail "Expected exception was not thrown"
     }
 
     @Test
     public void everySucceedsIfPeriodIsPositiveAndUnitsIsNonNull() {
-        new Repeater("repeatSucceedsIfClosureIsNonNull").every(10 * MILLISECONDS);
+        new Repeater("repeatSucceedsIfClosureIsNonNull").every(Duration.millis(10));
     }
 
-    @Test(expectedExceptions = [ IllegalArgumentException.class ])
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void limitTimeToFailsIfPeriodIsZero() {
         new Repeater("limitTimeToFailsIfPeriodIsZero").limitTimeTo(0, TimeUnit.MILLISECONDS);
-        fail "Expected exception was not thrown"
     }
 
-    @Test(expectedExceptions = [ IllegalArgumentException.class ])
+    @Test(expectedExceptions = IllegalArgumentException.class)
     public void limitTimeToFailsIfPeriodIsNegative() {
         new Repeater("limitTimeToFailsIfPeriodIsNegative").limitTimeTo(-1, TimeUnit.MILLISECONDS);
-        fail "Expected exception was not thrown"
     }
 
-    @Test(expectedExceptions = [ NullPointerException.class ])
+    @Test(expectedExceptions = NullPointerException.class)
     public void limitTimeToFailsIfUnitsIsNull() {
         new Repeater("limitTimeToFailsIfUnitsIsNull").limitTimeTo(10, null);
-        fail "Expected exception was not thrown"
     }
 
     @Test
@@ -151,23 +146,23 @@ public class RepeaterTest {
 
     @Test
     public void runReturnsTrueIfExitConditionIsTrue() {
-        assertTrue new Repeater("runReturnsTrueIfExitConditionIsTrue")
+        assertTrue(new Repeater("runReturnsTrueIfExitConditionIsTrue")
             .repeat()
-            .every(1 * MILLISECONDS)
-            .until { true }
-            .run();
+            .every(Duration.millis(1))
+            .until(Callables.returning(true))
+            .run());
     }
 
     @Test
     public void runRespectsMaximumIterationLimitAndReturnsFalseIfReached() {
-        int iterations = 0;
-        assertFalse new Repeater("runRespectsMaximumIterationLimitAndReturnsFalseIfReached")
-            .repeat { iterations++ }
-            .every(1 * MILLISECONDS)
-            .until { false }
+        final AtomicInteger iterations = new AtomicInteger();
+        assertFalse(new Repeater("runRespectsMaximumIterationLimitAndReturnsFalseIfReached")
+            .repeat(new Runnable() {@Override public void run() {iterations.incrementAndGet();}})
+            .every(Duration.millis(1))
+            .until(Callables.returning(false))
             .limitIterationsTo(5)
-            .run();
-        assertEquals 5, iterations;
+            .run());
+        assertEquals(iterations.get(), 5);
     }
 
     /**
@@ -186,71 +181,71 @@ public class RepeaterTest {
         final long LIMIT = 2000l;
         Repeater repeater = new Repeater("runRespectsTimeLimitAndReturnsFalseIfReached")
             .repeat()
-            .every(100 * MILLISECONDS)
-            .until { false }
+            .every(Duration.millis(100))
+            .until(Callables.returning(false))
             .limitTimeTo(LIMIT, TimeUnit.MILLISECONDS);
 
-        Stopwatch stopwatch = new Stopwatch().start();
+        Stopwatch stopwatch = Stopwatch.createStarted();
         boolean result = repeater.run();
         stopwatch.stop();
 
-        assertFalse result;
+        assertFalse(result);
 
         long difference = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         assertTrue(difference >= LIMIT, "Difference was: " + difference);
         assertTrue(difference < 4 * LIMIT, "Difference was: " + difference);
     }
 
-    @Test(expectedExceptions = [ IllegalStateException.class ])
+    @Test(expectedExceptions = IllegalStateException.class)
     public void runFailsIfUntilWasNotSet() {
         new Repeater("runFailsIfUntilWasNotSet")
             .repeat()
-            .every(10 * MILLISECONDS)
+            .every(Duration.millis(10))
             .run();
-        fail "Expected exception was not thrown"
     }
 
-    @Test(expectedExceptions = [ IllegalStateException.class ])
+    @Test(expectedExceptions = IllegalStateException.class)
     public void runFailsIfEveryWasNotSet() {
         new Repeater("runFailsIfEveryWasNotSet")
             .repeat()
-            .until { true }
+            .until(Callables.returning(true))
             .run();
-        fail "Expected exception was not thrown"
     }
 
-    @Test(expectedExceptions = [ UnsupportedOperationException.class ])
+    @Test(expectedExceptions = UnsupportedOperationException.class)
     public void testRethrowsException() {
-        boolean result = new Repeater("throwRuntimeException")
+        new Repeater("throwRuntimeException")
             .repeat()
-            .every(10 * MILLISECONDS)
-            .until { throw new UnsupportedOperationException("fail") }
+            .every(Duration.millis(10))
+            .until(new Callable<Boolean>() {@Override public Boolean call() {throw new UnsupportedOperationException("fail"); }})
             .rethrowException()
             .limitIterationsTo(2)
             .run();
-        fail "Expected exception was not thrown"
     }
 
     @Test
     public void testNoRethrowsException() {
         try {
-	        boolean result = new Repeater("throwRuntimeException")
-	            .repeat()
-	            .every(10 * MILLISECONDS)
-	            .until { throw new UnsupportedOperationException("fail") }
-	            .limitIterationsTo(2)
-	            .run();
-	        assertFalse result
+            boolean result = new Repeater("throwRuntimeException")
+                .repeat()
+                .every(Duration.millis(10))
+                .until(new Callable<Boolean>() {@Override public Boolean call() {throw new UnsupportedOperationException("fail"); }})
+                .limitIterationsTo(2)
+                .run();
+            assertFalse(result);
         } catch (RuntimeException re) {
-            fail "Exception should not have been thrown: " + re.getMessage()
+            fail("Exception should not have been thrown: " + re.getMessage(), re);
         }
     }
-	
-	public void testFlags() {
-		int count=0;
-		new Repeater(period: 5*MILLISECONDS, timeout: 100*MILLISECONDS).repeat({ count++ }).until({ count>100}).run();
-		assertTrue count>10
-		assertTrue count<30
-	}
-	
+    
+    public void testFlags() {
+        final AtomicInteger count = new AtomicInteger();
+        new Repeater(ImmutableMap.of("period", Duration.millis(5), "timeout", Duration.millis(100)))
+                .repeat(new Runnable() {@Override public void run() {count.incrementAndGet();}})
+                .until(new Callable<Boolean>() { @Override public Boolean call() {return count.get() > 0;}})
+                .run();
+        assertTrue(count.get()>10);
+        assertTrue(count.get()<30);
+    }
+    
 }
