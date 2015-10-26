@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.core.mgmt.osgi;
 
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -59,6 +60,7 @@ import org.apache.brooklyn.util.os.Os;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import org.apache.brooklyn.util.core.osgi.OsgiTestBase;
 
 
 /** 
@@ -105,7 +107,7 @@ public class OsgiVersionMoreEntityTest {
     @Test
     public void testEntityProxy() throws Exception {
         File storageTempDir = Os.newTempDir("osgi-standalone");
-        Framework framework = Osgis.newFrameworkStarted(storageTempDir.getAbsolutePath(), true, null);
+        Framework framework = Osgis.getFramework(storageTempDir.getAbsolutePath(), true);
         
         try {
             ManagementContextInternal managementContext;
@@ -129,7 +131,7 @@ public class OsgiVersionMoreEntityTest {
 
             if (managementContext != null) Entities.destroyAll(managementContext);
         } finally {
-            OsgiStandaloneTest.tearDownOsgiFramework(framework, storageTempDir);
+            OsgiTestBase.tearDownOsgiFramework(framework, storageTempDir);
         }
     }
     

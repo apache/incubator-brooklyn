@@ -41,16 +41,25 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.List;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.mgmt.classloading.OsgiBrooklynClassLoadingContext;
+import org.apache.brooklyn.core.mgmt.ha.OsgiManager;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.rt.felix.ManifestHelper;
 import org.apache.brooklyn.util.core.osgi.Osgis;
-import org.apache.brooklyn.util.core.osgi.Osgis.ManifestHelper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * Wraps the version of Brooklyn.
@@ -84,7 +93,7 @@ public class BrooklynVersion {
         // we read the maven pom metadata and osgi metadata and make sure it's sensible
         // everything is put into a single map for now (good enough, but should be cleaned up)
         readPropertiesFromMavenResource(BrooklynVersion.class.getClassLoader());
-        readPropertiesFromOsgiResource(BrooklynVersion.class.getClassLoader(), BROOKLYN_CORE_SYMBOLIC_NAME);
+        readPropertiesFromOsgiResource();
         // TODO there is also build-metadata.properties used in ServerResource /v1/server/version endpoint
         // see comments on that about folding it into this class instead
 
@@ -166,42 +175,50 @@ public class BrooklynVersion {
     }
 
     /**
-     * reads properties from brooklyn-core's manifest
+     * Reads main attributes properties from brooklyn-core's bundle manifest.
      */
-    private void readPropertiesFromOsgiResource(ClassLoader resourceLoader, String symbolicName) {
-        Enumeration<URL> paths;
-        try {
-            paths = BrooklynVersion.class.getClassLoader().getResources(MANIFEST_PATH);
-        } catch (IOException e) {
-            // shouldn't happen
-            throw Exceptions.propagate(e);
-        }
-        while (paths.hasMoreElements()) {
-            URL u = paths.nextElement();
-            InputStream us = null;
-            try {
-                us = u.openStream();
-                ManifestHelper mh = Osgis.ManifestHelper.forManifest(us);
-                if (BROOKLYN_CORE_SYMBOLIC_NAME.equals(mh.getSymbolicName())) {
-                    Attributes attrs = mh.getManifest().getMainAttributes();
-                    for (Object key : attrs.keySet()) {
-                        // key is an Attribute.Name; toString converts to string
-                        versionProperties.put(key.toString(), attrs.getValue(key.toString()));
-                    }
-                    return;
-                }
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                log.warn("Error reading OSGi manifest from " + u + " when determining version properties: " + e, e);
-            } finally {
-                Streams.closeQuietly(us);
+    private void readPropertiesFromOsgiResource() {
+        if (Osgis.isBrooklynInsideFramework()) {
+            Dictionary<String, String> headers = FrameworkUtil.getBundle(BrooklynVersion.class).getHeaders();
+            for (Enumeration<String> keys = headers.keys(); keys.hasMoreElements();) {
+                String key = keys.nextElement();
+                versionProperties.put(key, headers.get(key));
             }
-        }
-        if (isDevelopmentEnvironment()) {
-            // allowed for dev env
-            log.trace("No OSGi manifest available to determine version properties");
         } else {
-            log.warn("No OSGi manifest available to determine version properties");
+            Enumeration<URL> paths;
+            try {
+                paths = BrooklynVersion.class.getClassLoader().getResources(MANIFEST_PATH);
+            } catch (IOException e) {
+                // shouldn't happen
+                throw Exceptions.propagate(e);
+            }
+            while (paths.hasMoreElements()) {
+                URL u = paths.nextElement();
+                InputStream us = null;
+                try {
+                    us = u.openStream();
+                    ManifestHelper mh = ManifestHelper.forManifest(us);
+                    if (BROOKLYN_CORE_SYMBOLIC_NAME.equals(mh.getSymbolicName())) {
+                        Attributes attrs = mh.getManifest().getMainAttributes();
+                        for (Object key : attrs.keySet()) {
+                            // key is an Attribute.Name; toString converts to string
+                            versionProperties.put(key.toString(), attrs.getValue(key.toString()));
+                        }
+                        return;
+                    }
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    log.warn("Error reading OSGi manifest from " + u + " when determining version properties: " + e, e);
+                } finally {
+                    Streams.closeQuietly(us);
+                }
+            }
+            if (isDevelopmentEnvironment()) {
+                // allowed for dev env
+                log.trace("No OSGi manifest available to determine version properties");
+            } else {
+                log.warn("No OSGi manifest available to determine version properties");
+            }
         }
     }
 
@@ -271,33 +288,65 @@ public class BrooklynVersion {
      * @return An iterable containing all features found in the management context's classpath and catalogue.
      */
     public static Iterable<BrooklynFeature> getFeatures(ManagementContext mgmt) {
-        Iterable<URL> manifests = ResourceUtils.create(mgmt).getResources(MANIFEST_PATH);
+        if (Osgis.isBrooklynInsideFramework()) {
+            List<Bundle> bundles = Arrays.asList(
+                    FrameworkUtil.getBundle(BrooklynVersion.class)
+                            .getBundleContext()
+                            .getBundles()
+            );
 
-        for (CatalogItem<?, ?> catalogItem : mgmt.getCatalog().getCatalogItems()) {
-            OsgiBrooklynClassLoadingContext osgiContext = new OsgiBrooklynClassLoadingContext(
-                    mgmt, catalogItem.getCatalogItemId(), catalogItem.getLibraries());
-            manifests = Iterables.concat(manifests, osgiContext.getResources(MANIFEST_PATH));
-        }
+            Maybe<OsgiManager> osgi = ((ManagementContextInternal)mgmt).getOsgiManager();
+            for (CatalogItem<?, ?> catalogItem : mgmt.getCatalog().getCatalogItems()) {
+                if (osgi.isPresentAndNonNull()) {
+                    for (CatalogItem.CatalogBundle catalogBundle : catalogItem.getLibraries()) {
+                        Maybe<Bundle> osgiBundle = osgi.get().findBundle(catalogBundle);
+                        if (osgiBundle.isPresentAndNonNull()) {
+                            bundles.add(osgiBundle.get());
+                        }
+                    }
+                }
 
-        // Set over list in case a bundle is reported more than once (e.g. from classpath and from OSGi).
-        // Not sure of validity of this approach over just reporting duplicates.
-        ImmutableSet.Builder<BrooklynFeature> features = ImmutableSet.builder();
-        for (URL manifest : manifests) {
-            ManifestHelper mh = null;
-            try {
-                mh = Osgis.ManifestHelper.forManifest(manifest);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                log.debug("Error reading OSGi manifest from " + manifest + " when determining version properties: " + e, e);
             }
-            if (mh == null) continue;
-            Attributes attrs = mh.getManifest().getMainAttributes();
-            Optional<BrooklynFeature> fs = BrooklynFeature.newFeature(attrs);
-            if (fs.isPresent()) {
-                features.add(fs.get());
+
+            // Set over list in case a bundle is reported more than once (e.g. from classpath and from OSGi).
+            // Not sure of validity of this approach over just reporting duplicates.
+            ImmutableSet.Builder<BrooklynFeature> features = ImmutableSet.builder();
+            for(Bundle bundle : bundles) {
+                Optional<BrooklynFeature> fs = BrooklynFeature.newFeature(bundle.getHeaders());
+                if (fs.isPresent()) {
+                    features.add(fs.get());
+                }
             }
+            return features.build();
+        } else {
+            Iterable<URL> manifests = ResourceUtils.create(mgmt).getResources(MANIFEST_PATH);
+
+            for (CatalogItem<?, ?> catalogItem : mgmt.getCatalog().getCatalogItems()) {
+                OsgiBrooklynClassLoadingContext osgiContext = new OsgiBrooklynClassLoadingContext(
+                        mgmt, catalogItem.getCatalogItemId(), catalogItem.getLibraries());
+                manifests = Iterables.concat(manifests, osgiContext.getResources(MANIFEST_PATH));
+            }
+
+            // Set over list in case a bundle is reported more than once (e.g. from classpath and from OSGi).
+            // Not sure of validity of this approach over just reporting duplicates.
+            ImmutableSet.Builder<BrooklynFeature> features = ImmutableSet.builder();
+            for (URL manifest : manifests) {
+                ManifestHelper mh = null;
+                try {
+                    mh = ManifestHelper.forManifest(manifest);
+                } catch (Exception e) {
+                    Exceptions.propagateIfFatal(e);
+                    log.debug("Error reading OSGi manifest from " + manifest + " when determining version properties: " + e, e);
+                }
+                if (mh == null) continue;
+                Attributes attrs = mh.getManifest().getMainAttributes();
+                Optional<BrooklynFeature> fs = BrooklynFeature.newFeature(attrs);
+                if (fs.isPresent()) {
+                    features.add(fs.get());
+                }
+            }
+            return features.build();
         }
-        return features.build();
     }
 
     public static class BrooklynFeature {
@@ -315,15 +364,24 @@ public class BrooklynVersion {
             this.additionalData = ImmutableMap.copyOf(additionalData);
         }
 
+        private static Optional<BrooklynFeature> newFeature(Attributes attrs) {
+            // unfortunately Attributes is a Map<Object,Object>
+            Dictionary<String,String> headers = new Hashtable<>();
+            for (Map.Entry<Object, Object> entry : attrs.entrySet()) {
+                headers.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+            return newFeature(headers);
+        }
+
         /** @return Present if any attribute name begins with {@link #BROOKLYN_FEATURE_PREFIX}, absent otherwise. */
-        private static Optional<BrooklynFeature> newFeature(Attributes attributes) {
+        private static Optional<BrooklynFeature> newFeature(Dictionary<String,String> headers) {
             Map<String, String> additionalData = Maps.newHashMap();
-            for (Object key : attributes.keySet()) {
-                if (key instanceof Attributes.Name && key.toString().startsWith(BROOKLYN_FEATURE_PREFIX)) {
-                    Attributes.Name name = Attributes.Name.class.cast(key);
-                    String value = attributes.getValue(name);
+            for (Enumeration<String> keys = headers.keys(); keys.hasMoreElements();) {
+                String key = keys.nextElement();
+                if (key.startsWith(BROOKLYN_FEATURE_PREFIX)) {
+                    String value = headers.get(key);
                     if (!Strings.isBlank(value)) {
-                        additionalData.put(name.toString(), value);
+                        additionalData.put(key, value);
                     }
                 }
             }
@@ -335,13 +393,13 @@ public class BrooklynVersion {
             String nameKey = BROOKLYN_FEATURE_PREFIX + "Name";
             String name = Optional.fromNullable(additionalData.remove(nameKey))
                     .or(Optional.fromNullable(Constants.BUNDLE_NAME))
-                    .or(attributes.getValue(Constants.BUNDLE_SYMBOLICNAME));
+                    .or(headers.get(Constants.BUNDLE_SYMBOLICNAME));
 
             return Optional.of(new BrooklynFeature(
                     name,
-                    attributes.getValue(Constants.BUNDLE_SYMBOLICNAME),
-                    attributes.getValue(Constants.BUNDLE_VERSION),
-                    attributes.getValue("Bnd-LastModified"),
+                    headers.get(Constants.BUNDLE_SYMBOLICNAME),
+                    headers.get(Constants.BUNDLE_VERSION),
+                    headers.get("Bnd-LastModified"),
                     additionalData));
         }
 

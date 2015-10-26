@@ -42,7 +42,11 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-    
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-rt-felix</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-api</artifactId>
@@ -95,11 +99,6 @@
                     <artifactId>bcprov-jdk15on</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.felix</groupId>
-            <artifactId>org.apache.felix.framework</artifactId>
         </dependency>
 
         <dependency>
@@ -212,6 +211,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-rt-osgi</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-utils-common</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -263,6 +269,24 @@
                         <version>2.3.4-01</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>jar</supportedProjectType>
+                    </supportedProjectTypes>
+                    <instructions>
+                        <Export-Package>brooklyn.*,org.apache.brooklyn.*</Export-Package>
+                        <Import-Package>
+                            !org.apache.brooklyn.rt.felix,
+                            *
+                        </Import-Package>
+                        <Implementation-SHA-1>${buildNumber}</Implementation-SHA-1>
+                        <Implementation-Branch>${scmBranch}</Implementation-Branch>
+                    </instructions>
+                </configuration>
             </plugin>
         </plugins>
     </build>

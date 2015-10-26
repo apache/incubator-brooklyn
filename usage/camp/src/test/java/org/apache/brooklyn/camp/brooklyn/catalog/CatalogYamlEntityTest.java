@@ -32,7 +32,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
-import org.apache.brooklyn.core.mgmt.osgi.OsgiTestResources;
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.entity.stock.BasicEntity;

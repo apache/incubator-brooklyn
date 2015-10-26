@@ -18,66 +18,45 @@
  */
 package org.apache.brooklyn.util.core.osgi;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.jar.Attributes;
 import java.util.jar.JarInputStream;
-import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 
-import javax.annotation.Nullable;
-
-import org.apache.felix.framework.FrameworkFactory;
-import org.apache.felix.framework.util.StringMap;
-import org.apache.felix.framework.util.manifestparser.ManifestParser;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.Constants;
 import org.osgi.framework.Version;
 import org.osgi.framework.launch.Framework;
-import org.osgi.framework.namespace.PackageNamespace;
-import org.osgi.framework.wiring.BundleCapability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.rt.felix.EmbeddedFelixFramework;
 import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
-import org.apache.brooklyn.util.core.osgi.Osgis;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.exceptions.ReferenceWithError;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.osgi.VersionedName;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
-import org.apache.brooklyn.util.time.Duration;
-import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.base.Stopwatch;
+import org.apache.brooklyn.util.osgi.OsgiUtils;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 /** 
  * utilities for working with osgi.
@@ -90,46 +69,8 @@ public class Osgis {
     private static final Logger LOG = LoggerFactory.getLogger(Osgis.class);
 
     private static final String EXTENSION_PROTOCOL = "system";
-    private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
     private static final Set<String> SYSTEM_BUNDLES = MutableSet.of();
 
-    public static class VersionedName {
-        private final String symbolicName;
-        private final Version version;
-        public VersionedName(Bundle b) {
-            this.symbolicName = b.getSymbolicName();
-            this.version = b.getVersion();
-        }
-        public VersionedName(String symbolicName, Version version) {
-            this.symbolicName = symbolicName;
-            this.version = version;
-        }
-        @Override public String toString() {
-            return symbolicName + ":" + Strings.toString(version);
-        }
-        public boolean equals(String sn, String v) {
-            return symbolicName.equals(sn) && (version == null && v == null || version != null && version.toString().equals(v));
-        }
-        public boolean equals(String sn, Version v) {
-            return symbolicName.equals(sn) && (version == null && v == null || version != null && version.equals(v));
-        }
-        public String getSymbolicName() {
-            return symbolicName;
-        }
-        public Version getVersion() {
-            return version;
-        }
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(symbolicName, version);
-        }
-        @Override
-        public boolean equals(Object other) {
-            if (!(other instanceof VersionedName)) return false;
-            VersionedName o = (VersionedName) other;
-            return Objects.equal(symbolicName, o.symbolicName) && Objects.equal(version, o.version);
-        }
-    }
     
     public static class BundleFinder {
         protected final Framework framework;
@@ -157,7 +98,7 @@ public class Osgis {
             if (Strings.isBlank(symbolicNameOptionallyWithVersion))
                 return this;
             
-            Maybe<VersionedName> nv = parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
+            Maybe<VersionedName> nv = OsgiUtils.parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
             if (nv.isAbsent())
                 throw new IllegalArgumentException("Cannot parse symbolic-name:version string '"+symbolicNameOptionallyWithVersion+"'");
 
@@ -336,195 +277,56 @@ public class Osgis {
         return bundleFinder(framework).symbolicName(symbolicName).version(Predicates.equalTo(version)).findUnique();
     }
 
-    // -------- creating
-    
-    /*
-     * loading framework factory and starting framework based on:
-     * http://felix.apache.org/documentation/subprojects/apache-felix-framework/apache-felix-framework-launching-and-embedding.html
+    /** 
+     * Provides an OSGI framework.
+     *
+     * When running inside an OSGi container, the container framework is returned.
+     * When running standalone a new Apache Felix container is created.
+     * 
+     * Calling {@link #ungetFramework(Framework) } is needed in both cases, either to stop
+     * the embedded framework or to release the service reference.
+     *
+     * @param felixCacheDir
+     * @param clean
+     * @return
+     * @todo Use felixCacheDir ?
      */
-    
-    public static FrameworkFactory newFrameworkFactory() {
-        URL url = Osgis.class.getClassLoader().getResource(
-                "META-INF/services/org.osgi.framework.launch.FrameworkFactory");
-        if (url != null) {
-            try {
-                BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()));
-                try {
-                    for (String s = br.readLine(); s != null; s = br.readLine()) {
-                        s = s.trim();
-                        // load the first non-empty, non-commented line
-                        if ((s.length() > 0) && (s.charAt(0) != '#')) {
-                            return (FrameworkFactory) Class.forName(s).newInstance();
-                        }
-                    }
-                } finally {
-                    if (br != null) br.close();
-                }
-            } catch (Exception e) {
-                // class creation exceptions are not interesting to caller...
-                throw Exceptions.propagate(e);
-            }
+    public static Framework getFramework(String felixCacheDir, boolean clean) {
+        final Bundle frameworkBundle = FrameworkUtil.getBundle(Framework.class);
+        if (frameworkBundle != null) {
+            // already running inside an OSGi container
+            final BundleContext ctx = frameworkBundle.getBundleContext();
+            final ServiceReference<?> ref = ctx.getServiceReference(Framework.class);
+            return (Framework) ctx.getService(ref);
+        } else {
+            // not running inside OSGi container
+            return EmbeddedFelixFramework.newFrameworkStarted(felixCacheDir, clean, null);
         }
-        throw new IllegalStateException("Could not find framework factory.");
-    }
-    
-    public static Framework newFrameworkStarted(String felixCacheDir, boolean clean, Map<?,?> extraStartupConfig) {
-        Map<Object,Object> cfg = MutableMap.copyOf(extraStartupConfig);
-        if (clean) cfg.put(Constants.FRAMEWORK_STORAGE_CLEAN, "onFirstInit");
-        if (felixCacheDir!=null) cfg.put(Constants.FRAMEWORK_STORAGE, felixCacheDir);
-        cfg.put(Constants.FRAMEWORK_BSNVERSION, Constants.FRAMEWORK_BSNVERSION_MULTIPLE);
-        FrameworkFactory factory = newFrameworkFactory();
-
-        Stopwatch timer = Stopwatch.createStarted();
-        Framework framework = factory.newFramework(cfg);
-        try {
-            framework.init();
-            installBootBundles(framework);
-            framework.start();
-        } catch (Exception e) {
-            // framework bundle start exceptions are not interesting to caller...
-            throw Exceptions.propagate(e);
-        }
-        LOG.debug("System bundles are: "+SYSTEM_BUNDLES);
-        LOG.debug("OSGi framework started in " + Duration.of(timer));
-        return framework;
     }
 
-    private static void installBootBundles(Framework framework) {
-        Stopwatch timer = Stopwatch.createStarted();
-        LOG.debug("Installing OSGi boot bundles from "+Osgis.class.getClassLoader()+"...");
-        Enumeration<URL> resources;
-        try {
-            resources = Osgis.class.getClassLoader().getResources(MANIFEST_PATH);
-        } catch (IOException e) {
-            throw Exceptions.propagate(e);
-        }
-        BundleContext bundleContext = framework.getBundleContext();
-        Map<String, Bundle> installedBundles = getInstalledBundlesById(bundleContext);
-        while(resources.hasMoreElements()) {
-            URL url = resources.nextElement();
-            ReferenceWithError<?> installResult = installExtensionBundle(bundleContext, url, installedBundles, getVersionedId(framework));
-            if (installResult.hasError() && !installResult.masksErrorIfPresent()) {
-                // it's reported as a critical error, so warn here
-                LOG.warn("Unable to install manifest from "+url+": "+installResult.getError(), installResult.getError());
-            } else {
-                Object result = installResult.getWithoutError();
-                if (result instanceof Bundle) {
-                    String v = getVersionedId( (Bundle)result );
-                    SYSTEM_BUNDLES.add(v);
-                    if (installResult.hasError()) {
-                        LOG.debug(installResult.getError().getMessage()+(result!=null ? " ("+result+"/"+v+")" : ""));
-                    } else {
-                        LOG.debug("Installed "+v+" from "+url);
-                    }
-                } else if (installResult.hasError()) {
-                    LOG.debug(installResult.getError().getMessage());
-                }
-            }
-        }
-        LOG.debug("Installed OSGi boot bundles in "+Time.makeTimeStringRounded(timer)+": "+Arrays.asList(framework.getBundleContext().getBundles()));
-    }
-
-    private static Map<String, Bundle> getInstalledBundlesById(BundleContext bundleContext) {
-        Map<String, Bundle> installedBundles = new HashMap<String, Bundle>();
-        Bundle[] bundles = bundleContext.getBundles();
-        for (Bundle b : bundles) {
-            installedBundles.put(getVersionedId(b), b);
-        }
-        return installedBundles;
-    }
-
-    /** Wraps the bundle if successful or already installed, wraps TRUE if it's the system entry,
-     * wraps null if the bundle is already installed from somewhere else;
-     * in all these cases <i>masking</i> an explanatory error if already installed or it's the system entry.
-     * <p>
-     * Returns an instance wrapping null and <i>throwing</i> an error if the bundle could not be installed.
+    /**
+     * Stops/ungets the OSGi framework.
+     *
+     * See {@link #getFramework(java.lang.String, boolean)}
+     *
+     * @param framework
      */
-    private static ReferenceWithError<?> installExtensionBundle(BundleContext bundleContext, URL manifestUrl, Map<String, Bundle> installedBundles, String frameworkVersionedId) {
-        //ignore http://felix.extensions:9/ system entry
-        if("felix.extensions".equals(manifestUrl.getHost())) 
-            return ReferenceWithError.newInstanceMaskingError(null, new IllegalArgumentException("Skipping install of internal extension bundle from "+manifestUrl));
-
-        try {
-            Manifest manifest = readManifest(manifestUrl);
-            if (!isValidBundle(manifest)) 
-                return ReferenceWithError.newInstanceMaskingError(null, new IllegalArgumentException("Resource at "+manifestUrl+" is not an OSGi bundle: no valid manifest"));
-            
-            String versionedId = getVersionedId(manifest);
-            URL bundleUrl = ResourceUtils.getContainerUrl(manifestUrl, MANIFEST_PATH);
-
-            Bundle existingBundle = installedBundles.get(versionedId);
-            if (existingBundle != null) {
-                if (!bundleUrl.equals(existingBundle.getLocation()) &&
-                        //the framework bundle is always pre-installed, don't display duplicate info
-                        !versionedId.equals(frameworkVersionedId)) {
-                    return ReferenceWithError.newInstanceMaskingError(null, new IllegalArgumentException("Bundle "+versionedId+" (from manifest " + manifestUrl + ") is already installed, from " + existingBundle.getLocation()));
-                }
-                return ReferenceWithError.newInstanceMaskingError(existingBundle, new IllegalArgumentException("Bundle "+versionedId+" from manifest " + manifestUrl + " is already installed"));
-            }
-            
-            byte[] jar = buildExtensionBundle(manifest);
-            LOG.debug("Installing boot bundle " + bundleUrl);
-            //mark the bundle as extension so we can detect it later using the "system:" protocol
-            //(since we cannot access BundleImpl.isExtension)
-            Bundle newBundle = bundleContext.installBundle(EXTENSION_PROTOCOL + ":" + bundleUrl.toString(), new ByteArrayInputStream(jar));
-            installedBundles.put(versionedId, newBundle);
-            return ReferenceWithError.newInstanceWithoutError(newBundle);
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            return ReferenceWithError.newInstanceThrowingError(null, 
-                new IllegalStateException("Problem installing extension bundle " + manifestUrl + ": "+e, e));
+    public static void ungetFramework(Framework framework) {
+        final Bundle frameworkBundle = FrameworkUtil.getBundle(Framework.class);
+        if (frameworkBundle != null) {
+            // already running inside an OSGi container
+            final BundleContext ctx = frameworkBundle.getBundleContext();
+            final ServiceReference<?> ref = ctx.getServiceReference(Framework.class);
+            ctx.ungetService(ref);
+        } else {
+            EmbeddedFelixFramework.stopFramework(framework);
         }
     }
 
-    private static Manifest readManifest(URL manifestUrl) throws IOException {
-        Manifest manifest;
-        InputStream in = null;
-        try {
-            in = manifestUrl.openStream();
-            manifest = new Manifest(in);
-        } finally {
-            if (in != null) {
-                try {in.close();} 
-                catch (Exception e) {};
-            }
-        }
-        return manifest;
-    }
 
-    private static byte[] buildExtensionBundle(Manifest manifest) throws IOException {
-        Attributes atts = manifest.getMainAttributes();
-
-        //the following properties are invalid in extension bundles
-        atts.remove(new Attributes.Name(Constants.IMPORT_PACKAGE));
-        atts.remove(new Attributes.Name(Constants.REQUIRE_BUNDLE));
-        atts.remove(new Attributes.Name(Constants.BUNDLE_NATIVECODE));
-        atts.remove(new Attributes.Name(Constants.DYNAMICIMPORT_PACKAGE));
-        atts.remove(new Attributes.Name(Constants.BUNDLE_ACTIVATOR));
-        
-        //mark as extension bundle
-        atts.putValue(Constants.FRAGMENT_HOST, "system.bundle; extension:=framework");
-
-        //create the jar containing the manifest
-        ByteArrayOutputStream jar = new ByteArrayOutputStream();
-        JarOutputStream out = new JarOutputStream(jar, manifest);
-        out.close();
-        return jar.toByteArray();
-    }
-
-    private static boolean isValidBundle(Manifest manifest) {
-        Attributes atts = manifest.getMainAttributes();
-        return atts.containsKey(new Attributes.Name(Constants.BUNDLE_MANIFESTVERSION));
-    }
-
-    private static String getVersionedId(Bundle b) {
-        return b.getSymbolicName() + ":" + b.getVersion();
-    }
-
-    private static String getVersionedId(Manifest manifest) {
-        Attributes atts = manifest.getMainAttributes();
-        return atts.getValue(Constants.BUNDLE_SYMBOLICNAME) + ":" +
-            atts.getValue(Constants.BUNDLE_VERSION);
+    /** Tells if Brooklyn is running in an OSGi environment or not. */
+    public static boolean isBrooklynInsideFramework() {
+        return FrameworkUtil.getBundle(Framework.class) != null;
     }
 
     /**
@@ -596,9 +398,9 @@ public class Osgis {
         if (manifest == null) {
             throw new IllegalStateException("Missing manifest file in bundle or not a jar file.");
         }
-        String versionedId = getVersionedId(manifest);
+        String versionedId = OsgiUtils.getVersionedId(manifest);
         for (Bundle installedBundle : framework.getBundleContext().getBundles()) {
-            if (versionedId.equals(getVersionedId(installedBundle))) {
+            if (versionedId.equals(OsgiUtils.getVersionedId(installedBundle))) {
                 if (SYSTEM_BUNDLES.contains(versionedId)) {
                     LOG.debug("Already have system bundle "+versionedId+" from "+installedBundle+"/"+installedBundle.getLocation()+" when requested "+url+"; not installing");
                     // "System bundles" (ie things on the classpath) cannot be overridden
@@ -623,97 +425,4 @@ public class Osgis {
                 EXTENSION_PROTOCOL.equals(Urls.getProtocol(location));
     }
 
-    /** Takes a string which might be of the form "symbolic-name" or "symbolic-name:version" (or something else entirely)
-     * and returns a VersionedName. The versionedName.getVersion() will be null if if there was no version in the input
-     * (or returning {@link Maybe#absent()} if not valid, with a suitable error message). */
-    public static Maybe<VersionedName> parseOsgiIdentifier(String symbolicNameOptionalWithVersion) {
-        if (Strings.isBlank(symbolicNameOptionalWithVersion))
-            return Maybe.absent("OSGi identifier is blank");
-        
-        String[] parts = symbolicNameOptionalWithVersion.split(":");
-        if (parts.length>2)
-            return Maybe.absent("OSGi identifier has too many parts; max one ':' symbol");
-        
-        Version v = null;
-        if (parts.length == 2) {
-            try {
-                v = Version.parseVersion(parts[1]);
-            } catch (IllegalArgumentException e) {
-                return Maybe.absent("OSGi identifier has invalid version string ("+e.getMessage()+")");
-            }
-        }
-        
-        return Maybe.of(new VersionedName(parts[0], v));
-    }
-
-    /**
-     * The class is not used, staying for future reference.
-     * Remove after OSGi transition is completed.
-     */
-    public static class ManifestHelper {
-        
-        private static ManifestParser parse;
-        private Manifest manifest;
-        private String source;
-
-        private static final String WIRING_PACKAGE = PackageNamespace.PACKAGE_NAMESPACE;
-        
-        public static ManifestHelper forManifestContents(String contents) throws IOException, BundleException {
-            ManifestHelper result = forManifest(Streams.newInputStreamWithContents(contents));
-            result.source = contents;
-            return result;
-        }
-        
-        public static ManifestHelper forManifest(URL url) throws IOException, BundleException {
-            InputStream in = null;
-            try {
-                in = url.openStream();
-                return forManifest(in);
-            } finally {
-                if (in != null) in.close();
-            }
-        }
-        
-        public static ManifestHelper forManifest(InputStream in) throws IOException, BundleException {
-            return forManifest(new Manifest(in));
-        }
-
-        public static ManifestHelper forManifest(Manifest manifest) throws BundleException {
-            ManifestHelper result = new ManifestHelper();
-            result.manifest = manifest;
-            parse = new ManifestParser(null, null, null, new StringMap(manifest.getMainAttributes()));
-            return result;
-        }
-        
-        public String getSymbolicName() {
-            return parse.getSymbolicName();
-        }
-
-        public Version getVersion() {
-            return parse.getBundleVersion();
-        }
-
-        public String getSymbolicNameVersion() {
-            return getSymbolicName()+":"+getVersion();
-        }
-
-        public List<String> getExportedPackages() {
-            MutableList<String> result = MutableList.of();
-            for (BundleCapability c: parse.getCapabilities()) {
-                if (WIRING_PACKAGE.equals(c.getNamespace())) {
-                    result.add((String)c.getAttributes().get(WIRING_PACKAGE));
-                }
-            }
-            return result;
-        }
-        
-        @Nullable public String getSource() {
-            return source;
-        }
-        
-        public Manifest getManifest() {
-            return manifest;
-        }
-    }
-    
 }
