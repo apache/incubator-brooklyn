@@ -84,9 +84,25 @@
   organization: { name: "The jQuery Foundation", url: "http://jquery.org/" }
   license: MIT
   notices: 
-  - Copyright (c) John Resig (2011)
+  - Copyright (c) John Resig (2005-2011)
   - "Includes code fragments from sizzle.js:"
   - "  Copyright (c) jQuery Foundation and other contributors (2011)"
+  - "  Available at http://sizzlejs.com"
+  - "  Used under the MIT license"
+
+# used in docs (not reported)
+- id: jquery-core:2.1.1
+  url: http://jquery.com/
+  description: JS library for manipulating HTML and eventing
+  name: jQuery JavaScript Library
+  files: jquery.js
+  version: 2.1.1
+  organization: { name: "The jQuery Foundation", url: "http://jquery.org/" }
+  license: MIT
+  notices: 
+  - Copyright (c) John Resig (2005-2014)
+  - "Includes code fragments from sizzle.js:"
+  - "  Copyright (c) jQuery Foundation and other contributors (2013)"
   - "  Available at http://sizzlejs.com"
   - "  Used under the MIT license"
 
@@ -167,6 +183,13 @@
   url: http://twitter.github.com/bootstrap/javascript.html#transitions
   notice: Copyright (c) Twitter, Inc (2012)
   license: ASL2
+ 
+# used in docs (not needed for licensing) 
+- id: bootstrap.js:3.1.1
+  version: 3.1.1
+  url: http://getbootstrap.com/
+  notice: Copyright (c) Twitter, Inc (2011-2014)
+  license: MIT
   
 - id: underscore.js
   version: 1.4.4
@@ -174,6 +197,15 @@
   url: http://underscorejs.org
   organization: { name: "DocumentCloud Inc", url: "http://www.documentcloud.org/" }
   notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2009-2013)
+  license: MIT
+
+# used in CLI (and in docs)
+- id: underscore.js:1.7.0
+  version: 1.7.0
+  files: underscore*.{js,map}
+  url: http://underscorejs.org
+  organization: { name: "DocumentCloud Inc", url: "http://www.documentcloud.org/" }
+  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2009-2014)
   license: MIT
 
 - id: async.js
@@ -258,4 +290,30 @@
   organization: { name: "Twitter, Inc", url: "http://twitter.com" }
   notice: Copyright (c) Twitter, Inc. and other contributors (2013-2014)
   license: MIT
+
+# DOCS files
+#
+# we don't do a distributable docs build -- they are just online.
+# (docs are excluded from the source build, and not bundled with the binary build.)
+# so these are not used currently; but for completeness and in case we change our minds,
+# here they are:
+
+# * different versions of jquery, bootstrap, and underscore noted above,
+# * media items github octicons and font-awesome fonts, not listed
+# * plus the below:
+
+- id: jquery.superfish.js
+  name: Superfish jQuery Menu Widget
+  version: 1.4.8
+  url: http://users.tpg.com.au/j_birch/plugins/superfish/
+  notice: Copyright (c) Joel Birch (2008)
+  license: MIT
+
+- id: jquery.cookie.js
+  name: jQuery Cookie Plugin
+  version: 1.3.1
+  url: https://github.com/carhartl/jquery-cookie
+  notice: Copyright (c) 2013 Klaus Hartl
+  license: MIT
+
 
