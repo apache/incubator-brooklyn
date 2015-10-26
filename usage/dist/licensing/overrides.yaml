@@ -228,7 +228,7 @@
 
 - id: js-uri
   files: URI.js
-  version: r29
+  version: 0.1
   url: http://code.google.com/p/js-uri/
   organization: { name: "js-uri contributors", url: "https://code.google.com/js-uri" }
   license: BSD-3-Clause
