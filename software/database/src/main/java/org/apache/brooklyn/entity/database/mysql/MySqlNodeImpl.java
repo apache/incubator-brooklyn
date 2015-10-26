@@ -27,8 +27,6 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.feed.ssh.SshFeed;
 import org.apache.brooklyn.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.feed.ssh.SshPollValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -36,6 +34,8 @@ import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 
@@ -79,6 +79,9 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
                 return executeScript((String)parameters.getStringKey("commands"));
             }
         });
+        getMutableEntityType().addEffector(MySqlNodeEffectors.EXPORT_DUMP);
+        getMutableEntityType().addEffector(MySqlNodeEffectors.IMPORT_DUMP);
+        getMutableEntityType().addEffector(MySqlNodeEffectors.CHANGE_PASSWORD);
     }
 
     @Override
