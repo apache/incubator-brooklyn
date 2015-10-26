@@ -30,7 +30,8 @@ You can install these using Help -> Install New Software, or from the Eclipse Ma
 As of this writing, Eclipse 4.5 and Eclipse 4.4 are commonly used,
 and the codebase can be imported (Import -> Existing Maven Projects)
 and successfully built and run inside an IDE.
-However there are quirks, and mileage may vary.
+However there are quirks, and mileage may vary. Disable ``Build Automatically``
+from the ``Project`` menu if the IDE is slow to respond.
 
 If you encounter issues, the following hints may be helpful:
 
