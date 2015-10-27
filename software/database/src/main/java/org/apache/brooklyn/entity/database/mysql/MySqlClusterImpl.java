@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.entity.database.mysql;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -119,7 +121,7 @@ public class MySqlClusterImpl extends DynamicClusterImpl implements MySqlCluster
         enrichers().add(Enrichers.builder()
                 .aggregating(MySqlNode.DATASTORE_URL)
                 .publishing(SLAVE_DATASTORE_URL_LIST)
-                .computing((Function)Functions.identity())
+                .computing((Function<Collection<String>, List<String>>)(Function)Functions.identity())
                 .entityFilter(Predicates.not(MySqlClusterUtils.IS_MASTER))
                 .fromMembers()
                 .build());
