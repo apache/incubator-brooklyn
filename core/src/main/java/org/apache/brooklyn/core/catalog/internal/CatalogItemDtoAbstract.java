@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.mgmt.rebind.BasicCatalogItemRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
+import org.apache.brooklyn.core.relations.EmptyRelationSupport;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
@@ -242,6 +243,16 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     @Override
     public RebindSupport<CatalogItemMemento> getRebindSupport() {
         return new BasicCatalogItemRebindSupport(this);
+    }
+
+    /**
+     * Overrides the parent so that relations are not visible.
+     * @return an immutable empty relation support object; relations are not supported,
+     * but we do not throw on access to enable reads in a consistent manner
+     */
+    @Override
+    public RelationSupportInternal<CatalogItem<T,SpecT>> relations() {
+        return new EmptyRelationSupport<CatalogItem<T,SpecT>>(this);
     }
 
     @Override

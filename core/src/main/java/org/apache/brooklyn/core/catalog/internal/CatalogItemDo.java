@@ -66,6 +66,7 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
     }
     
     /**
+     * Overrides the parent so that relations are not visible.
      * @return an immutable empty relation support object; relations are not supported,
      * but we do not throw on access to enable reads in a consistent manner
      */

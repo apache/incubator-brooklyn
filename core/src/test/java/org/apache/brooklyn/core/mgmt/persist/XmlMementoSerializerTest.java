@@ -48,7 +48,6 @@ import org.apache.brooklyn.core.catalog.internal.CatalogItemDtoAbstract;
 import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.SimulatedLocation;
-import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
@@ -60,6 +59,7 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.net.UserAndHostAndPort;
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -71,7 +71,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.thoughtworks.xstream.converters.Converter;
 
 public class XmlMementoSerializerTest {
 
@@ -400,8 +399,6 @@ public class XmlMementoSerializerTest {
 
     @SuppressWarnings("unchecked")
     private <T> T assertSerializeAndDeserialize(T obj) throws Exception {
-Converter x = serializer.xstream.getConverterLookup().lookupConverterForType(Class.class);
-System.out.println("XXX: "+x);
         String serializedForm = serializer.toString(obj);
         LOG.info("serializedForm=" + serializedForm);
         Object deserialized = serializer.fromString(serializedForm);

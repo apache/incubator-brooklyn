@@ -42,8 +42,7 @@ import com.thoughtworks.xstream.mapper.MapperWrapper;
 public class XmlSerializer<T> {
 
     private final Map<String, String> deserializingClassRenames;
-    // XXX protected
-    public final XStream xstream;
+    protected final XStream xstream;
 
     public XmlSerializer() {
         this(ImmutableMap.<String, String>of());

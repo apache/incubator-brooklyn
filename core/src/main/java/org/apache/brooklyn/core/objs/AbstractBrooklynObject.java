@@ -52,12 +52,12 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
 
     private String catalogItemId;
 
-    /** subclasses should synchronize on this for all access */
+    /** callers (only in TagSupport) should synchronize on this for all access */
     @SetFromFlag(value = "tags")
     private final Set<Object> tags = Sets.newLinkedHashSet();
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private RelationSupportInternal relations = new ByObjectBasicRelationSupport(this, new RelationChangedCallback());
+    private final RelationSupportInternal relations = new ByObjectBasicRelationSupport(this, new RelationChangedCallback());
     
     private volatile ManagementContext managementContext;
     
@@ -249,7 +249,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
         }
     }
 
-    // XXX always override to get casting correct
+    // always override to get casting correct
     @Override
     public RelationSupportInternal<?> relations() {
         return relations;
