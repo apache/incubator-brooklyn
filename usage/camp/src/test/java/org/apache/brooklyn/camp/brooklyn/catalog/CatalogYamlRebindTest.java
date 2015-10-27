@@ -48,11 +48,13 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.StartableApplication;
 import org.apache.brooklyn.core.mgmt.persist.BrooklynMementoPersisterToObjectStore;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessor;
 import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
 import org.apache.brooklyn.core.test.policy.TestEnricher;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -196,6 +198,14 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
                 addCatalogItems(String.format(locCatalogFormat, locVersion));
                 break;
             case STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM:
+                //Make sure that the flags are actually removed from the XML instead of still being there with false values
+                appItem.setDeprecated(true);
+                appItem.setDisabled(true);
+                mgmt().getCatalog().persist(appItem);
+                locItem.setDisabled(true);
+                locItem.setDeprecated(true);
+                mgmt().getCatalog().persist(locItem);
+                break;
             case NO_OP:
                 break; // no-op
             default:
@@ -209,19 +219,21 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
                     .stateTransformer(new Function<BrooklynMementoPersister, Void>() {
                         @Override public Void apply(BrooklynMementoPersister input) {
                             PersistenceObjectStore objectStore = ((BrooklynMementoPersisterToObjectStore)input).getObjectStore();
-                            String appItemMemento = checkNotNull(objectStore.newAccessor("catalog/"+appItemId.replace(":", "_")).get(), "appItem in catalog");
-                            String locItemMemento = checkNotNull(objectStore.newAccessor("catalog/"+locItemId.replace(":", "_")).get(), "locItem in catalog");
+                            StoreObjectAccessor appItemAccessor = objectStore.newAccessor("catalog/"+Strings.makeValidFilename(appItemId));
+                            StoreObjectAccessor locItemAccessor = objectStore.newAccessor("catalog/"+Strings.makeValidFilename(locItemId));
+                            String appItemMemento = checkNotNull(appItemAccessor.get(), "appItem in catalog");
+                            String locItemMemento = checkNotNull(locItemAccessor.get(), "locItem in catalog");
                             String newAppItemMemento = removeFromXml(appItemMemento, ImmutableList.of("catalogItem/deprecated", "catalogItem/disabled"));
-                            String newLocItemMemento = removeFromXml(appItemMemento, ImmutableList.of("catalogItem/deprecated", "catalogItem/disabled"));
-                            objectStore.newAccessor("catalog/"+appItemId).put(newAppItemMemento);
-                            objectStore.newAccessor("catalog/"+locItemId).put(newLocItemMemento);
+                            String newLocItemMemento = removeFromXml(locItemMemento, ImmutableList.of("catalogItem/deprecated", "catalogItem/disabled"));
+                            appItemAccessor.put(newAppItemMemento);
+                            locItemAccessor.put(newLocItemMemento);
                             return null;
                         }}));
         } else {
             rebind();
         }
 
-        // Ensure app is still there, and that it is usabe - e.g. "stop" effector functions as expected
+        // Ensure app is still there, and that it is usable - e.g. "stop" effector functions as expected
         BasicEntity newEntity = (BasicEntity) Iterables.getOnlyElement(newApp.getChildren());
         Policy newPolicy = Iterables.getOnlyElement(newEntity.policies());
         Enricher newEnricher = Iterables.tryFind(newEntity.enrichers(), Predicates.instanceOf(TestEnricher.class)).get();

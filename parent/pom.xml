@@ -51,118 +51,6 @@
       http://stackoverflow.com/questions/5309379/how-to-keep-maven-profiles-which-are-activebydefault-active-even-if-another-prof )
     -->
 
-    <properties>
-        <!-- Compilation -->
-        <java.version>1.7</java.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-        <!-- Testing -->
-        <cobertura.plugin.version>2.7</cobertura.plugin.version>
-        <surefire.version>2.18.1</surefire.version>
-        <plantuml.version>6121</plantuml.version>
-        <ant.version>1.8.4</ant.version>
-        <includedTestGroups />
-        <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
-        <surefire.failIfNoSpecifiedTests>false</surefire.failIfNoSpecifiedTests>
-
-        <!-- Dependencies -->
-        <brooklyn.version>0.9.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
-        <jclouds.groupId>org.apache.jclouds</jclouds.groupId> <!-- JCLOUDS_GROUPID_VERSION -->
-
-        <!-- These dependencies also appear in usage/downstream-parent/pom.xml -
-           - please synchronise versions between these two pom files -->
-        <jclouds.version>1.9.1</jclouds.version> <!-- JCLOUDS_VERSION -->
-        <logback.version>1.0.7</logback.version>
-        <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
-        <guava.version>17.0</guava.version>
-        <xstream.version>1.4.7</xstream.version>
-        <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
-        <fasterxml.jackson.version>2.4.2</fasterxml.jackson.version>  <!-- more recent jackson, but not compatible with old annotations! -->
-        <jersey.version>1.18.1</jersey.version>
-        <httpclient.version>4.4.1</httpclient.version>
-        <commons-lang3.version>3.1</commons-lang3.version>
-        <groovy.version>2.3.4</groovy.version> <!-- Version supported by https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-2.9.0-Release-Notes -->
-        <jsr305.version>2.0.1</jsr305.version>
-        <snakeyaml.version>1.11</snakeyaml.version>
-
-        <!-- Ordinary dependencies -->
-        <testng.version>6.8.8</testng.version>
-        <mockito.version>1.10.8</mockito.version>
-        <swagger.version>1.0.1</swagger.version>
-        <jansi.version>1.2.1</jansi.version>
-        <gson.version>2.3</gson.version>
-        <ivy.version>2.2.0</ivy.version>
-        <mx4j.version>3.0.1</mx4j.version>
-        <bouncycastle.version>1.49</bouncycastle.version>
-        <sshj.version>0.8.1</sshj.version>
-        <felix.framework.version>4.4.0</felix.framework.version>
-        <reflections.version>0.9.9-RC1</reflections.version>
-        <jetty.version>8.1.17.v20150415</jetty.version>
-        <airline.version>0.6</airline.version>
-        <mockwebserver.version>20121111</mockwebserver.version>
-        <freemarker.version>2.3.22</freemarker.version>
-        <commons-io.version>2.4</commons-io.version>
-        <hazelcast.version>3.0</hazelcast.version>
-        <jsonPath.version>2.0.0</jsonPath.version>
-        <commons-compress.version>1.4</commons-compress.version>
-        <qpid.version>0.20</qpid.version>
-        <mongodb.version>3.0.3</mongodb.version>
-        <riak.version>1.4.0</riak.version>
-        <maven-war-plugin.version>2.4</maven-war-plugin.version>
-        <validation-api.version>1.0.0.GA</validation-api.version>
-        <geronimo-jms_1.1_spec.version>1.1.1</geronimo-jms_1.1_spec.version>
-        <sleepycat-je.version>5.0.34</sleepycat-je.version>
-        <org.marre.smsj.version>1.0.0-20051126</org.marre.smsj.version>
-        <mysql-connector-java.version>5.1.18</mysql-connector-java.version>
-        <hadoop.version>1.0.2</hadoop.version>
-        <commons-cli.version>1.2</commons-cli.version>
-        <postgresql.version>9.1-901.jdbc4</postgresql.version>
-        <activemq.version>5.10.0</activemq.version>
-        <rabbitmq-version>2.8.7</rabbitmq-version>
-        <kafka.version>0.8.2.1</kafka.version>
-        <storm.version>0.8.2</storm.version>
-        <redis.version>1.5.2</redis.version>
-        <astyanax.version>1.56.24</astyanax.version>
-        <jcouchdb.version>0.11.0-1</jcouchdb.version>
-        <solr.version>4.7.0</solr.version>
-        <jtidy.version>r8-20060801</jtidy.version>
-        <opendmk_jmxremote_optional_jar.version>1.0-b01-ea</opendmk_jmxremote_optional_jar.version>
-        <resteasy.version>3.0.8.Final</resteasy.version>
-        <maven-dependency-plugin.version>2.8</maven-dependency-plugin.version>
-        <jopt.version>4.3</jopt.version>
-        <concurrentlinkedhashmap.version>1.0_jdk5</concurrentlinkedhashmap.version>
-        <maven-replacer-plugin.version>1.5.2</maven-replacer-plugin.version>
-        <nodejs-maven-plugin.version>1.0.3</nodejs-maven-plugin.version>
-        <nodejs-maven-binaries.version>0.10.25</nodejs-maven-binaries.version>
-        <jasmine-maven-plugin.version>1.3.1.5</jasmine-maven-plugin.version>
-        <requirejs-maven-plugin.version>2.0.0</requirejs-maven-plugin.version>
-        <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
-        <jetty-orbit-javax-servlet.version>3.0.0.v201112011016</jetty-orbit-javax-servlet.version>
-        <jcommander.version>1.27</jcommander.version>
-        <jsr250-api.version>1.0</jsr250-api.version>
-        <guice.version>3.0</guice.version>
-        <javax-inject.version>1</javax-inject.version>
-        <aopalliance.version>1.0</aopalliance.version>
-        <commons-configuration.version>1.7</commons-configuration.version>
-        <commons-lang.version>2.4</commons-lang.version>
-        <hamcrest.version>1.1</hamcrest.version>
-        <jsr311-api.version>1.1.1</jsr311-api.version>
-        <maxmind.version>0.8.1</maxmind.version>
-        <jna.version>4.0.0</jna.version>
-        <winrm4j.version>0.1.0</winrm4j.version>
-        <coverage.target>${working.dir}</coverage.target>
-
-        <!-- Transitive dependencies, declared explicitly to avoid version mismatch -->
-        <clojure.version>1.4.0</clojure.version>
-        <zookeeper.version>3.3.4</zookeeper.version>
-        <ring-core.version>1.1.5</ring-core.version>
-        <clj-time.version>0.4.1</clj-time.version>
-        <commons-codec.version>1.9</commons-codec.version>
-        <log4j.version>1.2.17</log4j.version>
-        <commons-logging.version>1.2</commons-logging.version>
-    </properties>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -343,6 +231,11 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
                 <version>${httpclient.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>xml-apis</groupId>
+                <artifactId>xml-apis</artifactId>
+                <version>${xml-apis.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>
@@ -574,6 +467,21 @@
                 <groupId>net.java.dev.jna</groupId>
                 <artifactId>jna-platform</artifactId>
                 <version>${jna.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jline</groupId>
+                <artifactId>jline</artifactId>
+                <version>${jline.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>${jsonSmart.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>asm</artifactId>
+                <version>${minidev.asm.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -1040,26 +948,6 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <inherited>true</inherited>
-                <configuration>
-                    <fork>true</fork>
-                    <verbose>false</verbose>
-                </configuration>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-eclipse-compiler</artifactId>
-                        <version>2.9.0-01</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-eclipse-batch</artifactId>
-                        <version>2.3.4-01</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
             <!--  workaround for src/main/resources excluding all in eclipse, as per
                   https://issues.sonatype.org/browse/MNGECLIPSE-864
             -->
@@ -1148,6 +1036,7 @@
                   <exclude>**/src/test/resources/org/apache/brooklyn/entity/software/base/template_with_extra_substitutions.txt</exclude>
                   <exclude>**/src/main/resources/banner.txt</exclude>
                   <exclude>**/src/test/resources/ssl/certs/localhost/info.txt</exclude>
+                  <exclude>**/src/main/history/dependencies.xml</exclude>
                   <exclude>**/sandbox/examples/src/main/scripts/amis.txt</exclude>
                   <!-- see notes in https://issues.apache.org/jira/browse/BROOKLYN-18 -->
 
@@ -1865,23 +1754,25 @@
         <profile>
             <id>eclipse-compiler</id>
             <build>
-                <plugins>
-                    <plugin>
-                       <groupId>org.apache.maven.plugins</groupId>
-                       <artifactId>maven-compiler-plugin</artifactId>
-                       <configuration>
-                           <compilerId>eclipse</compilerId>
-                           <optimize>true</optimize>
-                       </configuration>
-                       <dependencies>
-                               <dependency>
-                                   <groupId>org.codehaus.plexus</groupId>
-                                   <artifactId>plexus-compiler-eclipse</artifactId>
-                                   <version>2.6</version>
-                               </dependency>
-                       </dependencies>
-                    </plugin>
-                </plugins>
+                <pluginManagement>
+                    <plugins>
+                      <plugin>
+                         <groupId>org.apache.maven.plugins</groupId>
+                         <artifactId>maven-compiler-plugin</artifactId>
+                         <configuration>
+                             <compilerId>eclipse</compilerId>
+                             <optimize>true</optimize>
+                         </configuration>
+                         <dependencies>
+                             <dependency>
+                                 <groupId>org.codehaus.plexus</groupId>
+                                 <artifactId>plexus-compiler-eclipse</artifactId>
+                                 <version>2.6</version>
+                             </dependency>
+                         </dependencies>
+                      </plugin>
+                  </plugins>
+              </pluginManagement>
             </build>
         </profile>
     </profiles>

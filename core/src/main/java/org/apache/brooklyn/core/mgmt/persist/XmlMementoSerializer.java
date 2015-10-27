@@ -71,7 +71,6 @@ import com.thoughtworks.xstream.converters.SingleValueConverter;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
 import com.thoughtworks.xstream.core.ReferencingMarshallingContext;
-import com.thoughtworks.xstream.core.util.HierarchicalStreams;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.path.PathTrackingReader;
@@ -335,7 +334,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         @Override
         public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
             if (reader.hasMoreChildren()) {
-                Class<?> type = HierarchicalStreams.readClassType(reader, mapper);
+                Class<?> type = readClassType(reader, mapper);
+//                Class<?> type2 = context.getRequiredType();
                 reader.moveDown();
                 Object result = context.convertAnother(null, type);
                 reader.moveUp();
@@ -345,7 +345,36 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             }
         }
     }
-    
+
+    // TODO: readClassType() and readClassAttribute()
+    // Temporarily copied until osgification is finished from bundle-private class
+    //   com.thoughtworks.xstream.core.util.HierarchicalStreams
+    // Perhaps context.getRequiredType(); can be used instead?
+    // Other users of xstream (e.g. jenkinsci) manually check for resoved-to and class attributes
+    //   for compatibility with older versions of xstream
+    public static Class readClassType(HierarchicalStreamReader reader, Mapper mapper) {
+        String classAttribute = readClassAttribute(reader, mapper);
+        Class type;
+        if (classAttribute == null) {
+            type = mapper.realClass(reader.getNodeName());
+        } else {
+            type = mapper.realClass(classAttribute);
+        }
+        return type;
+    }
+
+    public static String readClassAttribute(HierarchicalStreamReader reader, Mapper mapper) {
+        String attributeName = mapper.aliasForSystemAttribute("resolves-to");
+        String classAttribute = attributeName == null ? null : reader.getAttribute(attributeName);
+        if (classAttribute == null) {
+            attributeName = mapper.aliasForSystemAttribute("class");
+            if (attributeName != null) {
+                classAttribute = reader.getAttribute(attributeName);
+            }
+        }
+        return classAttribute;
+    }
+
     public class ManagementContextConverter implements Converter {
         @Override
         public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {

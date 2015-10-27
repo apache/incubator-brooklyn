@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.3.0" name="org.apache.brooklyn-0.9.0-SNAPSHOT">
+    <feature version="0.0.0">
+        <feature prerequisite="false" dependency="false">brooklyn-api</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
+        <bundle>mvn:ch.qos.logback/logback-classic/1.0.7</bundle>
+        <bundle>mvn:ch.qos.logback/logback-core/1.0.7</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/2.4.2</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/2.4.2</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/2.4.2</bundle>
+        <bundle>mvn:com.google.code.gson/gson/2.3</bundle>
+        <bundle>mvn:com.google.guava/guava/17.0</bundle>
+        <bundle>mvn:com.jayway.jsonpath/json-path/2.0.0</bundle>
+        <bundle>mvn:com.thoughtworks.xstream/xstream/1.4.7</bundle>
+        <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
+        <bundle>mvn:commons-io/commons-io/2.4</bundle>
+        <bundle>mvn:net.minidev/asm/1.0.2</bundle>
+        <bundle>mvn:net.minidev/json-smart/2.1.1</bundle>
+        <bundle>mvn:net.schmizz/sshj/0.8.1</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-api/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-commands/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-core/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-logback-includes/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rt-osgi/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-groovy/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
+        <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/4.4.1</bundle>
+        <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/4.4.1</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jzlib/1.1.3_2</bundle>
+        <bundle>mvn:org.bouncycastle/bcpkix-jdk15on/1.49</bundle>
+        <bundle>mvn:org.bouncycastle/bcprov-ext-jdk15on/1.49</bundle>
+        <bundle>mvn:org.codehaus.groovy/groovy-all/2.3.4</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-jaxrs/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
+        <bundle>mvn:org.freemarker/freemarker/2.3.22</bundle>
+        <bundle>mvn:org.slf4j/jul-to-slf4j/1.6.6</bundle>
+        <bundle>mvn:org.yaml/snakeyaml/1.11</bundle>
+        <bundle>wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle>
+        <bundle>wrap:mvn:com.maxmind.geoip2/geoip2/0.8.1</bundle>
+        <bundle>wrap:mvn:org.reflections/reflections/0.9.9-RC1</bundle>
+        <bundle>wrap:mvn:xpp3/xpp3_min/1.1.4c</bundle>
+    </feature>
+</features>

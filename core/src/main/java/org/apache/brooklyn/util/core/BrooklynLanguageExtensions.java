@@ -21,7 +21,6 @@ package org.apache.brooklyn.util.core;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
-import org.apache.brooklyn.util.groovy.TimeExtras;
 
 /** @deprecated since 0.7.0 use {@link BrooklynInitialization} */
 public class BrooklynLanguageExtensions {
@@ -38,7 +37,6 @@ public class BrooklynLanguageExtensions {
     /** performs the language extensions required for this project */
     public synchronized static void init() {
         if (done.getAndSet(true)) return;
-        TimeExtras.init();
         BrooklynInitialization.initPortRanges();
     }
     

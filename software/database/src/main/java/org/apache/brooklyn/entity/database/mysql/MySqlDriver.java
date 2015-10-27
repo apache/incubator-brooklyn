@@ -25,6 +25,9 @@ import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
  * The {@link SoftwareProcessDriver} for MySQL.
  */
 public interface MySqlDriver extends SoftwareProcessDriver {
-    public String getStatusCmd();
-    public ProcessTaskWrapper<Integer> executeScriptAsync(String commands);
+    String getStatusCmd();
+    ProcessTaskWrapper<Integer> executeScriptAsync(String commands);
+    ProcessTaskWrapper<Integer> executeScriptFromInstalledFileAsync(String filenameAlreadyInstalledAtServer);
+    ProcessTaskWrapper<Integer> dumpDatabase(String additionalOptions, String dumpDestination);
+    void changePassword(String oldPass, String newPass);
 }

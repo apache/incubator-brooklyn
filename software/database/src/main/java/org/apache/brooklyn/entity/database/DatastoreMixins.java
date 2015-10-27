@@ -50,9 +50,10 @@ public class DatastoreMixins {
     public static final Effector<String> EXECUTE_SCRIPT = CanExecuteScript.EXECUTE_SCRIPT;
     
     public static interface CanExecuteScript {
-        public static final Effector<String> EXECUTE_SCRIPT = Effectors.effector(String.class, "executeScript")
+        ConfigKey<String> COMMANDS = ConfigKeys.newStringConfigKey("commands");
+        Effector<String> EXECUTE_SCRIPT = Effectors.effector(String.class, "executeScript")
             .description("executes the given script contents")
-            .parameter(String.class, "commands")
+            .parameter(COMMANDS)
             .buildAbstract();
     }
 

@@ -114,17 +114,7 @@ public class SystemServiceEnricher extends AbstractEnricher implements Enricher 
                 .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
                 .build();
 
-        submitTopLevel(updateService);
-    }
-
-    private void submitTopLevel(Task<Void> updateService) {
-        Task<?> currentTask = BasicExecutionManager.getPerThreadCurrentTask().get();
-        BasicExecutionManager.getPerThreadCurrentTask().set(null);
-        try {
-            Entities.submit(entity, updateService);
-        } finally {
-            BasicExecutionManager.getPerThreadCurrentTask().set(currentTask);
-        }
+        DynamicTasks.submitTopLevelTask(updateService, entity);
     }
 
     private String getLaunchScript(String stdin, String env) {

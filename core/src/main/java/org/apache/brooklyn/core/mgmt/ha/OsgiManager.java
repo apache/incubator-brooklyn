@@ -30,7 +30,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +51,6 @@ import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -77,24 +75,14 @@ public class OsgiManager {
             osgiCacheDir = BrooklynServerPaths.getOsgiCacheDirCleanedIfNeeded(mgmt);
             
             // any extra OSGi startup args could go here
-            framework = Osgis.newFrameworkStarted(osgiCacheDir.getAbsolutePath(), false, MutableMap.of());
-            
+            framework = Osgis.getFramework(osgiCacheDir.getAbsolutePath(), false);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
     }
 
     public void stop() {
-        try {
-            if (framework!=null) {
-                framework.stop();
-                framework.waitForStop(0); // 0 means indefinite
-            }
-        } catch (BundleException e) {
-            throw Exceptions.propagate(e);
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        }
+        Osgis.ungetFramework(framework);
         if (BrooklynServerPaths.isOsgiCacheForCleaning(mgmt, osgiCacheDir)) {
             // See exception reported in https://issues.apache.org/jira/browse/BROOKLYN-72
             // We almost always fail to delete he OSGi temp directory due to a concurrent modification.

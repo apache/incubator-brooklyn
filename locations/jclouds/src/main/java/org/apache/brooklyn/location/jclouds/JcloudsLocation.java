@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
+import static org.apache.brooklyn.util.ssh.BashCommands.sbinPath;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -965,9 +966,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
             // Apply any optional app-specific customization.
             for (JcloudsLocationCustomizer customizer : getCustomizers(setup)) {
+                LOG.debug("Customizing machine {}, using customizer {}", machineLocation, customizer);
                 customizer.customize(this, computeService, machineLocation);
             }
             for (MachineLocationCustomizer customizer : getMachineCustomizers(setup)) {
+                LOG.debug("Customizing machine {}, using customizer {}", machineLocation, customizer);
                 customizer.customize(machineLocation);
             }
 
@@ -1641,7 +1644,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         sshLoc = new SshMachineLocation(sshProps);
                     }
     
-                    int exitcode = sshLoc.execScript(execProps, "create-user", commands);
+                    // BROOKLYN-188: for SUSE, need to specify the path (for groupadd, useradd, etc)
+                    Map<String, ?> env = ImmutableMap.of("PATH", sbinPath());
+                    
+                    int exitcode = sshLoc.execScript(execProps, "create-user", commands, env);
+
                     if (exitcode != 0) {
                         LOG.warn("exit code {} when creating user for {}; usage may subsequently fail", exitcode, node);
                     }
@@ -2515,8 +2522,16 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         LoginCredentials nodeCreds = node.getCredentials();
         String nodeUser = nodeCreds.getUser();
         String loginUserOverride = setup.get(LOGIN_USER);
-        Set<String> users = MutableSet.<String>builder().add(nodeUser).add(loginUserOverride).build();
-        
+        Set<String> users = MutableSet.of();
+
+        if (Strings.isNonBlank(nodeUser)) {
+            users.add(nodeUser);
+        }
+
+        if (Strings.isNonBlank(loginUserOverride)) {
+            users.add(loginUserOverride);
+        }
+
         // See https://issues.apache.org/jira/browse/BROOKLYN-186
         // Handle where jclouds gives us the wrong login user (!) and both a password + ssh key.
         // Try all the permutations to find the one that works.
@@ -2605,10 +2620,12 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 credsToString.add("user="+user+", password="+password+", key="+key);
             }
 
-            LOG.debug("VM {}: reported online, now waiting {} for it to be contactable on {}; using credentials {}",
+            LOG.debug("VM {}: reported online, now waiting {} for it to be contactable on {}; trying {} credential{}: {}",
                     new Object[] {
                             setup.getDescription(), timeout,
                             hostAndPort,
+                            credentialsToLog.size(),
+                            Strings.s(credentialsToLog.size()),
                             (credsToString.size() == 1) ? credsToString.get(0) : "(multiple!):" + Joiner.on("\n\t").join(credsToString)
                     });
         }

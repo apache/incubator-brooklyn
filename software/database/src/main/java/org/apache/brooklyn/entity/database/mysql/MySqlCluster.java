@@ -19,6 +19,7 @@
 package org.apache.brooklyn.entity.database.mysql;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.ImplementedBy;
@@ -29,6 +30,7 @@ import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey.StringAt
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.database.DatastoreMixins.HasDatastoreUrl;
 import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.util.GenericTypes;
 
 import com.google.common.reflect.TypeToken;
 
@@ -36,11 +38,6 @@ import com.google.common.reflect.TypeToken;
 @Catalog(name="MySql Master-Slave cluster", description="Sets up a cluster of MySQL nodes using master-slave relation and binary logging", iconUrl="classpath:///mysql-logo-110x57.png")
 public interface MySqlCluster extends DynamicCluster, HasDatastoreUrl {
     interface MySqlMaster {
-        AttributeSensor<String> MASTER_LOG_FILE = Sensors.newStringSensor(
-                "mysql.master.log_file", "The binary log file master is writing to");
-        AttributeSensor<Integer> MASTER_LOG_POSITION = Sensors.newIntegerSensor(
-                "mysql.master.log_position", "The position in the log file to start replication");
-
         ConfigKey<String> MASTER_CREATION_SCRIPT_CONTENTS = ConfigKeys.newStringConfigKey(
                 "datastore.master.creation.script.contents", "Contents of creation script to initialize the master node after initializing replication");
 
@@ -52,24 +49,29 @@ public interface MySqlCluster extends DynamicCluster, HasDatastoreUrl {
         AttributeSensor<Integer> SLAVE_SECONDS_BEHIND_MASTER = Sensors.newIntegerSensor("mysql.slave.seconds_behind_master", "How many seconds behind master is the replication state on the slave");
     }
 
+    AttributeSensor<ReplicationSnapshot> REPLICATION_LAST_SLAVE_SNAPSHOT = Sensors.newSensor(ReplicationSnapshot.class, "mysql.replication.last_slave_snapshot", "Last valid state to init slaves with");
+    ConfigKey<String> REPLICATION_PREFERRED_SOURCE = ConfigKeys.newStringConfigKey("mysql.replication.preferred_source", "ID of node to get the replication snapshot from. If not set a random slave is used, falling back to master if no slaves.");
+
     ConfigKey<String> SLAVE_USERNAME = ConfigKeys.newStringConfigKey(
             "mysql.slave.username", "The user name slaves will use to connect to the master", "slave");
-    ConfigKey<String> SLAVE_REPLICATE_DO_DB = ConfigKeys.newStringConfigKey(
-            "mysql.slave.replicate_do_db", "Replicate only listed DBs");
-    ConfigKey<String> SLAVE_REPLICATE_IGNORE_DB = ConfigKeys.newStringConfigKey(
-            "mysql.slave.replicate_ignore_db", "Don't replicate listed DBs");
-    ConfigKey<String> SLAVE_REPLICATE_DO_TABLE = ConfigKeys.newStringConfigKey(
-            "mysql.slave.replicate_do_table", "Replicate only listed tables");
-    ConfigKey<String> SLAVE_REPLICATE_IGNORE_TABLE = ConfigKeys.newStringConfigKey(
-            "mysql.slave.replicate_ignore_table", "Don't replicate listed tables");
-    ConfigKey<String> SLAVE_REPLICATE_WILD_DO_TABLE = ConfigKeys.newStringConfigKey(
-            "mysql.slave.replicate_wild_do_table", "Replicate only listed tables, wildcards acepted");
-    ConfigKey<String> SLAVE_REPLICATE_WILD_IGNORE_TABLE = ConfigKeys.newStringConfigKey(
-            "mysql.slave.replicate_wild_ignore_table", "Don't replicate listed tables, wildcards acepted");
+    ConfigKey<Collection<String>> SLAVE_REPLICATE_DO_DB = ConfigKeys.newConfigKey(GenericTypes.COLLECTION_STRING,
+            "mysql.slave.replicate_do_db", "Replicate only listed DBs. Use together with 'mysql.slave.replicate_dump_db'.");
+    ConfigKey<Collection<String>> SLAVE_REPLICATE_IGNORE_DB = ConfigKeys.newConfigKey(GenericTypes.COLLECTION_STRING,
+            "mysql.slave.replicate_ignore_db", "Don't replicate listed DBs. Use together with 'mysql.slave.replicate_dump_db'.");
+    ConfigKey<Collection<String>> SLAVE_REPLICATE_DO_TABLE = ConfigKeys.newConfigKey(GenericTypes.COLLECTION_STRING,
+            "mysql.slave.replicate_do_table", "Replicate only listed tables. Use together with 'mysql.slave.replicate_dump_db'.");
+    ConfigKey<Collection<String>> SLAVE_REPLICATE_IGNORE_TABLE = ConfigKeys.newConfigKey(GenericTypes.COLLECTION_STRING,
+            "mysql.slave.replicate_ignore_table", "Don't replicate listed tables. Use together with 'mysql.slave.replicate_dump_db'.");
+    ConfigKey<Collection<String>> SLAVE_REPLICATE_WILD_DO_TABLE = ConfigKeys.newConfigKey(GenericTypes.COLLECTION_STRING,
+            "mysql.slave.replicate_wild_do_table", "Replicate only listed tables, wildcards acepted. Use together with 'mysql.slave.replicate_dump_db'.");
+    ConfigKey<Collection<String>> SLAVE_REPLICATE_WILD_IGNORE_TABLE = ConfigKeys.newConfigKey(GenericTypes.COLLECTION_STRING,
+            "mysql.slave.replicate_wild_ignore_table", "Don't replicate listed tables, wildcards acepted. Use together with 'mysql.slave.replicate_dump_db'.");
+    ConfigKey<Collection<String>> SLAVE_REPLICATE_DUMP_DB = ConfigKeys.newConfigKey(GenericTypes.COLLECTION_STRING,
+            "mysql.slave.replicate_dump_db", "Databases to pass to the mysqldump command, used for slave initialization");
     StringAttributeSensorAndConfigKey SLAVE_PASSWORD = new StringAttributeSensorAndConfigKey(
             "mysql.slave.password", "The password slaves will use to connect to the master. Will be auto-generated by default.");
     @SuppressWarnings("serial")
-    AttributeSensor<Collection<String>> SLAVE_DATASTORE_URL_LIST = Sensors.newSensor(new TypeToken<Collection<String>>() {},
+    AttributeSensor<List<String>> SLAVE_DATASTORE_URL_LIST = Sensors.newSensor(new TypeToken<List<String>>() {},
             "mysql.slave.datastore.url", "List of all slave's DATASTORE_URL sensors");
     AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MYSQL_PER_NODE = Sensors.newDoubleSensor("mysql.queries.perSec.fromMysql.perNode");
 }

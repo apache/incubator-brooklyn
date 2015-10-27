@@ -18,21 +18,112 @@
  */
 package org.apache.brooklyn.util.exceptions;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
 import java.util.ConcurrentModificationException;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.brooklyn.util.collections.MutableSet;
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.exceptions.ExceptionsTest;
-import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicates;
+
 public class ExceptionsTest {
 
     private static final Logger log = LoggerFactory.getLogger(ExceptionsTest.class);
+    
+    @Test
+    public void testPropagateRuntimeException() throws Exception {
+        NullPointerException tothrow = new NullPointerException("simulated");
+        try {
+            throw Exceptions.propagate(tothrow);
+        } catch (NullPointerException e) {
+            assertEquals(e, tothrow);
+        }
+    }
+    
+    @Test
+    public void testPropagateCheckedException() throws Exception {
+        Exception tothrow = new Exception("simulated");
+        try {
+            throw Exceptions.propagate(tothrow);
+        } catch (RuntimeException e) {
+            assertEquals(e.getCause(), tothrow);
+        }
+    }
+    
+    @Test
+    public void testPropagateIfFatalPropagatesInterruptedException() throws Exception {
+        InterruptedException tothrow = new InterruptedException("simulated");
+        try {
+            Exceptions.propagateIfFatal(tothrow);
+            fail();
+        } catch (RuntimeException e) {
+            assertTrue(Thread.interrupted()); // note this clears the interrupted flag as well
+            assertEquals(e.getCause(), tothrow);
+        }
+    }
+    
+    @Test
+    public void testPropagateIfFatalPropagatesRuntimeInterruptedException() throws Exception {
+        RuntimeInterruptedException tothrow = new RuntimeInterruptedException(new InterruptedException("simulated"));
+        try {
+            Exceptions.propagateIfFatal(tothrow);
+            fail();
+        } catch (RuntimeInterruptedException e) {
+            assertTrue(Thread.interrupted()); // note this clears the interrupted flag as well
+            assertEquals(e, tothrow);
+        }
+    }
+    
+    @Test
+    public void testPropagateIfFatalPropagatesError() throws Exception {
+        Error tothrow = new Error();
+        try {
+            Exceptions.propagateIfFatal(tothrow);
+            fail();
+        } catch (Error e) {
+            assertEquals(e, tothrow);
+        }
+    }
+    
+    @Test
+    public void testPropagateIfFatalDoesNotPropagatesNormalException() throws Exception {
+        Exception e = new Exception();
+        Exceptions.propagateIfFatal(e);
+        
+        RuntimeException re = new RuntimeException();
+        Exceptions.propagateIfFatal(re);
+        
+        Throwable t = new Throwable();
+        Exceptions.propagateIfFatal(t);
+    }
+    
+    @Test
+    public void testGetFirstThrowableOfType() throws Exception {
+        NullPointerException npe = new NullPointerException("simulated");
+        IllegalStateException ise = new IllegalStateException("simulated", npe);
+        
+        assertEquals(Exceptions.getFirstThrowableOfType(ise, IllegalStateException.class), ise);
+        assertEquals(Exceptions.getFirstThrowableOfType(ise, NullPointerException.class), npe);
+        assertNull(Exceptions.getFirstThrowableOfType(ise, IndexOutOfBoundsException.class));
+    }
+    
+    @Test
+    public void testGetFirstThrowableMatching() throws Exception {
+        NullPointerException npe = new NullPointerException("simulated");
+        IllegalStateException ise = new IllegalStateException("simulated", npe);
+        
+        assertEquals(Exceptions.getFirstThrowableMatching(ise, Predicates.instanceOf(IllegalStateException.class)), ise);
+        assertEquals(Exceptions.getFirstThrowableMatching(ise, Predicates.instanceOf(NullPointerException.class)), npe);
+        assertNull(Exceptions.getFirstThrowableMatching(ise, Predicates.alwaysFalse()));
+    }
     
     @Test
     public void test12CollapseCompound() throws Exception {
