@@ -23,16 +23,16 @@ import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import brooklyn.basic.relations.Relationship;
+import brooklyn.basic.relations.RelationshipType;
 
 @Test
 public class RelationshipTest {
 
-    static Relationship<Entity, TestEntity> AUNTIE_OF = Relationships.newRelationshipPair(
+    static RelationshipType<Entity, TestEntity> AUNTIE_OF = RelationshipTypes.newRelationshipPair(
         "auntie", "aunties", Entity.class, "auntie_of_nephew",
         "nephew", "nephews", TestEntity.class, "nephew_of_auntie");
     
-    static Relationship<TestEntity, Entity> NEPHEW_OF = AUNTIE_OF.getInverseRelationship();
+    static RelationshipType<TestEntity, Entity> NEPHEW_OF = AUNTIE_OF.getInverseRelationshipType();
     
     public void testFields() {
         Assert.assertEquals(AUNTIE_OF.getRelationshipTypeName(), "auntie_of_nephew");
@@ -51,8 +51,8 @@ public class RelationshipTest {
         Assert.assertEquals(NEPHEW_OF.getSourceNamePlural(), "nephews");
         Assert.assertEquals(NEPHEW_OF.getTargetNamePlural(), "aunties");
         
-        Assert.assertEquals(NEPHEW_OF.getInverseRelationship(), AUNTIE_OF);
-        Assert.assertEquals(AUNTIE_OF.getInverseRelationship(), NEPHEW_OF);
+        Assert.assertEquals(NEPHEW_OF.getInverseRelationshipType(), AUNTIE_OF);
+        Assert.assertEquals(AUNTIE_OF.getInverseRelationshipType(), NEPHEW_OF);
     }
     
 }

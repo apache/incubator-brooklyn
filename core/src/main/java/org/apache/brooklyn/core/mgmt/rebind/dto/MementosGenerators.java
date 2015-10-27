@@ -68,7 +68,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Sets;
 
-import brooklyn.basic.relations.Relationship;
+import brooklyn.basic.relations.RelationshipType;
 
 public class MementosGenerators {
 
@@ -449,9 +449,9 @@ public class MementosGenerators {
             builder.tags.add(tag); 
         }
         // CatalogItems return empty support, so this is safe even through they don't support relations
-        for (Relationship<?,? extends BrooklynObject> relationship: instance.relations().getRelationships()) {
+        for (RelationshipType<?,? extends BrooklynObject> relationship: instance.relations().getRelationshipTypes()) {
             @SuppressWarnings({ "unchecked", "rawtypes" })
-            Set relations = instance.relations().getRelations((Relationship)relationship);
+            Set relations = instance.relations().getRelations((RelationshipType)relationship);
             Set<String> relationIds = Sets.newLinkedHashSet();
             for (Object r: relations) relationIds.add( ((BrooklynObject)r).getId() );
             builder.relations.put(relationship.getRelationshipTypeName(), relationIds);

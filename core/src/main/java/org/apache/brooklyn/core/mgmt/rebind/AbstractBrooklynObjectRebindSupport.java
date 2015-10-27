@@ -34,7 +34,7 @@ import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import brooklyn.basic.relations.Relationship;
+import brooklyn.basic.relations.RelationshipType;
 
 public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> implements RebindSupport<T> {
 
@@ -87,12 +87,12 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void addRelations(RebindContext rebindContext, T memento) {
         for (Map.Entry<String,Set<String>> rEntry : memento.getRelations().entrySet()) {
-            Relationship<? extends BrooklynObject, ? extends BrooklynObject> r = EntityRelations.lookup(instance.getManagementContext(), rEntry.getKey());
+            RelationshipType<? extends BrooklynObject, ? extends BrooklynObject> r = EntityRelations.lookup(instance.getManagementContext(), rEntry.getKey());
             if (r==null) throw new IllegalStateException("Unsupported relationship -- "+rEntry.getKey() + " -- in "+memento);
             for (String itemId: rEntry.getValue()) {
                 BrooklynObject item = rebindContext.lookup().lookup(null, itemId);
                 if (item != null) {
-                    instance.relations().add((Relationship)r, item);
+                    instance.relations().add((RelationshipType)r, item);
                 } else {
                     LOG.warn("Item not found; discarding item {} relation {} of entity {}({})",
                             new Object[] {itemId, r, memento.getType(), memento.getId()});

@@ -31,7 +31,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
-import brooklyn.basic.relations.Relationship;
+import brooklyn.basic.relations.RelationshipType;
 
 public class ByObjectBasicRelationSupport<SourceType extends BrooklynObject> extends AbstractBasicRelationSupport<SourceType> {
 
@@ -56,7 +56,7 @@ public class ByObjectBasicRelationSupport<SourceType extends BrooklynObject> ext
         }
         
         // TODO for now, relationships are stored here (and persisted); ideally we'd look them up in catalog
-        private Map<String,Relationship<? super T,? extends BrooklynObject>> relationships = MutableMap.of();
+        private Map<String,RelationshipType<? super T,? extends BrooklynObject>> relationshipTypes = MutableMap.of();
         
         private Multimap<String,BrooklynObject> relations = Multimaps.newMultimap(MutableMap.<String,Collection<BrooklynObject>>of(), 
             new Supplier<Collection<BrooklynObject>>() {
@@ -65,14 +65,14 @@ public class ByObjectBasicRelationSupport<SourceType extends BrooklynObject> ext
                 }
             });
 
-        public Set<Relationship<? super T,? extends BrooklynObject>> getRelationships() {
+        public Set<RelationshipType<? super T,? extends BrooklynObject>> getRelationshipTypes() {
             synchronized (relations) {
-                return MutableSet.copyOf(relationships.values());
+                return MutableSet.copyOf(relationshipTypes.values());
             }
         }
         
         @SuppressWarnings("unchecked") @Override 
-        public <U extends BrooklynObject> Set<U> getRelations(Relationship<? super T, U> relationship) {
+        public <U extends BrooklynObject> Set<U> getRelations(RelationshipType<? super T, U> relationship) {
             synchronized (relations) {
                 return (Set<U>)MutableSet.copyOf(relations.get(relationship.getRelationshipTypeName()));
             }
@@ -80,16 +80,16 @@ public class ByObjectBasicRelationSupport<SourceType extends BrooklynObject> ext
 
         @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public <U extends BrooklynObject> void add(Relationship<? super T,? super U> relationship, U target) {
+        public <U extends BrooklynObject> void add(RelationshipType<? super T,? super U> relationship, U target) {
             synchronized (relations) {
-                relationships.put(relationship.getRelationshipTypeName(), (Relationship)relationship);
+                relationshipTypes.put(relationship.getRelationshipTypeName(), (RelationshipType)relationship);
                 relations.put(relationship.getRelationshipTypeName(), target);
             }
             onRelationsChanged();
         }
 
         @Override
-        public <U extends BrooklynObject> void remove(Relationship<? super T,? super U> relationship, U target) {
+        public <U extends BrooklynObject> void remove(RelationshipType<? super T,? super U> relationship, U target) {
             synchronized (relations) {
                 relations.remove(relationship.getRelationshipTypeName(), target);
             }

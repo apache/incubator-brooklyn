@@ -20,11 +20,11 @@ package org.apache.brooklyn.core.relations;
 
 import com.google.common.base.Objects;
 
-import brooklyn.basic.relations.Relationship;
+import brooklyn.basic.relations.RelationshipType;
 
-public class Relationships {
+public class RelationshipTypes {
 
-    private static abstract class AbstractBasicRelationship<SourceType,TargetType> implements Relationship<SourceType,TargetType> {
+    private static abstract class AbstractBasicRelationship<SourceType,TargetType> implements RelationshipType<SourceType,TargetType> {
         private final String relationshipTypeName;
         private final String sourceName;
         private final String sourceNamePlural;
@@ -71,16 +71,16 @@ public class Relationships {
             if (!Objects.equal(getSourceType(), other.getSourceType())) return false;
             if (!Objects.equal(targetType, other.targetType)) return false;
 
-            if (getInverseRelationship() == null) {
+            if (getInverseRelationshipType() == null) {
                 // require both null or...
-                if (other.getInverseRelationship() != null)
+                if (other.getInverseRelationshipType() != null)
                     return false;
             } else {
                 // ... they have same type name
                 // (don't recurse as that sets up infinite loop)
-                if (other.getInverseRelationship() == null)
+                if (other.getInverseRelationshipType() == null)
                     return false;
-                if (!Objects.equal(getInverseRelationship().getRelationshipTypeName(), other.getInverseRelationship().getRelationshipTypeName())) return false;
+                if (!Objects.equal(getInverseRelationshipType().getRelationshipTypeName(), other.getInverseRelationshipType().getRelationshipTypeName())) return false;
             }
 
             return true;
@@ -90,7 +90,7 @@ public class Relationships {
         public int hashCode() {
             // comments as per equals
             return Objects.hashCode(relationshipTypeName, getSourceType(), targetType,
-                getInverseRelationship()!=null ? getInverseRelationship().getRelationshipTypeName() : null);
+                getInverseRelationshipType()!=null ? getInverseRelationshipType().getRelationshipTypeName() : null);
         }
         
         @Override
@@ -100,33 +100,33 @@ public class Relationships {
     }
 
     private static class BasicRelationshipWithInverse<SourceType,TargetType> extends AbstractBasicRelationship<SourceType,TargetType> {
-        private BasicRelationshipWithInverse<TargetType,SourceType> inverseRelationship;
+        private BasicRelationshipWithInverse<TargetType,SourceType> inverseRelationshipType;
         
         private BasicRelationshipWithInverse(String relationshipTypeName, String sourceName, String sourceNamePlural, Class<TargetType> targetType) {
             super(relationshipTypeName, sourceName, sourceNamePlural, targetType);
         }
 
         @Override
-        public Relationship<TargetType,SourceType> getInverseRelationship() {
-            return inverseRelationship;
+        public RelationshipType<TargetType,SourceType> getInverseRelationshipType() {
+            return inverseRelationshipType;
         }
 
         @Override
         public Class<SourceType> getSourceType() {
-            if (getInverseRelationship()==null) return null;
-            return getInverseRelationship().getTargetType();
+            if (getInverseRelationshipType()==null) return null;
+            return getInverseRelationshipType().getTargetType();
         }
 
         @Override
         public String getTargetName() {
-            if (getInverseRelationship()==null) return null;
-            return getInverseRelationship().getSourceName();
+            if (getInverseRelationshipType()==null) return null;
+            return getInverseRelationshipType().getSourceName();
         }
 
         @Override
         public String getTargetNamePlural() {
-            if (getInverseRelationship()==null) return null;
-            return getInverseRelationship().getSourceNamePlural();
+            if (getInverseRelationshipType()==null) return null;
+            return getInverseRelationshipType().getSourceNamePlural();
         }
     }
 
@@ -160,24 +160,24 @@ public class Relationships {
         }
 
         @Override
-        public Relationship<TargetType, SourceType> getInverseRelationship() {
+        public RelationshipType<TargetType, SourceType> getInverseRelationshipType() {
             return null;
         }
     }
 
-    public static <SourceType,TargetType> Relationship<SourceType,TargetType> newRelationshipPair(
+    public static <SourceType,TargetType> RelationshipType<SourceType,TargetType> newRelationshipPair(
             String sourceName, String sourceNamePlural, Class<SourceType> sourceType, String toTargetRelationshipTypeName,   
             String targetName, String targetNamePlural, Class<TargetType> targetType, String toSourceRelationshipTypeName) {
         BasicRelationshipWithInverse<SourceType, TargetType> r1 = new BasicRelationshipWithInverse<SourceType, TargetType>(
             toTargetRelationshipTypeName, sourceName, sourceNamePlural, targetType);
         BasicRelationshipWithInverse<TargetType, SourceType> r2 = new BasicRelationshipWithInverse<TargetType, SourceType>(
             toSourceRelationshipTypeName, targetName, targetNamePlural, sourceType);
-        r1.inverseRelationship = r2;
-        r2.inverseRelationship = r1;
+        r1.inverseRelationshipType = r2;
+        r2.inverseRelationshipType = r1;
         return r1;
     }
 
-    public static <SourceType,TargetType> Relationship<SourceType,TargetType> newRelationshipOneway(
+    public static <SourceType,TargetType> RelationshipType<SourceType,TargetType> newRelationshipOneway(
             String sourceName, String sourceNamePlural, Class<SourceType> sourceType, String toTargetRelationshipTypeName,   
             String targetName, String targetNamePlural, Class<TargetType> targetType) {
         return new BasicRelationshipOneWay<SourceType,TargetType>(

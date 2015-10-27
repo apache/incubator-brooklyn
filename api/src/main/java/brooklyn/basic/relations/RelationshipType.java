@@ -18,10 +18,10 @@
  */
 package brooklyn.basic.relations;
 
-import brooklyn.basic.relations.Relationship;
+import brooklyn.basic.relations.RelationshipType;
 
 
-public interface Relationship<SourceType,TargetType> {
+public interface RelationshipType<SourceType,TargetType> {
 
     public String getRelationshipTypeName();
     public Class<SourceType> getSourceType();
@@ -33,6 +33,6 @@ public interface Relationship<SourceType,TargetType> {
     public String getTargetName();
     public String getTargetNamePlural();
 
-    public Relationship<TargetType,SourceType> getInverseRelationship();
+    public RelationshipType<TargetType,SourceType> getInverseRelationshipType();
 
 }

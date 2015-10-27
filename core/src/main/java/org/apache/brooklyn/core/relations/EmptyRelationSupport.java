@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObject.RelationSupport;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.RelationSupportInternal;
 
-import brooklyn.basic.relations.Relationship;
+import brooklyn.basic.relations.RelationshipType;
 
 public final class EmptyRelationSupport<SourceType extends BrooklynObject> implements RelationSupportInternal<SourceType> {
 
@@ -34,22 +34,22 @@ public final class EmptyRelationSupport<SourceType extends BrooklynObject> imple
     public EmptyRelationSupport(SourceType source) { this.source = source; }
         
     @Override
-    public Set<Relationship<? super SourceType, ? extends BrooklynObject>> getRelationships() {
+    public Set<RelationshipType<? super SourceType, ? extends BrooklynObject>> getRelationshipTypes() {
         return Collections.emptySet();
     }
     
     @Override
-    public <U extends BrooklynObject> Set<U> getRelations(Relationship<? super SourceType, U> relationship) {
+    public <U extends BrooklynObject> Set<U> getRelations(RelationshipType<? super SourceType, U> relationship) {
         return Collections.emptySet();
     }
 
     @Override
-    public <U extends BrooklynObject> void add(Relationship<? super SourceType, ? super U> relationship, U target) {
+    public <U extends BrooklynObject> void add(RelationshipType<? super SourceType, ? super U> relationship, U target) {
         throw new UnsupportedOperationException("Relations not available on "+source);
     }
 
     @Override
-    public <U extends BrooklynObject> void remove(Relationship<? super SourceType, ? super U> relationship, U target) {
+    public <U extends BrooklynObject> void remove(RelationshipType<? super SourceType, ? super U> relationship, U target) {
     }
 
     @Override

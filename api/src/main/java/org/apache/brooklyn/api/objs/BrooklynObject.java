@@ -34,7 +34,7 @@ import org.apache.brooklyn.api.sensor.SensorEventListener;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
-import brooklyn.basic.relations.Relationship;
+import brooklyn.basic.relations.RelationshipType;
 
 /**
  * Super-type of entity, location, policy and enricher.
@@ -151,9 +151,20 @@ public interface BrooklynObject extends Identifiable, Configurable {
     }
     
     public interface RelationSupport<T extends BrooklynObject> {
-        public <U extends BrooklynObject> void add(Relationship<? super T,? super U> relationship, U target);
-        public <U extends BrooklynObject> void remove(Relationship<? super T,? super U> relationship, U target);
-        public Set<Relationship<? super T,? extends BrooklynObject>> getRelationships();
-        public <U extends BrooklynObject> Set<U> getRelations(Relationship<? super T,U> relationship);
+        /** Adds a relationship of the given type from this object pointing at the given target, 
+         * and ensures that the inverse relationship (if there is one) is present at the target pointing back at this object. 
+         */
+        public <U extends BrooklynObject> void add(RelationshipType<? super T,? super U> relationship, U target);
+        
+        /** Removes any and all relationships of the given type from this object pointing at the given target,
+         * and ensures that the inverse relationships (if there are one) are also removed. 
+         */
+        public <U extends BrooklynObject> void remove(RelationshipType<? super T,? super U> relationship, U target);
+        
+        /** @return the {@link RelationshipType}s originating from this object */
+        public Set<RelationshipType<? super T,? extends BrooklynObject>> getRelationshipTypes();
+        
+        /** @return the {@link BrooklynObject}s which are targets of the given {@link RelationshipType} */
+        public <U extends BrooklynObject> Set<U> getRelations(RelationshipType<? super T,U> relationshipType);
     }
 }
