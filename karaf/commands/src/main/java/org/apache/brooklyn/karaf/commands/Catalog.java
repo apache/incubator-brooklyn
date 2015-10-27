@@ -18,12 +18,14 @@
  */
 package org.apache.brooklyn.karaf.commands;
 
+import com.google.common.annotations.Beta;
 import org.apache.karaf.shell.api.action.Action;
 import org.apache.karaf.shell.api.action.Argument;
 import org.apache.karaf.shell.api.action.Command;
 import org.apache.karaf.shell.api.action.Option;
 import org.apache.karaf.shell.api.action.lifecycle.Service;
 
+@Beta
 @Command(scope = "brooklyn", name = "catalog", description = "Manage the local brooklyn catalog")
 @Service
 public class Catalog implements Action {
