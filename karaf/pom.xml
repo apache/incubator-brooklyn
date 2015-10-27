@@ -30,7 +30,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <karaf.version>4.0.1</karaf.version>
+    <karaf.version>4.0.2</karaf.version>
 
     <org.osgi.core.version>6.0.0</org.osgi.core.version>
     <org.osgi.compendium.version>5.0.0</org.osgi.compendium.version>
