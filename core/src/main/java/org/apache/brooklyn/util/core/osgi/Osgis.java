@@ -51,12 +51,15 @@ import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
+import java.util.Map;
 import org.apache.brooklyn.util.osgi.OsgiUtils;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.launch.FrameworkFactory;
 
 /** 
  * utilities for working with osgi.
@@ -71,7 +74,23 @@ public class Osgis {
     private static final String EXTENSION_PROTOCOL = "system";
     private static final Set<String> SYSTEM_BUNDLES = MutableSet.of();
 
-    
+    /** @deprecated since 0.9.0, replaced with {@link org.apache.brooklyn.util.osgi.VersionedName} */
+    @Deprecated
+    public static class VersionedName extends org.apache.brooklyn.util.osgi.VersionedName {
+
+        private VersionedName(org.apache.brooklyn.util.osgi.VersionedName src) {
+            super(src.getSymbolicName(), src.getVersion());
+        }
+
+        public VersionedName(Bundle b) {
+            super(b);
+        }
+
+        public VersionedName(String symbolicName, Version version) {
+            super(symbolicName, version);
+        }
+    }
+
     public static class BundleFinder {
         protected final Framework framework;
         protected String symbolicName;
@@ -98,14 +117,14 @@ public class Osgis {
             if (Strings.isBlank(symbolicNameOptionallyWithVersion))
                 return this;
             
-            Maybe<VersionedName> nv = OsgiUtils.parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
+            Maybe<org.apache.brooklyn.util.osgi.VersionedName> nv = OsgiUtils.parseOsgiIdentifier(symbolicNameOptionallyWithVersion);
             if (nv.isAbsent())
                 throw new IllegalArgumentException("Cannot parse symbolic-name:version string '"+symbolicNameOptionallyWithVersion+"'");
 
             return id(nv.get());
         }
 
-        private BundleFinder id(VersionedName nv) {
+        private BundleFinder id(org.apache.brooklyn.util.osgi.VersionedName nv) {
             symbolicName(nv.getSymbolicName());
             if (nv.getVersion() != null) {
                 version(nv.getVersion().toString());
@@ -277,6 +296,18 @@ public class Osgis {
         return bundleFinder(framework).symbolicName(symbolicName).version(Predicates.equalTo(version)).findUnique();
     }
 
+    /** @deprecated since 0.9.0, replaced by {@link EmbeddedFelixFramework#newFrameworkFactory() */
+    @Deprecated
+    public static FrameworkFactory newFrameworkFactory() {
+        return EmbeddedFelixFramework.newFrameworkFactory();
+    }
+
+    /** @deprecated since 0.9.0, replaced by {@link #getFramework(java.lang.String, boolean) } */
+    @Deprecated
+    public static Framework newFrameworkStarted(String felixCacheDir, boolean clean, Map<?,?> extraStartupConfig) {
+        return getFramework(felixCacheDir, clean);
+    }
+
     /** 
      * Provides an OSGI framework.
      *
@@ -327,6 +358,18 @@ public class Osgis {
     /** Tells if Brooklyn is running in an OSGi environment or not. */
     public static boolean isBrooklynInsideFramework() {
         return FrameworkUtil.getBundle(Framework.class) != null;
+    }
+
+    /** @deprecated since 0.9.0, replaced with {@link OsgiUtils#getVersionedId(org.osgi.framework.Bundle) } */
+    @Deprecated
+    public static String getVersionedId(Bundle b) {
+        return OsgiUtils.getVersionedId(b);
+    }
+
+    /** @deprecated since 0.9.0, replaced with {@link OsgiUtils#getVersionedId(java.util.jar.Manifest) } */
+    @Deprecated
+    public static String getVersionedId(Manifest manifest) {
+        return OsgiUtils.getVersionedId(manifest);
     }
 
     /**
@@ -425,4 +468,21 @@ public class Osgis {
                 EXTENSION_PROTOCOL.equals(Urls.getProtocol(location));
     }
 
+    /** @deprecated since 0.9.0, replaced with {@link OsgiUtils#parseOsgiIdentifier(java.lang.String) } */
+    @Deprecated
+    public static Maybe<VersionedName> parseOsgiIdentifier(String symbolicNameOptionalWithVersion) {
+        final Maybe<org.apache.brooklyn.util.osgi.VersionedName> original = OsgiUtils.parseOsgiIdentifier(symbolicNameOptionalWithVersion);
+        return original.transform(new Function<org.apache.brooklyn.util.osgi.VersionedName, VersionedName>() {
+            @Override
+            public VersionedName apply(org.apache.brooklyn.util.osgi.VersionedName input) {
+                return new VersionedName(input);
+            }
+        });
+    }
+
+    /** @deprecated since 0.9.0, replaced with {@link org.apache.brooklyn.rt.felix.ManifestHelper} */
+    @Deprecated
+    public static class ManifestHelper extends org.apache.brooklyn.rt.felix.ManifestHelper {
+
+    }
 }
