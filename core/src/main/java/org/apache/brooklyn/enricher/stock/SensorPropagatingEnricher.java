@@ -41,7 +41,7 @@ import com.google.common.collect.Sets;
  * an enricher policy which just listens for the target sensor(s) on a child entity and passes it up.
  * now superseded by syntax such as:
  * 
- * <pre>{@code Enrichers.builder().propagating(XXX).from(source).build()}</pre>
+ * <pre>{@code Enrichers.builder().propagating(sensor).from(source).build()}</pre>
  * 
  * @deprecated since 0.7.0; use {@link Enrichers#builder()}
  * 

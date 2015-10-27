@@ -109,6 +109,12 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Po
         return new BasicPolicyRebindSupport(this);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Policy> relations() {
+        return (RelationSupportInternal<Policy>) super.relations();
+    }
+    
     @Override
     public String toString() {
         return Objects.toStringHelper(getClass())

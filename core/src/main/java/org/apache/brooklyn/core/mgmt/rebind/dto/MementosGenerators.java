@@ -44,9 +44,9 @@ import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.AttributeSensor.SensorPersistenceMode;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Feed;
-import org.apache.brooklyn.api.sensor.AttributeSensor.SensorPersistenceMode;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemDo;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
@@ -66,6 +66,9 @@ import org.apache.brooklyn.util.core.flags.FlagUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Sets;
+
+import brooklyn.basic.relations.RelationshipType;
 
 public class MementosGenerators {
 
@@ -444,6 +447,14 @@ public class MementosGenerators {
         }
         for (Object tag : instance.tags().getTags()) {
             builder.tags.add(tag); 
+        }
+        // CatalogItems return empty support, so this is safe even through they don't support relations
+        for (RelationshipType<?,? extends BrooklynObject> relationship: instance.relations().getRelationshipTypes()) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Set relations = instance.relations().getRelations((RelationshipType)relationship);
+            Set<String> relationIds = Sets.newLinkedHashSet();
+            for (Object r: relations) relationIds.add( ((BrooklynObject)r).getId() );
+            builder.relations.put(relationship.getRelationshipTypeName(), relationIds);
         }
     }
 

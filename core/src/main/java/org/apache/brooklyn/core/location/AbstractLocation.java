@@ -175,7 +175,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         locationType = new LocationDynamicType(this);
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(properties);
+            AbstractLocation checkWeGetThis = configure(properties);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
@@ -753,6 +753,12 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     @Override
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Location> relations() {
+        return (RelationSupportInternal<Location>) super.relations();
     }
     
     @Override

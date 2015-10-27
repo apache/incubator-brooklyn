@@ -70,6 +70,12 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct implements 
         return new BasicEnricherRebindSupport(this);
     }
     
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Enricher> relations() {
+        return (RelationSupportInternal<Enricher>) super.relations();
+    }
+    
     @Override
     public EnricherType getEnricherType() {
         return enricherType.getSnapshot();

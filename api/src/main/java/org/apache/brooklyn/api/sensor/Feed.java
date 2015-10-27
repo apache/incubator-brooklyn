@@ -67,4 +67,8 @@ public interface Feed extends EntityAdjunct, Rebindable {
     @Override
     @Beta
     RebindSupport<FeedMemento> getRebindSupport();
+    
+    @Override
+    RelationSupport<Feed> relations();
+    
 }

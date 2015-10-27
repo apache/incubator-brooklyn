@@ -188,7 +188,7 @@ public class VanillaSoftwareProcessIntegrationTest extends BrooklynAppLiveTestSu
         assertEquals(new String(Files.readAllBytes(runRecord)).trim(), "installCommand");
     }
 
-    // Installation creates a installs/VanillaSoftwareProcess_0.0.0_XXXX/BROOKLYN marker file.
+    // Installation creates a installs/VanillaSoftwareProcess_0.0.0_nnnnn/BROOKLYN marker file.
     // It indicates that installation has already been done successfully, so it is skipped the second time.
     // Assert it respects different values for the install script, to ensure each different VanillaSoftwareProcess
     // does get installed!

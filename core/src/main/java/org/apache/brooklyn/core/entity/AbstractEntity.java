@@ -287,7 +287,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         entityType = new EntityDynamicType(this);
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(flags);
+            AbstractEntity checkWeGetThis = configure(flags);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (flags.containsKey("deferConstructionChecks") && TypeCoercions.coerce(flags.get("deferConstructionChecks"), Boolean.class));
@@ -2082,4 +2082,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         super.onTagsChanged();
         getManagementSupport().getEntityChangeListener().onTagsChanged();
     }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Entity> relations() {
+        return (RelationSupportInternal<Entity>) super.relations();
+    }
+    
 }

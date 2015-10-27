@@ -18,16 +18,23 @@
  */
 package org.apache.brooklyn.core.mgmt.rebind;
 
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.brooklyn.api.mgmt.rebind.RebindContext;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.Memento;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
+import org.apache.brooklyn.core.entity.EntityRelations;
 import org.apache.brooklyn.core.mgmt.rebind.dto.MementosGenerators;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
 import org.apache.brooklyn.core.objs.AbstractEntityAdjunct.AdjunctTagSupport;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import brooklyn.basic.relations.RelationshipType;
 
 public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> implements RebindSupport<T> {
 
@@ -55,6 +62,7 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
         //catalogItemId already set when creating the object
         addConfig(rebindContext, memento);
         addTags(rebindContext, memento);
+        addRelations(rebindContext, memento);
         addCustoms(rebindContext, memento);
         
         doReconstruct(rebindContext, memento);
@@ -66,12 +74,31 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
 
     protected abstract void addCustoms(RebindContext rebindContext, T memento);
     
+    @SuppressWarnings("rawtypes")
     protected void addTags(RebindContext rebindContext, T memento) {
         if (instance instanceof EntityAdjunct && Strings.isNonBlank(memento.getUniqueTag())) {
             ((AdjunctTagSupport)(instance.tags())).setUniqueTag(memento.getUniqueTag());
         }
         for (Object tag : memento.getTags()) {
             instance.tags().addTag(tag);
+        }
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected void addRelations(RebindContext rebindContext, T memento) {
+        for (Map.Entry<String,Set<String>> rEntry : memento.getRelations().entrySet()) {
+            RelationshipType<? extends BrooklynObject, ? extends BrooklynObject> r = EntityRelations.lookup(instance.getManagementContext(), rEntry.getKey());
+            if (r==null) throw new IllegalStateException("Unsupported relationship -- "+rEntry.getKey() + " -- in "+memento);
+            for (String itemId: rEntry.getValue()) {
+                BrooklynObject item = rebindContext.lookup().lookup(null, itemId);
+                if (item != null) {
+                    instance.relations().add((RelationshipType)r, item);
+                } else {
+                    LOG.warn("Item not found; discarding item {} relation {} of entity {}({})",
+                            new Object[] {itemId, r, memento.getType(), memento.getId()});
+                    rebindContext.getExceptionHandler().onDanglingUntypedItemRef(itemId);
+                }
+            }
         }
     }
 

@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.mgmt.rebind.BasicCatalogItemRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
+import org.apache.brooklyn.core.relations.EmptyRelationSupport;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
@@ -79,6 +80,11 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     @Override
     public SubscriptionSupportInternal subscriptions() {
         throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public <U> U getConfig(ConfigKey<U> key) {
+        return config().get(key);
     }
     
     @Override
@@ -239,13 +245,23 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         return new BasicCatalogItemRebindSupport(this);
     }
 
+    /**
+     * Overrides the parent so that relations are not visible.
+     * @return an immutable empty relation support object; relations are not supported,
+     * but we do not throw on access to enable reads in a consistent manner
+     */
+    @Override
+    public RelationSupportInternal<CatalogItem<T,SpecT>> relations() {
+        return new EmptyRelationSupport<CatalogItem<T,SpecT>>(this);
+    }
+
     @Override
     public void setDisplayName(String newName) {
         this.displayName = newName;
     }
 
     @Override
-    protected AbstractBrooklynObject configure(Map<?, ?> flags) {
+    protected CatalogItemDtoAbstract<T, SpecT> configure(Map<?, ?> flags) {
         FlagUtils.setFieldsFromFlags(flags, this);
         return this;
     }

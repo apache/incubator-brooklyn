@@ -121,7 +121,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         _legacyNoConstructionInit = (properties != null) && Boolean.TRUE.equals(properties.get("noConstructionInit"));
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(properties);
+            AbstractEntityAdjunct checkWeGetThis = configure(properties);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
@@ -361,6 +361,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         }
     }
 
+    @Override
     public <T> T getConfig(ConfigKey<T> key) {
         return config().get(key);
     }

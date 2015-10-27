@@ -45,7 +45,7 @@ import org.testng.annotations.Test
 /**
  * Test the operation of the {@link Effector} implementations.
  *
- * TODO clarify test purpose
+ * TODO delete? the groovy causes compile errors, and EffectorSayHiTest does most of what this does
  */
 public class EffectorSayHiGroovyTest {
     private static final Logger log = LoggerFactory.getLogger(EffectorSayHiTest.class);

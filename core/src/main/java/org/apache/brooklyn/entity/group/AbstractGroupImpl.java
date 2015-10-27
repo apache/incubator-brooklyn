@@ -239,6 +239,8 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
 
     @Override
     public Collection<Entity> getMembers() {
+        // TODO use this instead; see issue and email thread where this comment was introduced
+//        relations().getRelations(EntityRelations.GROUP_CONTAINS);
         synchronized (members) {
             return ImmutableSet.<Entity>copyOf(members);
         }
