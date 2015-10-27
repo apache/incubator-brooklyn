@@ -33,7 +33,7 @@
         <!-- Pax Exam Dependencies -->
         <dependency>
             <groupId>org.ops4j.pax.exam</groupId>
-            <artifactId>pax-exam-junit4</artifactId>
+            <artifactId>pax-exam-testng</artifactId>
             <version>${pax.exam.version}</version>
             <scope>test</scope>
         </dependency>
@@ -153,7 +153,6 @@
             <type>zip</type>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>
