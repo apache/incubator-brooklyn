@@ -19,6 +19,7 @@
 package org.apache.brooklyn;
 
 import static org.ops4j.pax.exam.CoreOptions.maven;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
@@ -37,18 +38,20 @@ import org.apache.karaf.features.FeaturesService;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption.LogLevel;
+import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.options.MavenUrlReference;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 import org.ops4j.pax.exam.testng.listener.PaxExam;
 import org.osgi.framework.BundleContext;
+import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
 /**
  * Tests the apache-brooklyn karaf runtime assembly.
  */
-@RunWith(PaxExam.class)
+@Listeners(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class AssemblyTest {
 
@@ -75,8 +78,16 @@ public class AssemblyTest {
             configureConsole().ignoreLocalConsole(),
             logLevel(LogLevel.INFO),
             keepRuntimeFolder(),
-            features(karafStandardFeaturesRepository(), "eventadmin")
+            features(karafStandardFeaturesRepository(), "eventadmin"),
+            addTestNGBundle()
         };
+    }
+
+    private static MavenArtifactProvisionOption addTestNGBundle() {
+        return mavenBundle()
+                .groupId("org.testng")
+                .artifactId("testng")
+                .version(asInProject());
     }
 
     private static MavenArtifactUrlReference brooklynKarafDist() {
