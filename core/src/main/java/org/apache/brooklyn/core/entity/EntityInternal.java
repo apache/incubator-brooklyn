@@ -46,7 +46,7 @@ import com.google.common.annotations.Beta;
  * for the brooklyn framework only).
  */
 @Beta
-public interface EntityInternal extends BrooklynObjectInternal<Entity,EntityInternal>, EntityLocal, Rebindable {
+public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Rebindable {
     
     void addLocations(Collection<? extends Location> locations);
 
@@ -175,6 +175,9 @@ public interface EntityInternal extends BrooklynObjectInternal<Entity,EntityInte
     @Beta
     RebindSupport<EntityMemento> getRebindSupport();
 
+    @Override
+    RelationSupportInternal<Entity> relations();
+    
     /**
      * Can be called to request that the entity be persisted.
      * This persistence may happen asynchronously, or may not happen at all if persistence is disabled.

@@ -73,4 +73,8 @@ public interface Policy extends EntityAdjunct, Rebindable, Configurable {
     @Override
     @Beta
     RebindSupport<PolicyMemento> getRebindSupport();
+    
+    @Override
+    RelationSupport<Policy> relations();
+    
 }

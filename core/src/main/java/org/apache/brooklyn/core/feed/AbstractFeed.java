@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * These generally poll or subscribe to get sensor values for an entity.
  * They make it easy to poll over http, jmx, etc.
  */
-public abstract class AbstractFeed extends AbstractEntityAdjunct<Feed,AbstractFeed> implements Feed {
+public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractFeed.class);
 
@@ -208,6 +208,12 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct<Feed,AbstractFe
         return new BasicFeedRebindSupport(this);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Feed> relations() {
+        return (RelationSupportInternal<Feed>) super.relations();
+    }
+    
     @Override
     protected void onChanged() {
         // TODO Auto-generated method stub

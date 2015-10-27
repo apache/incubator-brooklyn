@@ -94,7 +94,7 @@ import com.google.common.reflect.TypeToken;
  * 
  * Override {@link #configure(Map)} to add special initialization logic.
  */
-public abstract class AbstractLocation extends AbstractBrooklynObject<Location,LocationInternal> implements LocationInternal, HasHostGeoInfo, Configurable {
+public abstract class AbstractLocation extends AbstractBrooklynObject implements LocationInternal, HasHostGeoInfo, Configurable {
     
     private static final long serialVersionUID = -7495805474138619830L;
 
@@ -753,6 +753,12 @@ public abstract class AbstractLocation extends AbstractBrooklynObject<Location,L
     @Override
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Location> relations() {
+        return (RelationSupportInternal<Location>) super.relations();
     }
     
     @Override

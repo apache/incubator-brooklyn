@@ -131,4 +131,8 @@ public interface Location extends Serializable, BrooklynObject {
      * @throws NullPointerException if extensionType is null
      */
     <T> T getExtension(Class<T> extensionType);
+    
+    @Override
+    RelationSupport<Location> relations();
+    
 }

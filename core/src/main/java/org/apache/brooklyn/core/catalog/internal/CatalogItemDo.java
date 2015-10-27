@@ -33,7 +33,7 @@ import org.apache.brooklyn.core.relations.EmptyRelationSupport;
 
 import com.google.common.base.Preconditions;
 
-public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObjectInternal<CatalogItem<T,SpecT>,CatalogItemDo<T,SpecT>> {
+public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObjectInternal {
 
     protected final CatalogDo catalog;
     protected final CatalogItemDtoAbstract<T,SpecT> itemDto;

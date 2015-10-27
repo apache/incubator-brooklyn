@@ -43,7 +43,7 @@ import com.google.common.collect.Maps;
 /**
 * Base {@link Enricher} implementation; all enrichers should extend this or its children
 */
-public abstract class AbstractEnricher extends AbstractEntityAdjunct<Enricher,AbstractEnricher> implements Enricher {
+public abstract class AbstractEnricher extends AbstractEntityAdjunct implements Enricher {
 
     public static final ConfigKey<Boolean> SUPPRESS_DUPLICATES = ConfigKeys.newBooleanConfigKey("enricher.suppressDuplicates",
         "Whether duplicate values published by this enricher should be suppressed");
@@ -68,6 +68,12 @@ public abstract class AbstractEnricher extends AbstractEntityAdjunct<Enricher,Ab
     @Override
     public RebindSupport<EnricherMemento> getRebindSupport() {
         return new BasicEnricherRebindSupport(this);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Enricher> relations() {
+        return (RelationSupportInternal<Enricher>) super.relations();
     }
     
     @Override

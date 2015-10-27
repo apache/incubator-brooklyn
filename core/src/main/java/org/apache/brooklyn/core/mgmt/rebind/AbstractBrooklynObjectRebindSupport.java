@@ -40,9 +40,9 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
 
     private static final Logger LOG = LoggerFactory.getLogger(AbstractBrooklynObjectRebindSupport.class);
     
-    private final AbstractBrooklynObject<?,?> instance;
+    private final AbstractBrooklynObject instance;
     
-    public AbstractBrooklynObjectRebindSupport(AbstractBrooklynObject<?,?> instance) {
+    public AbstractBrooklynObjectRebindSupport(AbstractBrooklynObject instance) {
         this.instance = instance;
     }
     

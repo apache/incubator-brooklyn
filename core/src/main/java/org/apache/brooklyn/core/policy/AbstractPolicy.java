@@ -37,7 +37,7 @@ import com.google.common.base.Objects;
 /**
  * Base {@link Policy} implementation; all policies should extend this or its children
  */
-public abstract class AbstractPolicy extends AbstractEntityAdjunct<Policy,AbstractPolicy> implements Policy, Configurable {
+public abstract class AbstractPolicy extends AbstractEntityAdjunct implements Policy, Configurable {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(AbstractPolicy.class);
 
@@ -109,6 +109,12 @@ public abstract class AbstractPolicy extends AbstractEntityAdjunct<Policy,Abstra
         return new BasicPolicyRebindSupport(this);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Policy> relations() {
+        return (RelationSupportInternal<Policy>) super.relations();
+    }
+    
     @Override
     public String toString() {
         return Objects.toStringHelper(getClass())

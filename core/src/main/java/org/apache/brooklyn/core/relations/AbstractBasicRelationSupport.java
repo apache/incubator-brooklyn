@@ -26,6 +26,14 @@ import org.apache.brooklyn.core.objs.BrooklynObjectInternal.RelationSupportInter
 
 import brooklyn.basic.relations.Relationship;
 
+/** This abstract impl delegates to {@link EntityRelations} for all changes, routing through a local backing store.
+ * This allows us to make the changes in both directions simultaneously when a relationship is bi-directional,
+ * and should facilitate changing a backing datastore or remote instances when that is supported.
+ * <p>
+ * Currently it can be implemented without it, simplifying things a bit (avoiding the double dispatch)
+ * apart from the {@link #add(Relationship, BrooklynObject)} method triggering the reverse addition
+ * if it isn't already present. TBD which is better (and the internal call to get the backing store is 
+ * marked as Beta). */
 public abstract class AbstractBasicRelationSupport<SourceType extends BrooklynObject> implements RelationSupportInternal<SourceType> {
 
     final SourceType source;

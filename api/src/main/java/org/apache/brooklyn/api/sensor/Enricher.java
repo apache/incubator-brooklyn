@@ -55,4 +55,7 @@ public interface Enricher extends EntityAdjunct, Rebindable, Configurable {
     @Beta
     RebindSupport<EnricherMemento> getRebindSupport();
 
+    @Override
+    RelationSupport<Enricher> relations();
+    
 }

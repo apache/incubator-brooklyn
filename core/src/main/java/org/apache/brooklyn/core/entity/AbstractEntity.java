@@ -141,7 +141,7 @@ import com.google.common.collect.Sets;
  * The legacy (pre 0.5) mechanism for creating entities is for others to call the constructor directly.
  * This is now deprecated.
  */
-public abstract class AbstractEntity extends AbstractBrooklynObject<Entity,EntityInternal> implements EntityLocal, EntityInternal {
+public abstract class AbstractEntity extends AbstractBrooklynObject implements EntityLocal, EntityInternal {
     
     private static final Logger LOG = LoggerFactory.getLogger(AbstractEntity.class);
     
@@ -2081,6 +2081,12 @@ public abstract class AbstractEntity extends AbstractBrooklynObject<Entity,Entit
     protected void onTagsChanged() {
         super.onTagsChanged();
         getManagementSupport().getEntityChangeListener().onTagsChanged();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Entity> relations() {
+        return (RelationSupportInternal<Entity>) super.relations();
     }
     
 }

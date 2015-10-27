@@ -55,7 +55,7 @@ import com.google.common.collect.Lists;
  * for this reason it does *not* implement BrooklynType, but 
  * callers can call {@link #getSnapshot()} to get a snapshot such instance.  
  */
-public abstract class BrooklynDynamicType<T extends BrooklynObject, AbstractT extends AbstractBrooklynObject<T,?>> {
+public abstract class BrooklynDynamicType<T extends BrooklynObject, AbstractT extends AbstractBrooklynObject> {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynDynamicType.class);
 
@@ -144,7 +144,7 @@ public abstract class BrooklynDynamicType<T extends BrooklynObject, AbstractT ex
      * Prefers keys which overwrite other keys, and prefers keys which are lower in the hierarchy;
      * logs warnings if there are two conflicting keys which don't have an overwriting relationship.
      */
-    protected static void buildConfigKeys(Class<? extends BrooklynObject> clazz, AbstractBrooklynObject<?,?> optionalInstance, 
+    protected static void buildConfigKeys(Class<? extends BrooklynObject> clazz, AbstractBrooklynObject optionalInstance, 
             Map<String, FieldAndValue<ConfigKey<?>>> configKeys) {
         ListMultimap<String,FieldAndValue<ConfigKey<?>>> configKeysAll = 
                 ArrayListMultimap.<String, FieldAndValue<ConfigKey<?>>>create();

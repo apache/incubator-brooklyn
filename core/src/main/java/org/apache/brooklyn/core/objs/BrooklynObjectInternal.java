@@ -31,7 +31,7 @@ import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 
-public interface BrooklynObjectInternal<PublicSelfType extends BrooklynObject, InternalSelfType extends BrooklynObjectInternal<PublicSelfType,InternalSelfType>> extends BrooklynObject, Rebindable {
+public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
     
     void setCatalogItemId(String id);
     
@@ -124,7 +124,7 @@ public interface BrooklynObjectInternal<PublicSelfType extends BrooklynObject, I
         public void unsubscribeAll();
     }
     
-    RelationSupportInternal<PublicSelfType> relations();
+    RelationSupportInternal<?> relations();
     
     public interface RelationSupportInternal<T extends BrooklynObject> extends BrooklynObject.RelationSupport<T> {
         @Beta

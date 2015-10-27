@@ -35,7 +35,7 @@ import com.google.common.annotations.Beta;
 /**
  * Information about locations private to Brooklyn.
  */
-public interface LocationInternal extends BrooklynObjectInternal<Location,LocationInternal>, Location {
+public interface LocationInternal extends BrooklynObjectInternal, Location {
 
     @Beta
     public static final ConfigKey<String> ORIGINAL_SPEC = ConfigKeys.newStringConfigKey("spec.original", "The original spec used to instantiate a location");
@@ -88,6 +88,9 @@ public interface LocationInternal extends BrooklynObjectInternal<Location,Locati
     @Override
     @Beta
     RebindSupport<LocationMemento> getRebindSupport();
+    
+    @Override
+    RelationSupportInternal<Location> relations();
     
     ManagementContext getManagementContext();
 }

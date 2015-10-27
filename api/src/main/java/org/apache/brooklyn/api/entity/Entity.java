@@ -308,6 +308,7 @@ public interface Entity extends BrooklynObject {
 
     GroupSupport groups();
 
+    @Override
     RelationSupport<Entity> relations();
     
     @Beta

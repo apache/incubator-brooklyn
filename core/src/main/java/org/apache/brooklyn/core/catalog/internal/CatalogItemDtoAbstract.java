@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 
-public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynObject<CatalogItem<T, SpecT>, CatalogItemDtoAbstract<T, SpecT>> implements CatalogItem<T, SpecT> {
+public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynObject implements CatalogItem<T, SpecT> {
 
     private static Logger LOG = LoggerFactory.getLogger(CatalogItemDtoAbstract.class);
 

@@ -394,7 +394,7 @@ public class PortForwardManagerClient implements PortForwardManager {
     }
 
     @Override
-    public RelationSupport<?> relations() {
+    public RelationSupport<Location> relations() {
         return getDelegate().relations();
     }
     
