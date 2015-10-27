@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
-import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
 
 /**
@@ -79,7 +78,7 @@ public interface Memento extends Serializable {
 
     public Collection<Object> getTags();
     
-    Map<String, Set<BrooklynObject>> getRelations();
+    public Map<String,Set<String>> getRelations();
     
     /** Null for {@link Entity}, but important for adjuncts; see {@link EntityAdjunct#getUniqueTag()} */
     public String getUniqueTag();

@@ -86,11 +86,19 @@ public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> imp
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     protected void addRelations(RebindContext rebindContext, T memento) {
-        for (Map.Entry<String,Set<BrooklynObject>> rEntry : memento.getRelations().entrySet()) {
+        for (Map.Entry<String,Set<String>> rEntry : memento.getRelations().entrySet()) {
             Relationship<? extends BrooklynObject, ? extends BrooklynObject> r = EntityRelations.lookup(instance.getManagementContext(), rEntry.getKey());
             if (r==null) throw new IllegalStateException("Unsupported relationship -- "+rEntry.getKey() + " -- in "+memento);
-            for (BrooklynObject item: rEntry.getValue())
-                instance.relations().add((Relationship)r, item);
+            for (String itemId: rEntry.getValue()) {
+                BrooklynObject item = rebindContext.lookup().lookup(null, itemId);
+                if (item != null) {
+                    instance.relations().add((Relationship)r, item);
+                } else {
+                    LOG.warn("Item not found; discarding item {} relation {} of entity {}({})",
+                            new Object[] {itemId, r, memento.getType(), memento.getId()});
+                    rebindContext.getExceptionHandler().onDanglingUntypedItemRef(itemId);
+                }
+            }
         }
     }
 

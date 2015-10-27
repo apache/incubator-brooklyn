@@ -25,14 +25,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.mgmt.rebind.mementos.Memento;
-import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.core.config.Sanitizer;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 public abstract class AbstractMemento implements Memento, Serializable {
 
@@ -47,8 +48,8 @@ public abstract class AbstractMemento implements Memento, Serializable {
         protected String catalogItemId;
         protected Map<String, Object> customFields = Maps.newLinkedHashMap();
         protected List<Object> tags = Lists.newArrayList();
-        protected Map<String,Set<BrooklynObject>> relations = Maps.newLinkedHashMap();
-        
+        protected Map<String,Set<String>> relations = Maps.newLinkedHashMap();
+
         // only supported for EntityAdjuncts
         protected String uniqueTag;
 
@@ -86,7 +87,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
     private String displayName;
     private String catalogItemId;
     private List<Object> tags;
-    private Map<String, Set<BrooklynObject>> relations;
+    private Map<String,Set<String>> relations;
     
     // for EntityAdjuncts; not used for entity
     private String uniqueTag;
@@ -156,7 +157,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
     }
 
     @Override
-    public Map<String, Set<BrooklynObject>> getRelations() {
+    public Map<String,Set<String>> getRelations() {
         return fromPersistedMap(relations);
     }
     
@@ -215,6 +216,14 @@ public abstract class AbstractMemento implements Memento, Serializable {
         return Collections.unmodifiableMap(m);
     }
     protected <K,V> Map<K,V> toPersistedMap(Map<K,V> m) {
+        if (m==null || m.isEmpty()) return null;
+        return m;
+    }
+    protected <K,V> Multimap<K,V> fromPersistedMultimap(Multimap<K,V> m) {
+        if (m==null) return ImmutableMultimap.of();
+        return ImmutableMultimap.copyOf(m);
+    }
+    protected <K,V> Multimap<K,V> toPersistedMultimap(Multimap<K,V> m) {
         if (m==null || m.isEmpty()) return null;
         return m;
     }

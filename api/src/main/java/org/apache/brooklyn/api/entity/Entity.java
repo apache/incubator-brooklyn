@@ -216,15 +216,9 @@ public interface Entity extends BrooklynObject {
      * via code like {@code sensors().get(key)}.
      */
     <T> T getAttribute(AttributeSensor<T> sensor);
-
-    /**
-     * Convenience for calling {@link ConfigurationSupport#get(ConfigKey)},
-     * via code like {@code config().get(key)}.
-     */
-    <T> T getConfig(ConfigKey<T> key);
     
     /**
-     * @see #getConfig(ConfigKey)}
+     * @see {@link #getConfig(ConfigKey)}
      */
     <T> T getConfig(HasConfigKey<T> key);
     

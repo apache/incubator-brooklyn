@@ -66,6 +66,7 @@ import org.apache.brooklyn.util.core.flags.FlagUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
+import com.google.common.collect.Sets;
 
 import brooklyn.basic.relations.Relationship;
 
@@ -431,7 +432,6 @@ public class MementosGenerators {
         return builder.build();
     }
     
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static void populateBrooklynObjectMementoBuilder(BrooklynObject instance, AbstractMemento.Builder<?> builder) {
         if (Proxy.isProxyClass(instance.getClass())) {
             throw new IllegalStateException("Attempt to create memento from proxy "+instance+" (would fail with wrong type)");
@@ -448,12 +448,13 @@ public class MementosGenerators {
         for (Object tag : instance.tags().getTags()) {
             builder.tags.add(tag); 
         }
-        if (!(instance instanceof CatalogItem)) {
-            // CatalogItem is a BrooklynObject so it can be persisted
-            // but it does not support relations
-            for (Relationship<?,? extends BrooklynObject> relationship: instance.relations().getRelationships()) {
-                builder.relations.put(relationship.getRelationshipTypeName(), instance.relations().getRelations((Relationship)relationship));
-            }
+        // CatalogItems return empty support, so this is safe even through they don't support relations
+        for (Relationship<?,? extends BrooklynObject> relationship: instance.relations().getRelationships()) {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            Set relations = instance.relations().getRelations((Relationship)relationship);
+            Set<String> relationIds = Sets.newLinkedHashSet();
+            for (Object r: relations) relationIds.add( ((BrooklynObject)r).getId() );
+            builder.relations.put(relationship.getRelationshipTypeName(), relationIds);
         }
     }
 

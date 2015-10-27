@@ -65,6 +65,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<String> missingEnrichers = Sets.newConcurrentHashSet();
     protected final Set<String> missingFeeds = Sets.newConcurrentHashSet();
     protected final Set<String> missingCatalogItems = Sets.newConcurrentHashSet();
+    protected final Set<String> missingUntypedItems = Sets.newConcurrentHashSet();
     protected final Set<String> creationFailedIds = Sets.newConcurrentHashSet();
     
     protected final Set<Exception> addPolicyFailures = Sets.newConcurrentHashSet();
@@ -237,6 +238,17 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
 
     @Override
+    public CatalogItem<?, ?> onDanglingUntypedItemRef(String id) {
+        missingUntypedItems.add(id);
+        if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
+            throw new IllegalStateException("No item found with id "+id);
+        } else {
+            warn("No item found with id "+id+"; dangling reference on rebind");
+            return null;
+        }
+    }
+
+    @Override
     public void onCreateFailed(BrooklynObjectType type, String id, String instanceType, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem creating "+type+" "+id+" of type "+instanceType;
@@ -395,7 +407,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         }
         done = true;
         
-        List<String> danglingIds = MutableList.copyOf(missingEntities).appendAll(missingLocations).appendAll(missingPolicies).appendAll(missingEnrichers).appendAll(missingFeeds).appendAll(missingCatalogItems);
+        List<String> danglingIds = MutableList.copyOf(missingEntities).appendAll(missingLocations).appendAll(missingPolicies).appendAll(missingEnrichers).appendAll(missingFeeds).appendAll(missingCatalogItems).appendAll(missingUntypedItems);
         int totalDangling = danglingIds.size();
         if (totalDangling>0) {
             int totalFound = context.getAllBrooklynObjects().size();
@@ -440,6 +452,9 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             }
             if (!missingCatalogItems.isEmpty()) {
                 allExceptions.add(new IllegalStateException("Missing referenced catalog item" + Strings.s(missingCatalogItems) + ": " + missingCatalogItems));
+            }
+            if (!missingUntypedItems.isEmpty()) {
+                allExceptions.add(new IllegalStateException("Missing referenced untyped items" + Strings.s(missingUntypedItems) + ": " + missingUntypedItems));
             }
         }
         if (rebindFailureMode != RebindManager.RebindFailureMode.CONTINUE) {

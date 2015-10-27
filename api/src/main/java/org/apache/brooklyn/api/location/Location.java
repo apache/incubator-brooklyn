@@ -89,13 +89,6 @@ public interface Location extends Serializable, BrooklynObject {
      */
     boolean containsLocation(Location potentialDescendent);
 
-    /** 
-     * Returns configuration set at this location or inherited or default.
-     * 
-     * Convenience method for {@code config().get(key)}
-     */
-    <T> T getConfig(ConfigKey<T> key);
-
     /**
      * Convenience method for {@code config().get(key)}
      * 

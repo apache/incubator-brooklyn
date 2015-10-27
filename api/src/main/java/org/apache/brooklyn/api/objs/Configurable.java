@@ -42,7 +42,8 @@ public interface Configurable {
     public <T> T setConfig(ConfigKey<T> key, T val);
 
     /**
-     * Convenience method for {@code config().get(key)}
+     * Convenience for calling {@link ConfigurationSupport#get(ConfigKey)},
+     * via code like {@code config().get(key)}.
      */
     <T> T getConfig(ConfigKey<T> key);
 

@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.core.mgmt.rebind;
 
+import java.util.NoSuchElementException;
+
 import javax.annotation.Nullable;
 
 import org.slf4j.Logger;
@@ -127,6 +129,14 @@ public class RebindContextLookupContext implements LookupContext {
     
     @Override
     public BrooklynObject lookup(BrooklynObjectType type, String id) {
+        if (type==null) {
+            BrooklynObject result = peek(null, id);
+            if (result==null) {
+                exceptionHandler.onDanglingUntypedItemRef(id);
+            }
+            type = BrooklynObjectType.of(result);
+        }
+        
         switch (type) {
         case CATALOG_ITEM: return lookupCatalogItem(id);
         case ENRICHER: return lookupEnricher(id);
@@ -141,6 +151,14 @@ public class RebindContextLookupContext implements LookupContext {
     
     @Override
     public BrooklynObject peek(BrooklynObjectType type, String id) {
+        if (type==null) {
+            for (BrooklynObjectType typeX: BrooklynObjectType.values()) {
+                BrooklynObject result = peek(typeX, id);
+                if (result!=null) return result;
+            }
+            return null;
+        }
+        
         switch (type) {
         case CATALOG_ITEM: return rebindContext.getCatalogItem(id);
         case ENRICHER: return rebindContext.getEnricher(id);

@@ -516,6 +516,16 @@ System.out.println("XXX: "+x);
         
         @Override
         public BrooklynObject lookup(BrooklynObjectType type, String id) {
+            if (type==null) {
+                BrooklynObject result = peek(null, id);
+                if (result==null) {
+                    if (failOnDangling) {
+                        throw new NoSuchElementException("no brooklyn object with id "+id+"; type not specified");
+                    }                    
+                }
+                type = BrooklynObjectType.of(result);
+            }
+            
             switch (type) {
             case CATALOG_ITEM: return lookupCatalogItem(id);
             case ENRICHER: return lookupEnricher(id);
@@ -529,6 +539,14 @@ System.out.println("XXX: "+x);
         }
         @Override
         public BrooklynObject peek(BrooklynObjectType type, String id) {
+            if (type==null) {
+                for (BrooklynObjectType typeX: BrooklynObjectType.values()) {
+                    BrooklynObject result = peek(typeX, id);
+                    if (result!=null) return result;
+                }
+                return null;
+            }
+            
             switch (type) {
             case CATALOG_ITEM: return catalogItems.get(id);
             case ENRICHER: return enrichers.get(id);

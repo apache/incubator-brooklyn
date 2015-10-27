@@ -18,38 +18,43 @@
  */
 package org.apache.brooklyn.core.relations;
 
+import java.util.Collections;
 import java.util.Set;
 
 import org.apache.brooklyn.api.objs.BrooklynObject;
-import org.apache.brooklyn.core.entity.EntityRelations;
+import org.apache.brooklyn.api.objs.BrooklynObject.RelationSupport;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.RelationSupportInternal;
 
 import brooklyn.basic.relations.Relationship;
 
-public abstract class AbstractBasicRelationSupport<SourceType extends BrooklynObject> implements RelationSupportInternal<SourceType> {
+public final class EmptyRelationSupport<SourceType extends BrooklynObject> implements RelationSupportInternal<SourceType> {
 
     final SourceType source;
     
-    public AbstractBasicRelationSupport(SourceType source) { this.source = source; }
+    public EmptyRelationSupport(SourceType source) { this.source = source; }
         
     @Override
     public Set<Relationship<? super SourceType, ? extends BrooklynObject>> getRelationships() {
-        return EntityRelations.getRelationships(source);
+        return Collections.emptySet();
     }
     
     @Override
     public <U extends BrooklynObject> Set<U> getRelations(Relationship<? super SourceType, U> relationship) {
-        return EntityRelations.getRelations(relationship, source);
+        return Collections.emptySet();
     }
 
     @Override
     public <U extends BrooklynObject> void add(Relationship<? super SourceType, ? super U> relationship, U target) {
-        EntityRelations.add(source, relationship, target);
+        throw new UnsupportedOperationException("Relations not available on "+source);
     }
 
     @Override
     public <U extends BrooklynObject> void remove(Relationship<? super SourceType, ? super U> relationship, U target) {
-        EntityRelations.remove(source, relationship, target);
+    }
+
+    @Override
+    public RelationSupport<SourceType> getLocalBackingStore() {
+        throw new UnsupportedOperationException("Relations not available on "+source);
     }
 
 }

@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
+import org.apache.brooklyn.core.relations.EmptyRelationSupport;
 
 import com.google.common.base.Preconditions;
 
@@ -65,11 +66,12 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
     }
     
     /**
-     * @throws UnsupportedOperationException; relations are not supported for catalog items
+     * @return an immutable empty relation support object; relations are not supported,
+     * but we do not throw on access to enable reads in a consistent manner
      */
     @Override
     public RelationSupportInternal<CatalogItem<T,SpecT>> relations() {
-        throw new UnsupportedOperationException();
+        return new EmptyRelationSupport<CatalogItem<T,SpecT>>(this);
     }
     
     @Override

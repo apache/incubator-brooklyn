@@ -136,23 +136,23 @@ public class EntityRelations<T extends BrooklynObject> {
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <T extends BrooklynObject> Set<Relationship<? super T,? extends BrooklynObject>> getRelations(T source) {
+    public static <T extends BrooklynObject> Set<Relationship<? super T,? extends BrooklynObject>> getRelationships(T source) {
         return ((BrooklynObjectInternal)source).relations().getLocalBackingStore().getRelationships();
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <T extends BrooklynObject,U extends BrooklynObject> Set<U> getRelationships(Relationship<? super T,U> relationship, T source) {
+    public static <T extends BrooklynObject,U extends BrooklynObject> Set<U> getRelations(Relationship<? super T,U> relationship, T source) {
         return ((BrooklynObjectInternal)source).relations().getLocalBackingStore().getRelations(relationship);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <T extends BrooklynObject,U extends BrooklynObject> void add(T source, Relationship<? super T,U> relationship, U target) {
+    public static <T extends BrooklynObject,U extends BrooklynObject> void add(T source, Relationship<? super T,? super U> relationship, U target) {
         ((BrooklynObjectInternal)source).relations().getLocalBackingStore().add(relationship, target);
         ((BrooklynObjectInternal)target).relations().getLocalBackingStore().add(relationship.getInverseRelationship(), source);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public static <T extends BrooklynObject,U extends BrooklynObject> void remove(T source, Relationship<? super T,U> relationship, U target) {
+    public static <T extends BrooklynObject,U extends BrooklynObject> void remove(T source, Relationship<? super T,? super U> relationship, U target) {
         ((BrooklynObjectInternal)source).relations().getLocalBackingStore().remove(relationship, target);
         ((BrooklynObjectInternal)target).relations().getLocalBackingStore().remove(relationship.getInverseRelationship(), source);
     }

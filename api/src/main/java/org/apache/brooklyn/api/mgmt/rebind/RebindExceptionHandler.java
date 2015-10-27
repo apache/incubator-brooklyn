@@ -80,6 +80,11 @@ public interface RebindExceptionHandler {
      */
     CatalogItem<?, ?> onDanglingCatalogItemRef(String id);
 
+    /**
+     * @return the item to use in place of the missing one
+     */
+    BrooklynObject onDanglingUntypedItemRef(String id);
+
     void onCreateFailed(BrooklynObjectType type, String id, String instanceType, Exception e);
 
     void onNotFound(BrooklynObjectType type, String id);

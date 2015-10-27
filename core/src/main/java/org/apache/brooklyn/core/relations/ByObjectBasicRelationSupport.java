@@ -78,17 +78,18 @@ public class ByObjectBasicRelationSupport<SourceType extends BrooklynObject> ext
             }
         }
 
+        @SuppressWarnings({ "unchecked", "rawtypes" })
         @Override
-        public <U extends BrooklynObject> void add(Relationship<? super T,U> relationship, U target) {
+        public <U extends BrooklynObject> void add(Relationship<? super T,? super U> relationship, U target) {
             synchronized (relations) {
-                relationships.put(relationship.getRelationshipTypeName(), relationship);
+                relationships.put(relationship.getRelationshipTypeName(), (Relationship)relationship);
                 relations.put(relationship.getRelationshipTypeName(), target);
             }
             onRelationsChanged();
         }
 
         @Override
-        public <U extends BrooklynObject> void remove(Relationship<? super T,U> relationship, U target) {
+        public <U extends BrooklynObject> void remove(Relationship<? super T,? super U> relationship, U target) {
             synchronized (relations) {
                 relations.remove(relationship.getRelationshipTypeName(), target);
             }

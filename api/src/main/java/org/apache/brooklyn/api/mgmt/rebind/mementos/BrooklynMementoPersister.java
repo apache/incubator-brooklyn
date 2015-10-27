@@ -57,9 +57,10 @@ public interface BrooklynMementoPersister {
         Feed lookupFeed(String id);
         CatalogItem<?, ?> lookupCatalogItem(String id);
         
-        BrooklynObject lookup(BrooklynObjectType type, String objectId);
+        /** retrieve the item with the given ID, optionally ensuring it is of the indicated type; null if not found */
+        BrooklynObject lookup(@Nullable BrooklynObjectType type, String objectId);
         /** like {@link #lookup(BrooklynObjectType, String)} but doesn't record an exception if not found */
-        BrooklynObject peek(BrooklynObjectType type, String objectId);
+        BrooklynObject peek(@Nullable BrooklynObjectType type, String objectId);
     }
     
     /**

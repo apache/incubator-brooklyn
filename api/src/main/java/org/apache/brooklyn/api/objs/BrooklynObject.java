@@ -151,8 +151,8 @@ public interface BrooklynObject extends Identifiable, Configurable {
     }
     
     public interface RelationSupport<T extends BrooklynObject> {
-        public <U extends BrooklynObject> void add(Relationship<? super T,U> relationship, U target);
-        public <U extends BrooklynObject> void remove(Relationship<? super T,U> relationship, U target);
+        public <U extends BrooklynObject> void add(Relationship<? super T,? super U> relationship, U target);
+        public <U extends BrooklynObject> void remove(Relationship<? super T,? super U> relationship, U target);
         public Set<Relationship<? super T,? extends BrooklynObject>> getRelationships();
         public <U extends BrooklynObject> Set<U> getRelations(Relationship<? super T,U> relationship);
     }
