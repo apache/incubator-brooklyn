@@ -32,6 +32,7 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogInput;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
@@ -420,6 +421,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         // (this load is required for the scan below and I think also for yaml resolution)
         CatalogUtils.installLibraries(mgmt, libraryBundlesNew);
 
+        List<?> inputsRaw = MutableList.copyOf(getFirstAs(itemMetadata, List.class, "brooklyn.inputs", "inputs").orNull());
+        List<CatalogInput<?>> inputs = CatalogInputDto.ParseYamlInputs.parseInputs(inputsRaw, CatalogUtils.newClassLoadingContext(mgmt, "<catalog_input_parser>", libraryBundles));
+
         Boolean scanJavaAnnotations = getFirstAs(itemMetadata, Boolean.class, "scanJavaAnnotations", "scan_java_annotations").orNull();
         if (scanJavaAnnotations==null || !scanJavaAnnotations) {
             // don't scan
@@ -567,6 +571,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         String sourcePlanYaml = planInterpreter.getPlanYaml();
         
         CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(itemType, symbolicName, version)
+            .inputs(inputs)
             .libraries(libraryBundles)
             .displayName(displayName)
             .description(description)

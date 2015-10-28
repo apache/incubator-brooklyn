@@ -22,12 +22,15 @@ import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.effector.Effectors;
 
 @Catalog(name="More Entity v2")
 @ImplementedBy(MoreEntityImpl.class)
 public interface MoreEntity extends Entity {
 
+    public static final ConfigKey<String> MORE_CONFIG = ConfigKeys.newStringConfigKey("more_config");
     public static final Effector<String> SAY_HI = Effectors.effector(String.class, "sayHI")
         .description("says HI to an uppercased name")
         .parameter(String.class, "name")

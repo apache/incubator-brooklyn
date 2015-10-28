@@ -19,6 +19,7 @@
 package org.apache.brooklyn.api.catalog;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -27,6 +28,7 @@ import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
+import org.apache.brooklyn.config.ConfigKey;
 
 import com.google.common.annotations.Beta;
 
@@ -45,6 +47,15 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
         public boolean isNamed();
     }
 
+    public static interface CatalogInput<T> {
+        /** Short name, to be used in UI */
+        String getLabel();
+        /** Visible by default in UI, not all inputs may be visible at once */
+        boolean isPinned();
+        /** Type information for the input */
+        ConfigKey<T> getType();
+    }
+
     /**
      * @throws UnsupportedOperationException; config not supported for catalog items
      */
@@ -56,7 +67,8 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
      */
     @Override
     SubscriptionSupport subscriptions();
-    
+
+    /** @deprecated since 0.7.0 in favour of {@link CatalogBundle}, kept for rebind compatibility */
     @Deprecated
     public static interface CatalogItemLibraries {
         Collection<String> getBundles();
@@ -93,6 +105,8 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     public String getSymbolicName();
 
     public String getVersion();
+
+    public List<CatalogInput<?>> getInputs();
 
     public Collection<CatalogBundle> getLibraries();
 

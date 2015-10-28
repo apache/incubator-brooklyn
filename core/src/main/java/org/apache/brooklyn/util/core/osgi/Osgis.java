@@ -246,6 +246,7 @@ public class Osgis {
             return Joiner.on(";").join(parts);
         }
         
+        @Override
         public String toString() {
             return getClass().getCanonicalName()+"["+getConstraintsDescription()+"]";
         }

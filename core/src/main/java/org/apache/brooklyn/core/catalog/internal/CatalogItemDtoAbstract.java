@@ -20,6 +20,7 @@ package org.apache.brooklyn.core.catalog.internal;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,6 +62,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @Deprecated @SetFromFlag String type;
     private @SetFromFlag String planYaml;
 
+    private @SetFromFlag List<CatalogInput<?>> inputs;
     private @SetFromFlag Collection<CatalogBundle> libraries;
     private @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
     private @SetFromFlag boolean deprecated;
@@ -108,11 +110,13 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         return type;
     }
 
+    @Override
     @Deprecated
     public String getName() {
         return getDisplayName();
     }
 
+    @Override
     @Deprecated
     public String getRegisteredTypeName() {
         return getSymbolicName();
@@ -170,6 +174,11 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
     }
+    
+    @Override
+    public List<CatalogInput<?>> getInputs() {
+        return inputs;
+    }
 
     @Nonnull
     @Override
@@ -188,7 +197,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(symbolicName, planYaml, javaType, nullIfEmpty(libraries), version, getCatalogItemId());
+        return Objects.hashCode(symbolicName, planYaml, javaType, nullIfEmpty(inputs), nullIfEmpty(libraries), version, getCatalogItemId());
     }
 
     @Override
@@ -200,6 +209,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         if (!Objects.equal(symbolicName, other.symbolicName)) return false;
         if (!Objects.equal(planYaml, other.planYaml)) return false;
         if (!Objects.equal(javaType, other.javaType)) return false;
+        if (!Objects.equal(nullIfEmpty(inputs), nullIfEmpty(other.inputs))) return false;
         if (!Objects.equal(nullIfEmpty(libraries), nullIfEmpty(other.libraries))) return false;
         if (!Objects.equal(getCatalogItemId(), other.getCatalogItemId())) return false;
         if (!Objects.equal(version, other.version)) return false;
@@ -224,6 +234,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         return getClass().getSimpleName()+"["+getId()+"/"+getDisplayName()+"]";
     }
 
+    @Override
     public abstract Class<SpecT> getSpecType();
 
     transient CatalogXmlSerializer serializer;
@@ -369,6 +380,10 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     protected void setPlanYaml(String planYaml) {
         this.planYaml = planYaml;
+    }
+
+    protected void setInputs(List<CatalogInput<?>> inputs) {
+        this.inputs = inputs;
     }
 
     protected void setLibraries(Collection<CatalogBundle> libraries) {

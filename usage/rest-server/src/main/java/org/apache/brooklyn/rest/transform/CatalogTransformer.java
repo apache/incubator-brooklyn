@@ -22,11 +22,8 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.entity.EntityDynamicType;
-import org.apache.brooklyn.core.objs.BrooklynTypes;
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogInput;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
@@ -37,6 +34,8 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.core.entity.EntityDynamicType;
+import org.apache.brooklyn.core.objs.BrooklynTypes;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
@@ -50,6 +49,7 @@ import org.apache.brooklyn.rest.domain.SummaryComparators;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -69,8 +69,8 @@ public class CatalogTransformer {
             EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
             EntityType type = typeMap.getSnapshot();
 
-            for (ConfigKey<?> x: type.getConfigKeys())
-                config.add(EntityTransformer.entityConfigSummary(x, typeMap.getConfigKeyField(x.getName())));
+            for (CatalogInput<?> input: item.getInputs())
+                config.add(EntityTransformer.entityConfigSummary(input));
             for (Sensor<?> x: type.getSensors())
                 sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
             for (Effector<?> x: type.getEffectors())
