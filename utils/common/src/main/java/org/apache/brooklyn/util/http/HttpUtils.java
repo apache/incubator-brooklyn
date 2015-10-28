@@ -16,10 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.test;
-
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+package org.apache.brooklyn.util.http;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,12 +40,10 @@ import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.http.TrustingSslSocketFactory;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
@@ -60,16 +55,13 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * Utility methods to aid testing HTTP.
  * 
  * @author aled
- *
- * @deprecated Prefer org.apache.brooklyn.util.http.HttpUtils which has no TestNG dependencies.
  */
-@Deprecated
-public class HttpTestUtils {
+public class HttpUtils {
 
     // TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
     // and deprecate methods in TestUtils until deleted).
 
-    private static final Logger LOG = LoggerFactory.getLogger(HttpTestUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpUtils.class);
 
     static final ExecutorService executor = Executors.newCachedThreadPool();
     
@@ -127,7 +119,7 @@ public class HttpTestUtils {
 
     public static void assertHealthyStatusCode(int code) {
         if (code>=200 && code<=299) return;
-        Assert.fail("Wrong status code: "+code);
+        Asserts.fail("Wrong status code: " + code);
     }
     
     public static int getHttpStatusCode(String url) throws Exception {
@@ -154,14 +146,14 @@ public class HttpTestUtils {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted for "+url+" (in assertion that is reachable)", e);
         } catch (Exception e) {
-            throw new IllegalStateException("Server at "+url+" failed to respond (in assertion that is reachable): "+e, e);
+            throw new IllegalStateException("Server at "+url+" Asserts.failed to respond (in assertion that is reachable): "+e, e);
         }
     }
 
     public static void assertUrlUnreachable(String url) {
         try {
             int statusCode = getHttpStatusCode(url);
-            fail("Expected url "+url+" unreachable, but got status code "+statusCode);
+            Asserts.fail("Expected url " + url + " unreachable, but got status code " + statusCode);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted for "+url+" (in assertion that unreachable)", e);
@@ -194,13 +186,13 @@ public class HttpTestUtils {
         }
         try {
             int actualCode = getHttpStatusCode(url);
-            assertTrue(acceptableCodes.contains(actualCode), "code="+actualCode+"; expected="+acceptableCodes+"; url="+url);
+            Asserts.assertTrue(acceptableCodes.contains(actualCode), "code=" + actualCode + "; expected=" + acceptableCodes + "; url=" + url);
             
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted for "+url+" (in assertion that result code is "+acceptableCodes+")", e);
         } catch (Exception e) {
-            throw new IllegalStateException("Server at "+url+" failed to respond (in assertion that result code is "+acceptableCodes+"): "+e, e);
+            throw new IllegalStateException("Server at "+url+" Asserts.failed to respond (in assertion that result code is "+acceptableCodes+"): "+e, e);
         }
     }
 
@@ -219,11 +211,11 @@ public class HttpTestUtils {
     public static void assertContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
             String contents = getContent(url);
-            Assert.assertTrue(contents != null && contents.length() > 0);
+            Asserts.assertTrue(contents != null && contents.length() > 0);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (!contents.contains(text)) {
                     LOG.warn("CONTENTS OF URL "+url+" MISSING TEXT: "+text+"\n"+contents);
-                    Assert.fail("URL "+url+" does not contain text: "+text);
+                    Asserts.fail("URL "+url+" does not contain text: "+text);
                 }
             }
         } catch (Exception e) {
@@ -234,11 +226,11 @@ public class HttpTestUtils {
     public static void assertContentNotContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
             String contents = getContent(url);
-            Assert.assertTrue(contents != null);
+            Asserts.assertTrue(contents != null);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (contents.contains(text)) {
                     LOG.warn("CONTENTS OF URL "+url+" HAS TEXT: "+text+"\n"+contents);
-                    Assert.fail("URL "+url+" contain text: "+text);
+                    Asserts.fail("URL "+url+" contain text: "+text);
                 }
             }
         } catch (Exception e) {
@@ -249,11 +241,11 @@ public class HttpTestUtils {
     public static void assertErrorContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
             String contents = getErrorContent(url);
-            Assert.assertTrue(contents != null && contents.length() > 0);
+            Asserts.assertTrue(contents != null && contents.length() > 0);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (!contents.contains(text)) {
                     LOG.warn("CONTENTS OF URL "+url+" MISSING TEXT: "+text+"\n"+contents);
-                    Assert.fail("URL "+url+" does not contain text: "+text);
+                    Asserts.fail("URL "+url+" does not contain text: "+text);
                 }
             }
         } catch (Exception e) {
@@ -265,11 +257,11 @@ public class HttpTestUtils {
     public static void assertErrorContentNotContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
             String err = getErrorContent(url);
-            Assert.assertTrue(err != null);
+            Asserts.assertTrue(err != null);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (err.contains(text)) {
                     LOG.warn("CONTENTS OF URL "+url+" HAS TEXT: "+text+"\n"+err);
-                    Assert.fail("URL "+url+" contain text: "+text);
+                    Asserts.fail("URL "+url+" contain text: "+text);
                 }
             }
         } catch (Exception e) {
@@ -291,8 +283,8 @@ public class HttpTestUtils {
     
     public static void assertContentMatches(String url, String regex) {
         String contents = getContent(url);
-        Assert.assertNotNull(contents);
-        Assert.assertTrue(contents.matches(regex), "Contents does not match expected regex ("+regex+"): "+contents);
+        Asserts.assertNotNull(contents);
+        Asserts.assertTrue(contents.matches(regex), "Contents does not match expected regex ("+regex+"): "+contents);
     }
 
     public static void assertContentEventuallyMatches(final String url, final String regex) {
@@ -346,7 +338,7 @@ public class HttpTestUtils {
      * {@code
      * Future<?> future = assertAsyncHttpStatusCodeContinuallyEquals(executor, url, 200);
      * // do other stuff...
-     * if (future.isDone()) future.get(); // get exception if it's failed
+     * if (future.isDone()) future.get(); // get exception if it's Asserts.failed
      * }
      * </pre>
      * 
@@ -374,8 +366,8 @@ public class HttpTestUtils {
      * Consumes the input stream entirely and then cleanly closes the connection.
      * Ignores all exceptions completely, not even logging them!
      * 
-     * Consuming the stream fully is useful for preventing idle TCP connections. 
-     * See {@linkplain http://docs.oracle.com/javase/8/docs/technotes/guides/net/http-keepalive.html}.
+     * Consuming the stream fully is useful for preventing idle TCP connections.
+     * @see <a href="http://docs.oracle.com/javase/8/docs/technotes/guides/net/http-keepalive.html">Persistent Connections</a>
      */
     public static void consumeAndCloseQuietly(HttpURLConnection connection) {
         try { Streams.readFully(connection.getInputStream()); } catch (Exception e) {}
