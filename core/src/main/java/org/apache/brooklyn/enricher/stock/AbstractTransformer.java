@@ -28,6 +28,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.sensor.BasicSensorEvent;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,10 +64,9 @@ public abstract class AbstractTransformer<T,U> extends AbstractEnricher implemen
         this.targetSensor = targetSensorSpecified!=null ? (Sensor<U>) targetSensorSpecified : (Sensor<U>) this.sourceSensor;
         if (producer.equals(entity) && targetSensorSpecified==null) {
             // We cannot call getTransformation() here to log the tranformation, as it will attempt
-            // to resolve the transformation, which will cause the entity initialization thread to
-            // block
+            // to resolve the transformation, which will cause the entity initialization thread to block
             LOG.error("Refusing to add an enricher which reads and publishes on the same sensor: "+
-                producer+"."+sourceSensor+" (computing transformation)");
+                producer+"."+sourceSensor+" (computing transformation with "+JavaClassNames.simpleClassName(this)+")");
             // we don't throw because this error may manifest itself after a lengthy deployment, 
             // and failing it at that point simply because of an enricher is not very pleasant
             // (at least not until we have good re-run support across the board)
