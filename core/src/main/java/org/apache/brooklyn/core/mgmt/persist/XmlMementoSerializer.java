@@ -352,7 +352,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
     // Perhaps context.getRequiredType(); can be used instead?
     // Other users of xstream (e.g. jenkinsci) manually check for resoved-to and class attributes
     //   for compatibility with older versions of xstream
-    public static Class readClassType(HierarchicalStreamReader reader, Mapper mapper) {
+    private static Class readClassType(HierarchicalStreamReader reader, Mapper mapper) {
         String classAttribute = readClassAttribute(reader, mapper);
         Class type;
         if (classAttribute == null) {
@@ -363,7 +363,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         return type;
     }
 
-    public static String readClassAttribute(HierarchicalStreamReader reader, Mapper mapper) {
+    private static String readClassAttribute(HierarchicalStreamReader reader, Mapper mapper) {
         String attributeName = mapper.aliasForSystemAttribute("resolves-to");
         String classAttribute = attributeName == null ? null : reader.getAttribute(attributeName);
         if (classAttribute == null) {
