@@ -18,10 +18,13 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.dsl.methods;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+
+import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -191,6 +194,14 @@ public class BrooklynDslCommon {
         }
     }
 
+    public static Object regexReplacement(final Object source, final Object pattern, final Object replacement) {
+        if (DslUtils.resolved(Arrays.asList(source, pattern, replacement))) {
+            return (new Functions.RegexReplacer(String.valueOf(pattern), String.valueOf(replacement))).apply(String.valueOf(source));
+        } else {
+            return new DslRegexReplacement(source, pattern, replacement);
+        }
+    }
+
     /**
      * Deferred execution of String formatting.
      *
@@ -218,6 +229,31 @@ public class BrooklynDslCommon {
             return "$brooklyn:formatString("+
                 JavaStringEscapes.wrapJavaString(pattern)+
                 (args==null || args.length==0 ? "" : ","+Strings.join(args, ","))+")";
+        }
+    }
+
+
+
+    protected static class DslRegexReplacement extends BrooklynDslDeferredSupplier<String> {
+
+        private Object source;
+        private Object pattern;
+        private Object replacement;
+
+        public DslRegexReplacement(Object source, Object pattern, Object replacement) {
+            this.pattern = pattern;
+            this.replacement = replacement;
+            this.source = source;
+        }
+
+        @Override
+        public Task<String> newTask() {
+            return DependentConfiguration.regexReplacement(source, pattern, replacement);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("$brooklyn:regexReplace(%s:%s:%s)",source, pattern, replacement);
         }
     }
 
@@ -343,6 +379,53 @@ public class BrooklynDslCommon {
         @Override
         public String toString() {
             return "$brooklyn:external("+providerName+", "+key+")";
+        }
+    }
+
+    public static class Functions {
+        public static Object regexReplacement(final Object pattern, final Object replacement) {
+            if (DslUtils.resolved(pattern, replacement)) {
+                return new RegexReplacer(String.valueOf(pattern), String.valueOf(replacement));
+            } else {
+                return new DslRegexReplacer(pattern, replacement);
+            }
+        }
+
+        public static class RegexReplacer implements Function<String, String> {
+            private final String pattern;
+            private final String replacement;
+
+            public RegexReplacer(String pattern, String replacement) {
+                this.pattern = pattern;
+                this.replacement = replacement;
+            }
+
+            @Nullable
+            @Override
+            public String apply(@Nullable String s) {
+                return s == null ? null : Strings.replaceAllRegex(s, pattern, replacement);
+            }
+        }
+
+        protected static class DslRegexReplacer extends BrooklynDslDeferredSupplier<Function<String, String>> {
+
+            private Object pattern;
+            private Object replacement;
+
+            public DslRegexReplacer(Object pattern, Object replacement) {
+                this.pattern = pattern;
+                this.replacement = replacement;
+            }
+
+            @Override
+            public Task<Function<String, String>> newTask() {
+                return DependentConfiguration.regexReplacement(pattern, replacement);
+            }
+
+            @Override
+            public String toString() {
+                return String.format("$brooklyn:regexReplace(%s:%s)", pattern, replacement);
+            }
         }
     }
 

@@ -43,10 +43,9 @@ public class Transformer<T,U> extends AbstractTransformer<T,U> {
     public static ConfigKey<?> TARGET_VALUE = ConfigKeys.newConfigKey(Object.class, "enricher.targetValue");
     public static ConfigKey<Function<?, ?>> TRANSFORMATION_FROM_VALUE = ConfigKeys.newConfigKey(new TypeToken<Function<?, ?>>() {}, "enricher.transformation");
     public static ConfigKey<Function<?, ?>> TRANSFORMATION_FROM_EVENT = ConfigKeys.newConfigKey(new TypeToken<Function<?, ?>>() {}, "enricher.transformation.fromevent");
-    
-    public Transformer() {
-    }
 
+    public Transformer() { }
+    
     /** returns a function for transformation, for immediate use only (not for caching, as it may change) */
     @Override
     @SuppressWarnings("unchecked")
