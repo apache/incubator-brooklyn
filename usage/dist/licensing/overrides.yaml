@@ -86,7 +86,7 @@
   notices: 
   - Copyright (c) John Resig (2005-2011)
   - "Includes code fragments from sizzle.js:"
-  - "  Copyright (c) jQuery Foundation and other contributors (2011)"
+  - "  Copyright (c) The Dojo Foundation"
   - "  Available at http://sizzlejs.com"
   - "  Used under the MIT license"
 
@@ -100,9 +100,10 @@
   organization: { name: "The jQuery Foundation", url: "http://jquery.org/" }
   license: MIT
   notices: 
-  - Copyright (c) John Resig (2005-2014)
+  - Copyright (c) The jQuery Foundation, Inc. and other contributors (2005-2014)
   - "Includes code fragments from sizzle.js:"
-  - "  Copyright (c) jQuery Foundation and other contributors (2013)"
+  # NB: sizzle copyright changed from Dojo Foundation in 1.7.2
+  - "  Copyright (c) The jQuery Foundation, Inc. and other contributors (2013)"
   - "  Available at http://sizzlejs.com"
   - "  Used under the MIT license"
 
@@ -174,29 +175,29 @@
 - id: backbone.js
   version: 1.0.0
   url: http://backbonejs.org
-  organization: { name: "DocumentCloud Inc", url: "http://www.documentcloud.org/" }
-  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2010-2013)
+  organization: { name: "DocumentCloud Inc.", url: "http://www.documentcloud.org/" }
+  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc. (2010-2013)
   license: MIT
 
 - id: bootstrap.js
   version: 2.0.4
   url: http://twitter.github.com/bootstrap/javascript.html#transitions
-  notice: Copyright (c) Twitter, Inc (2012)
+  notice: Copyright (c) Twitter, Inc. (2012)
   license: ASL2
  
 # used in docs (not needed for licensing) 
 - id: bootstrap.js:3.1.1
   version: 3.1.1
   url: http://getbootstrap.com/
-  notice: Copyright (c) Twitter, Inc (2011-2014)
+  notice: Copyright (c) Twitter, Inc. (2011-2014)
   license: MIT
   
 - id: underscore.js
   version: 1.4.4
   files: underscore*.{js,map}
   url: http://underscorejs.org
-  organization: { name: "DocumentCloud Inc", url: "http://www.documentcloud.org/" }
-  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2009-2013)
+  organization: { name: "DocumentCloud Inc.", url: "http://www.documentcloud.org/" }
+  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc. (2009-2013)
   license: MIT
 
 # used in CLI (and in docs)
@@ -204,8 +205,8 @@
   version: 1.7.0
   files: underscore*.{js,map}
   url: http://underscorejs.org
-  organization: { name: "DocumentCloud Inc", url: "http://www.documentcloud.org/" }
-  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc (2009-2014)
+  organization: { name: "DocumentCloud Inc.", url: "http://www.documentcloud.org/" }
+  notice: "Copyright (c) Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors (2009-2014)"
   license: MIT
 
 - id: async.js
@@ -303,6 +304,7 @@
 # * plus the below:
 
 - id: jquery.superfish.js
+  files: superfish.js
   name: Superfish jQuery Menu Widget
   version: 1.4.8
   url: http://users.tpg.com.au/j_birch/plugins/superfish/
