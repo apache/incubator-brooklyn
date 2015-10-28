@@ -1,5 +1,5 @@
 /*
- * Taken from http://code.google.com/p/js-uri/ r29.  BSD license.
+ * Taken from http://code.google.com/p/js-uri/ v0.1.  BSD license.
  * No changes in this Brooklyn copy, apart from these header lines.
  * TODO Consider switching to  http://medialize.github.io/URI.js/  which appears more modern.
  * 

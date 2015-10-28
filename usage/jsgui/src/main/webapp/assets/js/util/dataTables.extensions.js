@@ -16,14 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  *
+ * ---
  *
- * Based on jQuery DataTables plug-ins for:
+ * This code has been created by the Apache Brooklyn contributors.
+ * It is heavily based on earlier software but rewritten for clarity 
+ * and to preserve license integrity.
+ *
+ * This work is based on the existing jQuery DataTables plug-ins for:
+ *
  * * fnStandingRedraw by Jonathan Hoguet, 
  *   http://www.datatables.net/plug-ins/api/fnStandingRedraw
+ *
  * * fnProcessingIndicator by Allan Chappell
  *   https://www.datatables.net/plug-ins/api/fnProcessingIndicator
  *
- * Both rewritten for clarity and to preserve license integrity.
  */
 define([
     "jquery", "jquery-datatables"

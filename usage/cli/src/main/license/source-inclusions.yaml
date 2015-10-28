@@ -20,5 +20,5 @@
 # extras file for org.heneveld.license-audit-maven-plugin
 # listing projects from which *source* files are included
 
-- id: underscore.js
+- id: underscore.js:1.7.0
 - id: typeahead.js
