@@ -196,6 +196,7 @@
   }
 
   Button.prototype.toggle = function () {
+	// TODO: buttons-radio :div is replaced by :ul
     var $parent = this.$element.parent('[data-toggle="buttons-radio"]')
 
     $parent && $parent
