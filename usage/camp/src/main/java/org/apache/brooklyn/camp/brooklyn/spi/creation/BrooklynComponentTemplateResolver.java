@@ -233,6 +233,7 @@ public class BrooklynComponentTemplateResolver {
         new BrooklynEntityDecorationResolver.PolicySpecResolver(yamlLoader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.EnricherSpecResolver(yamlLoader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.InitializerResolver(yamlLoader).decorate(spec, attrs);
+        new BrooklynEntityDecorationResolver.SpecParameterResolver(yamlLoader).decorate(spec, attrs);
 
         configureEntityConfig(spec);
     }
@@ -299,6 +300,7 @@ public class BrooklynComponentTemplateResolver {
         for (Class<?> iface : spec.getAdditionalInterfaces()) {
             allKeys.addAll(FlagUtils.findAllFlagsAndConfigKeys(null, iface, bagFlags));
         }
+        allKeys.addAll(FlagUtils.findAllParameterConfigKeys(spec.getParameters(), bagFlags));
         return allKeys;
     }
 

@@ -16,15 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.catalog.internal;
+package org.apache.brooklyn.core.objs;
 
 import static org.testng.Assert.assertEquals;
 
 import java.util.List;
 
 import org.apache.brooklyn.api.catalog.CatalogConfig;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogInput;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.testng.annotations.Test;
@@ -32,8 +32,8 @@ import org.testng.annotations.Test;
 import com.google.common.base.Predicate;
 import com.google.common.reflect.TypeToken;
 
-public class CatalogInputDtoClassTest {
-    public interface CatalogInputTestEntity extends Entity {
+public class BasicSpecParameterFromClassTest {
+    public interface SpecParameterTestEntity extends Entity {
         @CatalogConfig(label="String Key", priority=3)
         ConfigKey<String> STRING_KEY = ConfigKeys.newStringConfigKey("string_key");
 
@@ -49,14 +49,14 @@ public class CatalogInputDtoClassTest {
 
     @Test
     public void testFullDefinition() {
-        List<CatalogInput<?>> inputs = CatalogInputDto.ParseClassInputs.parseInputs(CatalogInputTestEntity.class);
-        assertInput(inputs.get(0), "Predicate Key", true, CatalogInputTestEntity.PREDICATE_KEY);
-        assertInput(inputs.get(1), "Integer Key", true, CatalogInputTestEntity.INTEGER_KEY);
-        assertInput(inputs.get(2), "String Key", true, CatalogInputTestEntity.STRING_KEY);
-        assertInput(inputs.get(3), "unpinned_key", false, CatalogInputTestEntity.UNPINNNED_KEY);
+        List<SpecParameter<?>> inputs = BasicSpecParameter.fromClass(SpecParameterTestEntity.class);
+        assertInput(inputs.get(0), "Predicate Key", true, SpecParameterTestEntity.PREDICATE_KEY);
+        assertInput(inputs.get(1), "Integer Key", true, SpecParameterTestEntity.INTEGER_KEY);
+        assertInput(inputs.get(2), "String Key", true, SpecParameterTestEntity.STRING_KEY);
+        assertInput(inputs.get(3), "unpinned_key", false, SpecParameterTestEntity.UNPINNNED_KEY);
     }
 
-    private void assertInput(CatalogInput<?> input, String label, boolean pinned, ConfigKey<?> type) {
+    private void assertInput(SpecParameter<?> input, String label, boolean pinned, ConfigKey<?> type) {
         assertEquals(input.getLabel(), label);
         assertEquals(input.isPinned(), pinned);
         assertEquals(input.getType(), type);

@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.core.objs.BasicSpecParameter;
 import org.apache.brooklyn.core.plan.PlanNotRecognizedException;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -71,29 +72,32 @@ public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
     @Override
     public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(
             CatalogItem<T, SpecT> item, Set<String> encounteredTypes) throws PlanNotRecognizedException {
-        if (item.getJavaType() != null) {
+        @SuppressWarnings("deprecation")
+        String javaType = item.getJavaType();
+        if (javaType != null) {
             log.warn("Deprecated functionality (since 0.9.0). Using old-style xml catalog items with java type attribute for " + item);
             Class<?> type;
             try {
                 // java types were deprecated before we added osgi support so this isn't necessary,
                 // but it doesn't hurt (and if we re-instate a class+bundle approach for RegisteredType 
                 // we will want to do this)
-                type = CatalogUtils.newClassLoadingContext(mgmt, item).loadClass(item.getJavaType());
+                type = CatalogUtils.newClassLoadingContext(mgmt, item).loadClass(javaType);
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
-                throw new IllegalStateException("Unable to load old-style java catalog item type " + item.getJavaType() + " for item " + item, e);
+                throw new IllegalStateException("Unable to load old-style java catalog item type " + javaType + " for item " + item, e);
             }
             AbstractBrooklynObjectSpec<?,?> spec;
             if (Entity.class.isAssignableFrom(type)) {
                 @SuppressWarnings("unchecked")
                 Class<Entity> entityType = (Class<Entity>)type;
-                spec = EntitySpec.create(entityType);
+                spec = EntitySpec.create(entityType)
+                        .parameters(BasicSpecParameter.fromClass(mgmt, entityType));
             } else if (Policy.class.isAssignableFrom(type)) {
                 @SuppressWarnings("unchecked")
                 Class<Policy> policyType = (Class<Policy>)type;
                 spec = PolicySpec.create(policyType);
             } else {
-                throw new IllegalStateException("Catalog item " + item + " java type " + item.getJavaType() + " is not a Brooklyn supported object.");
+                throw new IllegalStateException("Catalog item " + item + " java type " + javaType + " is not a Brooklyn supported object.");
             }
             spec.catalogItemId(item.getCatalogItemId());
             @SuppressWarnings("unchecked")

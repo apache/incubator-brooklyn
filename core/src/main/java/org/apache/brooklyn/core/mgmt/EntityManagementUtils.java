@@ -59,6 +59,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.Runnables;
 
 /** Utility methods for working with entities and applications */
 public class EntityManagementUtils {
@@ -215,7 +216,7 @@ public class EntityManagementUtils {
             } else {
                 // include a task, just to give feedback in the GUI
                 taskS.add(Tasks.builder().displayName("create").description("Skipping start (not a Startable Entity)")
-                    .body(new Runnable() { public void run() {} })
+                    .body(Runnables.doNothing())
                     .tag(BrooklynTaskTags.tagForTargetEntity(child))
                     .build());
             }
@@ -250,6 +251,9 @@ public class EntityManagementUtils {
             wrappedChild.displayName(wrapperParent.getDisplayName());
         if (!wrapperParent.getLocations().isEmpty())
             wrappedChild.locations(wrapperParent.getLocations());
+        if (!wrapperParent.getParameters().isEmpty()) {
+            wrappedChild.parameters(wrapperParent.getParameters());
+        }
 
         // NB: this clobbers child config; might prefer to deeply merge maps etc
         // (but this should not be surprising, as unwrapping is often parameterising the nested blueprint, so outer config should dominate) 

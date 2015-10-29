@@ -16,15 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.camp.brooklyn;
+package org.apache.brooklyn.api.objs;
 
-public interface BrooklynCampReservedKeys {
-    public static final String BROOKLYN_CONFIG = "brooklyn.config";
-    public static final String BROOKLYN_FLAGS = "brooklyn.flags";
-    public static final String BROOKLYN_POLICIES = "brooklyn.policies";
-    public static final String BROOKLYN_ENRICHERS = "brooklyn.enrichers";
-    public static final String BROOKLYN_CHILDREN = "brooklyn.children";
-    public static final String BROOKLYN_INITIALIZERS = "brooklyn.initializers";
-    public static final String BROOKLYN_PARAMETERS = "brooklyn.parameters";
-    public static final String BROOKLYN_CATALOG = "brooklyn.catalog";
+import java.io.Serializable;
+
+import org.apache.brooklyn.config.ConfigKey;
+
+public interface SpecParameter<T> extends Serializable {
+    /** Short name, to be used in UI */
+    String getLabel();
+    /** Visible by default in UI, not all inputs may be visible at once */
+    boolean isPinned();
+    /** Type information for the input */
+    ConfigKey<T> getType();
 }

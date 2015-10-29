@@ -26,13 +26,13 @@ import java.util.List;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogInput;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.mgmt.osgi.OsgiTestResources;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -40,7 +40,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
-public class CatalogInputTest {
+public class SpecParameterInMetaTest {
     private ManagementContext mgmt;
     private BrooklynCatalog catalog;
     private String spec;
@@ -58,27 +58,27 @@ public class CatalogInputTest {
                 "brooklyn.catalog:",
                 "  id: test.inputs",
                 "  version: 0.0.1",
-                "  inputs:",
+                "  parameters:",
                 "  - simple",
                 "  - name: explicit_name",
                 "  - name: third_input",
                 "    type: integer",
                 "  item: " + spec);
-        List<CatalogInput<?>> inputs = item.getInputs();
+        List<SpecParameter<?>> inputs = item.getParameters();
         assertEquals(inputs.size(), 3);
-        CatalogInput<?> firstInput = inputs.get(0);
+        SpecParameter<?> firstInput = inputs.get(0);
         assertEquals(firstInput.getLabel(), "simple");
         assertEquals(firstInput.isPinned(), true);
         assertEquals(firstInput.getType().getName(), "simple");
         assertEquals(firstInput.getType().getTypeToken(), TypeToken.of(String.class));
         
-        CatalogInput<?> secondInput = inputs.get(1);
+        SpecParameter<?> secondInput = inputs.get(1);
         assertEquals(secondInput.getLabel(), "explicit_name");
         assertEquals(secondInput.isPinned(), true);
         assertEquals(secondInput.getType().getName(), "explicit_name");
         assertEquals(secondInput.getType().getTypeToken(), TypeToken.of(String.class));
         
-        CatalogInput<?> thirdInput = inputs.get(2);
+        SpecParameter<?> thirdInput = inputs.get(2);
         assertEquals(thirdInput.getLabel(), "third_input");
         assertEquals(thirdInput.isPinned(), true);
         assertEquals(thirdInput.getType().getName(), "third_input");
@@ -95,13 +95,13 @@ public class CatalogInputTest {
                 "  version: 0.0.1",
                 "  libraries:",
                 "  - classpath://" + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH,
-                "  inputs:",
+                "  parameters:",
                 "  - name: simple",
                 "    type: " + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY,
                 "  item: " + spec);
-        List<CatalogInput<?>> inputs = item.getInputs();
+        List<SpecParameter<?>> inputs = item.getParameters();
         assertEquals(inputs.size(), 1);
-        CatalogInput<?> firstInput = inputs.get(0);
+        SpecParameter<?> firstInput = inputs.get(0);
         assertEquals(firstInput.getLabel(), "simple");
         assertTrue(firstInput.isPinned());
         assertEquals(firstInput.getType().getName(), "simple");
@@ -122,7 +122,7 @@ public class CatalogInputTest {
         CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
         assertEquals(item.getVersion(), "2.0.test_java");
         assertEquals(item.getLibraries().size(), 1);
-        CatalogInput<?> input = item.getInputs().get(0);
+        SpecParameter<?> input = item.getParameters().get(0);
         assertEquals(input.getLabel(), "more_config");
         assertFalse(input.isPinned());
         assertEquals(input.getType().getName(), "more_config");

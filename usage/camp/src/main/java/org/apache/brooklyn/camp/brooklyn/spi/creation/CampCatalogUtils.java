@@ -18,11 +18,9 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
-import java.util.List;
 import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.CampPlatform;
@@ -59,7 +57,7 @@ public class CampCatalogUtils {
         switch (item.getCatalogItemType()) {
             case TEMPLATE:
             case ENTITY:
-                spec = createEntitySpec(item.getPlanYaml(), loader, encounteredTypes);
+                spec = CampUtils.createRootServiceSpec(item.getPlanYaml(), loader, encounteredTypes);
                 break;
             case LOCATION: 
                 spec = CampUtils.createLocationSpec(item.getPlanYaml(), loader, encounteredTypes);
@@ -77,14 +75,6 @@ public class CampCatalogUtils {
             ((AbstractBrooklynObjectSpec<?, ?>)spec).displayName(item.getDisplayName());
 
         return spec;
-    }
-    
-    private static EntitySpec<?> createEntitySpec(String plan, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
-        List<EntitySpec<?>> serviceEntitySpecs = CampUtils.createServiceSpecs(plan, loader, encounteredTypes);
-        if (serviceEntitySpecs.size() > 1) {
-            throw new UnsupportedOperationException("Only supporting single service in catalog item currently: got "+serviceEntitySpecs);
-        }
-        return serviceEntitySpecs.get(0);
     }
 
     public static CampPlatform getCampPlatform(ManagementContext mgmt) {

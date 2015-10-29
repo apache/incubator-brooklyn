@@ -25,6 +25,7 @@ import com.google.common.annotations.Beta;
 @Beta
 public class BrooklynCampPlatformLauncherNoServer extends BrooklynCampPlatformLauncherAbstract {
 
+    @Override
     public void stopServers() {
         // nothing to do
     }

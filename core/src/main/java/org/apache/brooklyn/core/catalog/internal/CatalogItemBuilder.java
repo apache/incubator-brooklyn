@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogInput;
+import org.apache.brooklyn.api.objs.SpecParameter;
 
 import com.google.common.base.Preconditions;
 
@@ -106,8 +106,8 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> inputs(List<CatalogInput<?>> inputs) {
-        dto.setInputs(inputs);
+    public CatalogItemBuilder<CatalogItemType> parameters(List<SpecParameter<?>> inputs) {
+        dto.setParameters(inputs);
         return this;
     }
 
@@ -125,8 +125,8 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
         Preconditions.checkNotNull(dto.getSymbolicName());
         Preconditions.checkNotNull(dto.getVersion());
 
-        if (dto.getInputs() == null) {
-            dto.setInputs(Collections.<CatalogInput<?>>emptyList());
+        if (dto.getParameters() == null) {
+            dto.setParameters(Collections.<SpecParameter<?>>emptyList());
         }
         if (dto.getLibraries() == null) {
             dto.setLibraries(Collections.<CatalogBundle>emptyList());

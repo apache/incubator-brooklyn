@@ -18,14 +18,19 @@
  */
 package org.apache.brooklyn.api.internal;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
@@ -37,6 +42,7 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
     private String displayName;
     private String catalogItemId;
     private Set<Object> tags = MutableSet.of();
+    private List<SpecParameter<?>> parameters = ImmutableList.of();
 
     protected AbstractBrooklynObjectSpec(Class<? extends T> type) {
         checkValidType(type);
@@ -76,6 +82,11 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
         Iterables.addAll(this.tags, tagsToAdd);
         return self();
     }
+    
+    public SpecT parameters(List<? extends SpecParameter<?>> parameters) {
+        this.parameters = ImmutableList.copyOf(checkNotNull(parameters, "parameters"));
+        return self();
+    }
 
     /**
      * @return The type of the object (or significant interface)
@@ -99,6 +110,11 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
         return ImmutableSet.copyOf(tags);
     }
 
+    /** A list of configuration options that the entity supports. */
+    public final List<SpecParameter<?>> getParameters() {
+        return ImmutableList.copyOf(parameters);
+    }
+
     // TODO Duplicates method in BasicEntityTypeRegistry and InternalEntityFactory.isNewStyleEntity
     protected final void checkIsNewStyleImplementation(Class<?> implClazz) {
         try {
@@ -119,6 +135,13 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
         if (val.isInterface()) throw new IllegalStateException("Implementation "+val+" is an interface, but must be a non-abstract class");
         if (Modifier.isAbstract(val.getModifiers())) throw new IllegalStateException("Implementation "+val+" is abstract, but must be a non-abstract class");
     }
+    
+    protected SpecT copyFrom(SpecT otherSpec) {
+        return displayName(otherSpec.getDisplayName())
+            .tags(otherSpec.getTags())
+            .catalogItemId(otherSpec.getCatalogItemId())
+            .parameters(otherSpec.getParameters());
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -129,6 +152,7 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
         if (!Objects.equal(getCatalogItemId(), other.getCatalogItemId())) return false;
         if (!Objects.equal(getType(), other.getType())) return false;
         if (!Objects.equal(getTags(), other.getTags())) return false;
+        if (!Objects.equal(getParameters(), other.getParameters())) return false;
         return true;
     }
     

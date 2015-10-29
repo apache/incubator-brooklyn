@@ -27,8 +27,8 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
-import org.apache.brooklyn.config.ConfigKey;
 
 import com.google.common.annotations.Beta;
 
@@ -45,15 +45,6 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     public static interface CatalogBundle extends OsgiBundleWithUrl {
         /** @deprecated since 0.9.0, use {@link #isNameResolved()} */
         public boolean isNamed();
-    }
-
-    public static interface CatalogInput<T> {
-        /** Short name, to be used in UI */
-        String getLabel();
-        /** Visible by default in UI, not all inputs may be visible at once */
-        boolean isPinned();
-        /** Type information for the input */
-        ConfigKey<T> getType();
     }
 
     /**
@@ -106,7 +97,7 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
 
     public String getVersion();
 
-    public List<CatalogInput<?>> getInputs();
+    public List<SpecParameter<?>> getParameters();
 
     public Collection<CatalogBundle> getLibraries();
 

@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
-import java.util.List;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -58,11 +57,7 @@ public class UrlServiceSpecResolver implements EntitySpecResolver {
             return null;
         }
         // Referenced specs are expected to be CAMP format as well.
-        List<EntitySpec<?>> serviceSpecs = CampUtils.createServiceSpecs(yaml, loader, encounteredTypes);
-        if (serviceSpecs.size() > 1) {
-            throw new UnsupportedOperationException("Only supporting single service in remotely referenced plans: got "+serviceSpecs);
-        }
-        return serviceSpecs.get(0);
+        return CampUtils.createRootServiceSpec(yaml, loader, encounteredTypes);
     }
 
     @Override

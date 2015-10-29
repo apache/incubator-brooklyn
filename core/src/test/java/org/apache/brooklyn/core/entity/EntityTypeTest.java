@@ -20,6 +20,8 @@ package org.apache.brooklyn.core.entity;
 
 import static org.apache.brooklyn.core.entity.AbstractEntity.CHILD_ADDED;
 import static org.apache.brooklyn.core.entity.AbstractEntity.CHILD_REMOVED;
+import static org.apache.brooklyn.core.entity.AbstractEntity.CONFIG_KEY_ADDED;
+import static org.apache.brooklyn.core.entity.AbstractEntity.CONFIG_KEY_REMOVED;
 import static org.apache.brooklyn.core.entity.AbstractEntity.EFFECTOR_ADDED;
 import static org.apache.brooklyn.core.entity.AbstractEntity.EFFECTOR_CHANGED;
 import static org.apache.brooklyn.core.entity.AbstractEntity.EFFECTOR_REMOVED;
@@ -47,10 +49,8 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.core.effector.MethodEffector;
-import org.apache.brooklyn.core.entity.AbstractEntity;
-import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.sensor.BasicSensorEvent;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
@@ -69,10 +69,12 @@ import com.google.common.collect.Iterables;
 public class EntityTypeTest extends BrooklynAppUnitTestSupport {
     private static final AttributeSensor<String> TEST_SENSOR = Sensors.newStringSensor("test.sensor");
     private EntityInternal entity;
+    @SuppressWarnings("rawtypes")
     private RecordingSensorEventListener<Sensor> listener;
 
     public final static Set<Sensor<?>> DEFAULT_SENSORS = ImmutableSet.<Sensor<?>>of(
             SENSOR_ADDED, SENSOR_REMOVED,
+            CONFIG_KEY_ADDED, CONFIG_KEY_REMOVED,
             EFFECTOR_ADDED, EFFECTOR_REMOVED, EFFECTOR_CHANGED,
             POLICY_ADDED, POLICY_REMOVED,
             CHILD_ADDED, CHILD_REMOVED,
@@ -175,8 +177,11 @@ public class EntityTypeTest extends BrooklynAppUnitTestSupport {
         assertEquals(entity.getEntityType().getSensors(), DEFAULT_SENSORS);
     }
 
-    protected <T> void assertEventuallyListenerEventsEqual(final List<T> sensorEvents) {
-        final RecordingSensorEventListener listener = this.listener;
+    private void assertEventuallyListenerEventsEqual(@SuppressWarnings("rawtypes") final List<SensorEvent<Sensor>> sensorEvents) {
+        assertEventuallyListenerEventsEqual(listener, sensorEvents);
+    }
+
+    protected static <T> void assertEventuallyListenerEventsEqual(final RecordingSensorEventListener<T> listener, final List<SensorEvent<T>> sensorEvents) {
         Asserts.succeedsEventually(new Runnable() {
             @Override
             public void run() {

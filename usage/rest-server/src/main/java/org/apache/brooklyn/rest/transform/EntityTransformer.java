@@ -26,9 +26,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.catalog.CatalogConfig;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogInput;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
@@ -153,7 +153,7 @@ public class EntityTransformer {
         return entityConfigSummary(config, label, priority, null);
     }
 
-    public static EntityConfigSummary entityConfigSummary(CatalogInput<?> input) {
+    public static EntityConfigSummary entityConfigSummary(SpecParameter<?> input) {
         Double priority = input.isPinned() ? Double.valueOf(1d) : null;
         return entityConfigSummary(input.getType(), input.getLabel(), priority, null);
     }

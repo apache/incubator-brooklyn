@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -33,6 +34,7 @@ import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.EntityTypeRegistry;
 import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
@@ -46,6 +48,7 @@ import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
@@ -243,6 +246,7 @@ public class InternalEntityFactory extends InternalFactory {
             }
             
             entity.tags().addTags(spec.getTags());
+            ((AbstractEntity)entity).configure(getConfigKeysFromSpecParameters(spec));
             ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
             
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
@@ -260,6 +264,14 @@ public class InternalEntityFactory extends InternalFactory {
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
+    }
+
+    private <T extends Entity> List<ConfigKey<?>> getConfigKeysFromSpecParameters(EntitySpec<T> spec) {
+        List<ConfigKey<?>> configKeys = MutableList.of();
+        for (SpecParameter<?> param : spec.getParameters()) {
+            configKeys.add(param.getType());
+        }
+        return configKeys;
     }
 
     /**

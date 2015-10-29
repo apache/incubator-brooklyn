@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.catalog.internal;
+package org.apache.brooklyn.core.objs;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNull;
@@ -24,11 +24,12 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogInput;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
+import org.apache.brooklyn.core.objs.BasicSpecParameter;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.testng.annotations.BeforeMethod;
@@ -41,7 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
-public class CatalogInputDtoYamlTest {
+public class BasicSpecParameterFromListTest {
     private ManagementContext mgmt;
 
     @BeforeMethod(alwaysRun=true)
@@ -52,7 +53,7 @@ public class CatalogInputDtoYamlTest {
     @Test
     public void testInlineName() {
         String name = "minRam";
-        CatalogInput<?> input = parse(name);
+        SpecParameter<?> input = parse(name);
         assertEquals(input.getLabel(), name);
         assertTrue(input.isPinned());
         ConfigKey<?> type = input.getType();
@@ -67,7 +68,7 @@ public class CatalogInputDtoYamlTest {
     @Test
     public void testOnlyName() {
         String name = "minRam";
-        CatalogInput<?> input = parse(ImmutableMap.of("name", name));
+        SpecParameter<?> input = parse(ImmutableMap.of("name", name));
         assertEquals(input.getLabel(), name);
         assertEquals(input.getType().getName(), name);
         assertEquals(input.getType().getTypeToken(), TypeToken.of(String.class));
@@ -86,7 +87,7 @@ public class CatalogInputDtoYamlTest {
         String inputType = "string";
         String defaultValue = "VALUE";
         String constraint = "required";
-        CatalogInput<?> input = parse(ImmutableMap.builder()
+        SpecParameter<?> input = parse(ImmutableMap.builder()
                 .put("name", name)
                 .put("label", label)
                 .put("description", description)
@@ -113,7 +114,7 @@ public class CatalogInputDtoYamlTest {
         String label = "1234";
         String description = "5678.56";
         String defaultValue = "444.12";
-        CatalogInput<?> input = parse(ImmutableMap.of(
+        SpecParameter<?> input = parse(ImmutableMap.of(
                 "name", name,
                 "label", label,
                 "description", description,
@@ -133,7 +134,7 @@ public class CatalogInputDtoYamlTest {
     public void testConstraintAsArray() {
         String name = "minRam";
         String constraint = "required";
-        CatalogInput<?> input = parse(ImmutableMap.of(
+        SpecParameter<?> input = parse(ImmutableMap.of(
                 "name", name,
                 "constraints", ImmutableList.of(constraint)));
         ConfigKey<?> type = input.getType();
@@ -149,10 +150,10 @@ public class CatalogInputDtoYamlTest {
     @Test
     public void testJavaType() {
         String name = "minRam";
-        CatalogInput<?> input = parse(ImmutableMap.of(
+        SpecParameter<?> input = parse(ImmutableMap.of(
                 "name", name,
-                "type", CatalogInputDtoYamlTest.class.getName()));
-        assertEquals(input.getType().getTypeToken(), TypeToken.of(CatalogInputDtoYamlTest.class));
+                "type", BasicSpecParameterFromListTest.class.getName()));
+        assertEquals(input.getType().getTypeToken(), TypeToken.of(BasicSpecParameterFromListTest.class));
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -171,9 +172,9 @@ public class CatalogInputDtoYamlTest {
                 "type", "missing_type"));
     }
 
-    private CatalogInput<?> parse(Object def) {
+    private SpecParameter<?> parse(Object def) {
         BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-        List<CatalogInput<?>> inputs = CatalogInputDto.ParseYamlInputs.parseInputs(ImmutableList.of(def), loader);
+        List<SpecParameter<?>> inputs = BasicSpecParameter.fromConfigList(ImmutableList.of(def), loader);
         return Iterables.getOnlyElement(inputs);
     }
 

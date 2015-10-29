@@ -22,9 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
-import groovy.lang.Closure;
-import groovy.lang.GroovyObject;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -36,6 +33,7 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.apache.brooklyn.api.objs.Configurable;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -52,6 +50,9 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
+import groovy.lang.Closure;
+import groovy.lang.GroovyObject;
 
 
 /** class to help transfer values passed as named arguments to other well-known variables/fields/objects;
@@ -229,17 +230,30 @@ public class FlagUtils {
         return output;
     }
 
+    /** gets all the keys in the given config bag which are applicable to the given list of parameters */
+    public static List<FlagConfigKeyAndValueRecord> findAllParameterConfigKeys(List<SpecParameter<?>> parameters, ConfigBag input) {
+        List<FlagConfigKeyAndValueRecord> output = new ArrayList<FlagUtils.FlagConfigKeyAndValueRecord>();
+        for (SpecParameter<?> param : parameters) {
+            FlagConfigKeyAndValueRecord record = getFlagConfigKeyRecord(null, param.getType(), input);
+            if (record.isValuePresent())
+                output.add(record);
+        }
+        return output;
+    }
+
     /** returns the flag/config-key record for the given input */
     private static FlagConfigKeyAndValueRecord getFlagConfigKeyRecord(Field f, ConfigKey<?> key, ConfigBag input) {
         FlagConfigKeyAndValueRecord result = new FlagConfigKeyAndValueRecord(); 
         result.configKey = key;
         if (key!=null && input.containsKey(key))
             result.configKeyValue = Maybe.<Object>of(input.getStringKey(key.getName()));
-        SetFromFlag flag = f.getAnnotation(SetFromFlag.class);
-        if (flag!=null) {
-            result.flagName = flag.value();
-            if (input.containsKey(flag.value()))
-                result.flagValue = Maybe.of(input.getStringKey(flag.value()));
+        if (f != null) {
+            SetFromFlag flag = f.getAnnotation(SetFromFlag.class);
+            if (flag!=null) {
+                result.flagName = flag.value();
+                if (input.containsKey(flag.value()))
+                    result.flagValue = Maybe.of(input.getStringKey(flag.value()));
+            }
         }
         return result;
     }
