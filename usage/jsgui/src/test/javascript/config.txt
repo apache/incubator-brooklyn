@@ -42,7 +42,7 @@
         "uri":"js/libs/URI",
         "zeroclipboard":"js/libs/ZeroClipboard",
         "js-yaml":"js/libs/js-yaml",
-        
+
         "codemirror":"js/lib/codemirror",
 
         "model":"js/model",
@@ -65,7 +65,7 @@
         },
         "codemirror":{
             exports:"CodeMirror"
-        },        
+        },
         "jquery-form": { deps: [ "jquery" ] },
         "jquery-slideto": { deps: [ "jquery" ] },
         "jquery-wiggle": { deps: [ "jquery" ] },
