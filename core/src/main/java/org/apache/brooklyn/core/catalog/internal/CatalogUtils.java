@@ -22,14 +22,14 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.entity.EntityInternal;
@@ -44,6 +44,8 @@ import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
@@ -63,6 +65,10 @@ public class CatalogUtils {
         return newClassLoadingContext(mgmt, item.getId(), item.getLibraries());
     }
     
+    public static BrooklynClassLoadingContext newClassLoadingContext(ManagementContext mgmt, RegisteredType item) {
+        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries());
+    }
+    
     public static BrooklynClassLoadingContext getClassLoadingContext(Entity entity) {
         ManagementContext mgmt = ((EntityInternal)entity).getManagementContext();
         String catId = entity.getCatalogItemId();
@@ -75,7 +81,7 @@ public class CatalogUtils {
         return newClassLoadingContext(mgmt, cat);
     }
 
-    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<CatalogBundle> libraries) {
+    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> libraries) {
         BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
 
         if (libraries!=null && !libraries.isEmpty()) {
@@ -193,7 +199,13 @@ public class CatalogUtils {
         return true;
     }
 
+    /** @deprecated since 0.9.0 use {@link #getSymbolicNameFromVersionedId(String)} */
+    @Deprecated
     public static String getIdFromVersionedId(String versionedId) {
+        return getSymbolicNameFromVersionedId(versionedId);
+    }
+    
+    public static String getSymbolicNameFromVersionedId(String versionedId) {
         if (versionedId == null) return null;
         int versionDelimiterPos = versionedId.lastIndexOf(VERSION_DELIMITER);
         if (versionDelimiterPos != -1) {
@@ -224,7 +236,7 @@ public class CatalogUtils {
     public static CatalogItem<?, ?> getCatalogItemOptionalVersion(ManagementContext mgmt, String versionedId) {
         if (versionedId == null) return null;
         if (looksLikeVersionedId(versionedId)) {
-            String id = getIdFromVersionedId(versionedId);
+            String id = getSymbolicNameFromVersionedId(versionedId);
             String version = getVersionFromVersionedId(versionedId);
             return mgmt.getCatalog().getCatalogItem(id, version);
         } else {
@@ -240,7 +252,7 @@ public class CatalogUtils {
 
     public static <T,SpecT> CatalogItem<T, SpecT> getCatalogItemOptionalVersion(ManagementContext mgmt, Class<T> type, String versionedId) {
         if (looksLikeVersionedId(versionedId)) {
-            String id = getIdFromVersionedId(versionedId);
+            String id = getSymbolicNameFromVersionedId(versionedId);
             String version = getVersionFromVersionedId(versionedId);
             return mgmt.getCatalog().getCatalogItem(type, id, version);
         } else {

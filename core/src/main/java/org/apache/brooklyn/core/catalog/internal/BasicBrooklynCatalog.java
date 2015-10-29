@@ -185,14 +185,15 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     private String getFixedVersionId(String symbolicName, String version) {
-        if (!DEFAULT_VERSION.equals(version)) {
+        if (version!=null && !DEFAULT_VERSION.equals(version)) {
             return version;
         } else {
-            return getDefaultVersion(symbolicName);
+            return getBestVersion(symbolicName);
         }
     }
 
-    private String getDefaultVersion(String symbolicName) {
+    /** returns best version, as defined by {@link BrooklynCatalog#getCatalogItem(String, String)} */
+    private String getBestVersion(String symbolicName) {
         Iterable<CatalogItem<Object, Object>> versions = getCatalogItems(Predicates.and(
                 CatalogPredicates.disabled(false),
                 CatalogPredicates.symbolicName(Predicates.equalTo(symbolicName))));
@@ -209,12 +210,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @Override
-    @Deprecated
-    public CatalogItem<?,?> getCatalogItem(String symbolicName) {
-        return getCatalogItem(symbolicName, DEFAULT_VERSION);
-    }
-    
-    @Override
     public CatalogItem<?,?> getCatalogItem(String symbolicName, String version) {
         if (symbolicName == null) return null;
         checkNotNull(version, "version");
@@ -223,14 +218,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return itemDo.getDto();
     }
     
-    @Override
-    @Deprecated
-    public void deleteCatalogItem(String id) {
-        //Delete only if installed through the
-        //deprecated methods. Don't support DEFAULT_VERSION for delete.
-        deleteCatalogItem(id, NO_VERSION);
-    }
-
     @Override
     public void deleteCatalogItem(String symbolicName, String version) {
         log.debug("Deleting manual catalog item from "+mgmt+": "+symbolicName + ":" + version);
@@ -263,12 +250,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
     }
 
-    @Override
-    @Deprecated
-    public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id) {
-        return getCatalogItem(type, id, DEFAULT_VERSION);
-    }
-    
     @SuppressWarnings("unchecked")
     @Override
     public <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String id, String version) {
@@ -315,44 +296,14 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         @SuppressWarnings("unchecked")
         CatalogItemDo<T,SpecT> loadedItem = (CatalogItemDo<T, SpecT>) getCatalogItemDo(item.getSymbolicName(), item.getVersion());
         if (loadedItem == null) throw new RuntimeException(item+" not in catalog; cannot create spec");
-        Class<SpecT> specType = loadedItem.getSpecType();
-        if (specType==null) return null;
+        if (loadedItem.getSpecType()==null) return null;
 
-        if (loadedItem.getPlanYaml() != null) {
-            SpecT yamlSpec = EntityManagementUtils.createCatalogSpec(mgmt, loadedItem);
-            if (yamlSpec != null) {
-                return yamlSpec;
-            }
+        SpecT spec = EntityManagementUtils.createCatalogSpec(mgmt, loadedItem);
+        if (spec != null) {
+            return spec;
         }
 
         throw new IllegalStateException("No known mechanism to create instance of "+item);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
-    @Deprecated
-    public <T,SpecT> Class<? extends T> loadClass(CatalogItem<T,SpecT> item) {
-        if (log.isDebugEnabled())
-            log.debug("Loading class for catalog item " + item);
-        checkNotNull(item);
-        CatalogItemDo<?,?> loadedItem = getCatalogItemDo(item.getSymbolicName(), item.getVersion());
-        if (loadedItem==null) throw new NoSuchElementException("Unable to load '"+item.getId()+"' to instantiate it");
-        return (Class<? extends T>) loadedItem.getJavaClass();
-    }
-    
-    @SuppressWarnings("unchecked")
-    @Override
-    /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
-    @Deprecated
-    public <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass) {
-        final CatalogItem<?,?> resultI = getCatalogItemForType(typeName);
-
-        if (resultI == null) {
-            throw new NoSuchElementException("Unable to find catalog item for type "+typeName);
-        }
-
-        return (Class<? extends T>) loadClass(resultI);
     }
 
     @Deprecated /** @deprecated since 0.7.0 only used by other deprecated items */ 
@@ -507,13 +458,13 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (Strings.isBlank(symbolicName)) {
             if (Strings.isNonBlank(id)) {
                 if (CatalogUtils.looksLikeVersionedId(id)) {
-                    symbolicName = CatalogUtils.getIdFromVersionedId(id);
+                    symbolicName = CatalogUtils.getSymbolicNameFromVersionedId(id);
                 } else {
                     symbolicName = id;
                 }
             } else if (Strings.isNonBlank(name)) {
                 if (CatalogUtils.looksLikeVersionedId(name)) {
-                    symbolicName = CatalogUtils.getIdFromVersionedId(name);
+                    symbolicName = CatalogUtils.getSymbolicNameFromVersionedId(name);
                 } else {
                     symbolicName = name;
                 }
@@ -741,7 +692,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             String version = null;
             if (CatalogUtils.looksLikeVersionedId(type)) {
                 version = CatalogUtils.getVersionFromVersionedId(type);
-                type = CatalogUtils.getIdFromVersionedId(type);
+                type = CatalogUtils.getSymbolicNameFromVersionedId(type);
             }
             if (type!=null && key!=null) {
                 for (CatalogItemDtoAbstract<?,?> candidate: itemsDefinedSoFar) {

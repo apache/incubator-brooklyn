@@ -35,10 +35,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
-import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.mgmt.internal.LocalUsageManager;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.test.entity.TestApplication;
@@ -46,7 +46,6 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcessEntityTest;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
-import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.domain.Status;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.domain.UsageStatistic;
@@ -72,7 +71,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     private Calendar testStartTime;
     
     private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").
-            entities(ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
+            entities(ImmutableSet.of(new org.apache.brooklyn.rest.domain.EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
             locations(ImmutableSet.of("localhost")).
             build();
 
@@ -238,7 +237,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testListAndGetMachineUsage() throws Exception {
         Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
-        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
+        TestApplication app = getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestApplication.class));
         SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(org.apache.brooklyn.api.entity.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
         
         Calendar preStart = new GregorianCalendar();
@@ -264,7 +263,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testListMachinesUsageForApp() throws Exception {
         Location location = getManagementContext().getLocationManager().createLocation(LocationSpec.create(DynamicLocalhostMachineProvisioningLocation.class));
-        TestApplication app = ApplicationBuilder.newManagedApp(TestApplication.class, getManagementContext());
+        TestApplication app = getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestApplication.class));
         SoftwareProcessEntityTest.MyService entity = app.createAndManageChild(org.apache.brooklyn.api.entity.EntitySpec.create(SoftwareProcessEntityTest.MyService.class));
         String appId = app.getId();
         

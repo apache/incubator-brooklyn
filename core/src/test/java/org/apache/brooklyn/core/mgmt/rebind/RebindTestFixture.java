@@ -289,7 +289,7 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         assertEquals(actualIds.size(), Iterables.size(actual.getCatalogItems()), "id keyset size != size of catalog. Are there duplicates in the catalog?");
         assertEquals(actualIds, expectedIds);
         for (String versionedId : actualIds) {
-            String id = CatalogUtils.getIdFromVersionedId(versionedId);
+            String id = CatalogUtils.getSymbolicNameFromVersionedId(versionedId);
             String version = CatalogUtils.getVersionFromVersionedId(versionedId);
             assertCatalogItemsEqual(actual.getCatalogItem(id, version), expected.getCatalogItem(id, version));
         }

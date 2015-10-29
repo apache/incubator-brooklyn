@@ -24,21 +24,22 @@ import static org.testng.Assert.assertNull;
 import java.util.Collection;
 import java.util.List;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationDefinition;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
-import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
+import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.text.StringFunctions;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -51,7 +52,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
 
     @AfterMethod
     public void tearDown() {
-        for (CatalogItem<Location, LocationSpec<?>> ci : mgmt().getCatalog().getCatalogItems(CatalogPredicates.IS_LOCATION)) {
+        for (RegisteredType ci : mgmt().getTypeRegistry().getAll(RegisteredTypePredicates.IS_LOCATION)) {
             mgmt().getCatalog().deleteCatalogItem(ci.getSymbolicName(), ci.getVersion());
         }
     }
@@ -99,16 +100,17 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
     }
 
     private void assertOsgi(String symbolicName) {
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
-        Collection<CatalogBundle> libs = item.getLibraries();
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
+        Collection<OsgiBundleWithUrl> libs = item.getLibraries();
         assertEquals(libs.size(), 1);
         assertEquals(Iterables.getOnlyElement(libs).getUrl(), Iterables.getOnlyElement(getOsgiLibraries()));
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "rawtypes" })
     private void assertAdded(String symbolicName, String expectedJavaType) {
-        CatalogItem item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
+        Assert.assertTrue(Location.class.isAssignableFrom(item.getJavaType()), "Expected Location, not "+item.getJavaType());
         assertEquals(countCatalogLocations(), 1);
 
         // Item added to catalog should automatically be available in location registry
@@ -116,7 +118,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
         assertEquals(def.getId(), symbolicName);
         assertEquals(def.getName(), symbolicName);
         
-        LocationSpec spec = (LocationSpec) mgmt().getCatalog().createSpec(item);
+        LocationSpec spec = (LocationSpec) mgmt().getTypeRegistry().createSpec(item, LocationSpec.class);
         assertEquals(spec.getType().getName(), expectedJavaType);
     }
     
@@ -243,6 +245,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
     }
 
     private int countCatalogLocations() {
-        return Iterables.size(mgmt().getCatalog().getCatalogItems(CatalogPredicates.IS_LOCATION));
+        return Iterables.size(mgmt().getTypeRegistry().getAll(RegisteredTypePredicates.IS_LOCATION));
     }
+
 }

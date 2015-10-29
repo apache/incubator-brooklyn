@@ -141,7 +141,7 @@ public class WebResourceUtils {
 
     public static String getPathFromVersionedId(String versionedId) {
         if (CatalogUtils.looksLikeVersionedId(versionedId)) {
-            String symbolicName = CatalogUtils.getIdFromVersionedId(versionedId);
+            String symbolicName = CatalogUtils.getSymbolicNameFromVersionedId(versionedId);
             String version = CatalogUtils.getVersionFromVersionedId(versionedId);
             return Urls.encode(symbolicName) + "/" + Urls.encode(version);
         } else {

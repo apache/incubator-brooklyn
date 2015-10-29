@@ -26,6 +26,7 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 
 import com.google.common.annotations.Beta;
 
@@ -39,12 +40,8 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
         LOCATION;
     }
     
-    public static interface CatalogBundle {
-        public String getSymbolicName();
-        public String getVersion();
-        public String getUrl();
-
-        /** @return true if the bundle reference contains both name and version*/
+    public static interface CatalogBundle extends OsgiBundleWithUrl {
+        /** @deprecated since 0.9.0, use {@link #isFullDetailKnown()} */
         public boolean isNamed();
     }
 

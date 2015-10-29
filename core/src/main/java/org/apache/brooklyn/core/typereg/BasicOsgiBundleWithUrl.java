@@ -16,21 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.catalog.internal;
+package org.apache.brooklyn.core.typereg;
+
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
-
-public class CatalogBundleDto implements CatalogBundle {
+public class BasicOsgiBundleWithUrl implements CatalogBundle, OsgiBundleWithUrl {
     private String symbolicName;
     private String version;
     private String url;
 
-    public CatalogBundleDto() {}
+    // for deserializing (not sure if needed?)
+    @SuppressWarnings("unused")
+    private BasicOsgiBundleWithUrl() {}
 
-    public CatalogBundleDto(String name, String version, String url) {
+    public BasicOsgiBundleWithUrl(String name, String version, String url) {
         if (name == null && version == null) {
             Preconditions.checkNotNull(url, "url to an OSGi bundle is required");
         } else {
@@ -49,7 +52,10 @@ public class CatalogBundleDto implements CatalogBundle {
     }
     
     @Override
-    public boolean isNamed() { return isFullDetailKnown(); }
+    @Deprecated //see super
+    public boolean isNamed() {
+        return isFullDetailKnown();
+    }
 
     @Override
     public String getSymbolicName() {
@@ -85,12 +91,11 @@ public class CatalogBundleDto implements CatalogBundle {
         if (this == obj) return true;
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
-        CatalogBundleDto other = (CatalogBundleDto) obj;
-        if (!Objects.equal(symbolicName, other.symbolicName)) return false;
-        if (!Objects.equal(version, other.version)) return false;
-        if (!Objects.equal(url, other.url)) return false;
+        OsgiBundleWithUrl other = (OsgiBundleWithUrl) obj;
+        if (!Objects.equal(symbolicName, other.getSymbolicName())) return false;
+        if (!Objects.equal(version, other.getVersion())) return false;
+        if (!Objects.equal(url, other.getUrl())) return false;
         return true;
     }
-    
     
 }

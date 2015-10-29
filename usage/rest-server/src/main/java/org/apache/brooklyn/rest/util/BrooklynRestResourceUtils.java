@@ -18,13 +18,10 @@
  */
 package org.apache.brooklyn.rest.util;
 
-import static org.apache.brooklyn.rest.util.WebResourceUtils.notFound;
 import static com.google.common.collect.Iterables.transform;
-import groovy.lang.GroovyClassLoader;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.notFound;
 
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,12 +31,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.util.collections.MutableSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
@@ -55,26 +47,28 @@ import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent.Scope;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;
 import org.apache.brooklyn.core.objs.BrooklynTypes;
-import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
@@ -210,7 +204,52 @@ public class BrooklynRestResourceUtils {
         return null;
     }
 
-    @SuppressWarnings({ "unchecked", "deprecation" })
+    private class FindItemAndClass {
+        String catalogItemId;
+        Class<? extends Entity> clazz;
+        
+        @SuppressWarnings("unchecked")
+        private FindItemAndClass inferFrom(String type) {
+            BrooklynCatalog catalog = getCatalog();
+            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, type);
+            if (item==null) {
+                // although the method was deprecated in 0.7.0, its use here was not warned until 0.9.0;
+                // therefore this behaviour should not be changed until after 0.9.0
+                item = catalog.getCatalogItemForType(type);
+                if (item!=null) {
+                    log.warn("Creating application for requested type `"+type+" using item "+item+"; "
+                        + "the registered type name ("+item.getSymbolicName()+") should be used from the spec instead, "
+                        + "or the type registered under its own name. "
+                        + "Future versions will likely change semantics to attempt a POJO load of the type instead.");
+                }
+            }
+            
+            if (item != null) {
+                return setAs(
+                    catalog.createSpec((CatalogItem<Entity,org.apache.brooklyn.api.entity.EntitySpec<Entity>>)item).getType(),
+                    item.getId());
+            } else {
+                try {
+                    setAs(
+                        (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type),
+                        null);
+                    log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
+                    return this;
+                } catch (ClassNotFoundException e2) {
+                    log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
+                    throw new NoSuchElementException("Unable to find catalog item for type "+type);
+                }
+            }
+        }
+
+        private FindItemAndClass setAs(Class<? extends Entity> clazz, String catalogItemId) {
+            this.clazz = clazz;
+            this.catalogItemId = catalogItemId;
+            return this;
+        }
+    }
+    
+    @SuppressWarnings({ "deprecation" })
     public Application create(ApplicationSpec spec) {
         log.warn("Using deprecated functionality (as of 0.9.0), ApplicationSpec style (pre CAMP plans). " +
                     "Transition to actively supported spec plans.");
@@ -229,88 +268,73 @@ public class BrooklynRestResourceUtils {
         final Application instance;
 
         // Load the class; first try to use the appropriate catalog item; but then allow anything that is on the classpath
-        final Class<? extends Entity> clazz;
-        final String catalogItemId;
+        FindItemAndClass itemAndClass;
         if (Strings.isEmpty(type)) {
-            clazz = BasicApplication.class;
-            catalogItemId = null;
+            itemAndClass = new FindItemAndClass().setAs(BasicApplication.class, null);
         } else {
-            Class<? extends Entity> tempclazz;
-            BrooklynCatalog catalog = getCatalog();
-            CatalogItem<?, ?> item = catalog.getCatalogItemForType(type);
-            if (item != null) {
-                catalogItemId = item.getId();
-                tempclazz = (Class<? extends Entity>) catalog.loadClass(item);
-            } else {
-                catalogItemId = null;
-                try {
-                    tempclazz = (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type);
-                    log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
-                } catch (ClassNotFoundException e2) {
-                    log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
-                    throw new NoSuchElementException("Unable to find catalog item for type "+type);
-                }
-            }
-            clazz = tempclazz;
+            itemAndClass = new FindItemAndClass().inferFrom(type);
         }
-        if (Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, null)) {
-
-            try {
-                if (ApplicationBuilder.class.isAssignableFrom(clazz)) {
-                    Constructor<?> constructor = clazz.getConstructor();
-                    ApplicationBuilder appBuilder = (ApplicationBuilder) constructor.newInstance();
-                    if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
-                    if (entities.size() > 0)
-                        log.warn("Cannot supply additional entities when using an ApplicationBuilder; ignoring in spec {}", spec);
-
-                    log.info("REST placing '{}' under management", spec.getName());
-                    appBuilder.configure(convertFlagsToKeys(appBuilder.getType(), configO));
-                    configureRenderingMetadata(spec, appBuilder);
-                    instance = appBuilder.manage(mgmt);
-
-                } else if (Application.class.isAssignableFrom(clazz)) {
-                    org.apache.brooklyn.api.entity.EntitySpec<?> coreSpec = toCoreEntitySpec(clazz, name, configO, catalogItemId);
-                    configureRenderingMetadata(spec, coreSpec);
-                    for (EntitySpec entitySpec : entities) {
-                        log.info("REST creating instance for entity {}", entitySpec.getType());
-                        coreSpec.child(toCoreEntitySpec(entitySpec));
-                    }
-
-                    log.info("REST placing '{}' under management", spec.getName() != null ? spec.getName() : spec);
-                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
-
-                } else if (Entity.class.isAssignableFrom(clazz)) {
-                    if (entities.size() > 0)
-                        log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
-
-                    org.apache.brooklyn.api.entity.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO, catalogItemId);
-                    configureRenderingMetadata(spec, coreSpec);
-
-                    coreSpec.child(toCoreEntitySpec(clazz, name, configO, catalogItemId)
-                            .configure(BrooklynCampConstants.PLAN_ID, "soleChildId"));
-                    coreSpec.enricher(Enrichers.builder()
-                            .propagatingAllBut(Attributes.SERVICE_UP, Attributes.SERVICE_NOT_UP_INDICATORS, 
-                                    Attributes.SERVICE_STATE_ACTUAL, Attributes.SERVICE_STATE_EXPECTED, 
-                                    Attributes.SERVICE_PROBLEMS)
-                            .from(new DslComponent(Scope.CHILD, "soleChildId").newTask())
-                            .build());
-
-                    log.info("REST placing '{}' under management", spec.getName());
-                    instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
-
-                } else {
-                    throw new IllegalArgumentException("Class " + clazz + " must extend one of ApplicationBuilder, Application or Entity");
-                }
-
-                return instance;
-
-            } catch (Exception e) {
-                log.error("REST failed to create application: " + e, e);
-                throw Exceptions.propagate(e);
-            }
-        }
-        throw WebResourceUtils.unauthorized("User '%s' is not authorized to create application from applicationSpec %s",
+        
+        if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, null)) {
+            throw WebResourceUtils.unauthorized("User '%s' is not authorized to create application from applicationSpec %s",
                 Entitlements.getEntitlementContext().user(), spec);
+        }
+
+        try {
+            if (ApplicationBuilder.class.isAssignableFrom(itemAndClass.clazz)) {
+                // warning only added in 0.9.0
+                log.warn("Using deprecated ApplicationBuilder "+itemAndClass.clazz+"; callers must migrate to use of Application");
+                Constructor<?> constructor = itemAndClass.clazz.getConstructor();
+                ApplicationBuilder appBuilder = (ApplicationBuilder) constructor.newInstance();
+                if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
+                if (entities.size() > 0)
+                    log.warn("Cannot supply additional entities when using an ApplicationBuilder; ignoring in spec {}", spec);
+
+                log.info("REST placing '{}' under management", spec.getName());
+                appBuilder.configure(convertFlagsToKeys(appBuilder.getType(), configO));
+                configureRenderingMetadata(spec, appBuilder);
+                instance = appBuilder.manage(mgmt);
+
+            } else if (Application.class.isAssignableFrom(itemAndClass.clazz)) {
+                org.apache.brooklyn.api.entity.EntitySpec<?> coreSpec = toCoreEntitySpec(itemAndClass.clazz, name, configO, itemAndClass.catalogItemId);
+                configureRenderingMetadata(spec, coreSpec);
+                for (EntitySpec entitySpec : entities) {
+                    log.info("REST creating instance for entity {}", entitySpec.getType());
+                    coreSpec.child(toCoreEntitySpec(entitySpec));
+                }
+
+                log.info("REST placing '{}' under management", spec.getName() != null ? spec.getName() : spec);
+                instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
+
+            } else if (Entity.class.isAssignableFrom(itemAndClass.clazz)) {
+                if (entities.size() > 0)
+                    log.warn("Cannot supply additional entities when using a non-application entity; ignoring in spec {}", spec);
+
+                org.apache.brooklyn.api.entity.EntitySpec<?> coreSpec = toCoreEntitySpec(BasicApplication.class, name, configO, itemAndClass.catalogItemId);
+                configureRenderingMetadata(spec, coreSpec);
+
+                coreSpec.child(toCoreEntitySpec(itemAndClass.clazz, name, configO, itemAndClass.catalogItemId)
+                    .configure(BrooklynCampConstants.PLAN_ID, "soleChildId"));
+                coreSpec.enricher(Enrichers.builder()
+                    .propagatingAllBut(Attributes.SERVICE_UP, Attributes.SERVICE_NOT_UP_INDICATORS, 
+                        Attributes.SERVICE_STATE_ACTUAL, Attributes.SERVICE_STATE_EXPECTED, 
+                        Attributes.SERVICE_PROBLEMS)
+                        .from(new DslComponent(Scope.CHILD, "soleChildId").newTask())
+                        .build());
+
+                log.info("REST placing '{}' under management", spec.getName());
+                instance = (Application) mgmt.getEntityManager().createEntity(coreSpec);
+
+            } else {
+                throw new IllegalArgumentException("Class " + itemAndClass.clazz + " must extend one of ApplicationBuilder, Application or Entity");
+            }
+
+            return instance;
+
+        } catch (Exception e) {
+            log.error("REST failed to create application: " + e, e);
+            throw Exceptions.propagate(e);
+        }
     }
     
     public Task<?> start(Application app, ApplicationSpec spec) {
@@ -336,37 +360,21 @@ public class BrooklynRestResourceUtils {
         return locations;
     }
 
-    @SuppressWarnings({ "unchecked", "deprecation" })
     private org.apache.brooklyn.api.entity.EntitySpec<? extends Entity> toCoreEntitySpec(org.apache.brooklyn.rest.domain.EntitySpec spec) {
         String type = spec.getType();
         String name = spec.getName();
         Map<String, String> config = (spec.getConfig() == null) ? Maps.<String,String>newLinkedHashMap() : Maps.newLinkedHashMap(spec.getConfig());
 
-        BrooklynCatalog catalog = getCatalog();
-        CatalogItem<?, ?> item = catalog.getCatalogItemForType(type);
-        Class<? extends Entity> tempclazz;
-        final String catalogItemId;
-        if (item != null) {
-            tempclazz = (Class<? extends Entity>) catalog.loadClass(item);
-            catalogItemId = item.getId();
-        } else {
-            catalogItemId = null;
-            try {
-                tempclazz = (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type);
-                log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
-            } catch (ClassNotFoundException e2) {
-                log.warn("No catalog item for type {}, and could not load class directly; rethrowing", type);
-                throw new NoSuchElementException("Unable to find catalog item for type "+type);
-            }
-        }
-        final Class<? extends Entity> clazz = tempclazz;
+        FindItemAndClass itemAndClass = new FindItemAndClass().inferFrom(type);
+        
+        final Class<? extends Entity> clazz = itemAndClass.clazz;
         org.apache.brooklyn.api.entity.EntitySpec<? extends Entity> result;
         if (clazz.isInterface()) {
             result = org.apache.brooklyn.api.entity.EntitySpec.create(clazz);
         } else {
             result = org.apache.brooklyn.api.entity.EntitySpec.create(Entity.class).impl(clazz).additionalInterfaces(Reflections.getAllInterfaces(clazz));
         }
-        result.catalogItemId(catalogItemId);
+        result.catalogItemId(itemAndClass.catalogItemId);
         if (!Strings.isEmpty(name)) result.displayName(name);
         result.configure( convertFlagsToKeys(result.getType(), config) );
         configureRenderingMetadata(spec, result);
@@ -467,30 +475,6 @@ public class BrooklynRestResourceUtils {
         }
         throw WebResourceUtils.unauthorized("User '%s' is not authorized to expunge entity %s",
                     Entitlements.getEntitlementContext().user(), entity);
-    }
-
-
-    @Deprecated
-    @SuppressWarnings({ "rawtypes" })
-    public Response createCatalogEntryFromGroovyCode(String groovyCode) {
-        ClassLoader parent = getCatalog().getRootClassLoader();
-        @SuppressWarnings("resource")
-        GroovyClassLoader loader = new GroovyClassLoader(parent);
-
-        Class clazz = loader.parseClass(groovyCode);
-
-        if (AbstractEntity.class.isAssignableFrom(clazz)) {
-            CatalogItem<?,?> item = getCatalog().addItem(clazz);
-            log.info("REST created "+item);
-            return Response.created(URI.create("entities/" + clazz.getName())).build();
-
-        } else if (AbstractPolicy.class.isAssignableFrom(clazz)) {
-            CatalogItem<?,?> item = getCatalog().addItem(clazz);
-            log.info("REST created "+item);
-            return Response.created(URI.create("policies/" + clazz.getName())).build();
-        }
-
-        throw WebResourceUtils.preconditionFailed("Unsupported type superclass "+clazz.getSuperclass()+"; expects Entity or Policy");
     }
 
     @Deprecated

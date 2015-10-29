@@ -932,7 +932,7 @@ public abstract class RebindIteration {
                         // This is a dangling reference to the catalog item (which will have been logged by lookupCatalogItem).
                         // Try loading as any version.
                         if (CatalogUtils.looksLikeVersionedId(catalogItemId)) {
-                            String symbolicName = CatalogUtils.getIdFromVersionedId(catalogItemId);
+                            String symbolicName = CatalogUtils.getSymbolicNameFromVersionedId(catalogItemId);
                             catalogItem = rebindContext.lookup().lookupCatalogItem(symbolicName);
                             
                             if (catalogItem != null) {

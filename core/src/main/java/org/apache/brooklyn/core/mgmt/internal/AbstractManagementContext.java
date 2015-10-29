@@ -48,6 +48,7 @@ import org.apache.brooklyn.api.mgmt.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityManager;
 import org.apache.brooklyn.api.mgmt.rebind.RebindManager;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
@@ -69,6 +70,7 @@ import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContex
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.ha.HighAvailabilityManagerImpl;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl;
+import org.apache.brooklyn.core.typereg.BasicBrooklynTypeRegistry;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -151,6 +153,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected BrooklynProperties configMap;
     protected BasicLocationRegistry locationRegistry;
     protected final BasicBrooklynCatalog catalog;
+    protected final BrooklynTypeRegistry typeRegistry;
     protected ClassLoader baseClassLoader;
     protected Iterable<URL> baseClassPathForScanning;
 
@@ -189,6 +192,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         DataGrid datagrid = datagridFactory.newDataGrid(this);
 
         this.catalog = new BasicBrooklynCatalog(this);
+        this.typeRegistry = new BasicBrooklynTypeRegistry(this);
         
         this.storage = new BrooklynStorageImpl(datagrid);
         this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
@@ -382,6 +386,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             getCatalogInitialization().populateUnofficial(catalog);
         }
         return catalog;
+    }
+    
+    @Override
+    public BrooklynTypeRegistry getTypeRegistry() {
+        return typeRegistry;
     }
     
     @Override

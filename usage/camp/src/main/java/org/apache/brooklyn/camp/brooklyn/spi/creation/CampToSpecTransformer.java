@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
-import java.io.StringReader;
 import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -27,6 +26,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
@@ -59,7 +59,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     @Override
     public EntitySpec<? extends Application> createApplicationSpec(String plan) {
         try {
-            CampPlatform camp = CampCatalogUtils.getCampPlatform(mgmt);
+            CampPlatform camp = CampUtils.getCampPlatform(mgmt);
             BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
             AssemblyTemplate at = CampUtils.registerDeploymentPlan(plan, loader, camp);
             AssemblyTemplateInstantiator instantiator = CampUtils.getInstantiator(at);
@@ -69,7 +69,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
                 // The unknown instantiator can create the app (Assembly), but not a spec.
                 // Currently, all brooklyn plans should produce the above.
                 if (at.getPlatformComponentTemplates()==null || at.getPlatformComponentTemplates().isEmpty()) {
-                    if (at.getCustomAttributes().containsKey("brooklyn.catalog"))
+                    if (at.getCustomAttributes().containsKey(BrooklynCampReservedKeys.BROOKLYN_CATALOG))
                         throw new IllegalArgumentException("Unrecognized application blueprint format: expected an application, not a brooklyn.catalog");
                     throw new PlanNotRecognizedException("Unrecognized application blueprint format: no services defined");
                 }
@@ -98,6 +98,17 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
         // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
         return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item, encounteredTypes);
     }
+
+    // TODO
+//    @SuppressWarnings({ "unchecked", "rawtypes" })
+//    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(RegisteredType type, Set<String> encounteredTypes) {
+//        if (encounteredTypes.contains(type.getSymbolicName())) {
+//            throw new IllegalStateException("Already encountered types " + encounteredTypes + " must not contain catalog item being resolver " + type.getSymbolicName());
+//        }
+//
+//        // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
+//        return (SpecT) CampCatalogUtils.createSpec(mgmt, type, encounteredTypes);
+//    }
 
     @Override
     public void injectManagementContext(ManagementContext mgmt) {

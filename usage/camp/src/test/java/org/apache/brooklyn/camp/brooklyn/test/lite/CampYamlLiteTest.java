@@ -33,6 +33,9 @@ import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.pdp.PdpYamlTest;
@@ -45,12 +48,12 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.effector.AddChildrenEffector;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -127,7 +130,7 @@ public class CampYamlLiteTest {
             .configure(AddChildrenEffector.BLUEPRINT_YAML, childYaml)
             .configure(AddChildrenEffector.EFFECTOR_PARAMETER_DEFS, MutableMap.of("war", (Object)MutableMap.of(
                 "defaultValue", "foo.war"))) ) ;
-        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class).addInitializer(newEff), mgmt);
+        TestApplication app = mgmt.getEntityManager().createEntity(EntitySpec.create(TestApplication.class).addInitializer(newEff));
 
         // test adding, with a parameter
         Task<List> task = app.invoke(Effectors.effector(List.class, "add_tomcat").buildAbstract(), MutableMap.of("war", "foo.bar"));
@@ -227,19 +230,20 @@ public class CampYamlLiteTest {
     }
 
     private void assertMgmtHasSampleMyCatalogApp(String symbolicName, String bundleUrl) {
-        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = mgmt.getTypeRegistry().get(symbolicName, BrooklynTypeRegistry.RegisteredTypeKind.SPEC, null);
         assertNotNull(item, "failed to load item with id=" + symbolicName + " from catalog. Entries were: " +
-                Joiner.on(",").join(mgmt.getCatalog().getCatalogItems()));
+                Joiner.on(",").join(mgmt.getTypeRegistry().getAll()));
         assertEquals(item.getSymbolicName(), symbolicName);
 
         // stored as yaml, not java
-        assertNotNull(item.getPlanYaml());
-        Assert.assertTrue(item.getPlanYaml().contains("io.camp.mock:AppServer"));
+        String planYaml = RegisteredTypes.getImplementationDataStringForSpec(item);
+        assertNotNull(planYaml);
+        Assert.assertTrue(planYaml.contains("io.camp.mock:AppServer"));
 
         // and let's check we have libraries
-        Collection<CatalogBundle> libs = item.getLibraries();
+        Collection<OsgiBundleWithUrl> libs = item.getLibraries();
         assertEquals(libs.size(), 1);
-        CatalogBundle bundle = Iterables.getOnlyElement(libs);
+        OsgiBundleWithUrl bundle = Iterables.getOnlyElement(libs);
         assertEquals(bundle.getUrl(), bundleUrl);
 
         // now let's check other things on the item

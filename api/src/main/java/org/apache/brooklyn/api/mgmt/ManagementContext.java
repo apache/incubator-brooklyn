@@ -34,6 +34,7 @@ import org.apache.brooklyn.api.mgmt.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityManager;
 import org.apache.brooklyn.api.mgmt.rebind.RebindManager;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.util.guava.Maybe;
 
@@ -206,6 +207,9 @@ public interface ManagementContext {
     /** Record of configured Brooklyn entities (and templates and policies) which can be loaded */
     BrooklynCatalog getCatalog();
 
+    /** Record of configured classes which can be loaded */
+    BrooklynTypeRegistry getTypeRegistry();
+    
     /** Returns the class loader to be used to load items. 
      * Temporary routine while catalog supports classloader-based and OSGi-based classloading. */
     @Beta

@@ -18,13 +18,9 @@
  */
 package org.apache.brooklyn.camp.brooklyn.catalog;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
@@ -32,6 +28,10 @@ import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.entity.stock.BasicStartable;
 import org.apache.brooklyn.policy.ha.ServiceRestarter;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
 
@@ -60,7 +60,7 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
             "      type: A",
             "      brooklyn.config: { b: 1 }");
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem("B", TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get("B", TEST_VERSION, null, null);
         Assert.assertNotNull(item);
 
         Entity a = launchEntity("A");
@@ -113,7 +113,7 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
             "      brooklyn.policies:",
             "      - type: A");
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem("A", TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get("A", TEST_VERSION, null, null);
         Assert.assertNotNull(item);
 
         Entity b = launchEntity("B", false);

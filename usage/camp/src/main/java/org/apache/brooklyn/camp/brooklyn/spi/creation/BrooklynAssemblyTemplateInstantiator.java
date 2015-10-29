@@ -32,7 +32,6 @@ import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate.Builder;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils.CreationResult;
 import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
@@ -74,8 +73,8 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     public List<EntitySpec<?>> createServiceSpecs(
             AssemblyTemplate template,
             CampPlatform platform, BrooklynClassLoadingContext itemLoader,
-            Set<String> encounteredCatalogTypes) {
-        return buildTemplateServicesAsSpecs(itemLoader, template, platform, encounteredCatalogTypes);
+            Set<String> encounteredRegisteredTypeIds) {
+        return buildTemplateServicesAsSpecs(itemLoader, template, platform, encounteredRegisteredTypeIds);
     }
 
     @Override
@@ -125,13 +124,13 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         return EntityManagementUtils.canPromoteWrappedApplication(app);
     }
 
-    private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, Set<String> encounteredCatalogTypes) {
+    private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, Set<String> encounteredRegisteredTypeIds) {
         List<EntitySpec<?>> result = Lists.newArrayList();
 
         for (ResolvableLink<PlatformComponentTemplate> ctl: template.getPlatformComponentTemplates().links()) {
             PlatformComponentTemplate appChildComponentTemplate = ctl.resolve();
             BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, appChildComponentTemplate);
-            EntitySpec<?> spec = entityResolver.resolveSpec(encounteredCatalogTypes);
+            EntitySpec<?> spec = entityResolver.resolveSpec(encounteredRegisteredTypeIds);
             result.add(spec);
         }
         return result;

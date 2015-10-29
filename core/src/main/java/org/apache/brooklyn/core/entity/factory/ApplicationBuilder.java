@@ -88,11 +88,7 @@ public abstract class ApplicationBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    @Beta
-    /** @deprecated since 0.7.0 the management context should normally be passed in;
-     * for TestApplication also see TestApplication.Factory.newManagedInstanceForTests() */ 
-    @Deprecated
-    public static <T extends StartableApplication> T newManagedApp(EntitySpec<T> spec) {
+    private static <T extends StartableApplication> T newManagedApp(EntitySpec<T> spec) {
         return (T) new ApplicationBuilder(spec) {
             @Override protected void doBuild() {
             }
@@ -109,6 +105,7 @@ public abstract class ApplicationBuilder {
         }
     }
 
+    /** @deprecated class can be removed; users of this convenience method can now simply do mgmt.getEntityManager().createEntity(spec) */ 
     @SuppressWarnings("unchecked")
     @Beta
     public static <T extends StartableApplication> T newManagedApp(EntitySpec<T> spec, ManagementContext managementContext) {
