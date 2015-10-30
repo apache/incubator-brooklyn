@@ -6,9 +6,9 @@
         <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
         <bundle>mvn:ch.qos.logback/logback-classic/1.0.7</bundle>
         <bundle>mvn:ch.qos.logback/logback-core/1.0.7</bundle>
-        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/2.4.2</bundle>
-        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/2.4.2</bundle>
-        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/2.4.2</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/2.4.5</bundle>
         <bundle>mvn:com.google.code.gson/gson/2.3</bundle>
         <bundle>mvn:com.google.guava/guava/17.0</bundle>
         <bundle>mvn:com.jayway.jsonpath/json-path/2.0.0</bundle>
