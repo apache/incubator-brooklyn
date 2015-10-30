@@ -292,7 +292,11 @@ public class HttpTestUtils {
     }
 
     public static void assertContentEventuallyMatches(final String url, final String regex) {
-        Asserts.succeedsEventually(new Runnable() {
+        assertContentEventuallyMatches(MutableMap.of(), url, regex);
+    }
+
+    public static void assertContentEventuallyMatches(Map flags, final String url, final String regex) {
+        Asserts.succeedsEventually(flags, new Runnable() {
             @Override
             public void run() {
                 assertContentMatches(url, regex);
