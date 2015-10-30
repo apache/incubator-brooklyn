@@ -28,6 +28,7 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
+import org.eclipse.jetty.server.NetworkConnector;
 
 /** Convenience and demo for launching programmatically. */
 public class BrooklynJavascriptGuiLauncherTest {
@@ -71,7 +72,7 @@ public class BrooklynJavascriptGuiLauncherTest {
     }
 
     protected String rootUrl() {
-        return "http://localhost:"+server.getConnectors()[0].getLocalPort();
+        return "http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort();
     }
 
     private ManagementContext getManagementContextFromJettyServerAttributes(Server server) {

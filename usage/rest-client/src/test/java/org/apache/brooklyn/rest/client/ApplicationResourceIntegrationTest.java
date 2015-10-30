@@ -54,6 +54,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import org.eclipse.jetty.server.NetworkConnector;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceIntegrationTest {
@@ -89,7 +90,7 @@ public class ApplicationResourceIntegrationTest {
                 .managementContext(getManagementContext())
                 .start();
 
-        api = BrooklynApi.newInstance("http://localhost:" + server.getConnectors()[0].getPort() + "/");
+        api = BrooklynApi.newInstance("http://localhost:" + ((NetworkConnector)server.getConnectors()[0]).getPort() + "/");
     }
 
     @AfterClass(alwaysRun = true)

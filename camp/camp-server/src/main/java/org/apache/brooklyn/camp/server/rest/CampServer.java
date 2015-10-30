@@ -43,6 +43,8 @@ import com.google.common.io.Files;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
+import org.eclipse.jetty.server.NetworkConnector;
+import org.eclipse.jetty.server.ServerConnector;
 
 public class CampServer {
 
@@ -118,7 +120,8 @@ public class CampServer {
     
     public Integer getPort() {
         if (server==null) return null;
-        return server.getConnectors()[0].getLocalPort();
+        NetworkConnector networkConnector = (NetworkConnector) server.getConnectors()[0];
+        return networkConnector.getLocalPort();
     }
 
     public static class CampServerUtils {
@@ -148,13 +151,18 @@ public class CampServer {
         public static Server startServer(ContextHandler context, String summary) {
             // FIXME port hardcoded
             int port = Networking.nextAvailablePort(8080);
-            Server server = new Server(port);
-            server.setHandler(context);
-            
+
             // use a nice name in the thread pool (otherwise this is exactly the same as Server defaults)
             QueuedThreadPool threadPool = new QueuedThreadPool();
             threadPool.setName("camp-jetty-server-"+port+"-"+threadPool.getName());
-            server.setThreadPool(threadPool);
+
+            Server server = new Server(threadPool);
+
+            ServerConnector httpConnector = new ServerConnector(server);
+            httpConnector.setPort(port);
+            server.addConnector(httpConnector);
+
+            server.setHandler(context);
 
             try {
                 server.start();
@@ -162,7 +170,7 @@ public class CampServer {
                 throw Exceptions.propagate(e);
             } 
             log.info("CAMP REST server started ("+summary+") on");
-            log.info("  http://localhost:"+server.getConnectors()[0].getLocalPort()+"/");
+            log.info("  http://localhost:"+httpConnector.getLocalPort()+"/");
 
             return server;
         }

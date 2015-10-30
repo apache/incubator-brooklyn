@@ -35,7 +35,6 @@ import org.eclipse.jetty.security.SecurityHandler;
 import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ssl.SslSocketConnector;
 import org.eclipse.jetty.util.security.Constraint;
 import org.eclipse.jetty.util.security.Credential;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -47,6 +46,11 @@ import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocati
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 
 import com.google.common.base.Optional;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 
 /**
  * Starts an in-memory web-server, which for example can be used for testing HttpFeed.
@@ -128,15 +132,21 @@ public class HttpService {
                 } finally {
                     keyStoreStream.close();
                 }
-                
+
+                // manually create like seen in XMLs at http://www.eclipse.org/jetty/documentation/current/configuring-ssl.html
                 SslContextFactory sslContextFactory = new SslContextFactory();
                 sslContextFactory.setKeyStore(keyStore);
                 sslContextFactory.setTrustAll(true);
                 sslContextFactory.setKeyStorePassword("password");
 
-                SslSocketConnector sslSocketConnector = new SslSocketConnector(sslContextFactory);
-                sslSocketConnector.setPort(actualPort);
-                server.addConnector(sslSocketConnector);
+                HttpConfiguration sslHttpConfig = new HttpConfiguration();
+                sslHttpConfig.setSecureScheme("https");
+                sslHttpConfig.setSecurePort(actualPort);
+
+                ServerConnector httpsConnector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()), new HttpConnectionFactory(sslHttpConfig));
+                httpsConnector.setPort(actualPort);
+
+                server.addConnector(httpsConnector);
             }
     
             addShutdownHook();
