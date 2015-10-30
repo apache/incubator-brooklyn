@@ -28,6 +28,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.BrooklynLogging;
@@ -41,12 +42,14 @@ import org.apache.brooklyn.core.mgmt.ha.OsgiManager;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl.RebindTracker;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
+import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.api.client.util.Preconditions;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
@@ -73,7 +76,7 @@ public class CatalogUtils {
         ManagementContext mgmt = ((EntityInternal)entity).getManagementContext();
         String catId = entity.getCatalogItemId();
         if (Strings.isBlank(catId)) return JavaBrooklynClassLoadingContext.create(mgmt);
-        CatalogItem<?, ?> cat = getCatalogItemOptionalVersion(mgmt, catId);
+        RegisteredType cat = mgmt.getTypeRegistry().get(catId, RegisteredTypeConstraints.spec(Entity.class));
         if (cat==null) {
             log.warn("Cannot load "+catId+" to get classloader for "+entity+"; will try with standard loader, but might fail subsequently");
             return JavaBrooklynClassLoadingContext.create(mgmt);
@@ -200,6 +203,7 @@ public class CatalogUtils {
     }
 
     /** @deprecated since 0.9.0 use {@link #getSymbolicNameFromVersionedId(String)} */
+    // all uses removed
     @Deprecated
     public static String getIdFromVersionedId(String versionedId) {
         return getSymbolicNameFromVersionedId(versionedId);
@@ -230,9 +234,8 @@ public class CatalogUtils {
         return id + VERSION_DELIMITER + version;
     }
 
-    //TODO Don't really like this, but it's better to have it here than on the interface to keep the API's 
-    //surface minimal. Could instead have the interface methods accept VerionedId object and have the helpers
-    //construct it as needed.
+    /** @deprecated since 0.9.0 use {@link BrooklynTypeRegistry#get(String, org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind, Class)} */
+    // only a handful of items remaining, and those require a CatalogItem
     public static CatalogItem<?, ?> getCatalogItemOptionalVersion(ManagementContext mgmt, String versionedId) {
         if (versionedId == null) return null;
         if (looksLikeVersionedId(versionedId)) {
@@ -245,11 +248,13 @@ public class CatalogUtils {
     }
 
     public static boolean isBestVersion(ManagementContext mgmt, CatalogItem<?,?> item) {
-        CatalogItem<?, ?> bestVersion = getCatalogItemOptionalVersion(mgmt, item.getSymbolicName());
+        RegisteredType bestVersion = mgmt.getTypeRegistry().get(item.getSymbolicName(), BrooklynCatalog.DEFAULT_VERSION, null);
         if (bestVersion==null) return false;
         return (bestVersion.getVersion().equals(item.getVersion()));
     }
 
+    /** @deprecated since 0.9.0 use {@link BrooklynTypeRegistry#get(String, org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind, Class)} */
+    // only a handful of items remaining, and those require a CatalogItem
     public static <T,SpecT> CatalogItem<T, SpecT> getCatalogItemOptionalVersion(ManagementContext mgmt, Class<T> type, String versionedId) {
         if (looksLikeVersionedId(versionedId)) {
             String id = getSymbolicNameFromVersionedId(versionedId);
@@ -258,6 +263,38 @@ public class CatalogUtils {
         } else {
             return mgmt.getCatalog().getCatalogItem(type, versionedId, BrooklynCatalog.DEFAULT_VERSION);
         }
+    }
+
+    /** @deprecated since it was introduced in 0.9.0; TBD where this should live */
+    public static void setDeprecated(ManagementContext mgmt, String symbolicNameAndOptionalVersion, boolean newValue) {
+        RegisteredType item = mgmt.getTypeRegistry().get(symbolicNameAndOptionalVersion);
+        Preconditions.checkNotNull(item, "No such item: "+symbolicNameAndOptionalVersion);
+        setDeprecated(mgmt, item.getSymbolicName(), item.getVersion(), newValue);
+    }
+    
+    /** @deprecated since it was introduced in 0.9.0; TBD where this should live */
+    public static void setDisabled(ManagementContext mgmt, String symbolicNameAndOptionalVersion, boolean newValue) {
+        RegisteredType item = mgmt.getTypeRegistry().get(symbolicNameAndOptionalVersion);
+        Preconditions.checkNotNull(item, "No such item: "+symbolicNameAndOptionalVersion);
+        setDisabled(mgmt, item.getSymbolicName(), item.getVersion(), newValue);
+    }
+    
+    /** @deprecated since it was introduced in 0.9.0; TBD where this should live */
+    @Deprecated
+    public static void setDeprecated(ManagementContext mgmt, String symbolicName, String version, boolean newValue) {
+        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(symbolicName, version);
+        Preconditions.checkNotNull(item, "No such item: "+symbolicName+" v "+version);
+        item.setDeprecated(newValue);
+        mgmt.getCatalog().persist(item);
+    }
+
+    /** @deprecated since it was introduced in 0.9.0; TBD where this should live */
+    @Deprecated
+    public static void setDisabled(ManagementContext mgmt, String symbolicName, String version, boolean newValue) {
+        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(symbolicName, version);
+        Preconditions.checkNotNull(item, "No such item: "+symbolicName+" v "+version);
+        item.setDisabled(newValue);
+        mgmt.getCatalog().persist(item);
     }
 
 }

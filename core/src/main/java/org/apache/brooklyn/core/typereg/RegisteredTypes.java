@@ -21,14 +21,55 @@ package org.apache.brooklyn.core.typereg;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
 
 public class RegisteredTypes {
+
+    /** @deprecated since it was introduced in 0.9.0; for backwards compatibility only, may be removed at any point */
+    @Deprecated
+    static final Function<CatalogItem<?,?>,RegisteredType> CI_TO_RT = new Function<CatalogItem<?,?>, RegisteredType>() {
+        @Override
+        public RegisteredType apply(CatalogItem<?, ?> item) {
+            return of(item);
+        }
+    };
+    
+    /** @deprecated since it was introduced in 0.9.0; for backwards compatibility only, may be removed at any point */
+    @Deprecated
+    public static RegisteredType of(CatalogItem<?, ?> item) {
+        if (item==null) return null;
+        TypeImplementation impl = null;
+        if (item.getPlanYaml()!=null) {
+            impl = new TypeImplementation(null, item.getPlanYaml());
+        } else if (item.getJavaType()!=null) {
+            impl = new JavaTypeImplementation(item.getJavaType());
+        } else {
+            throw new IllegalStateException("Unsupported catalog item "+item+" when trying to create RegisteredType");
+        }
+        
+        RegisteredSpecType type = new RegisteredSpecType(item.getSymbolicName(), item.getVersion(),
+            item.getCatalogItemJavaType(), impl);
+        type.bundles = MutableList.<OsgiBundleWithUrl>copyOf(item.getLibraries());
+        type.displayName = item.getDisplayName();
+        type.description = item.getDescription();
+        type.iconUrl = item.getIconUrl();
+        type.disabled = item.isDisabled();
+        type.deprecated = item.isDeprecated();
+
+        // TODO
+        // javaType, specType, registeredTypeName ...
+        // tags ?
+        return type;
+    }
 
     /** Visitor adapter which can be used to ensure all kinds are supported */
     public static abstract class RegisteredTypeKindVisitor<T> {
@@ -60,6 +101,8 @@ public class RegisteredTypes {
         String displayName;
         String description;
         String iconUrl;
+        boolean deprecated;
+        boolean disabled;
 
         // TODO ensure this is re-populated on rebind
         transient Class<?> javaType;
@@ -106,8 +149,26 @@ public class RegisteredTypes {
         }
         
         @Override
+        public boolean isDisabled() {
+            return disabled;
+        }
+        
+        @Override
+        public boolean isDeprecated() {
+            return deprecated;
+        }
+        
+        @Override
         public Class<?> getJavaType() {
             return javaType;
+        }
+        
+        @Override
+        public String toString() {
+            return JavaClassNames.simpleClassName(this)+"["+getId()+
+                (isDisabled() ? ";DISABLED" : "")+
+                (isDeprecated() ? ";deprecated" : "")+
+                "]";
         }
     }
 
@@ -131,12 +192,12 @@ public class RegisteredTypes {
     }
 
     public static class TypeImplementation {
-        final String kind;
+        final String format;
         final Object data;
         
         public TypeImplementation(String kind, Object data) {
             super();
-            this.kind = kind;
+            this.format = kind;
             this.data = data;
         }
 
@@ -145,8 +206,8 @@ public class RegisteredTypes {
          * but in general we should look to determine the kind as early as possible and use that
          * to retrieve the appropriate such transformer.
          */
-        public String getKind() {
-            return kind;
+        public String getFormat() {
+            return format;
         }
         
         public Object getData() {
@@ -155,18 +216,18 @@ public class RegisteredTypes {
     }
     
     public static class JavaTypeImplementation extends TypeImplementation {
-        public static final String KIND = "java";
+        public static final String FORMAT = "java";
         public JavaTypeImplementation(String javaType) {
-            super(KIND, javaType);
+            super(FORMAT, javaType);
         }
         public String getJavaType() { return (String)getData(); }
     }
     
 //    // TODO remove, unless we want it
 //    public static class CampYamlTypeImplementation extends TypeImplementation {
-//        public static final String KIND = "camp";
+//        public static final String FORMAT = "camp";
 //        public CampYamlTypeImplementation(String javaType) {
-//            super(KIND, javaType);
+//            super(FORMAT, javaType);
 //        }
 //        public String getCampYaml() { return (String)getData(); }
 //    }

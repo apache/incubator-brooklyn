@@ -20,9 +20,14 @@ package org.apache.brooklyn.api.objs;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
+import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.api.sensor.Feed;
 
 import com.google.common.annotations.Beta;
@@ -30,19 +35,22 @@ import com.google.common.base.CaseFormat;
 
 @Beta
 public enum BrooklynObjectType {
-    ENTITY(Entity.class, "entities"),
-    LOCATION(Location.class, "locations"),
-    POLICY(Policy.class, "policies"),
-    ENRICHER(Enricher.class, "enrichers"),
-    FEED(Feed.class, "feeds"),
-    CATALOG_ITEM(CatalogItem.class, "catalog"),
-    UNKNOWN(null, "unknown");
+    // these are correctly type-checked by i can't tell how to get java not to warn!
+    @SuppressWarnings("unchecked") ENTITY(Entity.class, EntitySpec.class, "entities"),
+    @SuppressWarnings("unchecked") LOCATION(Location.class, LocationSpec.class, "locations"),
+    @SuppressWarnings("unchecked") POLICY(Policy.class, PolicySpec.class, "policies"),
+    @SuppressWarnings("unchecked") ENRICHER(Enricher.class, EnricherSpec.class, "enrichers"),
+    FEED(Feed.class, null, "feeds"),
+    CATALOG_ITEM(CatalogItem.class, null, "catalog"),
+    UNKNOWN(null, null, "unknown");
     
-    private Class<? extends BrooklynObject> interfaceType;
+    private final Class<? extends BrooklynObject> interfaceType;
+    private final Class<? extends AbstractBrooklynObjectSpec<?,?>> specType;
     private final String subPathName;
     
-    BrooklynObjectType(Class<? extends BrooklynObject> interfaceType, String subPathName) {
+    <T extends BrooklynObject,K extends AbstractBrooklynObjectSpec<T,K>> BrooklynObjectType(Class<T> interfaceType, Class<K> specType, String subPathName) {
         this.interfaceType = interfaceType;
+        this.specType = specType;
         this.subPathName = subPathName;
     }
     public String toCamelCase() {
@@ -55,6 +63,10 @@ public enum BrooklynObjectType {
     
     public Class<? extends BrooklynObject> getInterfaceType() {
         return interfaceType;
+    }
+    
+    public Class<? extends AbstractBrooklynObjectSpec<?, ?>> getSpecType() {
+        return specType;
     }
     
     public static BrooklynObjectType of(BrooklynObject instance) {

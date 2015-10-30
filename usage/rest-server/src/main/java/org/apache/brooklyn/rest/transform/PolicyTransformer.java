@@ -22,7 +22,6 @@ import java.net.URI;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.policy.Policies;
@@ -56,7 +55,7 @@ public class PolicyTransformer {
         return new PolicySummary(policy.getId(), policy.getDisplayName(), policy.getCatalogItemId(), ApplicationTransformer.statusFromLifecycle(Policies.getPolicyStatus(policy)), links);
     }
 
-    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, ApplicationSummary application, EntityLocal entity, Policy policy, ConfigKey<?> config) {
+    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, ApplicationSummary application, Entity entity, Policy policy, ConfigKey<?> config) {
         PolicyConfigSummary summary = policyConfigSummary(utils, entity, policy, config);
 //        TODO
 //        if (!entity.getApplicationId().equals(application.getInstance().getId()))
@@ -64,7 +63,7 @@ public class PolicyTransformer {
         return summary;
     }
 
-    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, EntityLocal entity, Policy policy, ConfigKey<?> config) {
+    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, Entity entity, Policy policy, ConfigKey<?> config) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();
         String entityUri = applicationUri + "/entities/" + entity.getId();
         String policyUri = entityUri + "/policies/" + policy.getId();

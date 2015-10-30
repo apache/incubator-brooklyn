@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
+import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
@@ -108,9 +109,9 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
             String policyType = decoLoader.getTypeName().get();
             ManagementContext mgmt = instantiator.loader.getManagementContext();
             
-            RegisteredType item = mgmt.getTypeRegistry().get(policyType, BrooklynTypeRegistry.RegisteredTypeKind.SPEC, Policy.class);
+            RegisteredType item = mgmt.getTypeRegistry().get(policyType, RegisteredTypeConstraints.spec(Policy.class));
             PolicySpec<? extends Policy> spec;
-            if (item!=null) spec = mgmt.getTypeRegistry().createSpec(item, PolicySpec.class);
+            if (item!=null) spec = mgmt.getTypeRegistry().createSpec(item, null, PolicySpec.class);
             else spec = PolicySpec.create(decoLoader.getType(Policy.class));
             spec.configure( decoLoader.getConfigMap() );
             decorations.add(spec);

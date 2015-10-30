@@ -26,15 +26,8 @@ import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-
 import org.apache.brooklyn.api.effector.Effector;
-import org.apache.brooklyn.api.entity.EntityLocal;
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;
@@ -49,6 +42,12 @@ import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.collect.FluentIterable;
 
 @HaHotStateRequired
 public class EffectorResource extends AbstractBrooklynRestResource implements EffectorApi {
@@ -57,7 +56,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
 
     @Override
     public List<EffectorSummary> list(final String application, final String entityToken) {
-        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        final Entity entity = brooklyn().getEntity(application, entityToken);
         return FluentIterable
                 .from(entity.getEntityType().getEffectors())
                 .filter(new Predicate<Effector<?>>() {
@@ -79,7 +78,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
     @Override
     public Response invoke(String application, String entityToken, String effectorName,
             String timeout, Map<String, Object> parameters) {
-        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        final Entity entity = brooklyn().getEntity(application, entityToken);
 
         // TODO check effectors?
         Maybe<Effector<?>> effector = EffectorUtils.findEffectorDeclared(entity, effectorName);

@@ -87,7 +87,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) {
-        // Ignore old-style java type catalog items
+        // Ignore old-style java type catalog items - there is a different (deprecated) transformer for that
         if (item.getPlanYaml() == null) {
             throw new PlanNotRecognizedException("Old style catalog item " + item + " not supported.");
         }
@@ -98,17 +98,6 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
         // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
         return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item, encounteredTypes);
     }
-
-    // TODO
-//    @SuppressWarnings({ "unchecked", "rawtypes" })
-//    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(RegisteredType type, Set<String> encounteredTypes) {
-//        if (encounteredTypes.contains(type.getSymbolicName())) {
-//            throw new IllegalStateException("Already encountered types " + encounteredTypes + " must not contain catalog item being resolver " + type.getSymbolicName());
-//        }
-//
-//        // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
-//        return (SpecT) CampCatalogUtils.createSpec(mgmt, type, encounteredTypes);
-//    }
 
     @Override
     public void injectManagementContext(ManagementContext mgmt) {

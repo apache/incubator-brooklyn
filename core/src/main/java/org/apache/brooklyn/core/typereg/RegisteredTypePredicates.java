@@ -20,6 +20,7 @@ package org.apache.brooklyn.core.typereg;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
@@ -34,37 +35,37 @@ import com.google.common.base.Predicates;
 
 public class RegisteredTypePredicates {
 
-//    public static Predicate<RegisteredType> deprecated(final boolean deprecated) {
-//        return new DeprecatedEqualTo(deprecated);
-//    }
-//
-//    private static class DeprecatedEqualTo implements Predicate<RegisteredType> {
-//        private final boolean deprecated;
-//        
-//        public DeprecatedEqualTo(boolean deprecated) {
-//            this.deprecated = deprecated;
-//        }
-//        @Override
-//        public boolean apply(@Nullable RegisteredType item) {
-//            return (item != null) && item.isDeprecated() == deprecated;
-//        }
-//    }
-//
-//    public static Predicate<RegisteredType> disabled(boolean disabled) {
-//        return new DisabledEqualTo(disabled);
-//    }
-//
-//    private static class DisabledEqualTo implements Predicate<RegisteredType> {
-//        private final boolean disabled;
-//        
-//        public DisabledEqualTo(boolean disabled) {
-//            this.disabled = disabled;
-//        }
-//        @Override
-//        public boolean apply(@Nullable RegisteredType item) {
-//            return (item != null) && item.isDisabled() == disabled;
-//        }
-//    }
+    public static Predicate<RegisteredType> deprecated(final boolean deprecated) {
+        return new DeprecatedEqualTo(deprecated);
+    }
+
+    private static class DeprecatedEqualTo implements Predicate<RegisteredType> {
+        private final boolean deprecated;
+        
+        public DeprecatedEqualTo(boolean deprecated) {
+            this.deprecated = deprecated;
+        }
+        @Override
+        public boolean apply(@Nullable RegisteredType item) {
+            return (item != null) && item.isDeprecated() == deprecated;
+        }
+    }
+
+    public static Predicate<RegisteredType> disabled(boolean disabled) {
+        return new DisabledEqualTo(disabled);
+    }
+
+    private static class DisabledEqualTo implements Predicate<RegisteredType> {
+        private final boolean disabled;
+        
+        public DisabledEqualTo(boolean disabled) {
+            this.disabled = disabled;
+        }
+        @Override
+        public boolean apply(@Nullable RegisteredType item) {
+            return (item != null) && item.isDisabled() == disabled;
+        }
+    }
 
     @SuppressWarnings("unused")
     private static final Function<RegisteredType,String> ID_OF_ITEM_TRANSFORMER_ANONYMOUS = new Function<RegisteredType, String>() {
@@ -140,6 +141,10 @@ public class RegisteredTypePredicates {
     }
 
     public static final Predicate<RegisteredType> IS_APPLICATION = javaTypeAssignableFrom(Application.class);
+    // TODO do we need this?  introduced already deprecated in 0.9.0 so can be removed, or enabled
+    @Deprecated
+    public static final Predicate<RegisteredType> IS_TEMPLATE = IS_APPLICATION;
+    
     public static final Predicate<RegisteredType> IS_ENTITY = javaTypeAssignableFrom(Entity.class);
     public static final Predicate<RegisteredType> IS_LOCATION = javaTypeAssignableFrom(Location.class);
     public static final Predicate<RegisteredType> IS_POLICY = javaTypeAssignableFrom(Policy.class);
@@ -161,20 +166,26 @@ public class RegisteredTypePredicates {
         }
     }
  
-//    public static Predicate<RegisteredType> isBestVersion(final ManagementContext mgmt) {
-//        return new IsBestVersion(mgmt);
-//    }
-//    
-//    private static class IsBestVersion implements Predicate<RegisteredType> {
-//        private final ManagementContext mgmt;
-//        
-//        public IsBestVersion(ManagementContext mgmt) {
-//            this.mgmt = mgmt;
-//        }
-//        @Override
-//        public boolean apply(@Nullable RegisteredType item) {
-//            return CatalogUtils.isBestVersion(mgmt, item);
-//        }
-//    }
-    
+    public static Predicate<RegisteredType> isBestVersion(final ManagementContext mgmt) {
+        return new IsBestVersion(mgmt);
+    }
+
+    private static class IsBestVersion implements Predicate<RegisteredType> {
+        private final ManagementContext mgmt;
+
+        public IsBestVersion(ManagementContext mgmt) {
+            this.mgmt = mgmt;
+        }
+        @Override
+        public boolean apply(@Nullable RegisteredType item) {
+            return isBestVersion(mgmt, item);
+        }
+    }
+ 
+    public static boolean isBestVersion(ManagementContext mgmt, RegisteredType item) {
+        RegisteredType bestVersion = mgmt.getTypeRegistry().get(item.getSymbolicName(), BrooklynCatalog.DEFAULT_VERSION);
+        if (bestVersion==null) return false;
+        return (bestVersion.getVersion().equals(item.getVersion()));
+    }
+
 }

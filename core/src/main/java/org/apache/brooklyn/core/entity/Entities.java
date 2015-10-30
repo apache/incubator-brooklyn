@@ -42,7 +42,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.entity.drivers.EntityDriver;
@@ -170,7 +169,7 @@ public class Entities {
      *
      * @return {@link ParallelTask} containing results from each invocation
      */
-    public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
+    public static <T> Task<List<T>> invokeEffectorList(Entity callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         // formulation is complicated, but it is building up a list of tasks, without blocking on them initially,
         // but ensuring that when the parallel task is gotten it does block on all of them
@@ -194,25 +193,25 @@ public class Entities {
         return DynamicTasks.queueIfPossible(invoke).orSubmitAsync(callingEntity).asTask();
     }
 
-    public static <T> Task<List<T>> invokeEffectorListWithMap(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
+    public static <T> Task<List<T>> invokeEffectorListWithMap(Entity callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, parameters);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Task<List<T>> invokeEffectorListWithArgs(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
+    public static <T> Task<List<T>> invokeEffectorListWithArgs(Entity callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<T> effector, Object ...args) {
         return invokeEffectorListWithMap(callingEntity, entitiesToCall, effector,
                 // putting into a map, unnecessarily, as it ends up being the array again...
                 EffectorUtils.prepareArgsForEffectorAsMapFromArray(effector, args));
     }
 
-    public static <T> Task<List<T>> invokeEffectorList(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
+    public static <T> Task<List<T>> invokeEffectorList(Entity callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<T> effector) {
         return invokeEffectorList(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
     }
 
-    public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
+    public static <T> Task<T> invokeEffector(Entity callingEntity, Entity entityToCall,
             final Effector<T> effector, final Map<String,?> parameters) {
         Task<T> t = Effectors.invocation(entityToCall, effector, parameters).asTask();
         TaskTags.markInessential(t);
@@ -231,19 +230,19 @@ public class Entities {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> Task<T> invokeEffectorWithArgs(EntityLocal callingEntity, Entity entityToCall,
+    public static <T> Task<T> invokeEffectorWithArgs(Entity callingEntity, Entity entityToCall,
             final Effector<T> effector, Object ...args) {
         return invokeEffector(callingEntity, entityToCall, effector,
                 EffectorUtils.prepareArgsForEffectorAsMapFromArray(effector, args));
     }
 
-    public static <T> Task<T> invokeEffector(EntityLocal callingEntity, Entity entityToCall,
+    public static <T> Task<T> invokeEffector(Entity callingEntity, Entity entityToCall,
             final Effector<T> effector) {
         return invokeEffector(callingEntity, entityToCall, effector, Collections.<String,Object>emptyMap());
     }
 
     /** Invokes in parallel if multiple, but otherwise invokes the item directly. */
-    public static Task<?> invokeEffector(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
+    public static Task<?> invokeEffector(Entity callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<?> effector, final Map<String,?> parameters) {
         if (Iterables.size(entitiesToCall)==1)
             return invokeEffector(callingEntity, entitiesToCall.iterator().next(), effector, parameters);
@@ -252,7 +251,7 @@ public class Entities {
     }
 
     /** Invokes in parallel if multiple, but otherwise invokes the item directly. */
-    public static Task<?> invokeEffector(EntityLocal callingEntity, Iterable<? extends Entity> entitiesToCall,
+    public static Task<?> invokeEffector(Entity callingEntity, Iterable<? extends Entity> entitiesToCall,
             final Effector<?> effector) {
         return invokeEffector(callingEntity, entitiesToCall, effector, Collections.<String,Object>emptyMap());
     }
@@ -376,14 +375,14 @@ public class Entities {
             out.append(currentIndentation+tab+tab+"Members: "+members.toString()+"\n");
         }
 
-        if (!e.getPolicies().isEmpty()) {
+        if (!e.policies().isEmpty()) {
             out.append(currentIndentation+tab+tab+"Policies:\n");
             for (Policy policy : e.policies()) {
                 dumpInfo(policy, out, currentIndentation+tab+tab+tab, tab);
             }
         }
 
-        if (!e.getEnrichers().isEmpty()) {
+        if (!e.enrichers().isEmpty()) {
             out.append(currentIndentation+tab+tab+"Enrichers:\n");
             for (Enricher enricher : e.enrichers()) {
                 dumpInfo(enricher, out, currentIndentation+tab+tab+tab, tab);
@@ -699,7 +698,7 @@ public class Entities {
             log.warn("Using deprecated discouraged mechanism to start management -- Entities.start(Application, Locations) -- caller should create and use the preferred management context");
             startManagement(e);
         }
-        if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.START,
+        if (e instanceof Startable) Entities.invokeEffector(e, e, Startable.START,
                 MutableMap.of("locations", locations)).getUnchecked();
     }
 
@@ -714,7 +713,7 @@ public class Entities {
                 unmanage(e);
                 log.debug("destroyed and unmanaged read-only copy of "+e);
             } else {
-                if (e instanceof Startable) Entities.invokeEffector((EntityLocal)e, e, Startable.STOP).getUnchecked();
+                if (e instanceof Startable) Entities.invokeEffector(e, e, Startable.STOP).getUnchecked();
                 
                 // if destroying gracefully we might also want to do this (currently gets done by GC after unmanage,
                 // which is good enough for leaks, but not sure if that's ideal for subscriptions etc)

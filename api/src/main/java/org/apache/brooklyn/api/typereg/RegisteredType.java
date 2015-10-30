@@ -51,5 +51,15 @@ public interface RegisteredType extends Identifiable {
      * for instance because the YAML has not yet been parsed or OSGi bundles downloaded). 
      */
     Class<?> getJavaType();
+
+    /**
+     * @return True if the item has been deprecated (i.e. its use is discouraged)
+     */
+    boolean isDeprecated();
+    
+    /**
+     * @return True if the item has been disabled (i.e. its use is forbidden, except for pre-existing apps)
+     */
+    boolean isDisabled();
     
 }

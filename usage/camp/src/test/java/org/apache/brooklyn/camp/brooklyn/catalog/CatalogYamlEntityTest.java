@@ -531,9 +531,9 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         addCatalogOSGiEntity(id);
         BrooklynTypeRegistry catalog = mgmt().getTypeRegistry();
         RegisteredType item = catalog.get(id, TEST_VERSION);
-        EntitySpec<?> spec = catalog.createSpec(item, EntitySpec.class);
+        EntitySpec<?> spec = catalog.createSpec(item, null, EntitySpec.class);
         Assert.assertNotNull(spec);
-        AbstractBrooklynObjectSpec<?,?> spec2 = catalog.createSpec(item, AbstractBrooklynObjectSpec.class);
+        AbstractBrooklynObjectSpec<?,?> spec2 = catalog.createSpec(item, null, null);
         Assert.assertNotNull(spec2);
     }
     
@@ -613,7 +613,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "  version: " + TEST_VERSION + "pre",
                 "",
                 "services:",
-                "- type: org.apache.brooklyn.entity.stock.BasicEntity");
+                "- type: "+BasicEntity.class.getName());
 
         addCatalogItems(
                 "brooklyn.catalog:",

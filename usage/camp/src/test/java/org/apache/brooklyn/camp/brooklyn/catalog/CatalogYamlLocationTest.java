@@ -118,7 +118,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
         assertEquals(def.getId(), symbolicName);
         assertEquals(def.getName(), symbolicName);
         
-        LocationSpec spec = (LocationSpec) mgmt().getTypeRegistry().createSpec(item, LocationSpec.class);
+        LocationSpec spec = (LocationSpec) mgmt().getTypeRegistry().createSpec(item, null, LocationSpec.class);
         assertEquals(spec.getType().getName(), expectedJavaType);
     }
     

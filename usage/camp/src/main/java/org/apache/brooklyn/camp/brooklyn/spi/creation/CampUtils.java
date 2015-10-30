@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.policy.Policy;
@@ -40,16 +39,15 @@ import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
 import org.apache.brooklyn.core.resolve.ResolveUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.yaml.Yamls;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
+//TODO-type-registry
 public class CampUtils {
 
     public static List<EntitySpec<?>> createServiceSpecs(String plan, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {

@@ -33,8 +33,8 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
@@ -113,9 +113,9 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         assertEquals(entityItem.getVersion(), TEST_VERSION);
 
         // and internally let's check we have libraries
-        CatalogItem<?, ?> item = getManagementContext().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = getManagementContext().getTypeRegistry().get(symbolicName, TEST_VERSION);
         Assert.assertNotNull(item);
-        Collection<CatalogBundle> libs = item.getLibraries();
+        Collection<OsgiBundleWithUrl> libs = item.getLibraries();
         assertEquals(libs.size(), 1);
         assertEquals(Iterables.getOnlyElement(libs).getUrl(), bundleUrl);
 

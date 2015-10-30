@@ -217,7 +217,8 @@ public abstract class ApplicationBuilder {
             this.managementContext = managementContext;
             this.app = managementContext.getEntityManager().createEntity(appSpec);
             doBuild();
-            Entities.startManagement(app, managementContext);
+            // not needed with 0.9.0 (TODO - remove when confirmed)
+//            Entities.startManagement(app, managementContext);
             managed = true;
             return app;
         } finally {

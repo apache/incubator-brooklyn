@@ -24,7 +24,6 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
@@ -46,7 +45,7 @@ public class PolicyConfigResource extends AbstractBrooklynRestResource implement
     @Override
     public List<PolicyConfigSummary> list(
             final String application, final String entityToken, final String policyToken) {
-        EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        Entity entity = brooklyn().getEntity(application, entityToken);
         Policy policy = brooklyn().getPolicy(entity, policyToken);
 
         List<PolicyConfigSummary> result = Lists.newArrayList();

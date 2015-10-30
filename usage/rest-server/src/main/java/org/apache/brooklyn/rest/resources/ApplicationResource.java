@@ -42,9 +42,10 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.core.config.ConstraintViolationException;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.EntityPredicates;
@@ -57,6 +58,7 @@ import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.EntityAndItem;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;
 import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
 import org.apache.brooklyn.entity.group.AbstractGroup;
 import org.apache.brooklyn.rest.api.ApplicationApi;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
@@ -73,6 +75,7 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.UserFacingException;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.text.Strings;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.ArrayNode;
@@ -144,8 +147,8 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             aRoot.put("parentId", entity.getParent().getId());
         }
 
-        if (!entity.getGroups().isEmpty())
-            aRoot.put("groupIds", entitiesIdAsArray(entity.getGroups()));
+        if (!entity.groups().isEmpty())
+            aRoot.put("groupIds", entitiesIdAsArray(entity.groups()));
 
         if (!entity.getChildren().isEmpty())
             aRoot.put("children", entitiesIdAndNameAsArray(entity.getChildren()));
@@ -183,7 +186,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         return node;
     }
 
-    private ArrayNode entitiesIdAsArray(Collection<? extends Entity> entities) {
+    private ArrayNode entitiesIdAsArray(Iterable<? extends Entity> entities) {
         ArrayNode node = mapper().createArrayNode();
         for (Entity entity : entities) {
             if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
@@ -398,16 +401,20 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         }
     }
 
-    private void checkEntityTypeIsValid(String type) {
-        if (CatalogUtils.getCatalogItemOptionalVersion(mgmt(), type) == null) {
+    private void checkSpecTypeIsValid(String type, Class<? extends BrooklynObject> subType) {
+        if (mgmt().getTypeRegistry().get(type, RegisteredTypeConstraints.spec(subType)) == null) {
             try {
                 brooklyn().getCatalogClassLoader().loadClass(type);
             } catch (ClassNotFoundException e) {
                 log.debug("Class not found for type '" + type + "'; reporting 404", e);
                 throw WebResourceUtils.notFound("Undefined type '%s'", type);
             }
-            log.info("Entity type '{}' not defined in catalog but is on classpath; continuing", type);
+            log.info(JavaClassNames.simpleClassName(subType)+" type '{}' not defined in catalog but is on classpath; continuing", type);
         }
+    }
+    
+    private void checkEntityTypeIsValid(String type) {
+        checkSpecTypeIsValid(type, Entity.class);
     }
 
     @SuppressWarnings("deprecation")

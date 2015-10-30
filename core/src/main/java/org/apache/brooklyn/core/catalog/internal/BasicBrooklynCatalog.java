@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -39,11 +40,13 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
-import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.plan.PlanToSpecFactory;
+import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -298,12 +301,36 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (loadedItem == null) throw new RuntimeException(item+" not in catalog; cannot create spec");
         if (loadedItem.getSpecType()==null) return null;
 
-        SpecT spec = EntityManagementUtils.createCatalogSpec(mgmt, loadedItem);
+        SpecT spec = internalCreateSpecWithTransformers(mgmt, loadedItem, MutableSet.<String>of());
         if (spec != null) {
             return spec;
         }
 
         throw new IllegalStateException("No known mechanism to create instance of "+item);
+    }
+    
+    /** @deprecated since introduction in 0.9.0, only used for backwards compatibility, can be removed any time;
+     * uses the type-creation info on the item */
+    @Deprecated 
+    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT internalCreateSpecWithTransformers(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
+        // deprecated lookup
+        if (encounteredTypes.contains(item.getSymbolicName())) {
+            throw new IllegalStateException("Type being resolved '"+item.getSymbolicName()+"' has already been encountered in " + encounteredTypes + "; recursive cycle detected");
+        }
+        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, SpecT>() {
+            @Override
+            public SpecT apply(PlanToSpecTransformer input) {
+                return input.createCatalogSpec(item, encounteredTypes);
+            }
+        }).get();
+    }
+
+    /**
+     * as internalCreateSpecFromItemWithTransformers, but marking contexts where the creation is being attempted
+     * @deprecated since introduction in 0.9.0, only used for backwards compatibility, can be removed any time */
+    @Deprecated
+    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT internalCreateSpecAttempting(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
+        return internalCreateSpecWithTransformers(mgmt, item, encounteredTypes);
     }
 
     @Deprecated /** @deprecated since 0.7.0 only used by other deprecated items */ 
@@ -620,7 +647,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         
         public PlanInterpreterGuessingType(@Nullable String id, Object item, String itemYaml, @Nullable CatalogItemType optionalCiType, 
                 Collection<CatalogBundle> libraryBundles, List<CatalogItemDtoAbstract<?,?>> itemsDefinedSoFar) {
-            // ID is useful to prevent recursive references (currently for entities only)
+            // ID is useful to prevent recursive references (possibly only supported for entities?)
             this.id = id;
             
             if (item instanceof String) {
@@ -717,7 +744,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     .libraries(libraryBundles)
                     .build();
                 @SuppressWarnings("unchecked")
-                Object spec = EntityManagementUtils.createCatalogSpec(mgmt, itemToAttempt);
+                Object spec = internalCreateSpecAttempting(mgmt, itemToAttempt, MutableSet.<String>of());
                 if (spec!=null) {
                     catalogItemType = candidateCiType;
                     planYaml = candidateYaml;
@@ -755,7 +782,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                             .libraries(libraryBundles)
                             .build();
                     @SuppressWarnings("unchecked")
-                    Object cutdownSpec = EntityManagementUtils.createCatalogSpec(mgmt, itemToAttempt);
+                    Object cutdownSpec = internalCreateSpecAttempting(mgmt, itemToAttempt, MutableSet.<String>of());
                     if (cutdownSpec!=null) {
                         catalogItemType = candidateCiType;
                         planYaml = candidateYaml;
@@ -1025,49 +1052,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     private synchronized void loadSerializer() {
         if (serializer==null) 
             serializer = new CatalogXmlSerializer();
-    }
-
-    @Override
-    @Deprecated
-    public CatalogItem<?,?> getCatalogItemForType(String typeName) {
-        final CatalogItem<?,?> resultI;
-        final BrooklynCatalog catalog = mgmt.getCatalog();
-        if (CatalogUtils.looksLikeVersionedId(typeName)) {
-            //All catalog identifiers of the form xxxx:yyyy are composed of symbolicName+version.
-            //No javaType is allowed as part of the identifier.
-            resultI = CatalogUtils.getCatalogItemOptionalVersion(mgmt, typeName);
-        } else {
-            //Usually for catalog items with javaType (that is items from catalog.xml)
-            //the symbolicName and javaType match because symbolicName (was ID)
-            //is not specified explicitly. But could be the case that there is an item
-            //whose symbolicName is explicitly set to be different from the javaType.
-            //Note that in the XML the attribute is called registeredTypeName.
-            Iterable<CatalogItem<Object,Object>> resultL = catalog.getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
-            if (!Iterables.isEmpty(resultL)) {
-                //Push newer versions in front of the list (not that there should
-                //be more than one considering the items are coming from catalog.xml).
-                resultI = sortVersionsDesc(resultL).iterator().next();
-                if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
-                    log.debug("Found "+Iterables.size(resultL)+" matches in catalog for type "+typeName+"; returning the result with preferred version, "+resultI);
-                }
-            } else {
-                //As a last resort try searching for items with the same symbolicName supposedly
-                //different from the javaType.
-                resultI = catalog.getCatalogItem(typeName, BrooklynCatalog.DEFAULT_VERSION);
-                if (resultI != null) {
-                    if (resultI.getJavaType() == null) {
-                        //Catalog items scanned from the classpath (using reflection and annotations) now
-                        //get yaml spec rather than a java type. Can't use those when creating apps from
-                        //the legacy app spec format.
-                        log.warn("Unable to find catalog item for type "+typeName +
-                                ". There is an existing catalog item with ID " + resultI.getId() +
-                                " but it doesn't define a class type.");
-                        return null;
-                    }
-                }
-            }
-        }
-        return resultI;
     }
 
 }

@@ -20,26 +20,26 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertTrue;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
+import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
+import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
+import org.apache.brooklyn.core.objs.BrooklynTypes;
+import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.api.catalog.BrooklynCatalog;
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
-import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.api.policy.Policy;
-import org.apache.brooklyn.api.policy.PolicySpec;
-import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
-import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
-import org.apache.brooklyn.core.objs.BrooklynTypes;
-import org.apache.brooklyn.test.support.TestResourceUnavailableException;
-import org.apache.brooklyn.util.core.ResourceUtils;
-import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.Iterables;
 
@@ -58,10 +58,10 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/brooklyn/osgi/brooklyn-test-osgi-more-entities_0.1.0.jar");
 
         addCatalogItems(getLocalResource("more-entity-v1-osgi-catalog.yaml"));
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "more-entity");
+        RegisteredType item = mgmt().getTypeRegistry().get("more-entity");
         Assert.assertNotNull(item);
         Assert.assertEquals(item.getVersion(), "1.0");
-        Assert.assertEquals(item.getCatalogItemType(), CatalogItemType.ENTITY);
+        Assert.assertTrue(RegisteredTypePredicates.IS_ENTITY.apply(item));
         Assert.assertEquals(item.getLibraries().size(), 1);
         
         Entity app = createAndStartApplication("services: [ { type: 'more-entity:1.0' } ]");
@@ -86,7 +86,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         
         Assert.assertEquals(moreEntity.getCatalogItemId(), "more-entity:1.0");
         
-        Assert.assertEquals(moreEntity.getPolicies().size(), 1, "wrong policies: "+moreEntity.getPolicies());
+        Assert.assertEquals(moreEntity.policies().size(), 1, "wrong policies: "+moreEntity.policies());
         Policy policy = Iterables.getOnlyElement(moreEntity.policies());
         // it was loaded by yaml w ref to catalog, so should have the simple-policy catalog-id
         Assert.assertEquals(policy.getCatalogItemId(), "simple-policy:1.0");
@@ -105,7 +105,7 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         OsgiVersionMoreEntityTest.assertV2EffectorCall(moreEntity);
         OsgiVersionMoreEntityTest.assertV2MethodCall(moreEntity);
         
-        Assert.assertEquals(moreEntity.getPolicies().size(), 1, "wrong policies: "+moreEntity.getPolicies());
+        Assert.assertEquals(moreEntity.policies().size(), 1, "wrong policies: "+moreEntity.policies());
         Policy policy = Iterables.getOnlyElement(moreEntity.policies());
         // it was loaded from the java so should have the base more-entity catalog id
         Assert.assertEquals(policy.getCatalogItemId(), "more-entity:1.0");
@@ -177,13 +177,13 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         
         log.info("autoscan for osgi found catalog items: "+Strings.join(mgmt().getCatalog().getCatalogItems(), ", "));
 
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "more-entity");
+        RegisteredType item = mgmt().getTypeRegistry().get("more-entity");
         Assert.assertNotNull(item);
         Assert.assertEquals(item.getVersion(), "2.0.test");
-        Assert.assertEquals(item.getCatalogItemType(), CatalogItemType.ENTITY);
+        Assert.assertTrue(RegisteredTypePredicates.IS_ENTITY.apply(item));
         
         // this refers to the java item, where the libraries are defined
-        item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "org.apache.brooklyn.test.osgi.entities.more.MoreEntity");
+        item = mgmt().getTypeRegistry().get("org.apache.brooklyn.test.osgi.entities.more.MoreEntity");
         Assert.assertEquals(item.getVersion(), "2.0.test_java");
         Assert.assertEquals(item.getLibraries().size(), 2);
         
@@ -204,13 +204,13 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         
         log.info("autoscan for osgi found catalog items: "+Strings.join(mgmt().getCatalog().getCatalogItems(), ", "));
 
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "more-policy");
+        RegisteredType item = mgmt().getTypeRegistry().get("more-policy");
         Assert.assertNotNull(item);
         Assert.assertEquals(item.getVersion(), "2.0.test");
-        Assert.assertEquals(item.getCatalogItemType(), CatalogItemType.POLICY);
+        Assert.assertTrue(RegisteredTypePredicates.IS_POLICY.apply(item));
         
         // this refers to the java item, where the libraries are defined
-        item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), "org.apache.brooklyn.test.osgi.entities.more.MorePolicy");
+        item = mgmt().getTypeRegistry().get("org.apache.brooklyn.test.osgi.entities.more.MorePolicy");
         Assert.assertEquals(item.getVersion(), "2.0.test_java");
         Assert.assertEquals(item.getLibraries().size(), 2);
         
@@ -233,27 +233,23 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
 
         addCatalogItems(getLocalResource("more-entities-osgi-catalog-scan.yaml"));
 
-        log.info("autoscan for osgi found catalog items: "+Strings.join(mgmt().getCatalog().getCatalogItems(), ", "));
+        log.info("autoscan for osgi found catalog items: "+Strings.join(mgmt().getTypeRegistry().getAll(), ", "));
 
-        BrooklynCatalog catalog = mgmt().getCatalog();
-        Iterable<CatalogItem<Object, Object>> items = catalog.getCatalogItems();
-        for (CatalogItem<Object, Object> item: items) {
-            @SuppressWarnings({ "unchecked", "rawtypes" })
-            Object spec = catalog.createSpec((CatalogItem)item);
-            switch (item.getCatalogItemType()) {
-                case TEMPLATE:
-                case ENTITY:
-                    assertTrue(spec instanceof EntitySpec, "Not an EntitySpec: " + spec);
-                    BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
-                    break;
-                case POLICY:
-                    assertTrue(spec instanceof PolicySpec, "Not a PolicySpec: " + spec);
-                    BrooklynTypes.getDefinedBrooklynType(((PolicySpec<?>)spec).getType());
-                    break;
-                case LOCATION:
-                    assertTrue(spec instanceof LocationSpec, "Not a LocationSpec: " + spec);
-                    BrooklynTypes.getDefinedBrooklynType(((LocationSpec<?>)spec).getType());
-                    break;
+        BrooklynTypeRegistry types = mgmt().getTypeRegistry();
+        Iterable<RegisteredType> items = types.getAll();
+        for (RegisteredType item: items) {
+            Object spec = types.createSpec(item, null, null);
+            if (Entity.class.isAssignableFrom(item.getJavaType())) {
+                assertTrue(spec instanceof EntitySpec, "Not an EntitySpec: " + spec);
+                BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
+            } else if (Policy.class.isAssignableFrom(item.getJavaType())) { 
+                assertTrue(spec instanceof PolicySpec, "Not a PolicySpec: " + spec);
+                BrooklynTypes.getDefinedBrooklynType(((PolicySpec<?>)spec).getType());
+            } else if (Location.class.isAssignableFrom(item.getJavaType())) {
+                assertTrue(spec instanceof LocationSpec, "Not a LocationSpec: " + spec);
+                BrooklynTypes.getDefinedBrooklynType(((LocationSpec<?>)spec).getType());
+            } else {
+                Assert.fail("Unexpected type: "+item.getJavaType()+" / "+item);
             }
         }
     }

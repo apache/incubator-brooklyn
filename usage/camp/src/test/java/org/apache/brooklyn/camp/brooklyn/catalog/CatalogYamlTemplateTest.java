@@ -18,18 +18,17 @@
  */
 package org.apache.brooklyn.camp.brooklyn.catalog;
 
-import static org.testng.Assert.assertEquals;
-
+import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
+import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
+import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.testng.Assert;
 import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
-import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
-import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
-import org.apache.brooklyn.util.osgi.OsgiTestResources;
-import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 
 
 public class CatalogYamlTemplateTest extends AbstractYamlTest {
@@ -38,12 +37,13 @@ public class CatalogYamlTemplateTest extends AbstractYamlTest {
 
     @Test
     public void testAddCatalogItem() throws Exception {
-        CatalogItem<?, ?> item = makeItem();
-        assertEquals(item.getCatalogItemType(), CatalogItemType.TEMPLATE);
-        Assert.assertTrue(item.getPlanYaml().indexOf("sample comment")>=0,
-            "YAML did not include original comments; it was:\n"+item.getPlanYaml());
-        Assert.assertFalse(item.getPlanYaml().indexOf("description")>=0,
-            "YAML included metadata which should have been excluded; it was:\n"+item.getPlanYaml());
+        RegisteredType item = makeItem();
+        Assert.assertTrue(RegisteredTypePredicates.IS_APPLICATION.apply(item), "item: "+item);
+        String yaml = RegisteredTypes.getImplementationDataStringForSpec(item);
+        Assert.assertTrue(yaml.indexOf("sample comment")>=0,
+            "YAML did not include original comments; it was:\n"+yaml);
+        Assert.assertFalse(yaml.indexOf("description")>=0,
+            "YAML included metadata which should have been excluded; it was:\n"+yaml);
 
         deleteCatalogEntity("t1");
     }
@@ -53,16 +53,17 @@ public class CatalogYamlTemplateTest extends AbstractYamlTest {
         // this will fail with the Eclipse TestNG plugin -- use the static main instead to run in eclipse!
         // see Yamls.KnownClassVersionException for details
         
-        CatalogItem<?, ?> item = makeItem();
-        Assert.assertTrue(item.getPlanYaml().indexOf("sample comment")>=0,
-            "YAML did not include original comments; it was:\n"+item.getPlanYaml());
-        Assert.assertFalse(item.getPlanYaml().indexOf("description")>=0,
-            "YAML included metadata which should have been excluded; it was:\n"+item.getPlanYaml());
+        RegisteredType item = makeItem();
+        String yaml = RegisteredTypes.getImplementationDataStringForSpec(item);
+        Assert.assertTrue(yaml.indexOf("sample comment")>=0,
+            "YAML did not include original comments; it was:\n"+yaml);
+        Assert.assertFalse(yaml.indexOf("description")>=0,
+            "YAML included metadata which should have been excluded; it was:\n"+yaml);
 
         deleteCatalogEntity("t1");
     }
 
-    private CatalogItem<?, ?> makeItem() {
+    private RegisteredType makeItem() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         
         addCatalogItems(
@@ -80,8 +81,7 @@ public class CatalogYamlTemplateTest extends AbstractYamlTest {
             "    # this sample comment should be included",
             "    - type: " + SIMPLE_ENTITY_TYPE);
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem("t1", TEST_VERSION);
-        return item;
+        return mgmt().getTypeRegistry().get("t1", TEST_VERSION);
     }
 
     // convenience for running in eclipse when the TestNG plugin drags in old version of snake yaml

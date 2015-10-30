@@ -60,7 +60,7 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
             "      type: A",
             "      brooklyn.config: { b: 1 }");
 
-        RegisteredType item = mgmt().getTypeRegistry().get("B", TEST_VERSION, null, null);
+        RegisteredType item = mgmt().getTypeRegistry().get("B", TEST_VERSION);
         Assert.assertNotNull(item);
 
         Entity a = launchEntity("A");
@@ -113,7 +113,7 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
             "      brooklyn.policies:",
             "      - type: A");
 
-        RegisteredType item = mgmt().getTypeRegistry().get("A", TEST_VERSION, null, null);
+        RegisteredType item = mgmt().getTypeRegistry().get("A", TEST_VERSION);
         Assert.assertNotNull(item);
 
         Entity b = launchEntity("B", false);
@@ -122,7 +122,7 @@ public class CatalogYamlCombiTest extends AbstractYamlTest {
         
         Assert.assertEquals(Iterables.getOnlyElement(b.getLocations()).getConfig(ConfigKeys.newIntegerConfigKey("z")), (Integer)9);
         
-        Policy p = Iterables.getOnlyElement(b.getPolicies());
+        Policy p = Iterables.getOnlyElement(b.policies());
         Assert.assertTrue(ServiceRestarter.class.isInstance(p), "Wrong type: "+p);
         Assert.assertEquals(p.getConfig(ConfigKeys.newIntegerConfigKey("a")), (Integer)99);
         

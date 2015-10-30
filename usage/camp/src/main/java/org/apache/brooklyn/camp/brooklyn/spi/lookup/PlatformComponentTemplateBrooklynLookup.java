@@ -25,6 +25,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.camp.spi.PlatformRootSummary;
 import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
@@ -37,7 +38,7 @@ public class PlatformComponentTemplateBrooklynLookup extends AbstractTemplateBro
     }
 
     @Override
-    public PlatformComponentTemplate adapt(CatalogItem<?,?> item) {
+    public PlatformComponentTemplate adapt(RegisteredType item) {
         return PlatformComponentTemplate.builder().
                 name(item.getDisplayName()).
                 id(item.getId()).

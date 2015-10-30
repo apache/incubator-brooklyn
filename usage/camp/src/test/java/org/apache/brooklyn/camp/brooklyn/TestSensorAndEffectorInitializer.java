@@ -42,7 +42,6 @@ public class TestSensorAndEffectorInitializer implements EntityInitializer {
 
     protected String helloWord() { return "Hello"; }
     
-    @Override
     public void apply(EntityLocal entity) {
         Effector<String> eff = Effectors.effector(String.class, EFFECTOR_SAY_HELLO).parameter(String.class, "name").impl(
             new EffectorBody<String>() {

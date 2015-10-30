@@ -145,20 +145,20 @@ public class BrooklynComponentTemplateResolver {
         return serviceSpecResolver.accepts(type, loader);
     }
 
-    public <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredRegisteredTypeIds) {
+    public <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredRegisteredTypeSymbolicNames) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
 
-        EntitySpec<?> spec = serviceSpecResolver.resolve(type, loader, encounteredRegisteredTypeIds);
+        EntitySpec<?> spec = serviceSpecResolver.resolve(type, loader, encounteredRegisteredTypeSymbolicNames);
 
         if (spec == null) {
             // Try to provide some troubleshooting details
             final String msgDetails;
-            RegisteredType item = mgmt.getTypeRegistry().get(Strings.removeFromStart(type, "catalog:"), null, null);
+            RegisteredType item = mgmt.getTypeRegistry().get(Strings.removeFromStart(type, "catalog:"));
             String proto = Urls.getProtocol(type);
-            if (item != null && encounteredRegisteredTypeIds.contains(item.getSymbolicName())) {
+            if (item != null && encounteredRegisteredTypeSymbolicNames.contains(item.getSymbolicName())) {
                 msgDetails = "Cycle between catalog items detected, starting from " + type +
-                        ". Other catalog items being resolved up the stack are " + encounteredRegisteredTypeIds +
+                        ". Other catalog items being resolved up the stack are " + encounteredRegisteredTypeSymbolicNames +
                         ". Tried loading it as a Java class instead but failed.";
             } else if (proto != null) {
                 msgDetails = "The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
@@ -170,7 +170,7 @@ public class BrooklynComponentTemplateResolver {
             throw new IllegalStateException("Unable to create spec for type " + type + ". " + msgDetails);
         }
 
-        populateSpec(spec, encounteredRegisteredTypeIds);
+        populateSpec(spec, encounteredRegisteredTypeSymbolicNames);
 
         @SuppressWarnings("unchecked")
         EntitySpec<T> typedSpec = (EntitySpec<T>) spec;

@@ -18,12 +18,8 @@
  */
 package org.apache.brooklyn.core.mgmt.rebind;
 
-import java.util.NoSuchElementException;
-
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
@@ -37,6 +33,8 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Feed;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** Looks in {@link RebindContext} <i>and</i> {@link ManagementContext} to find entities, locations, etc. */
 public class RebindContextLookupContext implements LookupContext {
@@ -115,10 +113,13 @@ public class RebindContextLookupContext implements LookupContext {
         return result;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public CatalogItem<?, ?> lookupCatalogItem(String id) {
         CatalogItem<?, ?> result = rebindContext.getCatalogItem(id);
         if (result == null) {
+            // TODO-type-registry
+//          result = managementContext.getTypeRegistry().get(id, null, null);
             result = CatalogUtils.getCatalogItemOptionalVersion(managementContext, id);
         }
         if (result == null) {

@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogDto;
@@ -44,6 +45,7 @@ import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -262,14 +264,14 @@ public class RebindCatalogItemTest extends RebindTestFixtureWithApp {
         item.setDeprecated(true);
         catalog.persist(item);
         rebindAndAssertCatalogsAreEqual();
-        CatalogItem<?, ?> catalogItemAfterRebind = newManagementContext.getCatalog().getCatalogItem("rebind-yaml-catalog-item-test", TEST_VERSION);
+        RegisteredType catalogItemAfterRebind = newManagementContext.getTypeRegistry().get("rebind-yaml-catalog-item-test", TEST_VERSION);
         assertTrue(catalogItemAfterRebind.isDeprecated(), "Expected item to be deprecated");
     }
 
     protected void deleteItem(ManagementContext mgmt, String symbolicName, String version) {
         mgmt.getCatalog().deleteCatalogItem(symbolicName, version);
         LOG.info("Deleted item from catalog: {}:{}", symbolicName, version);
-        assertCatalogDoesNotContain(mgmt.getCatalog(), symbolicName, version);
+        Assert.assertNull( mgmt.getTypeRegistry().get(symbolicName, version) );
     }
     
     private void rebindAndAssertCatalogsAreEqual() {

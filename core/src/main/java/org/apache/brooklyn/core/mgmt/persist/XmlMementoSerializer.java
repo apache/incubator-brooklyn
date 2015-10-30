@@ -40,6 +40,7 @@ import org.apache.brooklyn.api.objs.Identifiable;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Feed;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.catalog.internal.CatalogBundleDto;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.BasicConfigKey;
@@ -439,7 +440,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             try {
                 if (Strings.isNonBlank(catalogItemId)) {
                     if (lookupContext==null) throw new NullPointerException("lookupContext required to load catalog item "+catalogItemId);
-                    CatalogItem<?, ?> cat = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), catalogItemId);
+                    RegisteredType cat = lookupContext.lookupManagementContext().getTypeRegistry().get(catalogItemId);
                     if (cat==null) throw new NoSuchElementException("catalog item: "+catalogItemId);
                     BrooklynClassLoadingContext clcNew = CatalogUtils.newClassLoadingContext(lookupContext.lookupManagementContext(), cat);
                     pushXstreamCustomClassLoader(clcNew);

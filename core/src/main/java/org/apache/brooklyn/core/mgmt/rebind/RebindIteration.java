@@ -30,8 +30,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
@@ -43,6 +41,7 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoManifest;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
@@ -53,12 +52,13 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.Memento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.PolicyMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.TreeNode;
-import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoManifest.EntityMementoManifest;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObjectType;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Feed;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.BrooklynLogging.LoggingLevel;
@@ -98,6 +98,8 @@ import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -787,12 +789,13 @@ public abstract class RebindIteration {
             EntityMementoManifest ptr = entityManifest;
             while (ptr != null) {
                 if (ptr.getCatalogItemId() != null) {
-                    CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(managementContext, ptr.getCatalogItemId());
-                    if (catalogItem != null) {
-                        return catalogItem.getId();
+                    RegisteredType type = managementContext.getTypeRegistry().get(ptr.getCatalogItemId());
+                    if (type != null) {
+                        return type.getId();
                     } else {
                         //Couldn't find a catalog item with this id, but return it anyway and
                         //let the caller deal with the error.
+                        //TODO under what circumstances is this permitted?
                         return ptr.getCatalogItemId();
                     }
                 }
@@ -807,13 +810,13 @@ public abstract class RebindIteration {
             //The current convention is to set catalog item IDs to the java type (for both plain java or CAMP plan) they represent.
             //This will be applicable only the first time the store is rebinded, while the catalog items don't have the default
             //version appended to their IDs, but then we will have catalogItemId set on entities so not neede further anyways.
-            BrooklynCatalog catalog = managementContext.getCatalog();
+            BrooklynTypeRegistry types = managementContext.getTypeRegistry();
             ptr = entityManifest;
             while (ptr != null) {
-                CatalogItem<?, ?> catalogItem = catalog.getCatalogItem(ptr.getType(), BrooklynCatalog.DEFAULT_VERSION);
-                if (catalogItem != null) {
-                    LOG.debug("Inferred catalog item ID "+catalogItem.getId()+" for "+entityManifest+" from ancestor "+ptr);
-                    return catalogItem.getId();
+                RegisteredType t = types.get(ptr.getType(), BrooklynCatalog.DEFAULT_VERSION);
+                if (t != null) {
+                    LOG.debug("Inferred catalog item ID "+t.getId()+" for "+entityManifest+" from ancestor "+ptr);
+                    return t.getId();
                 }
                 if (ptr.getParent() != null) {
                     ptr = entityIdToManifest.get(ptr.getParent());
@@ -827,7 +830,8 @@ public abstract class RebindIteration {
             if (JavaBrooklynClassLoadingContext.create(managementContext).tryLoadClass(entityManifest.getType()).isPresent())
                 return null;
 
-            for (CatalogItem<?, ?> item : catalog.getCatalogItems()) {
+            // TODO get to the point when we can deprecate this behaviour!:
+            for (RegisteredType item : types.getAll()) {
                 BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(managementContext, item);
                 boolean canLoadClass = loader.tryLoadClass(entityManifest.getType()).isPresent();
                 if (canLoadClass) {

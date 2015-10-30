@@ -21,18 +21,18 @@ package org.apache.brooklyn.core.resolve;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
 import org.apache.brooklyn.util.guava.Maybe;
 
+@Deprecated /** @deprecated since 0.9.0 never belonged here, and not used much; new principled TypeRegistry simplifies things */
+// only used for camp
+// TODO-type-registry
 public class ResolveUtils {
 
     @SuppressWarnings("unchecked")
@@ -40,16 +40,13 @@ public class ResolveUtils {
             String versionedId,
             BrooklynClassLoadingContext loader,
             Set<String> encounteredCatalogTypes) {
+        
         PolicySpec<? extends Policy> spec;
-        CatalogItem<?, ?> policyItem = CatalogUtils.getCatalogItemOptionalVersion(loader.getManagementContext(), versionedId);
-        if (policyItem != null && !encounteredCatalogTypes.contains(policyItem.getSymbolicName())) {
-            if (policyItem.getCatalogItemType() != CatalogItemType.POLICY) {
-                throw new IllegalStateException("Non-policy catalog item in policy context: " + policyItem);
-            }
-            @SuppressWarnings("rawtypes")
-            CatalogItem rawItem = policyItem;
-            spec = (PolicySpec<? extends Policy>) EntityManagementUtils.createCatalogSpec(loader.getManagementContext(), rawItem, encounteredCatalogTypes);
+        RegisteredType item = loader.getManagementContext().getTypeRegistry().get(versionedId);
+        if (item != null && !encounteredCatalogTypes.contains(item.getSymbolicName())) {
+            return loader.getManagementContext().getTypeRegistry().createSpec(item, null, PolicySpec.class);
         } else {
+            // TODO-type-registry pass the loader in to the above, and allow it to load with the loader
             spec = PolicySpec.create(loader.loadClass(versionedId, Policy.class));
         }
         return spec;

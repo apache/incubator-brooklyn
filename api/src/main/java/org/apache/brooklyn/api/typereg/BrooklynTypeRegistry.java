@@ -42,14 +42,27 @@ public interface BrooklynTypeRegistry {
     Iterable<RegisteredType> getAll();
     Iterable<RegisteredType> getAll(Predicate<? super RegisteredType> alwaysTrue);
     
-    RegisteredType get(String symbolicNameWithOptionalVersion, @Nullable RegisteredTypeKind kind, @Nullable Class<?> requiredSupertype);
-    RegisteredType get(String symbolicName, String version, @Nullable RegisteredTypeKind kind, @Nullable Class<?> requiredSupertype);
+    /** @return The item matching the given given 
+     * {@link RegisteredType#getSymbolicName() symbolicName} 
+     * and optionally {@link RegisteredType#getVersion()},
+     * filtered for the optionally supplied {@link RegisteredTypeConstraint}, 
+     * taking the best version if the version is null or a default marker,
+     * returning null if no matches are found. */
+    RegisteredType get(String symbolicName, String version, @Nullable RegisteredTypeConstraint constraint);
+    /** as {@link #get(String, String, RegisteredTypeConstraint)} with no constraints */
     RegisteredType get(String symbolicName, String version);
+    /** as {@link #get(String, String, RegisteredTypeConstraint)} but allows <code>"name:version"</code> 
+     * (the {@link RegisteredType#getId()}) in addition to the unversioned name,
+     * using a default marker if no version can be inferred */
+    RegisteredType get(String symbolicNameWithOptionalVersion, @Nullable RegisteredTypeConstraint constraint);
+    /** as {@link #get(String, RegisteredTypeConstraint)} but with no constraints */
+    RegisteredType get(String symbolicNameWithOptionalVersion);
 
-    @SuppressWarnings("rawtypes")
-    <T extends AbstractBrooklynObjectSpec> T createSpec(RegisteredType type, @Nullable Class<T> specKind);
+    // NB the seemingly more correct generics <T,SpecT extends AbstractBrooklynObjectSpec<T,SpecT>> 
+    // cause compile errors, not in Eclipse, but in maven (?) 
+    <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeConstraint optionalConstraint, Class<SpecT> optionalSpecSuperType);
     
     // TODO when we support beans
-//    <T> T createBean(RegisteredType type, Class<T> superType);
+//    <T> T createBean(RegisteredType type, @Nullable RegisteredTypeConstraint optionalConstraint, Class<T> optionalResultSuperType);
     
 }

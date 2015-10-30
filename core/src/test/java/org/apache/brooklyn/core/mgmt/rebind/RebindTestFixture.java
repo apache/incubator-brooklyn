@@ -317,14 +317,14 @@ public abstract class RebindTestFixture<T extends StartableApplication> {
         assertEquals(actual.getLibraries(), expected.getLibraries());
     }
     
-    protected void assertCatalogContains(BrooklynCatalog catalog, CatalogItem<?, ?> item) {
-        CatalogItem<?, ?> found = catalog.getCatalogItem(item.getSymbolicName(), item.getVersion());
-        assertNotNull(found);
-        assertCatalogItemsEqual(found, item);
-    }
-    
-    protected void assertCatalogDoesNotContain(BrooklynCatalog catalog, String symbolicName, String version) {
-        CatalogItem<?, ?> found = catalog.getCatalogItem(symbolicName, version);
-        assertNull(found);
-    }
+//    protected void assertCatalogContains(BrooklynCatalog catalog, CatalogItem<?, ?> item) {
+//        CatalogItem<?, ?> found = catalog.getCatalogItem(item.getSymbolicName(), item.getVersion());
+//        assertNotNull(found);
+//        assertCatalogItemsEqual(found, item);
+//    }
+//    
+//    protected void assertCatalogDoesNotContain(BrooklynCatalog catalog, String symbolicName, String version) {
+//        CatalogItem<?, ?> found = catalog.getCatalogItem(symbolicName, version);
+//        assertNull(found);
+//    }
 }

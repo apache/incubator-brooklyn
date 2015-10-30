@@ -28,12 +28,12 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
@@ -89,6 +89,7 @@ public class EntityManagementUtils {
     }
     
     public static EntitySpec<? extends Application> createEntitySpecForApplication(ManagementContext mgmt, final String plan) {
+        // TODO-type-registry
         return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, EntitySpec<? extends Application>>() {
             @Override
             public EntitySpec<? extends Application> apply(PlanToSpecTransformer input) {
@@ -97,20 +98,16 @@ public class EntityManagementUtils {
         }).get();
     }
 
+    @Deprecated /** @deprecated since 0.9.0; use {@link BrooklynTypeRegistry#createSpec(RegisteredType, org.apache.brooklyn.api.typereg.RegisteredTypeConstraint, Class)} */
+    // not used in Brooklyn
     public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, CatalogItem<T, SpecT> item) {
         return createCatalogSpec(mgmt, item, ImmutableSet.<String>of());
     }
 
+    @Deprecated /** @deprecated since 0.9.0; use {@link BrooklynTypeRegistry#createSpec(RegisteredType, org.apache.brooklyn.api.typereg.RegisteredTypeConstraint, Class)} */
+    // not used in Brooklyn
     public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
-        if (encounteredTypes.contains(item.getSymbolicName())) {
-            throw new IllegalStateException("Already encountered types " + encounteredTypes + " must not contain catalog item being resolver " + item.getSymbolicName());
-        }
-        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, SpecT>() {
-            @Override
-            public SpecT apply(PlanToSpecTransformer input) {
-                return input.createCatalogSpec(item, encounteredTypes);
-            }
-        }).get();
+        return BasicBrooklynCatalog.internalCreateSpecWithTransformers(mgmt, item, encounteredTypes);
     }
 
     /** container for operation which creates something and which wants to return both
@@ -145,21 +142,21 @@ public class EntityManagementUtils {
     }
 
     public static <T extends Application> CreationResult<T,Void> start(T app) {
-        Task<Void> task = Entities.invokeEffector((EntityLocal)app, app, Startable.START,
+        Task<Void> task = Entities.invokeEffector(app, app, Startable.START,
             // locations already set in the entities themselves;
             // TODO make it so that this arg does not have to be supplied to START !
             MutableMap.of("locations", MutableList.of()));
         return CreationResult.of(app, task);
     }
     
-    public static CreationResult<List<Entity>, List<String>> addChildren(final EntityLocal parent, String yaml, Boolean start) {
+    public static CreationResult<List<Entity>, List<String>> addChildren(final Entity parent, String yaml, Boolean start) {
         if (Boolean.FALSE.equals(start))
             return CreationResult.of(addChildrenUnstarted(parent, yaml), null);
         return addChildrenStarting(parent, yaml);
     }
     
     /** adds entities from the given yaml, under the given parent; but does not start them */
-    public static List<Entity> addChildrenUnstarted(final EntityLocal parent, String yaml) {
+    public static List<Entity> addChildrenUnstarted(final Entity parent, String yaml) {
         log.debug("Creating child of "+parent+" from yaml:\n{}", yaml);
 
         ManagementContext mgmt = parent.getApplication().getManagementContext();
@@ -193,7 +190,7 @@ public class EntityManagementUtils {
         return children;
     }
 
-    public static CreationResult<List<Entity>,List<String>> addChildrenStarting(final EntityLocal parent, String yaml) {
+    public static CreationResult<List<Entity>,List<String>> addChildrenStarting(final Entity parent, String yaml) {
         final List<Entity> children = addChildrenUnstarted(parent, yaml);
         String childrenCountString;
 

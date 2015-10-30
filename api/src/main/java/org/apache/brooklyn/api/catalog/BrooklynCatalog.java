@@ -68,10 +68,6 @@ public interface BrooklynCatalog {
     /** creates a spec for the given catalog item, throwing exceptions if any problems */
     // TODO this should be cached on the item and renamed getSpec(...), else we re-create it too often (every time catalog is listed)
     <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createSpec(CatalogItem<T, SpecT> item);
-    
-    /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
-    // used in one place in BRRU with warnings added in 0.9.0. remove after 0.9. 
-    CatalogItem<?,?> getCatalogItemForType(String typeName);
 
     /**
      * Adds an item (represented in yaml) to the catalog.

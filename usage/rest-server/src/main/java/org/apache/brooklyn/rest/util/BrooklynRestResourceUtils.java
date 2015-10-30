@@ -23,6 +23,7 @@ import static org.apache.brooklyn.rest.util.WebResourceUtils.notFound;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,26 +37,28 @@ import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent.Scope;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.catalog.CatalogPredicates;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemComparator;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
-import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;
 import org.apache.brooklyn.core.objs.BrooklynTypes;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
@@ -73,7 +76,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -137,10 +142,10 @@ public class BrooklynRestResourceUtils {
      * in which case names will be searched recursively (and the application is required). 
      * 
      * @throws 404 or 412 (unless input is null in which case output is null) */
-    public EntityLocal getEntity(String application, String entity) {
+    public Entity getEntity(String application, String entity) {
         if (entity==null) return null;
         Application app = application!=null ? getApplication(application) : null;
-        EntityLocal e = (EntityLocal) mgmt.getEntityManager().getEntity(entity);
+        Entity e = (Entity) mgmt.getEntityManager().getEntity(entity);
         
         if (e!=null) {
             if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, e)) {
@@ -195,11 +200,11 @@ public class BrooklynRestResourceUtils {
     /** walks the hierarchy (depth-first) at root (often an Application) looking for
      * an entity matching the given ID or name; returns the first such entity, or null if none found
      **/
-    public EntityLocal searchForEntityNamed(Entity root, String entity) {
-        if (root.getId().equals(entity) || entity.equals(root.getDisplayName())) return (EntityLocal) root;
+    public Entity searchForEntityNamed(Entity root, String entity) {
+        if (root.getId().equals(entity) || entity.equals(root.getDisplayName())) return (Entity) root;
         for (Entity child: root.getChildren()) {
             Entity result = searchForEntityNamed(child, entity);
-            if (result!=null) return (EntityLocal) result;
+            if (result!=null) return (Entity) result;
         }
         return null;
     }
@@ -208,14 +213,16 @@ public class BrooklynRestResourceUtils {
         String catalogItemId;
         Class<? extends Entity> clazz;
         
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings({ "unchecked" })
         private FindItemAndClass inferFrom(String type) {
-            BrooklynCatalog catalog = getCatalog();
-            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, type);
+            RegisteredType item = mgmt.getTypeRegistry().get(type);
             if (item==null) {
-                // although the method was deprecated in 0.7.0, its use here was not warned until 0.9.0;
-                // therefore this behaviour should not be changed until after 0.9.0
-                item = catalog.getCatalogItemForType(type);
+                // deprecated attempt to load an item not in the type registry
+                
+                // although the method called was deprecated in 0.7.0, its use here was not warned until 0.9.0;
+                // therefore this behaviour should not be changed until after 0.9.0;
+                // at which point it should try a pojo load (see below)
+                item = getCatalogItemForType(type);
                 if (item!=null) {
                     log.warn("Creating application for requested type `"+type+" using item "+item+"; "
                         + "the registered type name ("+item.getSymbolicName()+") should be used from the spec instead, "
@@ -226,12 +233,12 @@ public class BrooklynRestResourceUtils {
             
             if (item != null) {
                 return setAs(
-                    catalog.createSpec((CatalogItem<Entity,org.apache.brooklyn.api.entity.EntitySpec<Entity>>)item).getType(),
+                    mgmt.getTypeRegistry().createSpec(item, null, org.apache.brooklyn.api.entity.EntitySpec.class).getType(),
                     item.getId());
             } else {
                 try {
                     setAs(
-                        (Class<? extends Entity>) catalog.getRootClassLoader().loadClass(type),
+                        (Class<? extends Entity>) getCatalog().getRootClassLoader().loadClass(type),
                         null);
                     log.info("Catalog does not contain item for type {}; loaded class directly instead", type);
                     return this;
@@ -246,6 +253,50 @@ public class BrooklynRestResourceUtils {
             this.clazz = clazz;
             this.catalogItemId = catalogItemId;
             return this;
+        }
+        
+        @Deprecated // see caller
+        private RegisteredType getCatalogItemForType(String typeName) {
+            final RegisteredType resultI;
+            if (CatalogUtils.looksLikeVersionedId(typeName)) {
+                //All catalog identifiers of the form xxxx:yyyy are composed of symbolicName+version.
+                //No javaType is allowed as part of the identifier.
+                resultI = mgmt.getTypeRegistry().get(typeName);
+            } else {
+                //Usually for catalog items with javaType (that is items from catalog.xml)
+                //the symbolicName and javaType match because symbolicName (was ID)
+                //is not specified explicitly. But could be the case that there is an item
+                //whose symbolicName is explicitly set to be different from the javaType.
+                //Note that in the XML the attribute is called registeredTypeName.
+                Iterable<CatalogItem<Object,Object>> resultL = mgmt.getCatalog().getCatalogItems(CatalogPredicates.javaType(Predicates.equalTo(typeName)));
+                if (!Iterables.isEmpty(resultL)) {
+                    //Push newer versions in front of the list (not that there should
+                    //be more than one considering the items are coming from catalog.xml).
+                    resultI = RegisteredTypes.of(sortVersionsDesc(resultL).iterator().next());
+                    if (log.isDebugEnabled() && Iterables.size(resultL)>1) {
+                        log.debug("Found "+Iterables.size(resultL)+" matches in catalog for type "+typeName+"; returning the result with preferred version, "+resultI);
+                    }
+                } else {
+                    //As a last resort try searching for items with the same symbolicName supposedly
+                    //different from the javaType.
+                    resultI = mgmt.getTypeRegistry().get(typeName, BrooklynCatalog.DEFAULT_VERSION);
+                    if (resultI != null) {
+                        if (resultI.getJavaType() == null) {
+                            //Catalog items scanned from the classpath (using reflection and annotations) now
+                            //get yaml spec rather than a java type. Can't use those when creating apps from
+                            //the legacy app spec format.
+                            log.warn("Unable to find catalog item for type "+typeName +
+                                    ". There is an existing catalog item with ID " + resultI.getId() +
+                                    " but it doesn't define a class type.");
+                            return null;
+                        }
+                    }
+                }
+            }
+            return resultI;
+        }
+        private <T,SpecT> Collection<CatalogItem<T,SpecT>> sortVersionsDesc(Iterable<CatalogItem<T,SpecT>> versions) {
+            return ImmutableSortedSet.orderedBy(CatalogItemComparator.<T,SpecT>getInstance()).addAll(versions).build();
         }
     }
     
@@ -281,11 +332,11 @@ public class BrooklynRestResourceUtils {
         }
 
         try {
-            if (ApplicationBuilder.class.isAssignableFrom(itemAndClass.clazz)) {
+            if (org.apache.brooklyn.core.entity.factory.ApplicationBuilder.class.isAssignableFrom(itemAndClass.clazz)) {
                 // warning only added in 0.9.0
                 log.warn("Using deprecated ApplicationBuilder "+itemAndClass.clazz+"; callers must migrate to use of Application");
                 Constructor<?> constructor = itemAndClass.clazz.getConstructor();
-                ApplicationBuilder appBuilder = (ApplicationBuilder) constructor.newInstance();
+                org.apache.brooklyn.core.entity.factory.ApplicationBuilder appBuilder = (org.apache.brooklyn.core.entity.factory.ApplicationBuilder) constructor.newInstance();
                 if (!Strings.isEmpty(name)) appBuilder.appDisplayName(name);
                 if (entities.size() > 0)
                     log.warn("Cannot supply additional entities when using an ApplicationBuilder; ignoring in spec {}", spec);
@@ -342,7 +393,7 @@ public class BrooklynRestResourceUtils {
     }
 
     public Task<?> start(Application app, List<? extends Location> locations) {
-        return Entities.invokeEffector((EntityLocal)app, app, Startable.START,
+        return Entities.invokeEffector((Entity)app, app, Startable.START,
                 MutableMap.of("locations", locations));
     }
 
@@ -381,7 +432,8 @@ public class BrooklynRestResourceUtils {
         return result;
     }
     
-    protected void configureRenderingMetadata(ApplicationSpec spec, ApplicationBuilder appBuilder) {
+    @SuppressWarnings("deprecation")
+    protected void configureRenderingMetadata(ApplicationSpec spec, org.apache.brooklyn.core.entity.factory.ApplicationBuilder appBuilder) {
         appBuilder.configure(getRenderingConfigurationFor(spec.getType()));
     }
 
@@ -395,7 +447,7 @@ public class BrooklynRestResourceUtils {
 
     protected Map<?, ?> getRenderingConfigurationFor(String catalogId) {
         MutableMap<Object, Object> result = MutableMap.of();
-        CatalogItem<?,?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, catalogId);
+        RegisteredType item = mgmt.getTypeRegistry().get(catalogId);
         if (item==null) return result;
         
         result.addIfNotNull("iconUrl", item.getIconUrl());
@@ -527,7 +579,7 @@ public class BrooklynRestResourceUtils {
     
     public Iterable<Entity> descendantsOfAnyType(String application, String entity) {
         List<Entity> result = Lists.newArrayList();
-        EntityLocal e = getEntity(application, entity);
+        Entity e = getEntity(application, entity);
         gatherAllDescendants(e, result);
         return result;
     }
