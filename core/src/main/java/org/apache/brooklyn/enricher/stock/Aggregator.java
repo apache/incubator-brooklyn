@@ -33,7 +33,6 @@ import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.enricher.stock.Enrichers.ComputingAverage;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
@@ -103,7 +102,7 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected Function<? super Collection<?>, ?> lookupTransformation(String t1) {
         if ("average".equalsIgnoreCase(t1)) return new Enrichers.ComputingAverage(null, null, targetSensor.getTypeToken());
-        if ("sum".equalsIgnoreCase(t1)) return new Enrichers.ComputingAverage(null, null, targetSensor.getTypeToken());
+        if ("sum".equalsIgnoreCase(t1)) return new Enrichers.ComputingSum(null, null, targetSensor.getTypeToken());
         if ("list".equalsIgnoreCase(t1)) return new ComputingList();
         return null;
     }
