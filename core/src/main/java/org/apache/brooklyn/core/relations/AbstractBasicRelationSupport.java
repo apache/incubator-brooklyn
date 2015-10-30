@@ -21,10 +21,9 @@ package org.apache.brooklyn.core.relations;
 import java.util.Set;
 
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.relations.RelationshipType;
 import org.apache.brooklyn.core.entity.EntityRelations;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.RelationSupportInternal;
-
-import brooklyn.basic.relations.RelationshipType;
 
 /** This abstract impl delegates to {@link EntityRelations} for all changes, routing through a local backing store.
  * This allows us to make the changes in both directions simultaneously when a relationship is bi-directional,

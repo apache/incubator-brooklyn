@@ -28,13 +28,12 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.SubscriptionManager;
+import org.apache.brooklyn.api.relations.RelationshipType;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
-
-import brooklyn.basic.relations.RelationshipType;
 
 /**
  * Super-type of entity, location, policy and enricher.

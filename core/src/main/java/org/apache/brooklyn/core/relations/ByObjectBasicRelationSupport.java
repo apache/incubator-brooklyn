@@ -24,14 +24,13 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObject.RelationSupport;
+import org.apache.brooklyn.api.relations.RelationshipType;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 
 import com.google.common.base.Supplier;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-
-import brooklyn.basic.relations.RelationshipType;
 
 public class ByObjectBasicRelationSupport<SourceType extends BrooklynObject> extends AbstractBasicRelationSupport<SourceType> {
 

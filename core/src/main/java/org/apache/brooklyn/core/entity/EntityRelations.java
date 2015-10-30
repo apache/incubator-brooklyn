@@ -28,14 +28,13 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObject.RelationSupport;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.relations.RelationshipType;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.core.relations.AbstractBasicRelationSupport;
 import org.apache.brooklyn.core.relations.RelationshipTypes;
 import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.annotations.Beta;
-
-import brooklyn.basic.relations.RelationshipType;
 
 /** TODO these relations are not used yet; see issue where this is introduced and email thread */
 @Beta

@@ -26,6 +26,7 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.Memento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
+import org.apache.brooklyn.api.relations.RelationshipType;
 import org.apache.brooklyn.core.entity.EntityRelations;
 import org.apache.brooklyn.core.mgmt.rebind.dto.MementosGenerators;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
@@ -33,8 +34,6 @@ import org.apache.brooklyn.core.objs.AbstractEntityAdjunct.AdjunctTagSupport;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import brooklyn.basic.relations.RelationshipType;
 
 public abstract class AbstractBrooklynObjectRebindSupport<T extends Memento> implements RebindSupport<T> {
 
