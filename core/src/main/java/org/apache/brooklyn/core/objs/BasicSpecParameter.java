@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynType;
@@ -154,6 +155,7 @@ public class BasicSpecParameter<T> implements SpecParameter<T>{
                 .put("float", Float.class)
                 .put("double", Double.class)
                 .put("timestamp", Date.class)
+                .put("port", PortRange.class)
                 .build();
 
         private static final Map<String, Predicate<?>> BUILT_IN_CONSTRAINTS = ImmutableMap.<String, Predicate<?>>of(
