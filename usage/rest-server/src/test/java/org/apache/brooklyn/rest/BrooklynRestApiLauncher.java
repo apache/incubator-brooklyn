@@ -72,6 +72,7 @@ import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import org.eclipse.jetty.server.NetworkConnector;
 import org.apache.brooklyn.rest.filter.SwaggerFilter;
+import org.eclipse.jetty.server.NetworkConnector;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>

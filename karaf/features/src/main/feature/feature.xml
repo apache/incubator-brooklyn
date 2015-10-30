@@ -70,8 +70,9 @@
         <!-- TODO: jersey osgi feature -->
         <bundle dependency="true">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
         <bundle dependency="true">mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
-        <!--<bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet-api.version}</bundle>-->
-        <bundle dependency="true">mvn:org.eclipse.jetty.orbit/javax.servlet/${jetty-orbit-javax-servlet.version}</bundle>
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
+        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
 
     </feature>
 
@@ -94,6 +95,7 @@
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
 
+        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
     </feature>
 
     <feature name="brooklyn-api"  version="${project.version}" description="Brooklyn API">
@@ -136,6 +138,38 @@
         <bundle dependency="true">wrap:mvn:xpp3/xpp3_min/1.1.4c</bundle> <!-- from com.thoughtworks.xstream/xstream -->
 
         <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.reflections/${reflections.bundle.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-camp-brooklyn" version="${project.version}" description="Brooklyn CAMP REST API">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-camp/${project.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-camp-base" version="${project.version}" description="Brooklyn CAMP Base">
+        <bundle>mvn:org.apache.brooklyn.camp/camp-base/${project.version}</bundle>
+
+        <feature>brooklyn-utils-common</feature>
+        <bundle dependency="true">mvn:org.apache.commons/commons-compress/${commons-compress.version}</bundle>
+        <bundle dependency="true">wrap:mvn:org.tukaani/xz/${commons-compress.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-camp-server" version="${project.version}" description="Brooklyn CAMP Server">
+        <bundle>mvn:org.apache.brooklyn.camp/camp-server/${project.version}</bundle>
+
+        <feature>brooklyn-camp-base</feature>
+        <feature>brooklyn-utils-rest-swagger</feature>
+        <feature>jetty</feature> <!-- TODO: pax-jetty??? -->
+
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
+    </feature>
+
+
+
+    <feature name="brooklyn-rest-server" version="${project.version}" description="Brooklyn REST Server">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-server/${project.version}</bundle>
+        <feature>brooklyn-core</feature>
+        <feature>brooklyn-rest-api</feature>
+
     </feature>
   
     <feature name="brooklyn-commands"  version="${project.version}"  description="Brooklyn Shell Commands">
