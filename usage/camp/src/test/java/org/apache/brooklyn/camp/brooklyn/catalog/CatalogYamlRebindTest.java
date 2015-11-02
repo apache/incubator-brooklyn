@@ -191,7 +191,11 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
                 addCatalogItems(String.format(locCatalogFormat, locVersion));
                 break;
             case STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM:
-                // nothing here -- but below we rebind with these fields removed to ensure that we can rebind
+                // set everything false -- then below we rebind with these fields removed to ensure that we can rebind
+                CatalogUtils.setDeprecated(mgmt(), appSymbolicName, appVersion, false);
+                CatalogUtils.setDeprecated(mgmt(), locSymbolicName, locVersion, false);
+                CatalogUtils.setDisabled(mgmt(), appSymbolicName, appVersion, false);
+                CatalogUtils.setDisabled(mgmt(), locSymbolicName, locVersion, false);
                 break;
             case NO_OP:
                 break; // no-op

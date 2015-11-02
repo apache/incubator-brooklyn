@@ -31,6 +31,6 @@ public interface OsgiBundleWithUrl {
     
     /** @return true if we have a name and version for this bundle;
      * false if not, e.g. if we only know the URL and we haven't loaded it yet */
-    public boolean isFullDetailKnown();
+    public boolean isNameResolved();
 
 }

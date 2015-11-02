@@ -171,7 +171,7 @@ public class OsgiManager {
     }
 
     public static boolean isBundleNameEqualOrAbsent(CatalogBundle bundle, Bundle b) {
-        return !bundle.isFullDetailKnown() ||
+        return !bundle.isNameResolved() ||
                 (bundle.getSymbolicName().equals(b.getSymbolicName()) &&
                 bundle.getVersion().equals(b.getVersion().toString()));
     }

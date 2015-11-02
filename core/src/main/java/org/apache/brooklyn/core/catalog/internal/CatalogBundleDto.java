@@ -44,12 +44,12 @@ public class CatalogBundleDto implements CatalogBundle {
     }
 
     @Override
-    public boolean isFullDetailKnown() {
+    public boolean isNameResolved() {
         return symbolicName != null && version != null;
     }
     
     @Override
-    public boolean isNamed() { return isFullDetailKnown(); }
+    public boolean isNamed() { return isNameResolved(); }
 
     @Override
     public String getSymbolicName() {

@@ -47,14 +47,14 @@ public class BasicOsgiBundleWithUrl implements CatalogBundle, OsgiBundleWithUrl 
     }
 
     @Override
-    public boolean isFullDetailKnown() {
+    public boolean isNameResolved() {
         return symbolicName != null && version != null;
     }
     
     @Override
     @Deprecated //see super
     public boolean isNamed() {
-        return isFullDetailKnown();
+        return isNameResolved();
     }
 
     @Override

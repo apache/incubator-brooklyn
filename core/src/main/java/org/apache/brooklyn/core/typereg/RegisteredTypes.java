@@ -22,15 +22,15 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
-import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableList;
 
 public class RegisteredTypes {
 
@@ -58,7 +58,7 @@ public class RegisteredTypes {
         
         RegisteredSpecType type = new RegisteredSpecType(item.getSymbolicName(), item.getVersion(),
             item.getCatalogItemJavaType(), impl);
-        type.bundles = MutableList.<OsgiBundleWithUrl>copyOf(item.getLibraries());
+        type.bundles = item.getLibraries()==null ? ImmutableList.<OsgiBundleWithUrl>of() : ImmutableList.<OsgiBundleWithUrl>copyOf(item.getLibraries());
         type.displayName = item.getDisplayName();
         type.description = item.getDescription();
         type.iconUrl = item.getIconUrl();
@@ -76,8 +76,9 @@ public class RegisteredTypes {
         public T visit(RegisteredType type) {
             if (type==null) throw new NullPointerException("Registered type must not be null");
             if (type instanceof RegisteredSpecType) {
-                visitSpec((RegisteredSpecType)type);
+                return visitSpec((RegisteredSpecType)type);
             }
+            // others go here
             throw new IllegalStateException("Unexpected registered type: "+type.getClass());
         }
 

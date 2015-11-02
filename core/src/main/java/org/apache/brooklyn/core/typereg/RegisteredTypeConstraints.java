@@ -22,6 +22,8 @@ import groovy.xml.Entity;
 
 import java.util.Set;
 
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.objs.BrooklynObject;
@@ -38,6 +40,7 @@ public class RegisteredTypeConstraints {
 
     private static final Logger log = LoggerFactory.getLogger(RegisteredTypeConstraints.BasicRegisteredTypeConstraint.class);
     
+    /** Immutable (from caller's perspective) record of a constraint */
     public final static class BasicRegisteredTypeConstraint implements RegisteredTypeConstraint {
         private RegisteredTypeKind kind;
         private Class<?> javaSuperType;
@@ -45,7 +48,7 @@ public class RegisteredTypeConstraints {
         
         private BasicRegisteredTypeConstraint() {}
         
-        public BasicRegisteredTypeConstraint(RegisteredTypeConstraint source) {
+        public BasicRegisteredTypeConstraint(@Nullable RegisteredTypeConstraint source) {
             if (source==null) return;
             
             this.kind = source.getKind();
@@ -83,13 +86,14 @@ public class RegisteredTypeConstraints {
 
     public static RegisteredTypeConstraint alreadyVisited(Set<String> encounteredTypeSymbolicNames) {
         BasicRegisteredTypeConstraint result = new BasicRegisteredTypeConstraint();
-        result.encounteredTypes = encounteredTypeSymbolicNames;
+        result.encounteredTypes = encounteredTypeSymbolicNames == null ? ImmutableSet.<String>of() : ImmutableSet.copyOf(encounteredTypeSymbolicNames);
         return result;
     }
     public static RegisteredTypeConstraint alreadyVisited(Set<String> encounteredTypeSymbolicNames, String anotherEncounteredType) {
         BasicRegisteredTypeConstraint result = new BasicRegisteredTypeConstraint();
-        result.encounteredTypes = MutableSet.copyOf(encounteredTypeSymbolicNames);
-        if (anotherEncounteredType!=null) result.encounteredTypes.add(anotherEncounteredType);
+        MutableSet<String> encounteredTypes = MutableSet.copyOf(encounteredTypeSymbolicNames);
+        encounteredTypes.addIfNotNull(anotherEncounteredType);
+        result.encounteredTypes = encounteredTypes.asUnmodifiable();
         return result;
     }
     

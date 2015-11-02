@@ -41,7 +41,7 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     }
     
     public static interface CatalogBundle extends OsgiBundleWithUrl {
-        /** @deprecated since 0.9.0, use {@link #isFullDetailKnown()} */
+        /** @deprecated since 0.9.0, use {@link #isNameResolved()} */
         public boolean isNamed();
     }
 
@@ -70,7 +70,8 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     /** @return The type of the spec e.g. EntitySpec corresponding to {@link #getCatalogItemJavaType()} */
     public Class<SpecT> getSpecType();
     
-    /** @return The underlying java type of the item represented, or null if not known (e.g. if it comes from yaml) */
+    /** @return The underlying java type of the item represented, if not described via a YAML spec.
+     * Normally null (and the type comes from yaml). */
     @Nullable public String getJavaType();
 
     /** @deprecated since 0.7.0. Use {@link #getDisplayName} */

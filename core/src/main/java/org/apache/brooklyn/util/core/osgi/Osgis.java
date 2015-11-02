@@ -133,7 +133,7 @@ public class Osgis {
         }
 
         public BundleFinder bundle(CatalogBundle bundle) {
-            if (bundle.isFullDetailKnown()) {
+            if (bundle.isNameResolved()) {
                 symbolicName(bundle.getSymbolicName());
                 version(bundle.getVersion());
             }

@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
  * with structure, only a single type.
  */
 public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(JavaCatalogToSpecTransformer.class);
 
     private ManagementContext mgmt;
@@ -73,8 +72,12 @@ public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
     public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(
             CatalogItem<T, SpecT> item, Set<String> encounteredTypes) throws PlanNotRecognizedException {
         if (item.getJavaType() != null) {
+            log.warn("Deprecated functionality (since 0.9.0). Using old-style xml catalog items with java type attribute for " + item);
             Class<?> type;
             try {
+                // java types were deprecated before we added osgi support so this isn't necessary,
+                // but it doesn't hurt (and if we re-instate a class+bundle approach for RegisteredType 
+                // we will want to do this)
                 type = CatalogUtils.newClassLoadingContext(mgmt, item).loadClass(item.getJavaType());
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);

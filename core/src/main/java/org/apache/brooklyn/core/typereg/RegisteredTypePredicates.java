@@ -67,15 +67,6 @@ public class RegisteredTypePredicates {
         }
     }
 
-    @SuppressWarnings("unused")
-    private static final Function<RegisteredType,String> ID_OF_ITEM_TRANSFORMER_ANONYMOUS = new Function<RegisteredType, String>() {
-        @Override @Nullable
-        public String apply(@Nullable RegisteredType input) {
-            if (input==null) return null;
-            return input.getId();
-        }
-    };
-
     public static final Function<RegisteredType,String> ID_OF_ITEM_TRANSFORMER = new IdOfItemTransformer();
     
     private static class IdOfItemTransformer implements Function<RegisteredType,String> {

@@ -145,7 +145,7 @@ public class BrooklynRestResourceUtils {
     public Entity getEntity(String application, String entity) {
         if (entity==null) return null;
         Application app = application!=null ? getApplication(application) : null;
-        Entity e = (Entity) mgmt.getEntityManager().getEntity(entity);
+        Entity e = mgmt.getEntityManager().getEntity(entity);
         
         if (e!=null) {
             if (!Entitlements.isEntitled(mgmt.getEntitlementManager(), Entitlements.SEE_ENTITY, e)) {
@@ -201,10 +201,10 @@ public class BrooklynRestResourceUtils {
      * an entity matching the given ID or name; returns the first such entity, or null if none found
      **/
     public Entity searchForEntityNamed(Entity root, String entity) {
-        if (root.getId().equals(entity) || entity.equals(root.getDisplayName())) return (Entity) root;
+        if (root.getId().equals(entity) || entity.equals(root.getDisplayName())) return root;
         for (Entity child: root.getChildren()) {
             Entity result = searchForEntityNamed(child, entity);
-            if (result!=null) return (Entity) result;
+            if (result!=null) return result;
         }
         return null;
     }
@@ -393,7 +393,7 @@ public class BrooklynRestResourceUtils {
     }
 
     public Task<?> start(Application app, List<? extends Location> locations) {
-        return Entities.invokeEffector((Entity)app, app, Startable.START,
+        return Entities.invokeEffector(app, app, Startable.START,
                 MutableMap.of("locations", locations));
     }
 
