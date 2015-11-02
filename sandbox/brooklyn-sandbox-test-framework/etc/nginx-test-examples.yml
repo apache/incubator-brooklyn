@@ -1,0 +1,98 @@
+---
+# 1. Start an nginx
+# 2. Test it is running
+# 3. Stop it
+# 4. Test it stopped
+# Note there are two alternative forms to look up target - either just provide the 'targetId' to do an implicit DSL lookup,
+# or look it up with explicit DSL and provide it as 'target'.
+name: NGINX Test
+location: localhost
+services:
+- type: org.apache.brooklyn.test.framework.TestCase
+  name: Stop Test
+  brooklyn.children:
+  - type: org.apache.brooklyn.entity.proxy.nginx.NginxController
+    id: nginx1
+  - type: org.apache.brooklyn.test.framework.TestSensor
+    target: $brooklyn:component("nginx1")
+    sensor: service.isUp
+    equals: true
+    timeout: 5m
+  - type: org.apache.brooklyn.test.framework.TestEffector
+    target: $brooklyn:component("nginx1")
+    effector: stop
+  - type: org.apache.brooklyn.test.framework.TestSensor
+    target: $brooklyn:component("nginx1")
+    sensor: service.isUp
+    assert:
+      equals: false
+...
+
+---
+name: NGINX Test
+location: localhost
+services:
+- type: org.apache.brooklyn.test.framework.TestCase
+  name: Stop Test
+  targetId: nginx1
+  brooklyn.children:
+  - type: org.apache.brooklyn.entity.proxy.nginx.NginxController
+    id: nginx1
+  - type: org.apache.brooklyn.test.framework.TestSensor
+    sensor: service.isUp
+    equals: true
+    timeout: 5m
+  - type: org.apache.brooklyn.test.framework.TestEffector
+    effector: stop
+  - type: org.apache.brooklyn.test.framework.TestSensor
+    sensor: service.isUp
+    equals: false
+
+
+
+---
+name: NGINX Test
+location: localhost
+services:
+- type: org.apache.brooklyn.test.framework.TestCase
+  name: Stop Test
+  brooklyn.children:
+  - type: org.apache.brooklyn.entity.proxy.nginx.NginxController
+    id: nginx1
+  - type: org.apache.brooklyn.test.framework.TestSensor
+    target: $brooklyn:component("nginx1")
+    sensor: service.isUp
+    timeout: 5m
+    assert:
+      equals: true
+  - type: org.apache.brooklyn.test.framework.TestEffector
+    target: $brooklyn:component("nginx1")
+    effector: stop
+  - type: org.apache.brooklyn.test.framework.TestSensor
+    target: $brooklyn:component("nginx1")
+    sensor: service.isUp
+    assert:
+      equals: false
+      regex: .*
+...
+
+---
+name: NGINX Test
+location: localhost
+services:
+- type: org.apache.brooklyn.entity.proxy.nginx.NginxController
+  id: nginx1
+- type: org.apache.brooklyn.test.framework.TestSensor
+  target: $brooklyn:component("nginx1")
+  sensor: service.isUp
+  timeout: 5m
+  assert:
+    equals: true
+- type: org.apache.brooklyn.test.framework.TestSensor
+  name: Test Regex
+  target: $brooklyn:component("nginx1")
+  sensor: service.isUp
+  timeout: 5m
+  assert:
+    regex: .*
+...

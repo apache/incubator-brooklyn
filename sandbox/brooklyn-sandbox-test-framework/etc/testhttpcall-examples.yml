@@ -1,0 +1,34 @@
+---
+name: Basic HTTP Call Tests
+location: localhost
+services:
+- type: org.apache.brooklyn.test.framework.TestCase
+  brooklyn.children:
+  - type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+    id: tomcat
+    brooklyn.config:
+      war: "http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war"
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Status Code 200
+    url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    assert:
+      status: 200
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Status Code 404
+    url: $brooklyn:formatString("%s/invalidpath/", component("tomcat").attributeWhenReady("main.uri"))
+    assert:
+      status: 404
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: String match
+    url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    assert:
+      string: Sample Brooklyn Deployed
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Regex match
+    url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    # the regex assert uses java.lang.String under the hood so if the url is expected to returns
+    # a multi-line response you should use the embedded dotall flag expression `(?s)` in your regex.
+    # See: http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+    assert:
+      regex: "(?s).*illustrate(\\s)*how(\\s)*web(\\s)*applications.*"
+...
