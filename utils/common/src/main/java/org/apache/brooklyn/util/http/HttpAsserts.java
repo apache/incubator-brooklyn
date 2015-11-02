@@ -242,6 +242,15 @@ public class HttpAsserts {
         });
     }
 
+    public static void assertContentEventuallyMatches(Map<String,?> flags, final String url, final String regex) {
+        Asserts.succeedsEventually(flags, new Runnable() {
+            @Override
+            public void run() {
+                assertContentMatches(url, regex);
+            }
+        });
+    }
+
 
 
     /**
