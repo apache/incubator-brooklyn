@@ -22,6 +22,7 @@ import groovy.xml.Entity;
 
 import java.util.Set;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -42,9 +43,9 @@ public class RegisteredTypeConstraints {
     
     /** Immutable (from caller's perspective) record of a constraint */
     public final static class BasicRegisteredTypeConstraint implements RegisteredTypeConstraint {
-        private RegisteredTypeKind kind;
-        private Class<?> javaSuperType;
-        private Set<String> encounteredTypes;
+        @Nullable private RegisteredTypeKind kind;
+        @Nullable private Class<?> javaSuperType;
+        @Nonnull private Set<String> encounteredTypes = ImmutableSet.of();
         
         private BasicRegisteredTypeConstraint() {}
         
@@ -108,7 +109,7 @@ public class RegisteredTypeConstraints {
         return of(RegisteredTypeKind.SPEC, javaSuperType);
     }
 
-    public static <T extends AbstractBrooklynObjectSpec<?,?>> RegisteredTypeConstraint extendedWithSpecSuperType(RegisteredTypeConstraint source, Class<T> specSuperType) {
+    public static <T extends AbstractBrooklynObjectSpec<?,?>> RegisteredTypeConstraint extendedWithSpecSuperType(@Nullable RegisteredTypeConstraint source, @Nullable Class<T> specSuperType) {
         Class<?> superType = lookupTargetTypeForSpec(specSuperType);
         BasicRegisteredTypeConstraint constraint = new BasicRegisteredTypeConstraint(source);
         if (source==null) source = constraint;

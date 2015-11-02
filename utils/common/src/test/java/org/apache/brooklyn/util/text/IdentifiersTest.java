@@ -86,4 +86,10 @@ public class IdentifiersTest {
         log.info("ID's made from hash, of -1 is "+id1+" and of Long.MIN_VALUE is "+Identifiers.makeIdFromHash(Long.MIN_VALUE));
     }
 
+    @Test
+    public void testJavaClassRegex() {
+        Assert.assertTrue("foo".matches(Identifiers.JAVA_BINARY_REGEX));
+        Assert.assertTrue("foo.bar.Baz$1".matches(Identifiers.JAVA_BINARY_REGEX));
+    }
+    
 }

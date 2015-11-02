@@ -29,10 +29,13 @@ import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.typereg.RegisteredTypes.RegisteredSpecType;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.api.client.util.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
@@ -96,8 +99,9 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
     @SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
     @Override
     public <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeConstraint constraint, Class<SpecT> specSuperType) {
-        if (!(type instanceof RegisteredSpecType)) { 
-            throw new IllegalStateException("Cannot create spec from type "+type);
+        Preconditions.checkNotNull(type, "type");
+        if (type.getKind()!=RegisteredTypeKind.SPEC) { 
+            throw new IllegalStateException("Cannot create spec from type "+type+" (kind "+type.getKind()+")");
         }
         if (constraint!=null) {
             if (constraint.getKind()!=null && constraint.getKind()!=RegisteredTypeKind.SPEC) {
@@ -110,11 +114,28 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         }
         constraint = RegisteredTypeConstraints.extendedWithSpecSuperType(constraint, specSuperType);
 
-        // TODO look up in the actual registry
+        Maybe<Object> result = TypePlanTransformers.transform(mgmt, type, constraint);
+        if (result.isPresent()) return (SpecT) result.get();
         
         // fallback: look up in (legacy) catalog
+        // TODO remove once all transformers are available in the new style
         CatalogItem item = (CatalogItem) mgmt.getCatalog().getCatalogItem(type.getSymbolicName(), type.getVersion());
-        return (SpecT) BasicBrooklynCatalog.internalCreateSpecWithTransformers(mgmt, item, constraint.getEncounteredTypes());
+        try {
+            return (SpecT) BasicBrooklynCatalog.internalCreateSpecWithTransformers(mgmt, item, constraint.getEncounteredTypes());
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            // for now, combine this failure with the original
+            try {
+                result.get();
+                // won't come here
+                throw new IllegalStateException("should have failed getting type resolution for "+type);
+            } catch (Exception e0) {
+                // prefer older exception, until the new transformer is the primary pathway
+                throw Exceptions.create("Unable to instantiate "+type, MutableList.of(e, e0));
+            }
+            // ultimately swallow the legacy failure, return the original failure (the call below will throw because result is absent)
+//            return (SpecT) result.get();
+        }
     }
 
 }

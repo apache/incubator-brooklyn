@@ -16,27 +16,21 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.plan;
+package org.apache.brooklyn.core.typereg;
 
-import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
-import org.apache.brooklyn.core.typereg.UnsupportedTypePlanException;
+public class UnsupportedTypePlanException extends RuntimeException {
 
-/** @deprecated since 0.9.0 use {@link UnsupportedTypePlanException} as part of switch to {@link BrooklynTypePlanTransformer} */
-@Deprecated 
-public class PlanNotRecognizedException extends RuntimeException {
-
-    /** {@link UnsupportedTypePlanException} */
     private static final long serialVersionUID = -5590108442839125317L;
 
-    public PlanNotRecognizedException(String message, Throwable cause) {
+    public UnsupportedTypePlanException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public PlanNotRecognizedException(String message) {
+    public UnsupportedTypePlanException(String message) {
         super(message);
     }
 
-    public PlanNotRecognizedException(Throwable cause) {
+    public UnsupportedTypePlanException(Throwable cause) {
         super(cause);
     }
 

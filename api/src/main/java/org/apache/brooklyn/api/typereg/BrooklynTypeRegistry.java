@@ -33,10 +33,10 @@ public interface BrooklynTypeRegistry {
         /** a registered type which will create an {@link AbstractBrooklynObjectSpec} (e.g. {@link EntitySpec}) 
          * for the type registered (e.g. the {@link Entity} instance) */
         SPEC,
-        // TODO
-//        BEAN 
-        
-        // NB: additional kinds should have the Visitor in RegisteredTypes updated
+        /** a registered type which will create the java type described */
+        BEAN 
+        // note: additional kinds should have the visitor in core/RegisteredTypeKindVisitor updated
+        // to flush out all places which want to implement support for all kinds 
     }
     
     Iterable<RegisteredType> getAll();

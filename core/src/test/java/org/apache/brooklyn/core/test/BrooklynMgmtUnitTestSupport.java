@@ -18,33 +18,41 @@
  */
 package org.apache.brooklyn.core.test;
 
-import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 /**
- * To be extended by live tests.
+ * To be extended by unit/integration tests.
  * <p>
- * Uses a management context that will not load {@code ~/.brooklyn/catalog.xml} but will
- * read from the default {@code ~/.brooklyn/brooklyn.properties}.
+ * Uses a light-weight management context that will not read {@code ~/.brooklyn/brooklyn.properties}.
  */
-public class BrooklynAppLiveTestSupport extends BrooklynMgmtUnitTestSupport {
+public class BrooklynMgmtUnitTestSupport {
 
-    protected TestApplication app;
+    private static final Logger LOG = LoggerFactory.getLogger(BrooklynMgmtUnitTestSupport.class);
+
+    protected ManagementContextInternal mgmt;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        if (mgmt!=null) {
-            app = mgmt.getEntityManager().createEntity(newAppSpec());
-        } else {
-            mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
-            app = mgmt.getEntityManager().createEntity(newAppSpec());
+        if (mgmt == null) {
+            mgmt = LocalManagementContextForTests.newInstance();
         }
     }
 
-    protected EntitySpec<? extends TestApplication> newAppSpec() {
-        return EntitySpec.create(TestApplication.class);
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() throws Exception {
+        try {
+            if (mgmt != null) Entities.destroyAll(mgmt);
+        } catch (Throwable t) {
+            LOG.error("Caught exception in tearDown method", t);
+        } finally {
+            mgmt = null;
+        }
     }
+
 }

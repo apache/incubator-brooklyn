@@ -20,14 +20,20 @@ package org.apache.brooklyn.api.typereg;
 
 import java.util.Collection;
 
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.objs.Identifiable;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
+
+import com.google.common.annotations.Beta;
 
 public interface RegisteredType extends Identifiable {
     
-    @Override
-    String getId();
+    @Override String getId();
+    
+    RegisteredTypeKind getKind();
     
     String getSymbolicName();
     String getVersion();
@@ -48,9 +54,12 @@ public interface RegisteredType extends Identifiable {
      * such as if the concrete type is private and callers should know only about a particular public interface,
      * or if precise type details are unavailable and all that is known at creation is some higher level interface/supertype
      * (e.g. this may return {@link Entity} even though the spec points at a specific subclass,
-     * for instance because the YAML has not yet been parsed or OSGi bundles downloaded). 
+     * for instance because the YAML has not yet been parsed or OSGi bundles downloaded).
+     * <p>
+     * If nothing is known, this will return null, and the item will not participate in type filtering.
      */
-    Class<?> getJavaType();
+    @Beta
+    @Nullable Class<?> getJavaType();
 
     /**
      * @return True if the item has been deprecated (i.e. its use is discouraged)
@@ -61,5 +70,19 @@ public interface RegisteredType extends Identifiable {
      * @return True if the item has been disabled (i.e. its use is forbidden, except for pre-existing apps)
      */
     boolean isDisabled();
+
+    /** @return implementation details, so that the framework can find a suitable {@link BrooklynTypePlanTransformer} 
+     * which can then use this object to instantiate this type */
+    TypeImplementationPlan getPlan();
+    
+    public interface TypeImplementationPlan {
+        /** hint which {@link BrooklynTypePlanTransformer} instance(s) can be used, if known;
+         * this may be null if the relevant transformer was not declared when created,
+         * but in general we should look to determine the kind as early as possible 
+         * and use that to retrieve the appropriate such transformer */
+        String getPlanFormat();
+        /** data for the implementation; may be more specific */
+        Object getPlanData();
+    }
     
 }

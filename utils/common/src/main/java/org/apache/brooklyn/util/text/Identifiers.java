@@ -26,6 +26,9 @@ public class Identifiers {
     
     public static final String JAVA_GOOD_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
     public static final String JAVA_GOOD_NONSTART_CHARS = JAVA_GOOD_START_CHARS+"1234567890";
+    public static final String JAVA_SEGMENT_REGEX = "["+JAVA_GOOD_START_CHARS+"]"+"["+JAVA_GOOD_NONSTART_CHARS+"]*";
+    public static final String JAVA_PACKAGE_OR_CLASS_REGEX = "("+JAVA_SEGMENT_REGEX+"\\."+")*"+JAVA_SEGMENT_REGEX;
+    public static final String JAVA_BINARY_REGEX = JAVA_PACKAGE_OR_CLASS_REGEX+"(\\$["+JAVA_GOOD_NONSTART_CHARS+"]+)*";
     
     public static final String JAVA_GENERATED_IDENTIFIER_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     public static final String JAVA_GENERATED_IDENTIFIERNONSTART_CHARS = JAVA_GENERATED_IDENTIFIER_START_CHARS+"1234567890";

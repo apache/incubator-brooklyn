@@ -26,13 +26,14 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
+import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
 
 import com.google.common.annotations.Beta;
 
 /** Pluggable {@link ServiceLoader} interface for different plan-interpreters,
  * that is, different ways of taking an application plan and returning an {@link EntitySpec},
  * and a {@link CatalogItem} and returning an {@link AbstractBrooklynObjectSpec}.
- */
+ * @deprecated since 0.9.0 use {@link BrooklynTypePlanTransformer} */
 @Beta
 public interface PlanToSpecTransformer extends ManagementContextInjectable {
     

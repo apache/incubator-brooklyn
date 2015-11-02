@@ -41,5 +41,5 @@ public interface RegisteredTypeConstraint {
     /** encountered types, so that during resolution, 
      * if we have already attempted to resolve a given type,
      * the instantiator can avoid recursive cycles */
-    public Set<String> getEncounteredTypes();
+    @Nonnull public Set<String> getEncounteredTypes();
 }

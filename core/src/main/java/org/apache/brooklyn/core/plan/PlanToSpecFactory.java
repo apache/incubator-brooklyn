@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.ServiceLoader;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
+import org.apache.brooklyn.core.typereg.TypePlanTransformers;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -36,6 +38,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
+/** @deprecated since 0.9.0 use {@link TypePlanTransformers} as part of switch to {@link BrooklynTypePlanTransformer} */
+@Deprecated 
 public class PlanToSpecFactory {
     
     private static final Logger log = LoggerFactory.getLogger(PlanToSpecFactory.class);
