@@ -39,7 +39,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 
-import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -52,7 +51,6 @@ import org.testng.Assert;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -176,10 +174,10 @@ public class HttpTestUtils {
     }
 
     public static void assertUrlUnreachableEventually(final String url) {
-        assertUrlUnreachableEventually(Maps.newLinkedHashMap(), url);
+        assertUrlUnreachableEventually(MutableMap.<String, Object>of(), url);
     }
     
-    public static void assertUrlUnreachableEventually(Map flags, final String url) {
+    public static void assertUrlUnreachableEventually(Map<String,?> flags, final String url) {
         Asserts.succeedsEventually(flags, new Runnable() {
             public void run() {
                 assertUrlUnreachable(url);
@@ -205,10 +203,10 @@ public class HttpTestUtils {
     }
 
     public static void assertHttpStatusCodeEventuallyEquals(final String url, final int expectedCode) {
-        assertHttpStatusCodeEventuallyEquals(Maps.newLinkedHashMap(),  url, expectedCode);
+        assertHttpStatusCodeEventuallyEquals(MutableMap.<String, Object>of(),  url, expectedCode);
     }
 
-    public static void assertHttpStatusCodeEventuallyEquals(Map flags, final String url, final int expectedCode) {
+    public static void assertHttpStatusCodeEventuallyEquals(Map<String,?> flags, final String url, final int expectedCode) {
         Asserts.succeedsEventually(flags, new Runnable() {
             public void run() {
                 assertHttpStatusCodeEquals(url, expectedCode);
@@ -278,10 +276,10 @@ public class HttpTestUtils {
     }
     
     public static void assertContentEventuallyContainsText(final String url, final String phrase, final String ...additionalPhrases) {
-        assertContentEventuallyContainsText(MutableMap.of(), url, phrase, additionalPhrases);
+        assertContentEventuallyContainsText(MutableMap.<String, Object>of(), url, phrase, additionalPhrases);
     }
     
-    public static void assertContentEventuallyContainsText(Map flags, final String url, final String phrase, final String ...additionalPhrases) {
+    public static void assertContentEventuallyContainsText(Map<String,?> flags, final String url, final String phrase, final String ...additionalPhrases) {
         Asserts.succeedsEventually(flags, new Runnable() {
             public void run() {
                 assertContentContainsText(url, phrase, additionalPhrases);
@@ -296,7 +294,11 @@ public class HttpTestUtils {
     }
 
     public static void assertContentEventuallyMatches(final String url, final String regex) {
-        Asserts.succeedsEventually(new Runnable() {
+        assertContentEventuallyMatches(MutableMap.<String, Object>of(), url, regex);
+    }
+
+    public static void assertContentEventuallyMatches(Map<String,?> flags, final String url, final String regex) {
+        Asserts.succeedsEventually(flags, new Runnable() {
             @Override
             public void run() {
                 assertContentMatches(url, regex);
