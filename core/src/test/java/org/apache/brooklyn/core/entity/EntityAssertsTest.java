@@ -211,7 +211,7 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
     @Test
     public void shouldAssertAttributeNever() {
         entity.sensors().set(TestEntity.NAME, "ever");
-        EntityAsserts.assertAttributeNever(ImmutableMap.of("timeout", "5s"), entity, TestEntity.NAME, "after");
+        EntityAsserts.assertAttributeContinuallyNotEqualTo(ImmutableMap.of("timeout", "5s"), entity, TestEntity.NAME, "after");
     }
 
 }

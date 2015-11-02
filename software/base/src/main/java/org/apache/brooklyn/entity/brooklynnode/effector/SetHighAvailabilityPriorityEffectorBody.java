@@ -25,7 +25,7 @@ import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.entity.brooklynnode.EntityHttpClient;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityPriorityEffector;
 import org.apache.brooklyn.util.core.config.ConfigBag;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.http.HttpStatus;
 
 import com.google.common.base.Preconditions;

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.util.core.http;
+package org.apache.brooklyn.util.http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.feed.http.HttpPollValue;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.time.Duration;
@@ -43,7 +42,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 
-public class HttpToolResponse implements HttpPollValue {
+public class HttpToolResponse {
 
     private static final Logger log = LoggerFactory.getLogger(HttpToolResponse.class);
     

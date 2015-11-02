@@ -37,8 +37,8 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.brooklyn.util.time.Time;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

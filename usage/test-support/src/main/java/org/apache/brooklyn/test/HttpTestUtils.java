@@ -61,7 +61,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * 
  * @author aled
  *
- * @deprecated Prefer org.apache.brooklyn.util.http.HttpUtils which has no TestNG dependencies.
+ * @deprecated Prefer org.apache.brooklyn.util.http.HttpAsserts which has no TestNG dependencies.
  */
 @Deprecated
 public class HttpTestUtils {

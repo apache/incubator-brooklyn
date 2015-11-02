@@ -29,7 +29,7 @@ import org.apache.brooklyn.entity.brooklynnode.BrooklynNode.SetHighAvailabilityM
 import org.apache.brooklyn.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.feed.http.JsonFunctions;
 import org.apache.brooklyn.util.core.config.ConfigBag;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.javalang.Enums;
 import org.apache.http.HttpStatus;

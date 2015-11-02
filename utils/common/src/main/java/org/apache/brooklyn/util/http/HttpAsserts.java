@@ -56,66 +56,12 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * 
  * @author aled
  */
-public class HttpUtils {
+public class HttpAsserts {
 
     // TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
     // and deprecate methods in TestUtils until deleted).
 
-    private static final Logger LOG = LoggerFactory.getLogger(HttpUtils.class);
-
-    static final ExecutorService executor = Executors.newCachedThreadPool();
-    
-    /**
-     * Connects to the given url and returns the connection.
-     * Caller should {@code connection.getInputStream().close()} the result of this
-     * (especially if they are making heavy use of this method).
-     */
-    public static URLConnection connectToUrl(String u) throws Exception {
-        final URL url = new URL(u);
-        final AtomicReference<Exception> exception = new AtomicReference<Exception>();
-        
-        // sometimes openConnection hangs, so run in background
-        Future<URLConnection> f = executor.submit(new Callable<URLConnection>() {
-            public URLConnection call() {
-                try {
-                    HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-                        @Override public boolean verify(String s, SSLSession sslSession) {
-                            return true;
-                        }
-                    });
-                    URLConnection connection = url.openConnection();
-                    TrustingSslSocketFactory.configure(connection);
-                    connection.connect();
-    
-                    connection.getContentLength(); // Make sure the connection is made.
-                    return connection;
-                } catch (Exception e) {
-                    exception.set(e);
-                    LOG.debug("Error connecting to url "+url+" (propagating): "+e, e);
-                }
-                return null;
-            }
-        });
-        try {
-            URLConnection result = null;
-            try {
-                result = f.get(60, TimeUnit.SECONDS);
-            } catch (InterruptedException e) {
-                throw e;
-            } catch (Exception e) {
-                LOG.debug("Error connecting to url "+url+", probably timed out (rethrowing): "+e);
-                throw new IllegalStateException("Connect to URL not complete within 60 seconds, for url "+url+": "+e);
-            }
-            if (exception.get() != null) {
-                LOG.debug("Error connecting to url "+url+", thread caller of "+exception, new Throwable("source of rethrown error "+exception));
-                throw exception.get();
-            } else {
-                return result;
-            }
-        } finally {
-            f.cancel(true);
-        }
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(HttpAsserts.class);
 
     public static void assertHealthyStatusCode(int code) {
         if (code>=200 && code<=299) return;
@@ -123,12 +69,12 @@ public class HttpUtils {
     }
     
     public static int getHttpStatusCode(String url) throws Exception {
-        URLConnection connection = connectToUrl(url);
+        URLConnection connection = HttpTool.connectToUrl(url);
         long startTime = System.currentTimeMillis();
         int status = ((HttpURLConnection) connection).getResponseCode();
         
         // read fully if possible, then close everything, trying to prevent cached threads at server
-        consumeAndCloseQuietly((HttpURLConnection) connection);
+        HttpTool.consumeAndCloseQuietly((HttpURLConnection) connection);
         
         if (LOG.isDebugEnabled())
             LOG.debug("connection to {} ({}ms) gives {}", new Object[] { url, (System.currentTimeMillis()-startTime), status });
@@ -210,7 +156,7 @@ public class HttpUtils {
 
     public static void assertContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
-            String contents = getContent(url);
+            String contents = HttpTool.getContent(url);
             Asserts.assertTrue(contents != null && contents.length() > 0);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (!contents.contains(text)) {
@@ -225,7 +171,7 @@ public class HttpUtils {
 
     public static void assertContentNotContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
-            String contents = getContent(url);
+            String contents = HttpTool.getContent(url);
             Asserts.assertTrue(contents != null);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (contents.contains(text)) {
@@ -240,7 +186,7 @@ public class HttpUtils {
 
     public static void assertErrorContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
-            String contents = getErrorContent(url);
+            String contents = HttpTool.getErrorContent(url);
             Asserts.assertTrue(contents != null && contents.length() > 0);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (!contents.contains(text)) {
@@ -256,7 +202,7 @@ public class HttpUtils {
 
     public static void assertErrorContentNotContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         try {
-            String err = getErrorContent(url);
+            String err = HttpTool.getErrorContent(url);
             Asserts.assertTrue(err != null);
             for (String text: Lists.asList(phrase, additionalPhrases)) {
                 if (err.contains(text)) {
@@ -282,7 +228,7 @@ public class HttpUtils {
     }
     
     public static void assertContentMatches(String url, String regex) {
-        String contents = getContent(url);
+        String contents = HttpTool.getContent(url);
         Asserts.assertNotNull(contents);
         Asserts.assertTrue(contents.matches(regex), "Contents does not match expected regex ("+regex+"): "+contents);
     }
@@ -295,38 +241,8 @@ public class HttpUtils {
             }
         });
     }
-    
-    public static String getErrorContent(String url) {
-        try {
-            HttpURLConnection connection = (HttpURLConnection) connectToUrl(url);
-            long startTime = System.currentTimeMillis();
-            
-            String err;
-            int status;
-            try {
-                InputStream errStream = connection.getErrorStream();
-                err = Streams.readFullyString(errStream);
-                status = connection.getResponseCode();
-            } finally {
-                closeQuietly(connection);
-            }
-            
-            if (LOG.isDebugEnabled())
-                LOG.debug("read of err {} ({}ms) complete; http code {}", new Object[] { url, Time.makeTimeStringRounded(System.currentTimeMillis()-startTime), status});
-            return err;
 
-        } catch (Exception e) {
-            throw Exceptions.propagate(e);
-        }
-    }
-    
-    public static String getContent(String url) {
-        try {
-            return Streams.readFullyString(SslTrustUtils.trustAll(new URL(url).openConnection()).getInputStream());
-        } catch (Exception e) {
-            throw Throwables.propagate(e);
-        }
-    }
+
 
     /**
      * Schedules (with the given executor) a poller that repeatedly accesses the given url, to confirm it always gives
@@ -362,26 +278,5 @@ public class HttpUtils {
         });
     }
     
-    /**
-     * Consumes the input stream entirely and then cleanly closes the connection.
-     * Ignores all exceptions completely, not even logging them!
-     * 
-     * Consuming the stream fully is useful for preventing idle TCP connections.
-     * @see <a href="http://docs.oracle.com/javase/8/docs/technotes/guides/net/http-keepalive.html">Persistent Connections</a>
-     */
-    public static void consumeAndCloseQuietly(HttpURLConnection connection) {
-        try { Streams.readFully(connection.getInputStream()); } catch (Exception e) {}
-        closeQuietly(connection);
-    }
-    
-    /**
-     * Closes all streams of the connection, and disconnects it. Ignores all exceptions completely,
-     * not even logging them!
-     */
-    public static void closeQuietly(HttpURLConnection connection) {
-        try { connection.disconnect(); } catch (Exception e) {}
-        try { connection.getInputStream().close(); } catch (Exception e) {}
-        try { connection.getOutputStream().close(); } catch (Exception e) {}
-        try { connection.getErrorStream().close(); } catch (Exception e) {}
-    }
+
 }

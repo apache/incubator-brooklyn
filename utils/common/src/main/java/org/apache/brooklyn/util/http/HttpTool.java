@@ -16,24 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.util.core.http;
+package org.apache.brooklyn.util.http;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 
+import com.google.common.base.Throwables;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.URLParamEncoder;
+import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.ConnectionReuseStrategy;
 import org.apache.http.HttpEntity;
@@ -76,9 +85,139 @@ import com.google.common.base.Optional;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSession;
+
 public class HttpTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpTool.class);
+
+    static final ExecutorService executor = Executors.newCachedThreadPool();
+
+    /**
+     * Connects to the given url and returns the connection.
+     * Caller should {@code connection.getInputStream().close()} the result of this
+     * (especially if they are making heavy use of this method).
+     */
+    public static URLConnection connectToUrl(String u) throws Exception {
+        final URL url = new URL(u);
+        final AtomicReference<Exception> exception = new AtomicReference<Exception>();
+
+        // sometimes openConnection hangs, so run in background
+        Future<URLConnection> f = executor.submit(new Callable<URLConnection>() {
+            public URLConnection call() {
+                try {
+                    HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+                        @Override
+                        public boolean verify(String s, SSLSession sslSession) {
+                            return true;
+                        }
+                    });
+                    URLConnection connection = url.openConnection();
+                    TrustingSslSocketFactory.configure(connection);
+                    connection.connect();
+
+                    connection.getContentLength(); // Make sure the connection is made.
+                    return connection;
+                } catch (Exception e) {
+                    exception.set(e);
+                    LOG.debug("Error connecting to url "+url+" (propagating): "+e, e);
+                }
+                return null;
+            }
+        });
+        try {
+            URLConnection result = null;
+            try {
+                result = f.get(60, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                throw e;
+            } catch (Exception e) {
+                LOG.debug("Error connecting to url "+url+", probably timed out (rethrowing): "+e);
+                throw new IllegalStateException("Connect to URL not complete within 60 seconds, for url "+url+": "+e);
+            }
+            if (exception.get() != null) {
+                LOG.debug("Error connecting to url "+url+", thread caller of "+exception, new Throwable("source of rethrown error "+exception));
+                throw exception.get();
+            } else {
+                return result;
+            }
+        } finally {
+            f.cancel(true);
+        }
+    }
+
+
+
+    public static int getHttpStatusCode(String url) throws Exception {
+        URLConnection connection = connectToUrl(url);
+        long startTime = System.currentTimeMillis();
+        int status = ((HttpURLConnection) connection).getResponseCode();
+
+        // read fully if possible, then close everything, trying to prevent cached threads at server
+        consumeAndCloseQuietly((HttpURLConnection) connection);
+
+        if (LOG.isDebugEnabled())
+            LOG.debug("connection to {} ({}ms) gives {}", new Object[] { url, (System.currentTimeMillis()-startTime), status });
+        return status;
+    }
+
+
+    public static String getContent(String url) {
+        try {
+            return Streams.readFullyString(SslTrustUtils.trustAll(new URL(url).openConnection()).getInputStream());
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    public static String getErrorContent(String url) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) connectToUrl(url);
+            long startTime = System.currentTimeMillis();
+
+            String err;
+            int status;
+            try {
+                InputStream errStream = connection.getErrorStream();
+                err = Streams.readFullyString(errStream);
+                status = connection.getResponseCode();
+            } finally {
+                closeQuietly(connection);
+            }
+
+            if (LOG.isDebugEnabled())
+                LOG.debug("read of err {} ({}ms) complete; http code {}", new Object[] { url, Time.makeTimeStringRounded(System.currentTimeMillis() - startTime), status});
+            return err;
+
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    /**
+     * Consumes the input stream entirely and then cleanly closes the connection.
+     * Ignores all exceptions completely, not even logging them!
+     *
+     * Consuming the stream fully is useful for preventing idle TCP connections.
+     * @see <a href="http://docs.oracle.com/javase/8/docs/technotes/guides/net/http-keepalive.html">Persistent Connections</a>
+     */
+    public static void consumeAndCloseQuietly(HttpURLConnection connection) {
+        try { Streams.readFully(connection.getInputStream()); } catch (Exception e) {}
+        closeQuietly(connection);
+    }
+
+    /**
+     * Closes all streams of the connection, and disconnects it. Ignores all exceptions completely,
+     * not even logging them!
+     */
+    public static void closeQuietly(HttpURLConnection connection) {
+        try { connection.disconnect(); } catch (Exception e) {}
+        try { connection.getInputStream().close(); } catch (Exception e) {}
+        try { connection.getOutputStream().close(); } catch (Exception e) {}
+        try { connection.getErrorStream().close(); } catch (Exception e) {}
+    }
 
     /** Apache HTTP commons utility for trusting all.
      * <p>

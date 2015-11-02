@@ -33,10 +33,12 @@ import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.time.Duration;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -163,8 +165,21 @@ public class EntityAsserts {
     }
 
 
+    /**
+     * Assert that the given attribute of an entity does not take any of the disallowed values during a given period.
+     *
+     * This method relies on {@link Asserts#succeedsContinually(Runnable)}, therefore it loops comparing the value
+     * of the attribute to the disallowed values, rather than setting up a subscription.  It may therefore miss a
+     * situation where the attribute temporarily takes a disallowed value. This method is therefore suited for use
+     * where the attribute will take on a value permanently, which may or may not be disallowed.
+     *
+     * @param entity      The entity owning the attribute to check.
+     * @param attribute   The attribute on the entity.
+     * @param disallowed  The disallowed values for the entity.
+     * @param <T>         Type of the sensor.
+     */
     @Beta @SafeVarargs
-    public static <T> void assertAttributeNever(final Entity entity, final AttributeSensor<T> attribute, T... disallowed) {
+    public static <T> void assertAttributeContinuallyNotEqualTo(final Entity entity, final AttributeSensor<T> attribute, T... disallowed) {
         final Set<T> reject = Sets.newHashSet(disallowed);
         Asserts.succeedsContinually(new Runnable() {
             @Override
@@ -176,8 +191,29 @@ public class EntityAsserts {
         });
     }
 
+
+
+    /**
+     * Assert that the given attribute of an entity does not take any of the disallowed values during a given period.
+     *
+     * This method relies on {@link Asserts#succeedsContinually(Runnable)}, therefore it loops comparing the value
+     * of the attribute to the disallowed values, rather than setting up a subscription.  It may therefore miss a
+     * situation where the attribute temporarily takes a disallowed value. This method is therefore suited for use
+     * where the attribute will take on a value permanently, which may or may not be disallowed.
+     *
+     * @param flags       Flags controlling the loop, with keys: <ul>
+     *                    <li>timeout: a {@link Duration} specification String for the duration for which to test the
+     *                    assertion. Default 1 second.</li>
+     *                    <li>period: a {@link Duration} specification String for the interval at which to perform polls
+     *                    on the attribute value. Default 10ms.</li>
+     *                   </ul>
+     * @param entity      The entity owning the attribute to check.
+     * @param attribute   The attribute on the entity.
+     * @param disallowed  The disallowed values for the entity.
+     * @param <T>         Type of the sensor.
+     */
     @Beta @SafeVarargs
-    public static <T> void assertAttributeNever(final Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, T... disallowed) {
+    public static <T> void assertAttributeContinuallyNotEqualTo(final Map<?, ?> flags, final Entity entity, final AttributeSensor<T> attribute, T... disallowed) {
         final Set<T> reject = Sets.newHashSet(disallowed);
         Asserts.succeedsContinually(flags, new Runnable() {
             @Override
