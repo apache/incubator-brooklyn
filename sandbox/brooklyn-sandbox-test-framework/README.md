@@ -21,6 +21,13 @@ Entity that tests a sensor value on another entity eg service.isUp == TRUE
 | assert | Assertions to be evaluated | yes |
 | timeout | The duration to wait on a result | no |
 
+##### Assertions
+| Key | Description |
+| --- | ----------- |
+| equal | Sensor value equals  |
+| regex | Sensor value matches regex |
+| isNull | Sensor value has not been set |
+
 ```
 type: org.apache.brooklyn.test.framework.TestSensor
 target: $brooklyn:component("nginx1")
@@ -54,4 +61,46 @@ effector: deploy
 params:
   url: https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war
   targetName: sample1
+```
+
+## TestHtmlCall
+Entity that makes a HTTP Request and tests the response
+
+#### Configuration
+| Key | Description | Required |
+| --- | ----------- | -------- |
+| url | The URL to test | yes |
+| assert | Assertions to be evaluated | yes |
+
+##### Assertions
+| Key | Description |
+| --- | ----------- |
+| string | HTTP body contains text |
+| regex | HTTP body matches regex |
+| status | HTTP status code equals |
+
+```
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Status Code 200
+    url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    assert:
+      status: 200
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Status Code 404
+    url: $brooklyn:formatString("%s/invalidpath/", component("tomcat").attributeWhenReady("main.uri"))
+    assert:
+      status: 404
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: String match
+    url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    assert:
+      string: Sample Brooklyn Deployed
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Regex match
+    url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    # the regex assert uses java.lang.String under the hood so if the url is expected to returns
+    # a multi-line response you should use the embedded dotall flag expression `(?s)` in your regex.
+    # See: http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
+    assert:
+      regex: "(?s).*illustrate(\\s)*how(\\s)*web(\\s)*applications.*"
 ```
