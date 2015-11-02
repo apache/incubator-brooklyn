@@ -56,7 +56,6 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
         ManagementContext mgmt = ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
         
         TestApplication app = (TestApplication) mgmt.getEntityManager().createEntity( createApplicationSpec(template, platform, null) );
-        mgmt.getEntityManager().manage(app);
 
         return new TestAppAssembly(app);
     }

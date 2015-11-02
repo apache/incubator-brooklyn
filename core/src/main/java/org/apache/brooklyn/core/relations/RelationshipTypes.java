@@ -18,9 +18,9 @@
  */
 package org.apache.brooklyn.core.relations;
 
-import com.google.common.base.Objects;
+import org.apache.brooklyn.api.relations.RelationshipType;
 
-import brooklyn.basic.relations.RelationshipType;
+import com.google.common.base.Objects;
 
 public class RelationshipTypes {
 

@@ -29,11 +29,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.CampServiceSpecResolver;
@@ -145,20 +145,20 @@ public class BrooklynComponentTemplateResolver {
         return serviceSpecResolver.accepts(type, loader);
     }
 
-    public <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredCatalogTypes) {
+    public <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredRegisteredTypeSymbolicNames) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
 
-        EntitySpec<?> spec = serviceSpecResolver.resolve(type, loader, encounteredCatalogTypes);
+        EntitySpec<?> spec = serviceSpecResolver.resolve(type, loader, encounteredRegisteredTypeSymbolicNames);
 
         if (spec == null) {
             // Try to provide some troubleshooting details
             final String msgDetails;
-            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, Strings.removeFromStart(type, "catalog:"));
+            RegisteredType item = mgmt.getTypeRegistry().get(Strings.removeFromStart(type, "catalog:"));
             String proto = Urls.getProtocol(type);
-            if (item != null && encounteredCatalogTypes.contains(item.getSymbolicName())) {
+            if (item != null && encounteredRegisteredTypeSymbolicNames.contains(item.getSymbolicName())) {
                 msgDetails = "Cycle between catalog items detected, starting from " + type +
-                        ". Other catalog items being resolved up the stack are " + encounteredCatalogTypes +
+                        ". Other catalog items being resolved up the stack are " + encounteredRegisteredTypeSymbolicNames +
                         ". Tried loading it as a Java class instead but failed.";
             } else if (proto != null) {
                 msgDetails = "The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
@@ -170,7 +170,7 @@ public class BrooklynComponentTemplateResolver {
             throw new IllegalStateException("Unable to create spec for type " + type + ". " + msgDetails);
         }
 
-        populateSpec(spec, encounteredCatalogTypes);
+        populateSpec(spec, encounteredRegisteredTypeSymbolicNames);
 
         @SuppressWarnings("unchecked")
         EntitySpec<T> typedSpec = (EntitySpec<T>) spec;
@@ -187,7 +187,7 @@ public class BrooklynComponentTemplateResolver {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Entity> void populateSpec(EntitySpec<T> spec, Set<String> encounteredCatalogTypes) {
+    private <T extends Entity> void populateSpec(EntitySpec<T> spec, Set<String> encounteredRegisteredTypeIds) {
         String name, source=null, templateId=null, planId=null;
         if (template.isPresent()) {
             name = template.get().getName();
@@ -205,9 +205,9 @@ public class BrooklynComponentTemplateResolver {
             Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                // encounteredCatalogTypes must contain the items currently being loaded (the dependency chain),
-                // but not parent items in this catalog item already resolved.
-                EntitySpec<? extends Entity> childSpec = entityResolver.resolveSpec(encounteredCatalogTypes);
+                // encounteredRegisteredTypeIds must contain the items currently being loaded (the dependency chain),
+                // but not parent items in this type already resolved.
+                EntitySpec<? extends Entity> childSpec = entityResolver.resolveSpec(encounteredRegisteredTypeIds);
                 spec.child(childSpec);
             }
         }
@@ -307,7 +307,7 @@ public class BrooklynComponentTemplateResolver {
         /* TODO find a way to make do without loader here?
          * it is not very nice having to serialize it; but serialization of BLCL is now relatively clean.
          *
-         * it is only used to instantiate classes, and now most things should be registered with catalog;
+         * it is only used to instantiate classes, and now most types should be registered;
          * the notable exception is when one entity in a bundle is creating another in the same bundle,
          * it wants to use his bundle CLC to do that.  but we can set up some unique reference to the entity
          * which can be used to find it from mgmt, rather than pass the loader.

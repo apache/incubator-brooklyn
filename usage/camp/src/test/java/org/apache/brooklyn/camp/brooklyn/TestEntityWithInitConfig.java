@@ -19,7 +19,6 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
@@ -27,7 +26,7 @@ import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.entity.trait.Startable;
 
 @ImplementedBy(TestEntityWithInitConfigImpl.class)
-public interface TestEntityWithInitConfig extends Entity, Startable, EntityLocal, EntityInternal {
+public interface TestEntityWithInitConfig extends Entity, Startable, EntityInternal {
     public static final ConfigKey<Entity> TEST_ENTITY = BasicConfigKey.builder(Entity.class)
             .name("test.entity")
             .build();

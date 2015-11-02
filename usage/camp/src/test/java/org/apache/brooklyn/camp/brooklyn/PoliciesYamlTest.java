@@ -53,7 +53,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
         log.info("App started:");
         Entities.dumpInfo(app);
 
-        Assert.assertEquals(app.getPolicies().size(), 1);
+        Assert.assertEquals(app.policies().size(), 1);
         Policy policy = app.policies().iterator().next();
         Assert.assertTrue(policy instanceof TestPolicy);
         Assert.assertEquals(policy.getConfig(TestPolicy.CONF_NAME), "Name from YAML");
@@ -73,10 +73,10 @@ public class PoliciesYamlTest extends AbstractYamlTest {
         log.info("App started:");
         Entities.dumpInfo(app);
 
-        Assert.assertEquals(app.getPolicies().size(), 0);
+        Assert.assertEquals(app.policies().size(), 0);
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity child = app.getChildren().iterator().next();
-        Assert.assertEquals(child.getPolicies().size(), 1);
+        Assert.assertEquals(child.policies().size(), 1);
         Policy policy = child.policies().iterator().next();
         Assert.assertNotNull(policy);
         Assert.assertTrue(policy instanceof TestPolicy, "policy=" + policy + "; type=" + policy.getClass());
@@ -108,13 +108,13 @@ public class PoliciesYamlTest extends AbstractYamlTest {
         final Entity child = firstEntity.getChildren().iterator().next();
         Assert.assertEquals(child.getChildren().size(), 0);
 
-        Assert.assertEquals(app.getPolicies().size(), 0);
-        Assert.assertEquals(firstEntity.getPolicies().size(), 0);
+        Assert.assertEquals(app.policies().size(), 0);
+        Assert.assertEquals(firstEntity.policies().size(), 0);
         
         Asserts.eventually(new Supplier<Integer>() {
             @Override
             public Integer get() {
-                return child.getPolicies().size();
+                return child.policies().size();
             }
         }, Predicates.<Integer> equalTo(1));
         
@@ -200,7 +200,7 @@ public class PoliciesYamlTest extends AbstractYamlTest {
     }
     
     private Policy getPolicy(Entity entity) {
-        Assert.assertEquals(entity.getPolicies().size(), 1);
+        Assert.assertEquals(entity.policies().size(), 1);
         Policy policy = entity.policies().iterator().next();
         Assert.assertTrue(policy instanceof TestReferencingPolicy);
         return policy;

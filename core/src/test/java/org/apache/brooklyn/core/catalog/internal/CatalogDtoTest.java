@@ -147,11 +147,11 @@ public class CatalogDtoTest {
         String version = "0.1.2";
         String versionedId = CatalogUtils.getVersionedId(id, version);
         
-        Assert.assertNull(CatalogUtils.getIdFromVersionedId(null));
+        Assert.assertNull(CatalogUtils.getSymbolicNameFromVersionedId(null));
         Assert.assertNull(CatalogUtils.getVersionFromVersionedId(null));
-        Assert.assertNull(CatalogUtils.getIdFromVersionedId(id));
+        Assert.assertNull(CatalogUtils.getSymbolicNameFromVersionedId(id));
         Assert.assertNull(CatalogUtils.getVersionFromVersionedId(version));
-        Assert.assertEquals(CatalogUtils.getIdFromVersionedId(versionedId), id);
+        Assert.assertEquals(CatalogUtils.getSymbolicNameFromVersionedId(versionedId), id);
         Assert.assertEquals(CatalogUtils.getVersionFromVersionedId(versionedId), version);
     }
 }

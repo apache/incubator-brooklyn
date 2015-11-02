@@ -35,9 +35,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.annotation.Nullable;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.rebind.PersistenceExceptionHandler;
 import org.apache.brooklyn.api.mgmt.rebind.RebindExceptionHandler;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMemento;
@@ -48,6 +45,7 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.Memento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObjectType;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
@@ -56,7 +54,6 @@ import org.apache.brooklyn.core.mgmt.classloading.ClassLoaderFromBrooklynClassLo
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessor;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import org.apache.brooklyn.core.mgmt.rebind.PeriodicDeltaChangeListener;
-import org.apache.brooklyn.core.mgmt.rebind.PersisterDeltaImpl;
 import org.apache.brooklyn.core.mgmt.rebind.dto.BrooklynMementoImpl;
 import org.apache.brooklyn.core.mgmt.rebind.dto.BrooklynMementoManifestImpl;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -66,9 +63,10 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
@@ -176,7 +174,7 @@ public class BrooklynMementoPersisterToObjectStore implements BrooklynMementoPer
         }
         // See RebindIteration.BrooklynObjectInstantiator.load(), for handling where catalog item is missing;
         // similar logic here.
-        CatalogItem<?, ?> catalogItem = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), catalogItemId);
+        RegisteredType catalogItem = lookupContext.lookupManagementContext().getTypeRegistry().get(catalogItemId);
         if (catalogItem == null) {
             // TODO do we need to only log once, rather than risk log.warn too often? I think this only happens on rebind, so ok.
             LOG.warn("Unable to load catalog item "+catalogItemId+" for custom class loader of "+type+" "+objectId+"; will use default class loader");

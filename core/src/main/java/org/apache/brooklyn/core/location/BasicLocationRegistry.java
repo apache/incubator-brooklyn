@@ -38,12 +38,14 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.config.ConfigMap;
-import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.config.ConfigPredicates;
 import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.mgmt.internal.LocalLocationManager;
+import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -72,8 +74,8 @@ import com.google.common.collect.Sets;
  * <p>
  * Any location item added to the catalog must therefore be registered here.
  * Whenever an item is added to the catalog, it will automatically call 
- * {@link #updateDefinedLocation(CatalogItem)}. Similarly, when a location
- * is deleted from the catalog it will call {@link #removeDefinedLocation(CatalogItem)}.
+ * {@link #updateDefinedLocation(RegisteredType)}. Similarly, when a location
+ * is deleted from the catalog it will call {@link #removeDefinedLocation(RegisteredType)}.
  * <p>
  * However, the location item in the catalog has an unparsed blob of YAML, which contains
  * important things like the type and the config of the location. This is only parsed when 
@@ -86,8 +88,8 @@ import com.google.common.collect.Sets;
  * <ol>
  *   <li>Call {@link BrooklynCatalog#addItems(String)}
  *     <ol>
- *       <li>This automatically calls {@link #updateDefinedLocation(CatalogItem)}
- *       <li>A LocationDefinition is creating, using as its id the {@link CatalogItem#getSymbolicName()}.
+ *       <li>This automatically calls {@link #updateDefinedLocation(RegisteredType)}
+ *       <li>A LocationDefinition is creating, using as its id the {@link RegisteredType#getSymbolicName()}.
  *           The definition's spec is {@code brooklyn.catalog:<symbolicName>:<version>},
  *     </ol>
  *   <li>A blueprint can reference the catalog item using its symbolic name, 
@@ -100,8 +102,8 @@ import com.google.common.collect.Sets;
  *           found for it.
  *       <li>This uses the {@link CatalogLocationResolver}, because the spec starts with {@code brooklyn.catalog:}.
  *       <li>This resolver extracts from the spec the <symobolicName>:<version>, and looks up the 
- *           catalog item using {@link BrooklynCatalog#getCatalogItem(String, String)}.
- *       <li>It then creates a {@link LocationSpec} by calling {@link BrooklynCatalog#createSpec(CatalogItem)}.
+ *           location item using the {@link BrooklynTypeRegistry}.
+ *       <li>It then creates a {@link LocationSpec} by calling {@link BrooklynTypeRegistry#createSpec(RegisteredType)}.
  *         <ol>
  *           <li>This first tries to use the type (that is in the YAML) as a simple Java class.
  *           <li>If that fails, it will resolve the type using {@link #resolve(String, Boolean, Map)}, which
@@ -113,7 +115,7 @@ import com.google.common.collect.Sets;
  *     </ol>
  * </ol>
  * 
- * There is no concept of a location version in this registry. The version
+ * TODO There is no concept of a location version in this registry. The version
  * in the catalog is generally ignored.
  */
 @SuppressWarnings({"rawtypes","unchecked"})
@@ -222,6 +224,21 @@ public class BasicLocationRegistry implements LocationRegistry {
         updateDefinedLocation(locDefinition);
     }
 
+    /**
+     * Converts the given item from the catalog into a LocationDefinition, and adds it
+     * to the registry (overwriting anything already registered with the id
+     * {@link RegisteredType#getId()}.
+     */
+    public void updateDefinedLocation(RegisteredType item) {
+        String id = item.getId();
+        String symbolicName = item.getSymbolicName();
+        String spec = CatalogLocationResolver.NAME + ":" + id;
+        Map<String, Object> config = ImmutableMap.<String, Object>of();
+        BasicLocationDefinition locDefinition = new BasicLocationDefinition(symbolicName, symbolicName, spec, config);
+        
+        updateDefinedLocation(locDefinition);
+    }
+
     public void removeDefinedLocation(CatalogItem<Location, LocationSpec<?>> item) {
         removeDefinedLocation(item.getSymbolicName());
     }
@@ -244,7 +261,7 @@ public class BasicLocationRegistry implements LocationRegistry {
             // we need ability/format for persisting named locations, and better support for adding+saving via REST/GUI)
             int count = 0; 
             String NAMED_LOCATION_PREFIX = "brooklyn.location.named.";
-            ConfigMap namedLocationProps = mgmt.getConfig().submap(ConfigPredicates.startingWith(NAMED_LOCATION_PREFIX));
+            ConfigMap namedLocationProps = mgmt.getConfig().submap(ConfigPredicates.nameStartsWith(NAMED_LOCATION_PREFIX));
             for (String k: namedLocationProps.asMapWithStringKeys().keySet()) {
                 String name = k.substring(NAMED_LOCATION_PREFIX.length());
                 // If has a dot, then is a sub-property of a named location (e.g. brooklyn.location.named.prod1.user=bob)
@@ -271,7 +288,7 @@ public class BasicLocationRegistry implements LocationRegistry {
                 definedLocations.putAll(oldDefined);
             }
             
-            for (CatalogItem<Location, LocationSpec<?>> item : mgmt.getCatalog().getCatalogItems(CatalogPredicates.IS_LOCATION)) {
+            for (RegisteredType item: mgmt.getTypeRegistry().getAll(RegisteredTypePredicates.IS_LOCATION)) {
                 updateDefinedLocation(item);
                 count++;
             }

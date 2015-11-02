@@ -28,7 +28,6 @@ import java.util.Map;
 import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
@@ -104,7 +103,7 @@ public class EntityTransformer {
     /** generates a representation for a given config key, 
      * with label inferred from annoation in the entity class,
      * and links pointing to the entity and the applicaiton */
-    public static EntityConfigSummary entityConfigSummary(EntityLocal entity, ConfigKey<?> config) {
+    public static EntityConfigSummary entityConfigSummary(Entity entity, ConfigKey<?> config) {
       /*
        * following code nearly there to get the @CatalogConfig annotation
        * in the class and use that to populate a label

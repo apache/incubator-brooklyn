@@ -34,14 +34,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
-
 import org.apache.brooklyn.api.entity.Application;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.entitlement.EntitlementContext;
@@ -82,6 +75,11 @@ import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.FluentIterable;
 
 public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 
@@ -156,7 +154,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                                     // Don't try to stop an already stopping app. Subsequent stops will complete faster
                                     // cancelling the first stop task.
                                     appState != Lifecycle.STOPPING) {
-                                stoppers.add(Entities.invokeEffector((EntityLocal)app, app, StartableApplication.STOP));
+                                stoppers.add(Entities.invokeEffector(app, app, StartableApplication.STOP));
                             } else {
                                 log.debug("App " + app + " is already stopping, will not stop second time. Will wait for original stop to complete.");
                             }

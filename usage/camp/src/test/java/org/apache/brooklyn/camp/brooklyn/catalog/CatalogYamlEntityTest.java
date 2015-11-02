@@ -27,19 +27,23 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
-import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -60,8 +64,9 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  item:",
             "    type: "+ BasicEntity.class.getName());
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
-        assertTrue(item.getPlanYaml().indexOf("services:")>=0, "expected 'services:' block: "+item+"\n"+item.getPlanYaml());
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
+        String planYaml = RegisteredTypes.getImplementationDataStringForSpec(item);
+        assertTrue(planYaml.indexOf("services:")>=0, "expected 'services:' block: "+item+"\n"+planYaml);
 
         deleteCatalogEntity(symbolicName);
     }
@@ -71,7 +76,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
         String symbolicName = "my.catalog.app.id.load";
         addCatalogOSGiEntity(symbolicName);
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
 
         deleteCatalogEntity(symbolicName);
@@ -93,7 +98,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "  item: " + SIMPLE_ENTITY_TYPE);
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
 
         deleteCatalogEntity(symbolicName);
@@ -116,7 +121,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  - url: " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "  item: " + SIMPLE_ENTITY_TYPE);
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
 
         deleteCatalogEntity(symbolicName);
@@ -140,7 +145,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "services:",
             "- type: " + SIMPLE_ENTITY_TYPE);
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
 
         deleteCatalogEntity(symbolicName);
@@ -158,7 +163,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  - " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "  item:",
             "    type: "+ SIMPLE_ENTITY_TYPE);
-        CatalogItem<?, ?> catalogItem = mgmt().getCatalog().getCatalogItem(id, BrooklynCatalog.DEFAULT_VERSION);
+        RegisteredType catalogItem = mgmt().getTypeRegistry().get(id, BrooklynCatalog.DEFAULT_VERSION);
         assertEquals(catalogItem.getVersion(), "0.0.0.SNAPSHOT");
         mgmt().getCatalog().deleteCatalogItem(id, "0.0.0.SNAPSHOT");
     }
@@ -175,7 +180,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
             "  - " + OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_URL,
             "services:",
             "- type: " + SIMPLE_ENTITY_TYPE);
-        CatalogItem<?, ?> catalogItem = mgmt().getCatalog().getCatalogItem(id, TEST_VERSION);
+        RegisteredType catalogItem = mgmt().getTypeRegistry().get(id, TEST_VERSION);
         assertEquals(catalogItem.getVersion(), TEST_VERSION);
         mgmt().getCatalog().deleteCatalogItem(id, TEST_VERSION);
     }
@@ -213,8 +218,9 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         String referrerSymbolicName = "my.catalog.app.id.referring";
         addCatalogOSGiEntities(referencedSymbolicName, SIMPLE_ENTITY_TYPE, referrerSymbolicName, ver(referencedSymbolicName));
 
-        CatalogItem<?, ?> referrer = mgmt().getCatalog().getCatalogItem(referrerSymbolicName, TEST_VERSION);
-        Assert.assertTrue(referrer.getPlanYaml().indexOf("services")>=0, "expected services in: "+referrer.getPlanYaml());
+        RegisteredType referrer = mgmt().getTypeRegistry().get(referrerSymbolicName, TEST_VERSION);
+        String planYaml = RegisteredTypes.getImplementationDataStringForSpec(referrer);
+        Assert.assertTrue(planYaml.indexOf("services")>=0, "expected services in: "+planYaml);
         
         String yaml = "name: simple-app-yaml\n" +
                       "location: localhost\n" +
@@ -523,11 +529,12 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
 
         String id = "my.catalog.app.id.create_spec";
         addCatalogOSGiEntity(id);
-        BrooklynCatalog catalog = mgmt().getCatalog();
-        CatalogItem<?, ?> item = catalog.getCatalogItem(id, TEST_VERSION);
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        Object spec = catalog.createSpec((CatalogItem) item);
+        BrooklynTypeRegistry catalog = mgmt().getTypeRegistry();
+        RegisteredType item = catalog.get(id, TEST_VERSION);
+        EntitySpec<?> spec = catalog.createSpec(item, null, EntitySpec.class);
         Assert.assertNotNull(spec);
+        AbstractBrooklynObjectSpec<?,?> spec2 = catalog.createSpec(item, null, null);
+        Assert.assertNotNull(spec2);
     }
     
     @Test
@@ -606,7 +613,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
                 "  version: " + TEST_VERSION + "pre",
                 "",
                 "services:",
-                "- type: org.apache.brooklyn.entity.stock.BasicEntity");
+                "- type: "+BasicEntity.class.getName());
 
         addCatalogItems(
                 "brooklyn.catalog:",

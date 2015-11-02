@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.basic.relations;
+package org.apache.brooklyn.api.relations;
 
-import brooklyn.basic.relations.RelationshipType;
+import org.apache.brooklyn.api.relations.RelationshipType;
 
 
 public interface RelationshipType<SourceType,TargetType> {

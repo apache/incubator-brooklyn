@@ -27,6 +27,7 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.core.test.TestHttpRequestHandler;
 import org.apache.brooklyn.core.test.TestHttpServer;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
@@ -104,9 +105,9 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
     }
     
     private void assertItems() {
-        BrooklynCatalog catalog = getManagementContext().getCatalog();
-        assertNotNull(catalog.getCatalogItem("org.apache.brooklyn.entity.stock.BasicApplication", BrooklynCatalog.DEFAULT_VERSION));
-        assertNotNull(catalog.getCatalogItem("org.apache.brooklyn.test.osgi.entities.SimpleApplication", BrooklynCatalog.DEFAULT_VERSION));
+        BrooklynTypeRegistry types = getManagementContext().getTypeRegistry();
+        assertNotNull(types.get("org.apache.brooklyn.entity.stock.BasicApplication", BrooklynCatalog.DEFAULT_VERSION));
+        assertNotNull(types.get("org.apache.brooklyn.test.osgi.entities.SimpleApplication", BrooklynCatalog.DEFAULT_VERSION));
     }
 
 }

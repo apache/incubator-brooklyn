@@ -43,9 +43,9 @@ import org.apache.brooklyn.api.objs.BrooklynObjectType;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Feed;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemDtoAbstract;
-import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
@@ -304,11 +304,11 @@ public class XmlMementoSerializerTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
         ManagementContext mgmt = LocalManagementContextForTests.builder(true).disableOsgi(false).build();
         try {
-            CatalogItem<?, ?> ci = OsgiVersionMoreEntityTest.addMoreEntityV1(mgmt, "1.0");
+            RegisteredType ci = OsgiVersionMoreEntityTest.addMoreEntityV1(mgmt, "1.0");
             
             EntitySpec<DynamicCluster> spec = EntitySpec.create(DynamicCluster.class)
                 .configure(DynamicCluster.INITIAL_SIZE, 1)
-                .configure(DynamicCluster.MEMBER_SPEC, CatalogTestUtils.createEssentialEntitySpec(mgmt, ci));
+                .configure(DynamicCluster.MEMBER_SPEC, mgmt.getTypeRegistry().createSpec(ci, null, EntitySpec.class));
     
             serializer.setLookupContext(new LookupContextImpl(mgmt,
                 ImmutableList.<Entity>of(), ImmutableList.<Location>of(), ImmutableList.<Policy>of(),

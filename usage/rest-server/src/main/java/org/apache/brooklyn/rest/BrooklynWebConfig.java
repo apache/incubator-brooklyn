@@ -152,7 +152,7 @@ public class BrooklynWebConfig {
             "SSL_RSA_WITH_3DES_EDE_CBC_SHA");
 
     public final static boolean hasNoSecurityOptions(ConfigMap config) {
-        return config.submap(ConfigPredicates.startingWith(BASE_NAME_SECURITY)).isEmpty();
+        return config.submap(ConfigPredicates.nameStartsWith(BASE_NAME_SECURITY)).isEmpty();
     }
     
 }

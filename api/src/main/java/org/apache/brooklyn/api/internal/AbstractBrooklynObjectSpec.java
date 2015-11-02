@@ -29,7 +29,7 @@ import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObjectSpec<T,K>> implements Serializable {
+public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrooklynObjectSpec<T,SpecT>> implements Serializable {
 
     private static final long serialVersionUID = 3010955277740333030L;
     
@@ -45,8 +45,8 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
     }
     
     @SuppressWarnings("unchecked")
-    protected K self() {
-        return (K) this;
+    protected SpecT self() {
+        return (SpecT) this;
     }
 
     @Override
@@ -56,23 +56,23 @@ public abstract class AbstractBrooklynObjectSpec<T,K extends AbstractBrooklynObj
 
     protected abstract void checkValidType(Class<? extends T> type);
     
-    public K displayName(String val) {
+    public SpecT displayName(String val) {
         displayName = val;
         return self();
     }
     
-    public K catalogItemId(String val) {
+    public SpecT catalogItemId(String val) {
         catalogItemId = val;
         return self();
     }
     
-    public K tag(Object tag) {
+    public SpecT tag(Object tag) {
         tags.add(tag);
         return self();
     }
 
     /** adds the given tags */
-    public K tags(Iterable<Object> tagsToAdd) {
+    public SpecT tags(Iterable<Object> tagsToAdd) {
         Iterables.addAll(this.tags, tagsToAdd);
         return self();
     }

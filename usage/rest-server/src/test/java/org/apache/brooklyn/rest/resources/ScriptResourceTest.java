@@ -20,21 +20,23 @@ package org.apache.brooklyn.rest.resources;
 
 import java.util.Collections;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.rest.domain.ScriptExecutionSummary;
 import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class ScriptResourceTest {
 
     @Test
     public void testGroovy() {
-        RestMockApp app = new RestMockApp();
-        Entities.startManagement(app);
-        ManagementContext mgmt = app.getManagementContext();
+        ManagementContext mgmt = LocalManagementContextForTests.newInstance();
+        Application app = mgmt.getEntityManager().createEntity( EntitySpec.create(Application.class, RestMockApp.class) );
         try {
         
             Entities.start(app, Collections.<Location>emptyList());

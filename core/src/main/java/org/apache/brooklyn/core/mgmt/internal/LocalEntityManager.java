@@ -394,6 +394,7 @@ public class LocalEntityManager implements EntityManagerInternal {
 
     @Override
     public void unmanage(final Entity e) {
+        // TODO don't want to guess; should we inspect state of e ?  or maybe it doesn't matter ?
         unmanage(e, ManagementTransitionMode.guessing(BrooklynObjectManagementMode.MANAGED_PRIMARY, BrooklynObjectManagementMode.NONEXISTENT));
     }
     

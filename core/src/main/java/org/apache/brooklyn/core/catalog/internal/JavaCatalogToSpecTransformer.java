@@ -28,16 +28,20 @@ import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.plan.PlanNotRecognizedException;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Old-style catalog items (can be defined in catalog.xml only) don't have structure, only a single type, so
- * they are loaded as a simple java type, only taking the class name from the catalog item instead of the
- * type value in the YAML. Classpath entries in the item are also used (through the catalog root classloader).
+ * Instantiates classes from a registered type which simply
+ * defines the java class name and OSGi bundles to use.
+ * <p>
+ * This is used where a {@link RegisteredType} is defined simply with the name of a java class
+ * (no YAML etc); and for legacy old-style (c0.7.0) catalog items (defined in catalog.xml only)
+ * with structure, only a single type.
  */
 public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
     private static final Logger log = LoggerFactory.getLogger(JavaCatalogToSpecTransformer.class);
@@ -51,7 +55,7 @@ public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
 
     @Override
     public String getShortDescription() {
-        return "Deprecated java-type catalog items transformer";
+        return "Java type instantiator";
     }
 
     @Override
@@ -71,8 +75,12 @@ public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
             log.warn("Deprecated functionality (since 0.9.0). Using old-style xml catalog items with java type attribute for " + item);
             Class<?> type;
             try {
-                type = mgmt.getCatalogClassLoader().loadClass(item.getJavaType());
-            } catch (ClassNotFoundException e) {
+                // java types were deprecated before we added osgi support so this isn't necessary,
+                // but it doesn't hurt (and if we re-instate a class+bundle approach for RegisteredType 
+                // we will want to do this)
+                type = CatalogUtils.newClassLoadingContext(mgmt, item).loadClass(item.getJavaType());
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
                 throw new IllegalStateException("Unable to load old-style java catalog item type " + item.getJavaType() + " for item " + item, e);
             }
             AbstractBrooklynObjectSpec<?,?> spec;
@@ -87,6 +95,7 @@ public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
             } else {
                 throw new IllegalStateException("Catalog item " + item + " java type " + item.getJavaType() + " is not a Brooklyn supported object.");
             }
+            spec.catalogItemId(item.getCatalogItemId());
             @SuppressWarnings("unchecked")
             SpecT untypedSpc = (SpecT) spec;
             return untypedSpc;

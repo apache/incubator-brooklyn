@@ -28,7 +28,7 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,14 +53,14 @@ public class CatalogLocationResolver implements LocationResolver {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
         String id = spec.substring(NAME.length()+1);
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(managementContext, id);
+        RegisteredType item = managementContext.getTypeRegistry().get(id);
         if (item.isDisabled()) {
             throw new IllegalStateException("Illegal use of disabled catalog item "+item.getSymbolicName()+":"+item.getVersion());
         } else if (item.isDeprecated()) {
             log.warn("Use of deprecated catalog item "+item.getSymbolicName()+":"+item.getVersion());
         }
         
-        LocationSpec origLocSpec = (LocationSpec) managementContext.getCatalog().createSpec((CatalogItem)item);
+        LocationSpec origLocSpec = (LocationSpec) managementContext.getTypeRegistry().createSpec(item, null, LocationSpec.class);
         LocationSpec locSpec = LocationSpec.create(origLocSpec)
                 .configure(locationFlags);
         return managementContext.getLocationManager().createLocation(locSpec);

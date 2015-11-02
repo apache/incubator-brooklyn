@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Application;
@@ -59,12 +57,12 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindManager;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
-import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.ha.OsgiManager;
 import org.apache.brooklyn.core.mgmt.usage.UsageManager;
 import org.apache.brooklyn.core.objs.proxy.InternalEntityFactory;
@@ -72,6 +70,8 @@ import org.apache.brooklyn.core.objs.proxy.InternalLocationFactory;
 import org.apache.brooklyn.core.objs.proxy.InternalPolicyFactory;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 
@@ -328,6 +328,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     public BrooklynCatalog getCatalog() {
         checkInitialManagementContextReal();
         return initialManagementContext.getCatalog();
+    }
+
+    @Override
+    public BrooklynTypeRegistry getTypeRegistry() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getTypeRegistry();
     }
     
     @Override

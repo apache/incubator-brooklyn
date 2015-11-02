@@ -332,7 +332,7 @@ public class WindowsYamlLiveTest extends AbstractYamlTest {
             String taskNameRegex = entry.getKey();
             List<String> expectedOuts = entry.getValue();
 
-            Task<?> subTask = findTaskOrSubTask(tasks, TaskPredicates.displayNameMatches(StringPredicates.matchesRegex(taskNameRegex))).get();
+            Task<?> subTask = findTaskOrSubTask(tasks, TaskPredicates.displayNameSatisfies(StringPredicates.matchesRegex(taskNameRegex))).get();
 
             String stdin = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_STDIN);
             String stdout = getStreamOrFail(subTask, BrooklynTaskTags.STREAM_STDOUT);
@@ -352,7 +352,7 @@ public class WindowsYamlLiveTest extends AbstractYamlTest {
         for (Map.Entry<String, Predicate<CharSequence>> entry : taskErrs.entrySet()) {
             String taskNameRegex = entry.getKey();
             Predicate<? super String> errChecker = entry.getValue();
-            Task<?> subTask = findTaskOrSubTask(tasks, TaskPredicates.displayNameMatches(StringPredicates.matchesRegex(taskNameRegex))).get();
+            Task<?> subTask = findTaskOrSubTask(tasks, TaskPredicates.displayNameSatisfies(StringPredicates.matchesRegex(taskNameRegex))).get();
             String msg = "regex="+taskNameRegex+"; task="+subTask;
             assertNotNull(subTask, msg);
             assertTrue(subTask.isDone(), msg);

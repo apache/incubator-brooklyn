@@ -48,7 +48,7 @@ public interface EntityManager {
     EntityTypeRegistry getEntityTypeRegistry();
     
     /**
-     * Creates a new (unmanaged) entity.
+     * Creates a new entity. Management is started immediately (by this method).
      * 
      * @param spec
      * @return A proxy to the created entity (rather than the actual entity itself).

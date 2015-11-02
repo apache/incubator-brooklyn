@@ -21,8 +21,6 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.api.catalog.BrooklynCatalog;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.EntityInitializer;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -30,9 +28,11 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
@@ -108,28 +108,13 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
 
             String policyType = decoLoader.getTypeName().get();
             ManagementContext mgmt = instantiator.loader.getManagementContext();
-            BrooklynCatalog catalog = mgmt.getCatalog();
-            CatalogItem<Policy, PolicySpec<?>> item = getPolicyCatalogItem(catalog, policyType);
+            
+            RegisteredType item = mgmt.getTypeRegistry().get(policyType, RegisteredTypeConstraints.spec(Policy.class));
             PolicySpec<? extends Policy> spec;
-            if (item != null) {
-                spec = (PolicySpec) catalog.createSpec((CatalogItem) item);
-                spec.configure(decoLoader.getConfigMap());
-            } else {
-                // this pattern of creating a spec could be simplified with a "Configurable" superinterface on *Spec  
-                spec = PolicySpec.create(decoLoader.getType(Policy.class))
-                    .configure( decoLoader.getConfigMap() );
-            }
+            if (item!=null) spec = mgmt.getTypeRegistry().createSpec(item, null, PolicySpec.class);
+            else spec = PolicySpec.create(decoLoader.getType(Policy.class));
+            spec.configure( decoLoader.getConfigMap() );
             decorations.add(spec);
-        }
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        private CatalogItem<Policy, PolicySpec<?>> getPolicyCatalogItem(BrooklynCatalog catalog, String policyType) {
-            if (CatalogUtils.looksLikeVersionedId(policyType)) {
-                String id = CatalogUtils.getIdFromVersionedId(policyType);
-                String version = CatalogUtils.getVersionFromVersionedId(policyType);
-                return (CatalogItem) catalog.getCatalogItem(id, version);
-            } else {
-                return (CatalogItem) catalog.getCatalogItem(policyType, BrooklynCatalog.DEFAULT_VERSION);
-            }
         }
     }
 

@@ -34,7 +34,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -42,6 +41,7 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogDto;
@@ -49,6 +49,8 @@ import org.apache.brooklyn.core.catalog.internal.CatalogItemComparator;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;
+import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
+import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
 import org.apache.brooklyn.rest.api.CatalogApi;
 import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
@@ -146,11 +148,9 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         try {
-            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), entityId);
+            RegisteredType item = mgmt().getTypeRegistry().get(entityId, RegisteredTypeConstraints.spec(Entity.class));
             if (item==null) {
                 throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
-            } else if (item.getCatalogItemType() != CatalogItemType.ENTITY && item.getCatalogItemType() != CatalogItemType.TEMPLATE) {
-                throw WebResourceUtils.preconditionFailed("Item with id '%s' not an entity", entityId);
             }
             brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
         } catch (NoSuchElementException e) {
@@ -170,10 +170,10 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, version);
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, version);
         if (item == null) {
             throw WebResourceUtils.notFound("Entity with id '%s:%s' not found", symbolicName, version);
-        } else if (item.getCatalogItemType() != CatalogItemType.ENTITY && item.getCatalogItemType() != CatalogItemType.TEMPLATE) {
+        } else if (!RegisteredTypePredicates.IS_ENTITY.apply(item) && !RegisteredTypePredicates.IS_APPLICATION.apply(item)) {
             throw WebResourceUtils.preconditionFailed("Item with id '%s:%s' not an entity", symbolicName, version);
         } else {
             brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
@@ -187,10 +187,10 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(policyId, version);
+        RegisteredType item = mgmt().getTypeRegistry().get(policyId, version);
         if (item == null) {
             throw WebResourceUtils.notFound("Policy with id '%s:%s' not found", policyId, version);
-        } else if (item.getCatalogItemType() != CatalogItemType.POLICY) {
+        } else if (!RegisteredTypePredicates.IS_POLICY.apply(item)) {
             throw WebResourceUtils.preconditionFailed("Item with id '%s:%s' not a policy", policyId, version);
         } else {
             brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
@@ -204,10 +204,10 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(locationId, version);
+        RegisteredType item = mgmt().getTypeRegistry().get(locationId, version);
         if (item == null) {
             throw WebResourceUtils.notFound("Location with id '%s:%s' not found", locationId, version);
-        } else if (item.getCatalogItemType() != CatalogItemType.LOCATION) {
+        } else if (!RegisteredTypePredicates.IS_LOCATION.apply(item)) {
             throw WebResourceUtils.preconditionFailed("Item with id '%s:%s' not a location", locationId, version);
         } else {
             brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
@@ -404,8 +404,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
 
-        CatalogItem<?,?> result = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), itemId);
-        return getCatalogItemIcon(result);
+        return getCatalogItemIcon( mgmt().getTypeRegistry().get(itemId) );
     }
 
     @Override
@@ -415,8 +414,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         
-        CatalogItem<?,?> result = brooklyn().getCatalog().getCatalogItem(itemId, version);
-        return getCatalogItemIcon(result);
+        return getCatalogItemIcon(mgmt().getTypeRegistry().get(itemId, version));
     }
 
     @Override
@@ -426,33 +424,27 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         setDeprecated(itemId, deprecated);
     }
     
+    @SuppressWarnings("deprecation")
     @Override
     public void setDeprecated(String itemId, boolean deprecated) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(itemId, "deprecated"))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
                     Entitlements.getEntitlementContext().user());
         }
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), itemId);
-        if (item==null)
-            throw WebResourceUtils.notFound("Catalog item with id '%s' not found", itemId);
-        item.setDeprecated(deprecated);
-        mgmt().getCatalog().persist(item);
+        CatalogUtils.setDeprecated(mgmt(), itemId, deprecated);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void setDisabled(String itemId, boolean disabled) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(itemId, "disabled"))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
                     Entitlements.getEntitlementContext().user());
         }
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), itemId);
-        if (item==null)
-            throw WebResourceUtils.notFound("Catalog item with id '%s' not found", itemId);
-        item.setDisabled(disabled);
-        mgmt().getCatalog().persist(item);
+        CatalogUtils.setDisabled(mgmt(), itemId, disabled);
     }
 
-    private Response getCatalogItemIcon(CatalogItem<?, ?> result) {
+    private Response getCatalogItemIcon(RegisteredType result) {
         String url = result.getIconUrl();
         if (url==null) {
             log.debug("No icon available for "+result+"; returning "+Status.NO_CONTENT);

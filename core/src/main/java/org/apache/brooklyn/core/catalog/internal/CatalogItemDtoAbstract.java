@@ -411,7 +411,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
                     url = inlineRef;
                 } else if (CatalogUtils.looksLikeVersionedId(inlineRef)) {
                     //looks like a name+version ref
-                    name = CatalogUtils.getIdFromVersionedId(inlineRef);
+                    name = CatalogUtils.getSymbolicNameFromVersionedId(inlineRef);
                     version = CatalogUtils.getVersionFromVersionedId(inlineRef);
                     url = null;
                 } else {

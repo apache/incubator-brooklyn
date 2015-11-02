@@ -18,34 +18,24 @@
  */
 package org.apache.brooklyn.core.mgmt.osgi;
 
-import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.launch.Framework;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.catalog.internal.CatalogEntityItemDto;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemDtoAbstract;
-import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.objs.proxy.InternalEntityFactory;
@@ -53,14 +43,23 @@ import org.apache.brooklyn.core.objs.proxy.InternalPolicyFactory;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.core.osgi.OsgiTestBase;
 import org.apache.brooklyn.util.core.osgi.Osgis;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.launch.Framework;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import org.apache.brooklyn.util.core.osgi.OsgiTestBase;
 
 
 /** 
@@ -135,18 +134,18 @@ public class OsgiVersionMoreEntityTest {
         }
     }
     
-    protected CatalogItem<?, ?> addCatalogItemWithTypeAsName(String type, String version, String ...libraries) {
+    protected RegisteredType addCatalogItemWithTypeAsName(String type, String version, String ...libraries) {
         return addCatalogItemWithNameAndType(type, version, type, libraries);
     }
-    protected CatalogItem<?, ?> addCatalogItemWithNameAndType(String symName, String version, String type, String ...libraries) {
+    protected RegisteredType addCatalogItemWithNameAndType(String symName, String version, String type, String ...libraries) {
         return addCatalogItemWithNameAndType(mgmt, symName, version, type, libraries);
     }
 
     @SuppressWarnings("deprecation")
-    static CatalogItem<?, ?> addCatalogItemWithNameAndType(ManagementContext mgmt, String symName, String version, String type, String ...libraries) {
+    static RegisteredType addCatalogItemWithNameAndType(ManagementContext mgmt, String symName, String version, String type, String ...libraries) {
         CatalogEntityItemDto c1 = newCatalogItemWithNameAndType(symName, version, type, libraries);
         mgmt.getCatalog().addItem(c1);
-        CatalogItem<?, ?> c2 = mgmt.getCatalog().getCatalogItem(symName, version);
+        RegisteredType c2 = mgmt.getTypeRegistry().get(symName, version);
         Preconditions.checkNotNull(c2, "Item "+type+":"+version+" was not found after adding it");
         return c2;
     }
@@ -163,12 +162,13 @@ public class OsgiVersionMoreEntityTest {
         return c1;
     }
 
-    protected Entity addItemFromCatalog(CatalogItem<?, ?> c2) {
+    protected Entity addItemFromCatalog(RegisteredType c2) {
         return addItemFromCatalog(mgmt, app, c2);
     }
     
-    public static Entity addItemFromCatalog(ManagementContext mgmt, TestApplication parent, CatalogItem<?, ?> c2) {
-        return parent.createAndManageChild( CatalogTestUtils.createEssentialEntitySpec(mgmt, c2) );
+    @SuppressWarnings("unchecked")
+    public static Entity addItemFromCatalog(ManagementContext mgmt, TestApplication parent, RegisteredType c2) {
+        return parent.createAndManageChild( mgmt.getTypeRegistry().createSpec(c2, null, EntitySpec.class) );
     }
 
     public static void assertV1MethodCall(Entity me) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
@@ -199,7 +199,7 @@ public class OsgiVersionMoreEntityTest {
         return me.invoke(Effectors.effector(String.class, "sayHI").buildAbstract(), ImmutableMap.of("name", "brooklyn")).getUnchecked();
     }
 
-    public static CatalogItem<?, ?> addMoreEntityV1(ManagementContext mgmt, String versionToRegister) {
+    public static RegisteredType addMoreEntityV1(ManagementContext mgmt, String versionToRegister) {
         TestResourceUnavailableException.throwIfResourceUnavailable(OsgiVersionMoreEntityTest.class, BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
         return addCatalogItemWithNameAndType(mgmt,
             OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
@@ -207,7 +207,7 @@ public class OsgiVersionMoreEntityTest {
             OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
             BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
     }
-    public static CatalogItem<?, ?> addMoreEntityV2(ManagementContext mgmt, String versionToRegister) {
+    public static RegisteredType addMoreEntityV2(ManagementContext mgmt, String versionToRegister) {
         TestResourceUnavailableException.throwIfResourceUnavailable(OsgiVersionMoreEntityTest.class, BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
         return addCatalogItemWithNameAndType(mgmt,
             OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
@@ -221,7 +221,7 @@ public class OsgiVersionMoreEntityTest {
     public void testMoreEntitiesV1() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
 
-        CatalogItem<?, ?> c2 = addMoreEntityV1(mgmt, TEST_VERSION);
+        RegisteredType c2 = addMoreEntityV1(mgmt, TEST_VERSION);
         
         // test load and instantiate
         Entity me = addItemFromCatalog(c2);
@@ -231,18 +231,13 @@ public class OsgiVersionMoreEntityTest {
         assertV1EffectorCall(me);
         
         // test adding a child gets the right type; this time by entity parent hierarchy
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, c2);
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        Entity me2 = me.addChild(EntitySpec.create( (Class)loader.loadClass(c2.getJavaType()) ));
+        @SuppressWarnings({ "unchecked" })
+        Entity me2 = me.addChild( mgmt.getTypeRegistry().createSpec(c2, null, EntitySpec.class) );
         Assert.assertEquals(me2.getCatalogItemId(), CatalogUtils.getVersionedId(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, TEST_VERSION));
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    protected PolicySpec<?> getPolicySpec(CatalogItem<?, ?> cp) {
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, cp);
-        PolicySpec spec = PolicySpec.create( (Class)loader.loadClass(cp.getJavaType()) );
-        spec.catalogItemId(cp.getId());
-        return spec;
+    protected PolicySpec<?> getPolicySpec(RegisteredType cp) {
+        return mgmt.getTypeRegistry().createSpec(cp, null, PolicySpec.class);
     }
 
     @Test
@@ -250,7 +245,7 @@ public class OsgiVersionMoreEntityTest {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V1_PATH);
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
-        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
+        RegisteredType c2 = addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
                 BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
@@ -258,13 +253,13 @@ public class OsgiVersionMoreEntityTest {
         // test load and instantiate
         Entity me = addItemFromCatalog(c2);
 
-        CatalogItem<?, ?> cp = addCatalogItemWithTypeAsName(
+        RegisteredType cp = addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_POLICY,
                 TEST_VERSION,
                 BROOKLYN_TEST_OSGI_ENTITIES_URL);
         me.policies().add(getPolicySpec(cp));
         
-        Assert.assertEquals(me.getPolicies().size(), 1, "Wrong number of policies: "+me.getPolicies());
+        Assert.assertEquals(me.policies().size(), 1, "Wrong number of policies: "+MutableList.copyOf(me.policies()));
         
         String catalogItemId = Iterables.getOnlyElement( me.policies() ).getCatalogItemId();
         Assert.assertNotNull(catalogItemId);
@@ -277,7 +272,7 @@ public class OsgiVersionMoreEntityTest {
     public void testMoreEntitiesV2FailsWithoutBasicTestOsgiEntitiesBundle() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
 
-        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
+        RegisteredType c2 = addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
                 BROOKLYN_TEST_MORE_ENTITIES_V2_URL);
@@ -299,7 +294,7 @@ public class OsgiVersionMoreEntityTest {
     public void testMoreEntitiesV2() throws Exception {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
 
-        CatalogItem<?, ?> c2 = addCatalogItemWithTypeAsName(
+        RegisteredType c2 = addCatalogItemWithTypeAsName(
                 OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY,
                 TEST_VERSION,
                 BROOKLYN_TEST_MORE_ENTITIES_V2_URL,
@@ -311,7 +306,7 @@ public class OsgiVersionMoreEntityTest {
         
         assertV2MethodCall(me);
         assertV2EffectorCall(me);
-        Assert.assertEquals(me.getPolicies().size(), 1, "Wrong number of policies: "+me.getPolicies());
+        Assert.assertEquals(me.policies().size(), 1, "Wrong number of policies: "+MutableList.copyOf(me.policies()));
         
         String catalogItemId = Iterables.getOnlyElement( me.policies() ).getCatalogItemId();
         Assert.assertNotNull(catalogItemId);
@@ -334,11 +329,11 @@ public class OsgiVersionMoreEntityTest {
                 BROOKLYN_TEST_MORE_ENTITIES_V2_URL, BROOKLYN_TEST_OSGI_ENTITIES_URL);
         
         // test load and instantiate
-        Entity me = addItemFromCatalog( mgmt.getCatalog().getCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, TEST_VERSION) );
+        Entity me = addItemFromCatalog( mgmt.getTypeRegistry().get(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, TEST_VERSION) );
         
         assertV2MethodCall(me);
         assertV2EffectorCall(me);
-        Assert.assertEquals(me.getPolicies().size(), 1, "Wrong number of policies: "+me.getPolicies());
+        Assert.assertEquals(me.policies().size(), 1, "Wrong number of policies: "+MutableList.copyOf(me.policies()));
     }
 
     @Test
@@ -356,7 +351,7 @@ public class OsgiVersionMoreEntityTest {
                 BROOKLYN_TEST_MORE_ENTITIES_V1_URL);
         
         // test load and instantiate
-        Entity me = addItemFromCatalog( mgmt.getCatalog().getCatalogItem(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, TEST_VERSION) );
+        Entity me = addItemFromCatalog( mgmt.getTypeRegistry().get(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY, TEST_VERSION) );
         /*
          * WARNING - Weird maven-bundle-plugin and OSGi behaviour.  Some caveats:
          * <p>
@@ -383,7 +378,7 @@ public class OsgiVersionMoreEntityTest {
          */
         assertV1MethodCall(me);
         assertV1EffectorCall(me);
-        Assert.assertEquals(me.getPolicies().size(), 0, "Wrong number of policies: "+me.getPolicies());
+        Assert.assertEquals(me.policies().size(), 0, "Wrong number of policies: "+MutableList.copyOf(me.policies()));
     }
 
     @Test
@@ -438,20 +433,20 @@ public class OsgiVersionMoreEntityTest {
 
         // test entity resolution
         
-        Entity v2 = addItemFromCatalog( mgmt.getCatalog().getCatalogItem("v2", TEST_VERSION) );
+        Entity v2 = addItemFromCatalog( mgmt.getTypeRegistry().get("v2", TEST_VERSION) );
         assertV2MethodCall(v2);
         assertV2EffectorCall(v2);
-        Assert.assertEquals(v2.getPolicies().size(), 1, "Wrong number of policies: "+v2.getPolicies());
+        Assert.assertEquals(v2.policies().size(), 1, "Wrong number of policies: "+MutableList.copyOf(v2.policies()));
 
-        Entity v2_evil = addItemFromCatalog( mgmt.getCatalog().getCatalogItem("v2-evil", TEST_VERSION) );
+        Entity v2_evil = addItemFromCatalog( mgmt.getTypeRegistry().get("v2-evil", TEST_VERSION) );
         assertV2EvilTwinMethodCall(v2_evil);
         assertV2EvilTwinEffectorCall(v2_evil);
-        Assert.assertEquals(v2_evil.getPolicies().size(), 1, "Wrong number of policies: "+v2_evil.getPolicies());
+        Assert.assertEquals(v2_evil.policies().size(), 1, "Wrong number of policies: "+MutableList.copyOf(v2_evil.policies()));
 
-        Entity v1 = addItemFromCatalog( mgmt.getCatalog().getCatalogItem("v1", TEST_VERSION) );
+        Entity v1 = addItemFromCatalog( mgmt.getTypeRegistry().get("v1", TEST_VERSION) );
         assertV1MethodCall(v1);
         assertV1EffectorCall(v1);
-        Assert.assertEquals(v1.getPolicies().size(), 0, "Wrong number of policies: "+v1.getPolicies());
+        Assert.assertEquals(v1.policies().size(), 0, "Wrong number of policies: "+MutableList.copyOf(v1.policies()));
     }
 
     // TODO versioning (WIP until #92), install both V1 and V2 with version number, and test that both work

@@ -20,15 +20,15 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertEquals;
 
-import org.testng.annotations.Test;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
 
@@ -43,7 +43,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         String symbolicName = "my.catalog.policy.id.load";
         addCatalogOsgiPolicy(symbolicName, SIMPLE_POLICY_TYPE);
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
         assertEquals(countCatalogPolicies(), 1);
 
@@ -57,7 +57,7 @@ public class CatalogYamlPolicyTest extends AbstractYamlTest {
         String symbolicName = "my.catalog.policy.id.load";
         addCatalogOsgiPolicyTopLevelSyntax(symbolicName, SIMPLE_POLICY_TYPE);
 
-        CatalogItem<?, ?> item = mgmt().getCatalog().getCatalogItem(symbolicName, TEST_VERSION);
+        RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
         assertEquals(countCatalogPolicies(), 1);
 

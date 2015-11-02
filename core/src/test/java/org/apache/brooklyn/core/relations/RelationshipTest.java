@@ -19,11 +19,10 @@
 package org.apache.brooklyn.core.relations;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.relations.RelationshipType;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import brooklyn.basic.relations.RelationshipType;
 
 @Test
 public class RelationshipTest {
