@@ -52,7 +52,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /**
- * Utility methods to aid testing HTTP.
+ * Utility assertions on HTTP.
  * 
  * @author aled
  */
@@ -63,31 +63,26 @@ public class HttpAsserts {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpAsserts.class);
 
+    /**
+     * Assert that a 'successful' (2xx) status code has been provided.
+     *
+     * @param code The status code.
+     */
     public static void assertHealthyStatusCode(int code) {
         if (code>=200 && code<=299) return;
         Asserts.fail("Wrong status code: " + code);
     }
     
-    public static int getHttpStatusCode(String url) throws Exception {
-        URLConnection connection = HttpTool.connectToUrl(url);
-        long startTime = System.currentTimeMillis();
-        int status = ((HttpURLConnection) connection).getResponseCode();
-        
-        // read fully if possible, then close everything, trying to prevent cached threads at server
-        HttpTool.consumeAndCloseQuietly((HttpURLConnection) connection);
-        
-        if (LOG.isDebugEnabled())
-            LOG.debug("connection to {} ({}ms) gives {}", new Object[] { url, (System.currentTimeMillis()-startTime), status });
-        return status;
-    }
 
     /**
      * Asserts that gets back any "valid" response - i.e. not an exception. This could be an unauthorized,
      * a redirect, a 404, or anything else that implies there is web-server listening on that port.
+     *
+     * @param url The URL to connect to.
      */
     public static void assertUrlReachable(String url) {
         try {
-            getHttpStatusCode(url);
+            HttpTool.getHttpStatusCode(url);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Interrupted for "+url+" (in assertion that is reachable)", e);
@@ -96,9 +91,15 @@ public class HttpAsserts {
         }
     }
 
+    /**
+     * Asserts that the URL could not be reached, detected as an IOException.
+     *
+     * @param url The URL to connect to.
+     */
+
     public static void assertUrlUnreachable(String url) {
         try {
-            int statusCode = getHttpStatusCode(url);
+            int statusCode = HttpTool.getHttpStatusCode(url);
             Asserts.fail("Expected url " + url + " unreachable, but got status code " + statusCode);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -108,30 +109,49 @@ public class HttpAsserts {
             if (cause != null) {
                 // success; clean shutdown transitioning from 400 to error
             } else {
-                Throwables.propagate(e);
+                propagateAsAssertionError(e);
             }                        
         }
     }
 
+    /**
+     * Asserts that the URL becomes unreachable within a default time period.
+     *
+     * @param url The URL
+     */
     public static void assertUrlUnreachableEventually(final String url) {
         assertUrlUnreachableEventually(Maps.newLinkedHashMap(), url);
     }
-    
+
+
+    /**
+     * Asserts that the URL becomes unreachable within a configurable time period.
+     *
+     * @param flags The flags controlling the timeout.
+     *              For details see {@link org.apache.brooklyn.test.Asserts#succeedsEventually(java.util.Map, java.util.concurrent.Callable)}
+     * @param url The URL
+     */
     public static void assertUrlUnreachableEventually(Map flags, final String url) {
-        Asserts.succeedsEventually(flags, new Runnable() {
+        assertEventually(flags, new Runnable() {
             public void run() {
                 assertUrlUnreachable(url);
             }
-         });
+        });
     }
 
+    /**
+     * Assert that the status code returned from the URL is in the given codes.
+     *
+     * @param url The URL to get.
+     * @param acceptableReturnCodes The return codes that are expected.
+     */
     public static void assertHttpStatusCodeEquals(String url, int... acceptableReturnCodes) {
         List<Integer> acceptableCodes = Lists.newArrayList();
         for (int code : acceptableReturnCodes) {
             acceptableCodes.add((Integer)code);
         }
         try {
-            int actualCode = getHttpStatusCode(url);
+            int actualCode = HttpTool.getHttpStatusCode(url);
             Asserts.assertTrue(acceptableCodes.contains(actualCode), "code=" + actualCode + "; expected=" + acceptableCodes + "; url=" + url);
             
         } catch (InterruptedException e) {
@@ -147,11 +167,11 @@ public class HttpAsserts {
     }
 
     public static void assertHttpStatusCodeEventuallyEquals(Map flags, final String url, final int expectedCode) {
-        Asserts.succeedsEventually(flags, new Runnable() {
+        assertEventually(flags, new Runnable() {
             public void run() {
                 assertHttpStatusCodeEquals(url, expectedCode);
             }
-         });
+        });
     }
 
     public static void assertContentContainsText(final String url, final String phrase, final String ...additionalPhrases) {
@@ -165,7 +185,7 @@ public class HttpAsserts {
                 }
             }
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw propagateAsAssertionError(e);
         }
     }
 
@@ -180,7 +200,7 @@ public class HttpAsserts {
                 }
             }
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw propagateAsAssertionError(e);
         }
     }
 
@@ -195,7 +215,7 @@ public class HttpAsserts {
                 }
             }
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw propagateAsAssertionError(e);
         }
     }
 
@@ -211,22 +231,43 @@ public class HttpAsserts {
                 }
             }
         } catch (Exception e) {
-            throw Throwables.propagate(e);
+            throw propagateAsAssertionError(e);
         }
     }
-    
+
+    private static AssertionError propagateAsAssertionError(Exception e) {
+        final AssertionError assertionError = new AssertionError("Assertion failed", e);
+        return assertionError;
+    }
+
     public static void assertContentEventuallyContainsText(final String url, final String phrase, final String ...additionalPhrases) {
         assertContentEventuallyContainsText(MutableMap.of(), url, phrase, additionalPhrases);
     }
     
     public static void assertContentEventuallyContainsText(Map flags, final String url, final String phrase, final String ...additionalPhrases) {
-        Asserts.succeedsEventually(flags, new Runnable() {
+        assertEventually(flags, new Runnable() {
             public void run() {
                 assertContentContainsText(url, phrase, additionalPhrases);
             }
-         });
+        });
     }
-    
+
+    private static void assertEventually(Map flags, Runnable r) {
+        try {
+            Asserts.succeedsEventually(flags, r);
+        } catch (Exception e) {
+            throw propagateAsAssertionError(e);
+        }
+    }
+
+    private static void assertEventually(Runnable r) {
+        try {
+            Asserts.succeedsEventually(r);
+        } catch (Exception e) {
+            throw propagateAsAssertionError(e);
+        }
+    }
+
     public static void assertContentMatches(String url, String regex) {
         String contents = HttpTool.getContent(url);
         Asserts.assertNotNull(contents);
@@ -234,7 +275,7 @@ public class HttpAsserts {
     }
 
     public static void assertContentEventuallyMatches(final String url, final String regex) {
-        Asserts.succeedsEventually(new Runnable() {
+        assertEventually(new Runnable() {
             @Override
             public void run() {
                 assertContentMatches(url, regex);
@@ -243,7 +284,7 @@ public class HttpAsserts {
     }
 
     public static void assertContentEventuallyMatches(Map<String,?> flags, final String url, final String regex) {
-        Asserts.succeedsEventually(flags, new Runnable() {
+        assertEventually(flags, new Runnable() {
             @Override
             public void run() {
                 assertContentMatches(url, regex);
@@ -266,6 +307,9 @@ public class HttpAsserts {
      * if (future.isDone()) future.get(); // get exception if it's Asserts.failed
      * }
      * </pre>
+     *
+     * NOTE that the exception thrown by future.get() is a java.util.concurrent.ExecutionException,
+     * not an AssertionError.
      * 
      * For stopping it, you can either do future.cancel(true), or you can just do executor.shutdownNow().
      * 

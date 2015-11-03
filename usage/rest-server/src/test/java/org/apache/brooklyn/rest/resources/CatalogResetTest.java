@@ -27,8 +27,8 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
-import org.apache.brooklyn.core.test.TestHttpRequestHandler;
-import org.apache.brooklyn.core.test.TestHttpServer;
+import org.apache.brooklyn.test.http.TestHttpRequestHandler;
+import org.apache.brooklyn.test.http.TestHttpServer;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.util.core.ResourceUtils;
 
