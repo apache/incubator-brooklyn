@@ -48,6 +48,7 @@ public class BasicCatalogItemRebindSupport extends AbstractBrooklynObjectRebindS
                 .put("description", memento.getDescription())
                 .put("iconUrl", memento.getIconUrl())
                 .put("version", memento.getVersion())
+                .put("parameters", memento.getParameters())
                 .put("libraries", memento.getLibraries())
                 .put("planYaml", memento.getPlanYaml())
                 .put("deprecated", memento.isDeprecated())

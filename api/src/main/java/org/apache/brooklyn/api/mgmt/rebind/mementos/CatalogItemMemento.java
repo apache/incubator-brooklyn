@@ -19,8 +19,10 @@
 package org.apache.brooklyn.api.mgmt.rebind.mementos;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.objs.SpecParameter;
 
 public interface CatalogItemMemento extends Memento {
 
@@ -35,6 +37,8 @@ public interface CatalogItemMemento extends Memento {
     String getPlanYaml();
 
     String getJavaType();
+
+    List<SpecParameter<?>> getParameters();
 
     Collection<CatalogItem.CatalogBundle> getLibraries();
 
