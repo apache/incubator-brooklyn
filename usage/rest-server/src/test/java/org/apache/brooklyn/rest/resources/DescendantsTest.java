@@ -27,14 +27,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.EntitySpec;
@@ -43,6 +37,11 @@ import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.text.StringEscapes;
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -101,9 +100,9 @@ public class DescendantsTest extends BrooklynRestResourceTest {
         assertEquals(sensors.size(), 0);
 
         long v = 0;
-        ((EntityLocal)application).sensors().set(Sensors.newLongSensor("foo"), v);
+        application.sensors().set(Sensors.newLongSensor("foo"), v);
         for (Entity e: entities)
-            ((EntityLocal)e).sensors().set(Sensors.newLongSensor("foo"), v+=123);
+            e.sensors().set(Sensors.newLongSensor("foo"), v+=123);
         
         sensors = client().resource("/v1/applications/"+application.getApplicationId()+"/descendants/sensor/foo")
             .get(new GenericType<Map<String,Object>>() {});

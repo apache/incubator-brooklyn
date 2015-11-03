@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
@@ -84,7 +83,7 @@ public class ApplicationTest {
         ManagementContext mgmt = LocalManagementContextForTests.newInstance();
         try {
             TestApplication app = mgmt.getEntityManager().createEntity(org.apache.brooklyn.api.entity.EntitySpec.create(TestApplication.class));
-            TestApplication e2 = app.addChild(org.apache.brooklyn.api.entity.EntitySpec.create(TestApplication.class));
+            app.addChild(org.apache.brooklyn.api.entity.EntitySpec.create(TestApplication.class));
             Asserts.assertEqualsIgnoringOrder(mgmt.getApplications(), ImmutableList.of(app));
         } finally {
             Entities.destroyAll(mgmt);

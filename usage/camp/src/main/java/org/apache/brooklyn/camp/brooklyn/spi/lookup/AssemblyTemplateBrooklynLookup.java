@@ -26,6 +26,7 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynAssemblyTemplateInstantiator;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.PlatformRootSummary;
@@ -39,7 +40,7 @@ public class AssemblyTemplateBrooklynLookup extends AbstractTemplateBrooklynLook
     }
 
     @Override
-    public AssemblyTemplate adapt(CatalogItem<?,?> item) {
+    public AssemblyTemplate adapt(RegisteredType item) {
         return AssemblyTemplate.builder().
                 name(item.getDisplayName()).
                 id(item.getId()).

@@ -23,39 +23,28 @@ import java.util.NoSuchElementException;
 
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 
 public interface BrooklynCatalog {
+    /** 
+     * Version set in catalog when creator does not supply a version, to mean a low priority item;
+     * and used when requesting to indicate the best version.
+     * (See {@link #getCatalogItem(String, String)} for discussion of the best version.)
+     */
     static String DEFAULT_VERSION = "0.0.0_DEFAULT_VERSION";
 
-    /** @return The item with the given {@link CatalogItem#getSymbolicName()
-     * symbolicName}, or null if not found.
-     * @deprecated since 0.7.0 use {@link #getCatalogItem(String, String)};
-     * or see also CatalogUtils getCatalogItemOptionalVersion */
-    @Deprecated
-    CatalogItem<?,?> getCatalogItem(String symbolicName);
-
-    /** @return The item with the given {@link CatalogItem#getSymbolicName()
-     * symbolicName}, or null if not found. */
+    /** @return The item matching the given given 
+     * {@link CatalogItem#getSymbolicName() symbolicName} 
+     * and optionally {@link CatalogItem#getVersion()},
+     * taking the best version if the version is {@link #DEFAULT_VERSION} or null,
+     * returning null if no matches are found. */
     CatalogItem<?,?> getCatalogItem(String symbolicName, String version);
-
-    /** @return Deletes the item with the given
-     *  {@link CatalogItem#getSymbolicName() symbolicName}
-     * @throws NoSuchElementException if not found
-     * @deprecated since 0.7.0 use {@link #deleteCatalogItem(String, String)} */
-    @Deprecated
-    void deleteCatalogItem(String symbolicName);
 
     /** @return Deletes the item with the given {@link CatalogItem#getSymbolicName()
      * symbolicName} and version
      * @throws NoSuchElementException if not found */
     void deleteCatalogItem(String symbolicName, String version);
-
-    /** variant of {@link #getCatalogItem(String, String)} which checks (and casts) type for convenience
-     * (returns null if type does not match)
-     * @deprecated since 0.7.0 use {@link #getCatalogItem(Class<T>, String, String)} */
-    @Deprecated
-    <T,SpecT> CatalogItem<T,SpecT> getCatalogItem(Class<T> type, String symbolicName);
 
     /** variant of {@link #getCatalogItem(String, String)} which checks (and casts) type for convenience
      * (returns null if type does not match) */
@@ -79,16 +68,6 @@ public interface BrooklynCatalog {
     /** creates a spec for the given catalog item, throwing exceptions if any problems */
     // TODO this should be cached on the item and renamed getSpec(...), else we re-create it too often (every time catalog is listed)
     <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createSpec(CatalogItem<T, SpecT> item);
-    
-    /** throws exceptions if any problems 
-     * @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
-    @Deprecated
-    <T,SpecT> Class<? extends T> loadClass(CatalogItem<T,SpecT> item);
-    /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
-    @Deprecated
-    <T> Class<? extends T> loadClassByType(String typeName, Class<T> typeClass);
-    /** @deprecated since 0.7.0 use {@link #createSpec(CatalogItem)} */
-    CatalogItem<?,?> getCatalogItemForType(String typeName);
 
     /**
      * Adds an item (represented in yaml) to the catalog.
@@ -150,9 +129,11 @@ public interface BrooklynCatalog {
      * so it is recommended to edit the 'manual' catalog DTO if using it to
      * generate a catalog, either adding the appropriate classpath URL or removing this entry.
      *
-     * @deprecated since 0.7.0 Construct catalogs with OSGi bundles instead
+     * @deprecated since 0.7.0 Construct catalogs with OSGi bundles instead.
+     * This is used in a handful of tests which should be rewritten to refer to OSGi bundles.
      */
     @Deprecated
+    @VisibleForTesting
     CatalogItem<?,?> addItem(Class<?> clazz);
 
     void reset(Collection<CatalogItem<?, ?>> entries);

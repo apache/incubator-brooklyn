@@ -715,6 +715,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         public Iterator<Group> iterator() { 
             return asList().iterator();
         }
+        @Override
+        public int size() {
+            return asList().size();
+        }
+        @Override
+        public boolean isEmpty() {
+            return asList().isEmpty();
+        }
         
         protected List<Group> asList() { 
             return ImmutableList.copyOf(groupsInternal);
@@ -1598,6 +1606,15 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             return asList().iterator();
         }
 
+        @Override
+        public int size() {
+            return policiesInternal.size();
+        }
+        @Override
+        public boolean isEmpty() {
+            return policiesInternal.isEmpty();
+        }
+        
         protected List<Policy> asList() {
             return ImmutableList.<Policy>copyOf(policiesInternal);
         }
@@ -1661,6 +1678,15 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             return asList().iterator();
         }
 
+        @Override
+        public int size() {
+            return enrichersInternal.size();
+        }
+        @Override
+        public boolean isEmpty() {
+            return enrichersInternal.isEmpty();
+        }
+        
         protected List<Enricher> asList() {
             return ImmutableList.<Enricher>copyOf(enrichersInternal);
         }

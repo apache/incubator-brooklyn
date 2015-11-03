@@ -363,6 +363,9 @@ public interface Entity extends BrooklynObject {
          */
         Iterator<T> iterator();
         
+        int size();
+        boolean isEmpty();
+        
         /**
          * Adds an instance.
          */
@@ -432,5 +435,8 @@ public interface Entity extends BrooklynObject {
          */
         @Override
         Iterator<Group> iterator();
+        
+        int size();
+        boolean isEmpty();
     }
 }

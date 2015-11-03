@@ -64,6 +64,7 @@ public class CatalogTransformer {
         Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
 
         try {
+            @SuppressWarnings({ "unchecked", "rawtypes" })
             EntitySpec<?> spec = (EntitySpec<?>) b.getCatalog().createSpec((CatalogItem) item);
             EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
             EntityType type = typeMap.getSnapshot();

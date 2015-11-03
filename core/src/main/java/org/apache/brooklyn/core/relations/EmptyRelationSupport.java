@@ -23,9 +23,8 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObject.RelationSupport;
+import org.apache.brooklyn.api.relations.RelationshipType;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.RelationSupportInternal;
-
-import brooklyn.basic.relations.RelationshipType;
 
 public final class EmptyRelationSupport<SourceType extends BrooklynObject> implements RelationSupportInternal<SourceType> {
 

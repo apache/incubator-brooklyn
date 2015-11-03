@@ -36,7 +36,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.api.entity.Application;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityFunctions;
@@ -244,12 +243,12 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-yaml");
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testReferenceCatalogEntity() throws Exception {
-        getManagementContext().getCatalog().addItem(BasicEntity.class);
+        getManagementContext().getCatalog().addItems("{ name: "+BasicEntity.class.getName()+", "
+            + "services: [ { type: "+BasicEntity.class.getName()+" } ] }");
 
-        String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: " + BasicEntity.class.getName() + " } ] }";
+        String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { type: " + BasicEntity.class.getName() + " } ] }";
 
         ClientResponse response = client().resource("/v1/applications")
                 .entity(yaml, "application/x-yaml")
@@ -335,7 +334,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
                 .get(ApplicationSummary.class);
         assertEquals(summary.getStatus(), Status.RUNNING);
 
-        ((EntityLocal)app).sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        app.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         try {
             ApplicationSummary summary2 = client().resource("/v1/applications/"+app.getId())
                     .get(ApplicationSummary.class);
@@ -343,7 +342,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             assertEquals(summary2.getStatus(), Status.ERROR);
             
         } finally {
-            ((EntityLocal)app).sensors().set(Attributes.SERVICE_STATE_ACTUAL, origState);
+            app.sensors().set(Attributes.SERVICE_STATE_ACTUAL, origState);
         }
     }
 

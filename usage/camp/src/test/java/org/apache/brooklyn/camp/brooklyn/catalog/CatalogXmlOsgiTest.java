@@ -18,11 +18,6 @@
  */
 package org.apache.brooklyn.camp.brooklyn.catalog;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
-
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.testng.annotations.Test;
 
 public class CatalogXmlOsgiTest extends AbstractCatalogXmlTest {
@@ -31,19 +26,12 @@ public class CatalogXmlOsgiTest extends AbstractCatalogXmlTest {
         super("classpath://osgi-catalog.xml");
     }
 
-    //OSGi libraries not supported with old-style catalog items
-    //We treat those catalog items just as an alias to the java type they hold.
-    //No loader wrapping their libraries is ever created.
     @Test
     public void testOsgiItem() throws Exception {
-        try {
-            startApp("OsgiApp");
-            fail();
-        } catch (PropagatedRuntimeException e) {
-            ClassNotFoundException ex = Exceptions.getFirstThrowableOfType(e, ClassNotFoundException.class);
-            if (ex == null) throw e;
-            assertEquals(ex.getMessage(), "org.apache.brooklyn.test.osgi.entities.SimpleApplication");
-        }
+        startApp("OsgiApp");
+        // previously OSGi libraries were not supported with old-style catalog items;
+        // now they are (2015-10), even though the XML is not supported,
+        // we may use the same type instantiator from CAMP and elsewhere
     }
 
 }

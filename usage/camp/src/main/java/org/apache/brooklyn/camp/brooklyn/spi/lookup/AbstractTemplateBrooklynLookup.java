@@ -18,16 +18,16 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.lookup;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.spi.AbstractResource;
 import org.apache.brooklyn.camp.spi.PlatformRootSummary;
 import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>  extends AbstractBrooklynResourceLookup<T> {
 
@@ -39,7 +39,7 @@ public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>
 
     @Override
     public T get(String id) {
-        CatalogItem<?,?> item = getCatalogItem(id);
+        RegisteredType item = bmc.getTypeRegistry().get(id);
         if (item==null) {
             log.warn("Could not find item '"+id+"' in Brooklyn catalog; returning null");
             return null;
@@ -47,11 +47,7 @@ public abstract class AbstractTemplateBrooklynLookup<T extends AbstractResource>
         return adapt(item);
     }
 
-    private CatalogItem<?, ?> getCatalogItem(String versionedId) {
-        return CatalogUtils.getCatalogItemOptionalVersion(bmc, versionedId);
-    }
-
-    public abstract T adapt(CatalogItem<?,?> item);
+    public abstract T adapt(RegisteredType item);
 
     protected ResolvableLink<T> newLink(CatalogItem<? extends Entity,EntitySpec<?>> li) {
         return newLink(li.getId(), li.getDisplayName());

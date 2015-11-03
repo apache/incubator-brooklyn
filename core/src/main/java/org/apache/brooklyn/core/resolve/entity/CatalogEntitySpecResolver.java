@@ -20,15 +20,10 @@ package org.apache.brooklyn.core.resolve.entity;
 
 import java.util.Set;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
+import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,27 +36,25 @@ public class CatalogEntitySpecResolver extends AbstractEntitySpecResolver {
         super(RESOLVER_NAME);
     }
 
+    // in 0.9.0 we've changed this *not* to perform
+    // symbolicName = DeserializingClassRenamesProvider.findMappedName(symbolicName);
+    // in belief that this should only apply to *java* loads TODO-type-registry confirm this
+
     @Override
     protected boolean canResolve(String type, BrooklynClassLoadingContext loader) {
         String localType = getLocalType(type);
-        CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem(mgmt, localType);
-        if (item != null) {
-            try {
-                //Keeps behaviour of previous functionality, but probably should throw instead when using disabled items.
-                checkUsable(item);
-                return true;
-            } catch (IllegalStateException e) {
-                return false;
-            }
-        } else {
-            return false;
-        }
+        RegisteredType item = mgmt.getTypeRegistry().get(localType);
+        if (item==null) return false;
+        //Keeps behaviour of previous functionality, but caller might be interested if item is disabled
+        if (item.isDisabled()) return false;
+        
+        return true;
     }
 
     @Override
     public EntitySpec<?> resolve(String type, BrooklynClassLoadingContext loader, Set<String> parentEncounteredTypes) {
         String localType = getLocalType(type);
-        CatalogItem<Entity, EntitySpec<?>> item = getCatalogItem(mgmt, localType);
+        RegisteredType item = mgmt.getTypeRegistry().get(localType);
 
         if (item == null) return null;
         checkUsable(item);
@@ -69,21 +62,14 @@ public class CatalogEntitySpecResolver extends AbstractEntitySpecResolver {
         //Take the symbolicName part of the catalog item only for recursion detection to prevent
         //cross referencing of different versions. Not interested in non-catalog item types.
         //Prevent catalog items self-referencing even if explicitly different version.
-        boolean nonRecursiveCall = !parentEncounteredTypes.contains(item.getSymbolicName());
-        if (nonRecursiveCall) {
-            // CatalogItem generics are just getting in the way, better get rid of them, we
-            // are casting anyway.
-            @SuppressWarnings({ "rawtypes" })
-            CatalogItem rawItem = item;
-            @SuppressWarnings({ "rawtypes", "unchecked" })
-            AbstractBrooklynObjectSpec rawSpec = EntityManagementUtils.createCatalogSpec(mgmt, rawItem, parentEncounteredTypes);
-            return (EntitySpec<?>) rawSpec;
-        } else {
-            return null;
-        }
+        boolean recursiveCall = parentEncounteredTypes.contains(item.getSymbolicName());
+        if (recursiveCall) return null;
+        return mgmt.getTypeRegistry().createSpec(item, 
+            RegisteredTypeConstraints.alreadyVisited(parentEncounteredTypes), 
+            EntitySpec.class);
     }
 
-    private void checkUsable(CatalogItem<Entity, EntitySpec<?>> item) {
+    private void checkUsable(RegisteredType item) {
         if (item.isDisabled()) {
             throw new IllegalStateException("Illegal use of disabled catalog item "+item.getSymbolicName()+":"+item.getVersion());
         } else if (item.isDeprecated()) {
@@ -91,9 +77,9 @@ public class CatalogEntitySpecResolver extends AbstractEntitySpecResolver {
         }
     }
 
-    protected CatalogItem<Entity,EntitySpec<?>> getCatalogItem(ManagementContext mgmt, String brooklynType) {
-        brooklynType = DeserializingClassRenamesProvider.findMappedName(brooklynType);
-        return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  brooklynType);
-    }
+//    protected CatalogItem<Entity,EntitySpec<?>> getCatalogItem(ManagementContext mgmt, String brooklynType) {
+//        brooklynType = DeserializingClassRenamesProvider.findMappedName(brooklynType);
+//        return CatalogUtils.getCatalogItemOptionalVersion(mgmt, Entity.class,  brooklynType);
+//    }
 
 }

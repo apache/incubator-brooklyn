@@ -31,6 +31,7 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
@@ -41,7 +42,6 @@ import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
-import org.apache.brooklyn.core.resolve.ResolveUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
@@ -50,6 +50,7 @@ import org.apache.brooklyn.util.yaml.Yamls;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
+//TODO-type-registry
 public class CampUtils {
 
     public static List<EntitySpec<?>> createServiceSpecs(String plan, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
@@ -108,7 +109,7 @@ public class CampUtils {
         }
 
         String versionedId = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "policy_type", "policyType", "type"), "policy type");
-        PolicySpec<? extends Policy> spec = ResolveUtils.resolveSpec(versionedId, loader, encounteredCatalogTypes);
+        PolicySpec<? extends Policy> spec = resolveSpec(versionedId, loader, encounteredCatalogTypes);
         Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
         if (brooklynConfig != null) {
             spec.configure(brooklynConfig);
@@ -141,7 +142,7 @@ public class CampUtils {
 
         String type = (String) checkNotNull(Yamls.getMultinameAttribute(itemMap, "location_type", "locationType", "type"), "location type");
         Map<String, Object> brooklynConfig = (Map<String, Object>) itemMap.get("brooklyn.config");
-        return ResolveUtils.resolveLocationSpec(type, brooklynConfig, loader);
+        return resolveLocationSpec(type, brooklynConfig, loader);
     }
 
     public static DeploymentPlan makePlanFromYaml(ManagementContext mgmt, String yaml) {
@@ -155,6 +156,52 @@ public class CampUtils {
             return result;
         } else {
             throw new IllegalStateException("No CAMP Platform is registered with this Brooklyn management context.");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static PolicySpec<? extends Policy> resolveSpec(
+            String versionedId,
+            BrooklynClassLoadingContext loader,
+            Set<String> encounteredCatalogTypes) {
+        
+        PolicySpec<? extends Policy> spec;
+        RegisteredType item = loader.getManagementContext().getTypeRegistry().get(versionedId);
+        if (item != null && !encounteredCatalogTypes.contains(item.getSymbolicName())) {
+            return loader.getManagementContext().getTypeRegistry().createSpec(item, null, PolicySpec.class);
+        } else {
+            // TODO-type-registry pass the loader in to the above, and allow it to load with the loader
+            spec = PolicySpec.create(loader.loadClass(versionedId, Policy.class));
+        }
+        return spec;
+    }
+
+    private static LocationSpec<?> resolveLocationSpec(
+            String type,
+            Map<String, Object> brooklynConfig,
+            BrooklynClassLoadingContext loader) {
+        Maybe<Class<? extends Location>> javaClass = loader.tryLoadClass(type, Location.class);
+        if (javaClass.isPresent()) {
+            LocationSpec<?> spec = LocationSpec.create(javaClass.get());
+            if (brooklynConfig != null) {
+                spec.configure(brooklynConfig);
+            }
+            return spec;
+        } else {
+            Maybe<Location> loc = loader.getManagementContext().getLocationRegistry().resolve(type, false, brooklynConfig);
+            if (loc.isPresent()) {
+                // TODO extensions?
+                Map<String, Object> locConfig = ((ConfigurationSupportInternal)loc.get().config()).getBag().getAllConfig();
+                Class<? extends Location> locType = loc.get().getClass();
+                Set<Object> locTags = loc.get().tags().getTags();
+                String locDisplayName = loc.get().getDisplayName();
+                return LocationSpec.create(locType)
+                        .configure(locConfig)
+                        .displayName(locDisplayName)
+                        .tags(locTags);
+            } else {
+                throw new IllegalStateException("No class or resolver found for location type "+type);
+            }
         }
     }
 

@@ -22,10 +22,9 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.ha.OsgiManager;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
@@ -37,22 +36,22 @@ public class OsgiBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
 
     private final String catalogItemId;
     private boolean hasBundles = false;
-    private transient Collection<CatalogBundle> _bundles;
+    private transient Collection<? extends OsgiBundleWithUrl> _bundles;
 
-    public OsgiBrooklynClassLoadingContext(ManagementContext mgmt, String catalogItemId, Collection<CatalogBundle> bundles) {
+    public OsgiBrooklynClassLoadingContext(ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> bundles) {
         super(mgmt);
         this._bundles = bundles;
         this.hasBundles = bundles!=null && !bundles.isEmpty();
         this.catalogItemId = catalogItemId;
     }
 
-    public Collection<CatalogBundle> getBundles() {
+    public Collection<? extends OsgiBundleWithUrl> getBundles() {
         if (_bundles!=null || !hasBundles) return _bundles;
-        CatalogItem<?, ?> cat = CatalogUtils.getCatalogItemOptionalVersion(mgmt, catalogItemId);
-        if (cat==null) {
+        RegisteredType item = mgmt.getTypeRegistry().get(catalogItemId);
+        if (item==null) {
             throw new IllegalStateException("Catalog item not found for "+catalogItemId+"; cannot create loading context");
         }
-        _bundles = cat.getLibraries();
+        _bundles = item.getLibraries();
         return _bundles;
     }
     

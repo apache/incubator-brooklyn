@@ -18,20 +18,18 @@
  */
 package org.apache.brooklyn.core.mgmt.rebind;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
+import org.apache.brooklyn.core.mgmt.rebind.transformer.CompoundTransformer;
+import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.core.catalog.internal.CatalogTestUtils;
-import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
-import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
-import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl;
-import org.apache.brooklyn.core.mgmt.rebind.transformer.CompoundTransformer;
-import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.util.collections.MutableList;
 
 public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
 
@@ -54,13 +52,13 @@ public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
     
     @Test
     public void testSwitchingVersions() throws Exception {
-        CatalogItem<?, ?> catV1 = OsgiVersionMoreEntityTest.addMoreEntityV1(origManagementContext, "1.0");
+        RegisteredType catV1 = OsgiVersionMoreEntityTest.addMoreEntityV1(origManagementContext, "1.0");
         Entity childV1 = OsgiVersionMoreEntityTest.addItemFromCatalog(origManagementContext, origApp, catV1);
         
         OsgiVersionMoreEntityTest.assertV1EffectorCall(childV1);
         
         // simply adding to catalog doesn't change
-        CatalogItem<?, ?> catV2 = OsgiVersionMoreEntityTest.addMoreEntityV2(origManagementContext, "1.1");
+        RegisteredType catV2 = OsgiVersionMoreEntityTest.addMoreEntityV2(origManagementContext, "1.1");
         OsgiVersionMoreEntityTest.assertV1EffectorCall(childV1);
         Entity child2V2 = OsgiVersionMoreEntityTest.addItemFromCatalog(origManagementContext, origApp, catV2);
         OsgiVersionMoreEntityTest.assertV2EffectorCall(child2V2);
@@ -83,8 +81,8 @@ public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
 
     @Test
     public void testSwitchingVersionsInCluster() throws Exception {
-        CatalogItem<?, ?> catV1 = OsgiVersionMoreEntityTest.addMoreEntityV1(origManagementContext, "1.0");
-        CatalogItem<?, ?> catV2 = OsgiVersionMoreEntityTest.addMoreEntityV2(origManagementContext, "1.1");
+        RegisteredType catV1 = OsgiVersionMoreEntityTest.addMoreEntityV1(origManagementContext, "1.0");
+        RegisteredType catV2 = OsgiVersionMoreEntityTest.addMoreEntityV2(origManagementContext, "1.1");
         
         // could do a yaml test in a downstream project (no camp available here)
 //        CreationResult<List<Entity>, List<String>> clusterR = EntityManagementUtils.addChildren(origApp, 
@@ -94,7 +92,7 @@ public class ActivePartialRebindVersionTest extends RebindTestFixtureWithApp {
 //            + "  entitySpec: { type: "+catV1.getId()+" }\n", true);
         DynamicCluster cluster = origApp.createAndManageChild(EntitySpec.create(DynamicCluster.class)
             .configure(DynamicCluster.INITIAL_SIZE, 1)
-            .configure(DynamicCluster.MEMBER_SPEC, CatalogTestUtils.createEssentialEntitySpec(origManagementContext, catV1))
+            .configure(DynamicCluster.MEMBER_SPEC, origManagementContext.getTypeRegistry().createSpec(catV1, null, EntitySpec.class))
             );
         cluster.start(MutableList.of(origApp.newSimulatedLocation()));
         Entity childV1 = MutableList.copyOf(cluster.getChildren()).get(1);
