@@ -89,6 +89,9 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 
+/**
+ * A utility tool for HTTP operations.
+ */
 public class HttpTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpTool.class);

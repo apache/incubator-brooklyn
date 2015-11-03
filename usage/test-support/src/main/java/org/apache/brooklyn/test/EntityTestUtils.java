@@ -48,7 +48,7 @@ import com.google.common.collect.Sets;
 /**
  * A utility class containing tests on Entities.
  *
- * @deprecated Prefer core assertions class org.apache.brooklyn.core.entity.EntityAsserts.
+ * @deprecated since 0.9.0. Prefer core assertions class org.apache.brooklyn.core.entity.EntityAsserts.
  */
 @Deprecated
 public class EntityTestUtils {

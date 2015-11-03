@@ -42,6 +42,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 
+/**
+ * A response class for use with {@link HttpTool}.
+ */
 public class HttpToolResponse {
 
     private static final Logger log = LoggerFactory.getLogger(HttpToolResponse.class);
