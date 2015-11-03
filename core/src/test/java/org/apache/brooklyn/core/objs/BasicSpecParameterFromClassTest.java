@@ -24,15 +24,27 @@ import java.util.List;
 
 import org.apache.brooklyn.api.catalog.CatalogConfig;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.reflect.TypeToken;
 
 public class BasicSpecParameterFromClassTest {
+    private ManagementContext mgmt;
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() {
+        mgmt = LocalManagementContextForTests.newInstance();
+    }
+
     public interface SpecParameterTestEntity extends Entity {
         @CatalogConfig(label="String Key", priority=3)
         ConfigKey<String> STRING_KEY = ConfigKeys.newStringConfigKey("string_key");
@@ -47,13 +59,28 @@ public class BasicSpecParameterFromClassTest {
         ConfigKey<String> UNPINNNED_KEY = ConfigKeys.newStringConfigKey("unpinned_key");
     }
 
+    @ImplementedBy(ConfigInImplParameterTestEntityImpl.class)
+    public static interface ConfigInImplParameterTestEntity extends Entity {}
+    public static class ConfigInImplParameterTestEntityImpl extends AbstractEntity implements ConfigInImplParameterTestEntity {
+        public static final ConfigKey<String> SUGGESTED_VERSION = BrooklynConfigKeys.SUGGESTED_VERSION;
+    }
+
     @Test
     public void testFullDefinition() {
-        List<SpecParameter<?>> inputs = BasicSpecParameter.fromClass(SpecParameterTestEntity.class);
+        List<SpecParameter<?>> inputs = BasicSpecParameter.fromClass(mgmt, SpecParameterTestEntity.class);
+        assertEquals(inputs.size(), 4);
         assertInput(inputs.get(0), "Predicate Key", true, SpecParameterTestEntity.PREDICATE_KEY);
         assertInput(inputs.get(1), "Integer Key", true, SpecParameterTestEntity.INTEGER_KEY);
         assertInput(inputs.get(2), "String Key", true, SpecParameterTestEntity.STRING_KEY);
         assertInput(inputs.get(3), "unpinned_key", false, SpecParameterTestEntity.UNPINNNED_KEY);
+    }
+
+    @Test
+    public void testConfigInImplVisible() {
+        List<SpecParameter<?>> inputs = BasicSpecParameter.fromClass(mgmt, ConfigInImplParameterTestEntity.class);
+        assertEquals(inputs.size(), 1);
+        ConfigKey<String> key = ConfigInImplParameterTestEntityImpl.SUGGESTED_VERSION;
+        assertInput(inputs.get(0), key.getName(), false, key);
     }
 
     private void assertInput(SpecParameter<?> input, String label, boolean pinned, ConfigKey<?> type) {

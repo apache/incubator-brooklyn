@@ -22,6 +22,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Set;
 
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -52,6 +53,7 @@ public abstract class AbstractYamlTest {
     protected static final String TEST_VERSION = "0.1.2";
 
     private ManagementContext brooklynMgmt;
+    protected BrooklynCatalog catalog;
     protected BrooklynCampPlatform platform;
     protected BrooklynCampPlatformLauncherNoServer launcher;
     private boolean forceUpdate;
@@ -73,6 +75,7 @@ public abstract class AbstractYamlTest {
         };
         launcher.launch();
         brooklynMgmt = launcher.getBrooklynMgmt();
+        catalog = brooklynMgmt.getCatalog();
         platform = launcher.getCampPlatform();
     }
 
@@ -168,11 +171,11 @@ public abstract class AbstractYamlTest {
         return LOG;
     }
 
-    private String joinLines(Iterable<String> catalogYaml) {
+    protected String joinLines(Iterable<String> catalogYaml) {
         return Joiner.on("\n").join(catalogYaml);
     }
 
-    private String joinLines(String[] catalogYaml) {
+    protected String joinLines(String... catalogYaml) {
         return Joiner.on("\n").join(catalogYaml);
     }
 
