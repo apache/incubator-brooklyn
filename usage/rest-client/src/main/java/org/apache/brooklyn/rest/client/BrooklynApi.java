@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.*;
 import org.jboss.resteasy.client.ClientExecutor;
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
@@ -76,27 +76,63 @@ public class BrooklynApi {
     private final ClientExecutor clientExecutor;
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynApi.class);
 
+    /**
+     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
+     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
+     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     */
+    @Deprecated
     public BrooklynApi(URL endpoint) {
         this(checkNotNull(endpoint, "endpoint").toString());
     }
 
+    /**
+     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
+     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
+     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     */
+    @Deprecated
     public BrooklynApi(String endpoint) {
         // username/password cannot be null, but credentials can
         this(endpoint, null);
     }
 
+    /**
+     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
+     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
+     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     */
+    @Deprecated
     public BrooklynApi(URL endpoint, String username, String password) {
         this(endpoint.toString(), new UsernamePasswordCredentials(username, password));
     }
 
+    /**
+     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
+     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
+     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     */
+    @Deprecated
     public BrooklynApi(String endpoint, String username, String password) {
         this(endpoint, new UsernamePasswordCredentials(username, password));
     }
 
+    /**
+     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
+     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
+     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     */
+    @Deprecated
     public BrooklynApi(URL endpoint, @Nullable Credentials credentials) {
         this(endpoint.toString(), credentials);
     }
 
+    /**
+     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
+     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
+     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     */
+    @Deprecated
     public BrooklynApi(String endpoint, @Nullable Credentials credentials) {
         try {
             new URL(checkNotNull(endpoint, "endpoint"));
@@ -114,7 +150,19 @@ public class BrooklynApi {
         }
     }
 
+    /**
+     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
+     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
+     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     */
+    @Deprecated
     public BrooklynApi(URL endpoint, ClientExecutor clientExecutor) {
+        this.target = checkNotNull(endpoint, "endpoint").toString();
+        this.clientExecutor = checkNotNull(clientExecutor, "clientExecutor");
+    }
+
+    // to be used by factories
+    BrooklynApi(ClientExecutor clientExecutor, URL endpoint) {
         this.target = checkNotNull(endpoint, "endpoint").toString();
         this.clientExecutor = checkNotNull(clientExecutor, "clientExecutor");
     }
@@ -252,7 +300,7 @@ public class BrooklynApi {
     }
 
     /**
-     * @deprecated Use {@link #getEntity(Response, GenericType)} instead.
+     * @deprecated since 0.9.0. Use {@link #getEntity(Response, GenericType)} instead.
      */
     @Deprecated
     public static <T> T getEntityGeneric(Response response, GenericType<T> type) {

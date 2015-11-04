@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.client;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -70,7 +71,9 @@ public class BrooklynApiRestClientTest {
                 .securityProvider(TestSecurityProvider.class)
                 .start();
 
-        api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/",
+        DefaultBrooklynApiFactory defaultBrooklynApiFactory = new DefaultBrooklynApiFactory();
+
+        api = defaultBrooklynApiFactory.getBrooklynApi(new URL("http://localhost:" + server.getConnectors()[0].getPort() + "/"),
                 TestSecurityProvider.USER, TestSecurityProvider.PASSWORD);
     }
 
