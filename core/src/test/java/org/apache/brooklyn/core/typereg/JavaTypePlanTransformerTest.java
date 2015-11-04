@@ -37,16 +37,16 @@ public class JavaTypePlanTransformerTest extends BrooklynMgmtUnitTestSupport {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        type = newNoArgRegisteredType(JavaTypePlanTransformer.FORMAT);
+        type = newNoArgRegisteredType(JavaClassNameTypePlanTransformer.FORMAT);
         transformer = newTransformer();
     }
     
     protected RegisteredType newNoArgRegisteredType(String format) {
-        return RegisteredTypes.bean("no-arg", "1.0", null, new BasicTypeImplementationPlan(format, NoArg.class.getName()));
+        return RegisteredTypes.bean("no-arg", "1.0", new BasicTypeImplementationPlan(format, NoArg.class.getName()), null);
     }
     
     protected BrooklynTypePlanTransformer newTransformer() {
-        BrooklynTypePlanTransformer xf = new JavaTypePlanTransformer();
+        BrooklynTypePlanTransformer xf = new JavaClassNameTypePlanTransformer();
         xf.injectManagementContext(mgmt);
         return xf;
     }

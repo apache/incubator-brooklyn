@@ -105,7 +105,7 @@ public class DelegatingEntitySpecResolver extends AbstractEntitySpecResolver {
                         resolversWhoDontSupport.add(resolver.getName() + " (returned null)");
                     }
                 } catch (Exception e) {
-                    otherProblemsFromResolvers.add(new PropagatedRuntimeException("Transformer for "+resolver.getName()+" gave an error creating this plan: "+
+                    otherProblemsFromResolvers.add(new PropagatedRuntimeException("Transformer for "+resolver.getName()+" gave an error creating this plan: ",
                             Exceptions.collapseText(e), e));
                 }
             }

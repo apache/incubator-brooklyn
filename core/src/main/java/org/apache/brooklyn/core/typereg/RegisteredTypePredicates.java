@@ -109,36 +109,46 @@ public class RegisteredTypePredicates {
         }
     }
 
-    public static <T> Predicate<RegisteredType> javaType(final Predicate<Class<T>> filter) {
-        return new JavaTypeMatches(filter);
+    public static <T> Predicate<RegisteredType> anySuperType(final Predicate<Class<T>> filter) {
+        return new AnySuperTypeMatches(filter);
     }
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static Predicate<RegisteredType> javaTypeAssignableFrom(final Class<?> filter) {
-        return javaType((Predicate)Predicates.assignableFrom(filter));
+    public static Predicate<RegisteredType> assignableFrom(final Class<?> filter) {
+        return anySuperType((Predicate)Predicates.assignableFrom(filter));
     }
     
-    private static class JavaTypeMatches implements Predicate<RegisteredType> {
+    private static class AnySuperTypeMatches implements Predicate<RegisteredType> {
         private final Predicate<Class<?>> filter;
         
         @SuppressWarnings({ "rawtypes", "unchecked" })
-        private <T> JavaTypeMatches(Predicate filter) {
+        private <T> AnySuperTypeMatches(Predicate filter) {
             this.filter = filter;
         }
         @Override
         public boolean apply(@Nullable RegisteredType item) {
             if (item==null) return false;
-            return (item != null) && filter.apply(item.getJavaType());
+            for (Object o: item.getSuperTypes()) {
+                if (o instanceof Class) {
+                    if (filter.apply((Class<?>)o)) return true;
+                }
+            }
+            for (Object o: item.getSuperTypes()) {
+                if (o instanceof RegisteredType) {
+                    if (apply((RegisteredType)o)) return true;
+                }
+            }
+            return false;
         }
     }
 
-    public static final Predicate<RegisteredType> IS_APPLICATION = javaTypeAssignableFrom(Application.class);
+    public static final Predicate<RegisteredType> IS_APPLICATION = assignableFrom(Application.class);
     // TODO do we need this?  introduced already deprecated in 0.9.0 so can be removed, or enabled
     @Deprecated
     public static final Predicate<RegisteredType> IS_TEMPLATE = IS_APPLICATION;
     
-    public static final Predicate<RegisteredType> IS_ENTITY = javaTypeAssignableFrom(Entity.class);
-    public static final Predicate<RegisteredType> IS_LOCATION = javaTypeAssignableFrom(Location.class);
-    public static final Predicate<RegisteredType> IS_POLICY = javaTypeAssignableFrom(Policy.class);
+    public static final Predicate<RegisteredType> IS_ENTITY = assignableFrom(Entity.class);
+    public static final Predicate<RegisteredType> IS_LOCATION = assignableFrom(Location.class);
+    public static final Predicate<RegisteredType> IS_POLICY = assignableFrom(Policy.class);
 
     public static Predicate<RegisteredType> entitledToSee(final ManagementContext mgmt) {
         return new EntitledToSee(mgmt);

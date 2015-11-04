@@ -33,6 +33,7 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiVersionMoreEntityTest;
 import org.apache.brooklyn.core.objs.BrooklynTypes;
 import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.text.Strings;
@@ -239,17 +240,24 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         Iterable<RegisteredType> items = types.getAll();
         for (RegisteredType item: items) {
             Object spec = types.createSpec(item, null, null);
-            if (Entity.class.isAssignableFrom(item.getJavaType())) {
+            int match = 0;
+            if (RegisteredTypes.isSubTypeOf(item, Entity.class)) {
                 assertTrue(spec instanceof EntitySpec, "Not an EntitySpec: " + spec);
                 BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
-            } else if (Policy.class.isAssignableFrom(item.getJavaType())) { 
+                match++;
+            }
+            if (RegisteredTypes.isSubTypeOf(item, Policy.class)) {
                 assertTrue(spec instanceof PolicySpec, "Not a PolicySpec: " + spec);
                 BrooklynTypes.getDefinedBrooklynType(((PolicySpec<?>)spec).getType());
-            } else if (Location.class.isAssignableFrom(item.getJavaType())) {
+                match++;
+            }
+            if (RegisteredTypes.isSubTypeOf(item, Location.class)) {
                 assertTrue(spec instanceof LocationSpec, "Not a LocationSpec: " + spec);
                 BrooklynTypes.getDefinedBrooklynType(((LocationSpec<?>)spec).getType());
-            } else {
-                Assert.fail("Unexpected type: "+item.getJavaType()+" / "+item);
+                match++;
+            }
+            if (match==0) {
+                Assert.fail("Unexpected type: "+item+" ("+item.getSuperTypes()+")");
             }
         }
     }

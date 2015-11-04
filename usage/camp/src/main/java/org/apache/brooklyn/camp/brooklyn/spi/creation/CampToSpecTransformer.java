@@ -34,10 +34,13 @@ import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.plan.PlanNotRecognizedException;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Deprecated /** @deprecated since 0.9.0 use CampTypePlanTransformer */
 public class CampToSpecTransformer implements PlanToSpecTransformer {
 
     public static final String YAML_CAMP_PLAN_TYPE = "org.apache.brooklyn.camp/yaml";
@@ -59,12 +62,12 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     @Override
     public EntitySpec<? extends Application> createApplicationSpec(String plan) {
         try {
-            CampPlatform camp = CampUtils.getCampPlatform(mgmt);
+            CampPlatform camp = CampInternalUtils.getCampPlatform(mgmt);
             BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-            AssemblyTemplate at = CampUtils.registerDeploymentPlan(plan, loader, camp);
-            AssemblyTemplateInstantiator instantiator = CampUtils.getInstantiator(at);
+            AssemblyTemplate at = CampInternalUtils.registerDeploymentPlan(plan, loader, camp);
+            AssemblyTemplateInstantiator instantiator = CampInternalUtils.getInstantiator(at);
             if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-                return ((AssemblyTemplateSpecInstantiator) instantiator).createApplicationSpec(at, camp, loader);
+                return ((AssemblyTemplateSpecInstantiator) instantiator).createApplicationSpec(at, camp, loader, MutableSet.<String>of());
             } else {
                 // The unknown instantiator can create the app (Assembly), but not a spec.
                 // Currently, all brooklyn plans should produce the above.
@@ -84,7 +87,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
         }
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({ "unchecked" })
     @Override
     public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) {
         // Ignore old-style java type catalog items - there is a different (deprecated) transformer for that
@@ -96,7 +99,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
         }
 
         // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
-        return (SpecT) CampCatalogUtils.createSpec(mgmt, (CatalogItem)item, encounteredTypes);
+        return (SpecT) CampResolver.createSpecFromFull(mgmt, RegisteredTypes.of(item), encounteredTypes, null);
     }
 
     @Override

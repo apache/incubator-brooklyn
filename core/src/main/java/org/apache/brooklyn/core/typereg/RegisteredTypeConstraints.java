@@ -31,7 +31,9 @@ import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObjectType;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
+import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +48,7 @@ public class RegisteredTypeConstraints {
         @Nullable private RegisteredTypeKind kind;
         @Nullable private Class<?> javaSuperType;
         @Nonnull private Set<String> encounteredTypes = ImmutableSet.of();
+        @Nullable BrooklynClassLoadingContext loader;
         
         private BasicRegisteredTypeConstraint() {}
         
@@ -55,6 +58,7 @@ public class RegisteredTypeConstraints {
             this.kind = source.getKind();
             this.javaSuperType = source.getJavaSuperType();
             this.encounteredTypes = source.getEncounteredTypes();
+            this.loader = (BrooklynClassLoadingContext) source.getLoader();
         }
 
         @Override
@@ -75,8 +79,13 @@ public class RegisteredTypeConstraints {
         }
         
         @Override
+        public BrooklynClassLoadingContext getLoader() {
+            return loader;
+        }
+        
+        @Override
         public String toString() {
-            return super.toString()+"["+kind+","+javaSuperType+","+encounteredTypes+"]";
+            return JavaClassNames.cleanSimpleClassName(this)+"["+kind+","+javaSuperType+","+encounteredTypes+"]";
         }
     }
 
@@ -97,7 +106,11 @@ public class RegisteredTypeConstraints {
         result.encounteredTypes = encounteredTypes.asUnmodifiable();
         return result;
     }
-    
+
+    public static RegisteredTypeConstraint alreadyVisited(Set<String> encounteredTypeSymbolicNames, BrooklynClassLoadingContext loader) {
+        return withLoader(alreadyVisited(encounteredTypeSymbolicNames), loader);
+    }
+
     private static RegisteredTypeConstraint of(RegisteredTypeKind kind, Class<? extends BrooklynObject> javaSuperType) {
         BasicRegisteredTypeConstraint result = new BasicRegisteredTypeConstraint();
         result.kind = kind;
@@ -109,7 +122,7 @@ public class RegisteredTypeConstraints {
         return of(RegisteredTypeKind.SPEC, javaSuperType);
     }
 
-    public static <T extends AbstractBrooklynObjectSpec<?,?>> RegisteredTypeConstraint extendedWithSpecSuperType(@Nullable RegisteredTypeConstraint source, @Nullable Class<T> specSuperType) {
+    public static <T extends AbstractBrooklynObjectSpec<?,?>> RegisteredTypeConstraint withSpecSuperType(@Nullable RegisteredTypeConstraint source, @Nullable Class<T> specSuperType) {
         Class<?> superType = lookupTargetTypeForSpec(specSuperType);
         BasicRegisteredTypeConstraint constraint = new BasicRegisteredTypeConstraint(source);
         if (source==null) source = constraint;
@@ -131,8 +144,9 @@ public class RegisteredTypeConstraints {
         return source;
     }
     
-    /** given a spec, returns the class of the item it targets, for instance {@link EntitySpec} for {@link Entity} */
-    private static <T extends AbstractBrooklynObjectSpec<?,?>> Class<? extends BrooklynObject> lookupTargetTypeForSpec(Class<T> specSuperType) {
+    /** given a spec, returns the class of the item it targets, for instance returns {@link Entity} given {@link EntitySpec};
+     * see also {@link #lookupSpecTypeForTarget(Class)} */
+    static <T extends AbstractBrooklynObjectSpec<?,?>> Class<? extends BrooklynObject> lookupTargetTypeForSpec(Class<T> specSuperType) {
         if (specSuperType==null) return BrooklynObject.class;
         BrooklynObjectType best = null;
 
@@ -152,6 +166,41 @@ public class RegisteredTypeConstraints {
         }
         // the spec is more specific, but we're not familiar with it here; return the best
         return best.getInterfaceType();
+    }
+
+    /** given a {@link BrooklynObject}, returns the spec class which would generate it, for instance returns {@link EntitySpec} given {@link Entity},
+     * or null if not known */
+    static <BO extends BrooklynObject> Class<? extends AbstractBrooklynObjectSpec<?,?>> lookupSpecTypeForTarget(Class<BO> targetSuperType) {
+        if (targetSuperType==null) return null;
+        BrooklynObjectType best = null;
+
+        for (BrooklynObjectType t: BrooklynObjectType.values()) {
+            if (t.getSpecType()==null) continue;
+            if (!t.getInterfaceType().isAssignableFrom(targetSuperType)) continue;
+            // on equality, exit immediately
+            if (t.getInterfaceType().equals(targetSuperType)) return t.getSpecType();
+            // else pick which is best
+            if (best==null) { best = t; continue; }
+            // if t is more specific, it is better (handles case when e.g. a Policy is a subclass of Entity)
+            if (best.getSpecType().isAssignableFrom(t.getSpecType())) { best = t; continue; }
+        }
+        if (best==null) {
+            log.warn("Unexpected target supertype ("+targetSuperType+"); unable to infer spec type");
+            return null;
+        }
+        // the spec is more specific, but we're not familiar with it here; return the best
+        return best.getSpecType();
+    }
+
+    public static RegisteredTypeConstraint loader(BrooklynClassLoadingContext loader) {
+        BasicRegisteredTypeConstraint result = new BasicRegisteredTypeConstraint();
+        result.loader = loader;
+        return result;
+    }
+    
+    public static RegisteredTypeConstraint withLoader(RegisteredTypeConstraint constraint, BrooklynClassLoadingContext loader) {
+        ((BasicRegisteredTypeConstraint)constraint).loader = loader;
+        return constraint;
     }
 
 }

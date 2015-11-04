@@ -20,19 +20,27 @@ package org.apache.brooklyn.core.typereg;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 
+import com.google.common.collect.ImmutableSet;
+
+/** Instances are usually created by methods in {@link RegisteredTypes}. */
 public class BasicRegisteredType implements RegisteredType {
 
     final String symbolicName;
     final String version;
     final RegisteredTypeKind kind;
     
-    List<OsgiBundleWithUrl> bundles;
+    Set<Object> superTypes = MutableSet.of();
+    List<OsgiBundleWithUrl> bundles = MutableList.of();
     String displayName;
     String description;
     String iconUrl;
@@ -41,14 +49,12 @@ public class BasicRegisteredType implements RegisteredType {
     
     TypeImplementationPlan implementationPlan;
 
-    // TODO ensure this is re-populated on rebind?  or remove?
-    transient Class<?> javaType;
+    private transient ConfigBag cache = new ConfigBag();
     
-    public BasicRegisteredType(RegisteredTypeKind kind, String symbolicName, String version, Class<?> javaType, TypeImplementationPlan implementationPlan) {
+    BasicRegisteredType(RegisteredTypeKind kind, String symbolicName, String version, TypeImplementationPlan implementationPlan) {
         this.kind = kind;
         this.symbolicName = symbolicName;
         this.version = version;
-        this.javaType = javaType;
         this.implementationPlan = implementationPlan;
     }
 
@@ -74,7 +80,7 @@ public class BasicRegisteredType implements RegisteredType {
     
     @Override
     public Collection<OsgiBundleWithUrl> getLibraries() {
-        return bundles;
+        return ImmutableSet.copyOf(bundles);
     }
 
     @Override
@@ -103,8 +109,12 @@ public class BasicRegisteredType implements RegisteredType {
     }
     
     @Override
-    public Class<?> getJavaType() {
-        return javaType;
+    public Set<Object> getSuperTypes() {
+        return ImmutableSet.copyOf(superTypes);
+    }
+
+    public ConfigBag getCache() {
+        return cache;
     }
     
     @Override
@@ -117,6 +127,7 @@ public class BasicRegisteredType implements RegisteredType {
         return JavaClassNames.simpleClassName(this)+"["+getId()+
             (isDisabled() ? ";DISABLED" : "")+
             (isDeprecated() ? ";deprecated" : "")+
+            (getPlan()!=null ? ";"+getPlan().getPlanFormat() : "")+
             "]";
     }
 }

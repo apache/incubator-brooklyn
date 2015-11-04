@@ -23,8 +23,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.api.mgmt.EntityManager;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -34,6 +37,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+/** Defines a spec for creating a {@link BrooklynObject}.
+ * <p>
+ * In addition to the contract defined by the code,
+ * subclasses should provide a public static <code>create(Class)</code>
+ * method to create an instance of the spec for the target type indicated by the argument. 
+ * <p>
+ * The spec is then passed to type-specific methods,
+ * e.g. {@link EntityManager#createEntity(org.apache.brooklyn.api.entity.EntitySpec)}
+ * to create a managed instance of the target type. */
 public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrooklynObjectSpec<T,SpecT>> implements Serializable {
 
     private static final long serialVersionUID = 3010955277740333030L;
@@ -160,5 +172,9 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
     public int hashCode() {
         return Objects.hashCode(getCatalogItemId(), getDisplayName(), getType(), getTags());
     }
+
+    /** strings inserted as flags, config keys inserted as config keys; 
+     * if you want to force one or the other, create a ConfigBag and convert to the appropriate map type */
+    public abstract SpecT configure(Map<?,?> val);
     
 }

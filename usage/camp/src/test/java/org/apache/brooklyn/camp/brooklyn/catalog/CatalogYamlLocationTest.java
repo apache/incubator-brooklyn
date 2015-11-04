@@ -34,6 +34,7 @@ import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
 import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.text.StringFunctions;
@@ -110,7 +111,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
     private void assertAdded(String symbolicName, String expectedJavaType) {
         RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
-        Assert.assertTrue(Location.class.isAssignableFrom(item.getJavaType()), "Expected Location, not "+item.getJavaType());
+        Assert.assertTrue(RegisteredTypes.isSubTypeOf(item, Location.class), "Expected Location, not "+item.getSuperTypes());
         assertEquals(countCatalogLocations(), 1);
 
         // Item added to catalog should automatically be available in location registry

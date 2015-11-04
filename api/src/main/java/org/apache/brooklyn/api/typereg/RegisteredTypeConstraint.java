@@ -42,4 +42,9 @@ public interface RegisteredTypeConstraint {
      * if we have already attempted to resolve a given type,
      * the instantiator can avoid recursive cycles */
     @Nonnull public Set<String> getEncounteredTypes();
+    
+    /** A special loader to use, if available.
+     * For internal use only; implementations should be a BrooklynClassLoadingContext */
+    @Nullable public Object getLoader();
+    
 }

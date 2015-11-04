@@ -281,7 +281,7 @@ public class BrooklynRestResourceUtils {
                     //different from the javaType.
                     resultI = mgmt.getTypeRegistry().get(typeName, BrooklynCatalog.DEFAULT_VERSION);
                     if (resultI != null) {
-                        if (resultI.getJavaType() == null) {
+                        if (resultI.getSuperTypes().isEmpty()) {
                             //Catalog items scanned from the classpath (using reflection and annotations) now
                             //get yaml spec rather than a java type. Can't use those when creating apps from
                             //the legacy app spec format.

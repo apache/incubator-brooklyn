@@ -30,12 +30,16 @@ import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 
 public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
 
+    @Deprecated /** @deprecaed since 0.9.0 include encountered types */
+    EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader);
+    
     /**
      * Gets the single item returned by {@link #createServiceSpecs}
      * and wraps it in an Application if needed, applying top-level
      * attributes and locations to the root entity.
      */
-    EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader);
+    EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes);
+    
     /** Returns specs for each item in the services list */
     List<EntitySpec<?>> createServiceSpecs(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext itemLoader, Set<String> encounteredCatalogTypes);
 

@@ -21,12 +21,10 @@ package org.apache.brooklyn.core.typereg;
 import java.util.List;
 
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.util.text.Identifiers;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Instantiates classes from a registered type which simply
@@ -35,22 +33,15 @@ import org.slf4j.LoggerFactory;
  * This is used where a {@link RegisteredType} is defined simply with the name of a java class
  * e.g. with a no-arg constructor -- no YAML etc just the name of the class.
  */
-public class JavaTypePlanTransformer extends AbstractTypePlanTransformer {
+public class JavaClassNameTypePlanTransformer extends AbstractTypePlanTransformer {
     
-    private static final Logger log = LoggerFactory.getLogger(JavaTypePlanTransformer.class);
     public static final String FORMAT = "java-type-name";
 
     public static class JavaTypeNameImplementation extends AbstractCustomImplementationPlan<String> {
-        private transient Class<?> cachedType;
-        public JavaTypeNameImplementation(String javaType) {
-            super(FORMAT, javaType);
-        }
-        public Class<?> getCachedType() {
-            return cachedType;
-        }
+        public JavaTypeNameImplementation(String javaType) { super(FORMAT, javaType); }
     }
 
-    public JavaTypePlanTransformer() {
+    public JavaClassNameTypePlanTransformer() {
         super(FORMAT, "Java type name", "Expects a java type name in a format suitable for use with ClassLoader.loadClass");
     }
 
@@ -68,13 +59,10 @@ public class JavaTypePlanTransformer extends AbstractTypePlanTransformer {
         return 0;
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings({ "unchecked" })
     @Override
     protected AbstractBrooklynObjectSpec<?,?> createSpec(RegisteredType type, RegisteredTypeConstraint context) throws Exception {
-        Class targetType = getType(type, context);
-        Class specType = RegisteredTypeConstraints.spec((Class)targetType).getJavaSuperType();
-        AbstractBrooklynObjectSpec result = (AbstractBrooklynObjectSpec) specType.getConstructor(Class.class).newInstance(targetType);
-        return result;
+        return RegisteredTypes.newSpecInstance(mgmt, (Class<? extends BrooklynObject>) getType(type, context));
     }
 
     @Override
@@ -82,23 +70,13 @@ public class JavaTypePlanTransformer extends AbstractTypePlanTransformer {
         return getType(type, context).newInstance();
     }
 
-    private Class<?> getType(RegisteredType type, RegisteredTypeConstraint context) {
-        if (type.getPlan() instanceof JavaTypeNameImplementation) {
-            Class<?> cachedType = ((JavaTypeNameImplementation)type.getPlan()).getCachedType();
-            if (cachedType==null) {
-                log.debug("Storing cached type "+cachedType+" for "+type);
-                cachedType = loadType(type, context);
-            }
-            return cachedType;
-        }
-        return loadType(type, context);
+    private Class<?> getType(RegisteredType type, RegisteredTypeConstraint context) throws Exception {
+        return RegisteredTypes.loadActualJavaType((String)type.getPlan().getPlanData(), mgmt, type, context);
     }
-    private Class<?> loadType(RegisteredType type, RegisteredTypeConstraint context) {
-        return CatalogUtils.newClassLoadingContext(mgmt, type).loadClass( ((String)type.getPlan().getPlanData()) );
-    }
-
     
-    // TODO not supported as a catalog format (yet)
+    
+    // not supported as a catalog format (yet? should we?)
+    
     @Override
     public double scoreForTypeDefinition(String formatCode, Object catalogData) {
         return 0;

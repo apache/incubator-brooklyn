@@ -39,14 +39,12 @@ import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
-import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate.Builder;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.camp.spi.pdp.DeploymentPlan;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
-import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.objs.BasicSpecParameter;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
@@ -61,41 +59,23 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
-//TODO-type-registry
-public class CampUtils {
+/** package-private; as {@link RegisteredType} becomes standard hopefully we can remove this */
+class CampInternalUtils {
 
-    public static EntitySpec<?> createRootServiceSpec(String plan, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
-        CampPlatform camp = getCampPlatform(loader.getManagementContext());
-
-        AssemblyTemplate at = registerDeploymentPlan(plan, loader, camp);
-        AssemblyTemplateInstantiator instantiator = getInstantiator(at);
-        if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
-            List<EntitySpec<?>> serviceSpecs = ((AssemblyTemplateSpecInstantiator)instantiator).createServiceSpecs(at, camp, loader, encounteredTypes);
-            if (serviceSpecs.size() > 1) {
-                throw new UnsupportedOperationException("Single service expected, but got "+serviceSpecs);
-            }
-            EntitySpec<?> rootSpec = serviceSpecs.get(0);
-            EntitySpec<? extends Application> wrapperApp = createWrapperApp(at, loader);
-            EntityManagementUtils.mergeWrapperParentSpecToChildEntity(wrapperApp, rootSpec);
-            return rootSpec;
-        } else {
-            throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
-        }
-    }
-
-    public static EntitySpec<? extends Application> createWrapperApp(AssemblyTemplate template, BrooklynClassLoadingContext loader) {
+    static EntitySpec<? extends Application> createWrapperApp(AssemblyTemplate template, BrooklynClassLoadingContext loader) {
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
             loader, buildWrapperAppTemplate(template));
         EntitySpec<Application> wrapperSpec = resolver.resolveSpec(ImmutableSet.<String>of());
-        // Clear out default parameters (coming from the wrapper app's class) so they don't overwrite the entity's params on unwrap.
-        if (!hasExplicitParams(template)) {
-            wrapperSpec.parameters(ImmutableList.<SpecParameter<?>>of());
-        }
+        resetSpecIfTemplateHasNoExplicitParameters(template, wrapperSpec);
+        // caller always sets WRAPPER_APP config; should we do it here?
         return wrapperSpec;
     }
 
-    private static boolean hasExplicitParams(AssemblyTemplate at) {
-        return at.getCustomAttributes().containsKey(BrooklynCampReservedKeys.BROOKLYN_PARAMETERS);
+    static void resetSpecIfTemplateHasNoExplicitParameters(AssemblyTemplate template, EntitySpec<? extends Application> wrapperSpec) {
+        if (!template.getCustomAttributes().containsKey(BrooklynCampReservedKeys.BROOKLYN_PARAMETERS)) {
+            // Clear out default parameters (coming from the wrapper app's class) so they don't overwrite the entity's params on unwrap.
+            wrapperSpec.parameters(ImmutableList.<SpecParameter<?>>of());
+        }
     }
 
     private static AssemblyTemplate buildWrapperAppTemplate(AssemblyTemplate template) {
@@ -112,7 +92,7 @@ public class CampUtils {
         return wrapTemplate;
     }
 
-    public static AssemblyTemplateInstantiator getInstantiator(AssemblyTemplate at) {
+    static AssemblyTemplateInstantiator getInstantiator(AssemblyTemplate at) {
         try {
             return at.getInstantiator().newInstance();
         } catch (Exception e) {
@@ -120,7 +100,7 @@ public class CampUtils {
         }
     }
 
-    public static AssemblyTemplate registerDeploymentPlan(String plan, BrooklynClassLoadingContext loader, CampPlatform camp) {
+    static AssemblyTemplate registerDeploymentPlan(String plan, BrooklynClassLoadingContext loader, CampPlatform camp) {
         BrooklynLoaderTracker.setLoader(loader);
         try {
             return camp.pdp().registerDeploymentPlan(new StringReader(plan));
@@ -129,7 +109,7 @@ public class CampUtils {
         }
     }
 
-    public static PolicySpec<?> createPolicySpec(String yamlPlan, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
+    static PolicySpec<?> createPolicySpec(String yamlPlan, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
         DeploymentPlan plan = makePlanFromYaml(loader.getManagementContext(), yamlPlan);
 
         //Would ideally re-use the PolicySpecResolver
@@ -145,7 +125,7 @@ public class CampUtils {
     }
 
     @SuppressWarnings("unchecked")
-    public static PolicySpec<?> createPolicySpec(BrooklynClassLoadingContext loader, Object policy, Set<String> encounteredCatalogTypes) {
+    static PolicySpec<?> createPolicySpec(BrooklynClassLoadingContext loader, Object policy, Set<String> encounteredCatalogTypes) {
         Map<String, Object> itemMap;
         if (policy instanceof String) {
             itemMap = ImmutableMap.<String, Object>of("type", policy);
@@ -166,7 +146,7 @@ public class CampUtils {
         return spec;
     }
 
-    public static LocationSpec<?> createLocationSpec(String yamlPlan, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
+    static LocationSpec<?> createLocationSpec(String yamlPlan, BrooklynClassLoadingContext loader, Set<String> encounteredTypes) {
         DeploymentPlan plan = makePlanFromYaml(loader.getManagementContext(), yamlPlan);
         Object locations = checkNotNull(plan.getCustomAttributes().get(BasicBrooklynCatalog.LOCATIONS_KEY), "location config");
         if (!(locations instanceof Iterable<?>)) {

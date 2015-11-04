@@ -69,7 +69,11 @@ public class CatalogUtils {
     }
     
     public static BrooklynClassLoadingContext newClassLoadingContext(ManagementContext mgmt, RegisteredType item) {
-        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries());
+        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries(), null);
+    }
+    
+    public static BrooklynClassLoadingContext newClassLoadingContext(ManagementContext mgmt, RegisteredType item, BrooklynClassLoadingContext loader) {
+        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries(), loader);
     }
     
     public static BrooklynClassLoadingContext getClassLoadingContext(Entity entity) {
@@ -85,15 +89,22 @@ public class CatalogUtils {
     }
 
     public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> libraries) {
+        return newClassLoadingContext(mgmt, catalogItemId, libraries, null);
+    }
+    
+    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> libraries, BrooklynClassLoadingContext loader) {
         BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
 
         if (libraries!=null && !libraries.isEmpty()) {
             result.add(new OsgiBrooklynClassLoadingContext(mgmt, catalogItemId, libraries));
         }
 
-        BrooklynClassLoadingContext loader = BrooklynLoaderTracker.getLoader();
-        if (loader != null) {
+        if (loader !=null) {
             result.add(loader);
+        }
+        BrooklynClassLoadingContext threadLocalLoader = BrooklynLoaderTracker.getLoader();
+        if (threadLocalLoader != null) {
+            result.add(threadLocalLoader);
         }
 
         result.addSecondary(JavaBrooklynClassLoadingContext.create(mgmt));

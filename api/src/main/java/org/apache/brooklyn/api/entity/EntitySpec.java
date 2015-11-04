@@ -337,8 +337,6 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
         return this;
     }
     
-    /** strings inserted as flags, config keys inserted as config keys; 
-     * if you want to force one or the other, create a ConfigBag and convert to the appropriate map type */
     public EntitySpec<T> configure(Map<?,?> val) {
         checkMutable();
         for (Map.Entry<?, ?> entry: val.entrySet()) {

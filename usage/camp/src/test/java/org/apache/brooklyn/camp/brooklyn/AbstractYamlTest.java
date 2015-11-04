@@ -23,29 +23,31 @@ import java.io.StringReader;
 import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.camp.spi.Assembly;
-import org.apache.brooklyn.camp.spi.AssemblyTemplate;
+import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.camp.brooklyn.spi.creation.CampTypePlanTransformer.CampTypeImplementationPlan;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
-import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 
 public abstract class AbstractYamlTest {
 
@@ -115,25 +117,12 @@ public abstract class AbstractYamlTest {
     }
 
     protected Entity createAndStartApplication(Reader input) throws Exception {
-        AssemblyTemplate at = platform.pdp().registerDeploymentPlan(input);
-        Assembly assembly;
-        try {
-            assembly = at.getInstantiator().newInstance().instantiate(at, platform);
-        } catch (Exception e) {
-            getLogger().warn("Unable to instantiate " + at + " (rethrowing): " + e);
-            throw e;
-        }
-        getLogger().info("Test - created " + assembly);
-        final Entity app = brooklynMgmt.getEntityManager().getEntity(assembly.getId());
-        getLogger().info("App - " + app);
-        
-        // wait for app to have started
-        Set<Task<?>> tasks = brooklynMgmt.getExecutionManager().getTasksWithAllTags(ImmutableList.of(
-                BrooklynTaskTags.EFFECTOR_TAG, 
-                BrooklynTaskTags.tagForContextEntity(app), 
-                BrooklynTaskTags.tagForEffectorCall(app, "start", ConfigBag.newInstance(ImmutableMap.of("locations", ImmutableMap.of())))));
-        Iterables.getOnlyElement(tasks).get();
-        
+        RegisteredType type = RegisteredTypes.spec(null, null, new CampTypeImplementationPlan(Streams.readFully(input)), Application.class);
+        EntitySpec<?> spec = 
+            mgmt().getTypeRegistry().createSpec(type, RegisteredTypeConstraints.spec(Application.class), EntitySpec.class);
+        final Entity app = brooklynMgmt.getEntityManager().createEntity(spec);
+        // start the app (happens automatically if we use camp to instantiate, but not if we use crate spec approach)
+        app.invoke(Startable.START, MutableMap.<String,String>of()).get();
         return app;
     }
 
@@ -141,8 +130,7 @@ public abstract class AbstractYamlTest {
         Entity app = createAndStartApplication(input);
         waitForApplicationTasks(app);
 
-        getLogger().info("App started:");
-        Entities.dumpInfo(app);
+        getLogger().info("App started: "+app);
         
         return app;
     }

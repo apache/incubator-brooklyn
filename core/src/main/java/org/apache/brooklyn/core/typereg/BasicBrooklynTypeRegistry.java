@@ -112,7 +112,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
                 // TODO implement using java if permitted
             }
         }
-        constraint = RegisteredTypeConstraints.extendedWithSpecSuperType(constraint, specSuperType);
+        constraint = RegisteredTypeConstraints.withSpecSuperType(constraint, specSuperType);
 
         Maybe<Object> result = TypePlanTransformers.transform(mgmt, type, constraint);
         if (result.isPresent()) return (SpecT) result.get();
@@ -120,6 +120,10 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         // fallback: look up in (legacy) catalog
         // TODO remove once all transformers are available in the new style
         CatalogItem item = (CatalogItem) mgmt.getCatalog().getCatalogItem(type.getSymbolicName(), type.getVersion());
+        if (item==null) {
+            // if not in catalog (because loading new one?) then throw original
+            result.get();
+        }
         try {
             return (SpecT) BasicBrooklynCatalog.internalCreateSpecWithTransformers(mgmt, item, constraint.getEncounteredTypes());
         } catch (Exception e) {
@@ -127,7 +131,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
             // for now, combine this failure with the original
             try {
                 result.get();
-                // won't come here
+                // above will throw -- so won't come here
                 throw new IllegalStateException("should have failed getting type resolution for "+type);
             } catch (Exception e0) {
                 // prefer older exception, until the new transformer is the primary pathway

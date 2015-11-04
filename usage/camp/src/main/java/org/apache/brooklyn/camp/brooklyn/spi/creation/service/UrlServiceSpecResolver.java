@@ -20,12 +20,16 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
-import org.apache.brooklyn.camp.brooklyn.spi.creation.CampUtils;
+import org.apache.brooklyn.camp.brooklyn.spi.creation.CampTypePlanTransformer;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
+import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.net.Urls;
 import org.slf4j.Logger;
@@ -56,8 +60,19 @@ public class UrlServiceSpecResolver implements EntitySpecResolver {
             log.warn("AssemblyTemplate type " + type + " looks like a URL that can't be fetched.", e);
             return null;
         }
+        if (encounteredTypes.contains(type)) {
+            throw new IllegalStateException("URL " + type + " is self referential.");
+        }
+        encounteredTypes = MutableSet.<String>builder().addAll(encounteredTypes).add(type).build().asUnmodifiable();
+        
         // Referenced specs are expected to be CAMP format as well.
-        return CampUtils.createRootServiceSpec(yaml, loader, encounteredTypes);
+        // XXX somehow specify to allow full syntax for services
+        EntitySpec<?> item = loader.getManagementContext().getTypeRegistry().createSpec(
+            RegisteredTypes.spec(null, null, 
+                new CampTypePlanTransformer.CampTypeImplementationPlan(yaml), Entity.class), 
+            RegisteredTypeConstraints.alreadyVisited(encounteredTypes, loader), 
+            EntitySpec.class);
+        return item;
     }
 
     @Override

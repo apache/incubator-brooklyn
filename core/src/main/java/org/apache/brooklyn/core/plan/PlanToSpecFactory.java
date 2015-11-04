@@ -111,7 +111,7 @@ public class PlanToSpecFactory {
                     (Strings.isNonBlank(e.getMessage()) ? " ("+e.getMessage()+")" : ""));
             } catch (Throwable e) {
                 Exceptions.propagateIfFatal(e);
-                otherProblemsFromTransformers.add(new PropagatedRuntimeException("Transformer for "+t.getShortDescription()+" gave an error creating this plan: "+
+                otherProblemsFromTransformers.add(new PropagatedRuntimeException("Transformer for "+t.getShortDescription()+" gave an error creating this plan: ",
                     Exceptions.collapseText(e), e));
             }
         }
