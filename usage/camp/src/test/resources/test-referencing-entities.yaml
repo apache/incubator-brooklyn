@@ -38,6 +38,7 @@ origin: https://github.com/apache/incubator-brooklyn
 id: app1
 brooklyn.config:
   test.reference.root: $brooklyn:root()
+  test.reference.scope_root: $brooklyn:scopeRoot()
   test.reference.app: $brooklyn:component("app1")
   test.reference.entity1: $brooklyn:entity("e1")
   test.reference.entity1a: $brooklyn:config("test.reference.entity1")
@@ -53,6 +54,7 @@ services:
   name: entity 1
   brooklyn.config:
     test.reference.root: $brooklyn:root()
+    test.reference.scope_root: $brooklyn:scopeRoot()
     test.reference.app: $brooklyn:component("parent", "ignored")
     test.reference.entity1: $brooklyn:component("this", "ignored")
     test.reference.entity1a: $brooklyn:ancestor("app1").child("e1")
@@ -69,6 +71,7 @@ services:
       brooklyn.config:
         self: $brooklyn:entity("c1")
         test.reference.root: $brooklyn:root()
+        test.reference.scope_root: $brooklyn:scopeRoot()
         test.reference.app: $brooklyn:parent().parent()
         test.reference.entity1: $brooklyn:parent()
         test.reference.entity1a: $brooklyn:entity("e1").parent().child("e1")
@@ -84,6 +87,7 @@ services:
         name: grandchild 1
         brooklyn.config:
           test.reference.root: $brooklyn:root()
+          test.reference.scope_root: $brooklyn:scopeRoot()
           test.reference.app: $brooklyn:component("app1")
           test.reference.entity1: $brooklyn:component("e1")
           test.reference.entity2: $brooklyn:component("e2")
@@ -96,6 +100,7 @@ services:
         name: grandchild 2
         brooklyn.config:
           test.reference.root: $brooklyn:root()
+          test.reference.scope_root: $brooklyn:scopeRoot()
           test.reference.app: $brooklyn:component("app1")
           test.reference.entity1: $brooklyn:component("e1")
           test.reference.entity2: $brooklyn:component("e2")
@@ -108,6 +113,7 @@ services:
       name: child 2
       brooklyn.config:
         test.reference.root: $brooklyn:root()
+        test.reference.scope_root: $brooklyn:scopeRoot()
         test.reference.app: $brooklyn:parent().parent().descendant("app1")
         test.reference.entity1: $brooklyn:component("e1")
         test.reference.entity2: $brooklyn:component("e2")
@@ -120,6 +126,7 @@ services:
   name: entity 2
   brooklyn.config:
     test.reference.root: $brooklyn:root()
+    test.reference.scope_root: $brooklyn:scopeRoot()
     test.reference.app: $brooklyn:component("app1")
     test.reference.entity1: $brooklyn:component("e1")
     test.reference.entity2: $brooklyn:component("e2")

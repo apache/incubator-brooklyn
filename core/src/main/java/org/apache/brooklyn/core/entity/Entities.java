@@ -100,6 +100,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.Beta;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -1170,6 +1171,16 @@ public class Entities {
         System.out.println(t.getStdout());
         System.err.println(t.getStderr());
         return t;
+    }
+
+    public static Entity catalogItemScopeRoot(Entity entity) {
+        Entity root = entity;
+        while (root.getParent() != null &&
+                root != root.getParent() &&
+                Objects.equal(root.getParent().getCatalogItemId(), root.getCatalogItemId())) {
+            root = root.getParent();
+        }
+        return root;
     }
 
 }

@@ -467,6 +467,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
 
         Map<ConfigKey<Entity>, Entity> keyToEntity = new ImmutableMap.Builder<ConfigKey<Entity>, Entity>()
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_ROOT, app)
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_SCOPE_ROOT, app)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_APP, app)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1, entity1)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1_ALT, entity1)
@@ -493,6 +494,70 @@ public class EntitiesYamlTest extends AbstractYamlTest {
                 /* expected */
             }
         }
+    }
+    
+    @Test
+    public void testScopeReferences() throws Exception {
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  items:",
+                "  -  id: ref_child",
+                "     item:",
+                "      type: " + ReferencingYamlTestEntity.class.getName(),
+                "      test.reference.root: $brooklyn:root()",
+                "      test.reference.scope_root: $brooklyn:scopeRoot()",
+                "      brooklyn.children:",
+                "      - type: " + ReferencingYamlTestEntity.class.getName(),
+                "        test.reference.root: $brooklyn:root()",
+                "        test.reference.scope_root: $brooklyn:scopeRoot()",
+
+                "  -  id: ref_parent",
+                "     item:",
+                "      type: " + ReferencingYamlTestEntity.class.getName(),
+                "      test.reference.root: $brooklyn:root()",
+                "      test.reference.scope_root: $brooklyn:scopeRoot()",
+                "      brooklyn.children:",
+                "      - type: " + ReferencingYamlTestEntity.class.getName(),
+                "        test.reference.root: $brooklyn:root()",
+                "        test.reference.scope_root: $brooklyn:scopeRoot()",
+                "        brooklyn.children:",
+                "        - type: ref_child");
+        Entity app = createAndStartApplication(
+                "brooklyn.config:",
+                "  test.reference.root: $brooklyn:root()",
+                "  test.reference.scope_root: $brooklyn:scopeRoot()",
+                "services:",
+                "- type: " + ReferencingYamlTestEntity.class.getName(),
+                "  test.reference.root: $brooklyn:root()",
+                "  test.reference.scope_root: $brooklyn:scopeRoot()",
+                "  brooklyn.children:",
+                "  - type: " + ReferencingYamlTestEntity.class.getName(),
+                "    test.reference.root: $brooklyn:root()",
+                "    test.reference.scope_root: $brooklyn:scopeRoot()",
+                "    brooklyn.children:",
+                "    - type: ref_parent");
+        
+        assertScopes(app, app, app);
+        Entity e1 = nextChild(app);
+        assertScopes(e1, app, app);
+        Entity e2 = nextChild(e1);
+        assertScopes(e2, app, app);
+        Entity e3 = nextChild(e2);
+        assertScopes(e3, app, e3);
+        Entity e4 = nextChild(e3);
+        assertScopes(e4, app, e3);
+        Entity e5 = nextChild(e4);
+        assertScopes(e5, app, e5);
+        Entity e6 = nextChild(e5);
+        assertScopes(e6, app, e5);
+    }
+    
+    private static Entity nextChild(Entity entity) {
+        return Iterables.getOnlyElement(entity.getChildren());
+    }
+    private static void assertScopes(Entity entity, Entity root, Entity scopeRoot) {
+        assertEquals(entity.config().get(ReferencingYamlTestEntity.TEST_REFERENCE_ROOT), root);
+        assertEquals(entity.config().get(ReferencingYamlTestEntity.TEST_REFERENCE_SCOPE_ROOT), scopeRoot);
     }
 
     private void checkReferences(final Entity entity, Map<ConfigKey<Entity>, Entity> keyToEntity) throws Exception {

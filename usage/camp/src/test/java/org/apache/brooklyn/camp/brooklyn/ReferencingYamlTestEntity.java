@@ -32,6 +32,10 @@ public interface ReferencingYamlTestEntity extends Entity {
             .name("test.reference.root")
             .build();
     @SuppressWarnings("serial")
+    public static final ConfigKey<Entity> TEST_REFERENCE_SCOPE_ROOT = BasicConfigKey.builder(new TypeToken<Entity>(){})
+            .name("test.reference.scope_root")
+            .build();
+    @SuppressWarnings("serial")
     public static final ConfigKey<Entity> TEST_REFERENCE_APP = BasicConfigKey.builder(new TypeToken<Entity>(){})
             .name("test.reference.app")
             .build();
