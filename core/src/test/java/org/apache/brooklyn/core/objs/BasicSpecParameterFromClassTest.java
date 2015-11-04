@@ -56,7 +56,16 @@ public class BasicSpecParameterFromClassTest {
         @CatalogConfig(label="Predicate Key", priority=1)
         ConfigKey<Predicate<String>> PREDICATE_KEY = ConfigKeys.newConfigKey(new TypeToken<Predicate<String>>() {}, "predicate_key");
 
-        ConfigKey<String> UNPINNNED_KEY = ConfigKeys.newStringConfigKey("unpinned_key");
+        @SuppressWarnings("serial")
+        @CatalogConfig(label="Hidden 1 Key", priority=-1)
+        ConfigKey<Predicate<String>> HIDDEN1_KEY = ConfigKeys.newConfigKey(new TypeToken<Predicate<String>>() {}, "hidden1_key");
+
+        @SuppressWarnings("serial")
+        @CatalogConfig(label="Hidden 2 Key", priority=-2)
+        ConfigKey<Predicate<String>> HIDDEN2_KEY = ConfigKeys.newConfigKey(new TypeToken<Predicate<String>>() {}, "hidden2_key");
+
+        ConfigKey<String> UNPINNNED2_KEY = ConfigKeys.newStringConfigKey("unpinned2_key");
+        ConfigKey<String> UNPINNNED1_KEY = ConfigKeys.newStringConfigKey("unpinned1_key");
     }
 
     @ImplementedBy(ConfigInImplParameterTestEntityImpl.class)
@@ -68,11 +77,19 @@ public class BasicSpecParameterFromClassTest {
     @Test
     public void testFullDefinition() {
         List<SpecParameter<?>> inputs = BasicSpecParameter.fromClass(mgmt, SpecParameterTestEntity.class);
-        assertEquals(inputs.size(), 4);
-        assertInput(inputs.get(0), "Predicate Key", true, SpecParameterTestEntity.PREDICATE_KEY);
+        assertEquals(inputs.size(), 7);
+        assertInput(inputs.get(0), "String Key", true, SpecParameterTestEntity.STRING_KEY);
         assertInput(inputs.get(1), "Integer Key", true, SpecParameterTestEntity.INTEGER_KEY);
-        assertInput(inputs.get(2), "String Key", true, SpecParameterTestEntity.STRING_KEY);
-        assertInput(inputs.get(3), "unpinned_key", false, SpecParameterTestEntity.UNPINNNED_KEY);
+        assertInput(inputs.get(2), "Predicate Key", true, SpecParameterTestEntity.PREDICATE_KEY);
+        assertInput(inputs.get(3), "Hidden 1 Key", true, SpecParameterTestEntity.HIDDEN1_KEY);
+        assertInput(inputs.get(4), "Hidden 2 Key", true, SpecParameterTestEntity.HIDDEN2_KEY);
+        assertInput(inputs.get(5), "unpinned1_key", false, SpecParameterTestEntity.UNPINNNED1_KEY);
+        assertInput(inputs.get(6), "unpinned2_key", false, SpecParameterTestEntity.UNPINNNED2_KEY);
+    }
+    
+    @Test
+    public void testDebug() throws ClassNotFoundException {
+        System.out.println(BasicSpecParameter.fromClass(mgmt,  Class.forName("org.apache.brooklyn.entity.stock.BasicApplication")));
     }
 
     @Test

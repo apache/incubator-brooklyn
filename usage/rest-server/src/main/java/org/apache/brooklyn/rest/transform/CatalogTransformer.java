@@ -59,9 +59,12 @@ public class CatalogTransformer {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(CatalogTransformer.class);
     
     public static <T extends Entity> CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<T,EntitySpec<? extends T>> item) {
-        Set<EntityConfigSummary> config = Sets.newTreeSet(SummaryComparators.nameComparator());
+        Set<EntityConfigSummary> config = Sets.newLinkedHashSet();
         Set<SensorSummary> sensors = Sets.newTreeSet(SummaryComparators.nameComparator());
         Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
+
+        for (SpecParameter<?> input: item.getParameters())
+            config.add(EntityTransformer.entityConfigSummary(input));
 
         try {
             @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -69,8 +72,6 @@ public class CatalogTransformer {
             EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
             EntityType type = typeMap.getSnapshot();
 
-            for (SpecParameter<?> input: item.getParameters())
-                config.add(EntityTransformer.entityConfigSummary(input));
             for (Sensor<?> x: type.getSensors())
                 sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
             for (Effector<?> x: type.getEffectors())

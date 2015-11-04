@@ -264,14 +264,14 @@ public class BasicSpecParameter<T> implements SpecParameter<T>{
         private static final class WeightedParameterComparator implements Comparator<WeightedParameter> {
             @Override
             public int compare(WeightedParameter o1, WeightedParameter o2) {
-                if (o1.getWeight() == o2.getWeight()) {
-                    return 0;
+                if (o1.getWeight() == null && o2.getWeight() == null) {
+                    return o1.getInput().getLabel().compareTo(o2.getInput().getLabel());
                 } else if (o1.getWeight() == null) {
                     return 1;
                 } else if (o2.getWeight() == null) {
                     return -1;
                 } else {
-                    return Double.compare(o1.getWeight(),  o2.getWeight());
+                    return -Double.compare(o1.getWeight(),  o2.getWeight());
                 }
             }
         }

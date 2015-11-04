@@ -39,7 +39,7 @@ under the License.
       </select>
     <% } else { %>
      <input id="value" type="text" class="input-medium" name="value" value="<% 
-        if (typeof data.defaultValue !== "undefined") { %><%= data.defaultValue %><% } 
+        if (typeof data.defaultValue !== "undefined") { %><%- data.defaultValue %><% } 
         %>" style="width: 250px">
     <% } %>
     </td>

@@ -517,7 +517,10 @@ define([
         getConfigMap:function (root) {
             var map = {}
             $('.app-add-wizard-config-entry',root).each( function (index,elt) {
-                map[$('#key',elt).val()] = getConvertedConfigValue($('#value',elt).val())
+                var value = getConvertedConfigValue($('#value',elt).val());
+                if (value !== null) {
+                    map[$('#key',elt).val()] = value;
+                }
             })
             return map;
         },
@@ -776,7 +779,6 @@ define([
                         // (others might be included in future with an "expand" option, or priority option)
                     })
                 }
-                configs = configs.sort( function(a,b) { return b.priority - a.priority } )
                 for (var c in configs) {
                     that.$('.config-table').append(configs[c].html)
                 }
@@ -786,9 +788,11 @@ define([
         getConfigMap:function() {
             var map = {};
             $('.app-add-wizard-config-entry').each( function (index,elt) {
-                map[$('#key',elt).val()] = 
-                    $('#checkboxValue',elt).length ? $('#checkboxValue',elt).is(':checked') :
-                    getConvertedConfigValue($('#value',elt).val())
+                var value = $('#checkboxValue',elt).length ? $('#checkboxValue',elt).is(':checked') :
+                    getConvertedConfigValue($('#value',elt).val());
+                if (value !== null) {
+                    map[$('#key',elt).val()] = value;
+                }
             })
             return map;
         },
