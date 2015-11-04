@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.apache.brooklyn.util.http.HttpUtils.*;
+import static org.apache.brooklyn.util.http.HttpAsserts.*;
 
 /**
  * {@inheritDoc}
@@ -52,7 +52,7 @@ public class TestHttpCallImpl extends AbstractEntity implements TestHttpCall {
      * use the embedded dotall flag expression <code>(?s)</code> in your regex.
      * <li>status - HTTP status code
      * </ul>
-     * Wraps the {@link org.apache.brooklyn.util.http.HttpUtils} immediate assertion methods.
+     * Wraps the {@link org.apache.brooklyn.util.http.HttpAsserts} immediate assertion methods.
      * <p>
      * See the test/resources directory for examples.
      *
