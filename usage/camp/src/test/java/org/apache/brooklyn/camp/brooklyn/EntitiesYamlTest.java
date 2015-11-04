@@ -402,11 +402,17 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         final Entity app = createAndStartApplication(loadYaml("test-referencing-entities.yaml"));
         waitForApplicationTasks(app);
         
+        Entity root1 = Tasks.resolving(new DslComponent(Scope.ROOT, "xxx").newTask(), Entity.class).context( ((EntityInternal)app).getExecutionContext() ).embedResolutionInTask(true).get();
+        Assert.assertEquals(root1, app);
+        
         Entity c1 = Tasks.resolving(new DslComponent("c1").newTask(), Entity.class).context( ((EntityInternal)app).getExecutionContext() ).embedResolutionInTask(true).get();
         Assert.assertEquals(c1, Entities.descendants(app, EntityPredicates.displayNameEqualTo("child 1")).iterator().next());
         
         Entity e1 = Tasks.resolving(new DslComponent(Scope.PARENT, "xxx").newTask(), Entity.class).context( ((EntityInternal)c1).getExecutionContext() ).embedResolutionInTask(true).get();
         Assert.assertEquals(e1, Entities.descendants(app, EntityPredicates.displayNameEqualTo("entity 1")).iterator().next());
+        
+        Entity root2 = Tasks.resolving(new DslComponent(Scope.ROOT, "xxx").newTask(), Entity.class).context( ((EntityInternal)c1).getExecutionContext() ).embedResolutionInTask(true).get();
+        Assert.assertEquals(root2, app);
         
         Entity c1a = Tasks.resolving(BrooklynDslCommon.descendant("c1").newTask(), Entity.class).context( ((EntityInternal)e1).getExecutionContext() ).embedResolutionInTask(true).get();
         Assert.assertEquals(c1a, c1);
@@ -460,6 +466,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertNotNull(grandchild2);
 
         Map<ConfigKey<Entity>, Entity> keyToEntity = new ImmutableMap.Builder<ConfigKey<Entity>, Entity>()
+            .put(ReferencingYamlTestEntity.TEST_REFERENCE_ROOT, app)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_APP, app)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1, entity1)
             .put(ReferencingYamlTestEntity.TEST_REFERENCE_ENTITY1_ALT, entity1)
@@ -491,7 +498,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
     private void checkReferences(final Entity entity, Map<ConfigKey<Entity>, Entity> keyToEntity) throws Exception {
         for (final ConfigKey<Entity> key : keyToEntity.keySet()) {
             try {
-                Assert.assertEquals(getResolvedConfigInTask(entity, key).get(), keyToEntity.get(key));
+                Assert.assertEquals(getResolvedConfigInTask(entity, key).get(), keyToEntity.get(key), "For entity " + entity.toString() + ":");
             } catch (Throwable t) {
                 Exceptions.propagateIfFatal(t);
                 Assert.fail("Wrong value for "+entity+":"+key+", "+((EntityInternal)entity).config().getLocalRaw(key)+": "+t, t);

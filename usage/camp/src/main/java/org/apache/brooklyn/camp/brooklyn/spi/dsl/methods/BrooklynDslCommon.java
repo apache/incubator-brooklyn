@@ -84,6 +84,9 @@ public class BrooklynDslCommon {
     public static DslComponent ancestor(String id) {
         return new DslComponent(Scope.ANCESTOR, id);
     }
+    public static DslComponent root() {
+        return new DslComponent(Scope.ROOT, null);
+    }
     // prefer the syntax above to the below now, but not deprecating the below
     public static DslComponent component(String id) {
         return component("global", id);
