@@ -42,6 +42,7 @@ import javax.net.ssl.SSLSession;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.http.TrustingSslSocketFactory;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
@@ -57,7 +58,10 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * Utility methods to aid testing HTTP.
  * 
  * @author aled
+ *
+ * @deprecated since 0.9.0. Prefer org.apache.brooklyn.util.http.HttpAsserts which has no TestNG dependencies.
  */
+@Deprecated
 public class HttpTestUtils {
 
     // TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,

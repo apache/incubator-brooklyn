@@ -20,8 +20,8 @@ package org.apache.brooklyn.entity.brooklynnode;
 
 import java.util.Map;
 
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;

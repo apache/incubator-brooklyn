@@ -20,6 +20,7 @@ package org.apache.brooklyn.test;
 
 import groovy.lang.Closure;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -52,8 +53,14 @@ import com.google.common.collect.Sets;
  * TODO should move this to new package brooklyn.util.assertions
  * and TODO should add a repeating() method which returns an AssertingRepeater extending Repeater
  * and:
+ * <ul>
  * <li> adds support for requireAllIterationsTrue
  * <li> convenience run methods equivalent to succeedsEventually and succeedsContinually
+ * </ul>
+ * <p>
+ * NOTE Selected routines in this class are originally copied from <a href="http://testng.org">TestNG</a>, to allow us to make assertions without having to
+ * introduce a runtime dependency on TestNG.
+ * </p>
  */
 @Beta
 public class Asserts {
@@ -67,9 +74,608 @@ public class Asserts {
     private static final Logger log = LoggerFactory.getLogger(Asserts.class);
 
     private Asserts() {}
+
+    private static final Character OPENING_CHARACTER = '[';
+    private static final Character CLOSING_CHARACTER = ']';
+
+    private static final String ASSERT_LEFT = "expected " + OPENING_CHARACTER;
+    private static final String ASSERT_MIDDLE = CLOSING_CHARACTER + " but found " + OPENING_CHARACTER;
+    private static final String ASSERT_RIGHT = Character.toString(CLOSING_CHARACTER);
+
+    static String format(Object actual, Object expected, String message) {
+        String formatted = "";
+        if (null != message) {
+            formatted = message + " ";
+        }
+
+        return formatted + ASSERT_LEFT + expected + ASSERT_MIDDLE + actual + ASSERT_RIGHT;
+    }
+
+    static private void failNotEquals(Object actual , Object expected, String message ) {
+        fail(format(actual, expected, message));
+    }
+
+    /**
+     * Assert that an object reference is null.
+     *
+     * @param object The object reference.
+     *
+     * @throws AssertionError if the assertion fails.
+     */
+    static public void assertNull(final Object object) {
+        assertNull(object, null);
+    }
+
+    /**
+     * Assert that an object reference is not null.
+     *
+     * @param object The object reference.
+     *
+     * @throws AssertionError if the assertion fails.
+     */
+    static public void assertNotNull(final Object object) {
+        assertNotNull(object, null);
+    }
+
+    /**
+     * Assert that an object reference is null.
+     *
+     * @param object The object reference.
+     * @param message The assertion error message.
+     *
+     * @throws AssertionError if the assertion fails.
+     */
+    static public void assertNull(final Object object, final String message) {
+        if (null != object) {
+            throw new AssertionError(message == null ? "object reference is not null" : message);
+        }
+    }
+
+    /**
+     * Assert that an object reference is not null.
+     *
+     * @param object The object reference.
+     * @param message The assertion error message.
+     *
+     * @throws AssertionError if the assertion fails.
+     */
+    static public void assertNotNull(final Object object, final String message) {
+        if (null == object) {
+            throw new AssertionError(message == null ? "object reference is null" : message);
+        }
+    }
+
+    /**
+     * Asserts that two collections contain the same elements in the same order. If they do not,
+     * an AssertionError is thrown.
+     *
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(Collection<?> actual, Collection<?> expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Asserts that two collections contain the same elements in the same order. If they do not,
+     * an AssertionError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(Collection<?> actual, Collection<?> expected, String message) {
+        if(actual == expected) {
+            return;
+        }
+
+        if (actual == null || expected == null) {
+            if (message != null) {
+                fail(message);
+            } else {
+                fail("Collections not equal: expected: " + expected + " and actual: " + actual);
+            }
+        }
+
+        assertEquals(actual.size(), expected.size(), message + ": lists don't have the same size");
+
+        Iterator<?> actIt = actual.iterator();
+        Iterator<?> expIt = expected.iterator();
+        int i = -1;
+        while(actIt.hasNext() && expIt.hasNext()) {
+            i++;
+            Object e = expIt.next();
+            Object a = actIt.next();
+            String explanation = "Lists differ at element [" + i + "]: " + e + " != " + a;
+            String errorMessage = message == null ? explanation : message + ": " + explanation;
+
+            assertEquals(a, e, errorMessage);
+        }
+    }
+
+    /** Asserts that two iterators return the same elements in the same order. If they do not,
+     * an AssertionError is thrown.
+     * Please note that this assert iterates over the elements and modifies the state of the iterators.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(Iterator<?> actual, Iterator<?> expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /** Asserts that two iterators return the same elements in the same order. If they do not,
+     * an AssertionError, with the given message, is thrown.
+     * Please note that this assert iterates over the elements and modifies the state of the iterators.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(Iterator<?> actual, Iterator<?> expected, String message) {
+        if(actual == expected) {
+            return;
+        }
+
+        if(actual == null || expected == null) {
+            if(message != null) {
+                fail(message);
+            } else {
+                fail("Iterators not equal: expected: " + expected + " and actual: " + actual);
+            }
+        }
+
+        int i = -1;
+        while(actual.hasNext() && expected.hasNext()) {
+
+            i++;
+            Object e = expected.next();
+            Object a = actual.next();
+            String explanation = "Iterators differ at element [" + i + "]: " + e + " != " + a;
+            String errorMessage = message == null ? explanation : message + ": " + explanation;
+
+            assertEquals(a, e, errorMessage);
+
+        }
+
+        if(actual.hasNext()) {
+
+            String explanation = "Actual iterator returned more elements than the expected iterator.";
+            String errorMessage = message == null ? explanation : message + ": " + explanation;
+            fail(errorMessage);
+
+        } else if(expected.hasNext()) {
+
+            String explanation = "Expected iterator returned more elements than the actual iterator.";
+            String errorMessage = message == null ? explanation : message + ": " + explanation;
+            fail(errorMessage);
+
+        }
+
+    }
+
+    /** Asserts that two iterables return iterators with the same elements in the same order. If they do not,
+     * an AssertionError is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(Iterable<?> actual, Iterable<?> expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /** Asserts that two iterables return iterators with the same elements in the same order. If they do not,
+     * an AssertionError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(Iterable<?> actual, Iterable<?> expected, String message) {
+        if(actual == expected) {
+            return;
+        }
+
+        if(actual == null || expected == null) {
+            if(message != null) {
+                fail(message);
+            } else {
+                fail("Iterables not equal: expected: " + expected + " and actual: " + actual);
+            }
+        }
+
+        Iterator<?> actIt = actual.iterator();
+        Iterator<?> expIt = expected.iterator();
+
+        assertEquals(actIt, expIt, message);
+    }
+
+
+
+    /**
+     * Asserts that two sets are equal.
+     */
+    static public void assertEquals(Set<?> actual, Set<?> expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Assert set equals
+     */
+    static public void assertEquals(Set<?> actual, Set<?> expected, String message) {
+        if (actual == expected) {
+            return;
+        }
+
+        if (actual == null || expected == null) {
+            // Keep the back compatible
+            if (message == null) {
+                fail("Sets not equal: expected: " + expected + " and actual: " + actual);
+            } else {
+                failNotEquals(actual, expected, message);
+            }
+        }
+
+        if (!actual.equals(expected)) {
+            if (message == null) {
+                fail("Sets differ: expected " + expected + " but got " + actual);
+            } else {
+                failNotEquals(actual, expected, message);
+            }
+        }
+    }
+
+    /**
+     * Asserts that two maps are equal.
+     */
+    static public void assertEquals(Map<?, ?> actual, Map<?, ?> expected) {
+        if (actual == expected) {
+            return;
+        }
+
+        if (actual == null || expected == null) {
+            fail("Maps not equal: expected: " + expected + " and actual: " + actual);
+        }
+
+        if (actual.size() != expected.size()) {
+            fail("Maps do not have the same size:" + actual.size() + " != " + expected.size());
+        }
+
+        Set<?> entrySet = actual.entrySet();
+        for (Iterator<?> iterator = entrySet.iterator(); iterator.hasNext();) {
+            Map.Entry<?, ?> entry = (Map.Entry<?, ?>) iterator.next();
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+            Object expectedValue = expected.get(key);
+            assertEquals(value, expectedValue, "Maps do not match for key:" + key + " actual:" + value
+                    + " expected:" + expectedValue);
+        }
+
+    }
+
+
+    /**
+     * Asserts that two arrays contain the same elements in the same order. If they do not,
+     * an AssertionError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(Object[] actual, Object[] expected, String message) {
+        if(actual == expected) {
+            return;
+        }
+
+        if ((actual == null && expected != null) || (actual != null && expected == null)) {
+            if (message != null) {
+                fail(message);
+            } else {
+                fail("Arrays not equal: " + Arrays.toString(expected) + " and " + Arrays.toString(actual));
+            }
+        }
+        assertEquals(Arrays.asList(actual), Arrays.asList(expected), message);
+    }
+
+    /**
+     * Asserts that two arrays contain the same elements in the same order. If they do not,
+     * an AssertionError is thrown.
+     *
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(Object[] actual, Object[] expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Asserts that two objects are equal. 
+     * @param actual the actual value
+     * @param expected the expected value
+     *                 
+     * @throws AssertionError if the values are not equal.
+     */
+    static public void assertEquals(Object actual, Object expected) {
+        assertEquals(actual, expected, null);
+    }
     
-    // --- selected routines from testng.Assert for visibility without needing that package
-    
+    /**
+     * Asserts that two objects are equal. 
+     * 
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     *
+     * @throws AssertionError if the values are not equal.
+     */
+    static public void assertEquals(Object actual, Object expected, String message) {
+        if((expected == null) && (actual == null)) {
+            return;
+        }
+        if(expected != null) {
+            if (expected.getClass().isArray()) {
+                assertArrayEquals(actual, expected, message);
+                return;
+            } else if (expected.equals(actual)) {
+                return;
+            }
+        }
+        failNotEquals(actual, expected, message);
+    }
+
+
+    /**
+     * Asserts that two objects are equal. It they are not, an AssertionError,
+     * with given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value (should be an non-null array value)
+     * @param message the assertion error message
+     */
+    private static void assertArrayEquals(Object actual, Object expected, String message) {
+        //is called only when expected is an array
+        if (actual.getClass().isArray()) {
+            int expectedLength = Array.getLength(expected);
+            if (expectedLength == Array.getLength(actual)) {
+                for (int i = 0 ; i < expectedLength ; i++) {
+                    Object _actual = Array.get(actual, i);
+                    Object _expected = Array.get(expected, i);
+                    try {
+                        assertEquals(_actual, _expected);
+                    } catch (AssertionError ae) {
+                        failNotEquals(actual, expected, message == null ? "" : message
+                                + " (values at index " + i + " are not the same)");
+                    }
+                }
+                //array values matched
+                return;
+            } else {
+                failNotEquals(Array.getLength(actual), expectedLength, message == null ? "" : message
+                        + " (Array lengths are not the same)");
+            }
+        }
+        failNotEquals(actual, expected, message);
+    }
+
+
+    /**
+     * Asserts that two Strings are equal. If they are not,
+     * an AssertionError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(String actual, String expected, String message) {
+        assertEquals((Object) actual, (Object) expected, message);
+    }
+
+    /**
+     * Asserts that two Strings are equal. If they are not,
+     * an AssertionError is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(String actual, String expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Asserts that two doubles are equal within a delta.  If they are not,
+     * an AssertionError, with the given message, is thrown.  If the expected
+     * value is infinity then the delta value is ignored.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param delta the absolute tolerable difference between the actual and expected values
+     * @param message the assertion error message
+     */
+    static public void assertEquals(double actual, double expected, double delta, String message) {
+        // handle infinity specially since subtracting to infinite values gives NaN and the
+        // the following test fails
+        if(Double.isInfinite(expected)) {
+            if(!(expected == actual)) {
+                failNotEquals(new Double(actual), new Double(expected), message);
+            }
+        }
+        else if(!(Math.abs(expected - actual) <= delta)) { // Because comparison with NaN always returns false
+            failNotEquals(new Double(actual), new Double(expected), message);
+        }
+    }
+
+    /**
+     * Asserts that two doubles are equal within a delta. If they are not,
+     * an AssertionError is thrown. If the expected value is infinity then the
+     * delta value is ignored.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param delta the absolute tolerable difference between the actual and expected values
+     */
+    static public void assertEquals(double actual, double expected, double delta) {
+        assertEquals(actual, expected, delta, null);
+    }
+
+    /**
+     * Asserts that two floats are equal within a delta. If they are not,
+     * an AssertionError, with the given message, is thrown.  If the expected
+     * value is infinity then the delta value is ignored.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param delta the absolute tolerable difference between the actual and expected values
+     * @param message the assertion error message
+     */
+    static public void assertEquals(float actual, float expected, float delta, String message) {
+        // handle infinity specially since subtracting to infinite values gives NaN and the
+        // the following test fails
+        if(Float.isInfinite(expected)) {
+            if(!(expected == actual)) {
+                failNotEquals(new Float(actual), new Float(expected), message);
+            }
+        }
+        else if(!(Math.abs(expected - actual) <= delta)) {
+            failNotEquals(new Float(actual), new Float(expected), message);
+        }
+    }
+
+    /**
+     * Asserts that two floats are equal within a delta. If they are not,
+     * an AssertionError is thrown. If the expected
+     * value is infinity then the delta value is ignored.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param delta the absolute tolerable difference between the actual and expected values
+     */
+    static public void assertEquals(float actual, float expected, float delta) {
+        assertEquals(actual, expected, delta, null);
+    }
+
+    /**
+     * Asserts that two longs are equal. If they are not,
+     * an AssertionError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(long actual, long expected, String message) {
+        assertEquals(Long.valueOf(actual), Long.valueOf(expected), message);
+    }
+
+    /**
+     * Asserts that two longs are equal. If they are not,
+     * an AssertionError is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(long actual, long expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Asserts that two booleans are equal. If they are not,
+     * an AssertionError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(boolean actual, boolean expected, String message) {
+        assertEquals( Boolean.valueOf(actual), Boolean.valueOf(expected), message);
+    }
+
+    /**
+     * Asserts that two booleans are equal. If they are not,
+     * an AssertionError is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(boolean actual, boolean expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Asserts that two bytes are equal. If they are not,
+     * an AssertionError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(byte actual, byte expected, String message) {
+        assertEquals(Byte.valueOf(actual), Byte.valueOf(expected), message);
+    }
+
+    /**
+     * Asserts that two bytes are equal. If they are not,
+     * an AssertionError is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(byte actual, byte expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Asserts that two chars are equal. If they are not,
+     * an AssertionFailedError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(char actual, char expected, String message) {
+        assertEquals(Character.valueOf(actual), Character.valueOf(expected), message);
+    }
+
+    /**
+     * Asserts that two chars are equal. If they are not,
+     * an AssertionError is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(char actual, char expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Asserts that two shorts are equal. If they are not,
+     * an AssertionFailedError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(short actual, short expected, String message) {
+        assertEquals(Short.valueOf(actual), Short.valueOf(expected), message);
+    }
+
+    /**
+     * Asserts that two shorts are equal. If they are not,
+     * an AssertionError is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(short actual, short expected) {
+        assertEquals(actual, expected, null);
+    }
+
+    /**
+     * Asserts that two ints are equal. If they are not,
+     * an AssertionFailedError, with the given message, is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     * @param message the assertion error message
+     */
+    static public void assertEquals(int actual,  int expected, String message) {
+        assertEquals(Integer.valueOf(actual), Integer.valueOf(expected), message);
+    }
+
+    /**
+     * Asserts that two ints are equal. If they are not,
+     * an AssertionError is thrown.
+     * @param actual the actual value
+     * @param expected the expected value
+     */
+    static public void assertEquals(int actual, int expected) {
+        assertEquals(actual, expected, null);
+    }
+
+
+
+    /**
+     * Asserts that a condition is true. If it isn't, an AssertionError is thrown.
+     * @param condition the condition to evaluate
+     */
+    public static void assertTrue(boolean condition) {
+        if (!condition) fail(null);
+    }
+
     /**
      * Asserts that a condition is true. If it isn't,
      * an AssertionError, with the given message, is thrown.
@@ -214,7 +820,7 @@ public class Asserts {
     /**
      * Convenience method for cases where we need to test until something is true.
      *
-     * The runnable will be invoked periodically until it succesfully concludes.
+     * The Callable will be invoked periodically until it succesfully concludes.
      * <p>
      * The following flags are supported:
      * <ul>
@@ -233,8 +839,7 @@ public class Asserts {
      * </ul>
      * 
      * @param flags, accepts the flags listed above
-     * @param r
-     * @param finallyBlock
+     * @param c The callable to invoke
      */
     public static <T> T succeedsEventually(Map<String,?> flags, Callable<T> c) {
         boolean abortOnException = get(flags, "abortOnException", false);

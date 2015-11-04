@@ -20,7 +20,7 @@ package org.apache.brooklyn.feed.http;
 
 import java.util.List;
 
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Function;

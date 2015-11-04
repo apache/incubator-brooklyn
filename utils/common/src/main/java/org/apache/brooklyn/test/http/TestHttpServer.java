@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.test;
+package org.apache.brooklyn.test.http;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -115,7 +115,10 @@ public class TestHttpServer {
     }
 
     public void stop() {
-        server.stop();
+        if (null != server) {
+            server.stop();
+            server = null;
+        }
     }
 
     private void checkNotStarted() {

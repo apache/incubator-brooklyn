@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.test;
+package org.apache.brooklyn.util.http;
 
 import java.io.IOException;
 import java.net.InetAddress;
