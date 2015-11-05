@@ -1,19 +1,20 @@
 package org.apache.brooklyn.core.config.external.vault;
 
-import com.google.api.client.util.Lists;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.JsonObject;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.List;
-import java.util.Map;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.gson.JsonObject;
 
 public class VaultAppIdExternalConfigSupplier extends VaultExternalConfigSupplier {
 

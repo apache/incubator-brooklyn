@@ -6,9 +6,9 @@ import java.util.Map;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.util.text.Strings;
 
-import com.google.api.client.util.Lists;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 
 public class VaultUserPassExternalConfigSupplier extends VaultExternalConfigSupplier {
