@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.core.entity;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -34,16 +34,16 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Tests on {@link EntityAsserts}.
  */
 public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
 
-    private static final int TIMEOUT_MS = 10*1000;
     private static final String STOOGE = "stooge";
 
     private SimulatedLocation loc;
@@ -99,7 +99,7 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
         EntityAsserts.assertConfigEquals(entity, TestEntity.CONF_NAME, "bogus");
     }
 
-    @Test
+    @Test(groups="Integration")
     public void shouldAssertAttributeEqualsEventually() {
         entity.sensors().set(TestEntity.NAME, "before");
         final String after = "after";
@@ -107,8 +107,7 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
         EntityAsserts.assertAttributeEqualsEventually(entity, TestEntity.NAME, after);
     }
 
-
-    @Test(expectedExceptions = AssertionError.class)
+    @Test(groups="Integration", expectedExceptions = AssertionError.class)
     public void shouldFailToAssertAttributeEqualsEventually() {
         entity.sensors().set(TestEntity.NAME, "before");
         final String after = "after";
@@ -125,14 +124,14 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
         }, delay.toUnit(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void shouldAssertAttributeEventuallyNonNull() {
         EntityAsserts.assertAttributeEquals(entity, TestEntity.NAME, null);
         setSensorValueLater(TestEntity.NAME, "something", Duration.seconds(1));
         EntityAsserts.assertAttributeEventuallyNonNull(entity, TestEntity.NAME);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void shouldAssertAttributeEventually() {
         setSensorValueLater(TestEntity.NAME, "testing testing 123", Duration.seconds(1));
         EntityAsserts.assertAttributeEventually(entity, TestEntity.NAME, new Predicate<String>() {
@@ -150,7 +149,7 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
         EntityAsserts.assertAttribute(entity, TestEntity.NAME, Predicates.equalTo(before));
     }
 
-    @Test
+    @Test(groups="Integration")
     public void shouldAssertPredicateEventuallyTrue() {
         final int testVal = 987654321;
         executor.schedule(new Runnable() {
@@ -167,7 +166,7 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
         });
     }
 
-    @Test
+    @Test(groups="Integration")
     public void shouldAssertAttributeEqualsContinually() {
         final String myName = "myname";
         entity.sensors().set(TestEntity.NAME, myName);
@@ -175,7 +174,7 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
                 ImmutableMap.of("timeout", "2s"), entity, TestEntity.NAME, myName);
     }
 
-    @Test(expectedExceptions = AssertionError.class)
+    @Test(groups="Integration", expectedExceptions = AssertionError.class)
     public void shouldFailAssertAttributeEqualsContinually() {
         final String myName = "myname";
         entity.sensors().set(TestEntity.NAME, myName);
@@ -184,7 +183,7 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
                 ImmutableMap.of("timeout", "2s"), entity, TestEntity.NAME, myName);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void shouldAssertGroupSizeEqualsEventually() {
         setGroupFilterLater(STOOGE, 1);
         EntityAsserts.assertGroupSizeEqualsEventually(ImmutableMap.of("timeout", "2s"), stooges, 3);
@@ -201,14 +200,14 @@ public class EntityAssertsTest extends BrooklynAppUnitTestSupport {
         }, delaySeconds, TimeUnit.SECONDS);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void shouldAssertAttributeChangesEventually () {
         entity.sensors().set(TestEntity.NAME, "before");
         setSensorValueLater(TestEntity.NAME, "after", Duration.seconds(2));
         EntityAsserts.assertAttributeChangesEventually(entity, TestEntity.NAME);
     }
 
-    @Test
+    @Test(groups="Integration")
     public void shouldAssertAttributeNever() {
         entity.sensors().set(TestEntity.NAME, "ever");
         EntityAsserts.assertAttributeContinuallyNotEqualTo(ImmutableMap.of("timeout", "5s"), entity, TestEntity.NAME, "after");
