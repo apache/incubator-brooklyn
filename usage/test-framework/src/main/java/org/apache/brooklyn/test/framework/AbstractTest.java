@@ -19,6 +19,7 @@
 package org.apache.brooklyn.test.framework;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent;
 import org.apache.brooklyn.core.entity.AbstractEntity;
@@ -44,24 +45,33 @@ public abstract class AbstractTest extends AbstractEntity implements BaseTest {
      * @throws @RuntimeException if no target can be determined.
      */
     public Entity resolveTarget() {
-        Entity entity = getConfig(TARGET_ENTITY);
-        if (null == entity) {
-            entity = getTargetById();
-        }
-        return entity;
+        return resolveTarget(getExecutionContext(), this);
     }
 
-    private Entity getTargetById() {
-        String targetId = getConfig(TARGET_ID);
+    /**
+     * Find the target entity in the given execution context.
+     *
+     * @see {@link #resolveTarget()}.
+     */
+    public static Entity resolveTarget(ExecutionContext executionContext, Entity entity) {
+        Entity target = entity.getConfig(TARGET_ENTITY);
+        if (null == target) {
+            target = getTargetById(executionContext, entity);
+        }
+        return target;
+    }
+
+    private static Entity getTargetById(ExecutionContext executionContext, Entity entity) {
+        String targetId = entity.getConfig(TARGET_ID);
         final Task<Entity> targetLookup = new DslComponent(targetId).newTask();
-        Entity entity = null;
+        Entity target = null;
         try {
-            entity = Tasks.resolveValue(targetLookup, Entity.class, getExecutionContext(), "Finding entity " + targetId);
+            target = Tasks.resolveValue(targetLookup, Entity.class, executionContext, "Finding entity " + targetId);
             LOG.debug("Found target by id {}", targetId);
         } catch (final ExecutionException | InterruptedException e) {
             LOG.error("Error finding target {}", targetId);
             Exceptions.propagate(e);
         }
-        return entity;
+        return target;
     }
 }

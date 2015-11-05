@@ -65,7 +65,7 @@ public class TestSensorImpl extends AbstractTest implements TestSensor {
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {
-            LOG.info("Sensor [{}] test failed", sensor);
+            LOG.debug("Sensor [{}] test failed", sensor);
             sensors().set(SERVICE_UP, false);
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(t);

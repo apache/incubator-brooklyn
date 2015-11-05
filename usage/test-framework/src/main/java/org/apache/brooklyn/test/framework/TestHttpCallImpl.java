@@ -58,7 +58,7 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {
-            LOG.info("Url [{}] test failed", url);
+            LOG.debug("Url [{}] test failed", url);
             sensors().set(SERVICE_UP, false);
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(t);
@@ -89,7 +89,7 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
 
         for (final Map.Entry<?, ?> entry : assertions.entrySet()) {
             if (Objects.equal(entry.getKey(), "regex")) {
-                LOG.info("Testing if url [{}] matches regex [{}]",
+                LOG.debug("Testing if url [{}] matches regex [{}]",
                         new Object[]{url, entry.getValue()});
                 assertContentEventuallyMatches(flags, url, TypeCoercions.coerce(entry.getValue(), String.class));
             } else if (Objects.equal(entry.getKey(), "bodyContains")) {

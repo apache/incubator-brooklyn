@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -18,21 +18,33 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
+import org.apache.brooklyn.util.os.Os;
+
+import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKey;
 
 /**
- * Entity that tests a sensor value on another entity
+ * Entity to invoke on a node a simple command that will immediately succeed or fail.
  *
- * @author m4rkmckenna
+ * Invokes the command in the start operation, and declares itself RUNNING.
  */
-@ImplementedBy(value = TestSensorImpl.class)
-public interface TestSensor extends BaseTest {
+@ImplementedBy(SimpleCommandImpl.class)
+public interface SimpleCommand extends Entity, Startable {
 
     @SetFromFlag(nullable = false)
-    ConfigKey<String> SENSOR_NAME = ConfigKeys.newConfigKey(String.class, "sensor", "Sensor to evaluate");
+    ConfigKey<String> DEFAULT_COMMAND = ConfigKeys.newConfigKey(String.class, "defaultCommand",
+            "Command to invoke if no script is provided via a downloadUrl");
 
+    @SetFromFlag("downloadUrl")
+    AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;
+
+    @SetFromFlag("scriptDir")
+    ConfigKey<String> SCRIPT_DIR = newConfigKey("scriptDir", "directory where downloaded scripts should be put", Os.tmp());
 }
