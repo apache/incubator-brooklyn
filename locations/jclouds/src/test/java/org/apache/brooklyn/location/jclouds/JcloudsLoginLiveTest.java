@@ -19,19 +19,21 @@
 package org.apache.brooklyn.location.jclouds;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 
 import java.io.File;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.stream.Streams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -171,27 +173,50 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
     }
 
     @Test(groups = {"Live"})
-    protected void testSpecifyingPasswordAndSshKeysPrefersKeys() throws Exception {
+    public void testSpecifyingPasswordAndSshKeysPrefersKeysAndDisablesPassword() throws Exception {
+        runSpecifyingPasswordAndSshKeysPrefersKeys(false);
+    }
+
+    @Test(groups = {"Live"})
+    public void testSpecifyingPasswordAndSshKeysPrefersKeysAndAllowsPassword() throws Exception {
+        runSpecifyingPasswordAndSshKeysPrefersKeys(true);
+    }
+
+    protected void runSpecifyingPasswordAndSshKeysPrefersKeys(boolean leavePasswordSsh) throws Exception {
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PRIVATE_KEY_FILE.getName(), "~/.ssh/id_rsa");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
+        if (leavePasswordSsh) {
+            brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH.getName(), false);
+        }
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
         machine = createEc2Machine();
         assertSshable(machine);
+        
+        assertNull(machine.config().get(SshMachineLocation.PASSWORD));
+        assertNotNull(machine.config().get(SshMachineLocation.PRIVATE_KEY_DATA));
         
         assertSshable(ImmutableMap.builder()
                 .put("address", machine.getAddress())
                 .put("user", "myname")
                 .put(SshMachineLocation.PRIVATE_KEY_FILE, Os.tidyPath("~/.ssh/id_rsa"))
                 .build());
-        
-        assertSshable(ImmutableMap.builder()
-                .put("address", machine.getAddress())
-                .put("user", "myname")
-                .put(SshMachineLocation.PASSWORD, "mypassword")
-                .build());
+
+        if (leavePasswordSsh) {
+            assertSshable(ImmutableMap.builder()
+                    .put("address", machine.getAddress())
+                    .put("user", "myname")
+                    .put(SshMachineLocation.PASSWORD, "mypassword")
+                    .build());
+        } else {
+            assertNotSshable(ImmutableMap.builder()
+                    .put("address", machine.getAddress())
+                    .put("user", "myname")
+                    .put(SshMachineLocation.PASSWORD, "mypassword")
+                    .build());
+        }
     }
 
     @Test(groups = {"Live"})
@@ -244,6 +269,7 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "myname");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
         brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PUBLIC_KEY_FILE.getName(), "~/.ssh/id_rsa.pub");
+        brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH.getName(), false);
         jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
         
         machine = createEc2Machine();
@@ -270,6 +296,7 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
             
             brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.USER.getName(), "root");
             brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.PASSWORD.getName(), "mypassword");
+            brooklynProperties.put(BROOKLYN_PROPERTIES_PREFIX+JcloudsLocationConfig.DISABLE_ROOT_AND_PASSWORD_SSH.getName(), false);
             jcloudsLocation = (JcloudsLocation) managementContext.getLocationRegistry().resolve(AWS_EC2_LOCATION_SPEC);
             
             machine = createEc2Machine();
@@ -351,7 +378,7 @@ public class JcloudsLoginLiveTest extends AbstractJcloudsLiveTest {
         return obtainMachine(MutableMap.<String,Object>builder()
                 .putAll(conf)
                 .putIfAbsent("imageId", AWS_EC2_CENTOS_IMAGE_ID)
-                .putIfAbsent("hardwareId", AWS_EC2_SMALL_HARDWARE_ID)
+                .putIfAbsent("hardwareId", AWS_EC2_MEDIUM_HARDWARE_ID)
                 .putIfAbsent("inboundPorts", ImmutableList.of(22))
                 .build());
     }

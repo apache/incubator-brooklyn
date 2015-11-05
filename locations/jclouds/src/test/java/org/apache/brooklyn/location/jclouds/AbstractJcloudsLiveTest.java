@@ -52,6 +52,7 @@ public class AbstractJcloudsLiveTest {
     public static final String AWS_EC2_PROVIDER = "aws-ec2";
     public static final String AWS_EC2_MICRO_HARDWARE_ID = "t1.micro";
     public static final String AWS_EC2_SMALL_HARDWARE_ID = "m1.small";
+    public static final String AWS_EC2_MEDIUM_HARDWARE_ID = "m3.medium";
     public static final String AWS_EC2_EUWEST_REGION_NAME = "eu-west-1";
     public static final String AWS_EC2_USEAST_REGION_NAME = "us-east-1";
 
