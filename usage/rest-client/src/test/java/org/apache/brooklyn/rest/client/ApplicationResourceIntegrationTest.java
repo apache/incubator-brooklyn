@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
+import java.net.URL;
 import java.util.Collection;
 
 import javax.ws.rs.core.Response;
@@ -88,7 +89,7 @@ public class ApplicationResourceIntegrationTest {
                 .managementContext(getManagementContext())
                 .start();
 
-        api = new BrooklynApi("http://localhost:" + server.getConnectors()[0].getPort() + "/");
+        api = BrooklynApi.newInstance("http://localhost:" + server.getConnectors()[0].getPort() + "/");
     }
 
     @AfterClass(alwaysRun = true)
