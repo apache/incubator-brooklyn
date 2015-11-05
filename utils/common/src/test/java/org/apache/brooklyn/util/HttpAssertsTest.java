@@ -35,6 +35,7 @@ import org.apache.http.localserver.ResponseBasicUnauthorized;
 import org.apache.http.protocol.ResponseServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.*;
 
 import java.net.URI;
@@ -44,8 +45,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by geoff on 03/11/2015.
+ * Tests on {@link HttpAsserts}.
+ *
+ * @todo Restructure this to avoid sleeps, according to conversation at
+ * <a href="https://github.com/apache/incubator-brooklyn/pull/994#issuecomment-154074295">#994</a> on github.
  */
+@Test(groups = "Integration")
 public class HttpAssertsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpAssertsTest.class);
