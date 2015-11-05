@@ -676,6 +676,7 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
+                    <version>0.11</version>
                     <configuration>
                         <excludes combine.children="append">
                             <!-- Exclude sandbox because not part of distribution: not in tgz, and not uploaded to maven-central -->
@@ -985,7 +986,6 @@
             <plugin>
               <groupId>org.apache.rat</groupId>
               <artifactId>apache-rat-plugin</artifactId>
-              <version>0.10</version>
               <executions>
                 <execution>
                   <phase>verify</phase>
