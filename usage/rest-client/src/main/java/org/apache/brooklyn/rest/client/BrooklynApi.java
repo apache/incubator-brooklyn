@@ -74,7 +74,7 @@ import com.wordnik.swagger.core.ApiOperation;
 
 /**
  * @author Adam Lowe
-     */
+ */
 @SuppressWarnings("deprecation")
 public class BrooklynApi {
 
@@ -386,7 +386,7 @@ public class BrooklynApi {
     }
 
     /**
-     * @deprecated since 0.9.0. Use {@link #getEntity(Response, GenericType)} instead.
+     * @deprecated since 0.8.0-incubating. Use {@link #getEntity(Response, GenericType)} instead.
      */
     @Deprecated
     public static <T> T getEntityGeneric(Response response, GenericType<T> type) {
