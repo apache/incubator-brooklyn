@@ -10,6 +10,7 @@ children:
 - catalog/
 - rest.md
 - logging.md
+- externalized-configuration.md
 - requirements.md
 - production-installation.md
 - troubleshooting/
