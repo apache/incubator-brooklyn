@@ -1,16 +1,15 @@
 package org.apache.brooklyn.core.config.external.vault;
 
+import java.util.List;
+import java.util.Map;
+
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.util.text.Strings;
+
 import com.google.api.client.util.Lists;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonObject;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.util.text.Strings;
-
-import java.util.List;
-import java.util.Map;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class VaultUserPassExternalConfigSupplier extends VaultExternalConfigSupplier {
     public VaultUserPassExternalConfigSupplier(ManagementContext managementContext, String name, Map<String, String> config) {

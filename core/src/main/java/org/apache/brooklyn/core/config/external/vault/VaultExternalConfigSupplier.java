@@ -1,25 +1,26 @@
 package org.apache.brooklyn.core.config.external.vault;
 
-import com.google.api.client.util.Lists;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.config.external.AbstractExternalConfigSupplier;
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.http.client.HttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.UnsupportedEncodingException;
-import java.util.List;
-import java.util.Map;
+import com.google.api.client.util.Lists;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 
 public abstract class VaultExternalConfigSupplier extends AbstractExternalConfigSupplier {
     public static final String CHARSET_NAME = "UTF-8";

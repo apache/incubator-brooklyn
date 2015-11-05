@@ -1,13 +1,11 @@
 package org.apache.brooklyn.core.config.external.vault;
 
-import com.google.common.collect.ImmutableMap;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.config.external.ExternalConfigSupplier;
-import org.apache.brooklyn.util.text.Strings;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkArgument;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.util.text.Strings;
 
 public class VaultTokenExternalConfigSupplier extends VaultExternalConfigSupplier {
     public VaultTokenExternalConfigSupplier(ManagementContext managementContext, String name, Map<String, String> config) {
