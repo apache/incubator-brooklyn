@@ -71,9 +71,7 @@ public class BrooklynApiRestClientTest {
                 .securityProvider(TestSecurityProvider.class)
                 .start();
 
-        DefaultBrooklynApiFactory defaultBrooklynApiFactory = new DefaultBrooklynApiFactory();
-
-        api = defaultBrooklynApiFactory.getBrooklynApi(new URL("http://localhost:" + server.getConnectors()[0].getPort() + "/"),
+        api = BrooklynApi.newInstance("http://localhost:" + server.getConnectors()[0].getPort() + "/",
                 TestSecurityProvider.USER, TestSecurityProvider.PASSWORD);
     }
 

@@ -30,12 +30,18 @@ import java.net.URL;
 import javax.annotation.Nullable;
 import javax.ws.rs.core.Response;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.impl.client.*;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.jboss.resteasy.client.ClientExecutor;
-import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
@@ -68,18 +74,18 @@ import com.wordnik.swagger.core.ApiOperation;
 
 /**
  * @author Adam Lowe
- */
+     */
 @SuppressWarnings("deprecation")
 public class BrooklynApi {
 
     private final String target;
     private final ClientExecutor clientExecutor;
+    private final int maxPoolSize;
+    private final int timeOutInMillis;
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynApi.class);
 
     /**
-     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
-     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
-     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     * @deprecated since 0.9.0. Use {@link BrooklynApi#newInstance(String)} instead
      */
     @Deprecated
     public BrooklynApi(URL endpoint) {
@@ -87,9 +93,7 @@ public class BrooklynApi {
     }
 
     /**
-     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
-     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
-     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     * @deprecated since 0.9.0. Use {@link BrooklynApi#newInstance(String)} instead
      */
     @Deprecated
     public BrooklynApi(String endpoint) {
@@ -98,9 +102,7 @@ public class BrooklynApi {
     }
 
     /**
-     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
-     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
-     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     * @deprecated since 0.9.0. Use {@link BrooklynApi#newInstance(String, String, String)} instead
      */
     @Deprecated
     public BrooklynApi(URL endpoint, String username, String password) {
@@ -108,9 +110,7 @@ public class BrooklynApi {
     }
 
     /**
-     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
-     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
-     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     * @deprecated since 0.9.0. Use {@link BrooklynApi#newInstance(String, String, String)} instead
      */
     @Deprecated
     public BrooklynApi(String endpoint, String username, String password) {
@@ -118,9 +118,7 @@ public class BrooklynApi {
     }
 
     /**
-     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
-     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
-     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     * @deprecated since 0.9.0. Use {@link BrooklynApi#newInstance(String, String, String)} instead
      */
     @Deprecated
     public BrooklynApi(URL endpoint, @Nullable Credentials credentials) {
@@ -128,43 +126,131 @@ public class BrooklynApi {
     }
 
     /**
-     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
-     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
-     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     * Creates a BrooklynApi using an HTTP connection pool
+     *
+     * @deprecated since 0.9.0. Use {@link BrooklynApi#newInstance(String, String, String)} instead
      */
     @Deprecated
     public BrooklynApi(String endpoint, @Nullable Credentials credentials) {
+        this(endpoint, credentials, 20, 5000);
+    }
+
+    /**
+     * Creates a BrooklynApi using a custom ClientExecutor
+     *
+     * @param endpoint the Brooklyn endpoint
+     * @param clientExecutor the ClientExecutor
+     * @see #getClientExecutor(org.apache.http.auth.Credentials)
+     */
+    public BrooklynApi(URL endpoint, ClientExecutor clientExecutor) {
+        this.target = checkNotNull(endpoint, "endpoint").toString();
+        this.maxPoolSize = -1;
+        this.timeOutInMillis = -1;
+        this.clientExecutor = checkNotNull(clientExecutor, "clientExecutor");
+    }
+
+    /**
+     * Creates a BrooklynApi using an HTTP connection pool
+     *
+     * @param endpoint the Brooklyn endpoint
+     * @param credentials user credentials or null
+     * @param maxPoolSize maximum pool size
+     * @param timeOutInMillis connection timeout in milliseconds
+     */
+    public BrooklynApi(String endpoint, @Nullable Credentials credentials, int maxPoolSize, int timeOutInMillis) {
         try {
             new URL(checkNotNull(endpoint, "endpoint"));
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException(e);
         }
-
         this.target = endpoint;
-        if (credentials != null) {
-            DefaultHttpClient httpClient = new DefaultHttpClient();
-            httpClient.getCredentialsProvider().setCredentials(AuthScope.ANY, credentials);
-            this.clientExecutor = new ApacheHttpClient4Executor(httpClient);
-        } else {
-            this.clientExecutor = ClientRequest.getDefaultExecutor();
+        this.maxPoolSize = maxPoolSize;
+        this.timeOutInMillis = timeOutInMillis;
+        this.clientExecutor = getClientExecutor(credentials);
+    }
+
+    private Supplier<PoolingHttpClientConnectionManager> connectionManagerSupplier = Suppliers.memoize(new Supplier<PoolingHttpClientConnectionManager>() {
+        @Override
+        public PoolingHttpClientConnectionManager get() {
+            PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager();
+            connManager.setMaxTotal(maxPoolSize);
+            connManager.setDefaultMaxPerRoute(maxPoolSize);
+            return connManager;
         }
+    });
+
+    private Supplier<RequestConfig> reqConfSupplier = Suppliers.memoize(new Supplier<RequestConfig>() {
+        @Override
+        public RequestConfig get() {
+            return RequestConfig.custom()
+                    .setConnectTimeout(timeOutInMillis)
+                    .setConnectionRequestTimeout(timeOutInMillis)
+                    .build();
+        }
+    });
+
+    /**
+     * Creates a ClientExecutor for this BrooklynApi
+     */
+    protected ClientExecutor getClientExecutor(Credentials credentials) {
+        CredentialsProvider provider = new BasicCredentialsProvider();
+        if (credentials != null) provider.setCredentials(AuthScope.ANY, credentials);
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setDefaultCredentialsProvider(provider)
+                .setDefaultRequestConfig(reqConfSupplier.get())
+                .setConnectionManager(connectionManagerSupplier.get())
+                .build();
+
+        return new ApacheHttpClient4Executor(httpClient);
     }
 
     /**
-     * @deprecated since 0.9.0. Use {@link BrooklynApiFactory#getBrooklynApi(java.net.URL, String, String)} instead
-     * @see org.apache.brooklyn.rest.client.DefaultBrooklynApiFactory
-     * @see org.apache.brooklyn.rest.client.PoolingBrooklynApiFactory
+     * Creates a BrooklynApi using an HTTP connection pool
+     *
+     * @param endpoint the Brooklyn endpoint
+     * @return a new BrooklynApi instance
      */
-    @Deprecated
-    public BrooklynApi(URL endpoint, ClientExecutor clientExecutor) {
-        this.target = checkNotNull(endpoint, "endpoint").toString();
-        this.clientExecutor = checkNotNull(clientExecutor, "clientExecutor");
+    public static BrooklynApi newInstance(String endpoint) {
+        return new BrooklynApi(endpoint, null);
     }
 
-    // to be used by factories
-    BrooklynApi(ClientExecutor clientExecutor, URL endpoint) {
-        this.target = checkNotNull(endpoint, "endpoint").toString();
-        this.clientExecutor = checkNotNull(clientExecutor, "clientExecutor");
+    /**
+     * Creates a BrooklynApi using an HTTP connection pool
+     *
+     * @param endpoint the Brooklyn endpoint
+     * @param maxPoolSize maximum connection pool size
+     * @param timeOutInMillis connection timeout in millisecond
+     * @return a new BrooklynApi instance
+     */
+    public static BrooklynApi newInstance(String endpoint, int maxPoolSize, int timeOutInMillis) {
+        return new BrooklynApi(endpoint, null, maxPoolSize, timeOutInMillis);
+    }
+
+    /**
+     * Creates a BrooklynApi using an HTTP connection pool
+     *
+     * @param endpoint the Brooklyn endpoint
+     * @param username for authentication
+     * @param password for authentication
+     * @return a new BrooklynApi instance
+     */
+    public static BrooklynApi newInstance(String endpoint, String username, String password) {
+        return new BrooklynApi(endpoint, new UsernamePasswordCredentials(username, password));
+    }
+
+    /**
+     * Creates a BrooklynApi using an HTTP connection pool
+     *
+     * @param endpoint the Brooklyn endpoint
+     * @param username for authentication
+     * @param password for authentication
+     * @param maxPoolSize maximum connection pool size
+     * @param timeOutInMillis connection timeout in millisecond
+     * @return a new BrooklynApi instance
+     */
+    public static BrooklynApi newInstance(String endpoint, String username, String password, int maxPoolSize, int timeOutInMillis) {
+        return new BrooklynApi(endpoint, new UsernamePasswordCredentials(username, password), maxPoolSize, timeOutInMillis);
     }
 
     @SuppressWarnings("unchecked")
@@ -172,7 +258,7 @@ public class BrooklynApi {
         final T result0 = ProxyFactory.create(clazz, target, clientExecutor);
         return (T) Proxy.newProxyInstance(clazz.getClassLoader(), new Class<?>[] { clazz }, new InvocationHandler() {
             @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {                 
+            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 try {
                     Object result1 = method.invoke(result0, args);
                     Class<?> type = String.class;
@@ -191,11 +277,11 @@ public class BrooklynApi {
                         e = ((InvocationTargetException)e).getTargetException();
                     }
                     throw Exceptions.propagate(e);
-                }  
+                }
             }
-            
+
             private boolean isStatusCodeHealthy(int code) { return (code>=200 && code<=299); }
-            
+
             private Class<?> getClassFromMethodAnnotationOrDefault(Method method, Class<?> def){
                 Class<?> type;
                 try{

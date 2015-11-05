@@ -89,9 +89,7 @@ public class ApplicationResourceIntegrationTest {
                 .managementContext(getManagementContext())
                 .start();
 
-        DefaultBrooklynApiFactory defaultBrooklynApiFactory = new DefaultBrooklynApiFactory();
-
-        api = defaultBrooklynApiFactory.getBrooklynApi(new URL("http://localhost:" + server.getConnectors()[0].getPort() + "/"), null, null);
+        api = BrooklynApi.newInstance("http://localhost:" + server.getConnectors()[0].getPort() + "/");
     }
 
     @AfterClass(alwaysRun = true)
