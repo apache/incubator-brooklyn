@@ -38,6 +38,68 @@ import org.testng.annotations.Test;
 /**
  * {@link GeoscalingWebClient} unit tests.
  */
+/*
+Exception java.lang.RuntimeException
+
+Message: Failed to log-in to GeoScaling service: javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure
+Stacktrace:
+
+
+at org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.login(GeoscalingWebClient.java:208)
+at org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClientTest.setUp(GeoscalingWebClientTest.java:64)
+at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+at java.lang.reflect.Method.invoke(Method.java:606)
+at org.testng.internal.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:84)
+at org.testng.internal.Invoker.invokeConfigurationMethod(Invoker.java:564)
+at org.testng.internal.Invoker.invokeConfigurations(Invoker.java:213)
+at org.testng.internal.Invoker.invokeMethod(Invoker.java:653)
+at org.testng.internal.Invoker.invokeTestMethod(Invoker.java:901)
+at org.testng.internal.Invoker.invokeTestMethods(Invoker.java:1231)
+at org.testng.internal.TestMethodWorker.invokeTestMethods(TestMethodWorker.java:127)
+at org.testng.internal.TestMethodWorker.run(TestMethodWorker.java:111)
+at org.testng.TestRunner.privateRun(TestRunner.java:767)
+at org.testng.TestRunner.run(TestRunner.java:617)
+at org.testng.SuiteRunner.runTest(SuiteRunner.java:348)
+at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:343)
+at org.testng.SuiteRunner.privateRun(SuiteRunner.java:305)
+at org.testng.SuiteRunner.run(SuiteRunner.java:254)
+at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:52)
+at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:86)
+at org.testng.TestNG.runSuitesSequentially(TestNG.java:1224)
+at org.testng.TestNG.runSuitesLocally(TestNG.java:1149)
+at org.testng.TestNG.run(TestNG.java:1057)
+at org.apache.maven.surefire.testng.TestNGExecutor.run(TestNGExecutor.java:115)
+at org.apache.maven.surefire.testng.TestNGDirectoryTestSuite.executeMulti(TestNGDirectoryTestSuite.java:205)
+at org.apache.maven.surefire.testng.TestNGDirectoryTestSuite.execute(TestNGDirectoryTestSuite.java:108)
+at org.apache.maven.surefire.testng.TestNGProvider.invoke(TestNGProvider.java:111)
+at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:203)
+at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:155)
+at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:103)
+Caused by: javax.net.ssl.SSLHandshakeException: Received fatal alert: handshake_failure
+at sun.security.ssl.Alerts.getSSLException(Alerts.java:192)
+at sun.security.ssl.Alerts.getSSLException(Alerts.java:154)
+at sun.security.ssl.SSLSocketImpl.recvAlert(SSLSocketImpl.java:1991)
+at sun.security.ssl.SSLSocketImpl.readRecord(SSLSocketImpl.java:1098)
+at sun.security.ssl.SSLSocketImpl.performInitialHandshake(SSLSocketImpl.java:1344)
+at sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:1371)
+at sun.security.ssl.SSLSocketImpl.startHandshake(SSLSocketImpl.java:1355)
+at org.apache.http.conn.ssl.SSLSocketFactory.connectSocket(SSLSocketFactory.java:543)
+at org.apache.http.conn.ssl.SSLSocketFactory.connectSocket(SSLSocketFactory.java:409)
+at org.apache.http.impl.conn.DefaultClientConnectionOperator.openConnection(DefaultClientConnectionOperator.java:177)
+at org.apache.http.impl.conn.ManagedClientConnectionImpl.open(ManagedClientConnectionImpl.java:304)
+at org.apache.http.impl.client.DefaultRequestDirector.tryConnect(DefaultRequestDirector.java:611)
+at org.apache.http.impl.client.DefaultRequestDirector.execute(DefaultRequestDirector.java:446)
+at org.apache.http.impl.client.AbstractHttpClient.doExecute(AbstractHttpClient.java:882)
+at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:82)
+at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:107)
+at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:55)
+at org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.sendRequest(GeoscalingWebClient.java:438)
+at org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.login(GeoscalingWebClient.java:205)
+... 31 more
+ */
+@Test(groups="Broken", enabled=false)
 public class GeoscalingWebClientTest {
     
     private final static String GEOSCALING_URL = "https://www.geoscaling.com";

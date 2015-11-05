@@ -111,7 +111,8 @@ public class NodeJsWebAppFixtureIntegrationTest {
     /**
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
-    @Test(groups = "Integration")
+    // Broken on Ubuntu 15.04 Vivid, no packages from ppa:chris-lea/node.js available
+    @Test(groups = {"Integration","Broken"})
     public void testCanStartAndStop() {
         LOG.info("test=canStartAndStop; entity="+entity+"; app="+entity.getApplication());
 
@@ -128,7 +129,8 @@ public class NodeJsWebAppFixtureIntegrationTest {
     /**
      * Checks an entity can start, set SERVICE_UP to true and shutdown again.
      */
-    @Test(groups = "Integration")
+    // Broken on Ubuntu 15.04 Vivid, no packages from ppa:chris-lea/node.js available
+    @Test(groups = {"Integration","Broken"})
     public void testReportsServiceDownWhenKilled() throws Exception {
         LOG.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication());
         
@@ -153,7 +155,8 @@ public class NodeJsWebAppFixtureIntegrationTest {
         // but TODO we should have some rebind tests for these!
     }
 
-    @Test(groups = "Integration")
+    // Broken on Ubuntu 15.04 Vivid, no packages from ppa:chris-lea/node.js available
+    @Test(groups = {"Integration","Broken"})
     public void testInitialNamedDeployments() {
         final String urlSubPathToWebApp = APP_NAME;
         final String urlSubPathToPageToQuery = "";

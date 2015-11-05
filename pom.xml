@@ -85,7 +85,7 @@
         <plantuml.version>6121</plantuml.version>
         <ant.version>1.8.4</ant.version>
         <includedTestGroups />
-        <excludedTestGroups>Integration,Acceptance,Live,WIP</excludedTestGroups>
+        <excludedTestGroups>Integration,Acceptance,Live,WIP,Broken</excludedTestGroups>
         <surefire.failIfNoSpecifiedTests>false</surefire.failIfNoSpecifiedTests>
 
         <!-- Dependencies -->
