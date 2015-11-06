@@ -246,7 +246,7 @@ public class EntityManagementUtils {
      * See {@link #WRAPPER_APP_MARKER}. */
     @Beta //where should this live long-term?
     public static void mergeWrapperParentSpecToChildEntity(EntitySpec<? extends Application> wrapperParent, EntitySpec<?> wrappedChild) {
-        if (Strings.isEmpty(wrappedChild.getDisplayName()))
+        if (Strings.isNonEmpty(wrapperParent.getDisplayName()))
             wrappedChild.displayName(wrapperParent.getDisplayName());
         if (!wrapperParent.getLocations().isEmpty())
             wrappedChild.locations(wrapperParent.getLocations());
@@ -270,7 +270,7 @@ public class EntityManagementUtils {
      * for use when adding from a plan specifying an application which was wrapped because it had to be.
      * @see #WRAPPER_APP_MARKER */
     public static boolean canPromoteWrappedApplication(EntitySpec<? extends Application> app) {
-        if (app.getChildren().size()!=1)
+        if (!hasSingleChild(app))
             return false;
 
         EntitySpec<?> childSpec = Iterables.getOnlyElement(app.getChildren());
@@ -283,9 +283,8 @@ public class EntityManagementUtils {
     /** returns true if the spec is for an empty-ish wrapper app, 
      * for use when adding from a plan specifying multiple entities but nothing significant at the application level.
      * @see #WRAPPER_APP_MARKER */
-    public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<?> spec) {
-        return canPromoteBasedOnName(spec) &&
-                isWrapperApp(spec) &&
+    public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<? extends Application> spec) {
+        return isWrapperApp(spec) && hasSingleChild(spec) &&
                 //equivalent to no keys starting with "brooklyn."
                 spec.getEnrichers().isEmpty() &&
                 spec.getInitializers().isEmpty() &&
@@ -296,26 +295,8 @@ public class EntityManagementUtils {
         return Boolean.TRUE.equals(spec.getConfig().get(EntityManagementUtils.WRAPPER_APP_MARKER));
     }
 
-    private static boolean canPromoteBasedOnName(EntitySpec<?> spec) {
-        if (!Strings.isEmpty(spec.getDisplayName())) {
-            if (spec.getChildren().size()==1) {
-                String childName = Iterables.getOnlyElement(spec.getChildren()).getDisplayName();
-                if (Strings.isEmpty(childName) || childName.equals(spec.getDisplayName())) {
-                    // if child has no name, or it's the same, could still promote
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                // if name set at root and promoting children would be ambiguous, do not promote 
-                return false;
-            }
-        } else if (spec.getChildren().size()>1) {
-            // don't allow multiple children if a name is specified as a root
-            return false;
-        } else {
-            return true;
-        }
+    private static boolean hasSingleChild(EntitySpec<?> spec) {
+        return spec.getChildren().size() == 1;
     }
 
 }
