@@ -131,7 +131,6 @@
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-jaxrs/${jackson.version}</bundle>
 
-
         <!-- TODO: don't use wrap -->
         <bundle dependency="true">wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle> <!-- from geoip -->
         <bundle dependency="true">wrap:mvn:com.maxmind.geoip2/geoip2/${maxmind.version}</bundle> <!-- from geoip2 -->
@@ -142,6 +141,11 @@
 
     <feature name="brooklyn-camp-brooklyn" version="${project.version}" description="Brooklyn CAMP REST API">
         <bundle>mvn:org.apache.brooklyn/brooklyn-camp/${project.version}</bundle>
+
+        <feature>brooklyn-core</feature>
+        <feature>brooklyn-camp-base</feature>
+        <bundle dependency="true">mvn:commons-beanutils/commons-beanutils/${commons-beanutils.version}</bundle>
+        <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections.version}</bundle>
     </feature>
 
     <feature name="brooklyn-camp-base" version="${project.version}" description="Brooklyn CAMP Base">
@@ -163,12 +167,12 @@
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
     </feature>
 
-
-
     <feature name="brooklyn-rest-server" version="${project.version}" description="Brooklyn REST Server">
         <bundle>mvn:org.apache.brooklyn/brooklyn-rest-server/${project.version}</bundle>
         <feature>brooklyn-core</feature>
         <feature>brooklyn-rest-api</feature>
+        <feature>brooklyn-camp-brooklyn</feature>
+        <feature>brooklyn-camp-base</feature>
 
     </feature>
   

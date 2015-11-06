@@ -186,6 +186,8 @@
         <jline.version>2.12</jline.version>
         <jsonSmart.version>2.1.1</jsonSmart.version>
         <minidev.asm.version>1.0.2</minidev.asm.version>
+        <commons-beanutils.version>1.9.1</commons-beanutils.version>
+        <commons-collections.version>3.2.1</commons-collections.version>
 
         <!-- Compilation -->
     </properties>

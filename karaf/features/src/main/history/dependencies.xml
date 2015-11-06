@@ -4,6 +4,10 @@
         <feature prerequisite="false" dependency="false">brooklyn-api</feature>
         <feature prerequisite="false" dependency="false">brooklyn-api</feature>
         <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-camp-brooklyn</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-core</feature>
         <feature prerequisite="false" dependency="false">brooklyn-core</feature>
         <feature prerequisite="false" dependency="false">brooklyn-rest-api</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
@@ -34,7 +38,9 @@
         <bundle>mvn:com.sun.jersey/jersey-servlet/1.18.1</bundle>
         <bundle>mvn:com.sun.jersey/jersey-servlet/1.18.1</bundle>
         <bundle>mvn:com.thoughtworks.xstream/xstream/1.4.7</bundle>
+        <bundle>mvn:commons-beanutils/commons-beanutils/1.9.1</bundle>
         <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
+        <bundle>mvn:commons-collections/commons-collections/3.2.1</bundle>
         <bundle>mvn:commons-io/commons-io/2.4</bundle>
         <bundle>mvn:commons-lang/commons-lang/2.4</bundle>
         <bundle>mvn:io.swagger/swagger-annotations/1.5.3</bundle>
