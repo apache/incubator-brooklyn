@@ -35,6 +35,7 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.ReferenceWithError;
+import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.osgi.OsgiUtils;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
@@ -253,6 +254,17 @@ public class EmbeddedFelixFramework {
     private static boolean isValidBundle(Manifest manifest) {
         Attributes atts = manifest.getMainAttributes();
         return atts.containsKey(new Attributes.Name(Constants.BUNDLE_MANIFESTVERSION));
+    }
+
+    public static boolean isSystemBundle(Bundle bundle) {
+        String versionedId = OsgiUtils.getVersionedId( bundle );
+        return SYSTEM_BUNDLES.contains(versionedId);
+    }
+
+    public static boolean isExtensionBundle(Bundle bundle) {
+        String location = bundle.getLocation();
+        return location != null && 
+                EXTENSION_PROTOCOL.equals(Urls.getProtocol(location));
     }
 
 }

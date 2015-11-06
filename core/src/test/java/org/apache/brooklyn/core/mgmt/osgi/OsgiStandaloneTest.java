@@ -19,8 +19,8 @@
 package org.apache.brooklyn.core.mgmt.osgi;
 
 
-import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.rt.felix.EmbeddedFelixFramework;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.osgi.OsgiTestBase;
@@ -29,6 +29,7 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.maven.MavenArtifact;
 import org.apache.brooklyn.util.maven.MavenRetriever;
 import org.apache.brooklyn.util.net.Urls;
+import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.slf4j.Logger;
@@ -84,8 +85,7 @@ public class OsgiStandaloneTest extends OsgiTestBase {
         Assert.assertEquals(Entity.class, bundleCls.getClassLoader().loadClass(Entity.class.getName()));
     }
 
-    // FIXME re-enable
-    @Test(enabled = false)
+    @Test
     public void testDuplicateBundle() throws Exception {
         MavenArtifact artifact = new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.9.0-SNAPSHOT"); // BROOKLYN_VERSION
         String localUrl = MavenRetriever.localUrl(artifact);
@@ -106,7 +106,7 @@ public class OsgiStandaloneTest extends OsgiTestBase {
         //Make sure that we still get the initially loaded
         //bundle after trying to install the same version.
         Bundle bundle = install(url);
-        Assert.assertTrue(Osgis.isExtensionBundle(bundle));
+        Assert.assertTrue(EmbeddedFelixFramework.isExtensionBundle(bundle));
     }
 
     @Test
