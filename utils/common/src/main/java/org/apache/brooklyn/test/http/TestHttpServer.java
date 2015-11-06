@@ -137,6 +137,10 @@ public class TestHttpServer {
 
     public String getUrl() {
         try {
+            if (server==null) {
+                // guess the URL, in those cases where the server is not started yet
+                return new URL("http", getLocalAddress().getHostAddress(), basePort, "").toExternalForm();
+            }
             return new URL("http", server.getInetAddress().getHostAddress(), server.getLocalPort(), "").toExternalForm();
         } catch (MalformedURLException e) {
             throw Exceptions.propagate(e);

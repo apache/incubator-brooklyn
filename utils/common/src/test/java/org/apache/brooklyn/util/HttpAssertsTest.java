@@ -18,16 +18,22 @@
  */
 package org.apache.brooklyn.util;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
+import java.net.URI;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.brooklyn.test.http.TestHttpRequestHandler;
 import org.apache.brooklyn.test.http.TestHttpServer;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.http.HttpAsserts;
 import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.http.HttpToolResponse;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.net.Networking;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.localserver.RequestBasicAuth;
@@ -35,14 +41,14 @@ import org.apache.http.localserver.ResponseBasicUnauthorized;
 import org.apache.http.protocol.ResponseServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
-import java.net.URI;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 
 /**
  * Tests on {@link HttpAsserts}.
@@ -54,26 +60,33 @@ import java.util.concurrent.TimeUnit;
 public class HttpAssertsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpAssertsTest.class);
+    private static Duration DELAY_FOR_SERVER_TO_SETTLE = Duration.seconds(2);
+    
     HttpClient httpClient;
     URI baseUri;
     private TestHttpServer server;
     private String baseUrl;
+    private String simpleEndpoint;
     private ScheduledExecutorService executor;
-
 
     @BeforeMethod(alwaysRun = true)
     public void setUp() throws Exception {
         server = initializeServer();
+        initVars();
+        Time.sleep(DELAY_FOR_SERVER_TO_SETTLE);
+    }
+
+    private void initVars() {
         baseUrl = server.getUrl();
         httpClient = HttpTool.httpClientBuilder()
             .uri(baseUrl)
             .build();
         baseUri = URI.create(baseUrl);
+        simpleEndpoint = testUri("/simple");
         executor = Executors.newScheduledThreadPool(3);
-        TimeUnit.SECONDS.sleep(2);
     }
 
-    private TestHttpServer initializeServer() {
+    private TestHttpServer initializeServerUnstarted() {
         return new TestHttpServer()
             .interceptor(new ResponseServer())
             .interceptor(new ResponseBasicUnauthorized())
@@ -83,46 +96,52 @@ public class HttpAssertsTest {
             .handler("/missing", new TestHttpRequestHandler().code(HttpStatus.SC_NOT_FOUND).response("Missing"))
             .handler("/redirect", new TestHttpRequestHandler().code(HttpStatus.SC_MOVED_TEMPORARILY).response("Redirect").header("Location", "/simple"))
             .handler("/cycle", new TestHttpRequestHandler().code(HttpStatus.SC_MOVED_TEMPORARILY).response("Redirect").header("Location", "/cycle"))
-            .handler("/secure", new TestHttpRequestHandler().code(HttpStatus.SC_MOVED_TEMPORARILY).response("Redirect").header("Location", "https://0.0.0.0/"))
-            .start();
+            .handler("/secure", new TestHttpRequestHandler().code(HttpStatus.SC_MOVED_TEMPORARILY).response("Redirect").header("Location", "https://0.0.0.0/"));
     }
-
+    private TestHttpServer initializeServer() {
+            return initializeServerUnstarted().start();
+    }
 
     @AfterMethod(alwaysRun = true)
     public void tearDown() throws Exception {
         if (executor != null) executor.shutdownNow();
         server.stop();
-        TimeUnit.SECONDS.sleep(2);
+        Time.sleep(DELAY_FOR_SERVER_TO_SETTLE);
     }
 
     // schedule a stop of server after n seconds
-    private void stopAfter(int delay) {
+    private void stopAfter(final Duration time) {
+        final TestHttpServer serverCached = server;
         executor.schedule(new Runnable() {
             @Override
             public void run() {
-                server.stop();
+                LOG.info("stopping server ("+time+" elapsed)");
+                serverCached.stop();
             }
-        }, delay, TimeUnit.SECONDS);
+        }, time.toMilliseconds(), TimeUnit.MILLISECONDS);
     }
 
     // stop server and pause to wait for it to finish
     private void stopServer() {
         server.stop();
-        try {
-            TimeUnit.SECONDS.sleep(2);
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        }
+        Time.sleep(DELAY_FOR_SERVER_TO_SETTLE);
     }
 
     // schedule a start of server after n seconds
-    private void startAfter(int delay) {
+    private void startAfter(final Duration time) {
+        // find the port before delay so that callers can get the right url
+        // (sometimes if stopped and started it can't bind to the same port;
+        // at least that is one suspicion for failures on hosted jenkins)
+        server = initializeServerUnstarted();
+        server.basePort(Networking.nextAvailablePort(50606));
+        initVars();
         executor.schedule(new Runnable() {
             @Override
             public void run() {
-                server = initializeServer();
+                LOG.info("starting server ("+time+" elapsed)");
+                server.start();
             }
-        }, delay, TimeUnit.SECONDS);
+        }, time.toMilliseconds(), TimeUnit.MILLISECONDS);
     }
 
     private HttpToolResponse doGet(String str) {
@@ -145,45 +164,52 @@ public class HttpAssertsTest {
     @Test
     public void shouldAssertUrlUnreachable() {
         stopServer();
-        HttpAsserts.assertUrlUnreachable(testUri("/simple"));
+        HttpAsserts.assertUrlUnreachable(simpleEndpoint);
     }
 
     @Test
     public void shouldAssertUrlUnreachableEventually() {
         HttpAsserts.assertUrlReachable(baseUrl);
-        stopAfter(1);
+        stopAfter(Duration.seconds(1));
         HttpAsserts.assertUrlUnreachableEventually(baseUrl);
     }
 
     @Test
     public void shouldAssertUrlUnreachableEventuallyWithFlags() throws Exception {
-        stopAfter(5);
-        TimeUnit.SECONDS.sleep(3);
-        HttpAsserts.assertUrlReachable(baseUrl);
-        HttpAsserts.assertUrlUnreachableEventually(ImmutableMap.of("timeout", "10s"), baseUrl);
+        String baseUrlOrig = baseUrl;
+        LOG.info("testing "+JavaClassNames.niceClassAndMethod()+", server "+server.getUrl());
+        stopAfter(DELAY_FOR_SERVER_TO_SETTLE);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE.add(DELAY_FOR_SERVER_TO_SETTLE).add(DELAY_FOR_SERVER_TO_SETTLE));
+        LOG.info(JavaClassNames.niceClassAndMethod()+" queued server changes");
+        HttpAsserts.assertUrlReachable(baseUrlOrig);
+        HttpAsserts.assertUrlUnreachableEventually(ImmutableMap.of("timeout", "10s"), baseUrlOrig);
     }
 
     @Test(expectedExceptions = AssertionError.class)
-    public void shouldAssertUrlUnreachableEventuallyWithTimeout() throws Exception {
+    public void shouldFailAssertUrlUnreachableEventuallyWithTimeout() throws Exception {
         HttpAsserts.assertUrlReachable(baseUrl);
         HttpAsserts.assertUrlUnreachableEventually(ImmutableMap.of("timeout", "3s"), baseUrl);
     }
 
-
     @Test
     public void shouldAssertHttpStatusCodeEquals() {
         HttpAsserts.assertHttpStatusCodeEquals(baseUrl, 500, 501);
-        HttpAsserts.assertHttpStatusCodeEquals(testUri("/simple"), 201, 200);
+        HttpAsserts.assertHttpStatusCodeEquals(simpleEndpoint, 201, 200);
         HttpAsserts.assertHttpStatusCodeEquals(testUri("/missing"), 400, 404);
     }
 
     @Test
     public void shouldAssertHttpStatusCodeEventuallyEquals() throws Exception {
         stopServer();
-        final String simple = testUri("/simple");
-        HttpAsserts.assertUrlUnreachable(simple);
-        startAfter(2);
-        HttpAsserts.assertHttpStatusCodeEventuallyEquals(simple, 200);
+        HttpAsserts.assertUrlUnreachable(simpleEndpoint);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE);
+        try {
+            HttpAsserts.assertHttpStatusCodeEventuallyEquals(simpleEndpoint, 200);
+        } catch (Throwable t) {
+            LOG.warn("Failed waiting for simple with start after: "+t, t);
+            LOG.warn("Detail: server at "+server.getUrl()+" ("+server+"), looking at "+simpleEndpoint);
+            throw Exceptions.propagate(t);
+        }
     }
 
     private String testUri(String str) {
@@ -192,12 +218,12 @@ public class HttpAssertsTest {
 
     @Test
     public void shouldAssertContentContainsText() {
-        HttpAsserts.assertContentContainsText(testUri("/simple"), "OK");
+        HttpAsserts.assertContentContainsText(simpleEndpoint, "OK");
     }
 
     @Test
     public void shouldAssertContentNotContainsText() {
-        HttpAsserts.assertContentNotContainsText(testUri("/simple"), "Bad");
+        HttpAsserts.assertContentNotContainsText(simpleEndpoint, "Bad");
     }
 
     @Test
@@ -213,71 +239,72 @@ public class HttpAssertsTest {
     @Test
     public void shouldAssertContentEventuallyContainsText() {
         stopServer();
-        final String simple = testUri("/simple");
-        HttpAsserts.assertUrlUnreachable(simple);
-        startAfter(2);
-        HttpAsserts.assertContentEventuallyContainsText(simple, "OK");
+        HttpAsserts.assertUrlUnreachable(simpleEndpoint);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE);
+        HttpAsserts.assertContentEventuallyContainsText(simpleEndpoint, "OK");
     }
 
     @Test
     public void shouldAssertContentEventuallyContainsTextWithFlags() {
         stopServer();
-        final String simple = testUri("/simple");
-        HttpAsserts.assertUrlUnreachable(simple);
-        startAfter(2);
-        HttpAsserts.assertContentEventuallyContainsText(ImmutableMap.of("timeout", "3s"), simple, "OK");
+        HttpAsserts.assertUrlUnreachable(simpleEndpoint);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE);
+        HttpAsserts.assertContentEventuallyContainsText(ImmutableMap.of("timeout", 
+            DELAY_FOR_SERVER_TO_SETTLE.add(Duration.ONE_SECOND).toStringRounded()), 
+            simpleEndpoint, "OK");
     }
 
     @Test(expectedExceptions = AssertionError.class)
     public void shouldAssertContentEventuallyContainsTextWithTimeout() {
         stopServer();
-        final String simple = testUri("/simple");
-        HttpAsserts.assertUrlUnreachable(simple);
-        startAfter(4);
-        HttpAsserts.assertContentEventuallyContainsText(ImmutableMap.of("timeout", "3s"), simple, "OK");
+        HttpAsserts.assertUrlUnreachable(simpleEndpoint);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE.add(Duration.seconds(2)));
+        HttpAsserts.assertContentEventuallyContainsText(ImmutableMap.of("timeout", 
+            DELAY_FOR_SERVER_TO_SETTLE.add(Duration.ONE_SECOND).toStringRounded()), 
+            simpleEndpoint, "OK");
     }
 
 
     @Test
     public void shouldAssertContentMatches() {
-        HttpAsserts.assertContentMatches(testUri("/simple"), "[Oo][Kk]");
+        HttpAsserts.assertContentMatches(simpleEndpoint, "[Oo][Kk]");
     }
 
     @Test
     public void shouldAssertContentEventuallyMatches() throws Exception {
         stopServer();
-        TimeUnit.SECONDS.sleep(2);
-        final String simple = testUri("/simple");
-        HttpAsserts.assertUrlUnreachable(simple);
-        TimeUnit.SECONDS.sleep(2);
-        startAfter(2);
-        HttpAsserts.assertContentEventuallyMatches(testUri("/simple"), "[Oo][Kk]");
+        Time.sleep(DELAY_FOR_SERVER_TO_SETTLE);
+        HttpAsserts.assertUrlUnreachable(simpleEndpoint);
+        Time.sleep(DELAY_FOR_SERVER_TO_SETTLE);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE);
+        HttpAsserts.assertContentEventuallyMatches(simpleEndpoint, "[Oo][Kk]");
     }
 
     @Test
     public void shouldAssertContentEventuallyMatchesWithFlags() {
         stopServer();
-        final String simple = testUri("/simple");
-        HttpAsserts.assertUrlUnreachable(simple);
-        startAfter(2);
-        HttpAsserts.assertContentEventuallyMatches(ImmutableMap.of("timeout", "3s"), testUri("/simple"), "[Oo][Kk]");
+        HttpAsserts.assertUrlUnreachable(simpleEndpoint);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE);
+        HttpAsserts.assertContentEventuallyMatches(ImmutableMap.of("timeout", "3s"), simpleEndpoint, "[Oo][Kk]");
     }
 
     @Test(expectedExceptions = AssertionError.class)
     public void shouldAssertContentEventuallyMatchesWithTimeout() {
         stopServer();
-        final String simple = testUri("/simple");
-        HttpAsserts.assertUrlUnreachable(simple);
-        startAfter(4);
-        HttpAsserts.assertContentEventuallyMatches(ImmutableMap.of("timeout", "3s"), testUri("/simple"), "[Oo][Kk]");
+        HttpAsserts.assertUrlUnreachable(simpleEndpoint);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE.add(Duration.seconds(2)));
+        HttpAsserts.assertContentEventuallyMatches(ImmutableMap.of("timeout", 
+            DELAY_FOR_SERVER_TO_SETTLE.add(Duration.ONE_SECOND).toStringRounded()), 
+            simpleEndpoint, "[Oo][Kk]");
     }
 
     @Test
     public void shouldAssertAsyncHttpStatusCodeContinuallyEquals() throws Exception {
+        stopServer();
         ListeningExecutorService listeningExecutor = MoreExecutors.listeningDecorator(executor);
         final ListenableFuture<?> future =
-            HttpAsserts.assertAsyncHttpStatusCodeContinuallyEquals(listeningExecutor, testUri("/simple"), 200);
-        TimeUnit.SECONDS.sleep(3);
+            HttpAsserts.assertAsyncHttpStatusCodeContinuallyEquals(listeningExecutor, simpleEndpoint, 200);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE.add(Duration.seconds(1)));
         if (future.isDone()) {
             future.get(); // should not throw exception
         }
@@ -286,12 +313,17 @@ public class HttpAssertsTest {
 
     @Test(expectedExceptions = ExecutionException.class)
     public void shouldAssertAsyncHttpStatusCodeContinuallyEqualsFails() throws Exception {
+        stopServer();
         ListeningExecutorService listeningExecutor = MoreExecutors.listeningDecorator(executor);
         final ListenableFuture<?> future =
             HttpAsserts.assertAsyncHttpStatusCodeContinuallyEquals(listeningExecutor, testUri("/missing"), 200);
-        TimeUnit.SECONDS.sleep(3);
+        startAfter(DELAY_FOR_SERVER_TO_SETTLE.add(Duration.seconds(1)));
+        Time.sleep(DELAY_FOR_SERVER_TO_SETTLE);
         if (future.isDone()) {
-            future.get(); // should throw exception
+            Object result = future.get(); // should throw exception
+            LOG.warn("Should have failed, instead gave "+result+" (accessing "+server+")");
+        } else {
+            LOG.warn("Future should have been done");
         }
         future.cancel(true);
     }

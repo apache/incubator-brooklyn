@@ -19,33 +19,15 @@
 package org.apache.brooklyn.util.http;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLSession;
 
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.stream.Streams;
-import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -120,7 +102,7 @@ public class HttpAsserts {
      * @param url The URL
      */
     public static void assertUrlUnreachableEventually(final String url) {
-        assertUrlUnreachableEventually(Maps.newLinkedHashMap(), url);
+        assertUrlUnreachableEventually(Maps.<String,Object>newLinkedHashMap(), url);
     }
 
 
@@ -131,7 +113,7 @@ public class HttpAsserts {
      *              For details see {@link org.apache.brooklyn.test.Asserts#succeedsEventually(java.util.Map, java.util.concurrent.Callable)}
      * @param url The URL
      */
-    public static void assertUrlUnreachableEventually(Map flags, final String url) {
+    public static void assertUrlUnreachableEventually(Map<String,?> flags, final String url) {
         assertEventually(flags, new Runnable() {
             public void run() {
                 assertUrlUnreachable(url);
@@ -163,10 +145,10 @@ public class HttpAsserts {
     }
 
     public static void assertHttpStatusCodeEventuallyEquals(final String url, final int expectedCode) {
-        assertHttpStatusCodeEventuallyEquals(Maps.newLinkedHashMap(),  url, expectedCode);
+        assertHttpStatusCodeEventuallyEquals(Maps.<String,Object>newLinkedHashMap(), url, expectedCode);
     }
 
-    public static void assertHttpStatusCodeEventuallyEquals(Map flags, final String url, final int expectedCode) {
+    public static void assertHttpStatusCodeEventuallyEquals(Map<String,?> flags, final String url, final int expectedCode) {
         assertEventually(flags, new Runnable() {
             public void run() {
                 assertHttpStatusCodeEquals(url, expectedCode);
@@ -241,10 +223,10 @@ public class HttpAsserts {
     }
 
     public static void assertContentEventuallyContainsText(final String url, final String phrase, final String ...additionalPhrases) {
-        assertContentEventuallyContainsText(MutableMap.of(), url, phrase, additionalPhrases);
+        assertContentEventuallyContainsText(MutableMap.<String,Object>of(), url, phrase, additionalPhrases);
     }
     
-    public static void assertContentEventuallyContainsText(Map flags, final String url, final String phrase, final String ...additionalPhrases) {
+    public static void assertContentEventuallyContainsText(Map<String,?> flags, final String url, final String phrase, final String ...additionalPhrases) {
         assertEventually(flags, new Runnable() {
             public void run() {
                 assertContentContainsText(url, phrase, additionalPhrases);
@@ -252,7 +234,7 @@ public class HttpAsserts {
         });
     }
 
-    private static void assertEventually(Map flags, Runnable r) {
+    private static void assertEventually(Map<String,?> flags, Runnable r) {
         try {
             Asserts.succeedsEventually(flags, r);
         } catch (Exception e) {
@@ -304,7 +286,7 @@ public class HttpAsserts {
      * {@code
      * Future<?> future = assertAsyncHttpStatusCodeContinuallyEquals(executor, url, 200);
      * // do other stuff...
-     * if (future.isDone()) future.get(); // get exception if it's Asserts.failed
+     * if (future.isDone()) future.get(); // get exception if its Asserts.failed
      * }
      * </pre>
      *
