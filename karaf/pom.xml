@@ -112,6 +112,7 @@
                     <goals>
                       <goal>assembly</goal>
                       <goal>commands-generate-help</goal>
+                      <goal>features-generate-descriptor</goal>
                     </goals>
                   </pluginExecutionFilter>
                   <action>
