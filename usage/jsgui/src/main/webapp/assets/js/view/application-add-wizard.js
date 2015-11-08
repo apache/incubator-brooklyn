@@ -400,21 +400,24 @@ define([
         },
         refreshEditor: function() {
             log("::refreshEditor()");
-            var cm = self.editor;
-            cm.refresh();
-            cm.focus();
-            // set cursor to End of Document
-            cm.setCursor(self.editor.lineCount(), 0);
+            if (self.editor !== null) {
+                var cm = self.editor;
+                cm.refresh();
+                cm.focus();
+                // set cursor to End of Document
+                cm.setCursor(self.editor.lineCount(), 0);
+            }
         },
         afterRender: function() { 
             log('::afterRender()');
             // TODO: feature request: either support a resolution dependent layout, or deprecate support for 800x600 resolution
-            self.editor = CodeMirror.fromTextArea(this.$('#yaml_code')[0], {
-                            lineNumbers: true,
-                            extraKeys: {"Ctrl-Space": "autocomplete"},
-                            // TODO: feature request: to allow custom theme: http://codemirror.net/demo/theme.html#base16-light
-                            mode: {name: "yaml", globalVars: true}
-                          });
+            if (self.editor == null)
+                self.editor = CodeMirror.fromTextArea(this.$('#yaml_code')[0], {
+                                lineNumbers: true,
+                                extraKeys: {"Ctrl-Space": "autocomplete"},
+                                // TODO: feature request: to allow custom theme: http://codemirror.net/demo/theme.html#base16-light
+                                mode: {name: "yaml", globalVars: true}
+                              });
             
             // postpone refresh until the Backbone rendering is over
             setTimeout(this.refreshEditor, 1);
@@ -453,7 +456,7 @@ define([
             }
 
             if (this.options.wizard) {
-            	this.refreshEditor();
+                this.refreshEditor();
                 this.options.wizard.updateButtonVisibility();
             }
         },
