@@ -47,7 +47,16 @@ require.config({
         "uri":"libs/URI",
         "zeroclipboard":"libs/ZeroClipboard",
         "js-yaml":"libs/js-yaml",
-        
+
+        "codemirror":"lib/codemirror",
+
+        "mode":"mode",
+        "addon":"addon",
+
+        "codemirror-mode-yaml":"mode/yaml/yaml",
+        "codemirror-addon-show-hint":"addon/hint/show-hint",
+        "codemirror-addon-anyword-hint":"addon/hint/anyword-hint",
+
         "tpl":"../tpl"
     },
     
@@ -70,6 +79,14 @@ require.config({
         "jquery-wiggle": { deps: [ "jquery" ] },
         "jquery-ba-bbq": { deps: [ "jquery" ] },
         "handlebars": { deps: [ "jquery" ] },
+
+        "codemirror":{
+            exports:"CodeMirror"
+        },
+        "codemirror-mode-yaml":{ deps: ["codemirror"] },
+        "codemirror-addon-show-hint":{ deps: ["codemirror"] },
+        "codemirror-addon-anyword-hint":{ deps: ["codemirror"] },
+
         "bootstrap": { deps: [ "jquery" ] /* http://stackoverflow.com/questions/9227406/bootstrap-typeerror-undefined-is-not-a-function-has-no-method-tab-when-us */ }
     }
 });
