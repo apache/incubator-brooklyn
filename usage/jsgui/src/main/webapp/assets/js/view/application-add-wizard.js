@@ -357,7 +357,7 @@ define([
             'paste #yaml_code':'onYamlCodeChange',
             'shown a[data-toggle="tab"]':'onTabChange',
             'click #templateTab #catalog-add':'switchToCatalogAdd',
-            'click #templateTab #catalog-yaml':'showYamlTab' // TODO: #templateTab is used in app-add-wizard
+            'click #templateTab #catalog-yaml':'showYamlTab'
         },
         template:_.template(CreateHtml),
         wizard: null,
@@ -398,6 +398,14 @@ define([
                 }
             });
         },
+        refreshEditor: function() {
+            log("::refreshEditor()");
+            var cm = self.editor;
+            cm.refresh();
+            cm.focus();
+            // set cursor to End of Document
+            cm.setCursor(self.editor.lineCount(), 0);
+        },
         afterRender: function() { 
             log('::afterRender()');
             // TODO: feature request: either support a resolution dependent layout, or deprecate support for 800x600 resolution
@@ -409,13 +417,7 @@ define([
                           });
             
             // postpone refresh until the Backbone rendering is over
-            setTimeout(function() {
-                var cm = self.editor;
-                cm.refresh();
-                cm.focus();
-                // set cursor to End of Document
-                cm.setCursor(self.editor.lineCount(), 0);
-            },1);
+            setTimeout(this.refreshEditor, 1);
         },
         renderConfiguredEntities:function () {
             var $configuredEntities = this.$('#entitiesAccordionish').empty()
@@ -450,8 +452,10 @@ define([
                 this.model.mode = "other";
             }
 
-            if (this.options.wizard)
+            if (this.options.wizard) {
+            	this.refreshEditor();
                 this.options.wizard.updateButtonVisibility();
+            }
         },
         onYamlCodeChange: function() {
             log("ModalWizard.StepCreate::onYamlCodeChange() ... event");
