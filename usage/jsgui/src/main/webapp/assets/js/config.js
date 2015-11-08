@@ -56,6 +56,7 @@ require.config({
         "codemirror-mode-yaml":"mode/yaml/yaml",
         "codemirror-addon-show-hint":"addon/hint/show-hint",
         "codemirror-addon-anyword-hint":"addon/hint/anyword-hint",
+        "codemirror-addon-display-placeholder":"addon/display/placeholder",
 
         "tpl":"../tpl"
     },
@@ -86,6 +87,7 @@ require.config({
         "codemirror-mode-yaml":{ deps: ["codemirror"] },
         "codemirror-addon-show-hint":{ deps: ["codemirror"] },
         "codemirror-addon-anyword-hint":{ deps: ["codemirror"] },
+        "codemirror-addon-display-placeholder":{ deps: ["codemirror"] },
 
         "bootstrap": { deps: [ "jquery" ] /* http://stackoverflow.com/questions/9227406/bootstrap-typeerror-undefined-is-not-a-function-has-no-method-tab-when-us */ }
     }

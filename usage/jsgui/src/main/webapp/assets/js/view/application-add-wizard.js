@@ -37,6 +37,7 @@ define([
     "codemirror-mode-yaml",
     "codemirror-addon-show-hint",
     "codemirror-addon-anyword-hint",
+    "codemirror-addon-display-placeholder",
     "bootstrap"
     
 ], function (_, $, Backbone, Util, JsYaml, CodeMirror, Entity, Application, Location, CatalogApplication,
@@ -397,36 +398,24 @@ define([
                 }
             });
         },
-        updateCodeMirror: function(data) {
-            var cm = this.$('.CodeMirror')[0].CodeMirror;
-            var doc = cm.getDoc();
-            var cursor = doc.getCursor(); // gets the line number in the cursor position
-            var line = doc.getLine(cursor.line); // get the line contents
-            var pos = { // create a new object to avoid mutation of the original selection
-                line: cursor.line,
-                ch: line.length - 1 // set the character position to the end of the line
-            }
-            // doc.replaceRange('\n'+data+'\n', pos); // adds a new line
-        },
         afterRender: function() { 
             log('::afterRender()');
+            // TODO: feature request: either support a resolution dependent layout, or deprecate support for 800x600 resolution
             self.editor = CodeMirror.fromTextArea(this.$('#yaml_code')[0], {
-                			lineNumbers: true,
-                			extraKeys: {"Ctrl-Space": "autocomplete"},
-                			// stylesheet:'monokai.css',
-                			id: "cucurigu",
-                			mode: {name: "yaml", globalVars: true}
-                		  });
+                            lineNumbers: true,
+                            extraKeys: {"Ctrl-Space": "autocomplete"},
+                            // TODO: feature request: to allow custom theme: http://codemirror.net/demo/theme.html#base16-light
+                            mode: {name: "yaml", globalVars: true}
+                          });
             
-            // this.updateCodeMirror("var");
+            // postpone refresh until the Backbone rendering is over
             setTimeout(function() {
-            	var cm = self.editor;
-            	cm.getDoc().setValue('Enter CAMP Plan YAML code here\nmore:http://docs.oasis-open.org/camp/camp-spec/v1.1/camp-spec-v1.1.html');
-            	cm.refresh();
-            	cm.focus();
-            	cm.setCursor(self.editor.lineCount(), 0);
+                var cm = self.editor;
+                cm.refresh();
+                cm.focus();
+                // set cursor to End of Document
+                cm.setCursor(self.editor.lineCount(), 0);
             },1);
-            // self.editor.refresh();
         },
         renderConfiguredEntities:function () {
             var $configuredEntities = this.$('#entitiesAccordionish').empty()
@@ -439,7 +428,6 @@ define([
         },
         updateForState: function () {},
         render:function () {
-        	// _self.beforeRender();
             this.renderConfiguredEntities();
             this.delegateEvents();
             this.afterRender();
