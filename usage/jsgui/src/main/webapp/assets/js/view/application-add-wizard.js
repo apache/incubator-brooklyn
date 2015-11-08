@@ -311,9 +311,8 @@ define([
         },
         setEditorValue: function(text) {
           log("::setEditorValue");
-          log(self.editor);
-          if (self.editor !== null) {
-              var cm = self.editor;
+          if (this.editor !== null) {
+              var cm = this.editor;
               cm.getDoc().setValue(text);
           }
         },
@@ -372,6 +371,7 @@ define([
         wizard: null,
         editor: null,
         initialize:function () {
+            log("ModalWizard.StepCreate::initialize()");
             var self = this
             self.catalogEntityIds = []
 
@@ -379,6 +379,9 @@ define([
 
             // for building from entities
             this.addEntityBox()
+
+            // for reseting editor state
+            this.editor = null;
 
             // TODO: Make into models, allow options to override, then pass in in test
             // with overrridden url. Can then think about fixing tests in application-add-wizard-spec.js.
@@ -408,20 +411,20 @@ define([
             });
         },
         refreshEditor: function() {
-            log("::refreshEditor() editor: " + self.editor);
-            if (self.editor !== null) {
-                var cm = self.editor;
+            log("::refreshEditor() editor: " + this.editor);
+            if (this.editor !== null) {
+                var cm = this.editor;
                 cm.refresh();
                 cm.focus();
                 // set cursor to End of Document
-                cm.setCursor(self.editor.lineCount(), 0);
+                cm.setCursor(cm.lineCount(), 0);
             }
         },
         afterRender: function() { 
             log('::afterRender()');
             // TODO: feature request: either support a resolution dependent layout, or deprecate support for 800x600 resolution
-            if (self.editor == null)
-                self.editor = CodeMirror.fromTextArea(this.$('#yaml_code')[0], {
+            if (this.editor == null)
+                this.editor = CodeMirror.fromTextArea(this.$('#yaml_code')[0], {
                                 lineNumbers: true,
                                 extraKeys: {"Ctrl-Space": "autocomplete"},
                                 // TODO: feature request: to allow custom theme: http://codemirror.net/demo/theme.html#base16-light
