@@ -134,8 +134,9 @@ public class RegisteredTypeLoadingContexts {
         BasicRegisteredTypeLoadingContext constraint = new BasicRegisteredTypeLoadingContext(source);
         if (source==null) source = constraint;
         if (superType==null) return source;
+        constraint.expectedSuperType = superType;
         if (source.getExpectedJavaSuperType()==null || source.getExpectedJavaSuperType().isAssignableFrom( superType )) {
-            // the constraint was weaker than present; return the new constraint
+            // the old constraint was weaker than present; return the new constraint
             return constraint;
         }
         if (superType.isAssignableFrom( source.getExpectedJavaSuperType() )) {
@@ -153,8 +154,9 @@ public class RegisteredTypeLoadingContexts {
         BasicRegisteredTypeLoadingContext constraint = new BasicRegisteredTypeLoadingContext(source);
         if (source==null) source = constraint;
         if (superType==null) return source;
+        constraint.expectedSuperType = superType;
         if (source.getExpectedJavaSuperType()==null || source.getExpectedJavaSuperType().isAssignableFrom( superType )) {
-            // the constraint was weaker than present; return the new constraint
+            // the old constraint was weaker than present; return the new constraint
             return constraint;
         }
         if (superType.isAssignableFrom( source.getExpectedJavaSuperType() )) {

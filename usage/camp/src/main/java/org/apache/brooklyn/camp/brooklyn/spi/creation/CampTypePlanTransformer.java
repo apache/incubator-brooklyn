@@ -48,6 +48,10 @@ public class CampTypePlanTransformer extends AbstractTypePlanTransformer {
         Maybe<Map<Object, Object>> plan = RegisteredTypes.getAsYamlMap(planData);
         if (plan.isAbsent()) return 0;
         if (plan.get().containsKey("services")) return 0.8;
+        if (plan.get().containsKey("type")) return 0.4;
+        // TODO these should become legacy
+        if (plan.get().containsKey("brooklyn.locations")) return 0.7;
+        if (plan.get().containsKey("brooklyn.policies")) return 0.7;
         return 0;
     }
 

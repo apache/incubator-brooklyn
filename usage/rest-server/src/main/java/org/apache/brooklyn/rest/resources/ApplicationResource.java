@@ -45,7 +45,6 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
-import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.core.config.ConstraintViolationException;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.EntityPredicates;
@@ -372,14 +371,14 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     private EntitySpec<? extends Application> createEntitySpecForApplication(String potentialYaml) {
         try {
             return EntityManagementUtils.createEntitySpecForApplication(mgmt(), potentialYaml);
-        } catch (IllegalStateException e) {
-            // An IllegalArgumentException for creating the entity spec gets wrapped in a ISE.
+        } catch (Exception e) {
+            // An IllegalArgumentException for creating the entity spec gets wrapped in a ISE, and possibly a Compound.
             // But we want to return a 400 rather than 500, so ensure we throw IAE.
-            IllegalArgumentException iae = (IllegalArgumentException) Exceptions.getFirstThrowableOfType(e.getCause(), IllegalArgumentException.class);
+            IllegalArgumentException iae = (IllegalArgumentException) Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class);
             if (iae != null) {
                 throw new IllegalArgumentException("Cannot create spec for app: "+iae.getMessage(), e);
             } else {
-                throw e;
+                throw Exceptions.propagate(e);
             }
         }
     }

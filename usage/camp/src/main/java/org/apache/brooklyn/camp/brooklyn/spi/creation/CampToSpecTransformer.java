@@ -99,7 +99,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
         }
 
         // Not really clear what should happen to the top-level attributes, ignored until a good use case appears.
-        return (SpecT) CampResolver.createSpecFromFull(mgmt, RegisteredTypes.of(item), encounteredTypes, null);
+        return (SpecT) CampResolver.createSpecFromFull(mgmt, RegisteredTypes.of(item), item.getCatalogItemJavaType(), encounteredTypes, null);
     }
 
     @Override

@@ -148,7 +148,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
                 throw new IllegalStateException("should have failed getting type resolution for "+type);
             } catch (Exception e0) {
                 // prefer older exception, until the new transformer is the primary pathway
-                throw Exceptions.create("Unable to instantiate "+type, MutableList.of(e, e0));
+                throw Exceptions.create("Unable to instantiate "+type, MutableList.of(e0, e));
             }
         }
     }

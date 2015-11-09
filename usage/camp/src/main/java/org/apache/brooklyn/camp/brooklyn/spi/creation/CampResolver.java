@@ -37,6 +37,7 @@ import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableSet;
@@ -72,10 +73,10 @@ class CampResolver {
         // TODO new-style approach:
         //            AbstractBrooklynObjectSpec<?, ?> spec = RegisteredTypes.newSpecInstance(mgmt, /* 'type' key */);
         //            spec.configure(keysAndValues);
-        return createSpecFromFull(mgmt, type, context.getAlreadyEncounteredTypes(), context.getLoader());
+        return createSpecFromFull(mgmt, type, context.getExpectedJavaSuperType(), context.getAlreadyEncounteredTypes(), context.getLoader());
     }
 
-    static AbstractBrooklynObjectSpec<?, ?> createSpecFromFull(ManagementContext mgmt, RegisteredType item, Set<String> parentEncounteredTypes, BrooklynClassLoadingContext loaderO) {
+    static AbstractBrooklynObjectSpec<?, ?> createSpecFromFull(ManagementContext mgmt, RegisteredType item, Class<?> expectedType, Set<String> parentEncounteredTypes, BrooklynClassLoadingContext loaderO) {
         // for this method, a prefix "services" or "brooklyn.{location,policies}" is required at the root;
         // we now prefer items to come in "{ type: .. }" format, except for application roots which
         // should have a "services: [ ... ]" block (and which may subsequently be unwrapped)
@@ -94,13 +95,15 @@ class CampResolver {
 
         AbstractBrooklynObjectSpec<?, ?> spec;
         String planYaml = RegisteredTypes.getImplementationDataStringForSpec(item);
-        if (RegisteredTypes.isSubTypeOf(item, Policy.class)) {
+        MutableSet<Object> supers = MutableSet.copyOf(item.getSuperTypes());
+        supers.addIfNotNull(expectedType);
+        if (RegisteredTypes.isSubTypeOf(supers, Policy.class)) {
             spec = CampInternalUtils.createPolicySpec(planYaml, loader, encounteredTypes);
-        } else if (RegisteredTypes.isSubTypeOf(item, Location.class)) {
+        } else if (RegisteredTypes.isSubTypeOf(supers, Location.class)) {
             spec = CampInternalUtils.createLocationSpec(planYaml, loader, encounteredTypes);
-        } else if (RegisteredTypes.isSubTypeOf(item, Application.class)) {
+        } else if (RegisteredTypes.isSubTypeOf(supers, Application.class)) {
             spec = createEntitySpecFromServicesBlock(planYaml, loader, encounteredTypes, true);
-        } else if (RegisteredTypes.isSubTypeOf(item, Entity.class)) {
+        } else if (RegisteredTypes.isSubTypeOf(supers, Entity.class)) {
             spec = createEntitySpecFromServicesBlock(planYaml, loader, encounteredTypes, false);
         } else {
             // try any of them???
@@ -123,9 +126,9 @@ class CampResolver {
         AssemblyTemplateInstantiator instantiator = CampInternalUtils.getInstantiator(at);
         if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
             EntitySpec<? extends Application> appSpec = ((AssemblyTemplateSpecInstantiator)instantiator).createApplicationSpec(at, camp, loader, encounteredTypes);
-            CampInternalUtils.resetSpecIfTemplateHasNoExplicitParameters(at, appSpec);
 
             if (!isApplication && EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec) && appSpec.getChildren().size()==1) {
+                CampInternalUtils.resetSpecIfTemplateHasNoExplicitParameters(at, appSpec);
                 EntitySpec<?> childSpec = appSpec.getChildren().get(0);
                 EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, childSpec);
                 return childSpec;

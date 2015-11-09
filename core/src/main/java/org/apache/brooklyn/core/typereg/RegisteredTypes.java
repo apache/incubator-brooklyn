@@ -21,6 +21,7 @@ package org.apache.brooklyn.core.typereg;
 import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.Nullable;
 
@@ -112,11 +113,11 @@ public class RegisteredTypes {
      * @param mgmt */
     @Beta
     // TODO should this be on the AbstractTypePlanTransformer ?
-    public static Class<?> loadActualJavaType(String javaTypeName, ManagementContext mgmt, RegisteredType type, RegisteredTypeLoadingContext constraint) throws Exception {
+    public static Class<?> loadActualJavaType(String javaTypeName, ManagementContext mgmt, RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
         Class<?> result = ((BasicRegisteredType)type).getCache().get(ACTUAL_JAVA_TYPE);
         if (result!=null) return result;
         
-        result = CatalogUtils.newClassLoadingContext(mgmt, type).loadClass( javaTypeName );
+        result = CatalogUtils.newClassLoadingContext(mgmt, type, context==null ? null : context.getLoader()).loadClass( javaTypeName );
         Preconditions.checkNotNull(result, "Could not load class "+javaTypeName+"; returned null (should have thrown a different exception!)");
         
         ((BasicRegisteredType)type).getCache().put(ACTUAL_JAVA_TYPE, result);
@@ -178,7 +179,7 @@ public class RegisteredTypes {
         Iterator<Object> ri = result.iterator();
         if (!ri.hasNext()) return Maybe.absent("YAML has no elements in it");
         Object r1 = ri.next();
-        if (!ri.hasNext()) return Maybe.absent("YAML has multiple elements in it");
+        if (ri.hasNext()) return Maybe.absent("YAML has multiple elements in it");
         if (r1 instanceof Map) return Maybe.of((Map<Object,Object>)r1);
         return Maybe.absent("YAML does not contain a map");
     }
@@ -187,12 +188,19 @@ public class RegisteredTypes {
      * Queries recursively the supertypes of {@link RegisteredType} to see whether it 
      * declares a supertype compatible with the given {@link Class} */
     public static boolean isSubTypeOf(RegisteredType type, Class<?> superType) {
-        for (Object st: type.getSuperTypes()) {
+        return isSubTypeOf(type.getSuperTypes(), superType);
+    }
+    
+    /** 
+     * Queries recursively the given types (either {@link Class} or {@link RegisteredType}) 
+     * to see whether any are compatible with the given {@link Class} */
+    public static boolean isSubTypeOf(Set<Object> allKnownTypes, Class<?> superType) {
+        for (Object st: allKnownTypes) {
             if (st instanceof Class) {
                 if (superType.isAssignableFrom((Class<?>)st)) return true;
             }
         }
-        for (Object st: type.getSuperTypes()) {
+        for (Object st: allKnownTypes) {
             if (st instanceof RegisteredType) {
                 if (isSubTypeOf((RegisteredType)st, superType)) return true;
             }

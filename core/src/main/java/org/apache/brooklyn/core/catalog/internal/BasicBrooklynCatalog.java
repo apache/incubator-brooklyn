@@ -301,7 +301,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (loadedItem == null) throw new RuntimeException(item+" not in catalog; cannot create spec");
         if (loadedItem.getSpecType()==null) return null;
 
-        SpecT spec = internalCreateSpecLegacy(mgmt, loadedItem, MutableSet.<String>of(), false);
+        SpecT spec = internalCreateSpecLegacy(mgmt, loadedItem, MutableSet.<String>of(), true);
         if (spec != null) {
             return spec;
         }

@@ -65,7 +65,7 @@ public class UrlServiceSpecResolver implements EntitySpecResolver {
         }
         
         // Referenced specs are expected to be CAMP format as well.
-        // XXX somehow specify to allow full syntax for services
+        // TODO somehow specify to allow full syntax for services
         EntitySpec<?> item = loader.getManagementContext().getTypeRegistry().createSpecFromPlan(
             CampTypePlanTransformer.FORMAT,
             yaml,

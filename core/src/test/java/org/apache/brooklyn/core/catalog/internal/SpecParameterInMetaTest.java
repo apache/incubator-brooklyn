@@ -27,15 +27,21 @@ import java.util.List;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.SpecParameter;
+import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.core.plan.PlanToSpecFactory;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.osgi.OsgiTestResources;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
@@ -43,18 +49,40 @@ import com.google.common.reflect.TypeToken;
 public class SpecParameterInMetaTest {
     private ManagementContext mgmt;
     private BrooklynCatalog catalog;
-    private String spec;
+    private String specId;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
         mgmt = LocalManagementContextForTests.newInstanceWithOsgi();
         catalog = mgmt.getCatalog();
-        spec = TestToSpecTransformer.registerSpec(EntitySpec.create(BasicEntity.class));
+        StaticTypePlanTransformer.forceInstall();
+        PlanToSpecFactory.forceAvailable(TestToSpecTransformer.class, JavaCatalogToSpecTransformer.class);
+        specId = StaticTypePlanTransformer.registerSpec(EntitySpec.create(BasicEntity.class));
+    }
+
+    @AfterMethod(alwaysRun=true)
+    public void tearDown() {
+        StaticTypePlanTransformer.clearForced();
+        PlanToSpecFactory.clearForced();
     }
 
     @Test
+    public void testCanRetrieveWithNew() {
+        AbstractBrooklynObjectSpec<?, ?> spec = mgmt.getTypeRegistry().createSpecFromPlan(null, specId, null, null);
+        Assert.assertNotNull(spec);
+    }
+
+    // it's not actually added to the catalog; probably it would be cleaner if it is;
+    // but for now when we resolve in PlanToSpecFactory we make explicit reference to StaticTypePlanTransformer
+//    @Test
+//    public void testCanLookupNew() {
+//        RegisteredType type = mgmt.getTypeRegistry().get(specId);
+//        Assert.assertNotNull(type);
+//    }
+    
+    @Test
     public void testYamlInputsParsed() {
-        CatalogItem<?, ?> item = add(
+        String itemId = add(
                 "brooklyn.catalog:",
                 "  id: test.inputs",
                 "  version: 0.0.1",
@@ -63,7 +91,9 @@ public class SpecParameterInMetaTest {
                 "  - name: explicit_name",
                 "  - name: third_input",
                 "    type: integer",
-                "  item: " + spec);
+                "  item: " + specId);
+        
+        EntitySpec<?> item = mgmt.getTypeRegistry().createSpec(mgmt.getTypeRegistry().get(itemId), null, EntitySpec.class);
         List<SpecParameter<?>> inputs = item.getParameters();
         assertEquals(inputs.size(), 3);
         SpecParameter<?> firstInput = inputs.get(0);
@@ -89,7 +119,7 @@ public class SpecParameterInMetaTest {
     public void testOsgiType() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
 
-        CatalogItem<?, ?> item = add(
+        String itemId = add(
                 "brooklyn.catalog:",
                 "  id: test.inputs",
                 "  version: 0.0.1",
@@ -98,7 +128,8 @@ public class SpecParameterInMetaTest {
                 "  parameters:",
                 "  - name: simple",
                 "    type: " + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY,
-                "  item: " + spec);
+                "  item: " + specId);
+        EntitySpec<?> item = mgmt.getTypeRegistry().createSpec(mgmt.getTypeRegistry().get(itemId), null, EntitySpec.class);
         List<SpecParameter<?>> inputs = item.getParameters();
         assertEquals(inputs.size(), 1);
         SpecParameter<?> firstInput = inputs.get(0);
@@ -110,6 +141,7 @@ public class SpecParameterInMetaTest {
 
     @Test
     public void testOsgiClassScanned() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
 
         addMulti("brooklyn.catalog:",
@@ -117,23 +149,32 @@ public class SpecParameterInMetaTest {
             "    - scanJavaAnnotations: true",
             "      version: 2.0.test_java",
             "      libraries:",
+            "      - classpath://" + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH,
             "      - classpath://" + OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
 
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
-        assertEquals(item.getVersion(), "2.0.test_java");
-        assertEquals(item.getLibraries().size(), 1);
+        RegisteredType itemT = mgmt.getTypeRegistry().get(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
+        assertEquals(itemT.getVersion(), "2.0.test_java");
+        assertEquals(itemT.getLibraries().size(), 2);
+        
+        EntitySpec<?> item = mgmt.getTypeRegistry().createSpec(itemT, null, EntitySpec.class);
         SpecParameter<?> input = item.getParameters().get(0);
         assertEquals(input.getLabel(), "more_config");
         assertFalse(input.isPinned());
         assertEquals(input.getType().getName(), "more_config");
     }
 
-    private CatalogItem<?,?> add(String... def) {
+    private String add(String... def) {
         return Iterables.getOnlyElement(addMulti(def));
     }
 
-    private Iterable<? extends CatalogItem<?, ?>> addMulti(String... def) {
-        return catalog.addItems(Joiner.on('\n').join(def));
+    private Iterable<String> addMulti(String... def) {
+        return Iterables.transform(catalog.addItems(Joiner.on('\n').join(def)),
+            new Function<CatalogItem<?,?>, String>() {
+                @Override
+                public String apply(CatalogItem<?, ?> input) {
+                    return input.getId();
+                }
+            });
     }
 
 }

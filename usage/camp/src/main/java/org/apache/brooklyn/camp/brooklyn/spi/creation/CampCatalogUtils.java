@@ -30,7 +30,7 @@ import org.apache.brooklyn.core.typereg.RegisteredTypes;
 public class CampCatalogUtils {
 
     public static AbstractBrooklynObjectSpec<?, ?> createSpec(ManagementContext mgmt, CatalogItem<?, ?> item, Set<String> parentEncounteredTypes) {
-        return CampResolver.createSpecFromFull(mgmt, RegisteredTypes.of(item), parentEncounteredTypes, null);
+        return CampResolver.createSpecFromFull(mgmt, RegisteredTypes.of(item), item.getCatalogItemJavaType(), parentEncounteredTypes, null);
     }
     
     public static CampPlatform getCampPlatform(ManagementContext mgmt) {

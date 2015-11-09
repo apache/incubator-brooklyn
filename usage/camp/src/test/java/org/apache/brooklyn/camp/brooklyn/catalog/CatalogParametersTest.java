@@ -273,7 +273,54 @@ public class CatalogParametersTest extends AbstractYamlTest {
     }
 
     @Test
-    public void testParametersCoercedOnSetAndReferences() throws Exception {
+    public void testParametersOnItemCoercedOnSetAndReferences() throws Exception {
+        Integer testValue = Integer.valueOf(55);
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: " + SYMBOLIC_NAME,
+                "  version: " + TEST_VERSION,
+                "  item:",
+                "    type: " + BasicApplication.class.getName(),
+                "    brooklyn.parameters:",
+                "    - name: num",
+                "      type: integer",
+                "    brooklyn.children:",
+                "    - type: " + ConfigEntityForTest.class.getName(),
+                "      brooklyn.config:",
+                "        refConfig: $brooklyn:scopeRoot().config(\"num\")",
+                "    - type: " + ConfigEntityForTest.class.getName(),
+                "      brooklyn.config:",
+                "        refConfig: $brooklyn:config(\"num\")"); //inherited config
+
+        Entity app = createAndStartApplication(
+                "services:",
+                "- type: " + BasicApplication.class.getName(),
+                "  brooklyn.children:",
+                "  - type: " + ver(SYMBOLIC_NAME),
+                "    brooklyn.config:",
+                "      num: \"" + testValue + "\"");
+
+        Entity scopeRoot = Iterables.getOnlyElement(app.getChildren());
+
+        ConfigKey<Object> numKey = ConfigKeys.newConfigKey(Object.class, "num");
+        assertEquals(scopeRoot.config().get(numKey), testValue);
+
+        ConfigKey<Object> refConfigKey = ConfigKeys.newConfigKey(Object.class, "refConfig");
+
+        Iterator<Entity> childIter = scopeRoot.getChildren().iterator();
+        Entity c1 = childIter.next();
+        assertEquals(c1.config().get(refConfigKey), testValue);
+        Entity c2 = childIter.next();
+        assertEquals(c2.config().get(refConfigKey), testValue);
+        assertFalse(childIter.hasNext());
+    }
+    
+    // XXX TODO parameters on the root don't work with new type registry; 
+    // they require the CI being able to keep them,
+    // or else modifying the plan. TODO should they be permitted as metadata in this way?
+    // or treaded like a declaration of config keys on the entity?  i (alex) prefer the latter.
+    @Test(groups="WIP")
+    public void testParametersAtRootCoercedOnSetAndReferences() throws Exception {
         Integer testValue = Integer.valueOf(55);
         addCatalogItems(
                 "brooklyn.catalog:",

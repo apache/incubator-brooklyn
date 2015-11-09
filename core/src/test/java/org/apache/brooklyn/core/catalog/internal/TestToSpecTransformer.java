@@ -20,43 +20,36 @@ package org.apache.brooklyn.core.catalog.internal;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.plan.PlanNotRecognizedException;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
-import org.apache.brooklyn.util.text.Identifiers;
+import org.apache.brooklyn.core.typereg.JavaClassNameTypePlanTransformer;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.yaml.Yamls;
 
+import com.google.common.collect.Iterables;
+
 /**
- * Resolves previously registered specs by id.
- * First create a spec and register it, keeping the returned ID:
- * <pre> {@code
- * String specId = TestToSpecTransformer.registerSpec(EntitySpec.create(BasicEntity.class));
- * }</pre>
- *
- * Then build a plan to be resolved such as:
- * <pre> {@code
- *  brooklyn.catalog:
- *    id: test.inputs
- *    version: 0.0.1
- *    item: <specId>
- * } </pre>
+ * For use in conjunction with {@link StaticTypePlanTransformer};
+ * this will lookup an item by ID or in a map "type: id".
+ * <p>
+ * Should be removed when catalog is able to function using new-style lookups.
  */
 public class TestToSpecTransformer implements PlanToSpecTransformer {
-    private static final Map<String, AbstractBrooklynObjectSpec<?, ?>> REGISTERED_SPECS = new ConcurrentHashMap<>();
-    public static String registerSpec(AbstractBrooklynObjectSpec<?, ?> spec) {
-        String id = Identifiers.makeRandomId(10);
-        REGISTERED_SPECS.put(id, spec);
-        return id;
-    }
+
+    private ManagementContext mgmt;
 
     @Override
     public void injectManagementContext(ManagementContext managementContext) {
+        mgmt = managementContext;
     }
 
     @Override
@@ -72,47 +65,56 @@ public class TestToSpecTransformer implements PlanToSpecTransformer {
     @SuppressWarnings("unchecked")
     @Override
     public EntitySpec<? extends Application> createApplicationSpec(String plan) throws PlanNotRecognizedException {
-        return (EntitySpec<? extends Application>) getSpec(plan);
+        return (EntitySpec<? extends Application>) getSpec(plan, null, MutableSet.<String>of());
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) 
             throws PlanNotRecognizedException {
-        return (SpecT) getSpecFromPlan(item.getPlanYaml());
+        return (SpecT) getSpecFromPlan(item.getPlanYaml(), item, encounteredTypes);
     }
 
-    private AbstractBrooklynObjectSpec<?,?> getSpecFromPlan(String plan) {
+    @SuppressWarnings("unchecked")
+    private AbstractBrooklynObjectSpec<?,?> getSpecFromPlan(String plan, CatalogItem<?,?> item, Set<String> encounteredTypes) {
         if (plan != null) {
             Object planRaw = Yamls.parseAll(plan).iterator().next();
             if (planRaw instanceof String) {
-                return getSpec((String)planRaw);
+                return getSpec((String)planRaw, item, encounteredTypes);
             } else if (planRaw instanceof Map) {
                 // The catalog parser assumes it's dealing with CAMP specs so will helpfully
                 // prepend "type: " if it's an inline item.
-                return getSpec((String)((Map<?, ?>)planRaw).get("type"));
-            } else {
-                throw notRecognized();
+                Map<?, ?> planMap = (Map<?, ?>)planRaw;
+                if (planMap.size()==1 && planMap.containsKey("services")) {
+                    planMap = Iterables.getOnlyElement( (Iterable<Map<?,?>>)(planMap.get("services")) );
+                }
+                if (planMap.size()==1 && planMap.containsKey("type"))
+                    return getSpec((String)(planMap.get("type")), item, encounteredTypes);
             }
-        } else {
-            throw notRecognized();
         }
+        throw notRecognized("unknown format "+plan);
     }
 
-    private AbstractBrooklynObjectSpec<?,?> getSpec(String plan) {
-        if (plan == null) {
-            throw notRecognized();
+    private AbstractBrooklynObjectSpec<?,?> getSpec(String typeName, CatalogItem<?,?> item, Set<String> encounteredTypes) {
+        if (typeName == null) {
+            throw notRecognized("null type "+typeName);
         }
-        AbstractBrooklynObjectSpec<?, ?> spec = REGISTERED_SPECS.get(plan);
-        if (spec != null) {
-            return spec;
-        } else {
-            throw notRecognized();
+
+        RegisteredType type = mgmt.getTypeRegistry().get(typeName);
+        if (type==null) {
+            AbstractBrooklynObjectSpec<?,?> spec = StaticTypePlanTransformer.get(typeName);
+            if (spec!=null) return spec;
+            
+            throw notRecognized("no type "+typeName);
         }
+        
+        return mgmt.getTypeRegistry().createSpecFromPlan(
+            JavaClassNameTypePlanTransformer.FORMAT,
+            typeName, RegisteredTypeLoadingContexts.loader(CatalogUtils.newClassLoadingContext(mgmt, item)), null);
     }
 
-    private PlanNotRecognizedException notRecognized() {
-        return new PlanNotRecognizedException("Not recognized as registered spec");
+    private PlanNotRecognizedException notRecognized(String message) {
+        return new PlanNotRecognizedException("Not recognized as registered spec: "+message);
     }
 
 }
