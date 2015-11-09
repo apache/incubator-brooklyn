@@ -237,6 +237,7 @@
         <module>usage/rest-api</module>
         <module>usage/rest-client</module>
         <module>usage/rest-server</module>
+        <module>usage/test-framework</module>
         <module>usage/test-support</module>
 
         <module>utils/common</module>
