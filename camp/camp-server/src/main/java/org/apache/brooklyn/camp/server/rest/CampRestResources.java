@@ -30,15 +30,15 @@ import org.apache.brooklyn.camp.server.rest.resource.AssemblyTemplateRestResourc
 import org.apache.brooklyn.camp.server.rest.resource.PlatformComponentRestResource;
 import org.apache.brooklyn.camp.server.rest.resource.PlatformComponentTemplateRestResource;
 import org.apache.brooklyn.camp.server.rest.resource.PlatformRestResource;
-import org.apache.brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.common.collect.Iterables;
+import io.swagger.jaxrs.listing.SwaggerSerializers;
 
 public class CampRestResources {
 
     public static Iterable<AbstractCampRestResource> getCampRestResources() {
-        List<AbstractCampRestResource> resources = new ArrayList<AbstractCampRestResource>();
+        List<AbstractCampRestResource> resources = new ArrayList<>();
         resources.add(new PlatformRestResource());
         resources.add(new AssemblyTemplateRestResource());
         resources.add(new PlatformComponentTemplateRestResource());
@@ -50,14 +50,14 @@ public class CampRestResources {
     }
 
     public static Iterable<Object> getApidocResources() {
-        List<Object> resources = new ArrayList<Object>();
-        resources.add(new ApidocHelpMessageBodyWriter());
+        List<Object> resources = new ArrayList<>();
         resources.add(new ApidocRestResource());
         return resources;
     }
 
     public static Iterable<Object> getMiscResources() {
-        List<Object> resources = new ArrayList<Object>();
+        List<Object> resources = new ArrayList<>();
+        resources.add(new SwaggerSerializers());
         resources.add(new JacksonJsonProvider());
         return resources;
     }

@@ -36,9 +36,11 @@ import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.LowLevelAppDescriptor;
+import com.sun.jersey.test.framework.WebAppDescriptor;
 
 import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
+import org.apache.brooklyn.rest.filter.SwaggerFilter;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.NullHttpServletRequestProvider;
 import org.apache.brooklyn.rest.util.NullServletConfigProvider;
@@ -157,6 +159,12 @@ public abstract class BrooklynRestApiTest {
         jerseyTest = new JerseyTest() {
             @Override
             protected AppDescriptor configure() {
+//                return new WebAppDescriptor.Builder(
+//                        "io.swagger.jaxrs.listing",
+//                        "org.apache.brooklyn.rest.util",
+//                        "org.codehaus.jackson.jaxrs",
+//                        "org.apache.brooklyn.rest.resources")
+//                        .filterClass(SwaggerFilter.class).build();
                 return new LowLevelAppDescriptor.Builder(config).build();
             }
         };

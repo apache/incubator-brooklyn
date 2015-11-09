@@ -71,6 +71,7 @@ import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import org.eclipse.jetty.server.NetworkConnector;
+import org.apache.brooklyn.rest.filter.SwaggerFilter;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -308,7 +309,7 @@ public class BrooklynRestApiLauncher {
     }
 
     public static void main(String[] args) throws Exception {
-        startRestResourcesViaFilter();
+        startRestResourcesViaWebXml();
         log.info("Press Ctrl-C to quit.");
     }
 

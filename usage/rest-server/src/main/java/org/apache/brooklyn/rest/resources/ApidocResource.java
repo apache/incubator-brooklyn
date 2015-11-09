@@ -21,8 +21,11 @@ package org.apache.brooklyn.rest.resources;
 import io.swagger.annotations.Api;
 import javax.ws.rs.Path;
 
-@Api(value = "org.apache.brooklyn.rest.resources.ApidocRestResource", description = "API Documentation")
+/**
+ * @author Ciprian Ciubotariu <cheepeero@gmx.net>
+ */
+@Api(value = "org.apache.brooklyn.rest.resources.ApidocResource", description = "API Documentation")
 @Path("/v1/apidoc")
-public class ApidocResource extends org.apache.brooklyn.rest.apidoc.ApidocResource {
+public class ApidocResource extends org.apache.brooklyn.rest.apidoc.ApiListingResource {
 
 }
