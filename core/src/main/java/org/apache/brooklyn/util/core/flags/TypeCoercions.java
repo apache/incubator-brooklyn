@@ -586,10 +586,22 @@ public class TypeCoercions {
                 }
             }
         });
+        registerAdapter(URL.class, String.class, new Function<URL,String>() {
+            @Override
+            public String apply(URL input) {
+                return input.toString();
+            }
+        });
         registerAdapter(String.class, URI.class, new Function<String,URI>() {
             @Override
             public URI apply(String input) {
                 return URI.create(input);
+            }
+        });
+        registerAdapter(URI.class, String.class, new Function<URI,String>() {
+            @Override
+            public String apply(URI input) {
+                return input.toString();
             }
         });
         registerAdapter(Closure.class, ConfigurableEntityFactory.class, new Function<Closure,ConfigurableEntityFactory>() {
