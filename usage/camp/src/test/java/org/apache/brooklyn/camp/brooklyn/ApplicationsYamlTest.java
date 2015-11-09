@@ -67,6 +67,34 @@ public class ApplicationsYamlTest extends AbstractYamlTest {
         assertEquals(app.getChildren().size(), 2);
     }
 
+    @Test
+    public void testWrapsWhenEnrichers() throws Exception {
+        Entity app = createAndStartApplication(
+                "brooklyn.enrichers:",
+                "- type: " + TestEnricher.class.getName(),
+                "services:",
+                "- type: " + BasicApplication.class.getName());
+        assertWrapped(app, BasicApplication.class);
+    }
+
+    @Test
+    public void testWrapsWhenPolicy() throws Exception {
+        Entity app = createAndStartApplication(
+                "brooklyn.policies:",
+                "- type: " + TestPolicy.class.getName(),
+                "services:",
+                "- type: " + BasicApplication.class.getName());
+        assertWrapped(app, BasicApplication.class);
+    }
+
+    @Test
+    public void testWrapsWhenInitializer() throws Exception {
+        Entity app = createAndStartApplication(
+                "brooklyn.initializers:",
+                "- type: " + TestConfigurableInitializer.class.getName(),
+                "services:",
+                "- type: " + BasicApplication.class.getName());
+        assertWrapped(app, BasicApplication.class);
     }
 
     @Test
