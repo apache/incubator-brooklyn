@@ -87,6 +87,7 @@ public class CampUtils {
         BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
             loader, buildWrapperAppTemplate(template));
         EntitySpec<Application> wrapperSpec = resolver.resolveSpec(ImmutableSet.<String>of());
+        // Clear out default parameters (coming from the wrapper app's class) so they don't overwrite the entity's params on unwrap.
         if (!hasExplicitParams(template)) {
             wrapperSpec.parameters(ImmutableList.<SpecParameter<?>>of());
         }

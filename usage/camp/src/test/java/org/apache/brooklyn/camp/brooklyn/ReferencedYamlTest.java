@@ -49,7 +49,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
             "services:",
             "- type: classpath://yaml-ref-entity.yaml");
         
-        checkChildEntitySpec(app, "service");
+        checkChildEntitySpec(app, "Basic entity");
     }
 
     @Test
@@ -87,7 +87,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
             "  brooklyn.children:",
             "  - type: classpath://yaml-ref-entity.yaml");
         
-        checkGrandchildEntitySpec(createAndStartApplication, "service");
+        checkGrandchildEntitySpec(createAndStartApplication, "Basic entity");
     }
 
     @Test
