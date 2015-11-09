@@ -65,7 +65,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -226,19 +225,19 @@ public class BrooklynComponentTemplateResolver {
         if (childLocations != null)
             spec.locations(childLocations);
 
-        decorateSpec(spec);
+        decorateSpec(spec, encounteredRegisteredTypeIds);
     }
 
-    private <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
+    private <T extends Entity> void decorateSpec(EntitySpec<T> spec, Set<String> encounteredRegisteredTypeIds) {
         new BrooklynEntityDecorationResolver.PolicySpecResolver(yamlLoader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.EnricherSpecResolver(yamlLoader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.InitializerResolver(yamlLoader).decorate(spec, attrs);
 
-        configureEntityConfig(spec);
+        configureEntityConfig(spec, encounteredRegisteredTypeIds);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void configureEntityConfig(EntitySpec<?> spec) {
+    private void configureEntityConfig(EntitySpec<?> spec, Set<String> encounteredRegisteredTypeIds) {
         // first take *recognised* flags and config keys from the top-level, and put them in the bag (of brooklyn.config)
         // attrs will contain only brooklyn.xxx properties when coming from BrooklynEntityMatcher.
         // Any top-level flags will go into "brooklyn.flags". When resolving a spec from $brooklyn:entitySpec
@@ -263,12 +262,12 @@ public class BrooklynComponentTemplateResolver {
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {
             if (r.getFlagMaybeValue().isPresent()) {
-                Object transformed = new SpecialFlagsTransformer(loader).apply(r.getFlagMaybeValue().get());
+                Object transformed = new SpecialFlagsTransformer(loader, encounteredRegisteredTypeIds).apply(r.getFlagMaybeValue().get());
                 spec.configure(r.getFlagName(), transformed);
                 keyNamesUsed.add(r.getFlagName());
             }
             if (r.getConfigKeyMaybeValue().isPresent()) {
-                Object transformed = new SpecialFlagsTransformer(loader).apply(r.getConfigKeyMaybeValue().get());
+                Object transformed = new SpecialFlagsTransformer(loader, encounteredRegisteredTypeIds).apply(r.getConfigKeyMaybeValue().get());
                 spec.configure((ConfigKey<Object>)r.getConfigKey(), transformed);
                 keyNamesUsed.add(r.getConfigKey().getName());
             }
@@ -281,7 +280,7 @@ public class BrooklynComponentTemplateResolver {
             // we don't let a flag with the same name as a config key override the config key
             // (that's why we check whether it is used)
             if (!keyNamesUsed.contains(key)) {
-                Object transformed = new SpecialFlagsTransformer(loader).apply(bag.getStringKey(key));
+                Object transformed = new SpecialFlagsTransformer(loader, encounteredRegisteredTypeIds).apply(bag.getStringKey(key));
                 spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), transformed);
             }
         }
@@ -313,10 +312,12 @@ public class BrooklynComponentTemplateResolver {
          * which can be used to find it from mgmt, rather than pass the loader.
          */
         private BrooklynClassLoadingContext loader = null;
+        private Set<String> encounteredRegisteredTypeIds;
 
-        public SpecialFlagsTransformer(BrooklynClassLoadingContext loader) {
+        public SpecialFlagsTransformer(BrooklynClassLoadingContext loader, Set<String> encounteredRegisteredTypeIds) {
             this.loader = loader;
             mgmt = loader.getManagementContext();
+            this.encounteredRegisteredTypeIds = encounteredRegisteredTypeIds;
         }
         @Override
         public Object apply(Object input) {
@@ -362,7 +363,7 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(ImmutableSet.<String>of());
+                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(encounteredRegisteredTypeIds);
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);
