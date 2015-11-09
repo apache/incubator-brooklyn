@@ -36,7 +36,7 @@ import javax.ws.rs.core.Response;
 
 import org.codehaus.jackson.JsonNode;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.EntitySummary;

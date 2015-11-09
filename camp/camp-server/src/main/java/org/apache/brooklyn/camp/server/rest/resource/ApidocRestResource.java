@@ -20,7 +20,7 @@ package org.apache.brooklyn.camp.server.rest.resource;
 
 import javax.ws.rs.Path;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.swagger.annotations.Apidoc;
 
 @Path(ApidocRestResource.API_URI_PATH)
 @Apidoc("Web API Documentation")

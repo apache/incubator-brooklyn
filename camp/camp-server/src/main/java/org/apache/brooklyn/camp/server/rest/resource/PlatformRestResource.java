@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.camp.server.dto.PlatformDto;
 import org.apache.brooklyn.camp.server.rest.util.WebResourceUtils;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.swagger.annotations.Apidoc;
 
 import com.wordnik.swagger.core.ApiOperation;
 

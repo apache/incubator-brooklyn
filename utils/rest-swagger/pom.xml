@@ -66,6 +66,13 @@
             <artifactId>brooklyn-utils-common</artifactId>
             <version>${project.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-swagger-annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         
         <dependency>
             <groupId>org.apache.brooklyn</groupId>

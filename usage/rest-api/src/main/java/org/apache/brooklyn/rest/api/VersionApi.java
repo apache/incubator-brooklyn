@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.swagger.annotations.Apidoc;
 import com.wordnik.swagger.core.ApiOperation;
 
 import javax.ws.rs.Consumes;

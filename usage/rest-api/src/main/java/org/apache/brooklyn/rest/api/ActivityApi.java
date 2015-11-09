@@ -20,7 +20,7 @@ package org.apache.brooklyn.rest.api;
 
 import java.util.List;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.swagger.annotations.Apidoc;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 
 import com.wordnik.swagger.core.ApiError;

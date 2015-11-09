@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.apidoc;
 
+import org.apache.brooklyn.swagger.annotations.Apidoc;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -138,7 +139,7 @@ abstract public class ApidocResource {
 
         ApidocRoot allApiDoc = new ApidocRoot();
 
-        List<ApidocEndpoint> endpoints = new ArrayList<ApidocEndpoint>();
+        List<ApidocEndpoint> endpoints = new ArrayList<>();
         for (Class<?> resource : resources) {
             if (!isIncludedForDocumentation(resource))
                 continue;

@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import org.apache.brooklyn.swagger.annotations.Apidoc;
 
 import javax.ws.rs.Path;
 
