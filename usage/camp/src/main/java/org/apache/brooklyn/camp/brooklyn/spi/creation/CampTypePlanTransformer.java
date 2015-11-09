@@ -24,7 +24,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredType.TypeImplementationPlan;
-import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.core.typereg.AbstractCustomImplementationPlan;
 import org.apache.brooklyn.core.typereg.AbstractTypePlanTransformer;
 import org.apache.brooklyn.core.typereg.BasicTypeImplementationPlan;
@@ -37,12 +37,14 @@ public class CampTypePlanTransformer extends AbstractTypePlanTransformer {
 
     private static final List<String> FORMATS = ImmutableList.of("brooklyn-camp", "camp", "brooklyn");
     
+    public static final String FORMAT = FORMATS.get(0);
+    
     public CampTypePlanTransformer() {
-        super(FORMATS.get(0), "OASIS CAMP / Brooklyn", "The Apache Brooklyn implementation of the OASIS CAMP blueprint plan format and extensions");
+        super(FORMAT, "OASIS CAMP / Brooklyn", "The Apache Brooklyn implementation of the OASIS CAMP blueprint plan format and extensions");
     }
 
     @Override
-    protected double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeConstraint context) {
+    protected double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeLoadingContext context) {
         Maybe<Map<Object, Object>> plan = RegisteredTypes.getAsYamlMap(planData);
         if (plan.isAbsent()) return 0;
         if (plan.get().containsKey("services")) return 0.8;
@@ -50,19 +52,19 @@ public class CampTypePlanTransformer extends AbstractTypePlanTransformer {
     }
 
     @Override
-    protected double scoreForNonmatchingNonnullFormat(String planFormat, Object planData, RegisteredType type, RegisteredTypeConstraint context) {
+    protected double scoreForNonmatchingNonnullFormat(String planFormat, Object planData, RegisteredType type, RegisteredTypeLoadingContext context) {
         if (FORMATS.contains(planFormat.toLowerCase())) return 0.9;
         return 0;
     }
 
     @Override
-    protected AbstractBrooklynObjectSpec<?, ?> createSpec(RegisteredType type, RegisteredTypeConstraint context) throws Exception {
+    protected AbstractBrooklynObjectSpec<?, ?> createSpec(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
         // TODO cache
         return new CampResolver(mgmt, type, context).createSpec();
     }
 
     @Override
-    protected Object createBean(RegisteredType type, RegisteredTypeConstraint context) throws Exception {
+    protected Object createBean(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
         // beans not supported by this?
         return null;
     }

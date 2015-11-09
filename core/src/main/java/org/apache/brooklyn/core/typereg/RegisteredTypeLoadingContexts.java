@@ -27,11 +27,11 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObjectType;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
-import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.slf4j.Logger;
@@ -39,41 +39,41 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
-public class RegisteredTypeConstraints {
+public class RegisteredTypeLoadingContexts {
 
-    private static final Logger log = LoggerFactory.getLogger(RegisteredTypeConstraints.BasicRegisteredTypeConstraint.class);
+    private static final Logger log = LoggerFactory.getLogger(RegisteredTypeLoadingContexts.BasicRegisteredTypeLoadingContext.class);
     
     /** Immutable (from caller's perspective) record of a constraint */
-    public final static class BasicRegisteredTypeConstraint implements RegisteredTypeConstraint {
+    public final static class BasicRegisteredTypeLoadingContext implements RegisteredTypeLoadingContext {
         @Nullable private RegisteredTypeKind kind;
-        @Nullable private Class<?> javaSuperType;
+        @Nullable private Class<?> expectedSuperType;
         @Nonnull private Set<String> encounteredTypes = ImmutableSet.of();
         @Nullable BrooklynClassLoadingContext loader;
         
-        private BasicRegisteredTypeConstraint() {}
+        private BasicRegisteredTypeLoadingContext() {}
         
-        public BasicRegisteredTypeConstraint(@Nullable RegisteredTypeConstraint source) {
+        public BasicRegisteredTypeLoadingContext(@Nullable RegisteredTypeLoadingContext source) {
             if (source==null) return;
             
-            this.kind = source.getKind();
-            this.javaSuperType = source.getJavaSuperType();
-            this.encounteredTypes = source.getEncounteredTypes();
+            this.kind = source.getExpectedKind();
+            this.expectedSuperType = source.getExpectedJavaSuperType();
+            this.encounteredTypes = source.getAlreadyEncounteredTypes();
             this.loader = (BrooklynClassLoadingContext) source.getLoader();
         }
 
         @Override
-        public RegisteredTypeKind getKind() {
+        public RegisteredTypeKind getExpectedKind() {
             return kind;
         }
         
         @Override
-        public Class<?> getJavaSuperType() {
-            if (javaSuperType==null) return Object.class;
-            return javaSuperType;
+        public Class<?> getExpectedJavaSuperType() {
+            if (expectedSuperType==null) return Object.class;
+            return expectedSuperType;
         }
 
         @Override
-        public Set<String> getEncounteredTypes() {
+        public Set<String> getAlreadyEncounteredTypes() {
             if (encounteredTypes==null) return ImmutableSet.of();
             return ImmutableSet.<String>copyOf(encounteredTypes);
         }
@@ -85,52 +85,79 @@ public class RegisteredTypeConstraints {
         
         @Override
         public String toString() {
-            return JavaClassNames.cleanSimpleClassName(this)+"["+kind+","+javaSuperType+","+encounteredTypes+"]";
+            return JavaClassNames.cleanSimpleClassName(this)+"["+kind+","+expectedSuperType+","+encounteredTypes+"]";
         }
     }
 
     /** returns a constraint which allows anything */
-    public static RegisteredTypeConstraint any() {
-        return new BasicRegisteredTypeConstraint();
+    public static RegisteredTypeLoadingContext any() {
+        return new BasicRegisteredTypeLoadingContext();
     }
 
-    public static RegisteredTypeConstraint alreadyVisited(Set<String> encounteredTypeSymbolicNames) {
-        BasicRegisteredTypeConstraint result = new BasicRegisteredTypeConstraint();
+    public static RegisteredTypeLoadingContext alreadyEncountered(Set<String> encounteredTypeSymbolicNames) {
+        BasicRegisteredTypeLoadingContext result = new BasicRegisteredTypeLoadingContext();
         result.encounteredTypes = encounteredTypeSymbolicNames == null ? ImmutableSet.<String>of() : ImmutableSet.copyOf(encounteredTypeSymbolicNames);
         return result;
     }
-    public static RegisteredTypeConstraint alreadyVisited(Set<String> encounteredTypeSymbolicNames, String anotherEncounteredType) {
-        BasicRegisteredTypeConstraint result = new BasicRegisteredTypeConstraint();
+    public static RegisteredTypeLoadingContext alreadyEncountered(Set<String> encounteredTypeSymbolicNames, String anotherEncounteredType) {
+        BasicRegisteredTypeLoadingContext result = new BasicRegisteredTypeLoadingContext();
         MutableSet<String> encounteredTypes = MutableSet.copyOf(encounteredTypeSymbolicNames);
         encounteredTypes.addIfNotNull(anotherEncounteredType);
         result.encounteredTypes = encounteredTypes.asUnmodifiable();
         return result;
     }
 
-    public static RegisteredTypeConstraint alreadyVisited(Set<String> encounteredTypeSymbolicNames, BrooklynClassLoadingContext loader) {
-        return withLoader(alreadyVisited(encounteredTypeSymbolicNames), loader);
+    public static RegisteredTypeLoadingContext loaderAlreadyEncountered(BrooklynClassLoadingContext loader, Set<String> encounteredTypeSymbolicNames) {
+        return loaderAlreadyEncountered(loader, encounteredTypeSymbolicNames, null);
+    }
+    public static RegisteredTypeLoadingContext loaderAlreadyEncountered(BrooklynClassLoadingContext loader, Set<String> encounteredTypeSymbolicNames, String anotherEncounteredType) {
+        return withLoader(alreadyEncountered(encounteredTypeSymbolicNames, anotherEncounteredType), loader);
     }
 
-    private static RegisteredTypeConstraint of(RegisteredTypeKind kind, Class<? extends BrooklynObject> javaSuperType) {
-        BasicRegisteredTypeConstraint result = new BasicRegisteredTypeConstraint();
+    private static RegisteredTypeLoadingContext of(RegisteredTypeKind kind, Class<?> javaSuperType) {
+        BasicRegisteredTypeLoadingContext result = new BasicRegisteredTypeLoadingContext();
         result.kind = kind;
-        result.javaSuperType = javaSuperType;
+        result.expectedSuperType = javaSuperType;
         return result;
     }
 
-    public static RegisteredTypeConstraint spec(Class<? extends BrooklynObject> javaSuperType) {
-        return of(RegisteredTypeKind.SPEC, javaSuperType);
+    public static RegisteredTypeLoadingContext bean(Class<?> javaSuperType) {
+        return of(RegisteredTypeKind.BEAN, javaSuperType);
     }
 
-    public static <T extends AbstractBrooklynObjectSpec<?,?>> RegisteredTypeConstraint withSpecSuperType(@Nullable RegisteredTypeConstraint source, @Nullable Class<T> specSuperType) {
-        Class<?> superType = lookupTargetTypeForSpec(specSuperType);
-        BasicRegisteredTypeConstraint constraint = new BasicRegisteredTypeConstraint(source);
+    public static RegisteredTypeLoadingContext spec(Class<? extends BrooklynObject> javaSuperType) {
+        return of(RegisteredTypeKind.SPEC, javaSuperType);
+    }
+    
+    public static <T> RegisteredTypeLoadingContext withBeanSuperType(@Nullable RegisteredTypeLoadingContext source, @Nullable Class<T> beanSuperType) {
+        Class<T> superType = beanSuperType;
+        BasicRegisteredTypeLoadingContext constraint = new BasicRegisteredTypeLoadingContext(source);
         if (source==null) source = constraint;
-        if (source.getJavaSuperType()==null || source.getJavaSuperType().isAssignableFrom( superType )) {
+        if (superType==null) return source;
+        if (source.getExpectedJavaSuperType()==null || source.getExpectedJavaSuperType().isAssignableFrom( superType )) {
             // the constraint was weaker than present; return the new constraint
             return constraint;
         }
-        if (superType.isAssignableFrom( source.getJavaSuperType() )) {
+        if (superType.isAssignableFrom( source.getExpectedJavaSuperType() )) {
+            // the constraint was already for something more specific; ignore what we've inferred here
+            return source;
+        }
+        log.warn("Ambiguous bean supertypes ("+beanSuperType+" for target "+source.getExpectedJavaSuperType()+"); "
+            + "it is recommended that any registered type constraint for a spec be compatible with the spec type");
+        return source;
+    }
+
+    /** Takes a Spec java type and adds an expected java type to the {@link RegisteredTypeLoadingContext} */
+    public static <T extends AbstractBrooklynObjectSpec<?,?>> RegisteredTypeLoadingContext withSpecSuperType(@Nullable RegisteredTypeLoadingContext source, @Nullable Class<T> specSuperType) {
+        Class<?> superType = lookupTargetTypeForSpec(specSuperType);
+        BasicRegisteredTypeLoadingContext constraint = new BasicRegisteredTypeLoadingContext(source);
+        if (source==null) source = constraint;
+        if (superType==null) return source;
+        if (source.getExpectedJavaSuperType()==null || source.getExpectedJavaSuperType().isAssignableFrom( superType )) {
+            // the constraint was weaker than present; return the new constraint
+            return constraint;
+        }
+        if (superType.isAssignableFrom( source.getExpectedJavaSuperType() )) {
             // the constraint was already for something more specific; ignore what we've inferred here
             return source;
         }
@@ -139,11 +166,11 @@ public class RegisteredTypeConstraints {
         // this may be because the caller specified a Spec as the type supertype, which is wrong;
         // or they may have specified an interface along a different hierarchy, which we discouraged
         // as it will make filtering/indexing more complex)
-        log.warn("Ambiguous spec supertypes ("+specSuperType+" for target "+source.getJavaSuperType()+"); "
+        log.warn("Ambiguous spec supertypes ("+specSuperType+" for target "+source.getExpectedJavaSuperType()+"); "
             + "it is recommended that any registered type constraint for a spec be compatible with the spec type");
         return source;
     }
-    
+        
     /** given a spec, returns the class of the item it targets, for instance returns {@link Entity} given {@link EntitySpec};
      * see also {@link #lookupSpecTypeForTarget(Class)} */
     static <T extends AbstractBrooklynObjectSpec<?,?>> Class<? extends BrooklynObject> lookupTargetTypeForSpec(Class<T> specSuperType) {
@@ -192,15 +219,16 @@ public class RegisteredTypeConstraints {
         return best.getSpecType();
     }
 
-    public static RegisteredTypeConstraint loader(BrooklynClassLoadingContext loader) {
-        BasicRegisteredTypeConstraint result = new BasicRegisteredTypeConstraint();
+    public static RegisteredTypeLoadingContext loader(BrooklynClassLoadingContext loader) {
+        BasicRegisteredTypeLoadingContext result = new BasicRegisteredTypeLoadingContext();
         result.loader = loader;
         return result;
     }
     
-    public static RegisteredTypeConstraint withLoader(RegisteredTypeConstraint constraint, BrooklynClassLoadingContext loader) {
-        ((BasicRegisteredTypeConstraint)constraint).loader = loader;
-        return constraint;
+    public static RegisteredTypeLoadingContext withLoader(RegisteredTypeLoadingContext constraint, BrooklynClassLoadingContext loader) {
+        BasicRegisteredTypeLoadingContext result = new BasicRegisteredTypeLoadingContext(constraint);
+        result.loader = loader;
+        return result;
     }
 
 }

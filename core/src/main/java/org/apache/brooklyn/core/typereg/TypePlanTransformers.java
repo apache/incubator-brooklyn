@@ -30,7 +30,7 @@ import java.util.TreeMap;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
@@ -88,7 +88,7 @@ public class TypePlanTransformers {
     /** returns a list of {@link BrooklynTypePlanTransformer} instances for this {@link ManagementContext}
      * which may be able to handle the given plan; the list is sorted with highest-score transformer first */
     @Beta
-    public static List<BrooklynTypePlanTransformer> forType(ManagementContext mgmt, RegisteredType type, RegisteredTypeConstraint constraint) {
+    public static List<BrooklynTypePlanTransformer> forType(ManagementContext mgmt, RegisteredType type, RegisteredTypeLoadingContext constraint) {
         Multimap<Double,BrooklynTypePlanTransformer> byScoreMulti = ArrayListMultimap.create(); 
         Collection<BrooklynTypePlanTransformer> transformers = all(mgmt);
         for (BrooklynTypePlanTransformer transformer : transformers) {
@@ -105,7 +105,7 @@ public class TypePlanTransformers {
      * <p>
      * callers should generally use one of the create methods on {@link BrooklynTypeRegistry} rather than using this method directly. */
     @Beta
-    public static Maybe<Object> transform(ManagementContext mgmt, RegisteredType type, RegisteredTypeConstraint constraint) {
+    public static Maybe<Object> transform(ManagementContext mgmt, RegisteredType type, RegisteredTypeLoadingContext constraint) {
         if (type==null) return Maybe.absent("type cannot be null");
         if (type.getPlan()==null) return Maybe.absent("type plan cannot be null, when instantiating "+type);
         

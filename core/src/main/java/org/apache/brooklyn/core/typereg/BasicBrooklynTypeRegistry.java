@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.util.collections.MutableList;
@@ -63,8 +63,8 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
 
     @SuppressWarnings("deprecation")
     @Override
-    public RegisteredType get(String symbolicName, String version, RegisteredTypeConstraint constraint) {
-        if (constraint==null) constraint = RegisteredTypeConstraints.any();
+    public RegisteredType get(String symbolicName, String version, RegisteredTypeLoadingContext constraint) {
+        if (constraint==null) constraint = RegisteredTypeLoadingContexts.any();
         if (version==null) version = BrooklynCatalog.DEFAULT_VERSION;
         
         // TODO lookup here, using constraints
@@ -81,7 +81,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
     }
     
     @Override
-    public RegisteredType get(String symbolicNameWithOptionalVersion, RegisteredTypeConstraint constraint) {
+    public RegisteredType get(String symbolicNameWithOptionalVersion, RegisteredTypeLoadingContext constraint) {
         if (CatalogUtils.looksLikeVersionedId(symbolicNameWithOptionalVersion)) {
             String symbolicName = CatalogUtils.getSymbolicNameFromVersionedId(symbolicNameWithOptionalVersion);
             String version = CatalogUtils.getVersionFromVersionedId(symbolicNameWithOptionalVersion);
@@ -93,26 +93,26 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
 
     @Override
     public RegisteredType get(String symbolicNameWithOptionalVersion) {
-        return get(symbolicNameWithOptionalVersion, (RegisteredTypeConstraint)null);
+        return get(symbolicNameWithOptionalVersion, (RegisteredTypeLoadingContext)null);
     }
 
     @SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
     @Override
-    public <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeConstraint constraint, Class<SpecT> specSuperType) {
+    public <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeLoadingContext constraint, Class<SpecT> specSuperType) {
         Preconditions.checkNotNull(type, "type");
         if (type.getKind()!=RegisteredTypeKind.SPEC) { 
             throw new IllegalStateException("Cannot create spec from type "+type+" (kind "+type.getKind()+")");
         }
         if (constraint!=null) {
-            if (constraint.getKind()!=null && constraint.getKind()!=RegisteredTypeKind.SPEC) {
+            if (constraint.getExpectedKind()!=null && constraint.getExpectedKind()!=RegisteredTypeKind.SPEC) {
                 throw new IllegalStateException("Cannot create spec with constraint "+constraint);
             }
-            if (constraint.getEncounteredTypes().contains(type.getSymbolicName())) {
+            if (constraint.getAlreadyEncounteredTypes().contains(type.getSymbolicName())) {
                 // avoid recursive cycle
                 // TODO implement using java if permitted
             }
         }
-        constraint = RegisteredTypeConstraints.withSpecSuperType(constraint, specSuperType);
+        constraint = RegisteredTypeLoadingContexts.withSpecSuperType(constraint, specSuperType);
 
         Maybe<Object> result = TypePlanTransformers.transform(mgmt, type, constraint);
         if (result.isPresent()) return (SpecT) result.get();
@@ -121,11 +121,12 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         // TODO remove once all transformers are available in the new style
         CatalogItem item = (CatalogItem) mgmt.getCatalog().getCatalogItem(type.getSymbolicName(), type.getVersion());
         if (item==null) {
-            // if not in catalog (because loading new one?) then throw original
+            // if not in catalog (because loading a new item?) then throw original
+            // (NB: to support any recursive legacy transformers we might have to create a CI; cross that bridge when we come to it)
             result.get();
         }
         try {
-            return (SpecT) BasicBrooklynCatalog.internalCreateSpecWithTransformers(mgmt, item, constraint.getEncounteredTypes());
+            return (SpecT) BasicBrooklynCatalog.internalCreateSpecLegacy(mgmt, item, constraint.getAlreadyEncounteredTypes(), false);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             // for now, combine this failure with the original
@@ -137,9 +138,41 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
                 // prefer older exception, until the new transformer is the primary pathway
                 throw Exceptions.create("Unable to instantiate "+type, MutableList.of(e, e0));
             }
-            // ultimately swallow the legacy failure, return the original failure (the call below will throw because result is absent)
-//            return (SpecT) result.get();
         }
+    }
+
+    @Override
+    public <SpecT extends AbstractBrooklynObjectSpec<?, ?>> SpecT createSpecFromPlan(String planFormat, Object planData, RegisteredTypeLoadingContext optionalConstraint, Class<SpecT> optionalSpecSuperType) {
+        return createSpec(RegisteredTypes.spec(null, null, new BasicTypeImplementationPlan(planFormat, planData), null),
+            optionalConstraint, optionalSpecSuperType);
+    }
+
+    @Override
+    public <T> T createBean(RegisteredType type, RegisteredTypeLoadingContext constraint, Class<T> optionalResultSuperType) {
+        Preconditions.checkNotNull(type, "type");
+        if (type.getKind()!=RegisteredTypeKind.SPEC) { 
+            throw new IllegalStateException("Cannot create spec from type "+type+" (kind "+type.getKind()+")");
+        }
+        if (constraint!=null) {
+            if (constraint.getExpectedKind()!=null && constraint.getExpectedKind()!=RegisteredTypeKind.SPEC) {
+                throw new IllegalStateException("Cannot create spec with constraint "+constraint);
+            }
+            if (constraint.getAlreadyEncounteredTypes().contains(type.getSymbolicName())) {
+                // avoid recursive cycle
+                // TODO implement using java if permitted
+            }
+        }
+        constraint = RegisteredTypeLoadingContexts.withBeanSuperType(constraint, optionalResultSuperType);
+
+        @SuppressWarnings("unchecked")
+        T result = (T) TypePlanTransformers.transform(mgmt, type, constraint).get();
+        return result;
+    }
+
+    @Override
+    public <T> T createBeanFromPlan(String planFormat, Object planData, RegisteredTypeLoadingContext optionalConstraint, Class<T> optionalBeanSuperType) {
+        return createBean(RegisteredTypes.bean(null, null, new BasicTypeImplementationPlan(planFormat, planData), null),
+            optionalConstraint, optionalBeanSuperType);
     }
 
 }

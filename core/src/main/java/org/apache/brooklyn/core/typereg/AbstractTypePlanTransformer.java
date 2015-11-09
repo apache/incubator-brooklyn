@@ -21,7 +21,7 @@ package org.apache.brooklyn.core.typereg;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.slf4j.Logger;
@@ -72,7 +72,7 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
     }
     
     @Override
-    public double scoreForType(RegisteredType type, RegisteredTypeConstraint context) {
+    public double scoreForType(RegisteredType type, RegisteredTypeLoadingContext context) {
         if (getFormatCode().equals(type.getPlan().getPlanFormat())) return 1;
         if (type.getPlan().getPlanFormat()==null)
             return scoreForNullFormat(type.getPlan().getPlanData(), type, context);
@@ -80,8 +80,8 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
             return scoreForNonmatchingNonnullFormat(type.getPlan().getPlanFormat(), type.getPlan().getPlanData(), type, context);
     }
 
-    protected abstract double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeConstraint context);
-    protected abstract double scoreForNonmatchingNonnullFormat(String planFormat, Object planData, RegisteredType type, RegisteredTypeConstraint context);
+    protected abstract double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeLoadingContext context);
+    protected abstract double scoreForNonmatchingNonnullFormat(String planFormat, Object planData, RegisteredType type, RegisteredTypeLoadingContext context);
 
     /** delegates to more specific abstract create methods,
      * and performs common validation and customisation of the items created.
@@ -90,7 +90,7 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
      * <li> setting the {@link AbstractBrooklynObjectSpec#catalogItemId(String)}
      */
     @Override
-    public Object create(final RegisteredType type, final RegisteredTypeConstraint context) {
+    public Object create(final RegisteredType type, final RegisteredTypeLoadingContext context) {
         try {
             return validate(new RegisteredTypeKindVisitor<Object>() {
                 @Override protected Object visitSpec(RegisteredType type) {
@@ -117,14 +117,14 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
         }
     }
     
-    protected <T> T validate(T createdObject, RegisteredType type, RegisteredTypeConstraint context) {
+    protected <T> T validate(T createdObject, RegisteredType type, RegisteredTypeLoadingContext context) {
         if (createdObject==null) return null;
         // TODO validation based on the constraint, throw UnsupportedTypePlanException with details if not matched
         return createdObject;
     }
 
-    protected abstract AbstractBrooklynObjectSpec<?,?> createSpec(RegisteredType type, RegisteredTypeConstraint context) throws Exception;
+    protected abstract AbstractBrooklynObjectSpec<?,?> createSpec(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception;
 
-    protected abstract Object createBean(RegisteredType type, RegisteredTypeConstraint context) throws Exception;
+    protected abstract Object createBean(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception;
     
 }

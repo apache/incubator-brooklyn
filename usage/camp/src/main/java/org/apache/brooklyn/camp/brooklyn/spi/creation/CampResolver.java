@@ -26,16 +26,16 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.util.text.Strings;
 
@@ -45,7 +45,7 @@ class CampResolver {
 
     private ManagementContext mgmt;
     private RegisteredType type;
-    private RegisteredTypeConstraint context;
+    private RegisteredTypeLoadingContext context;
 
     /** whether to allow parsing of the 'full' syntax for applications,
      * where items are wrapped in a "services:" block, and if the wrapper is an application,
@@ -62,18 +62,17 @@ class CampResolver {
      * i.e. not wrapped in any "services:" or "brooklyn.{locations,policies}" block */
     boolean allowTypeSyntax = true;
 
-    public CampResolver(ManagementContext mgmt, RegisteredType type, RegisteredTypeConstraint context) {
+    public CampResolver(ManagementContext mgmt, RegisteredType type, RegisteredTypeLoadingContext context) {
         this.mgmt = mgmt;
         this.type = type;
         this.context = context;
     }
 
     public AbstractBrooklynObjectSpec<?, ?> createSpec() {
-        // TODO modern approach
+        // TODO new-style approach:
         //            AbstractBrooklynObjectSpec<?, ?> spec = RegisteredTypes.newSpecInstance(mgmt, /* 'type' key */);
         //            spec.configure(keysAndValues);
-        return createSpecFromFull(mgmt, type, 
-            context.getEncounteredTypes(), (BrooklynClassLoadingContext) context.getLoader());
+        return createSpecFromFull(mgmt, type, context.getAlreadyEncounteredTypes(), context.getLoader());
     }
 
     static AbstractBrooklynObjectSpec<?, ?> createSpecFromFull(ManagementContext mgmt, RegisteredType item, Set<String> parentEncounteredTypes, BrooklynClassLoadingContext loaderO) {

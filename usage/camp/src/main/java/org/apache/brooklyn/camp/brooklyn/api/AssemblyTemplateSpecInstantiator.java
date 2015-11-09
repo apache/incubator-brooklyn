@@ -23,10 +23,10 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 
 public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
 

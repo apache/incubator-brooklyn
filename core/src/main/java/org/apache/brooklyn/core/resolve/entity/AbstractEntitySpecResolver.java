@@ -22,7 +22,7 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.util.text.Strings;
 
 public abstract class AbstractEntitySpecResolver implements EntitySpecResolver {

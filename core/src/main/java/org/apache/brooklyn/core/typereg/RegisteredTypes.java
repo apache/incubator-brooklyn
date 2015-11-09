@@ -32,7 +32,7 @@ import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredType.TypeImplementationPlan;
-import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.ConfigKeys;
@@ -112,7 +112,7 @@ public class RegisteredTypes {
      * @param mgmt */
     @Beta
     // TODO should this be on the AbstractTypePlanTransformer ?
-    public static Class<?> loadActualJavaType(String javaTypeName, ManagementContext mgmt, RegisteredType type, RegisteredTypeConstraint constraint) throws Exception {
+    public static Class<?> loadActualJavaType(String javaTypeName, ManagementContext mgmt, RegisteredType type, RegisteredTypeLoadingContext constraint) throws Exception {
         Class<?> result = ((BasicRegisteredType)type).getCache().get(ACTUAL_JAVA_TYPE);
         if (result!=null) return result;
         
@@ -152,12 +152,12 @@ public class RegisteredTypes {
     }
 
     /** returns an implementation of the spec class corresponding to the given target type;
-     * for use in {@link BrooklynTypePlanTransformer#create(RegisteredType, RegisteredTypeConstraint)} 
+     * for use in {@link BrooklynTypePlanTransformer#create(RegisteredType, RegisteredTypeLoadingContext)} 
      * implementations when dealing with a spec; returns null if none found
      * @param mgmt */
     @Beta
     public static AbstractBrooklynObjectSpec<?,?> newSpecInstance(ManagementContext mgmt, Class<? extends BrooklynObject> targetType) throws Exception {
-        Class<? extends AbstractBrooklynObjectSpec<?, ?>> specType = RegisteredTypeConstraints.lookupSpecTypeForTarget(targetType);
+        Class<? extends AbstractBrooklynObjectSpec<?, ?>> specType = RegisteredTypeLoadingContexts.lookupSpecTypeForTarget(targetType);
         if (specType==null) return null;
         Method createMethod = specType.getMethod("create", Class.class);
         return (AbstractBrooklynObjectSpec<?, ?>) createMethod.invoke(null, targetType);

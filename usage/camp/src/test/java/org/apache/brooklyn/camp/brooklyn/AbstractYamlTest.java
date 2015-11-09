@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.camp.brooklyn.spi.creation.CampTypePlanTransformer;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.CampTypePlanTransformer.CampTypeImplementationPlan;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.entity.Entities;
@@ -37,7 +38,7 @@ import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -117,9 +118,8 @@ public abstract class AbstractYamlTest {
     }
 
     protected Entity createAndStartApplication(Reader input) throws Exception {
-        RegisteredType type = RegisteredTypes.spec(null, null, new CampTypeImplementationPlan(Streams.readFully(input)), Application.class);
         EntitySpec<?> spec = 
-            mgmt().getTypeRegistry().createSpec(type, RegisteredTypeConstraints.spec(Application.class), EntitySpec.class);
+            mgmt().getTypeRegistry().createSpecFromPlan(CampTypePlanTransformer.FORMAT, Streams.readFully(input), RegisteredTypeLoadingContexts.spec(Application.class), EntitySpec.class);
         final Entity app = brooklynMgmt.getEntityManager().createEntity(spec);
         // start the app (happens automatically if we use camp to instantiate, but not if we use crate spec approach)
         app.invoke(Startable.START, MutableMap.<String,String>of()).get();

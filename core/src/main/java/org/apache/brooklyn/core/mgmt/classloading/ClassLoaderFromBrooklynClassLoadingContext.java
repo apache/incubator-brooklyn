@@ -20,6 +20,8 @@ package org.apache.brooklyn.core.mgmt.classloading;
 
 import java.net.URL;
 
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
+
 public class ClassLoaderFromBrooklynClassLoadingContext extends ClassLoader {
 
     /** Constructs a {@link ClassLoader} which delegates to the given {@link BrooklynClassLoadingContext} */

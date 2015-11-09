@@ -25,26 +25,26 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 
-public interface RegisteredTypeConstraint {
+public interface RegisteredTypeLoadingContext {
     
     /** The kind required, if specified. */
-    @Nullable public RegisteredTypeKind getKind();
+    @Nullable public RegisteredTypeKind getExpectedKind();
     
     /** A java super-type or interface that should be filtered for; 
      * for specs, this refers to the target type, not the spec 
      * (eg {@link Entity} not {@link EntitySpec}). 
      * If nothing is specified, this returns {@link Object}'s class. */
-    @Nonnull public Class<?> getJavaSuperType();
+    @Nonnull public Class<?> getExpectedJavaSuperType();
     
     /** encountered types, so that during resolution, 
      * if we have already attempted to resolve a given type,
      * the instantiator can avoid recursive cycles */
-    @Nonnull public Set<String> getEncounteredTypes();
+    @Nonnull public Set<String> getAlreadyEncounteredTypes();
     
-    /** A special loader to use, if available.
-     * For internal use only; implementations should be a BrooklynClassLoadingContext */
-    @Nullable public Object getLoader();
+    /** A loader to use, supplying additional search paths */
+    @Nullable public BrooklynClassLoadingContext getLoader();
     
 }

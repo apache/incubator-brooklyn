@@ -23,7 +23,7 @@ import java.util.List;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.api.typereg.RegisteredTypeConstraint;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.util.text.Identifiers;
 
 /**
@@ -46,7 +46,7 @@ public class JavaClassNameTypePlanTransformer extends AbstractTypePlanTransforme
     }
 
     @Override
-    protected double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeConstraint context) {
+    protected double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeLoadingContext context) {
         if (type.getPlan().getPlanData() instanceof String && 
                 ((String)type.getPlan().getPlanData()).matches(Identifiers.JAVA_BINARY_REGEX)) {
             return 0.1;
@@ -55,22 +55,22 @@ public class JavaClassNameTypePlanTransformer extends AbstractTypePlanTransforme
     }
     
     @Override
-    protected double scoreForNonmatchingNonnullFormat(String planFormat, Object planData, RegisteredType type, RegisteredTypeConstraint context) {
+    protected double scoreForNonmatchingNonnullFormat(String planFormat, Object planData, RegisteredType type, RegisteredTypeLoadingContext context) {
         return 0;
     }
 
     @SuppressWarnings({ "unchecked" })
     @Override
-    protected AbstractBrooklynObjectSpec<?,?> createSpec(RegisteredType type, RegisteredTypeConstraint context) throws Exception {
+    protected AbstractBrooklynObjectSpec<?,?> createSpec(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
         return RegisteredTypes.newSpecInstance(mgmt, (Class<? extends BrooklynObject>) getType(type, context));
     }
 
     @Override
-    protected Object createBean(RegisteredType type, RegisteredTypeConstraint context) throws Exception {
+    protected Object createBean(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
         return getType(type, context).newInstance();
     }
 
-    private Class<?> getType(RegisteredType type, RegisteredTypeConstraint context) throws Exception {
+    private Class<?> getType(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
         return RegisteredTypes.loadActualJavaType((String)type.getPlan().getPlanData(), mgmt, type, context);
     }
     
