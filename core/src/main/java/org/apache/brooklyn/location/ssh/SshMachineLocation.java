@@ -134,10 +134,8 @@ import groovy.lang.Closure;
  */
 public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, WithMutexes, Closeable {
 
-    /** @deprecated since 0.7.0 shouldn't be public */
-    public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
-    /** @deprecated since 0.7.0 shouldn't be public */
-    public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
+    private static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
+    private static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
     
     // Use a sane timeout when doing a connectivity test
     private static final int SSHABLE_CONNECT_TIMEOUT = (int)Duration.minutes(2).toMilliseconds();
