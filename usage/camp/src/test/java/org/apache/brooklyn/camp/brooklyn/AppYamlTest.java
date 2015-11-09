@@ -19,10 +19,13 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 
 import java.io.StringReader;
 
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.entity.stock.BasicApplication;
@@ -66,10 +69,10 @@ public class AppYamlTest extends AbstractYamlTest {
                 "- serviceType: org.apache.brooklyn.core.test.entity.TestApplication",
                 "  name: myEntityName");
         
-        BasicApplication app = (BasicApplication) createStartWaitAndLogApplication(new StringReader(yaml));
-        TestApplication entity = (TestApplication) Iterables.getOnlyElement(app.getChildren());
+        Entity app = createStartWaitAndLogApplication(new StringReader(yaml));
+        assertNull(app.getConfig(EntityManagementUtils.WRAPPER_APP_MARKER));
         assertEquals(app.getDisplayName(), "myTopLevelName");
-        assertEquals(entity.getDisplayName(), "myEntityName");
+        assertEquals(app.getChildren().size(), 0);
     }
     
     @Test
