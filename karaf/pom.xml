@@ -54,7 +54,7 @@
     <module>features</module>
     <module>apache-brooklyn</module>
     <module>commands</module>
-    <!-- module>itest</module -->
+    <module>itest</module>
   </modules>
   
   <dependencyManagement>
