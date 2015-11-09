@@ -111,6 +111,31 @@ The following optional catalog metadata is supported:
   This feature is experimental and may change or be removed.
   Also note that external OSGi dependencies are not supported 
   and other metadata (such as versions, etc) may not be applied.
+- `brooklyn.parameters`: a list of parameters the blueprint accepts. The items have
+  the following properties:
+  - `name` (required): identifier by which to reference the parameter when setting
+    or retrieving its value
+  - `label`: a value to present to the user, same as `name` if empty
+  - `description`: Short text describing the parameter behaviour/usage, presented
+    to the user
+  - `type`: the type of the parameter, one of `string`, `integer`, `long`, `float`,
+    `double`, `timestamp`, `port`, a fully qualified Java type name. Default is `string`.
+  - `default`: a default value, converted to the type above
+  - `constraints`: a list of constraints the parameter should meet, currently
+    `required` is supported
+  A shorthand notation is also supported where the name of the parameter is directly
+  passed as an item in the list. For example:
+
+~~~ yaml
+brooklyn.properties:
+- displayName
+- name: user.name
+  constraints:
+  - required
+- name: user.age
+  type: integer
+~~~
+
 - `brooklyn.libraries`: a list of pointers to OSGi bundles required for the catalog item.
   This can be omitted if blueprints are pure YAML and everything required is included in the classpath and catalog.
   Where custom Java code or bundled resources is needed, however, OSGi JARs supply

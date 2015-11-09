@@ -89,6 +89,7 @@ public abstract class BrooklynYamlTypeInstantiator {
             return this;
         }
 
+        @Override
         public Maybe<String> getTypeName() {
             Maybe<Object> result = data.getStringKeyMaybe(getPreferredKeyName());
             if (result.isAbsent() && typeKeyPrefix!=null) {
@@ -174,6 +175,7 @@ public abstract class BrooklynYamlTypeInstantiator {
             this.typeName = typeName;
         }
         
+        @Override
         public Maybe<String> getTypeName() {
             return Maybe.fromNullable(typeName);
         }

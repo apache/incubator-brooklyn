@@ -28,6 +28,14 @@ import com.google.common.reflect.TypeToken;
 @ImplementedBy(ReferencingYamlTestEntityImpl.class)
 public interface ReferencingYamlTestEntity extends Entity {
     @SuppressWarnings("serial")
+    public static final ConfigKey<Entity> TEST_REFERENCE_ROOT = BasicConfigKey.builder(new TypeToken<Entity>(){})
+            .name("test.reference.root")
+            .build();
+    @SuppressWarnings("serial")
+    public static final ConfigKey<Entity> TEST_REFERENCE_SCOPE_ROOT = BasicConfigKey.builder(new TypeToken<Entity>(){})
+            .name("test.reference.scope_root")
+            .build();
+    @SuppressWarnings("serial")
     public static final ConfigKey<Entity> TEST_REFERENCE_APP = BasicConfigKey.builder(new TypeToken<Entity>(){})
             .name("test.reference.app")
             .build();

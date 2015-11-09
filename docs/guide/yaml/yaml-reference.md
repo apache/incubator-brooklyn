@@ -165,6 +165,10 @@ concise DSL defined here:
   * `sibling`: looks for the `ID` anywhere among children of the parent entity
   * `parent`: returns the parent entity (ignores the `ID`)
   * `this`: returns this entity (ignores the `ID`)
+* `$brooklyn:root()` will return the topmost entity (the application)
+* `$broopklyn:scopeRoot()` will return the root entity in the current plan scope.
+  For catalog items it's the topmost entity in the plan, for application plans it is the same as
+  `$brooklyn:root()`.
 * `$brooklyn:formatString("pattern e.g. %s %s", "field 1", "field 2")` returns a future which creates the formatted string
   with the given parameters, where parameters may be strings *or* other tasks such as `attributeWhenReady`
 * `$brooklyn:literal("string")` returns the given string as a literal (suppressing any `$brooklyn:` expansion)

@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.effector.EffectorAndBody;
 import org.apache.brooklyn.core.effector.EffectorBody;
@@ -97,6 +98,7 @@ public class EntityDynamicType extends BrooklynDynamicType<Entity, AbstractEntit
         return super.getBrooklynClass();
     }
     
+    @Override
     public EntityType getSnapshot() {
         return (EntityType) super.getSnapshot();
     }
@@ -230,6 +232,41 @@ public class EntityDynamicType extends BrooklynDynamicType<Entity, AbstractEntit
         return (removeSensor(sensor.getName()) != null);
     }
     
+    // --------------------------------------------------
+    
+    /**
+     * Adds the given {@link ConfigKey} to this entity.
+     */
+    public void addConfigKey(ConfigKey<?> newKey) {
+        configKeys.put(newKey.getName(), new FieldAndValue<ConfigKey<?>>(null, newKey));
+        invalidateSnapshot();
+        instance.sensors().emit(AbstractEntity.CONFIG_KEY_ADDED, newKey);
+    }
+    
+    /**
+     * Adds the given {@link ConfigKey} to this entity.
+     */
+    public void addConfigKeys(Iterable<ConfigKey<?>> newKeys) {
+        for (ConfigKey<?> newKey : newKeys) {
+            addConfigKey(newKey);
+        }
+    }
+
+    /**
+     * Removes the named {@link ConfigKey} from this entity.
+     */
+    public boolean removeConfigKey(ConfigKey<?> key) {
+        FieldAndValue<ConfigKey<?>> result = configKeys.remove(key.getName());
+        if (result != null) {
+            invalidateSnapshot();
+            ConfigKey<?> removedKey = result.value;
+            instance.sensors().emit(AbstractEntity.CONFIG_KEY_REMOVED, removedKey);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     // --------------------------------------------------
     
     @Override

@@ -92,6 +92,7 @@ public class OsgiManager {
             final AtomicReference<DeletionResult> deletionResult = new AtomicReference<DeletionResult>();
             Repeater.create("Delete OSGi cache dir")
                     .until(new Callable<Boolean>() {
+                        @Override
                         public Boolean call() {
                             deletionResult.set(Os.deleteRecursively(osgiCacheDir));
                             return deletionResult.get().wasSuccessful();

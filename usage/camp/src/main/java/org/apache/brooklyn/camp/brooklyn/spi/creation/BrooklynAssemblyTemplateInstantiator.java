@@ -19,7 +19,6 @@
 package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
@@ -29,7 +28,6 @@ import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
-import org.apache.brooklyn.camp.spi.AssemblyTemplate.Builder;
 import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
@@ -37,12 +35,10 @@ import org.apache.brooklyn.core.mgmt.EntityManagementUtils.CreationResult;
 import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
-import org.apache.brooklyn.entity.stock.BasicApplicationImpl;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -86,9 +82,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
 
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
 
-        BrooklynComponentTemplateResolver resolver = BrooklynComponentTemplateResolver.Factory.newInstance(
-            loader, buildWrapperAppTemplate(template));
-        EntitySpec<? extends Application> app = resolver.resolveSpec(ImmutableSet.<String>of());
+        EntitySpec<? extends Application> app = CampUtils.createWrapperApp(template, loader);
         app.configure(EntityManagementUtils.WRAPPER_APP_MARKER, Boolean.TRUE);
 
         // first build the children into an empty shell app
@@ -102,20 +96,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         }
 
         return app;
-    }
-
-    private AssemblyTemplate buildWrapperAppTemplate(AssemblyTemplate template) {
-        Builder<? extends AssemblyTemplate> builder = AssemblyTemplate.builder();
-        builder.type("brooklyn:" + BasicApplicationImpl.class.getName());
-        builder.id(template.getId());
-        builder.name(template.getName());
-        builder.sourceCode(template.getSourceCode());
-        for (Entry<String, Object> entry : template.getCustomAttributes().entrySet()) {
-            builder.customAttribute(entry.getKey(), entry.getValue());
-        }
-        builder.instantiator(template.getInstantiator());
-        AssemblyTemplate wrapTemplate = builder.build();
-        return wrapTemplate;
     }
 
     private boolean shouldUnwrap(AssemblyTemplate template, EntitySpec<? extends Application> app) {

@@ -46,7 +46,7 @@ public class CatalogLoadTest {
         return ResourceUtils.create(this).getResourceAsString(file);
     }
 
-    // CAMP YAML parsing not available in core, so YAML catalog tests are in camp, e.g. CatalogYamlEntitiesTest 
+    // CAMP YAML parsing not available in core, so YAML catalog tests are in camp, e.g. CatalogYamlEntityTest 
     
     @Test
     public void testLoadXmlCatalog() {

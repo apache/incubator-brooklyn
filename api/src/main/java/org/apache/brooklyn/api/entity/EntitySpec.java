@@ -103,27 +103,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
      * original entity spec.
      */
     public static <T extends Entity> EntitySpec<T> create(EntitySpec<T> spec) {
-        EntitySpec<T> result = create(spec.getType())
-                .displayName(spec.getDisplayName())
-                .tags(spec.getTags())
-                .additionalInterfaces(spec.getAdditionalInterfaces())
-                .configure(spec.getConfig())
-                .configure(spec.getFlags())
-                .policySpecs(spec.getPolicySpecs())
-                .policies(spec.getPolicies())
-                .enricherSpecs(spec.getEnricherSpecs())
-                .enrichers(spec.getEnrichers())
-                .addInitializers(spec.getInitializers())
-                .children(spec.getChildren())
-                .members(spec.getMembers())
-                .groups(spec.getGroups())
-                .catalogItemId(spec.getCatalogItemId())
-                .locations(spec.getLocations());
-        
-        if (spec.getParent() != null) result.parent(spec.getParent());
-        if (spec.getImplementation() != null) result.impl(spec.getImplementation());
-        
-        return result;
+        return create(spec.getType()).copyFrom(spec);
     }
     
     public static <T extends Entity> EntitySpec<T> newInstance(Class<T> type) {
@@ -149,7 +129,33 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     public EntitySpec(Class<T> type) {
         super(type);
     }
-    
+
+    @Override
+    protected EntitySpec<T> copyFrom(EntitySpec<T> otherSpec) {
+        super.copyFrom(otherSpec)
+                .displayName(otherSpec.getDisplayName())
+                .tags(otherSpec.getTags())
+                .additionalInterfaces(otherSpec.getAdditionalInterfaces())
+                .configure(otherSpec.getConfig())
+                .configure(otherSpec.getFlags())
+                .policySpecs(otherSpec.getPolicySpecs())
+                .policies(otherSpec.getPolicies())
+                .enricherSpecs(otherSpec.getEnricherSpecs())
+                .enrichers(otherSpec.getEnrichers())
+                .addInitializers(otherSpec.getInitializers())
+                .children(otherSpec.getChildren())
+                .members(otherSpec.getMembers())
+                .groups(otherSpec.getGroups())
+                .catalogItemId(otherSpec.getCatalogItemId())
+                .locations(otherSpec.getLocations());
+        
+        if (otherSpec.getParent() != null) parent(otherSpec.getParent());
+        if (otherSpec.getImplementation() != null) impl(otherSpec.getImplementation());
+        
+        return this;
+    }
+
+    @Override
     @SuppressWarnings("unchecked")
     public Class<T> getType() {
         return (Class<T>)super.getType();

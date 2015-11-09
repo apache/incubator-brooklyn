@@ -19,6 +19,7 @@
 package org.apache.brooklyn.api.catalog;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -26,6 +27,7 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 
 import com.google.common.annotations.Beta;
@@ -56,7 +58,8 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
      */
     @Override
     SubscriptionSupport subscriptions();
-    
+
+    /** @deprecated since 0.7.0 in favour of {@link CatalogBundle}, kept for rebind compatibility */
     @Deprecated
     public static interface CatalogItemLibraries {
         Collection<String> getBundles();
@@ -70,8 +73,12 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     /** @return The type of the spec e.g. EntitySpec corresponding to {@link #getCatalogItemJavaType()} */
     public Class<SpecT> getSpecType();
     
-    /** @return The underlying java type of the item represented, if not described via a YAML spec.
-     * Normally null (and the type comes from yaml). */
+    /**
+     * @return The underlying java type of the item represented, if not described via a YAML spec.
+     * Normally null (and the type comes from yaml).
+     * @deprecated since 0.9.0. Use plan based items instead ({@link #getPlanYaml()})
+     */
+    @Deprecated
     @Nullable public String getJavaType();
 
     /** @deprecated since 0.7.0. Use {@link #getDisplayName} */
@@ -89,6 +96,8 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     public String getSymbolicName();
 
     public String getVersion();
+
+    public List<SpecParameter<?>> getParameters();
 
     public Collection<CatalogBundle> getLibraries();
 

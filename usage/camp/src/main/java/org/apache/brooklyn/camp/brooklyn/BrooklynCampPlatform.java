@@ -55,6 +55,7 @@ public class BrooklynCampPlatform extends AggregatingCampPlatform implements Has
 
     // --- brooklyn setup
     
+    @Override
     public ManagementContext getBrooklynManagementContext() {
         return bmc;
     }
