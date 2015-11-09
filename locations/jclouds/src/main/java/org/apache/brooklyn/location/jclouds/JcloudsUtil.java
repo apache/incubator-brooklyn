@@ -31,6 +31,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -41,10 +42,12 @@ import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Protocol;
+import org.apache.brooklyn.util.net.ReachableSocketFinder;
 import org.apache.brooklyn.util.ssh.BashCommands;
 import org.apache.brooklyn.util.ssh.IptablesCommands;
 import org.apache.brooklyn.util.ssh.IptablesCommands.Chain;
 import org.apache.brooklyn.util.ssh.IptablesCommands.Policy;
+import org.apache.brooklyn.util.time.Duration;
 import org.jclouds.Constants;
 import org.jclouds.ContextBuilder;
 import org.jclouds.aws.ec2.AWSEC2Api;
@@ -68,7 +71,6 @@ import org.jclouds.encryption.bouncycastle.config.BouncyCastleCryptoModule;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
 import org.jclouds.scriptbuilder.domain.Statement;
 import org.jclouds.scriptbuilder.domain.Statements;
-import org.jclouds.ssh.SshClient;
 import org.jclouds.sshj.config.SshjSshClientModule;
 import org.jclouds.util.Predicates2;
 import org.slf4j.Logger;
@@ -80,11 +82,15 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
+import com.google.common.net.HostAndPort;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Module;
 
 public class JcloudsUtil implements JcloudsLocationConfig {
@@ -319,8 +325,11 @@ public class JcloudsUtil implements JcloudsLocationConfig {
                 interpret("chmod 600 /root/.ssh/authorized_keys"));
     }
 
+    /**
+     * @deprecated since 0.9.0; use {@link #getFirstReachableAddress(NodeMetadata, Duration)}
+     */
     public static String getFirstReachableAddress(ComputeServiceContext context, NodeMetadata node) {
-        // To pick the address, it relies on jclouds `sshForNode().apply(Node)` to check all IPs of node (private+public),
+        // Previously this called jclouds `sshForNode().apply(Node)` to check all IPs of node (private+public),
         // to find one that is reachable. It does `openSocketFinder.findOpenSocketOnNode(node, node.getLoginPort(), ...)`.
         // This keeps trying for time org.jclouds.compute.reference.ComputeServiceConstants.Timeouts.portOpen.
         // TODO Want to configure this timeout here.
@@ -333,21 +342,38 @@ public class JcloudsUtil implements JcloudsLocationConfig {
         //     https://issues.apache.org/jira/browse/WHIRR-420
         //     jclouds.ssh.max-retries
         //     jclouds.ssh.retry-auth
+        //
+        // With `sshForNode`, we'd seen exceptions:
+        //     java.lang.IllegalStateException: Optional.get() cannot be called on an absent value
+        //     from org.jclouds.crypto.ASN1Codec.createASN1Sequence(ASN1Codec.java:86), if the ssh key has a passphrase, against AWS.
+        // And others reported:
+        //     java.lang.IllegalArgumentException: DER length more than 4 bytes
+        //     when using a key with a passphrase (perhaps from other clouds?); not sure if that's this callpath or a different one.
 
-        SshClient client;
+        return getFirstReachableAddress(node, Duration.FIVE_MINUTES);
+    }
+    
+    public static String getFirstReachableAddress(NodeMetadata node, Duration timeout) {
+        final int port = node.getLoginPort();
+        List<HostAndPort> sockets = FluentIterable
+                .from(Iterables.concat(node.getPublicAddresses(), node.getPrivateAddresses()))
+                .transform(new Function<String, HostAndPort>() {
+                        @Override public HostAndPort apply(String input) {
+                            return HostAndPort.fromParts(input, port);
+                        }})
+                .toList();
+        
+        ListeningExecutorService executor = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
         try {
-            client = context.utils().sshForNode().apply(node);
+            ReachableSocketFinder finder = new ReachableSocketFinder(executor);
+            HostAndPort result = finder.findOpenSocketOnNode(sockets, timeout);
+            return result.getHostText();
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            /* i've seen: java.lang.IllegalStateException: Optional.get() cannot be called on an absent value
-             * from org.jclouds.crypto.ASN1Codec.createASN1Sequence(ASN1Codec.java:86), if the ssh key has a passphrase, against AWS.
-             *
-             * others have reported: java.lang.IllegalArgumentException: DER length more than 4 bytes
-             * when using a key with a passphrase (perhaps from other clouds?); not sure if that's this callpath or a different one.
-             */
             throw new IllegalStateException("Unable to connect SshClient to "+node+"; check that the node is accessible and that the SSH key exists and is correctly configured, including any passphrase defined", e);
+        } finally {
+            executor.shutdownNow();
         }
-        return client.getHostAddress();
     }
 
     // Suggest at least 15 minutes for timeout
