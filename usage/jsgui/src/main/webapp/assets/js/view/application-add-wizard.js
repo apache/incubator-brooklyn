@@ -311,7 +311,8 @@ define([
         },
         setEditorValue: function(text) {
           log("::setEditorValue");
-          if (this.editor !== null) {
+          log(this);
+          if (typeof this.editor !== "undefined" && this.editor !== null) {
               var cm = this.editor;
               cm.getDoc().setValue(text);
           }
@@ -329,7 +330,8 @@ define([
                 this.renderCurrentStep(function callback(view) {
                     // Drop any "None" locations.
                     that.model.spec.pruneLocations();
-                    that.setEditorValue( that.getCAMPfromSpec(that.model) );
+                    console.log(view);
+                    that.setEditorValue(view, that.getCAMPfromSpec(that.model));
                     $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
                 });
             } else {
@@ -412,7 +414,7 @@ define([
         },
         refreshEditor: function() {
             log("::refreshEditor() editor: " + this.editor);
-            if (this.editor !== null) {
+            if (typeof this.editor !== "undefined" && this.editor !== null) {
                 var cm = this.editor;
                 cm.refresh();
                 cm.focus();
