@@ -35,7 +35,6 @@ import org.apache.brooklyn.entity.database.mysql.MySqlCluster.MySqlMaster;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.ssh.BashCommands;
@@ -74,7 +73,7 @@ public class MySqlClusterIntegrationTest extends BrooklynAppLiveTestSupport {
             Location loc = getLocation();
             EntitySpec<MySqlCluster> clusterSpec = EntitySpec.create(MySqlCluster.class)
                     .configure(MySqlMaster.MASTER_CREATION_SCRIPT_CONTENTS, MySqlClusterTestHelper.CREATION_SCRIPT)
-                    .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.<String, Object>of("skip-name-resolve",""));
+                    .configure(MySqlNode.MYSQL_SERVER_CONF, MySqlClusterTestHelper.minimalMemoryConfig());
             MySqlCluster cluster = MySqlClusterTestHelper.initCluster(app, loc, clusterSpec);
             MySqlNode master = (MySqlNode) cluster.getAttribute(MySqlCluster.FIRST);
             purgeLogs(cluster, master);
@@ -108,7 +107,7 @@ public class MySqlClusterIntegrationTest extends BrooklynAppLiveTestSupport {
             Location loc = getLocation();
             EntitySpec<MySqlCluster> clusterSpec = EntitySpec.create(MySqlCluster.class)
                     .configure(MySqlMaster.MASTER_CREATION_SCRIPT_CONTENTS, MySqlClusterTestHelper.CREATION_SCRIPT)
-                    .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.<String, Object>of("skip-name-resolve",""))
+                    .configure(MySqlNode.MYSQL_SERVER_CONF, MySqlClusterTestHelper.minimalMemoryConfig())
                     .configure(MySqlCluster.SLAVE_REPLICATE_DO_DB, ImmutableList.of("feedback", "items", "mysql"))
                     .configure(MySqlCluster.SLAVE_REPLICATE_DUMP_DB, ImmutableList.of("feedback", "items", "mysql"));
 

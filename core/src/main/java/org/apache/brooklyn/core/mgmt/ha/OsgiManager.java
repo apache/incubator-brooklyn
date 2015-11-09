@@ -36,6 +36,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.server.BrooklynServerPaths;
+import org.apache.brooklyn.rt.felix.EmbeddedFelixFramework;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.osgi.Osgis;
@@ -190,7 +191,7 @@ public class OsgiManager {
                     Class<T> clazz;
                     //Extension bundles don't support loadClass.
                     //Instead load from the app classpath.
-                    if (Osgis.isExtensionBundle(b)) {
+                    if (EmbeddedFelixFramework.isExtensionBundle(b)) {
                         @SuppressWarnings("unchecked")
                         Class<T> c = (Class<T>)Class.forName(type);
                         clazz = c;

@@ -92,14 +92,46 @@ public class MySqlClusterTestHelper {
         test(app, location, EntitySpec.create(MySqlCluster.class)
                 .configure(MySqlCluster.INITIAL_SIZE, 2)
                 .configure(MySqlNode.CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT)
-                .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.<String, Object>of("skip-name-resolve","")));
+                .configure(MySqlNode.MYSQL_SERVER_CONF, minimalMemoryConfig()));
+    }
+
+    public static MutableMap<String, Object> minimalMemoryConfig() {
+        // http://www.tocker.ca/2014/03/10/configuring-mysql-to-use-minimal-memory.html
+        return MutableMap.<String, Object>of()
+                .add("skip-name-resolve","")
+                .add("performance_schema","0")
+                .add("innodb_buffer_pool_size","5M")
+                .add("innodb_log_buffer_size","256K")
+                .add("query_cache_size","0")
+                .add("max_connections","10")
+                .add("key_buffer_size","8")
+                .add("thread_cache_size","0")
+                .add("host_cache_size","0")
+                .add("innodb_ft_cache_size","1600000")
+                .add("innodb_ft_total_cache_size","32000000")
+
+                // per thread or per operation settings
+                .add("thread_stack","131072")
+                .add("sort_buffer_size","32K")
+                .add("read_buffer_size","8200")
+                .add("read_rnd_buffer_size","8200")
+                .add("max_heap_table_size","16K")
+                .add("tmp_table_size","1K")
+                .add("bulk_insert_buffer_size","0")
+                .add("join_buffer_size","128")
+                .add("net_buffer_length","1K")
+                .add("innodb_sort_buffer_size","64K")
+
+                // settings that relate to the binary log (if enabled)
+                .add("binlog_cache_size","4K")
+                .add("binlog_stmt_cache_size","4K");
     }
 
     public static void testMasterInit(TestApplication app, Location location) throws Exception {
         test(app, location, EntitySpec.create(MySqlCluster.class)
                 .configure(MySqlCluster.INITIAL_SIZE, 2)
                 .configure(MySqlMaster.MASTER_CREATION_SCRIPT_CONTENTS, CREATION_SCRIPT)
-                .configure(MySqlNode.MYSQL_SERVER_CONF, MutableMap.<String, Object>of("skip-name-resolve","")));
+                .configure(MySqlNode.MYSQL_SERVER_CONF, minimalMemoryConfig()));
     }
 
     public static void test(TestApplication app, Location location, EntitySpec<MySqlCluster> clusterSpec) throws Exception {

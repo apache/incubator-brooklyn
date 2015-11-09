@@ -676,6 +676,7 @@
                 <plugin>
                     <groupId>org.apache.rat</groupId>
                     <artifactId>apache-rat-plugin</artifactId>
+                    <version>0.11</version>
                     <configuration>
                         <excludes combine.children="append">
                             <!-- Exclude sandbox because not part of distribution: not in tgz, and not uploaded to maven-central -->
@@ -975,7 +976,6 @@
             <plugin>
               <groupId>org.apache.rat</groupId>
               <artifactId>apache-rat-plugin</artifactId>
-              <version>0.10</version>
               <executions>
                 <execution>
                   <phase>verify</phase>
@@ -1322,7 +1322,7 @@
             <id>Integration</id>
             <properties>
                 <includedTestGroups>Integration</includedTestGroups>
-                <excludedTestGroups>Acceptance,Live,WIP</excludedTestGroups>
+                <excludedTestGroups>Acceptance,Live,WIP,Broken</excludedTestGroups>
             </properties>
             <build>
                 <plugins>
@@ -1357,7 +1357,7 @@
             <id>Acceptance</id>
             <properties>
                 <includedTestGroups>Acceptance</includedTestGroups>
-                <excludedTestGroups>Integration,Live,WIP</excludedTestGroups>
+                <excludedTestGroups>Integration,Live,WIP,Broken</excludedTestGroups>
             </properties>
             <build>
                 <plugins>
@@ -1392,7 +1392,7 @@
             <id>Live</id>
             <properties>
                 <includedTestGroups>Live</includedTestGroups>
-                <excludedTestGroups>Acceptance,WIP</excludedTestGroups>
+                <excludedTestGroups>Acceptance,WIP,Broken</excludedTestGroups>
             </properties>
             <build>
                 <plugins>
@@ -1415,7 +1415,7 @@
             <id>Live-sanity</id>
             <properties>
                 <includedTestGroups>Live-sanity</includedTestGroups>
-                <excludedTestGroups>Acceptance,WIP</excludedTestGroups>
+                <excludedTestGroups>Acceptance,WIP,Broken</excludedTestGroups>
             </properties>
             <build>
                 <plugins>

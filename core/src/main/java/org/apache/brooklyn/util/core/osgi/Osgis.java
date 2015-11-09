@@ -26,40 +26,37 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.Version;
-import org.osgi.framework.launch.Framework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.rt.felix.EmbeddedFelixFramework;
 import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.os.Os;
-import org.apache.brooklyn.util.osgi.VersionedName;
+import org.apache.brooklyn.util.osgi.OsgiUtils;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.Version;
+import org.osgi.framework.launch.Framework;
+import org.osgi.framework.launch.FrameworkFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import java.util.Map;
-import org.apache.brooklyn.util.osgi.OsgiUtils;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.launch.FrameworkFactory;
 
 /** 
  * utilities for working with osgi.
@@ -70,9 +67,6 @@ import org.osgi.framework.launch.FrameworkFactory;
 @Beta
 public class Osgis {
     private static final Logger LOG = LoggerFactory.getLogger(Osgis.class);
-
-    private static final String EXTENSION_PROTOCOL = "system";
-    private static final Set<String> SYSTEM_BUNDLES = MutableSet.of();
 
     /** @deprecated since 0.9.0, replaced with {@link org.apache.brooklyn.util.osgi.VersionedName} */
     @Deprecated
@@ -246,6 +240,7 @@ public class Osgis {
             return Joiner.on(";").join(parts);
         }
         
+        @Override
         public String toString() {
             return getClass().getCanonicalName()+"["+getConstraintsDescription()+"]";
         }
@@ -444,7 +439,7 @@ public class Osgis {
         String versionedId = OsgiUtils.getVersionedId(manifest);
         for (Bundle installedBundle : framework.getBundleContext().getBundles()) {
             if (versionedId.equals(OsgiUtils.getVersionedId(installedBundle))) {
-                if (SYSTEM_BUNDLES.contains(versionedId)) {
+                if (EmbeddedFelixFramework.isSystemBundle(installedBundle)) {
                     LOG.debug("Already have system bundle "+versionedId+" from "+installedBundle+"/"+installedBundle.getLocation()+" when requested "+url+"; not installing");
                     // "System bundles" (ie things on the classpath) cannot be overridden
                     return installedBundle;
@@ -462,10 +457,10 @@ public class Osgis {
         return ResourceUtils.create(Osgis.class).getResourceFromUrl(url);
     }
     
+    /** @deprecated since 0.9.0, replaced with {@link EmbeddedFelixFramework#isExtensionBundle(Bundle)} */
+    @Deprecated
     public static boolean isExtensionBundle(Bundle bundle) {
-        String location = bundle.getLocation();
-        return location != null && 
-                EXTENSION_PROTOCOL.equals(Urls.getProtocol(location));
+        return EmbeddedFelixFramework.isExtensionBundle(bundle);
     }
 
     /** @deprecated since 0.9.0, replaced with {@link OsgiUtils#parseOsgiIdentifier(java.lang.String) } */

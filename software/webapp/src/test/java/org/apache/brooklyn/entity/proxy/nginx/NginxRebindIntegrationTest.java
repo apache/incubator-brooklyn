@@ -153,10 +153,49 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         assertEquals(monitor.getFailures(), 0);
     }
     
+    /*
+        Exception java.lang.NoClassDefFoundError
+        
+        Message: org/apache/brooklyn/test/HttpTestUtils$3
+        Stacktrace:
+        
+        
+        at org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals(HttpTestUtils.java:208)
+        at org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals(HttpTestUtils.java:204)
+        at org.apache.brooklyn.entity.proxy.nginx.NginxRebindIntegrationTest.testRebindsWithoutLosingServerPool(NginxRebindIntegrationTest.java:178)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.lang.reflect.Method.invoke(Method.java:606)
+        at org.testng.internal.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:84)
+        at org.testng.internal.Invoker.invokeMethod(Invoker.java:714)
+        at org.testng.internal.Invoker.invokeTestMethod(Invoker.java:901)
+        at org.testng.internal.Invoker.invokeTestMethods(Invoker.java:1231)
+        at org.testng.internal.TestMethodWorker.invokeTestMethods(TestMethodWorker.java:127)
+        at org.testng.internal.TestMethodWorker.run(TestMethodWorker.java:111)
+        at org.testng.TestRunner.privateRun(TestRunner.java:767)
+        at org.testng.TestRunner.run(TestRunner.java:617)
+        at org.testng.SuiteRunner.runTest(SuiteRunner.java:348)
+        at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:343)
+        at org.testng.SuiteRunner.privateRun(SuiteRunner.java:305)
+        at org.testng.SuiteRunner.run(SuiteRunner.java:254)
+        at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:52)
+        at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:86)
+        at org.testng.TestNG.runSuitesSequentially(TestNG.java:1224)
+        at org.testng.TestNG.runSuitesLocally(TestNG.java:1149)
+        at org.testng.TestNG.run(TestNG.java:1057)
+        at org.apache.maven.surefire.testng.TestNGExecutor.run(TestNGExecutor.java:115)
+        at org.apache.maven.surefire.testng.TestNGDirectoryTestSuite.executeMulti(TestNGDirectoryTestSuite.java:205)
+        at org.apache.maven.surefire.testng.TestNGDirectoryTestSuite.execute(TestNGDirectoryTestSuite.java:108)
+        at org.apache.maven.surefire.testng.TestNGProvider.invoke(TestNGProvider.java:111)
+        at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:203)
+        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:155)
+        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:103)
+     */
     /**
      * Test can rebind with an active server pool.
      */
-    @Test(groups = "Integration")
+    @Test(groups = {"Integration","Broken"})
     public void testRebindsWithoutLosingServerPool() throws Exception {
         
         // Set up nginx with a server pool
@@ -221,12 +260,50 @@ public class NginxRebindIntegrationTest extends RebindTestFixtureWithApp {
         assertEquals(monitor.getFailures(), 0);
     }
     
-    
+    /*
+        Exception java.lang.NoClassDefFoundError
+        
+        Message: org/apache/brooklyn/test/HttpTestUtils$3
+        Stacktrace:
+        
+        
+        at org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals(HttpTestUtils.java:208)
+        at org.apache.brooklyn.test.HttpTestUtils.assertHttpStatusCodeEventuallyEquals(HttpTestUtils.java:204)
+        at org.apache.brooklyn.entity.proxy.nginx.NginxRebindIntegrationTest.testRebindsWithoutLosingUrlMappings(NginxRebindIntegrationTest.java:254)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.lang.reflect.Method.invoke(Method.java:606)
+        at org.testng.internal.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:84)
+        at org.testng.internal.Invoker.invokeMethod(Invoker.java:714)
+        at org.testng.internal.Invoker.invokeTestMethod(Invoker.java:901)
+        at org.testng.internal.Invoker.invokeTestMethods(Invoker.java:1231)
+        at org.testng.internal.TestMethodWorker.invokeTestMethods(TestMethodWorker.java:127)
+        at org.testng.internal.TestMethodWorker.run(TestMethodWorker.java:111)
+        at org.testng.TestRunner.privateRun(TestRunner.java:767)
+        at org.testng.TestRunner.run(TestRunner.java:617)
+        at org.testng.SuiteRunner.runTest(SuiteRunner.java:348)
+        at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:343)
+        at org.testng.SuiteRunner.privateRun(SuiteRunner.java:305)
+        at org.testng.SuiteRunner.run(SuiteRunner.java:254)
+        at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:52)
+        at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:86)
+        at org.testng.TestNG.runSuitesSequentially(TestNG.java:1224)
+        at org.testng.TestNG.runSuitesLocally(TestNG.java:1149)
+        at org.testng.TestNG.run(TestNG.java:1057)
+        at org.apache.maven.surefire.testng.TestNGExecutor.run(TestNGExecutor.java:115)
+        at org.apache.maven.surefire.testng.TestNGDirectoryTestSuite.executeMulti(TestNGDirectoryTestSuite.java:205)
+        at org.apache.maven.surefire.testng.TestNGDirectoryTestSuite.execute(TestNGDirectoryTestSuite.java:108)
+        at org.apache.maven.surefire.testng.TestNGProvider.invoke(TestNGProvider.java:111)
+        at org.apache.maven.surefire.booter.ForkedBooter.invokeProviderInSameClassLoader(ForkedBooter.java:203)
+        at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:155)
+        at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:103)
+     */
     /**
      * Test can rebind to the with server pool and URL remappings.
      * NOTE: This requires a redirection from localhost1 to 127.0.0.1 in your /etc/hosts file
      */
-    @Test(groups = "Integration")
+    @Test(groups = {"Integration","Broken"})
     public void testRebindsWithoutLosingUrlMappings() throws Exception {
         
         // Set up nginx with a url-mapping
