@@ -71,6 +71,7 @@ Entity that makes a HTTP Request and tests the response
 | --- | ----------- | -------- |
 | url | The URL to test | yes |
 | assert | Assertions to be evaluated | yes |
+| timeout | The duration to wait for assertion result | no |
 
 ##### Assertions
 | Key | Description |
@@ -83,21 +84,23 @@ Entity that makes a HTTP Request and tests the response
   - type: org.apache.brooklyn.test.framework.TestHttpCall
     name: Status Code 200
     url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    timeout: 1m
     assert:
       status: 200
   - type: org.apache.brooklyn.test.framework.TestHttpCall
-    name: Status Code 404
-    url: $brooklyn:formatString("%s/invalidpath/", component("tomcat").attributeWhenReady("main.uri"))
-    assert:
-      status: 404
-  - type: org.apache.brooklyn.test.framework.TestHttpCall
     name: String match
     url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    timeout: 1m
     assert:
       string: Sample Brooklyn Deployed
   - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Status Code 404
+    url: $brooklyn:formatString("%s/invalidpath/", component("tomcat").attributeWhenReady("webapp.url"))
+    assert:
+      status: 404
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
     name: Regex match
-    url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
+    url: $brooklyn:component("tomcat").attributeWhenReady("webapp.url")
     # the regex assert uses java.lang.String under the hood so if the url is expected to returns
     # a multi-line response you should use the embedded dotall flag expression `(?s)` in your regex.
     # See: http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html
