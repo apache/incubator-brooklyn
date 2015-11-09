@@ -1,0 +1,4 @@
+# We need a placeholder for src/main/resources to 
+#  prevent the m2e plugin to complain about missing folder
+!.gitignore
+
