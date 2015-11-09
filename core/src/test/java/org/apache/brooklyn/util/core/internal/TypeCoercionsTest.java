@@ -23,6 +23,9 @@ import static org.testng.Assert.assertNull;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -316,6 +319,18 @@ public class TypeCoercionsTest {
     public void testKeyEqualsOrColonValueWithoutBracesStringToMapCoercion() {
         Map<?,?> s = TypeCoercions.coerce("a=1, b: 2", Map.class);
         Assert.assertEquals(s, ImmutableMap.of("a", "1", "b", 2));
+    }
+
+    @Test
+    public void testURItoStringCoercion() {
+        String s = TypeCoercions.coerce(URI.create("http://localhost:1234/"), String.class);
+        Assert.assertEquals(s, "http://localhost:1234/");
+    }
+
+    @Test
+    public void testURLtoStringCoercion() throws MalformedURLException {
+        String s = TypeCoercions.coerce(new URL("http://localhost:1234/"), String.class);
+        Assert.assertEquals(s, "http://localhost:1234/");
     }
 
     @Test
