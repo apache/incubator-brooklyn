@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.plan;
+package org.apache.brooklyn.core.typereg;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
@@ -25,35 +25,35 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
+import org.apache.brooklyn.core.plan.XmlPlanToSpecTransformer;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import com.google.common.collect.Iterables;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Iterables;
+
 /** Tests the sample {@link XmlPlanToSpecTransformer}
  * which illustrates how the {@link PlanToSpecTransformer} can be used. */
-public class XmlPlanToSpecTransformerTest {
+public class ExampleXmlTypePlanTransformerTest {
 
-    // TEST is REPLACED by ExampleXmlTypePlanTransformerTest
-   
     private ManagementContext mgmt;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        PlanToSpecFactory.forceAvailable(XmlPlanToSpecTransformer.class);
+        TypePlanTransformers.forceAvailable(ExampleXmlTypePlanTransformer.class);
         mgmt = LocalManagementContextForTests.newInstance();
     }
     
     @AfterMethod(alwaysRun = true)
     public void tearDown() {
-        PlanToSpecFactory.clearForced();
+        TypePlanTransformers.clearForced();
         if (mgmt!=null) Entities.destroyAll(mgmt);
     }
 
     @Test
-    public void testSimpleXmlPlanParse() {
+    public void testAppSpecXmlPlanParse() {
         EntitySpec<? extends Application> appSpec = EntityManagementUtils.createEntitySpecForApplication(mgmt, 
             "<root><a_kid foo=\"bar\"/></root>");
         Application app = EntityManagementUtils.createStarting(mgmt, appSpec).get();

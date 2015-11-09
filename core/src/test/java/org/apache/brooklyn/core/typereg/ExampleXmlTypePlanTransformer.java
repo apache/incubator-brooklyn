@@ -16,76 +16,81 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.plan;
+package org.apache.brooklyn.core.typereg;
 
 import java.io.StringReader;
-import java.util.Set;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
+import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.util.core.xstream.XmlSerializer;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.stream.ReaderInputStream;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-/** Example implementation of {@link PlanToSpecTransformer} showing 
+/** Example implementation of {@link BrooklynTypePlanTransformer} showing 
  * how implementations are meant to be written. */
-public class XmlPlanToSpecTransformer implements PlanToSpecTransformer {
-    
-    // this is REPLACED by ExampleXmlTypePlanTransformer
+public class ExampleXmlTypePlanTransformer extends AbstractTypePlanTransformer {
 
-    @SuppressWarnings("unused")
-    private ManagementContext mgmt;
-
-    @Override
-    public void injectManagementContext(ManagementContext managementContext) {
-        mgmt = managementContext;
+    protected ExampleXmlTypePlanTransformer() {
+        super("example-xml", "Example XML", "Illustration of writing a transformer");
     }
 
     @Override
-    public String getShortDescription() {
-        return "Dummy app structure created from the XML tree";
-    }
-
-    @Override
-    public boolean accepts(String mime) {
-        if ("test-xml".equals(mime)) return true;
-        return false;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public EntitySpec<? extends Application> createApplicationSpec(String plan) {
-        Document dom = parseXml(plan);
-        EntitySpec<?> result = toEntitySpec(dom, 0);
-        if (Application.class.isAssignableFrom(result.getType())) {
-            return (EntitySpec<Application>) result;
-        } else {
-            return EntityManagementUtils.newWrapperApp().child(result);
+    protected double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeLoadingContext context) {
+        if (!(planData instanceof String)) return 0;
+        try {
+            // if it's XML, accept it
+            parseXml((String)planData);
+            return 0.3;
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            return 0;
         }
     }
 
-    @SuppressWarnings({ "unchecked" })
     @Override
-    public <T, SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(CatalogItem<T, SpecT> item, Set<String> encounteredTypes) {
-        if (item.getPlanYaml()==null) throw new PlanNotRecognizedException("Plan is null");
-        if (item.getCatalogItemType()==CatalogItemType.ENTITY) {
-            return (SpecT)toEntitySpec(parseXml(item.getPlanYaml()), 1);
-        }
-        if (item.getCatalogItemType()==CatalogItemType.TEMPLATE) {
-            return (SpecT)toEntitySpec(parseXml(item.getPlanYaml()), 0);
-        }
-        throw new PlanNotRecognizedException("Type "+item.getCatalogItemType()+" not supported");
+    protected double scoreForNonmatchingNonnullFormat(String planFormat, Object planData, RegisteredType type, RegisteredTypeLoadingContext context) {
+        // only null and xml supported
+        return 0;
+    }
+
+    @Override
+    protected AbstractBrooklynObjectSpec<?, ?> createSpec(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
+        return toEntitySpec(parseXml((String)type.getPlan().getPlanData()), 
+            isApplicationExpected(type, context) ? 0 : 1);
+    }
+
+    private static boolean isApplicationExpected(RegisteredType type, RegisteredTypeLoadingContext context) {
+        return RegisteredTypes.isSubTypeOf(type, Application.class) ||
+            (context.getExpectedJavaSuperType()!=null && context.getExpectedJavaSuperType().isAssignableFrom(Application.class));
+    }
+
+    @Override
+    protected Object createBean(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
+        return new XmlSerializer<Object>().fromString((String)type.getPlan().getPlanData());
+    }
+
+
+    @Override
+    public double scoreForTypeDefinition(String formatCode, Object catalogData) {
+        // defining types not supported
+        return 0;
+    }
+
+    @Override
+    public List<RegisteredType> createFromTypeDefinition(String formatCode, Object catalogData) {
+        // defining types not supported
+        return null;
     }
 
     private Document parseXml(String plan) {
@@ -101,7 +106,7 @@ public class XmlPlanToSpecTransformer implements PlanToSpecTransformer {
             
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            throw new PlanNotRecognizedException(e);
+            throw new UnsupportedTypePlanException(e);
         }
         return dom;
     }

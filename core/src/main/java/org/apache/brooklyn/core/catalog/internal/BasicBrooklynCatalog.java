@@ -63,7 +63,6 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
@@ -849,15 +848,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return Strings.join(lines, "\n");
     }
 
-    private CatalogItemBuilder<?> createItemBuilder(CatalogItemType itemType, String itemId, String version) {
-        Preconditions.checkNotNull(itemType, "itemType required");
-        switch (itemType) {
-        case ENTITY: return CatalogItemBuilder.newEntity(itemId, version);
-        case TEMPLATE: return CatalogItemBuilder.newTemplate(itemId, version);
-        case POLICY: return CatalogItemBuilder.newPolicy(itemId, version);
-        case LOCATION: return CatalogItemBuilder.newLocation(itemId, version);
-        }
-        throw new IllegalStateException("Unexpected itemType: "+itemType);
+    static CatalogItemBuilder<?> createItemBuilder(CatalogItemType itemType, String symbolicName, String version) {
+        return CatalogItemBuilder.newItem(itemType, symbolicName, version);
     }
 
     // these kept as their logic may prove useful; Apr 2015

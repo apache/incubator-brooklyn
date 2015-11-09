@@ -22,16 +22,19 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
+import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -121,9 +124,18 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         // TODO remove once all transformers are available in the new style
         CatalogItem item = (CatalogItem) mgmt.getCatalog().getCatalogItem(type.getSymbolicName(), type.getVersion());
         if (item==null) {
-            // if not in catalog (because loading a new item?) then throw original
-            // (NB: to support any recursive legacy transformers we might have to create a CI; cross that bridge when we come to it)
-            result.get();
+            // if not in catalog (because loading a new item?) then look up item based on type
+            // (only really used in tests; possibly also for any recursive legacy transformers we might have to create a CI; cross that bridge when we come to it)
+            CatalogItemType ciType = CatalogItemType.ofTargetClass( (Class)constraint.getExpectedJavaSuperType() );
+            if (ciType==null) {
+                // throw -- not supported for non-spec types
+                result.get();
+            }
+            item = CatalogItemBuilder.newItem(ciType, 
+                    type.getSymbolicName()!=null ? type.getSymbolicName() : Identifiers.makeRandomId(8), 
+                        type.getVersion()!=null ? type.getVersion() : BasicBrooklynCatalog.DEFAULT_VERSION)
+                .plan(RegisteredTypes.getImplementationDataStringForSpec(type))
+                .build();
         }
         try {
             return (SpecT) BasicBrooklynCatalog.internalCreateSpecLegacy(mgmt, item, constraint.getAlreadyEncounteredTypes(), false);
