@@ -21,10 +21,18 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 import org.testng.annotations.Test;
 
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 
 
 public class CatalogYamlAppTest extends AbstractYamlTest {
-    
+
+    @Override
+    protected LocalManagementContext newTestManagementContext() {
+        // Don't need osgi
+        return LocalManagementContextForTests.newInstance();
+    }
+
     /**
      * "Contrived" example was encountered by a customer in a real use-case!
      * I couldn't yet simplify it further while still reproducing the failure.
@@ -68,6 +76,34 @@ public class CatalogYamlAppTest extends AbstractYamlTest {
             deleteCatalogEntity("another.app.in.the.catalog");
         } finally {
             deleteCatalogEntity("org.apache.brooklyn.entity.stock.BasicEntity");
+        }
+    }
+
+    @Test // same as above, but the minimal possible setup
+    public void testAddCatalogItemWithMemberSpecCircularReference() throws Exception {
+        // Add a catalog item with a circular reference to its own id through a $brooklyn:entitySpec
+        addCatalogItems(
+                "brooklyn.catalog:",
+                "  id: org.apache.brooklyn.entity.stock.BasicApplication",
+                "  version: "+TEST_VERSION,
+                "services:",
+                "- type: org.apache.brooklyn.entity.stock.BasicApplication",
+                "  brooklyn.config:",
+                "    memberSpec:",
+                "      $brooklyn:entitySpec:",
+                "      - type: org.apache.brooklyn.entity.stock.BasicApplication");
+
+        try {
+            // Use the blueprint from the catalog that has the circular reference.
+            addCatalogItems(
+                    "brooklyn.catalog:",
+                    "  id: another.app.in.the.catalog",
+                    "  version: "+TEST_VERSION,
+                    "services:",
+                    "- type: org.apache.brooklyn.entity.stock.BasicApplication");
+            deleteCatalogEntity("another.app.in.the.catalog");
+        } finally {
+            deleteCatalogEntity("org.apache.brooklyn.entity.stock.BasicApplication");
         }
     }
 }
