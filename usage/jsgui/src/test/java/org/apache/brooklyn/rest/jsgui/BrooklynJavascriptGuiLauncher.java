@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.util.net.Networking;
+import org.eclipse.jetty.server.NetworkConnector;
 
 /** launches Javascript GUI programmatically. and used for tests.
  * see {@link BrooklynRestApiLauncher} for more information.
@@ -71,7 +72,7 @@ public class BrooklynJavascriptGuiLauncher {
         Server server = new Server(new InetSocketAddress(Networking.LOOPBACK, Networking.nextAvailablePort(FAVOURITE_PORT)));
         server.setHandler(context);
         server.start();
-        log.info("JS GUI server started (no REST) at  http://localhost:"+server.getConnectors()[0].getLocalPort()+"/");
+        log.info("JS GUI server started (no REST) at  http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort()+"/");
         
         return server;
     }

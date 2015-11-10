@@ -208,9 +208,9 @@
                 <version>${swagger.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty.orbit</groupId>
-                <artifactId>javax.servlet</artifactId>
-                <version>${jetty-orbit-javax-servlet.version}</version>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${javax-servlet.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>

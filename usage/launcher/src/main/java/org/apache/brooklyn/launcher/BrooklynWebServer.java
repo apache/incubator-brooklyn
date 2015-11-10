@@ -40,8 +40,6 @@ import javax.servlet.DispatcherType;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.SessionManager;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -99,6 +97,11 @@ import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.web.ContextHandlerCollectionHotSwappable;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SslConnectionFactory;
 
 /**
  * Starts the web-app running, connected to the given management context
@@ -379,13 +382,25 @@ public class BrooklynWebServer {
                 throw new IllegalStateException("Unable to provision port for web console (wanted "+portRange+")");
         }
 
-        server = new Server();
-        final Connector connector;
+
+        // use a nice name in the thread pool (otherwise this is exactly the same as Server defaults)
+        QueuedThreadPool threadPool = new QueuedThreadPool();
+        threadPool.setName("brooklyn-jetty-server-"+actualPort+"-"+threadPool.getName());
+
+        server = new Server(threadPool);
+        final ServerConnector connector;
+
         if (getHttpsEnabled()) {
-            connector = new SslSelectChannelConnector(createContextFactory());
+            HttpConfiguration sslHttpConfig = new HttpConfiguration();
+            sslHttpConfig.setSecureScheme("https");
+            sslHttpConfig.setSecurePort(actualPort);
+
+            SslContextFactory sslContextFactory = createContextFactory();
+            connector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, HttpVersion.HTTP_1_1.asString()), new HttpConnectionFactory(sslHttpConfig));
         } else {
-            connector = new SelectChannelConnector();
+            connector = new ServerConnector(server, new HttpConnectionFactory());
         }
+
         if (bindAddress != null) {
             connector.setHost(bindAddress.getHostName());
         }
@@ -397,11 +412,6 @@ public class BrooklynWebServer {
         } else {
             actualAddress = bindAddress;
         }
-
-        // use a nice name in the thread pool (otherwise this is exactly the same as Server defaults)
-        QueuedThreadPool threadPool = new QueuedThreadPool();
-        threadPool.setName("brooklyn-jetty-server-"+actualPort+"-"+threadPool.getName());
-        server.setThreadPool(threadPool);
 
         if (log.isDebugEnabled())
             log.debug("Starting Brooklyn console at "+getRootUrl()+", running " + war + (wars != null ? " and " + wars.values() : ""));
@@ -481,7 +491,7 @@ public class BrooklynWebServer {
             sslContextFactory.setCertAlias(ksCertAlias);
         }
         if (!Strings.isEmpty(truststorePath)) {
-            sslContextFactory.setTrustStore(checkFileExists(truststorePath, "truststore"));
+            sslContextFactory.setTrustStorePath(checkFileExists(truststorePath, "truststore"));
             sslContextFactory.setTrustStorePassword(trustStorePassword);
         }
 

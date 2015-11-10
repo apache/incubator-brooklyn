@@ -44,6 +44,7 @@ import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
+import org.eclipse.jetty.server.NetworkConnector;
 
 @Test
 public class BrooklynApiRestClientTest {
@@ -71,7 +72,7 @@ public class BrooklynApiRestClientTest {
                 .securityProvider(TestSecurityProvider.class)
                 .start();
 
-        api = BrooklynApi.newInstance("http://localhost:" + server.getConnectors()[0].getPort() + "/",
+        api = BrooklynApi.newInstance("http://localhost:" + ((NetworkConnector)server.getConnectors()[0]).getPort() + "/",
                 TestSecurityProvider.USER, TestSecurityProvider.PASSWORD);
     }
 

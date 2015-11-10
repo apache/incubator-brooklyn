@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLPeerUnverifiedException;
 
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.SSLSocketFactory;
@@ -56,6 +55,7 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import java.net.SocketException;
 
 public class BrooklynWebServerTest {
 
@@ -90,7 +90,7 @@ public class BrooklynWebServerTest {
         webServer = new BrooklynWebServer(newManagementContext(brooklynProperties));
         try {
             webServer.start();
-    
+
             HttpToolResponse response = HttpTool.execAndConsume(new DefaultHttpClient(), new HttpGet(webServer.getRootUrl()));
             assertEquals(response.getResponseCode(), 200);
         } finally {
@@ -151,8 +151,21 @@ public class BrooklynWebServerTest {
             verifyHttpsFromConfig(brooklynProperties);
             fail("Expected to fail due to unsupported ciphers during connection negotiation");
         } catch (Exception e) {
-            assertTrue(Exceptions.getFirstThrowableOfType(e, SSLPeerUnverifiedException.class) != null ||
-                    Exceptions.getFirstThrowableOfType(e, SSLHandshakeException.class) != null,
+            // if the server manages to process the error in the protocol ciphers above
+            // before the client enters the SSL handshake, then the server closes the socket
+            // abruptly and the client throws java.net.SocketException
+            // (see org.eclipse.jetty.io.ssl.SslConnection.onOpen)
+            //
+            // however, if the client manages to enter SSL negotiations, then the same behavior above
+            // causes the client to reports javax.net.ssl.SSLHandshakeException
+            // (see org.apache.http.conn.ssl.SSLSocketFactory.connectSocket)
+            //
+            // this race happens because org.apache.http.conn.ssl.SSLSockerFactory.connectSocket(...)
+            // calls java.net.Socket.connect(), and next javax.net.ssl.SSLSocket.startHandshake(),
+            // which provides the opportunity for the server to interweave between those and close the
+            // socket before the client calls startHandshake(), or maybe miss it
+            assertTrue((Exceptions.getFirstThrowableOfType(e, SocketException.class) != null)
+                    || (Exceptions.getFirstThrowableOfType(e, SSLHandshakeException.class) != null),
                     "Expected to fail due to inability to negotiate");
         }
     }

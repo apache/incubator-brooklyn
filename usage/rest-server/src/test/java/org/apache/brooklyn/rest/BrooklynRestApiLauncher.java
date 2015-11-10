@@ -70,6 +70,7 @@ import com.google.common.io.Files;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
+import org.eclipse.jetty.server.NetworkConnector;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -297,7 +298,7 @@ public class BrooklynRestApiLauncher {
             throw Exceptions.propagate(e);
         }
         log.info("Brooklyn REST server started ("+summary+") on");
-        log.info("  http://localhost:"+server.getConnectors()[0].getLocalPort()+"/");
+        log.info("  http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort()+"/");
 
         return server;
     }
