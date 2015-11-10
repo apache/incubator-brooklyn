@@ -18,20 +18,11 @@
  */
 package org.apache.brooklyn.rest.client;
 
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.test.HttpTestUtils;
-import org.eclipse.jetty.server.Server;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
@@ -44,7 +35,15 @@ import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.http.HttpAsserts;
 import org.eclipse.jetty.server.NetworkConnector;
+import org.eclipse.jetty.server.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 @Test
 public class BrooklynApiRestClientTest {
@@ -107,29 +106,29 @@ public class BrooklynApiRestClientTest {
     public void testApplicationApiCreate() throws Exception {
         Response r1 = api.getApplicationApi().createFromYaml("name: test-1234\n"
             + "services: [ { type: "+TestEntity.class.getName()+" } ]");
-        HttpTestUtils.assertHealthyStatusCode(r1.getStatus());
+        HttpAsserts.assertHealthyStatusCode(r1.getStatus());
         log.info("creation result: "+r1.getEntity());
         List<ApplicationSummary> apps = api.getApplicationApi().list(null);
         log.info("apps with test: "+apps);
-        Assert.assertTrue(apps.toString().contains("test-1234"), "should have had test-1234 as an app; instead: "+apps);
+        Asserts.assertStringContains(apps.toString(), "test-1234");
     }
     
     public void testApplicationApiHandledError() throws Exception {
         Response r1 = api.getApplicationApi().createFromYaml("name: test");
-        Assert.assertTrue(r1.getStatus()/100 != 2, "needed an unhealthy status, not "+r1.getStatus());
-        Object entity = r1.getEntity();
-        Assert.assertTrue(entity.toString().indexOf("Unrecognized application blueprint format: no services defined")>=0,
-            "Missing expected text in response: "+entity.toString());
+        HttpAsserts.assertNotHealthyStatusCode(r1.getStatus());
+        // new-style messages first, old-style messages after (during switch to TypePlanTransformer)
+        Asserts.assertStringContainsAtLeastOne(r1.getEntity().toString().toLowerCase(), 
+            "invalid plan", "no services");
+        Asserts.assertStringContainsAtLeastOne(r1.getEntity().toString().toLowerCase(), 
+            "format could not be recognized", "Unrecognized application blueprint format");
     }
 
     public void testApplicationApiThrownError() throws Exception {
         try {
             ApplicationSummary summary = api.getApplicationApi().get("test-5678");
-            Assert.fail("Should have thrown, not given: "+summary);
+            Asserts.shouldHaveFailedPreviously("got "+summary);
         } catch (Exception e) {
-            e.printStackTrace();
-            Assert.assertTrue(e.toString().toLowerCase().contains("not found"),
-                "Missing expected text in response: "+e.toString());
+            Asserts.expectedFailureContainsIgnoreCase(e, "404", "not found");
         }
     }
 }

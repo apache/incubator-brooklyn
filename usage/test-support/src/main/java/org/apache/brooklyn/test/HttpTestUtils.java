@@ -42,6 +42,7 @@ import javax.net.ssl.SSLSession;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.crypto.SslTrustUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.http.TrustingSslSocketFactory;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.time.Time;
@@ -59,13 +60,11 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  * 
  * @author aled
  *
- * @deprecated since 0.9.0. Prefer org.apache.brooklyn.util.http.HttpAsserts which has no TestNG dependencies.
+ * @deprecated since 0.9.0. Prefer {@link org.apache.brooklyn.util.http.HttpAsserts} which has no TestNG dependencies
+ * (or {@link HttpTool} for some utility methods).
  */
 @Deprecated
 public class HttpTestUtils {
-
-    // TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
-    // and deprecate methods in TestUtils until deleted).
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpTestUtils.class);
 

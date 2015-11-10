@@ -33,8 +33,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1034,6 +1037,135 @@ public class Asserts {
         fail("Failed "+condition+": "+object);
     }
 
+    public static void assertStringContains(String input, String phrase1ToContain, String ...optionalOtherPhrasesToContain) {
+        if (input==null) fail("Input is null.");
+        if (phrase1ToContain!=null) {
+            assertThat(input, StringPredicates.containsLiteral(phrase1ToContain));
+        }
+        for (String otherPhrase: optionalOtherPhrasesToContain) {
+            if (otherPhrase!=null) {
+                assertThat(input, StringPredicates.containsLiteral(otherPhrase));
+            }
+        }
+    }
+    
+    public static void assertStringContainsAtLeastOne(String input, String possiblePhrase1ToContain, String ...optionalOtherPossiblePhrasesToContain) {
+        if (input==null) fail("Input is null.");
+        List<String> missing = MutableList.of();
+        if (possiblePhrase1ToContain!=null) {
+            if (input.contains(possiblePhrase1ToContain)) return;
+            missing.add(possiblePhrase1ToContain);
+        }
+        for (String otherPhrase: optionalOtherPossiblePhrasesToContain) {
+            if (otherPhrase!=null) {
+                if (input.contains(otherPhrase)) return;
+                missing.add(otherPhrase);
+            }
+        }
+        fail("Input did not contain any of the expected phrases "+missing+": "+input);
+    }
+    
+    public static void assertStringContainsIgnoreCase(String input, String phrase1ToContain, String ...optionalOtherPhrasesToContain) {
+        if (input==null) fail("Input is null.");
+        if (phrase1ToContain!=null) {
+            assertThat(input, StringPredicates.containsLiteralIgnoreCase(phrase1ToContain));
+        }
+        for (String otherPhrase: optionalOtherPhrasesToContain) {
+            if (otherPhrase!=null) {
+                assertThat(input, StringPredicates.containsLiteralIgnoreCase(otherPhrase));
+            }
+        }
+    }
+    
+    public static void assertStringMatchesRegex(String input, String regex1ToMatch, String ...optionalOtherRegexesToMatch) {
+        if (input==null) fail("Input is null.");
+        if (regex1ToMatch!=null) {
+            assertThat(input, StringPredicates.matchesRegex(regex1ToMatch));
+        }
+        for (String otherRegex: optionalOtherRegexesToMatch) {
+            if (otherRegex!=null) {
+                assertThat(input, StringPredicates.matchesRegex(otherRegex));
+            }
+        }
+    }
+
+    /** Subclass of {@link AssertionError} which indicates that code which should have thrown did not, 
+     * so that callers can disambiguate expected errors from this one.
+     * See {@link #shouldHaveFailedPreviously()} */
+    public static class ShouldHaveFailedPreviouslyAssertionError extends AssertionError {
+        private static final long serialVersionUID = 4359541529633617518L;
+        public ShouldHaveFailedPreviouslyAssertionError() { this("Should have failed previously."); }
+        public ShouldHaveFailedPreviouslyAssertionError(String message) { super(message); }
+    }
+    
+    /** Throws a {@link ShouldHaveFailedPreviouslyAssertionError} exception, 
+     * to more easily distinguish this failure from other fails.
+     * In particular, use one of the <code>expectedFailure</code> methods
+     * in the surrounding <code>catch</code> block and this error will pass through it. */
+    public static void shouldHaveFailedPreviously() {
+        throw new ShouldHaveFailedPreviouslyAssertionError();
+    }
+    /** As {@link #shouldHaveFailedPreviously()} but allowing detail,
+     * for example a value which was received when it shouldn't have been. */
+    public static void shouldHaveFailedPreviously(String message) {
+        throw new ShouldHaveFailedPreviouslyAssertionError(message);
+    }
+
+    /** Tests that an exception is not {@link ShouldHaveFailedPreviouslyAssertionError}.
+     * See {@link #shouldHaveFailedPreviously()} */
+    public static void expectedFailure(Throwable e) {
+        if (e instanceof ShouldHaveFailedPreviouslyAssertionError) throw (Error)e;
+    }
+    
+    /** Tests that an exception is not {@link ShouldHaveFailedPreviouslyAssertionError}
+     * and is one of the given types. 
+     * 
+     * @return If the test is satisfied, this method returns normally. 
+     * The caller can decide whether anything more should be done with the exception.
+     * If the test fails, then either it is propagated, 
+     * if the {@link Throwable} is a fatal ({@link Exceptions#propagateIfFatal(Throwable)}) other than an {@link AssertionError}, 
+     * or more usually the test failure of this method is thrown, 
+     * with detail of the original {@link Throwable} logged. */
+    public static void expectedFailureOfType(Throwable e, Class<?> ...permittedSupertypes) {
+        if (e instanceof ShouldHaveFailedPreviouslyAssertionError) throw (Error)e;
+        for (Class<?> t: permittedSupertypes) {
+            if (t.isInstance(e)) return;
+        }
+        rethrowPreferredException(e, 
+            new AssertionError("Error "+JavaClassNames.simpleClassName(e)+" is not any of the expected types: " + Arrays.asList(permittedSupertypes)));
+    }
+    
+    /** Tests {@link #expectedFailure(Throwable)} and that the <code>toString</code>
+     * satisfies {@link #assertStringContains(String, String, String...)}.
+     * @return as per {@link #expectedFailureOfType(Throwable, Class...)} */
+    public static void expectedFailureContains(Throwable e, String phrase1ToContain, String ...optionalOtherPhrasesToContain) {
+        if (e instanceof ShouldHaveFailedPreviouslyAssertionError) throw (Error)e;
+        try {
+            assertStringContains(e.toString(), phrase1ToContain, optionalOtherPhrasesToContain);
+        } catch (AssertionError ee) {
+            rethrowPreferredException(e, ee);
+        }
+    }
+
+    /** As {@link #expectedFailureContains(Throwable, String, String...)} but case insensitive */
+    public static void expectedFailureContainsIgnoreCase(Throwable e, String phrase1ToContain, String ...optionalOtherPhrasesToContain) {
+        if (e instanceof ShouldHaveFailedPreviouslyAssertionError) throw (Error)e;
+        try {
+            assertStringContainsIgnoreCase(e.toString(), phrase1ToContain, optionalOtherPhrasesToContain);
+        } catch (AssertionError ee) {
+            rethrowPreferredException(e, ee);
+        }
+    }
+
+    /** Implements the return beahvior for {@link #expectedFailureOfType(Throwable, Class...)} and others. */
+    private static void rethrowPreferredException(Throwable earlierPreferredIfFatalElseLogged, Throwable laterPreferredOtherwise) throws AssertionError {
+        if (!(earlierPreferredIfFatalElseLogged instanceof AssertionError)) {
+            Exceptions.propagateIfFatal(earlierPreferredIfFatalElseLogged);
+        }
+        log.warn("Detail of unexpected error: "+earlierPreferredIfFatalElseLogged, earlierPreferredIfFatalElseLogged);
+        throw Exceptions.propagate(laterPreferredOtherwise);
+    }
+
     @SuppressWarnings("rawtypes")
     private static boolean groovyTruth(Object o) {
         // TODO Doesn't handle matchers (see http://docs.codehaus.org/display/GROOVY/Groovy+Truth)
@@ -1102,4 +1234,5 @@ public class Asserts {
         if (t instanceof Error) throw (Error)t;
         throw new RuntimeException(t);
     }
+
 }

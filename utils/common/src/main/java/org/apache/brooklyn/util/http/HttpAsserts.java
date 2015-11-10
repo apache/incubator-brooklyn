@@ -40,21 +40,46 @@ import com.google.common.util.concurrent.ListeningExecutorService;
  */
 public class HttpAsserts {
 
-    // TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
-    // and deprecate methods in TestUtils until deleted).
-
     private static final Logger LOG = LoggerFactory.getLogger(HttpAsserts.class);
 
-    /**
-     * Assert that a 'successful' (2xx) status code has been provided.
-     *
-     * @param code The status code.
-     */
-    public static void assertHealthyStatusCode(int code) {
-        if (code>=200 && code<=299) return;
-        Asserts.fail("Wrong status code: " + code);
+    /** @return whether the given HTTP status code is a "success" class code (2xx) */
+    public static boolean isHealthyStatusCode(int code) {
+        return code>=200 && code<=299;
     }
     
+    /** Asserts that the given HTTP status code indicates "success", i.e. {@link #isHealthyStatusCode(int)} is true */
+    public static void assertHealthyStatusCode(int code) {
+        if (isHealthyStatusCode(code)) return;
+        Asserts.fail("Expected success status code, got: " + code);
+    }
+
+    /** Asserts that the given HTTP status code does not indicate "success", i.e. {@link #isHealthyStatusCode(int)} returns false */
+    public static void assertNotHealthyStatusCode(int code) {
+        if (!isHealthyStatusCode(code)) return;
+        Asserts.fail("Expected non-success status code, got: " + code);
+    }
+
+    /** @return whether the given HTTP status code is a "client error" class code (4xx) */
+    public static boolean isClientErrorStatusCode(int code) {
+        return code>=400 && code<=499;
+    }
+    
+    /** Asserts that the given HTTP status code indicates "client error", i.e. {@link #isClientErrorStatusCode(int)} is true */
+    public static void assertClientErrorStatusCode(int code) {
+        if (isClientErrorStatusCode(code)) return;
+        Asserts.fail("Expected client error status code, got: " + code);        
+    }
+
+    /** @return whether the given HTTP status code is a "server error" class code (5xx) */
+    public static boolean isServerErrorStatusCode(int code) {
+        return code>=500 && code<=599;
+    }
+    
+    /** Asserts that the given HTTP status code indicates "server error", i.e. {@link #isServerErrorStatusCode(int)} is true */
+    public static void assertServerErrorStatusCode(int code) {
+        if (isServerErrorStatusCode(code)) return;
+        Asserts.fail("Expected server error status code, got: " + code);        
+    }
 
     /**
      * Asserts that gets back any "valid" response - i.e. not an exception. This could be an unauthorized,
@@ -312,6 +337,5 @@ public class HttpAsserts {
             }
         });
     }
-    
 
 }
