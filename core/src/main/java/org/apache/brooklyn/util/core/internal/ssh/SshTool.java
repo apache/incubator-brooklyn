@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.stream.KnownSizeInputStream;
 import org.apache.brooklyn.util.time.Duration;
 
@@ -49,7 +50,18 @@ public interface SshTool extends ShellTool {
      * These keys are detected from entity/global config and automatically applied to ssh executions. */
     public static final String BROOKLYN_CONFIG_KEY_PREFIX = "brooklyn.ssh.config.";
     
-    public static final ConfigKey<String> PROP_TOOL_CLASS = newStringConfigKey("tool.class", "SshTool implementation to use", null);
+    /**
+     * @deprecated since 0.9.0; use {@link SshMachineLocation#SSH_TOOL_CLASS}
+     * 
+     * This configuration does not belong on SshTool: all other config here relates to configuration 
+     * used by the SshTool, rather than for instantiating the SshTool. Therefore instead set the 
+     * configuration in SshMachineLocation where the SshTool is instantiated.
+     */
+    @Deprecated
+    public static final ConfigKey<String> PROP_TOOL_CLASS = newStringConfigKey(
+            "tool.class", 
+            "SshTool implementation to use (Deprecated - see SshMachineLocation's sshToolClass)", 
+            null);
     
     public static final ConfigKey<String> PROP_HOST = newStringConfigKey("host", "Host to connect to (required)", null);
     public static final ConfigKey<Integer> PROP_PORT = newConfigKey("port", "Port on host to connect to", 22);
