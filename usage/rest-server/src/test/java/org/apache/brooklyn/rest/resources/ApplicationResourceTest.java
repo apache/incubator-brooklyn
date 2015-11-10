@@ -67,9 +67,9 @@ import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
 import org.apache.brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.http.HttpAsserts;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
@@ -158,7 +158,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     public void testDeployApplication() throws Exception {
         ClientResponse response = clientDeploy(simpleSpec);
 
-        HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+        HttpAsserts.assertHealthyStatusCode(response.getStatus());
         assertEquals(getManagementContext().getApplications().size(), 1);
         assertRegexMatches(response.getLocation().getPath(), "/v1/applications/.*");
         // Object taskO = response.getEntity(Object.class);
@@ -619,7 +619,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             ClientResponse response = client().resource("/v1/applications")
                     .entity(yaml, "application/x-yaml")
                     .post(ClientResponse.class);
-            assertTrue(response.getStatus()/100 == 2, "response is "+response);
+            HttpAsserts.assertHealthyStatusCode(response.getStatus());
             waitForPageFoundResponse("/v1/applications/my-app", ApplicationSummary.class);
     
             // Deprecate
@@ -630,7 +630,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             ClientResponse response2 = client().resource("/v1/applications")
                     .entity(yaml2, "application/x-yaml")
                     .post(ClientResponse.class);
-            assertTrue(response2.getStatus()/100 == 2, "response is "+response2);
+            HttpAsserts.assertHealthyStatusCode(response2.getStatus());
             waitForPageFoundResponse("/v1/applications/my-app2", ApplicationSummary.class);
     
             // Disable
@@ -641,7 +641,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             ClientResponse response3 = client().resource("/v1/applications")
                     .entity(yaml3, "application/x-yaml")
                     .post(ClientResponse.class);
-            assertTrue(response3.getStatus()/100 == 4, "response is "+response3);
+            HttpAsserts.assertClientErrorStatusCode(response3.getStatus());
             assertTrue(response3.getEntity(String.class).contains("cannot be matched"));
             waitForPageNotFoundResponse("/v1/applications/my-app3", ApplicationSummary.class);
             

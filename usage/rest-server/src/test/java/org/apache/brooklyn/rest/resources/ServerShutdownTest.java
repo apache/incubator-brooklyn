@@ -31,6 +31,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.EntityManager;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.EntityAsserts;
 import org.apache.brooklyn.core.entity.drivers.BasicEntityDriverManager;
 import org.apache.brooklyn.core.entity.drivers.ReflectiveEntityDriverFactory;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
@@ -39,7 +40,6 @@ import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.rest.resources.ServerResourceTest.StopLatchEntity;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,7 +116,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
         EntitySpec<StopLatchEntity> latchEntitySpec = EntitySpec.create(StopLatchEntity.class);
         final StopLatchEntity entity = app.createAndManageChild(latchEntitySpec);
         app.start(ImmutableSet.of(app.newLocalhostProvisioningLocation()));
-        EntityTestUtils.assertAttributeEquals(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        EntityAsserts.assertAttributeEquals(entity, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
 
         try {
             final Task<Void> firstStop = app.invoke(Startable.STOP, ImmutableMap.<String, Object>of());

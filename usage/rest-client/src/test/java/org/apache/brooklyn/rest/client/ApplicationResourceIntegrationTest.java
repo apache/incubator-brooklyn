@@ -22,18 +22,10 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-import java.net.URL;
 import java.util.Collection;
 
 import javax.ws.rs.core.Response;
 
-import org.eclipse.jetty.server.Server;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.StartableApplication;
@@ -49,6 +41,13 @@ import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.time.Duration;
+import org.eclipse.jetty.server.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;

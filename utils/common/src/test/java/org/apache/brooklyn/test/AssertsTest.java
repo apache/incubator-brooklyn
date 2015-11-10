@@ -18,12 +18,14 @@
  */
 package org.apache.brooklyn.test;
 
+import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.test.Asserts.ShouldHaveFailedPreviouslyAssertionError;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
@@ -91,5 +93,77 @@ public class AssertsTest {
             IllegalStateException ise = Exceptions.getFirstThrowableOfType(e, IllegalStateException.class);
             if (ise == null || !ise.toString().contains("Simulating failure")) throw e;
         }
+    }
+    
+    @Test
+    public void testAssertStrings() {
+        Asserts.assertStringContains("hello", "hello", "he");
+        try {
+            Asserts.assertStringContains("hello", "goodbye");
+            Asserts.shouldHaveFailedPreviously();
+        } catch (AssertionError e) { 
+            Asserts.expectedFailureContains(e, "hello", "goodbye"); 
+            Asserts.expectedFailureContainsIgnoreCase(e, "hello", "Goodbye"); 
+        }
+        
+        Asserts.assertStringContainsIgnoreCase("hello", "Hello");
+        try {
+            Asserts.assertStringContains("hello", "Hello");
+            Asserts.shouldHaveFailedPreviously();
+        } catch (AssertionError e) { Asserts.expectedFailureContains(e, "hello", "Hello"); }
+        
+        Asserts.assertStringContainsAtLeastOne("hello", "hello", "goodbye");
+        try {
+            Asserts.assertStringContainsAtLeastOne("hello", "Hello", "goodbye");
+            Asserts.shouldHaveFailedPreviously();
+        } catch (AssertionError e) { Asserts.expectedFailureContains(e, "hello", "Hello", "goodbye"); }
+        
+        Asserts.assertStringMatchesRegex("hello", "hello", "he.*", "he[ckl]+e*o");
+        try {
+            Asserts.assertStringMatchesRegex("hello", "hello", "he");
+            Asserts.shouldHaveFailedPreviously();
+        } catch (AssertionError e) { Asserts.expectedFailureContains(e, "hello", "matchesRegex(he)"); }
+    }
+
+    @Test
+    public void testExpectedFailures() {
+        Asserts.expectedFailureOfType(new IllegalStateException(), 
+            NoSuchElementException.class, IllegalStateException.class);
+        Asserts.expectedFailureOfType(new IllegalStateException(), 
+            NoSuchElementException.class, Object.class);
+        
+        try {
+            Asserts.expectedFailureOfType(new IllegalStateException(), 
+                NoSuchElementException.class, Error.class);
+            Asserts.shouldHaveFailedPreviously();
+        } catch (Throwable e) { Asserts.expectedFailure(e); }
+    }
+    
+    @Test
+    public void testShouldHaveFailed() {
+        int reached = 0;
+        try {
+            try {
+                // in normal tests the following indicates that an expected failure didn't happen
+                // (but here we are testing it)
+                Asserts.shouldHaveFailedPreviously();
+                reached--;
+            } catch (Throwable e) { 
+                // in normal tests the following indicates that a failure was NOT thrown by the above
+                // (but here the call *below* should rethrow)
+                reached++;
+                Asserts.expectedFailure(e); 
+                reached--;
+            }
+            reached--;
+            throw new AssertionError("It should have failed previously, with a "
+                + "ShouldHaveFailedPreviouslyAssertionError in the first block rethrown by the second");
+        } catch (ShouldHaveFailedPreviouslyAssertionError e) {
+            // expected
+            reached++;
+        }
+        reached++;
+        // check code flowed the way we expected
+        Asserts.assertEquals(reached, 3);
     }
 }
