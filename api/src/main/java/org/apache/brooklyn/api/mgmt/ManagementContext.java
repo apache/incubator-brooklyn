@@ -180,7 +180,9 @@ public interface ManagementContext {
      * Defaults to reading ~/.brooklyn/brooklyn.properties but configurable in the management context.
      */
     StringConfigMap getConfig();
-    
+
+    StringConfigMap getConfigWithExternalConfigResolved();
+
     /**
      * Whether the management context has been initialized and not yet terminated.
      * This does not mean startup is entirely completed. See also {@link #isStartupComplete()}.
