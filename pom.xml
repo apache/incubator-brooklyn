@@ -80,6 +80,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Testing -->
+        <assertj.version>2.2.0</assertj.version> <!-- v 2.2.0 is being used as v 3.20 introduces Java8 dependencies-->
         <cobertura.plugin.version>2.7</cobertura.plugin.version>
         <surefire.version>2.18.1</surefire.version>
         <plantuml.version>6121</plantuml.version>
@@ -237,6 +238,7 @@
         <module>usage/rest-api</module>
         <module>usage/rest-client</module>
         <module>usage/rest-server</module>
+        <module>usage/test-framework</module>
         <module>usage/test-support</module>
 
         <module>utils/common</module>

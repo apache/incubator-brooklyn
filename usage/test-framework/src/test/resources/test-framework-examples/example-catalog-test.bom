@@ -1,0 +1,22 @@
+brooklyn.catalog:
+  id: simple-tomcat-test
+  version: 1.0
+  itemType: template
+  iconUrl: http://tomcat.apache.org/images/tomcat.png
+  name: Simple Tomcat Test
+  license: Apache-2.0
+  item:
+    brooklyn.config:
+      simple.confg: someValue
+    services:
+    - type: org.apache.brooklyn.test.framework.TestCase
+      name: Simple Tomcat Tests
+      brooklyn.children:
+      - type: simple-tomcat
+        id: tomcat
+      - type: org.apache.brooklyn.test.framework.TestSensor
+        target: $brooklyn:component("tomcat")
+        sensor: service.isUp
+        timeout: 10m
+        assert:
+          equals: true
