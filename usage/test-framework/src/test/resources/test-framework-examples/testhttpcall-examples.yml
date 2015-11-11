@@ -23,7 +23,7 @@ services:
     name: String match
     url: $brooklyn:component("tomcat").attributeWhenReady("webapp.url")
     assert:
-      string: Sample Brooklyn Deployed
+      bodyContains: Sample Brooklyn Deployed
   - type: org.apache.brooklyn.test.framework.TestHttpCall
     name: Regex match
     url: $brooklyn:component("tomcat").attributeWhenReady("webapp.url")
@@ -105,14 +105,14 @@ services:
     url: $brooklyn:formatString("%s/newcontext2/", component("tomcat").attributeWhenReady("webapp.url"))
     timeout: 10s
     assert:
-      string: Sample Brooklyn Deployed
+      bodyContains: Sample Brooklyn Deployed
     assert:
       status: 404
   - type: org.apache.brooklyn.test.framework.TestHttpCall
     name: String match
     url: $brooklyn:component("tomcat").attributeWhenReady("webapp.url")
     assert:
-      string: Sample Brooklyn Deployed
+      bodyContains: Sample Brooklyn Deployed
   - type: org.apache.brooklyn.test.framework.TestHttpCall
     name: Regex match
     url: $brooklyn:component("tomcat").attributeWhenReady("webapp.url")

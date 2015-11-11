@@ -74,7 +74,7 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
                 LOG.info("Testing if url [{}] matches regex [{}]",
                         new Object[]{url, entry.getValue()});
                 assertContentEventuallyMatches(flags, url, TypeCoercions.coerce(entry.getValue(), String.class));
-            } else if (Objects.equal(entry.getKey(), "string")) {
+            } else if (Objects.equal(entry.getKey(), "bodyContains")) {
                 LOG.debug("Testing if url [{}] contains string [{}]",
                         new Object[]{url, entry.getValue()});
                 assertContentEventuallyContainsText(flags, url, TypeCoercions.coerce(entry.getValue(), String.class));

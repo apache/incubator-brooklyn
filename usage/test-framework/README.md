@@ -92,7 +92,7 @@ Entity that makes a HTTP Request and tests the response
     url: $brooklyn:component("tomcat").attributeWhenReady("main.uri")
     timeout: 1m
     assert:
-      string: Sample Brooklyn Deployed
+      bodyContains: Sample Brooklyn Deployed
   - type: org.apache.brooklyn.test.framework.TestHttpCall
     name: Status Code 404
     url: $brooklyn:formatString("%s/invalidpath/", component("tomcat").attributeWhenReady("webapp.url"))
