@@ -4,7 +4,6 @@ import com.google.api.client.util.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
@@ -16,14 +15,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.Map;
 
-import static org.apache.brooklyn.util.http.HttpAsserts.assertContentEventuallyContainsText;
-import static org.apache.brooklyn.util.http.HttpAsserts.assertContentEventuallyMatches;
-import static org.apache.brooklyn.util.http.HttpAsserts.assertHttpStatusCodeEventuallyEquals;
+import static org.apache.brooklyn.util.http.HttpAsserts.*;
 
 /**
  * {@inheritDoc}
  */
-public class TestHttpCallImpl extends AbstractEntity implements TestHttpCall {
+public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestHttpCallImpl.class);
 
@@ -36,7 +33,7 @@ public class TestHttpCallImpl extends AbstractEntity implements TestHttpCall {
         final Map assertions = getConfig(ASSERTIONS);
         final Duration timeout = getConfig(TIMEOUT);
         try {
-            checkAssertions(url.toString(), ImmutableMap.of("timeout", timeout), assertions);
+            checkAssertions(url, ImmutableMap.of("timeout", timeout), assertions);
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {
@@ -65,16 +62,15 @@ public class TestHttpCallImpl extends AbstractEntity implements TestHttpCall {
      * @param flags      Passed to {@link org.apache.brooklyn.util.http.HttpAsserts#assertContentEventuallyContainsText(Map, String, String, String...)},
      *                   {@link org.apache.brooklyn.util.http.HttpAsserts#assertContentEventuallyMatches(Map, String, String)},
      *                   {@link org.apache.brooklyn.util.http.HttpAsserts#assertHttpStatusCodeEventuallyEquals(Map, String, int)}
-     *
      * @param assertions The map of assertions
      */
-    private void checkAssertions(final String url, final Map<String,?> flags, final Map<?, ?> assertions) {
+    private void checkAssertions(final String url, final Map<String, ?> flags, final Map<?, ?> assertions) {
 
         for (final Map.Entry<?, ?> entry : assertions.entrySet()) {
             if (Objects.equal(entry.getKey(), "regex")) {
                 LOG.info("Testing if url [{}] matches regex [{}]",
                         new Object[]{url, entry.getValue()});
-                assertContentEventuallyMatches( flags, url, TypeCoercions.coerce(entry.getValue(), String.class));
+                assertContentEventuallyMatches(flags, url, TypeCoercions.coerce(entry.getValue(), String.class));
             } else if (Objects.equal(entry.getKey(), "string")) {
                 LOG.debug("Testing if url [{}] contains string [{}]",
                         new Object[]{url, entry.getValue()});

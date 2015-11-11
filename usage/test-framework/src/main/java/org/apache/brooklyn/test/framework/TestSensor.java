@@ -21,7 +21,4 @@ public interface TestSensor extends BaseTest {
     @SetFromFlag(nullable = false)
     ConfigKey<String> SENSOR_NAME = ConfigKeys.newConfigKey(String.class, "sensor", "Sensor to evaluate");
 
-    ConfigKey<Map> ASSERTIONS = ConfigKeys.newConfigKey(Map.class, "assert", "Assertions to be evaluated", Maps.newLinkedHashMap());
-
-    ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "Time to wait on sensor result", new Duration(1L, TimeUnit.SECONDS));
 }

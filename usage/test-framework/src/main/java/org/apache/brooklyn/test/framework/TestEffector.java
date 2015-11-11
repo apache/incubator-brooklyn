@@ -26,8 +26,6 @@ public interface TestEffector extends BaseTest {
     ConfigKey<Map<String, ?>> EFFECTOR_PARAMS = ConfigKeys.newConfigKey(new TypeToken<Map<String, ?>>() {
     }, "params", "The parameters to pass to the effector", ImmutableMap.<String, Object>of());
 
-    ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "Time to wait on sensor result", new Duration(5L, TimeUnit.SECONDS));
-
     AttributeSensorAndConfigKey<Object, Object> EFFECTOR_RESULT = ConfigKeys.newSensorAndConfigKey(Object.class, "result", "The result of invoking the effector");
 
 }
