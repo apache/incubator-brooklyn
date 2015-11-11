@@ -281,6 +281,7 @@
                         <Export-Package>brooklyn.*,org.apache.brooklyn.*</Export-Package>
                         <Import-Package>
                             !org.apache.brooklyn.rt.felix,
+                            !org.apache.felix.framework,
                             *
                         </Import-Package>
                         <Implementation-SHA-1>${buildNumber}</Implementation-SHA-1>
