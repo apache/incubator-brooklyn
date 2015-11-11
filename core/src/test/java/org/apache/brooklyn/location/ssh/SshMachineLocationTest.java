@@ -91,7 +91,7 @@ public class SshMachineLocationTest extends BrooklynAppUnitTestSupport {
         super.setUp();
         host = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", Networking.getLocalHost()));
-        RecordingSshTool.execScriptCmds.clear();
+        RecordingSshTool.clear();
     }
 
     @AfterMethod(alwaysRun=true)
@@ -99,7 +99,7 @@ public class SshMachineLocationTest extends BrooklynAppUnitTestSupport {
         try {
             if (host != null) Streams.closeQuietly(host);
         } finally {
-            RecordingSshTool.execScriptCmds.clear();
+            RecordingSshTool.clear();
             super.tearDown();
         }
     }

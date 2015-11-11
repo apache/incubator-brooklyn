@@ -64,7 +64,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
     @BeforeMethod(alwaysRun=true)
     @Override
     public void setUp() throws Exception {
-        RecordingSshTool.execScriptCmds.clear();
+        RecordingSshTool.clear();
         super.setUp();
         loc = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", "localhost")
@@ -75,7 +75,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
     @Override
     public void tearDown() throws Exception {
         super.tearDown();
-        RecordingSshTool.execScriptCmds.clear();
+        RecordingSshTool.clear();
     }
     
     @Test
