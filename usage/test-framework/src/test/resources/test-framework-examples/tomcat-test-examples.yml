@@ -32,7 +32,7 @@ services:
   target: $brooklyn:component("tomcat")
   sensor: service.isUp
   assert:
-    equals: true
+  - equals: true
   timeout: 10m
 ...
 
@@ -54,10 +54,4 @@ services:
       params:
         url: https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war
         targetName: sample1
-#    - type: org.apache.brooklyn.test.framework.TestSensor
-#      target: $brooklyn:component("tomcat")
-#      sensor: webapp.deployedWars
-#      assert:
-#        regex: .*sample1.*
-#      timeout: 1m
 ...
