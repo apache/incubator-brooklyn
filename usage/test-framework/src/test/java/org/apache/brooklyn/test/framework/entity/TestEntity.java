@@ -1,4 +1,4 @@
-package org.apache.brooklyn.test.framework;
+package org.apache.brooklyn.test.framework.entity;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;

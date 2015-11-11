@@ -1,8 +1,9 @@
-package org.apache.brooklyn.test.framework;
+package org.apache.brooklyn.test.framework.entity;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.test.framework.entity.TestEntity;
 
 import java.util.Collection;
 
