@@ -54,6 +54,7 @@ under the License.
  
   <div class="tab-pane active" id="templateTab">
     <div id="catalog-applications-throbber"><img src="/assets/images/throbber.gif"/></div>
+    <!-- TODO: transform the menu to list -->
     <div id="catalog-applications-empty" class="hide">
       The applications catalog is empty.
       <br/><br/><br/><br/>
@@ -66,7 +67,22 @@ under the License.
   
   <div class="tab-pane" id="yamlTab">
     <div id="yamlAccordionish" style="margin: 12px 20px 12px 12px;">
-        <textarea id="yaml_code" spellcheck="false" style="width: 100%; height: 260px;" class="code-textarea" placeholder="Enter CAMP Plan YAML code here"></textarea>
+        <textarea id="yaml_code" spellcheck="false" style="width: 100%; height: 260px;" class="code-textarea" placeholder="Enter CAMP Plan YAML code here
+-------------------------------
+Example:
+
+id: your-aplication
+name: &#148My Application&#148
+services:
+- type: org.apache.brooklyn.entity.example.MyApp
+  id: myapp
+  name: &#148My Application&#148
+  brooklyn.config:
+    packages:
+    - java
+    - mariadb
+-------------------------------
+spec: http://docs.oasis-open.org/camp/camp-spec/v1.1/camp-spec-v1.1.html"></textarea>
     </div>
   </div>
 
