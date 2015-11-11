@@ -8,7 +8,6 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
-import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.mgmt.internal.EffectorUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -30,6 +29,9 @@ public class TestEffectorImpl extends AbstractTest implements TestEffector {
      * {@inheritDoc}
      */
     public void start(Collection<? extends Location> locations) {
+        if (!getChildren().isEmpty()) {
+            throw new RuntimeException(String.format("The entity [%s] cannot have child entities", getClass().getName()));
+        }
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         final Entity targetEntity = resolveTarget();
         final String effectorName = getConfig(EFFECTOR_NAME);
@@ -46,14 +48,8 @@ public class TestEffectorImpl extends AbstractTest implements TestEffector {
             } else {
                 effectorResult = Entities.invokeEffector(this, targetEntity, effector.get(), effectorParams);
             }
-
             //Add result of effector to sensor
             sensors().set(EFFECTOR_RESULT, effectorResult.get(timeout));
-
-            //Start Children
-            for (Entity childEntity : getChildren()) {
-                if (childEntity instanceof Startable) ((Startable) childEntity).start(locations);
-            }
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {
@@ -69,15 +65,6 @@ public class TestEffectorImpl extends AbstractTest implements TestEffector {
     public void stop() {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         sensors().set(SERVICE_UP, false);
-        try {
-            for (Entity child : getChildren()) {
-                if (child instanceof Startable) ((Startable) child).stop();
-            }
-            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
-        } catch (Exception e) {
-            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
-            throw Exceptions.propagate(e);
-        }
     }
 
     /**

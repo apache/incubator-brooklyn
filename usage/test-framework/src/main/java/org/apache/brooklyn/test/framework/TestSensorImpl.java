@@ -34,6 +34,9 @@ public class TestSensorImpl extends AbstractTest implements TestSensor {
      * {@inheritDoc}
      */
     public void start(Collection<? extends Location> locations) {
+        if (!getChildren().isEmpty()) {
+            throw new RuntimeException(String.format("The entity [%s] cannot have child entities", getClass().getName()));
+        }
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         final Entity target = resolveTarget();
         final String sensor = getConfig(SENSOR_NAME);
@@ -78,15 +81,6 @@ public class TestSensorImpl extends AbstractTest implements TestSensor {
     public void stop() {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
         sensors().set(SERVICE_UP, false);
-        try {
-            for (Entity child : getChildren()) {
-                if (child instanceof Startable) ((Startable) child).stop();
-            }
-            ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPED);
-        } catch (Exception e) {
-            ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
-            throw Exceptions.propagate(e);
-        }
     }
 
     /**

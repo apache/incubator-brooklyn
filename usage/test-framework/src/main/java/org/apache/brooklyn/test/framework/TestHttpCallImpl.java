@@ -28,6 +28,9 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
      * {@inheritDoc}
      */
     public void start(Collection<? extends Location> locations) {
+        if (!getChildren().isEmpty()) {
+            throw new RuntimeException(String.format("The entity [%s] cannot have child entities", getClass().getName()));
+        }
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         final String url = getConfig(TARGET_URL);
         final Map assertions = getConfig(ASSERTIONS);
