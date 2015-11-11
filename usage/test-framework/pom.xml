@@ -13,10 +13,6 @@
     <artifactId>test-framework</artifactId>
     <name>Brooklyn Test Framework</name>
 
-    <properties>
-        <assertj.version>2.2.0</assertj.version>
-    </properties>
-
     <dependencies>
 
         <dependency>
