@@ -18,7 +18,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -215,8 +214,6 @@ public class TestSensorTest {
     @Test
     public void testAssertRegexOnNullSensor() {
         boolean sensorTestFail = false;
-        final String sensorValue = String.format("%s%s%s", Identifiers.makeRandomId(8), System.currentTimeMillis(), Identifiers.makeRandomId(8));
-
         //Add Sensor Test for STRING sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
