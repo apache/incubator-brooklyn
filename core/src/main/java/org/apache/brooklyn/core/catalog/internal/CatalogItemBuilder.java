@@ -121,6 +121,11 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
         return this;
     }
 
+    public CatalogItemBuilder<CatalogItemType> tag(Object tag) {
+        dto.tags().addTag(tag);
+        return this;
+    }
+
     public CatalogItemType build() {
         Preconditions.checkNotNull(dto.getSymbolicName());
         Preconditions.checkNotNull(dto.getVersion());

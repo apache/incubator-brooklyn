@@ -37,6 +37,7 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.tosca.Tosca;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.objs.BasicSpecParameter;
@@ -302,14 +303,22 @@ public class CatalogClasspathDo {
      * @deprecated since 0.7.0 the classpath DO is replaced by libraries */
     @Deprecated
     public CatalogItem<?,?> addCatalogEntry(CatalogItemDtoAbstract<?,?> item, Class<?> c) {
-        Catalog annotations = c.getAnnotation(Catalog.class);
+        Catalog catalogAnnotation = c.getAnnotation(Catalog.class);
         item.setSymbolicName(c.getName());
         item.setJavaType(c.getName());
         item.setDisplayName(firstNonEmpty(c.getSimpleName(), c.getName()));
-        if (annotations!=null) {
-            item.setDisplayName(firstNonEmpty(annotations.name(), item.getDisplayName()));
-            item.setDescription(firstNonEmpty(annotations.description()));
-            item.setIconUrl(firstNonEmpty(annotations.iconUrl()));
+        if (catalogAnnotation!=null) {
+            item.setDisplayName(firstNonEmpty(catalogAnnotation.name(), item.getDisplayName()));
+            item.setDescription(firstNonEmpty(catalogAnnotation.description()));
+            item.setIconUrl(firstNonEmpty(catalogAnnotation.iconUrl()));
+        }
+        if (item instanceof CatalogEntityItemDto || item instanceof CatalogTemplateItemDto) {
+            final BrooklynToscaTags brooklynToscaTags = new BrooklynToscaTags();
+            Tosca toscaAnnotation = c.getAnnotation(Tosca.class);
+            if (toscaAnnotation != null) {
+                brooklynToscaTags.setDerivedFrom(toscaAnnotation.derivedFrom());
+            }
+            item.tags().addTag(brooklynToscaTags);
         }
         if (log.isTraceEnabled())
             log.trace("adding to catalog: "+c+" (from catalog "+catalog+")");

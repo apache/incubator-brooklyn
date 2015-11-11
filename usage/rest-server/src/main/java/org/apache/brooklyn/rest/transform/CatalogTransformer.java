@@ -92,7 +92,7 @@ public class CatalogTransformer {
         return new CatalogEntitySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
             item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
-            config, sensors, effectors,
+            item.tags().getTags(), config, sensors, effectors,
             item.isDeprecated(), makeLinks(item));
     }
 

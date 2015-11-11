@@ -469,6 +469,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         String symbolicName = getFirstAs(catalogMetadata, String.class, "symbolicName").orNull();
         String displayName = getFirstAs(catalogMetadata, String.class, "displayName").orNull();
         String name = getFirstAs(catalogMetadata, String.class, "name").orNull();
+        String derivedFrom = getFirstAs(catalogMetadata, String.class, "derivedFrom").orNull();
 
         if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
                 Strings.isNonBlank(displayName) &&
@@ -574,16 +575,23 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             throw new IllegalStateException("Could not resolve plan once id and itemType are known (recursive reference?): "+sourceYaml);
         }
         String sourcePlanYaml = planInterpreter.getPlanYaml();
-        
-        CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(itemType, symbolicName, version)
+
+        CatalogItemBuilder itemBuilder = createItemBuilder(itemType, symbolicName, version)
             .libraries(libraryBundles)
             .parameters(getParameters(metaParameters, planInterpreter))
             .displayName(displayName)
             .description(description)
             .deprecated(catalogDeprecated)
             .iconUrl(catalogIconUrl)
-            .plan(sourcePlanYaml)
-            .build();
+            .plan(sourcePlanYaml);
+        if (itemType.equals(CatalogItemType.ENTITY) || itemType.equals(CatalogItemType.TEMPLATE)) {
+            final BrooklynToscaTags brooklynToscaTags = new BrooklynToscaTags();
+            if (derivedFrom != null) {
+                brooklynToscaTags.setDerivedFrom(derivedFrom);
+            }
+            itemBuilder.tag(brooklynToscaTags);
+        }
+        CatalogItemDtoAbstract<?, ?> dto = itemBuilder.build();
 
         dto.setManagementContext((ManagementContextInternal) mgmt);
         result.add(dto);
