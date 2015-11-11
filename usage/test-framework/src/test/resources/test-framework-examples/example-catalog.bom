@@ -1,0 +1,15 @@
+brooklyn.catalog:
+  id: simple-tomcat
+  version: 1.0
+  itemType: template
+  iconUrl: http://tomcat.apache.org/images/tomcat.png
+  name: Simple Tomcat
+  license: Apache-2.0
+  item:
+    brooklyn.config:
+      simple.confg: someValue
+    services:
+    - type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+      id: tomcat
+      name: Tomcat
+      war: https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war
