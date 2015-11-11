@@ -1,8 +1,5 @@
 package org.apache.brooklyn.test.framework;
 
-import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
@@ -15,11 +12,9 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * This implementation will start all child entities in parallel.
- * 
- * @author Chris Burke
- */
+import java.util.Collection;
+import java.util.concurrent.ExecutionException;
+
 public class ParallelTestCaseImpl extends AbstractEntity implements ParallelTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(ParallelTestCaseImpl.class);
@@ -102,9 +97,9 @@ public class ParallelTestCaseImpl extends AbstractEntity implements ParallelTest
 
     /**
      * Submits the task to the ExecutionManager and then waits until the task has completed.
-     * 
+     *
      * @param taskAdaptable the TaskAdaptable to submit for execution.
-     * @throws ExecutionException if the task threw an exception
+     * @throws ExecutionException   if the task threw an exception
      * @throws InterruptedException if the current thread was interrupted while waiting
      */
     private void submitTaskAndWait(final TaskAdaptable<?> taskAdaptable)

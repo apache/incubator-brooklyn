@@ -5,7 +5,8 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.core.entity.trait.Startable;
 
 /**
- * 
+ * This implementation will start all child entities in parallel.
+ *
  * @author Chris Burke
  */
 @ImplementedBy(value = ParallelTestCaseImpl.class)
