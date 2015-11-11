@@ -12,12 +12,12 @@ import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,7 +37,7 @@ public class TestSensorTest {
 
     @BeforeMethod
     public void setup() {
-        testId = UUID.randomUUID().toString();
+        testId = Identifiers.makeRandomId(8);
         app = TestApplication.Factory.newManagedInstanceForTests();
         managementContext = app.getManagementContext();
         loc = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
@@ -166,7 +166,7 @@ public class TestSensorTest {
     @Test
     public void testAssertRegex() {
         final long time = System.currentTimeMillis();
-        final String sensorValue = String.format("%s%s%s", UUID.randomUUID().toString(), time, UUID.randomUUID().toString());
+        final String sensorValue = String.format("%s%s%s", Identifiers.makeRandomId(8), time, Identifiers.makeRandomId(8));
 
         //Add Sensor Test for STRING sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
@@ -189,13 +189,13 @@ public class TestSensorTest {
     @Test
     public void testAssertRegexFail() {
         boolean sensorTestFail = false;
-        final String sensorValue = String.format("%s%s%s", UUID.randomUUID().toString(), System.currentTimeMillis(), UUID.randomUUID().toString());
+        final String sensorValue = String.format("%s%s%s", Identifiers.makeRandomId(8), System.currentTimeMillis(), Identifiers.makeRandomId(8));
 
         //Add Sensor Test for STRING sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", String.format(".*%s.*", UUID.randomUUID().toString()))));
+                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", String.format(".*%s.*", Identifiers.makeRandomId(8)))));
 
         //Set STRING sensor
         app.sensors().set(STRING_SENSOR, sensorValue);
@@ -215,13 +215,13 @@ public class TestSensorTest {
     @Test
     public void testAssertRegexOnNullSensor() {
         boolean sensorTestFail = false;
-        final String sensorValue = String.format("%s%s%s", UUID.randomUUID().toString(), System.currentTimeMillis(), UUID.randomUUID().toString());
+        final String sensorValue = String.format("%s%s%s", Identifiers.makeRandomId(8), System.currentTimeMillis(), Identifiers.makeRandomId(8));
 
         //Add Sensor Test for STRING sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", String.format(".*%s.*", UUID.randomUUID().toString()))));
+                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", String.format(".*%s.*", Identifiers.makeRandomId(8)))));
 
         try {
             app.start(ImmutableList.of(loc));
@@ -254,7 +254,7 @@ public class TestSensorTest {
         private final String id;
 
         public TestObject() {
-            id = UUID.randomUUID().toString();
+            id = Identifiers.makeRandomId(8);
         }
 
         public String getId() {

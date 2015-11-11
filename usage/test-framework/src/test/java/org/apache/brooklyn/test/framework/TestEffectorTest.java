@@ -9,11 +9,10 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.framework.entity.TestEntity;
+import org.apache.brooklyn.util.text.Identifiers;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,7 +28,7 @@ public class TestEffectorTest {
 
     @BeforeMethod
     public void setup() {
-        testId = UUID.randomUUID().toString();
+        testId = Identifiers.makeRandomId(8);
         app = TestApplication.Factory.newManagedInstanceForTests();
         managementContext = app.getManagementContext();
 
