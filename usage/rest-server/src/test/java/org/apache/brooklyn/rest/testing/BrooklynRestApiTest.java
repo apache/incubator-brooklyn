@@ -32,15 +32,17 @@ import org.testng.annotations.BeforeMethod;
 
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.test.framework.AppDescriptor;
 import com.sun.jersey.test.framework.JerseyTest;
 import com.sun.jersey.test.framework.LowLevelAppDescriptor;
-import com.sun.jersey.test.framework.WebAppDescriptor;
+import com.sun.jersey.test.framework.spi.container.TestContainerException;
+import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
+import com.sun.jersey.test.framework.spi.container.inmemory.InMemoryTestContainerFactory;
 
 import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
-import org.apache.brooklyn.rest.filter.SwaggerFilter;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.NullHttpServletRequestProvider;
 import org.apache.brooklyn.rest.util.NullServletConfigProvider;
@@ -156,18 +158,7 @@ public abstract class BrooklynRestApiTest {
     protected void setUpJersey() {
         setUpResources();
         
-        jerseyTest = new JerseyTest() {
-            @Override
-            protected AppDescriptor configure() {
-//                return new WebAppDescriptor.Builder(
-//                        "io.swagger.jaxrs.listing",
-//                        "org.apache.brooklyn.rest.util",
-//                        "org.codehaus.jackson.jaxrs",
-//                        "org.apache.brooklyn.rest.resources")
-//                        .filterClass(SwaggerFilter.class).build();
-                return new LowLevelAppDescriptor.Builder(config).build();
-            }
-        };
+        jerseyTest = createJerseyTest();
         config = null;
         try {
             jerseyTest.setUp();
@@ -175,6 +166,21 @@ public abstract class BrooklynRestApiTest {
             throw Exceptions.propagate(e);
         }
     }
+
+    protected JerseyTest createJerseyTest() {
+        return new JerseyTest() {
+            @Override
+            protected AppDescriptor configure() {
+                return new LowLevelAppDescriptor.Builder(config).build();
+            }
+
+            @Override
+            protected TestContainerFactory getTestContainerFactory() throws TestContainerException {
+                return new InMemoryTestContainerFactory();
+            }
+        };
+    }
+    
     protected void tearDownJersey() {
         if (jerseyTest != null) {
             try {
@@ -189,5 +195,10 @@ public abstract class BrooklynRestApiTest {
     public Client client() {
         Preconditions.checkNotNull(jerseyTest, "Must run setUpJersey first");
         return jerseyTest.client();
+    }
+
+    public WebResource resource(String uri) {
+        Preconditions.checkNotNull(jerseyTest, "Must run setUpJersey first");
+        return jerseyTest.resource().path(uri);
     }
 }
