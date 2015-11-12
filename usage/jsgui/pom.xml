@@ -237,6 +237,9 @@
                             <directory>${basedir}/src/main/license/files</directory>
                         </webResource>
                     </webResources>
+                    <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
                 </configuration>
             </plugin>
             <!-- Disable the automatic LICENSE/NOTICE placement from the upstream pom, because we need to include
@@ -254,6 +257,29 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>war</supportedProjectType>
+                    </supportedProjectTypes>
+                    <instructions>
+                        <Web-ContextPath>/</Web-ContextPath>
+                        <Implementation-SHA-1>${buildNumber}</Implementation-SHA-1>
+                        <Implementation-Branch>${scmBranch}</Implementation-Branch>
+                    </instructions>
+                </configuration>
             </plugin>
         </plugins>
 
