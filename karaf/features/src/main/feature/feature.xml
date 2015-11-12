@@ -173,7 +173,11 @@
         <feature>brooklyn-rest-api</feature>
         <feature>brooklyn-camp-brooklyn</feature>
         <feature>brooklyn-camp-base</feature>
+    </feature>
 
+    <feature name="brooklyn-jsgui" version="${project.version}" description="Brooklyn REST JavaScript Web GUI">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-jsgui/${project.version}/war</bundle>
+        <feature>war</feature>
     </feature>
   
     <feature name="brooklyn-commands"  version="${project.version}"  description="Brooklyn Shell Commands">
