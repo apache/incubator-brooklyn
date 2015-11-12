@@ -50,9 +50,9 @@ import com.wordnik.swagger.core.ApiParam;
 @Beta
 public interface ServerApi {
 
-    public final String MIME_TYPE_ZIP = "applicaiton/zip";
+    public final String MIME_TYPE_ZIP = "application/zip";
     // TODO support TGZ, and check mime type
-    public final String MIME_TYPE_TGZ = "applicaiton/gzip";
+    public final String MIME_TYPE_TGZ = "application/gzip";
     
     @POST
     @Path("/properties/reload")
