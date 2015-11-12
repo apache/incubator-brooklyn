@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.util.ssh;
 
+import org.apache.brooklyn.util.net.Protocol;
 import org.apache.brooklyn.util.ssh.IptablesCommands;
 import org.apache.brooklyn.util.ssh.IptablesCommands.Chain;
 import org.apache.brooklyn.util.ssh.IptablesCommands.Policy;
-import org.apache.brooklyn.util.ssh.IptablesCommands.Protocol;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
