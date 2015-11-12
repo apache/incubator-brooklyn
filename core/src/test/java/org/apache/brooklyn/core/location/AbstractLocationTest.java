@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableMap;
 public class AbstractLocationTest {
 
     public static class ConcreteLocation extends AbstractLocation {
-        private static final long serialVersionUID = 3954199300889119970L;
         @SetFromFlag(defaultVal="mydefault")
         String myfield;
 

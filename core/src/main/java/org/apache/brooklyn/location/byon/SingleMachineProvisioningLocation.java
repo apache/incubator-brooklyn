@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.ImmutableMap;
 
 public class SingleMachineProvisioningLocation<T extends MachineLocation> extends FixedListMachineProvisioningLocation<T> {
-    private static final long serialVersionUID = -4216528515792151062L;
 
     private static final Logger log = LoggerFactory.getLogger(SingleMachineProvisioningLocation.class);
     

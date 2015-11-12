@@ -71,8 +71,6 @@ import com.google.common.collect.Sets;
  */
 public class LocalhostMachineProvisioningLocation extends FixedListMachineProvisioningLocation<SshMachineLocation> implements AddressableLocation, LocationWithObjectStore {
 
-    private static final long serialVersionUID = -7791239672433897762L;
-
     /** @deprecated since 0.9.0; shouldn't be public */
     @Deprecated
     public static final Logger LOG = LoggerFactory.getLogger(LocalhostMachineProvisioningLocation.class);

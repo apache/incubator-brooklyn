@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.api.location;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -30,7 +29,7 @@ import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
  * A location that an entity can be in. Examples of locations include a single machine
  * or a pool of machines, or a region within a given cloud. 
  */
-public interface Location extends Serializable, BrooklynObject {
+public interface Location extends BrooklynObject {
 
     /**
      * A unique id for this location.

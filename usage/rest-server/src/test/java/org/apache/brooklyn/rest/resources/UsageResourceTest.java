@@ -420,8 +420,6 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     }
     
     public static class DynamicLocalhostMachineProvisioningLocation extends LocalhostMachineProvisioningLocation {
-        private static final long serialVersionUID = 2163357613938738967L;
-
         @Override
         public SshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
             return super.obtain(flags);

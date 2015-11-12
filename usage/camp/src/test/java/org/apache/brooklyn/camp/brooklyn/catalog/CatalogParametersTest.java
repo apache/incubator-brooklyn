@@ -59,7 +59,6 @@ public class CatalogParametersTest extends AbstractYamlTest {
         public static final ConfigKey<String> SAMPLE_CONFIG = SHARED_CONFIG;
     }
     public static class ConfigLocationForTest extends AbstractLocation {
-        private static final long serialVersionUID = 1L;
         public static final ConfigKey<String> SAMPLE_CONFIG = SHARED_CONFIG;
     }
 

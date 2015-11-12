@@ -742,8 +742,6 @@ public class SoftwareProcessEntityTest extends BrooklynAppUnitTestSupport {
     }
 
     public static class ReleaseLatchLocation extends SimulatedLocation {
-        private static final long serialVersionUID = 1L;
-        
         private CountDownLatch lock = new CountDownLatch(1);
         private volatile boolean isBlocked;
 

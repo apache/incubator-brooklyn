@@ -96,8 +96,6 @@ import com.google.common.reflect.TypeToken;
  */
 public abstract class AbstractLocation extends AbstractBrooklynObject implements LocationInternal, HasHostGeoInfo, Configurable {
     
-    private static final long serialVersionUID = -7495805474138619830L;
-
     /** @deprecated since 0.7.0 shouldn't be public */
     @Deprecated
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);

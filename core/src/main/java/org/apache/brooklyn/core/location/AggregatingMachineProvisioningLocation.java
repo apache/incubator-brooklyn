@@ -42,8 +42,6 @@ import com.google.common.collect.Maps;
 public class AggregatingMachineProvisioningLocation<T extends MachineLocation> extends AbstractLocation 
         implements MachineProvisioningLocation<T>, Closeable {
 
-    private static final long serialVersionUID = -8818006672883481775L;
-
     private Object lock;
     
     @SetFromFlag

@@ -61,8 +61,6 @@ public class BailOutJcloudsLocation extends JcloudsLocation {
     public static final ConfigKey<Boolean> BUILD_TEMPLATE = ConfigKeys.newBooleanConfigKey(
             "buildtemplate");
 
-    private static final long serialVersionUID = -3373789512935057842L;
-
     ConfigBag lastConfigBag;
     Template template;
 
@@ -149,7 +147,6 @@ public class BailOutJcloudsLocation extends JcloudsLocation {
 
     /** As {@link BailOutJcloudsLocation}, counting the number of {@link #buildTemplate} calls. */
     public static class CountingBailOutJcloudsLocation extends BailOutJcloudsLocation {
-        private static final long serialVersionUID = 2433684033045735773L;
         int buildTemplateCount = 0;
         @Override
         public Template buildTemplate(ComputeService computeService, ConfigBag config) {

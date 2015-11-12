@@ -68,7 +68,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 public class JcloudsSshMachineLocation extends SshMachineLocation implements JcloudsMachineLocation {
     
     private static final Logger LOG = LoggerFactory.getLogger(JcloudsSshMachineLocation.class);
-    private static final long serialVersionUID = -443866395634771659L;
 
     @SetFromFlag
     JcloudsLocation jcloudsParent;
