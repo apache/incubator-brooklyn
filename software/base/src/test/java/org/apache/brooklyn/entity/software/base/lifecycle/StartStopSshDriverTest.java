@@ -87,6 +87,8 @@ public class StartStopSshDriverTest {
 
         SshTool lastTool;
         public SshMachineLocationWithSshTool(Map flags) { super(flags); }
+
+        @Override
         public SshTool connectSsh(Map args) {
             SshTool result = super.connectSsh(args);
             lastTool = result;

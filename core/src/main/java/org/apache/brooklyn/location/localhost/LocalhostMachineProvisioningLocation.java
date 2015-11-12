@@ -73,6 +73,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
 
     private static final long serialVersionUID = -7791239672433897762L;
 
+    /** @deprecated since 0.9.0; shouldn't be public */
+    @Deprecated
     public static final Logger LOG = LoggerFactory.getLogger(LocalhostMachineProvisioningLocation.class);
     
     public static final ConfigKey<Boolean> SKIP_ON_BOX_BASE_DIR_RESOLUTION = ConfigKeys.newConfigKeyWithDefault(
@@ -245,6 +247,8 @@ public class LocalhostMachineProvisioningLocation extends FixedListMachineProvis
     }
     
     public static class LocalhostMachine extends SshMachineLocation implements HasSubnetHostname {
+        private static final Logger LOG = LoggerFactory.getLogger(LocalhostMachine.class);
+
         // declaring this here (as well as on LocalhostMachineProvisioningLocation) because:
         //  1. machine.getConfig(key) will not inherit default value of machine.getParent()'s key
         //  2. things might instantiate a `LocalhostMachine` without going through LocalhostMachineProvisioningLocation

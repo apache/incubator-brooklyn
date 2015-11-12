@@ -27,13 +27,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
@@ -41,6 +37,9 @@ import org.apache.brooklyn.util.core.internal.ssh.sshj.SshjTool;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.time.Duration;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -104,7 +103,7 @@ public class SshMachineLocationReuseIntegrationTest {
         managementContext = new LocalManagementContext();
         host = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", Networking.getLocalHost())
-                .configure(SshTool.PROP_TOOL_CLASS, RecordingSshjTool.class.getName()));
+                .configure(SshMachineLocation.SSH_TOOL_CLASS, RecordingSshjTool.class.getName()));
     }
 
     @AfterMethod(alwaysRun=true)
@@ -151,7 +150,7 @@ public class SshMachineLocationReuseIntegrationTest {
         SshMachineLocation host2 = managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", InetAddress.getLocalHost())
                 .configure(SshMachineLocation.SSH_CACHE_EXPIRY_DURATION, Duration.ONE_SECOND)
-                .configure(SshTool.PROP_TOOL_CLASS, RecordingSshjTool.class.getName()));
+                .configure(SshMachineLocation.SSH_TOOL_CLASS, RecordingSshjTool.class.getName()));
         
         Map<String, Object> props = customSshConfigKeys();
         host2.execScript(props, "mysummary", ImmutableList.of("exit"));

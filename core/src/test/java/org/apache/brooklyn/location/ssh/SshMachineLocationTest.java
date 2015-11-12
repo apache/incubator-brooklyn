@@ -42,12 +42,10 @@ import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.PortRange;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.effector.EffectorBody;
 import org.apache.brooklyn.core.effector.EffectorTaskTest;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.location.BasicHardwareDetails;
@@ -55,16 +53,14 @@ import org.apache.brooklyn.core.location.BasicMachineDetails;
 import org.apache.brooklyn.core.location.BasicOsDetails;
 import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.core.location.PortRanges;
-import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.file.ArchiveUtils;
 import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool;
 import org.apache.brooklyn.util.core.internal.ssh.SshException;
-import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.core.task.BasicExecutionContext;
 import org.apache.brooklyn.util.core.task.BasicExecutionManager;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -86,23 +82,28 @@ import com.google.common.io.Files;
 /**
  * Test the {@link SshMachineLocation} implementation of the {@link Location} interface.
  */
-public class SshMachineLocationTest {
+public class SshMachineLocationTest extends BrooklynAppUnitTestSupport {
 
     private SshMachineLocation host;
-    private ManagementContext mgmt;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        mgmt = LocalManagementContextForTests.newInstance();
-        host = new SshMachineLocation(MutableMap.of("address", Networking.getLocalHost()));
+        super.setUp();
+        host = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure("address", Networking.getLocalHost()));
+        RecordingSshTool.execScriptCmds.clear();
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (host != null) Streams.closeQuietly(host);
-        if (mgmt != null) Entities.destroyAll(mgmt);
+        try {
+            if (host != null) Streams.closeQuietly(host);
+        } finally {
+            RecordingSshTool.execScriptCmds.clear();
+            super.tearDown();
+        }
     }
-    
+
     @Test(groups = "Integration")
     public void testGetMachineDetails() throws Exception {
         BasicExecutionManager execManager = new BasicExecutionManager("mycontextid");
@@ -144,7 +145,7 @@ public class SshMachineLocationTest {
     public void testGetMachineIsInessentialOnFailure() throws Exception {
         SshMachineLocation host2 = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", Networking.getLocalHost())
-                .configure(SshTool.PROP_TOOL_CLASS, FailingSshTool.class.getName()));
+                .configure(SshMachineLocation.SSH_TOOL_CLASS, FailingSshTool.class.getName()));
 
         final Effector<MachineDetails> GET_MACHINE_DETAILS = Effectors.effector(MachineDetails.class, "getMachineDetails")
                 .impl(new EffectorBody<MachineDetails>() {

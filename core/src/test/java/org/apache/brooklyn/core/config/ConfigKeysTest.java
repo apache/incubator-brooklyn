@@ -19,11 +19,10 @@
 package org.apache.brooklyn.core.config;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 import org.apache.brooklyn.config.ConfigInheritance;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.config.BasicConfigKey;
-import org.apache.brooklyn.core.config.ConfigKeys;
 import org.testng.annotations.Test;
 
 import com.google.common.base.CaseFormat;
@@ -58,6 +57,24 @@ public class ConfigKeysTest {
         assertEquals(key2.getType(), String.class);
         assertEquals(key2.getDescription(), "my descr");
         assertEquals(key2.getDefaultValue(), "my default val");
+    }
+    
+    @Test
+    public void testConfigKeyWithoutPrefix() throws Exception {
+        ConfigKey<String> key = ConfigKeys.newStringConfigKey("a.b.mykey", "my descr", "my default val");
+        ConfigKey<String> key2 = ConfigKeys.newConfigKeyWithPrefixRemoved("a.b.", key);
+        
+        assertEquals(key2.getName(), "mykey");
+        assertEquals(key2.getType(), String.class);
+        assertEquals(key2.getDescription(), "my descr");
+        assertEquals(key2.getDefaultValue(), "my default val");
+        
+        try {
+            ConfigKey<String> key3 = ConfigKeys.newConfigKeyWithPrefixRemoved("wrong.prefix.", key);
+            fail("key="+key3);
+        } catch (IllegalArgumentException e) {
+            // success
+        }
     }
     
     @Test
