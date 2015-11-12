@@ -42,9 +42,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * is not available. The exception message is then derived from this. The two-string constructors take both the
  * resource name and an explicit exception message.</p>
  */
-@SuppressWarnings("UnusedDeclaration")
 public class TestResourceUnavailableException extends SkipException {
 
+    private static final long serialVersionUID = -6150059547094292069L;
+    
     private final String resourceName;
 
     /**
