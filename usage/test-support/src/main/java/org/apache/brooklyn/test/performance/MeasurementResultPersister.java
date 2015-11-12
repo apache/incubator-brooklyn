@@ -16,11 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.test;
+package org.apache.brooklyn.test.performance;
 
-/**
- * @deprecated since 0.9.0; see {@link org.apache.brooklyn.test.performance.PerformanceTestUtils}.
- */
-@Deprecated
-public class PerformanceTestUtils extends org.apache.brooklyn.test.performance.PerformanceTestUtils {
+import java.util.Date;
+
+import com.google.common.annotations.Beta;
+
+@Beta
+public interface MeasurementResultPersister {
+
+    void persist(Date time, PerformanceTestDescriptor options, PerformanceTestResult result);
 }

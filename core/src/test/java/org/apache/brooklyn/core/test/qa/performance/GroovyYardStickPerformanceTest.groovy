@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 
+import org.apache.brooklyn.test.performance.PerformanceTestDescriptor;
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.testng.annotations.AfterMethod
@@ -56,7 +57,11 @@ public class GroovyYardStickPerformanceTest extends AbstractPerformanceTest {
         double minRatePerSec = 1000000 * PERFORMANCE_EXPECTATION;
         AtomicInteger i = new AtomicInteger();
         
-        measureAndAssert("noop-groovy", numIterations, minRatePerSec, { i.incrementAndGet() });
+        measure(MeasurementOptions.create()
+                .summary("GroovyYardStickPerformanceTest.noop")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job({ i.incrementAndGet() }));
         assertTrue(i.get() >= numIterations, "i="+i);
     }
 }

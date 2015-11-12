@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.brooklyn.test.performance.PerformanceTestDescriptor;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -53,10 +54,14 @@ public class JavaYardStickPerformanceTest extends AbstractPerformanceTest {
         int numIterations = 1000000;
         double minRatePerSec = 1000000 * PERFORMANCE_EXPECTATION;
         final int[] i = {0};
-        measureAndAssert("noop-java", numIterations, minRatePerSec, new Runnable() {
-            @Override public void run() {
-                i[0] = i[0] + 1;
-            }});
+        measure(PerformanceTestDescriptor.create()
+                .summary("JavaYardStickPerformanceTest.noop")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
+                    @Override public void run() {
+                        i[0] = i[0] + 1;
+                    }}));
         
         assertTrue(i[0] >= numIterations, "i="+i);
     }
@@ -66,15 +71,19 @@ public class JavaYardStickPerformanceTest extends AbstractPerformanceTest {
         int numIterations = 100000;
         double minRatePerSec = 100000 * PERFORMANCE_EXPECTATION;
         final int[] i = {0};
-        measureAndAssert("scheduleExecuteAndGet-java", numIterations, minRatePerSec, new Runnable() {
-            @Override public void run() {
-                Future<?> future = executor.submit(new Runnable() { public void run() { i[0] = i[0] + 1; }});
-                try {
-                    future.get();
-                } catch (Exception e) {
-                    throw Throwables.propagate(e);
-                }
-            }});
+        measure(PerformanceTestDescriptor.create()
+                .summary("JavaYardStickPerformanceTest.scheduleExecuteAndGet")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
+                    @Override public void run() {
+                        Future<?> future = executor.submit(new Runnable() { public void run() { i[0] = i[0] + 1; }});
+                        try {
+                            future.get();
+                        } catch (Exception e) {
+                            throw Throwables.propagate(e);
+                        }
+                    }}));
         
         assertTrue(i[0] >= numIterations, "i="+i);
     }
