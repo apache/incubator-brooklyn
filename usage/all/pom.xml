@@ -101,6 +101,12 @@
             <version>${project.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-test-framework</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
         <!-- bring in all jclouds-supported cloud providers -->
         <dependency>
             <groupId>${jclouds.groupId}</groupId>
