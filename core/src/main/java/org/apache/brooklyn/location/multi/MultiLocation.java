@@ -55,8 +55,6 @@ import com.google.common.reflect.TypeToken;
  * is used, it may stripe across each of the locations.  See notes at {@link AvailabilityZoneExtension}. */
 public class MultiLocation<T extends MachineLocation> extends AbstractLocation implements MachineProvisioningLocation<T> {
 
-    private static final long serialVersionUID = 7993091317970457862L;
-    
     @SuppressWarnings("serial")
     @SetFromFlag("subLocations")
     public static final ConfigKey<List<MachineProvisioningLocation<?>>> SUB_LOCATIONS = ConfigKeys.newConfigKey(

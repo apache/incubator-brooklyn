@@ -145,8 +145,6 @@ public class SoftwareProcessEntityRebindTest extends BrooklynAppUnitTestSupport 
     }
     
     public static class MyProvisioningLocation extends AbstractLocation implements MachineProvisioningLocation<SshMachineLocation> {
-        private static final long serialVersionUID = 1L;
-        
         @SetFromFlag(defaultVal="0")
         AtomicInteger inUseCount;
 

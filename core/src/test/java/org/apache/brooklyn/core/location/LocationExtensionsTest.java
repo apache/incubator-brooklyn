@@ -36,8 +36,6 @@ import org.testng.annotations.Test;
 public class LocationExtensionsTest {
 
     public static class ConcreteLocation extends AbstractLocation {
-        private static final long serialVersionUID = 2407231019435442876L;
-
         public ConcreteLocation() {
             super();
         }
