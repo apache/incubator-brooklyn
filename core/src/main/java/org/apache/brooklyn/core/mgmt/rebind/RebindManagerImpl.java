@@ -92,6 +92,9 @@ public class RebindManagerImpl implements RebindManager {
     public static final ConfigKey<RebindFailureMode> REBIND_FAILURE_MODE =
             ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.rebind",
                     "Action to take if a failure occurs during rebind", RebindFailureMode.FAIL_AT_END);
+    public static final ConfigKey<RebindFailureMode> ADD_CONFIG_FAILURE_MODE =
+            ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.addConfig",
+                    "Action to take if a failure occurs when setting a config value. It could happen coercion of the value type to fail.", RebindFailureMode.FAIL_AT_END);
     public static final ConfigKey<RebindFailureMode> ADD_POLICY_FAILURE_MODE =
             ConfigKeys.newConfigKey(RebindFailureMode.class, "rebind.failureMode.addPolicy",
                     "Action to take if a failure occurs when adding a policy or enricher", RebindFailureMode.CONTINUE);
@@ -131,6 +134,7 @@ public class RebindManagerImpl implements RebindManager {
     
     private RebindFailureMode danglingRefFailureMode;
     private RebindFailureMode rebindFailureMode;
+    private RebindFailureMode addConfigFailureMode;
     private RebindFailureMode addPolicyFailureMode;
     private RebindFailureMode loadPolicyFailureMode;
     private QuorumCheck danglingRefsQuorumRequiredHealthy;
@@ -177,6 +181,7 @@ public class RebindManagerImpl implements RebindManager {
 
         danglingRefFailureMode = managementContext.getConfig().getConfig(DANGLING_REFERENCE_FAILURE_MODE);
         rebindFailureMode = managementContext.getConfig().getConfig(REBIND_FAILURE_MODE);
+        addConfigFailureMode = managementContext.getConfig().getConfig(ADD_CONFIG_FAILURE_MODE);
         addPolicyFailureMode = managementContext.getConfig().getConfig(ADD_POLICY_FAILURE_MODE);
         loadPolicyFailureMode = managementContext.getConfig().getConfig(LOAD_POLICY_FAILURE_MODE);
         
@@ -384,6 +389,7 @@ public class RebindManagerImpl implements RebindManager {
                 .danglingRefFailureMode(danglingRefFailureMode)
                 .danglingRefQuorumRequiredHealthy(danglingRefsQuorumRequiredHealthy)
                 .rebindFailureMode(rebindFailureMode)
+                .addConfigFailureMode(addConfigFailureMode)
                 .addPolicyFailureMode(addPolicyFailureMode)
                 .loadPolicyFailureMode(loadPolicyFailureMode)
                 .build();
@@ -479,6 +485,7 @@ public class RebindManagerImpl implements RebindManager {
                 .danglingRefFailureMode(danglingRefFailureMode)
                 .danglingRefQuorumRequiredHealthy(danglingRefsQuorumRequiredHealthy)
                 .rebindFailureMode(rebindFailureMode)
+                .addConfigFailureMode(addConfigFailureMode)
                 .addPolicyFailureMode(addPolicyFailureMode)
                 .loadPolicyFailureMode(loadPolicyFailureMode)
                 .build();
@@ -509,6 +516,7 @@ public class RebindManagerImpl implements RebindManager {
         RebindExceptionHandler exceptionHandler = RebindExceptionHandlerImpl.builder()
                 .danglingRefFailureMode(danglingRefFailureMode)
                 .rebindFailureMode(rebindFailureMode)
+                .addConfigFailureMode(addConfigFailureMode)
                 .addPolicyFailureMode(addPolicyFailureMode)
                 .loadPolicyFailureMode(loadPolicyFailureMode)
                 .build();
