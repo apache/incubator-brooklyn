@@ -22,6 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import org.apache.brooklyn.util.os.Os;
@@ -29,6 +30,7 @@ import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
@@ -61,16 +63,46 @@ public class FileBasedStoreObjectAccessorWriterTest extends PersistenceStoreObje
         FileBasedObjectStoreTest.assertFilePermission600(file);
     }
 
-    @Test(enabled = false)
+    @Test(groups="Integration")
+    public void testPutCreatesNewFile() throws Exception {
+        File nonExistantFile = Os.newTempFile(getClass(), "txt");
+        nonExistantFile.delete();
+        StoreObjectAccessorLocking accessor = new StoreObjectAccessorLocking(new FileBasedStoreObjectAccessor(nonExistantFile, ".tmp"));
+        try {
+            accessor.put("abc");
+            assertEquals(Files.readLines(nonExistantFile, Charsets.UTF_8), ImmutableList.of("abc"));
+        } finally {
+            accessor.delete();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testPutCreatesNewFileAndParentDir() throws Exception {
+        File nonExistantDir = Os.newTempDir(getClass());
+        nonExistantDir.delete();
+        File nonExistantFile = new File(nonExistantDir, "file.txt");
+        StoreObjectAccessorLocking accessor = new StoreObjectAccessorLocking(new FileBasedStoreObjectAccessor(nonExistantFile, ".tmp"));
+        try {
+            accessor.put("abc");
+            assertEquals(Files.readLines(nonExistantFile, Charsets.UTF_8), ImmutableList.of("abc"));
+        } finally {
+            accessor.delete();
+        }
+    }
+
+    @Test(groups={"Integration", "Acceptance"})
     public void testFilePermissionsPerformance() throws Exception {
         long interval = 10 * 1000; // millis
         long start = System.currentTimeMillis();
 
         int count = 0;
+        Stopwatch stopwatch = Stopwatch.createStarted();
         while (System.currentTimeMillis() < start + interval) {
             accessor.put("abc" + count);
-            ++count;
+            count++;
         }
-        System.out.println("writes per second:" + (count * 1000 / interval));
+        stopwatch.stop();
+        double writesPerSec = ((double)count) / stopwatch.elapsed(TimeUnit.MILLISECONDS) * 1000;
+        System.out.println("writes per second: " + writesPerSec);
     }
 }

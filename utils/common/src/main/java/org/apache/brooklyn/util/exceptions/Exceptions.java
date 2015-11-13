@@ -97,12 +97,31 @@ public class Exceptions {
      * <li> wraps as PropagatedRuntimeException for easier filtering
      */
     public static RuntimeException propagate(Throwable throwable) {
-        if (throwable instanceof InterruptedException)
+        if (throwable instanceof InterruptedException) {
             throw new RuntimeInterruptedException((InterruptedException) throwable);
+        } else if (throwable instanceof RuntimeInterruptedException) {
+            Thread.currentThread().interrupt();
+            throw (RuntimeInterruptedException) throwable;
+        }
         Throwables.propagateIfPossible(checkNotNull(throwable));
         throw new PropagatedRuntimeException(throwable);
     }
 
+    /**
+     * See {@link #propagate(Throwable)}. If wrapping the exception, then include the given message;
+     * otherwise the message is not used.
+     */
+    public static RuntimeException propagate(String msg, Throwable throwable) {
+        if (throwable instanceof InterruptedException) {
+            throw new RuntimeInterruptedException(msg, (InterruptedException) throwable);
+        } else if (throwable instanceof RuntimeInterruptedException) {
+            Thread.currentThread().interrupt();
+            throw (RuntimeInterruptedException) throwable;
+        }
+        Throwables.propagateIfPossible(checkNotNull(throwable));
+        throw new PropagatedRuntimeException(msg, throwable);
+    }
+    
     /** 
      * Propagate exceptions which are fatal.
      * <p>
@@ -110,12 +129,14 @@ public class Exceptions {
      * such as {@link InterruptedException} and {@link Error}s.
      */
     public static void propagateIfFatal(Throwable throwable) {
-        if (throwable instanceof InterruptedException)
+        if (throwable instanceof InterruptedException) {
             throw new RuntimeInterruptedException((InterruptedException) throwable);
-        if (throwable instanceof RuntimeInterruptedException)
+        } else if (throwable instanceof RuntimeInterruptedException) {
+            Thread.currentThread().interrupt();
             throw (RuntimeInterruptedException) throwable;
-        if (throwable instanceof Error)
+        } else if (throwable instanceof Error) {
             throw (Error) throwable;
+        }
     }
 
     /** returns the first exception of the given type, or null */
