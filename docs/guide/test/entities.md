@@ -1,5 +1,7 @@
-# Entities
-
+---
+title: Entities
+layout: website-normal
+---
 ## TestCase
 A logical grouping for tests, e.g. Restart tests.
 
