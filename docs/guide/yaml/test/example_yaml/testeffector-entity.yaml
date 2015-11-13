@@ -1,0 +1,7 @@
+- type: org.apache.brooklyn.test.framework.TestEffector
+  name: Deploy WAR in /newcontext
+  target: $brooklyn:component("tomcat")
+  effector: deploy
+  params:
+    url: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+    targetName: newcontext

@@ -1,0 +1,5 @@
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: /newcontext Status Code 404
+    url: $brooklyn:formatString("%s/newcontext/", component("tomcat").attributeWhenReady("webapp.url"))
+    assert:
+      status: 404

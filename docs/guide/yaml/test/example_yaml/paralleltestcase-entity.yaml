@@ -1,0 +1,2 @@
+- type: org.apache.brooklyn.test.framework.ParallelTestCase
+  brooklyn.children:
