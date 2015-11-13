@@ -6,7 +6,7 @@ children:
 - usage-examples.md
 ---
 
-Brooklyn provides a selection of basic test entities which can be used to validate Blueprints via YAML. These are divided into two groups structural, which effect the order in which child entities are started, and validation, which are used to confirm the application is deployed as intended:
+Brooklyn provides a selection of basic test entities which can be used to validate Blueprints via YAML. These are divided into two groups, structural, which effect the order in which child entities are started, and validation, which are used to confirm the application is deployed as intended:
 
 Structural test entities include:
 
