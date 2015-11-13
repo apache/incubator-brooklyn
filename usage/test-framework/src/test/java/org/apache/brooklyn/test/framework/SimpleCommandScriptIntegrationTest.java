@@ -54,7 +54,7 @@ import static org.apache.brooklyn.test.framework.SimpleCommand.DEFAULT_COMMAND;
 import static org.apache.brooklyn.test.framework.SimpleCommandTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Test(groups = "Integration")
+@Test(groups = "Integration")  // TODO investigate proper status of this test that requires SSH access to localhost
 public class SimpleCommandScriptIntegrationTest {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandScriptIntegrationTest.class);
 
@@ -110,7 +110,7 @@ public class SimpleCommandScriptIntegrationTest {
 
 
 
-    @Test
+    @Test(enabled = false)
     public void shouldInvokeScript() {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 

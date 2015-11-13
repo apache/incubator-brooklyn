@@ -47,6 +47,7 @@ import static org.apache.brooklyn.test.framework.SimpleCommand.DEFAULT_COMMAND;
 import static org.apache.brooklyn.test.framework.SimpleCommandTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
+// TODO investigate proper status of this test that requires SSH access to localhost
 public class SimpleCommandImplTest {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandImplTest.class);
 
@@ -75,7 +76,7 @@ public class SimpleCommandImplTest {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldInvokeCommand() {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
@@ -94,7 +95,7 @@ public class SimpleCommandImplTest {
 
     }
 
-    @Test
+    @Test(enabled = false)
     public void shouldNotBeUpIfAssertionFails() {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
