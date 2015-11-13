@@ -23,7 +23,6 @@ import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.objs.HasShortName;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.api.tosca.Tosca;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.config.ConfigKeys;
@@ -37,10 +36,13 @@ import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.tosca.Tosca;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 @Catalog(name="MySql Node", description="MySql is an open source relational database management system (RDBMS)", iconUrl="classpath:///mysql-logo-110x57.png")
-@Tosca(derivedFrom = "brooklyn.nodes.Database")
+@Tosca(derivedFrom = "brooklyn.nodes.Database", capabilities = {
+        @Tosca.Capability(id = "database_endpoint", type = "tosca.capabilities.Endpoint.Database")
+})
 @ImplementedBy(MySqlNodeImpl.class)
 public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommon {
 

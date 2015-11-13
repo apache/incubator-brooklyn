@@ -37,10 +37,11 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.policy.Policy;
-import org.apache.brooklyn.api.tosca.Tosca;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.objs.BasicSpecParameter;
+import org.apache.brooklyn.tosca.BrooklynToscaTags;
+import org.apache.brooklyn.tosca.Tosca;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.javalang.ReflectionScanner;
 import org.apache.brooklyn.util.core.javalang.UrlClassLoader;
@@ -317,6 +318,16 @@ public class CatalogClasspathDo {
             Tosca toscaAnnotation = c.getAnnotation(Tosca.class);
             if (toscaAnnotation != null) {
                 brooklynToscaTags.setDerivedFrom(toscaAnnotation.derivedFrom());
+                if (toscaAnnotation.capabilities() != null) {
+                    for (Tosca.Capability capability : toscaAnnotation.capabilities()) {
+                        brooklynToscaTags.addCapability(capability.id(), capability.type(), capability.upperBound());
+                    }
+                }
+                if (toscaAnnotation.requirements() != null) {
+                    for (Tosca.Requirement requirement : toscaAnnotation.requirements()) {
+                        brooklynToscaTags.addRequirement(requirement.id(), requirement.capabilityType(), requirement.relationshipType(), requirement.lowerBound(), requirement.upperBound());
+                    }
+                }
             }
             item.tags().addTag(brooklynToscaTags);
         }

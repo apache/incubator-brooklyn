@@ -46,6 +46,7 @@ import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.objs.BasicSpecParameter;
 import org.apache.brooklyn.core.plan.PlanToSpecFactory;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.tosca.BrooklynToscaTags;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -470,6 +471,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         String displayName = getFirstAs(catalogMetadata, String.class, "displayName").orNull();
         String name = getFirstAs(catalogMetadata, String.class, "name").orNull();
         String derivedFrom = getFirstAs(catalogMetadata, String.class, "derivedFrom").orNull();
+        Collection<?> capabilities = MutableList.copyOf(getFirstAs(catalogMetadata, Collection.class, "capabilities").orNull());
+        Collection<?> requirements = MutableList.copyOf(getFirstAs(catalogMetadata, Collection.class, "requirements").orNull());
 
         if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
                 Strings.isNonBlank(displayName) &&
@@ -588,6 +591,18 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             final BrooklynToscaTags brooklynToscaTags = new BrooklynToscaTags();
             if (derivedFrom != null) {
                 brooklynToscaTags.setDerivedFrom(derivedFrom);
+            }
+            if (capabilities != null) {
+                for (Object capability : capabilities) {
+                    final Map<String, String> capabilityMap = (Map<String, String>) capability;
+                    brooklynToscaTags.addCapability(capabilityMap.get("id"), capabilityMap.get("type"), Integer.parseInt(capabilityMap.get("upperBound")));
+                }
+            }
+            if (requirements != null) {
+                for (Object requirement : requirements) {
+                    final Map<String, String> requirementMap = (Map<String, String>) requirement;
+                    brooklynToscaTags.addRequirement(requirementMap.get("id"), requirementMap.get("capabilityType"), requirementMap.get("relationshipType"), Integer.parseInt(requirementMap.get("lowerBound")), Integer.parseInt(requirementMap.get("upperBound")));
+                }
             }
             itemBuilder.tag(brooklynToscaTags);
         }

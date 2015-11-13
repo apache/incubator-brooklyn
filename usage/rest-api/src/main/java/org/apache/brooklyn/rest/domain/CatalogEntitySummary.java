@@ -19,26 +19,16 @@
 package org.apache.brooklyn.rest.domain;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.brooklyn.util.collections.Jsonya;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
-import com.google.common.collect.ImmutableList;
-
 public class CatalogEntitySummary extends CatalogItemSummary {
 
     private static final long serialVersionUID = 1063908984191424539L;
-
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
-    private final List<Object> tags;
 
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<EntityConfigSummary> config;
@@ -63,25 +53,10 @@ public class CatalogEntitySummary extends CatalogItemSummary {
             @JsonProperty("deprecated") boolean deprecated,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, deprecated, links);
-        this.tags = (tags == null) ? ImmutableList.of() : ImmutableList.<Object> copyOf(tags);
+        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, tags, deprecated, links);
         this.config = config;
         this.sensors = sensors;
         this.effectors = effectors;
-    }
-
-    public Collection<Object> getTags() {
-        List<Object> result = new ArrayList<Object>();
-        for (Object t : tags) {
-            // TODO if we had access to a mapper we could use it to give better json
-            result.add(Jsonya.convertToJsonPrimitive(t));
-        }
-        return result;
-    }
-
-    @JsonIgnore
-    public Collection<Object> getRawTags() {
-        return tags;
     }
 
     public Set<EntityConfigSummary> getConfig() {
@@ -99,7 +74,6 @@ public class CatalogEntitySummary extends CatalogItemSummary {
     @Override
     public String toString() {
         return super.toString()+"["+
-                "tags="+getRawTags()+"; " +
                 "config="+getConfig()+"; " +
                 "sensors="+getSensors()+"; "+
                 "effectors="+getEffectors()+"; "+

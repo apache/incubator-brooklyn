@@ -116,7 +116,7 @@ public class CatalogTransformer {
         }
         return new CatalogItemSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
-            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), item.isDeprecated(), makeLinks(item));
+            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
@@ -124,7 +124,7 @@ public class CatalogTransformer {
         return new CatalogPolicySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                item.isDeprecated(), makeLinks(item));
+                item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     public static CatalogLocationSummary catalogLocationSummary(BrooklynRestResourceUtils b, CatalogItem<? extends Location,LocationSpec<?>> item) {
@@ -132,7 +132,7 @@ public class CatalogTransformer {
         return new CatalogLocationSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                item.isDeprecated(), makeLinks(item));
+                item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     protected static Map<String, URI> makeLinks(CatalogItem<?,?> item) {

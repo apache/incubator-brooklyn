@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.api.tosca;
+package org.apache.brooklyn.tosca;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -24,12 +24,33 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /** 
- * annotation that can be placed on an entity to give TOSCA metadata such as type, requirements or relationships
+ * Annotation that can be placed on an entity to give TOSCA metadata such as type, requirements or relationships
  */
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = { ElementType.TYPE })
 public @interface Tosca {
 
     String derivedFrom() default "brooklyn.nodes.SoftwareProcess";
-    
+    Capability[] capabilities() default {};
+    Requirement[] requirements() default {};
+
+    @Retention(value = RetentionPolicy.RUNTIME)
+    @Target(value = { ElementType.TYPE })
+    public @interface Capability {
+
+        String id();
+        String type();
+        int upperBound() default Integer.MAX_VALUE;
+    }
+
+    @Retention(value = RetentionPolicy.RUNTIME)
+    @Target(value = { ElementType.TYPE })
+    public @interface Requirement {
+
+        String id();
+        String capabilityType();
+        String relationshipType();
+        int lowerBound() default 0;
+        int upperBound() default Integer.MAX_VALUE;
+    }
 }

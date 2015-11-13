@@ -31,6 +31,7 @@ import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import org.apache.brooklyn.tosca.Tosca;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.time.Duration;
@@ -41,6 +42,9 @@ import org.apache.brooklyn.util.time.Duration;
 @Catalog(name="Tomcat Server",
         description="Apache Tomcat is an open source software implementation of the Java Servlet and JavaServer Pages technologies",
         iconUrl="classpath:///tomcat-logo.png")
+@Tosca(requirements = {
+        @Tosca.Requirement(id = "database_endpoint", capabilityType = "tosca.capabilities.Endpoint.Database", relationshipType = "brooklyn.relationships.Configure", upperBound = 1)
+})
 @ImplementedBy(TomcatServerImpl.class)
 public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasShortName {
 
