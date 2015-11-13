@@ -18,28 +18,23 @@
  */
 package org.apache.brooklyn.test.framework;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.util.core.task.Tasks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import javax.annotation.Nullable;
 import java.util.UUID;
 
 import static org.apache.brooklyn.test.framework.BaseTest.TARGET_ENTITY;
@@ -47,9 +42,8 @@ import static org.apache.brooklyn.test.framework.SimpleCommand.DEFAULT_COMMAND;
 import static org.apache.brooklyn.test.framework.SimpleCommandTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-// TODO investigate proper status of this test that requires SSH access to localhost
-public class SimpleCommandImplTest {
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandImplTest.class);
+public class SimpleCommandImplIntegrationTest {
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandImplIntegrationTest.class);
 
     private static final String UP = "up";
     private TestApplication app;
@@ -76,7 +70,7 @@ public class SimpleCommandImplTest {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
-    @Test(enabled = false)
+    @Test(groups = "Integration")
     public void shouldInvokeCommand() {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
@@ -95,7 +89,7 @@ public class SimpleCommandImplTest {
 
     }
 
-    @Test(enabled = false)
+    @Test(groups = "Integration")
     public void shouldNotBeUpIfAssertionFails() {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
