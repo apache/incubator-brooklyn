@@ -1,17 +1,31 @@
-# Entities
-
+---
+title: Entities
+layout: website-normal
+---
 ## TestCase
-A logical grouping for tests eg Restart tests
+A logical grouping for tests, e.g. Restart tests.
+
 ```
 type: org.apache.brooklyn.test.framework.TestCase
-  name: Stop Test
-  brooklyn.children:
+name: Stop Test
+brooklyn.children:
+  - ***
+  - ***
+```
+
+## ParallelTestCase
+A logical grouping for tests where each child is started in parallel instead of being run sequentially.
+
+```
+type: org.apache.brooklyn.test.framework.ParallelTestCase
+name: Start Test
+brooklyn.children:
   - ***
   - ***
 ```
 
 ## TestSensor
-Entity that tests a sensor value on another entity eg service.isUp == TRUE
+Entity that tests a sensor value on another entity, e.g. service.isUp == TRUE.
 
 #### Configuration
 | Key | Description | Required |
@@ -37,7 +51,7 @@ timeout: 5m
 ```
 
 ## TestEffector
-Entity that invokes an effector on another entity eg restart
+Entity that invokes an effector on another entity, e.g. restart.
 
 #### Configuration
 | Key | Description | Required |
@@ -64,7 +78,7 @@ params:
 ```
 
 ## TestHtmlCall
-Entity that makes a HTTP Request and tests the response
+Entity that makes a HTTP Request and tests the response.
 
 #### Configuration
 | Key | Description | Required |
