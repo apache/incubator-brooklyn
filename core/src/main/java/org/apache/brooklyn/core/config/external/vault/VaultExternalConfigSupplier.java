@@ -92,13 +92,13 @@ public abstract class VaultExternalConfigSupplier extends AbstractExternalConfig
     protected JsonObject apiGet(String path, ImmutableMap<String, String> headers) {
         try {
             String uri = Urls.mergePaths(endpoint, path);
-            LOG.info("Vault request - GET: {}", uri);
-            LOG.info("Vault request - headers: {}", headers.toString());
+            LOG.debug("Vault request - GET: {}", uri);
+            LOG.debug("Vault request - headers: {}", headers.toString());
             HttpToolResponse response = HttpTool.httpGet(httpClient, Urls.toUri(uri), headers);
-            LOG.info("Vault response - code: {} {}", new Object[]{Integer.toString(response.getResponseCode()), response.getReasonPhrase()});
-            LOG.info("Vault response - headers: {}", response.getHeaderLists().toString());
+            LOG.debug("Vault response - code: {} {}", new Object[]{Integer.toString(response.getResponseCode()), response.getReasonPhrase()});
+            LOG.debug("Vault response - headers: {}", response.getHeaderLists().toString());
             String responseBody = new String(response.getContent(), CHARSET_NAME);
-            LOG.info("Vault response - body: {}", responseBody);
+            LOG.debug("Vault response - body: {}", responseBody);
             if (HttpTool.isStatusCodeHealthy(response.getResponseCode())) {
                 return gson.fromJson(responseBody, JsonObject.class);
             } else {
@@ -113,14 +113,14 @@ public abstract class VaultExternalConfigSupplier extends AbstractExternalConfig
         try {
             String body = gson.toJson(requestData);
             String uri = Urls.mergePaths(endpoint, path);
-            LOG.info("Vault request - POST: {}", uri);
-            LOG.info("Vault request - headers: {}", headers.toString());
-            LOG.info("Vault request - body: {}", body);
+            LOG.debug("Vault request - POST: {}", uri);
+            LOG.debug("Vault request - headers: {}", headers.toString());
+            LOG.debug("Vault request - body: {}", body);
             HttpToolResponse response = HttpTool.httpPost(httpClient, Urls.toUri(uri), headers, body.getBytes(CHARSET_NAME));
-            LOG.info("Vault response - code: {} {}", new Object[]{Integer.toString(response.getResponseCode()), response.getReasonPhrase()});
-            LOG.info("Vault response - headers: {}", response.getHeaderLists().toString());
+            LOG.debug("Vault response - code: {} {}", new Object[]{Integer.toString(response.getResponseCode()), response.getReasonPhrase()});
+            LOG.debug("Vault response - headers: {}", response.getHeaderLists().toString());
             String responseBody = new String(response.getContent(), CHARSET_NAME);
-            LOG.info("Vault response - body: {}", responseBody);
+            LOG.debug("Vault response - body: {}", responseBody);
             if (HttpTool.isStatusCodeHealthy(response.getResponseCode())) {
                 return gson.fromJson(responseBody, JsonObject.class);
             } else {
