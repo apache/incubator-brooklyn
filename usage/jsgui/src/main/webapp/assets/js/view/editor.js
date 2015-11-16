@@ -18,8 +18,9 @@
 */
 define([
     "underscore", "jquery", "backbone",
-    "text!tpl/script/swagger.html",
-    
+    "text!tpl/editor/page.html",
+
+    // no constructor
     "jquery-slideto",
     "jquery-wiggle",
     "jquery-ba-bbq",

@@ -280,3 +280,8 @@ button.catalog-submit-button.btn {
 .CodeMirror pre.CodeMirror-placeholder {
     color: #999;
 }
+
+.margin-fix {
+margin-left: 20px;
+margin-top: 10px;
+}
