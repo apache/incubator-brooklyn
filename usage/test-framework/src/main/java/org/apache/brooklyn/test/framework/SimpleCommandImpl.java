@@ -83,8 +83,8 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
      * Gives the opportunity to sub-classes to do additional work based on the result of the command.
      */
     protected void handle(SimpleCommand.Result result) {
-        LOG.debug("Result is {}\nwith output [\n{}\n] and error [\n{}\n]", new Object[] {
-                result.getExitCode(), shorten(result.getStdout()), shorten(result.getStderr())
+        LOG.debug("{}, Result is {}\nwith output [\n{}\n] and error [\n{}\n]", new Object[] {
+                this, result.getExitCode(), shorten(result.getStdout()), shorten(result.getStderr())
         });
     }
 
@@ -108,13 +108,13 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
 
     @Override
     public void stop() {
-        LOG.debug("Stopping simple command");
+        LOG.debug("{} Stopping simple command", this);
         setUpAndRunState(false, STOPPED);
     }
 
     @Override
     public void restart() {
-        LOG.debug("Restarting simple command");
+        LOG.debug("{} Restarting simple command", this);
         setUpAndRunState(true, RUNNING);
     }
 
@@ -189,7 +189,7 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
         SshMachineLocation machine = getSshMachine(ImmutableList.of(machineLocation));
         SshEffectorTasks.SshEffectorTaskFactory<Integer> etf = SshEffectorTasks.ssh(machine, command);
 
-        LOG.debug("Creating task to execute '{}' on location {}", command, machine);
+        LOG.debug("{} Creating task to execute '{}' on location {}", new Object[] {this, command, machine});
         ProcessTaskWrapper<Integer> job = DynamicTasks.queue(etf);
         DynamicTasks.waitForLast();
         return buildResult(job);
