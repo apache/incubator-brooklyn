@@ -48,16 +48,11 @@ public class SimpleShellCommandIntegrationTest extends BrooklynAppUnitTestSuppor
 
     private static final String UP = "up";
     private LocalhostMachineProvisioningLocation localhost;
-    private String testId;
-
 
     protected void setUpApp() {
         super.setUpApp();
-        testId = UUID.randomUUID().toString();
-
         localhost = app.getManagementContext().getLocationManager()
-            .createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
-                .configure("name", testId));
+            .createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
     }
 
     @Test(groups = "Integration")
