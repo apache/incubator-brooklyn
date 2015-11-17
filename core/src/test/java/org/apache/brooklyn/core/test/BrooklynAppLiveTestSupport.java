@@ -19,15 +19,9 @@
 package org.apache.brooklyn.core.test;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
-import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 /**
@@ -36,31 +30,17 @@ import org.testng.annotations.BeforeMethod;
  * Uses a management context that will not load {@code ~/.brooklyn/catalog.xml} but will
  * read from the default {@code ~/.brooklyn/brooklyn.properties}.
  */
-public class BrooklynAppLiveTestSupport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(BrooklynAppLiveTestSupport.class);
+public class BrooklynAppLiveTestSupport extends BrooklynMgmtUnitTestSupport {
 
     protected TestApplication app;
-    protected ManagementContextInternal mgmt;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         if (mgmt!=null) {
-            app = ApplicationBuilder.newManagedApp(newAppSpec(), mgmt);
+            app = mgmt.getEntityManager().createEntity(newAppSpec());
         } else {
             mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
-            app = ApplicationBuilder.newManagedApp(newAppSpec(), mgmt);
-        }
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        try {
-            if (mgmt != null) Entities.destroyAll(mgmt);
-        } catch (Throwable t) {
-            LOG.error("Caught exception in tearDown method", t);
-        } finally {
-            mgmt = null;
+            app = mgmt.getEntityManager().createEntity(newAppSpec());
         }
     }
 

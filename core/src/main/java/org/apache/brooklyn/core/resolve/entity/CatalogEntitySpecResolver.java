@@ -21,9 +21,9 @@ package org.apache.brooklyn.core.resolve.entity;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +65,7 @@ public class CatalogEntitySpecResolver extends AbstractEntitySpecResolver {
         boolean recursiveCall = parentEncounteredTypes.contains(item.getSymbolicName());
         if (recursiveCall) return null;
         return mgmt.getTypeRegistry().createSpec(item, 
-            RegisteredTypeConstraints.alreadyVisited(parentEncounteredTypes), 
+            RegisteredTypeLoadingContexts.alreadyEncountered(parentEncounteredTypes), 
             EntitySpec.class);
     }
 

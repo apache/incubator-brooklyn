@@ -37,13 +37,12 @@ import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.plan.PlanToSpecFactory;
-import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -62,7 +61,6 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
@@ -301,7 +299,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (loadedItem == null) throw new RuntimeException(item+" not in catalog; cannot create spec");
         if (loadedItem.getSpecType()==null) return null;
 
-        SpecT spec = internalCreateSpecWithTransformers(mgmt, loadedItem, MutableSet.<String>of());
+        SpecT spec = internalCreateSpecLegacy(mgmt, loadedItem, MutableSet.<String>of(), true);
         if (spec != null) {
             return spec;
         }
@@ -310,28 +308,22 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     /** @deprecated since introduction in 0.9.0, only used for backwards compatibility, can be removed any time;
-     * uses the type-creation info on the item */
+     * uses the type-creation info on the item.
+     * deprecated transformers must be included by routines which don't use {@link BrooklynTypePlanTransformer} instances;
+     * otherwise deprecated transformers should be excluded. (deprecation is taken as equivalent to having a new-style transformer.) */
     @Deprecated 
-    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT internalCreateSpecWithTransformers(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
+    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT internalCreateSpecLegacy(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes, boolean includeDeprecatedTransformers) {
         // deprecated lookup
         if (encounteredTypes.contains(item.getSymbolicName())) {
             throw new IllegalStateException("Type being resolved '"+item.getSymbolicName()+"' has already been encountered in " + encounteredTypes + "; recursive cycle detected");
         }
-        Maybe<SpecT> specMaybe = PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, SpecT>() {
+        Maybe<SpecT> specMaybe = org.apache.brooklyn.core.plan.PlanToSpecFactory.attemptWithLoaders(mgmt, includeDeprecatedTransformers, new Function<org.apache.brooklyn.core.plan.PlanToSpecTransformer, SpecT>() {
             @Override
-            public SpecT apply(PlanToSpecTransformer input) {
+            public SpecT apply(org.apache.brooklyn.core.plan.PlanToSpecTransformer input) {
                 return input.createCatalogSpec(item, encounteredTypes);
             }
         });
         return specMaybe.get();
-    }
-
-    /**
-     * as internalCreateSpecFromItemWithTransformers, but marking contexts where the creation is being attempted
-     * @deprecated since introduction in 0.9.0, only used for backwards compatibility, can be removed any time */
-    @Deprecated
-    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT internalCreateSpecAttempting(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
-        return internalCreateSpecWithTransformers(mgmt, item, encounteredTypes);
     }
 
     @Deprecated /** @deprecated since 0.7.0 only used by other deprecated items */ 
@@ -745,7 +737,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     .libraries(libraryBundles)
                     .build();
                 @SuppressWarnings("unchecked")
-                AbstractBrooklynObjectSpec<?, ?> spec = internalCreateSpecAttempting(mgmt, itemToAttempt, MutableSet.<String>of());
+                AbstractBrooklynObjectSpec<?, ?> spec = internalCreateSpecLegacy(mgmt, itemToAttempt, MutableSet.<String>of(), true);
                 if (spec!=null) {
                     catalogItemType = candidateCiType;
                     planYaml = candidateYaml;
@@ -783,7 +775,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                             .libraries(libraryBundles)
                             .build();
                     @SuppressWarnings("unchecked")
-                    AbstractBrooklynObjectSpec<?, ?> cutdownSpec = internalCreateSpecAttempting(mgmt, itemToAttempt, MutableSet.<String>of());
+                    AbstractBrooklynObjectSpec<?, ?> cutdownSpec = internalCreateSpecLegacy(mgmt, itemToAttempt, MutableSet.<String>of(), true);
                     if (cutdownSpec!=null) {
                         catalogItemType = candidateCiType;
                         planYaml = candidateYaml;
@@ -824,15 +816,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return Strings.join(lines, "\n");
     }
 
-    private CatalogItemBuilder<?> createItemBuilder(CatalogItemType itemType, String itemId, String version) {
-        Preconditions.checkNotNull(itemType, "itemType required");
-        switch (itemType) {
-        case ENTITY: return CatalogItemBuilder.newEntity(itemId, version);
-        case TEMPLATE: return CatalogItemBuilder.newTemplate(itemId, version);
-        case POLICY: return CatalogItemBuilder.newPolicy(itemId, version);
-        case LOCATION: return CatalogItemBuilder.newLocation(itemId, version);
-        }
-        throw new IllegalStateException("Unexpected itemType: "+itemType);
+    static CatalogItemBuilder<?> createItemBuilder(CatalogItemType itemType, String symbolicName, String version) {
+        return CatalogItemBuilder.newItem(itemType, symbolicName, version);
     }
 
     // these kept as their logic may prove useful; Apr 2015

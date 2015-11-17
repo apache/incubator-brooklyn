@@ -36,6 +36,8 @@ import org.testng.annotations.Test;
  * which illustrates how the {@link PlanToSpecTransformer} can be used. */
 public class XmlPlanToSpecTransformerTest {
 
+    // TEST is REPLACED by ExampleXmlTypePlanTransformerTest
+   
     private ManagementContext mgmt;
 
     @BeforeMethod(alwaysRun=true)

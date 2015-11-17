@@ -162,7 +162,7 @@ public class LocationsYamlTest extends AbstractYamlTest {
         
         try {
             createStartWaitAndLogApplication(new StringReader(yaml));
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             if (!e.toString().contains("Conflicting 'location' and 'locations'")) throw e;
         }
     }
@@ -178,7 +178,7 @@ public class LocationsYamlTest extends AbstractYamlTest {
         
         try {
             createStartWaitAndLogApplication(new StringReader(yaml));
-        } catch (IllegalStateException e) {
+        } catch (Exception e) {
             if (!e.toString().contains("must be a string or map")) throw e;
         }
     }

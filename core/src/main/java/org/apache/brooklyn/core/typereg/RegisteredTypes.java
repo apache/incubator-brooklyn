@@ -18,21 +18,52 @@
  */
 package org.apache.brooklyn.core.typereg;
 
-import java.util.Collection;
-import java.util.List;
+import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
-import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.api.typereg.RegisteredType.TypeImplementationPlan;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
+import org.apache.brooklyn.core.typereg.JavaClassNameTypePlanTransformer.JavaClassNameTypeImplementationPlan;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.yaml.Yamls;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 
+/**
+ * Utility and preferred creation mechanisms for working with {@link RegisteredType} instances.
+ * <p>
+ * Use {@link #bean(String, String, TypeImplementationPlan, Class)} and {@link #spec(String, String, TypeImplementationPlan, Class)}
+ * to create {@link RegisteredType} instances.
+ * <p>
+ * See {@link #isSubtypeOf(RegisteredType, Class)} or {@link #isSubtypeOf(RegisteredType, RegisteredType)} to 
+ * inspect the type hierarchy.
+ */
 public class RegisteredTypes {
+
+    @SuppressWarnings("serial")
+    static ConfigKey<Class<?>> ACTUAL_JAVA_TYPE = ConfigKeys.newConfigKey(new TypeToken<Class<?>>() {}, "java.type.actual",
+        "The actual Java type which will be instantiated (bean) or pointed at (spec)");
 
     /** @deprecated since it was introduced in 0.9.0; for backwards compatibility only, may be removed at any point */
     @Deprecated
@@ -47,17 +78,16 @@ public class RegisteredTypes {
     @Deprecated
     public static RegisteredType of(CatalogItem<?, ?> item) {
         if (item==null) return null;
-        TypeImplementation impl = null;
+        TypeImplementationPlan impl = null;
         if (item.getPlanYaml()!=null) {
-            impl = new TypeImplementation(null, item.getPlanYaml());
+            impl = new BasicTypeImplementationPlan(null, item.getPlanYaml());
         } else if (item.getJavaType()!=null) {
-            impl = new JavaTypeImplementation(item.getJavaType());
+            impl = new JavaClassNameTypeImplementationPlan(item.getJavaType());
         } else {
             throw new IllegalStateException("Unsupported catalog item "+item+" when trying to create RegisteredType");
         }
         
-        RegisteredSpecType type = new RegisteredSpecType(item.getSymbolicName(), item.getVersion(),
-            item.getCatalogItemJavaType(), impl);
+        BasicRegisteredType type = (BasicRegisteredType) spec(item.getSymbolicName(), item.getVersion(), impl, item.getCatalogItemJavaType());
         type.bundles = item.getLibraries()==null ? ImmutableList.<OsgiBundleWithUrl>of() : ImmutableList.<OsgiBundleWithUrl>copyOf(item.getLibraries());
         type.displayName = item.getDisplayName();
         type.description = item.getDescription();
@@ -66,180 +96,247 @@ public class RegisteredTypes {
         type.deprecated = item.isDeprecated();
 
         // TODO
-        // javaType, specType, registeredTypeName ...
-        // tags ?
+        // probably not: javaType, specType, registeredTypeName ...
+        // maybe: tags ?
         return type;
     }
 
-    /** Visitor adapter which can be used to ensure all kinds are supported */
-    public static abstract class RegisteredTypeKindVisitor<T> {
-        public T visit(RegisteredType type) {
-            if (type==null) throw new NullPointerException("Registered type must not be null");
-            if (type instanceof RegisteredSpecType) {
-                return visitSpec((RegisteredSpecType)type);
+    /** Preferred mechanism for defining a bean {@link RegisteredType}. */
+    public static RegisteredType bean(String symbolicName, String version, TypeImplementationPlan plan, @Nullable Class<?> superType) {
+        return addSuperType(new BasicRegisteredType(RegisteredTypeKind.BEAN, symbolicName, version, plan), superType);
+    }
+    
+    /** Preferred mechanism for defining a spec {@link RegisteredType}. */
+    // TODO we currently allow symbolicName and version to be null for the purposes of creation, internal only in BasicBrooklynTypeRegistry.createSpec
+    // (ideally the API in TypePlanTransformer can be changed so even that is not needed)
+    public static RegisteredType spec(String symbolicName, String version, TypeImplementationPlan plan, @Nullable Class<?> superType) {
+        return addSuperType(new BasicRegisteredType(RegisteredTypeKind.SPEC, symbolicName, version, plan), superType);
+    }
+
+    /** returns the {@link Class} object corresponding to the given java type name,
+     * using the cache on the type and the loader defined on the type
+     * @param mgmt */
+    @Beta
+    // TODO should this be on the AbstractTypePlanTransformer ?
+    public static Class<?> loadActualJavaType(String javaTypeName, ManagementContext mgmt, RegisteredType type, RegisteredTypeLoadingContext context) {
+        Class<?> result = ((BasicRegisteredType)type).getCache().get(ACTUAL_JAVA_TYPE);
+        if (result!=null) return result;
+        
+        result = CatalogUtils.newClassLoadingContext(mgmt, type, context==null ? null : context.getLoader()).loadClass( javaTypeName );
+        
+        ((BasicRegisteredType)type).getCache().put(ACTUAL_JAVA_TYPE, result);
+        return result;
+    }
+
+    @Beta
+    public static RegisteredType addSuperType(RegisteredType type, @Nullable Class<?> superType) {
+        if (superType!=null) {
+            ((BasicRegisteredType)type).superTypes.add(superType);
+        }
+        return type;
+    }
+
+    @Beta
+    public static RegisteredType addSuperType(RegisteredType type, @Nullable RegisteredType superType) {
+        if (superType!=null) {
+            if (isSubtypeOf(superType, type)) {
+                throw new IllegalStateException(superType+" declares "+type+" as a supertype; cannot set "+superType+" as a supertype of "+type);
             }
-            // others go here
-            throw new IllegalStateException("Unexpected registered type: "+type.getClass());
+            ((BasicRegisteredType)type).superTypes.add(superType);
         }
-
-        protected abstract T visitSpec(RegisteredSpecType type);
-        
-        // TODO beans, others
-    }
-    
-    public static RegisteredTypeKind getKindOf(RegisteredType type) {
-        return new RegisteredTypeKindVisitor<RegisteredTypeKind>() {
-            @Override protected RegisteredTypeKind visitSpec(RegisteredSpecType type) { return RegisteredTypeKind.SPEC; }
-        }.visit(type);
-    }
-    
-    public abstract static class AbstractRegisteredType implements RegisteredType {
-
-        final String symbolicName;
-        final String version;
-        
-        List<OsgiBundleWithUrl> bundles;
-        String displayName;
-        String description;
-        String iconUrl;
-        boolean deprecated;
-        boolean disabled;
-
-        // TODO ensure this is re-populated on rebind
-        transient Class<?> javaType;
-        
-        public AbstractRegisteredType(String symbolicName, String version, Class<?> javaType) {
-            this.symbolicName = symbolicName;
-            this.version = version;
-            this.javaType = javaType;
-        }
-
-        @Override
-        public String getId() {
-            return symbolicName + (version!=null ? ":"+version : "");
-        }
-
-        @Override
-        public String getSymbolicName() {
-            return symbolicName;
-        }
-
-        @Override
-        public String getVersion() {
-            return version;
-        }
-        
-        @Override
-        public Collection<OsgiBundleWithUrl> getLibraries() {
-            return bundles;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        @Override
-        public String getDescription() {
-            return description;
-        }
-
-        @Override
-        public String getIconUrl() {
-            return iconUrl;
-        }
-        
-        @Override
-        public boolean isDisabled() {
-            return disabled;
-        }
-        
-        @Override
-        public boolean isDeprecated() {
-            return deprecated;
-        }
-        
-        @Override
-        public Class<?> getJavaType() {
-            return javaType;
-        }
-        
-        @Override
-        public String toString() {
-            return JavaClassNames.simpleClassName(this)+"["+getId()+
-                (isDisabled() ? ";DISABLED" : "")+
-                (isDeprecated() ? ";deprecated" : "")+
-                "]";
-        }
+        return type;
     }
 
-    // TODO
-//    public static class RegisteredBeanType extends AbstractRegisteredType {
-//        
-//    }
-    
-    public static class RegisteredSpecType extends AbstractRegisteredType {
-
-        private TypeImplementation impl;
-        
-        public RegisteredSpecType(String symbolicName, String version, Class<?> javaType, TypeImplementation impl) {
-            super(symbolicName, version, javaType);
-            this.impl = impl;
-        }
-
-        public TypeImplementation getImplementation() {
-            return impl;
-        }
-    }
-
-    public static class TypeImplementation {
-        final String format;
-        final Object data;
-        
-        public TypeImplementation(String kind, Object data) {
-            super();
-            this.format = kind;
-            this.data = data;
-        }
-
-        /** details of the implementation, if known;
-         * this may be null if the relevant {@link PlanToSpecTransformer} was not declared when created,
-         * but in general we should look to determine the kind as early as possible and use that
-         * to retrieve the appropriate such transformer.
-         */
-        public String getFormat() {
-            return format;
-        }
-        
-        public Object getData() {
-            return data;
-        }
-    }
-    
-    public static class JavaTypeImplementation extends TypeImplementation {
-        public static final String FORMAT = "java";
-        public JavaTypeImplementation(String javaType) {
-            super(FORMAT, javaType);
-        }
-        public String getJavaType() { return (String)getData(); }
-    }
-    
-//    // TODO remove, unless we want it
-//    public static class CampYamlTypeImplementation extends TypeImplementation {
-//        public static final String FORMAT = "camp";
-//        public CampYamlTypeImplementation(String javaType) {
-//            super(FORMAT, javaType);
-//        }
-//        public String getCampYaml() { return (String)getData(); }
-//    }
-
-    /** returns the implementation data for a spec if it is a string (e.g. plan yaml or java class name); else false */
+    /** returns the implementation data for a spec if it is a string (e.g. plan yaml or java class name); else throws */
     @Beta
     public static String getImplementationDataStringForSpec(RegisteredType item) {
-        if (!(item instanceof RegisteredSpecType)) return null;
-        Object data = ((RegisteredSpecType)item).getImplementation().getData();
-        if (data instanceof String) return (String) data;
-        return null;
+        if (item==null || item.getPlan()==null) return null;
+        Object data = item.getPlan().getPlanData();
+        if (!(data instanceof String)) throw new IllegalStateException("Expected plan data for "+item+" to be a string");
+        return (String)data;
+    }
+
+    /** returns an implementation of the spec class corresponding to the given target type;
+     * for use in {@link BrooklynTypePlanTransformer#create(RegisteredType, RegisteredTypeLoadingContext)} 
+     * implementations when dealing with a spec; returns null if none found
+     * @param mgmt */
+    @Beta
+    public static AbstractBrooklynObjectSpec<?,?> newSpecInstance(ManagementContext mgmt, Class<? extends BrooklynObject> targetType) throws Exception {
+        Class<? extends AbstractBrooklynObjectSpec<?, ?>> specType = RegisteredTypeLoadingContexts.lookupSpecTypeForTarget(targetType);
+        if (specType==null) return null;
+        Method createMethod = specType.getMethod("create", Class.class);
+        return (AbstractBrooklynObjectSpec<?, ?>) createMethod.invoke(null, targetType);
+    }
+
+    /** Returns a wrapped map, if the object is YAML which parses as a map; 
+     * otherwise returns absent capable of throwing an error with more details */
+    @SuppressWarnings("unchecked")
+    public static Maybe<Map<?,?>> getAsYamlMap(Object planData) {
+        if (!(planData instanceof String)) return Maybe.absent("not a string");
+        Iterable<Object> result;
+        try {
+            result = Yamls.parseAll((String)planData);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            return Maybe.absent(e);
+        }
+        Iterator<Object> ri = result.iterator();
+        if (!ri.hasNext()) return Maybe.absent("YAML has no elements in it");
+        Object r1 = ri.next();
+        if (ri.hasNext()) return Maybe.absent("YAML has multiple elements in it");
+        if (r1 instanceof Map) return (Maybe<Map<?,?>>)(Maybe<?>) Maybe.of(r1);
+        return Maybe.absent("YAML does not contain a map");
+    }
+
+    /** 
+     * Queries recursively the supertypes of {@link RegisteredType} to see whether it 
+     * inherits from the given {@link RegisteredType} */
+    public static boolean isSubtypeOf(RegisteredType type, RegisteredType superType) {
+        if (type.equals(superType)) return true;
+        for (Object st: type.getSuperTypes()) {
+            if (st instanceof RegisteredType) {
+                if (isSubtypeOf((RegisteredType)st, superType)) return true;
+            }
+        }
+        return false;
+    }
+
+    /** 
+     * Queries recursively the supertypes of {@link RegisteredType} to see whether it 
+     * inherits from the given {@link Class} */
+    public static boolean isSubtypeOf(RegisteredType type, Class<?> superType) {
+        return isAnyTypeSubtypeOf(type.getSuperTypes(), superType);
     }
     
+    /** 
+     * Queries recursively the given types (either {@link Class} or {@link RegisteredType}) 
+     * to see whether any inherit from the given {@link Class} */
+    public static boolean isAnyTypeSubtypeOf(Set<Object> candidateTypes, Class<?> superType) {
+        return isAnyTypeOrSuperSatisfying(candidateTypes, Predicates.assignableFrom(superType));
+    }
+
+    /** 
+     * Queries recursively the given types (either {@link Class} or {@link RegisteredType}) 
+     * to see whether any java superclasses satisfy the given {@link Predicate} */
+    public static boolean isAnyTypeOrSuperSatisfying(Set<Object> candidateTypes, Predicate<Class<?>> filter) {
+        for (Object st: candidateTypes) {
+            if (st instanceof Class) {
+                if (filter.apply((Class<?>)st)) return true;
+            }
+        }
+        for (Object st: candidateTypes) {
+            if (st instanceof RegisteredType) {
+                if (isAnyTypeOrSuperSatisfying(((RegisteredType)st).getSuperTypes(), filter)) return true;
+            }
+        }
+        return false;
+    }
+
+    public static RegisteredType validate(RegisteredType item, final RegisteredTypeLoadingContext constraint) {
+        if (item==null || constraint==null) return item;
+        if (constraint.getExpectedKind()!=null && !constraint.getExpectedKind().equals(item.getKind()))
+            throw new IllegalStateException(item+" is not the expected kind "+constraint.getExpectedKind());
+        if (constraint.getExpectedJavaSuperType()!=null) {
+            if (!isSubtypeOf(item, constraint.getExpectedJavaSuperType())) {
+                throw new IllegalStateException(item+" is not for the expected type "+constraint.getExpectedJavaSuperType());
+            }
+        }
+        return item;
+    }
+
+    /** 
+     * Checks whether the given object appears to be an instance of the given registered type */
+    private static boolean isSubtypeOf(Class<?> candidate, RegisteredType type) {
+        for (Object st: type.getSuperTypes()) {
+            if (st instanceof RegisteredType) {
+                if (!isSubtypeOf(candidate, (RegisteredType)st)) return false;
+            }
+            if (st instanceof Class) {
+                if (!((Class<?>)st).isAssignableFrom(candidate)) return false;
+            }
+        }
+        return true;
+    }
+
+    public static <T> T validate(final T object, final RegisteredType type, final RegisteredTypeLoadingContext constraint) {
+        RegisteredTypeKind kind = type!=null ? type.getKind() : constraint!=null ? constraint.getExpectedKind() : null;
+        if (kind==null) {
+            if (object instanceof AbstractBrooklynObjectSpec) kind=RegisteredTypeKind.SPEC;
+            else kind=RegisteredTypeKind.BEAN;
+        }
+        return new RegisteredTypeKindVisitor<T>() {
+            @Override
+            protected T visitSpec() {
+                return validateSpec(object, type, constraint);
+            }
+
+            @Override
+            protected T visitBean() {
+                return validateBean(object, type, constraint);
+            }
+        }.visit(kind);
+    }
+
+    private static <T> T validateBean(T object, RegisteredType type, final RegisteredTypeLoadingContext constraint) {
+        if (object==null) return null;
+        
+        if (type!=null) {
+            if (type.getKind()!=RegisteredTypeKind.BEAN)
+                throw new IllegalStateException("Validating a bean when type is "+type.getKind()+" "+type);
+            if (!isSubtypeOf(object.getClass(), type))
+                throw new IllegalStateException(object+" does not have all the java supertypes of "+type);
+        }
+
+        if (constraint!=null) {
+            if (constraint.getExpectedKind()!=RegisteredTypeKind.BEAN)
+                throw new IllegalStateException("Validating a bean when constraint expected "+constraint.getExpectedKind());
+            if (constraint.getExpectedJavaSuperType()!=null && !constraint.getExpectedJavaSuperType().isInstance(object))
+                throw new IllegalStateException(object+" is not of the expected java supertype "+constraint.getExpectedJavaSuperType());
+        }
+        
+        return object;
+    }
+
+    private static <T> T validateSpec(T object, RegisteredType rType, final RegisteredTypeLoadingContext constraint) {
+        if (object==null) return null;
+        
+        if (!(object instanceof AbstractBrooklynObjectSpec)) {
+            throw new IllegalStateException("Found "+object+" when expecting a spec");
+        }
+        Class<?> targetType = ((AbstractBrooklynObjectSpec<?,?>)object).getType();
+        
+        if (targetType==null) {
+            throw new IllegalStateException("Spec "+object+" does not have a target type");
+        }
+        
+        if (rType!=null) {
+            if (rType.getKind()!=RegisteredTypeKind.SPEC)
+                throw new IllegalStateException("Validating a spec when type is "+rType.getKind()+" "+rType);
+            if (!isSubtypeOf(targetType, rType))
+                throw new IllegalStateException(object+" does not have all the java supertypes of "+rType);
+        }
+
+        if (constraint!=null) {
+            if (constraint.getExpectedJavaSuperType()!=null) {
+                if (!constraint.getExpectedJavaSuperType().isAssignableFrom(targetType)) {
+                    throw new IllegalStateException(object+" does not target the expected java supertype "+constraint.getExpectedJavaSuperType());
+                }
+                if (constraint.getExpectedJavaSuperType().isAssignableFrom(BrooklynObjectInternal.class)) {
+                    // don't check spec type; any spec is acceptable
+                } else {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends AbstractBrooklynObjectSpec<?, ?>> specType = RegisteredTypeLoadingContexts.lookupSpecTypeForTarget( (Class<? extends BrooklynObject>) constraint.getExpectedJavaSuperType());
+                    if (specType==null) {
+                        // means a problem in our classification of spec types!
+                        throw new IllegalStateException(object+" is returned as spec for unexpected java supertype "+constraint.getExpectedJavaSuperType());
+                    }
+                    if (!specType.isAssignableFrom(object.getClass())) {
+                        throw new IllegalStateException(object+" is not a spec of the expected java supertype "+constraint.getExpectedJavaSuperType());
+                    }
+                }
+            }
+        }
+        return object;
+    }
+
 }

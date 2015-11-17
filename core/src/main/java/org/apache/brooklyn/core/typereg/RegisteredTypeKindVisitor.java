@@ -16,30 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.api.typereg;
+package org.apache.brooklyn.core.typereg;
 
-import java.util.Set;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
-import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 
-public interface RegisteredTypeConstraint {
+/** Visitor adapter which can be used to ensure all kinds are supported
+ * <p>
+ * By design this class may have abstract methods added without notification,
+ * and subclasses will be responsible for providing the implementation in order to ensure compatibility. */
+public abstract class RegisteredTypeKindVisitor<T> {
     
-    /** The kind required, if specified. */
-    @Nullable public RegisteredTypeKind getKind();
-    
-    /** A java super-type or interface that should be filtered for; 
-     * for specs, this refers to the target type, not the spec 
-     * (eg {@link Entity} not {@link EntitySpec}). 
-     * If nothing is specified, this returns {@link Object}'s class. */
-    @Nonnull public Class<?> getJavaSuperType();
-    
-    /** encountered types, so that during resolution, 
-     * if we have already attempted to resolve a given type,
-     * the instantiator can avoid recursive cycles */
-    public Set<String> getEncounteredTypes();
+    public T visit(RegisteredTypeKind kind) {
+        if (kind==null) return visitNull();
+        switch (kind) {
+        case SPEC: return visitSpec();
+        case BEAN: return visitBean();
+        default:
+            throw new IllegalStateException("Unexpected registered type kind: "+kind);
+        }
+    }
+
+    protected T visitNull() {
+        throw new NullPointerException("Registered type kind must not be null");
+    }
+
+    protected abstract T visitSpec();
+    protected abstract T visitBean();
 }

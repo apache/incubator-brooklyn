@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package brooklyn.policy.basic;
+package org.apache.brooklyn.core.objs;
 
 import java.util.Map;
 

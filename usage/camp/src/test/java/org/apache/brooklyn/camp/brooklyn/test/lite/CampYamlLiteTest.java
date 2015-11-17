@@ -30,11 +30,9 @@ import java.util.Map;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
-import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.spi.Assembly;
@@ -54,7 +52,7 @@ import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -232,7 +230,7 @@ public class CampYamlLiteTest {
     }
 
     private void assertMgmtHasSampleMyCatalogApp(String symbolicName, String bundleUrl) {
-        RegisteredType item = mgmt.getTypeRegistry().get(symbolicName, RegisteredTypeConstraints.spec(Entity.class));
+        RegisteredType item = RegisteredTypes.validate(mgmt.getTypeRegistry().get(symbolicName), RegisteredTypeLoadingContexts.spec(Entity.class));
         assertNotNull(item, "failed to load item with id=" + symbolicName + " from catalog. Entries were: " +
                 Joiner.on(",").join(mgmt.getTypeRegistry().getAll()));
         assertEquals(item.getSymbolicName(), symbolicName);

@@ -27,7 +27,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.slf4j.Logger;
@@ -105,7 +105,7 @@ public class DelegatingEntitySpecResolver extends AbstractEntitySpecResolver {
                         resolversWhoDontSupport.add(resolver.getName() + " (returned null)");
                     }
                 } catch (Exception e) {
-                    otherProblemsFromResolvers.add(new PropagatedRuntimeException("Transformer for "+resolver.getName()+" gave an error creating this plan: "+
+                    otherProblemsFromResolvers.add(new PropagatedRuntimeException("Transformer for "+resolver.getName()+" gave an error creating this plan: ",
                             Exceptions.collapseText(e), e));
                 }
             }
