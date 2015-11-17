@@ -63,6 +63,8 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandImpl.class);
     private static final int A_LINE = 80;
     public static final String DEFAULT_NAME = "download.sh";
+    private static final String CD = "cd";
+    private static final String SHELL_AND = "&&";
 
     private ResourceUtils resourceUtils;
 
@@ -150,8 +152,8 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
 
         if (Strings.isNonBlank(downloadUrl)) {
             String scriptDir = getConfig(SCRIPT_DIR);
-            String destPath = calculateDestPath(downloadUrl, scriptDir);
-            result = executeDownloadedScript(machineLocation, downloadUrl, destPath);
+            String scriptPath = calculateDestPath(downloadUrl, scriptDir);
+            result = executeDownloadedScript(machineLocation, downloadUrl, scriptPath);
         }
 
         if (Strings.isNonBlank(command)) {
@@ -165,17 +167,20 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
         return new IllegalArgumentException(Joiner.on(' ').join(this.toString() + ":", messages));
     }
 
-    private SimpleCommand.Result executeDownloadedScript(MachineLocation machineLocation, String downloadUrl, String destPath) {
+    private SimpleCommand.Result executeDownloadedScript(MachineLocation machineLocation, String url, String scriptPath) {
 
         SshMachineLocation machine = getSshMachine(ImmutableList.<Location>of(machineLocation));
 
-        TaskFactory<?> install = SshTasks.installFromUrl(ImmutableMap.<String, Object>of(), machine, downloadUrl, destPath);
+        TaskFactory<?> install = SshTasks.installFromUrl(ImmutableMap.<String, Object>of(), machine, url, scriptPath);
         DynamicTasks.queue(install);
         DynamicTasks.waitForLast();
 
-        machine.execCommands("make the script executable", ImmutableList.<String>of("chmod u+x " + destPath));
+        machine.execCommands("make the script executable", ImmutableList.<String>of("chmod u+x " + scriptPath));
 
-        return executeShellCommand(machineLocation, destPath);
+        String runDir = getConfig(RUN_DIR);
+        String cdAndRun = Joiner.on(' ').join(CD, runDir, SHELL_AND, scriptPath);
+
+        return executeShellCommand(machineLocation, cdAndRun);
     }
 
 

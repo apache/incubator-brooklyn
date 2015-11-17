@@ -56,6 +56,15 @@ public interface SimpleCommand extends Entity, Startable {
     @SetFromFlag("downloadUrl")
     AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;
 
+    /**
+     * Where the script will be downloaded on the target machine.
+     */
     @SetFromFlag("scriptDir")
-    ConfigKey<String> SCRIPT_DIR = newConfigKey("scriptDir", "directory where downloaded scripts should be put", TMP_DEFAULT);
+    ConfigKey<String> SCRIPT_DIR = newConfigKey("script.dir", "directory where downloaded scripts should be put", TMP_DEFAULT);
+
+    /**
+     * The working directory that the script will be run from on the target machine.
+     */
+    @SetFromFlag("runDir")
+    ConfigKey<String> RUN_DIR = newConfigKey("run.dir", "directory where downloaded scripts should be put", TMP_DEFAULT);
 }

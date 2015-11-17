@@ -37,6 +37,7 @@ import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocati
 import org.apache.brooklyn.test.http.TestHttpRequestHandler;
 import org.apache.brooklyn.test.http.TestHttpServer;
 import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.task.system.internal.SystemProcessTaskFactory;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.FatalRuntimeException;
 import org.apache.brooklyn.util.http.HttpAsserts;
@@ -46,7 +47,12 @@ import org.testng.annotations.*;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.UUID;
 
 import static org.apache.brooklyn.test.framework.BaseTest.TARGET_ENTITY;
@@ -128,6 +134,45 @@ public class SimpleCommandScriptIntegrationTest {
             .withFailMessage("Service should be up");
         assertThat(ServiceStateLogic.getExpectedState(uptime)).isEqualTo(Lifecycle.RUNNING)
             .withFailMessage("Service should be marked running");
+    }
+
+    @Test
+    public void shouldExecuteInTheRightPlace() throws Exception {
+        TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+
+        String testUrl = server.getUrl() + "/" + SCRIPT_NAME;
+        HttpAsserts.assertContentContainsText(testUrl, TEXT);
+
+        String remoteTmp = randomName();
+        SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+            .configure(TARGET_ENTITY, testEntity)
+            .configure(DEFAULT_COMMAND, "mkdir " + remoteTmp)
+            .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0)));
+
+        Path localTmpPath = Paths.get("/tmp/").resolve(randomName());
+        Path pwdSh = localTmpPath.resolve("pwd.sh");
+        Files.createDirectory(localTmpPath);
+        Files.createFile(pwdSh);
+        Files.write(pwdSh, "pwd".getBytes());
+        String pwdUrl = "file:" + pwdSh.toString();
+
+        SimpleCommandTest pwd = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+            .configure(TARGET_ENTITY, testEntity)
+            .configure(DOWNLOAD_URL, pwdUrl)
+            .configure(RUN_DIR, remoteTmp)
+            .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
+            .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, remoteTmp)));
+
+        app.start(ImmutableList.of(localhost));
+
+        assertThat(uptime.sensors().get(SERVICE_UP)).isTrue()
+            .withFailMessage("Service should be up");
+        assertThat(ServiceStateLogic.getExpectedState(uptime)).isEqualTo(Lifecycle.RUNNING)
+            .withFailMessage("Service should be marked running");
+    }
+
+    private String randomName() {
+        return Integer.valueOf(new Random(System.currentTimeMillis()).nextInt(100000)).toString();
     }
 
 }
