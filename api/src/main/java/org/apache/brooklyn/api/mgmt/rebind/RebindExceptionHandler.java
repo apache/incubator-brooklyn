@@ -24,6 +24,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.EntityMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynObjectType;
 import org.apache.brooklyn.api.policy.Policy;
@@ -31,6 +32,7 @@ import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Feed;
 
 import com.google.common.annotations.Beta;
+import org.apache.brooklyn.config.ConfigKey;
 
 /**
  * Handler called on all exceptions to do with rebind.
@@ -90,6 +92,8 @@ public interface RebindExceptionHandler {
     void onNotFound(BrooklynObjectType type, String id);
 
     void onRebindFailed(BrooklynObjectType type, BrooklynObject instance, Exception e);
+
+    void onAddConfigFailed(EntityMemento type, ConfigKey<?> value, Exception e);
 
     void onAddPolicyFailed(EntityLocal entity, Policy policy, Exception e);
 
