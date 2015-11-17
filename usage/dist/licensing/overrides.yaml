@@ -17,6 +17,7 @@
 # under the License.
 #
 
+
 # overrides file for org.heneveld.license-audit-maven-plugin
 # expands/corrects detail needed for generating license notices
 
@@ -27,13 +28,8 @@
   url: http://brooklyn.incubator.apache.org/
   license: ASL2
   internal: true
-- id: org.apache.jclouds
-  url: http://jclouds.apache.org/
-- id: com.fasterxml.jackson
-  url: http://wiki.fasterxml.com/JacksonHome
 
-
-# poms with missing data
+# poms with missing and incorrect data
 
 - id: org.codehaus.jettison:jettison
   url: https://github.com/codehaus/jettison
@@ -41,26 +37,54 @@
 - id: org.glassfish.external:opendmk_jmxremote_optional_jar
   url: https://opendmk.java.net/
   license: CDDL
-
-
-# poms with incorrect data (out-of-date URL's mainly)
+- id: javax.validation:validation-api
+  url: http://beanvalidation.org/
+- id: com.squareup.okhttp:okhttp
+  copyright_by: Square, Inc.
+- id: com.squareup.okio:okio
+  copyright_by: Square, Inc.
+- id: com.wordnik:swagger-core_2.9.1
+  copyright_by: SmartBear Software
+- id: com.wordnik:swagger-jaxrs_2.9.1
+  copyright_by: SmartBear Software
+- id: org.bouncycastle  
+  copyright_by: The Legion of the Bouncy Castle Inc. (http://www.bouncycastle.org)
+- id: org.javassist:javassist
+  copyright_by: Shigeru Chiba
+- id: org.mongodb:mongo-java-driver
+  copyright_by: MongoDB, Inc
+- id: org.apache.httpcomponents:httpclient:*
+  url: http://hc.apache.org/httpcomponents-client-ga
+- id: javax.annotation:jsr250-api:*
+  url: https://jcp.org/en/jsr/detail?id=250
+- id: javax.ws.rs:jsr311-api:*
+  url: https://jsr311.java.net/
+- id: com.thoughtworks.xstream:*:*
+  url: http://x-stream.github.io/
+- id: com.fasterxml.jackson:*:*
+  url: http://wiki.fasterxml.com/JacksonHome
 
 - id: org.hibernate:jtidy:r8-20060801
   license:
   - url: "http://sourceforge.net/p/jtidy/code/HEAD/tree/trunk/jtidy/LICENSE.txt?revision=95"
     name: Java HTML Tidy License
     comment: Original link http://svn.sourceforge.net/viewvc/*checkout*/jtidy/trunk/jtidy/LICENSE.txt?revision=95 is no longer valid
+
 - id: dom4j:dom4j:1.6.1
   url: "http://dom4j.sourceforge.net/"
   license:
   - name: MetaStuff BSD style license (3-clause)
     url: http://dom4j.sourceforge.net/dom4j-1.6.1/license.html
+
 - id: org.python:jython-standalone:2.7-b3
+  copyright_by: Jython Developers
   license:
   - url: http://www.jython.org/license.html
     name: Jython Software License
     comment: Original link http://www.jython.org/Project/license.html is no longer valid
-- id: xpp3:xpp3_min:1.1.4c
+
+- id: xpp3:xpp3_min:*
+  copyright_by: Extreme! Lab, Indiana University
   license:
   - url: https://github.com/apache/openmeetings/blob/a95714ce3f7e587d13d3d0bb3b4f570be15c67a5/LICENSE#L1361
     name: "Indiana University Extreme! Lab Software License, vesion 1.1.1"
