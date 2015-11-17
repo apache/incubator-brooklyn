@@ -22,23 +22,19 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
-import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.test.http.TestHttpRequestHandler;
-import org.apache.brooklyn.test.http.TestHttpServer;
-import org.apache.brooklyn.util.http.HttpAsserts;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.*;
+import org.testng.annotations.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Random;
 import java.util.UUID;
 
@@ -47,73 +43,74 @@ import static org.apache.brooklyn.test.framework.SimpleCommand.COMMAND;
 import static org.apache.brooklyn.test.framework.SimpleCommandTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SimpleCommandScriptIntegrationTest {
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandScriptIntegrationTest.class);
+public class SimpleCommandIntegrationTest extends BrooklynAppUnitTestSupport {
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandIntegrationTest.class);
 
     private static final String UP = "up";
-    private static final String SCRIPT_NAME = "script.sh";
-    private static final String TEXT = "hello world";
-    private TestApplication app;
-    private ManagementContext managementContext;
     private LocalhostMachineProvisioningLocation localhost;
-    private TestHttpServer server;
     private String testId;
 
 
-    @BeforeClass
-    public void setUpTests() {
-        server = initializeServer();
-    }
-
-    @AfterClass
-    public void tearDownTests() {
-        if (null != server) {
-            server.stop();
-        }
-    }
-
-    @BeforeMethod
-    public void setUp() {
-
+    protected void setUpApp() {
+        super.setUpApp();
         testId = UUID.randomUUID().toString();
 
-        app = TestApplication.Factory.newManagedInstanceForTests();
-        managementContext = app.getManagementContext();
-
-        localhost = managementContext.getLocationManager()
+        localhost = app.getManagementContext().getLocationManager()
             .createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
                 .configure("name", testId));
     }
 
-    @AfterMethod(alwaysRun = true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+    @Test(groups = "Integration")
+    public void shouldInvokeCommand() {
+        TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+
+        SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+            .configure(TARGET_ENTITY, testEntity)
+            .configure(COMMAND, "uptime")
+            .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
+            .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, UP)));
+
+        app.start(ImmutableList.of(localhost));
+
+        assertThat(uptime.sensors().get(SERVICE_UP)).isTrue()
+            .withFailMessage("Service should be up");
+        assertThat(ServiceStateLogic.getExpectedState(uptime)).isEqualTo(Lifecycle.RUNNING)
+            .withFailMessage("Service should be marked running");
+
     }
 
+    @Test(groups = "Integration")
+    public void shouldNotBeUpIfAssertionFails() {
+        TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
-    private TestHttpServer initializeServerUnstarted() {
-        return new TestHttpServer()
-            .handler("/" + SCRIPT_NAME,
-                new TestHttpRequestHandler().response("#!/bin/sh\necho " + TEXT + "\n"));
+        SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+            .configure(TARGET_ENTITY, testEntity)
+            .configure(COMMAND, "uptime")
+            .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 1)));
+
+        try {
+            app.start(ImmutableList.of(localhost));
+        } catch (Exception e) {
+            assertThat(e.getCause().getMessage().contains("exit code equals 1"));
+        }
+
+        assertThat(ServiceStateLogic.getExpectedState(uptime)).isEqualTo(Lifecycle.ON_FIRE)
+            .withFailMessage("Service should be marked on fire");
+
     }
-    private TestHttpServer initializeServer() {
-        return initializeServerUnstarted().start();
-    }
-
-
 
     @Test(groups = "Integration")
     public void shouldInvokeScript() {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
-        String testUrl = server.getUrl() + "/" + SCRIPT_NAME;
-        HttpAsserts.assertContentContainsText(testUrl, TEXT);
+        String text = "hello world";
+        String testUrl = createTempScript("script.sh", "echo " + text);
 
         SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
             .configure(DOWNLOAD_URL, testUrl)
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
-            .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, TEXT)));
+            .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, text)));
 
         app.start(ImmutableList.of(localhost));
 
@@ -127,21 +124,13 @@ public class SimpleCommandScriptIntegrationTest {
     public void shouldExecuteInTheRightPlace() throws Exception {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
-        String testUrl = server.getUrl() + "/" + SCRIPT_NAME;
-        HttpAsserts.assertContentContainsText(testUrl, TEXT);
-
         String remoteTmp = randomName();
         SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
             .configure(COMMAND, "mkdir " + remoteTmp)
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0)));
 
-        Path localTmpPath = Paths.get("/tmp/").resolve(randomName());
-        Path pwdSh = localTmpPath.resolve("pwd.sh");
-        Files.createDirectory(localTmpPath);
-        Files.createFile(pwdSh);
-        Files.write(pwdSh, "pwd".getBytes());
-        String pwdUrl = "file:" + pwdSh.toString();
+        String pwdUrl = createTempScript("pwd.sh", "pwd");
 
         SimpleCommandTest pwd = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
@@ -156,6 +145,18 @@ public class SimpleCommandScriptIntegrationTest {
             .withFailMessage("Service should be up");
         assertThat(ServiceStateLogic.getExpectedState(uptime)).isEqualTo(Lifecycle.RUNNING)
             .withFailMessage("Service should be marked running");
+    }
+
+    private String createTempScript(String filename, String contents) {
+        try {
+            Path tempDirectory = Files.createTempDirectory(randomName());
+            tempDirectory.toFile().deleteOnExit();
+            Path tempFile = Files.createFile(tempDirectory.resolve(filename));
+            Files.write(tempFile, contents.getBytes());
+            return "file:" + tempFile.toString();
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        }
     }
 
     private String randomName() {
