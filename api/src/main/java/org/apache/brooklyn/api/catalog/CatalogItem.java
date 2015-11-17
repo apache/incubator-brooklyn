@@ -19,7 +19,6 @@
 package org.apache.brooklyn.api.catalog;
 
 import java.util.Collection;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
@@ -27,7 +26,6 @@ import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
-import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 
 import com.google.common.annotations.Beta;
@@ -96,8 +94,6 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     public String getSymbolicName();
 
     public String getVersion();
-
-    public List<SpecParameter<?>> getParameters();
 
     public Collection<CatalogBundle> getLibraries();
 
