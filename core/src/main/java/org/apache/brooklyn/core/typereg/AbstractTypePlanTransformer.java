@@ -29,6 +29,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Convenience supertype for {@link BrooklynTypePlanTransformer} instances.
+ * <p>
+ * This supplies a default {@link #scoreForType(RegisteredType, RegisteredTypeLoadingContext)}
+ * method which returns 1 if the format code matches,
+ * and otherwise branches to two methods {@link #scoreForNullFormat(Object, RegisteredType, RegisteredTypeLoadingContext)}
+ * and {@link #scoreForNonmatchingNonnullFormat(String, Object, RegisteredType, RegisteredTypeLoadingContext)}
+ * which subclasses can implement.  (Often the implementation of the latter is 0.)
  */
 public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTransformer {
 
@@ -107,12 +113,11 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
                 }
                 
             }.visit(type), type, context);
-        } catch (UnsupportedTypePlanException e) {
-            // no logging
-            throw Exceptions.propagate(e);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
-            log.debug("Could not instantiate "+type+" (rethrowing): "+Exceptions.collapseText(e));
+            if (!(e instanceof UnsupportedTypePlanException)) {
+                log.debug("Could not instantiate "+type+" (rethrowing): "+Exceptions.collapseText(e));
+            }
             throw Exceptions.propagate(e);
         }
     }

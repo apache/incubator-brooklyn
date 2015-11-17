@@ -25,7 +25,6 @@ import org.apache.brooklyn.core.typereg.UnsupportedTypePlanException;
 @Deprecated 
 public class PlanNotRecognizedException extends RuntimeException {
 
-    /** {@link UnsupportedTypePlanException} */
     private static final long serialVersionUID = -5590108442839125317L;
 
     public PlanNotRecognizedException(String message, Throwable cause) {

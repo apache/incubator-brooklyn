@@ -21,6 +21,9 @@ package org.apache.brooklyn.core.typereg;
 import java.util.List;
 import java.util.ServiceLoader;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 import org.apache.brooklyn.api.typereg.RegisteredType;
@@ -28,7 +31,8 @@ import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 
 /**
- * Interface for use by schemes which with to be able to transform plans.
+ * Interface for use by schemes which provide the capability to transform plans
+ * (serialized descriptions) to brooklyn objecs and specs.
  * <p>
  * To add a new plan transformation scheme, simply create an implementation and declare it
  * as a java service (cf {@link ServiceLoader}).
@@ -37,19 +41,29 @@ import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
  */
 public interface BrooklynTypePlanTransformer extends ManagementContextInjectable {
 
-    /** @return a code to identify type implementations created specifying the use of this plan transformer. */
+    /** @return An identifier for the transformer. 
+     * This may be used by RegisteredType instances to target a specific transformer. */
     String getFormatCode();
-    /** @return a display name for this transformer. */
+    /** @return A display name for this transformer. 
+     * This may be used to prompt a user what type of plan they are supplying. */
     String getFormatName();
-    /** @return a description for this transformer */
+    /** @return A description for this transformer */
     String getFormatDescription();
 
-    /** @return how appropriate is this transformer for the {@link RegisteredType#getPlan()} of the type;
-     * 0 (or less) if not, 1 for absolutely, and in some autodetect cases a value between 0 and 1 indicate a ranking.
-     * <p>
+    /** 
+     * Determines how appropriate is this transformer for the {@link RegisteredType#getPlan()} of the type.
      * The framework guarantees arguments are nonnull, and that the {@link RegisteredType#getPlan()} is also not-null.
-     * However the format in that plan may be null. */
-    double scoreForType(RegisteredType type, RegisteredTypeLoadingContext context);
+     * However the format in that plan may be null. 
+     * @return A co-ordinated score / confidence value in the range 0 to 1. 
+     * 0 means not compatible, 
+     * 1 means this is clearly the intended transformer and no others need be tried 
+     * (for instance because the format is explicitly specified),
+     * and values between 0 and 1 indicate how likely a transformer believes it should be used.
+     * Values greater than 0.5 are generally reserved for the presence of marker tags or files
+     * which strongly indicate that the format is compatible.
+     * <p>
+     * */
+    double scoreForType(@Nonnull RegisteredType type, @Nonnull RegisteredTypeLoadingContext context);
     /** Creates a new instance of the indicated type, or throws if not supported;
      * this method is used by the {@link BrooklynTypeRegistry} when it creates instances,
      * so implementations must respect the {@link RegisteredTypeKind} semantics and the {@link RegisteredTypeLoadingContext}
@@ -60,7 +74,7 @@ public interface BrooklynTypePlanTransformer extends ManagementContextInjectable
      * <p>
      * Implementations should either return null or throw {@link UnsupportedTypePlanException} 
      * if the {@link RegisteredType#getPlan()} is not supported. */
-    Object create(RegisteredType type, RegisteredTypeLoadingContext context);
+    @Nullable Object create(@Nonnull RegisteredType type, @Nonnull RegisteredTypeLoadingContext context);
     
     double scoreForTypeDefinition(String formatCode, Object catalogData);
     List<RegisteredType> createFromTypeDefinition(String formatCode, Object catalogData);

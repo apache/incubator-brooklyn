@@ -22,20 +22,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.mgmt.EntityManager;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.SpecParameter;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
 
 /** Defines a spec for creating a {@link BrooklynObject}.
  * <p>
@@ -49,12 +56,17 @@ import com.google.common.collect.Iterables;
 public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrooklynObjectSpec<T,SpecT>> implements Serializable {
 
     private static final long serialVersionUID = 3010955277740333030L;
+
+    private static final Logger log = LoggerFactory.getLogger(AbstractBrooklynObjectSpec.class);
     
     private final Class<? extends T> type;
     private String displayName;
     private String catalogItemId;
     private Set<Object> tags = MutableSet.of();
     private List<SpecParameter<?>> parameters = ImmutableList.of();
+
+    protected final Map<String, Object> flags = Maps.newLinkedHashMap();
+    protected final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
 
     protected AbstractBrooklynObjectSpec(Class<? extends T> type) {
         checkValidType(type);
@@ -150,6 +162,8 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
     
     protected SpecT copyFrom(SpecT otherSpec) {
         return displayName(otherSpec.getDisplayName())
+            .configure(otherSpec.getConfig())
+            .configure(otherSpec.getFlags())
             .tags(otherSpec.getTags())
             .catalogItemId(otherSpec.getCatalogItemId())
             .parameters(otherSpec.getParameters());
@@ -175,6 +189,74 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
 
     /** strings inserted as flags, config keys inserted as config keys; 
      * if you want to force one or the other, create a ConfigBag and convert to the appropriate map type */
-    public abstract SpecT configure(Map<?,?> val);
+    public SpecT configure(Map<?,?> val) {
+        for (Map.Entry<?, ?> entry: val.entrySet()) {
+            if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");
+            if (entry.getKey() instanceof CharSequence)
+                flags.put(entry.getKey().toString(), entry.getValue());
+            else if (entry.getKey() instanceof ConfigKey<?>)
+                config.put((ConfigKey<?>)entry.getKey(), entry.getValue());
+            else if (entry.getKey() instanceof HasConfigKey<?>)
+                config.put(((HasConfigKey<?>)entry.getKey()).getConfigKey(), entry.getValue());
+            else {
+                log.warn("Spec "+this+" ignoring unknown config key "+entry.getKey());
+            }
+        }
+        return self();
+    }
+
+    public SpecT configure(CharSequence key, Object val) {
+        flags.put(checkNotNull(key, "key").toString(), val);
+        return self();
+    }
     
+    public <V> SpecT configure(ConfigKey<V> key, V val) {
+        config.put(checkNotNull(key, "key"), val);
+        return self();
+    }
+
+    public <V> SpecT configureIfNotNull(ConfigKey<V> key, V val) {
+        return (val != null) ? configure(key, val) : self();
+    }
+
+    public <V> SpecT configure(ConfigKey<V> key, Task<? extends V> val) {
+        config.put(checkNotNull(key, "key"), val);
+        return self();
+    }
+
+    public <V> SpecT configure(HasConfigKey<V> key, V val) {
+        config.put(checkNotNull(key, "key").getConfigKey(), val);
+        return self();
+    }
+
+    public <V> SpecT configure(HasConfigKey<V> key, Task<? extends V> val) {
+        config.put(checkNotNull(key, "key").getConfigKey(), val);
+        return self();
+    }
+
+    public <V> SpecT removeConfig(ConfigKey<V> key) {
+        config.remove( checkNotNull(key, "key") );
+        return self();
+    }
+
+    /** Clears the config map, removing any config previously set. */
+    public void clearConfig() {
+        config.clear();
+    }
+        
+    /**
+     * @return Read-only construction flags
+     * @see SetFromFlag declarations on the policy type
+     */
+    public Map<String, ?> getFlags() {
+        return Collections.unmodifiableMap(flags);
+    }
+    
+    /**
+     * @return Read-only configuration values
+     */
+    public Map<ConfigKey<?>, Object> getConfig() {
+        return Collections.unmodifiableMap(config);
+    }
+
 }

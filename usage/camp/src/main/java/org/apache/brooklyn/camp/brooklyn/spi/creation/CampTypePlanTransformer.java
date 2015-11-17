@@ -35,7 +35,9 @@ import com.google.common.collect.ImmutableList;
 
 public class CampTypePlanTransformer extends AbstractTypePlanTransformer {
 
-    private static final List<String> FORMATS = ImmutableList.of("brooklyn-camp", "camp", "brooklyn");
+    private static final List<String> FORMATS = ImmutableList.of("brooklyn-camp");
+    // TODO any use in having these formats? if not, remove. Nov 2015.
+    // , "camp", "brooklyn");
     
     public static final String FORMAT = FORMATS.get(0);
     
