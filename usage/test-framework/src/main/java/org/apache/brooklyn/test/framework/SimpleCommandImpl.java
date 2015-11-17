@@ -69,7 +69,7 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
         getLifecycleEffectorTasks().attachLifecycleEffectors(this);
     }
 
-    protected SimpleCommandLifecycleEffectorTasks getLifecycleEffectorTasks () {
+    protected SimpleCommandLifecycleEffectorTasks getLifecycleEffectorTasks() {
         return new SimpleCommandLifecycleEffectorTasks();
     }
 
