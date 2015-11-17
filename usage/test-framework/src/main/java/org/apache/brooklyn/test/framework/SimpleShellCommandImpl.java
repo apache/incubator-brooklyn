@@ -42,10 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.Random;
+import java.util.*;
 
 import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.*;
 import static org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.setExpectedState;
@@ -61,12 +58,30 @@ public class SimpleShellCommandImpl extends AbstractEntity implements SimpleShel
     private static final int A_LINE = 80;
     public static final String DEFAULT_NAME = "download.sh";
     private static final String CD = "cd";
-    private static final String SHELL_AND = "&&";
 
     @Override
     public void init() {
         super.init();
         getLifecycleEffectorTasks().attachLifecycleEffectors(this);
+    }
+
+    @Override
+    public void start(Collection<? extends Location> locations) {
+        addLocations(filterLocations(locations));
+        setExpectedState(this, STARTING);
+    }
+
+
+    @Override
+    public void stop() {
+        LOG.debug("{} Stopping simple command", this);
+        setUpAndRunState(false, STOPPED);
+    }
+
+    @Override
+    public void restart() {
+        LOG.debug("{} Restarting simple command", this);
+        setUpAndRunState(true, RUNNING);
     }
 
     protected SimpleShellCommandLifecycleEffectorTasks getLifecycleEffectorTasks() {
@@ -78,7 +93,7 @@ public class SimpleShellCommandImpl extends AbstractEntity implements SimpleShel
      */
     protected void handle(SimpleShellCommand.Result result) {
         LOG.debug("{}, Result is {}\nwith output [\n{}\n] and error [\n{}\n]", new Object[] {
-                this, result.getExitCode(), shorten(result.getStdout()), shorten(result.getStderr())
+            this, result.getExitCode(), shorten(result.getStdout()), shorten(result.getStderr())
         });
     }
 
@@ -91,25 +106,6 @@ public class SimpleShellCommandImpl extends AbstractEntity implements SimpleShel
      */
     public Collection<? extends Location> filterLocations(Collection<? extends Location> locations) {
         return locations;
-    }
-
-
-    @Override
-    public void start(Collection<? extends Location> locations) {
-        addLocations(locations);
-        setExpectedState(this, STARTING);
-    }
-
-    @Override
-    public void stop() {
-        LOG.debug("{} Stopping simple command", this);
-        setUpAndRunState(false, STOPPED);
-    }
-
-    @Override
-    public void restart() {
-        LOG.debug("{} Restarting simple command", this);
-        setUpAndRunState(true, RUNNING);
     }
 
     private void setUpAndRunState(boolean up, Lifecycle status) {
@@ -136,29 +132,21 @@ public class SimpleShellCommandImpl extends AbstractEntity implements SimpleShel
         String downloadName = DOWNLOAD_URL.getName();
         String commandName = COMMAND.getName();
 
-        if (isNonBlank(downloadUrl) && isNonBlank(command)) {
-            throw illegal("Cannot specify both", downloadName, "and", commandName);
+        if (!(isNonBlank(downloadUrl) ^ isNonBlank(command))) {
+            throw illegal("Must specify exactly one of", downloadName, "and", commandName);
         }
 
-        if (isBlank(downloadUrl) && isBlank(commandName)) {
-            throw illegal("No", downloadName, "and no", commandName, "provided");
-        }
-
-        if (Strings.isNonBlank(downloadUrl)) {
+        if (isNonBlank(downloadUrl)) {
             String scriptDir = getConfig(SCRIPT_DIR);
             String scriptPath = calculateDestPath(downloadUrl, scriptDir);
             result = executeDownloadedScript(machineLocation, downloadUrl, scriptPath);
         }
 
-        if (Strings.isNonBlank(command)) {
+        if (isNonBlank(command)) {
             result = executeShellCommand(machineLocation, command);
         }
 
         handle(result);
-    }
-
-    private IllegalArgumentException illegal(String ...messages) {
-        return new IllegalArgumentException(Joiner.on(' ').join(this.toString() + ":", messages));
     }
 
     private SimpleShellCommand.Result executeDownloadedScript(MachineLocation machineLocation, String url, String scriptPath) {
@@ -169,45 +157,65 @@ public class SimpleShellCommandImpl extends AbstractEntity implements SimpleShel
         DynamicTasks.queue(install);
         DynamicTasks.waitForLast();
 
-        machine.execCommands("make the script executable", ImmutableList.<String>of("chmod u+x " + scriptPath));
+        List<String> commands = new ArrayList<>();
+        commands.add("chmod u+x " + scriptPath);
+        maybeCdToRunDir(commands);
+        commands.add(scriptPath);
 
-        String runDir = getConfig(RUN_DIR);
-        String cdAndRun = Joiner.on(' ').join(CD, runDir, SHELL_AND, scriptPath);
-
-        return executeShellCommand(machineLocation, cdAndRun);
+        return runCommands(machine, commands);
     }
-
 
     private SimpleShellCommand.Result executeShellCommand(MachineLocation machineLocation, String command) {
 
         SshMachineLocation machine = getSshMachine(ImmutableList.of(machineLocation));
-        SshEffectorTasks.SshEffectorTaskFactory<Integer> etf = SshEffectorTasks.ssh(machine, command);
 
-        LOG.debug("{} Creating task to execute '{}' on location {}", new Object[] {this, command, machine});
+        List<String> commands = new ArrayList<>();
+        maybeCdToRunDir(commands);
+        commands.add(command);
+
+        return runCommands(machine, commands);
+    }
+
+    private void maybeCdToRunDir(List<String> commands) {
+        String runDir = getConfig(RUN_DIR);
+        if (!isBlank(runDir)) {
+            commands.add(CD + " " + runDir);
+        }
+    }
+
+    private Result runCommands(SshMachineLocation machine, List<String> commands) {
+        SshEffectorTasks.SshEffectorTaskFactory<Integer> etf = SshEffectorTasks.ssh(machine, commands.toArray(new String[]{}));
+
         ProcessTaskWrapper<Integer> job = DynamicTasks.queue(etf);
         DynamicTasks.waitForLast();
         return buildResult(job);
     }
 
-
     private <T> SimpleShellCommand.Result buildResult(final ProcessTaskWrapper<Integer> job) {
+        final int exitCode = job.get();
+        final String stdout = job.getStdout().trim();
+        final String stderr = job.getStderr().trim();
         return new SimpleShellCommand.Result() {
 
             @Override
             public int getExitCode() {
-                return job.get();
+                return exitCode;
             }
 
             @Override
             public String getStdout() {
-                return job.getStdout().trim();
+                return stdout;
             }
 
             @Override
             public String getStderr() {
-                return job.getStderr().trim();
+                return stderr;
             }
         };
+    }
+
+    private IllegalArgumentException illegal(String message, String ...messages) {
+        return new IllegalArgumentException(Joiner.on(' ').join(this.toString() + ":", message, messages));
     }
 
     private SshMachineLocation getSshMachine(Collection<? extends Location> hostLocations) {

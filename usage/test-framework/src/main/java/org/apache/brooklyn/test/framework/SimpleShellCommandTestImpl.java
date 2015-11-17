@@ -47,7 +47,8 @@ public class SimpleShellCommandTestImpl extends SimpleShellCommandImpl implement
      */
     public Collection<? extends Location> filterLocations(Collection<? extends Location> locations) {
         Entity target = resolveTarget();
-        return target.getLocations();
+        Collection<Location> targetLocations = target.getLocations();
+        return targetLocations;
     }
 
     @Override

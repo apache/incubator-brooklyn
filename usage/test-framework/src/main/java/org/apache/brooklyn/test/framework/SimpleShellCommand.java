@@ -71,5 +71,5 @@ public interface SimpleShellCommand extends Entity, Startable {
      * The working directory that the script will be run from on the target machine.
      */
     @SetFromFlag("runDir")
-    ConfigKey<String> RUN_DIR = newConfigKey("run.dir", "directory where downloaded scripts should be put", TMP_DEFAULT);
+    ConfigKey<String> RUN_DIR = newConfigKey(String.class, "run.dir", "directory where downloaded scripts should be run from");
 }

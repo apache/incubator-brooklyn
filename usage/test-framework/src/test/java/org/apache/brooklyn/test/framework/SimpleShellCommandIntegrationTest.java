@@ -27,16 +27,17 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
-import java.util.UUID;
 
 import static org.apache.brooklyn.test.framework.BaseTest.TARGET_ENTITY;
 import static org.apache.brooklyn.test.framework.SimpleShellCommand.COMMAND;
@@ -44,7 +45,6 @@ import static org.apache.brooklyn.test.framework.SimpleShellCommandTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SimpleShellCommandIntegrationTest extends BrooklynAppUnitTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleShellCommandIntegrationTest.class);
 
     private static final String UP = "up";
     private LocalhostMachineProvisioningLocation localhost;
@@ -53,6 +53,48 @@ public class SimpleShellCommandIntegrationTest extends BrooklynAppUnitTestSuppor
         super.setUpApp();
         localhost = app.getManagementContext().getLocationManager()
             .createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class));
+    }
+
+    @DataProvider(name = "shouldInsistOnJustOneOfCommandAndScript")
+    public Object[][] createData1() {
+
+        return new Object[][] {
+            { "pwd", "pwd.sh", Boolean.FALSE },
+            { null, null, Boolean.FALSE },
+            { "pwd", null, Boolean.TRUE },
+            { null, "pwd.sh", Boolean.TRUE }
+        };
+    }
+
+    @Test(dataProvider = "shouldInsistOnJustOneOfCommandAndScript")
+    public void shouldInsistOnJustOneOfCommandAndScript(String command, String script, boolean valid) throws  Exception{
+        Path scriptPath = null;
+        String scriptUrl = null;
+        if (null != script) {
+            scriptPath = createTempScript("pwd", "pwd");
+            scriptUrl = "file:" + scriptPath;
+        }
+        TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+
+        app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
+            .configure(TARGET_ENTITY, testEntity)
+            .configure(COMMAND, command)
+            .configure(DOWNLOAD_URL, scriptUrl));
+
+        try {
+            app.start(ImmutableList.of(localhost));
+            if (!valid) {
+                Asserts.shouldHaveFailedPreviously();
+            }
+
+        } catch (Exception e) {
+            Asserts.expectedFailureContains(e, "Must specify exactly one of download.url and command");
+
+        } finally {
+            if (null != scriptPath) {
+                Files.delete(scriptPath);
+            }
+        }
     }
 
     @Test(groups = "Integration")
@@ -95,67 +137,76 @@ public class SimpleShellCommandIntegrationTest extends BrooklynAppUnitTestSuppor
     }
 
     @Test(groups = "Integration")
-    public void shouldInvokeScript() {
+    public void shouldInvokeScript() throws Exception {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
         String text = "hello world";
-        String testUrl = createTempScript("script.sh", "echo " + text);
+        Path testScript = createTempScript("script", "echo " + text);
 
-        SimpleShellCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
-            .configure(TARGET_ENTITY, testEntity)
-            .configure(DOWNLOAD_URL, testUrl)
-            .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
-            .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, text)));
-
-        app.start(ImmutableList.of(localhost));
-
-        assertThat(uptime.sensors().get(SERVICE_UP)).isTrue()
-            .withFailMessage("Service should be up");
-        assertThat(ServiceStateLogic.getExpectedState(uptime)).isEqualTo(Lifecycle.RUNNING)
-            .withFailMessage("Service should be marked running");
-    }
-
-    @Test
-    public void shouldExecuteInTheRightPlace() throws Exception {
-        TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-
-        String remoteTmp = randomName();
-        SimpleShellCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
-            .configure(TARGET_ENTITY, testEntity)
-            .configure(COMMAND, "mkdir " + remoteTmp)
-            .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0)));
-
-        String pwdUrl = createTempScript("pwd.sh", "pwd");
-
-        SimpleShellCommandTest pwd = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
-            .configure(TARGET_ENTITY, testEntity)
-            .configure(DOWNLOAD_URL, pwdUrl)
-            .configure(RUN_DIR, remoteTmp)
-            .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
-            .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, remoteTmp)));
-
-        app.start(ImmutableList.of(localhost));
-
-        assertThat(uptime.sensors().get(SERVICE_UP)).isTrue()
-            .withFailMessage("Service should be up");
-        assertThat(ServiceStateLogic.getExpectedState(uptime)).isEqualTo(Lifecycle.RUNNING)
-            .withFailMessage("Service should be marked running");
-    }
-
-    private String createTempScript(String filename, String contents) {
         try {
-            Path tempDirectory = Files.createTempDirectory(randomName());
-            tempDirectory.toFile().deleteOnExit();
-            Path tempFile = Files.createFile(tempDirectory.resolve(filename));
-            Files.write(tempFile, contents.getBytes());
-            return "file:" + tempFile.toString();
-        } catch (IOException e) {
-            throw Exceptions.propagate(e);
+            SimpleShellCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
+                .configure(TARGET_ENTITY, testEntity)
+                .configure(DOWNLOAD_URL, "file:" + testScript)
+                .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
+                .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, text)));
+
+            app.start(ImmutableList.of(localhost));
+
+            assertThat(uptime.sensors().get(SERVICE_UP)).isTrue()
+                .withFailMessage("Service should be up");
+            assertThat(ServiceStateLogic.getExpectedState(uptime)).isEqualTo(Lifecycle.RUNNING)
+                .withFailMessage("Service should be marked running");
+
+        } finally {
+            Files.delete(testScript);
         }
     }
 
-    private String randomName() {
-        return Integer.valueOf(new Random(System.currentTimeMillis()).nextInt(100000)).toString();
+    @Test
+    public void shouldExecuteInTheRunDir() throws Exception {
+        TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
+
+        Path pwdPath = createTempScript("pwd", "pwd");
+
+        try {
+            SimpleShellCommandTest pwd = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
+                .configure(TARGET_ENTITY, testEntity)
+                .configure(DOWNLOAD_URL, "file:" + pwdPath)
+                .configure(RUN_DIR, "/tmp")
+                .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
+                .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, "/tmp")));
+
+
+            SimpleShellCommandTest alsoPwd = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
+                .configure(TARGET_ENTITY, testEntity)
+                .configure(COMMAND, "pwd")
+                .configure(RUN_DIR, "/tmp")
+                .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
+                .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, "/tmp")));
+
+            app.start(ImmutableList.of(localhost));
+
+            assertThat(pwd.sensors().get(SERVICE_UP)).isTrue().withFailMessage("Service should be up");
+            assertThat(ServiceStateLogic.getExpectedState(pwd)).isEqualTo(Lifecycle.RUNNING)
+                .withFailMessage("Service should be marked running");
+
+            assertThat(alsoPwd.sensors().get(SERVICE_UP)).isTrue().withFailMessage("Service should be up");
+            assertThat(ServiceStateLogic.getExpectedState(alsoPwd)).isEqualTo(Lifecycle.RUNNING)
+                .withFailMessage("Service should be marked running");
+
+        } finally {
+            Files.delete(pwdPath);
+        }
+    }
+
+    private Path createTempScript(String filename, String contents) {
+        try {
+            Path tempFile = Files.createTempFile("SimpleShellCommandIntegrationTest-" + filename, ".sh");
+            Files.write(tempFile, contents.getBytes());
+            return tempFile;
+        } catch (IOException e) {
+            throw Exceptions.propagate(e);
+        }
     }
 
 }
