@@ -41,10 +41,11 @@ public class CatalogLocationSummary extends CatalogItemSummary {
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
             @JsonProperty("config") Set<LocationConfigSummary> config,
+            @JsonProperty("tags") Set<Object> tags,
             @JsonProperty("deprecated") boolean deprecated,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, deprecated, links);
+        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, tags, deprecated, links);
         // TODO expose config from policies
         this.config = (config == null) ? ImmutableSet.<LocationConfigSummary>of() : config;
     }

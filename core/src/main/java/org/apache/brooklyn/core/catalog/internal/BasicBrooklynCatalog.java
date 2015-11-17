@@ -46,6 +46,7 @@ import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.objs.BasicSpecParameter;
 import org.apache.brooklyn.core.plan.PlanToSpecFactory;
 import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.tosca.BrooklynToscaTags;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -469,6 +470,9 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         String symbolicName = getFirstAs(catalogMetadata, String.class, "symbolicName").orNull();
         String displayName = getFirstAs(catalogMetadata, String.class, "displayName").orNull();
         String name = getFirstAs(catalogMetadata, String.class, "name").orNull();
+        String derivedFrom = getFirstAs(catalogMetadata, String.class, "derivedFrom").orNull();
+        Collection<?> capabilities = MutableList.copyOf(getFirstAs(catalogMetadata, Collection.class, "capabilities").orNull());
+        Collection<?> requirements = MutableList.copyOf(getFirstAs(catalogMetadata, Collection.class, "requirements").orNull());
 
         if ((Strings.isNonBlank(id) || Strings.isNonBlank(symbolicName)) && 
                 Strings.isNonBlank(displayName) &&
@@ -574,16 +578,35 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             throw new IllegalStateException("Could not resolve plan once id and itemType are known (recursive reference?): "+sourceYaml);
         }
         String sourcePlanYaml = planInterpreter.getPlanYaml();
-        
-        CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(itemType, symbolicName, version)
+
+        CatalogItemBuilder itemBuilder = createItemBuilder(itemType, symbolicName, version)
             .libraries(libraryBundles)
             .parameters(getParameters(metaParameters, planInterpreter))
             .displayName(displayName)
             .description(description)
             .deprecated(catalogDeprecated)
             .iconUrl(catalogIconUrl)
-            .plan(sourcePlanYaml)
-            .build();
+            .plan(sourcePlanYaml);
+        if (itemType.equals(CatalogItemType.ENTITY) || itemType.equals(CatalogItemType.TEMPLATE)) {
+            final BrooklynToscaTags brooklynToscaTags = new BrooklynToscaTags();
+            if (derivedFrom != null) {
+                brooklynToscaTags.setDerivedFrom(derivedFrom);
+            }
+            if (capabilities != null) {
+                for (Object capability : capabilities) {
+                    final Map<String, String> capabilityMap = (Map<String, String>) capability;
+                    brooklynToscaTags.addCapability(capabilityMap.get("id"), capabilityMap.get("type"), Integer.parseInt(capabilityMap.get("upperBound")));
+                }
+            }
+            if (requirements != null) {
+                for (Object requirement : requirements) {
+                    final Map<String, String> requirementMap = (Map<String, String>) requirement;
+                    brooklynToscaTags.addRequirement(requirementMap.get("id"), requirementMap.get("capabilityType"), requirementMap.get("relationshipType"), Integer.parseInt(requirementMap.get("lowerBound")), Integer.parseInt(requirementMap.get("upperBound")));
+                }
+            }
+            itemBuilder.tag(brooklynToscaTags);
+        }
+        CatalogItemDtoAbstract<?, ?> dto = itemBuilder.build();
 
         dto.setManagementContext((ManagementContextInternal) mgmt);
         result.add(dto);

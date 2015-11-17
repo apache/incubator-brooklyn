@@ -197,6 +197,7 @@
 
         <module>api</module>
         <module>camp</module>
+        <module>tosca</module>
         <module>core</module>
         <module>examples</module>
         <module>policy</module>

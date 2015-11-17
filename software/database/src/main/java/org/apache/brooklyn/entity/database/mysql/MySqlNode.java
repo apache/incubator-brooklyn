@@ -36,9 +36,13 @@ import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.tosca.Tosca;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 @Catalog(name="MySql Node", description="MySql is an open source relational database management system (RDBMS)", iconUrl="classpath:///mysql-logo-110x57.png")
+@Tosca(derivedFrom = "brooklyn.nodes.Database", capabilities = {
+        @Tosca.Capability(id = "database_endpoint", type = "tosca.capabilities.Endpoint.Database")
+})
 @ImplementedBy(MySqlNodeImpl.class)
 public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommon {
 

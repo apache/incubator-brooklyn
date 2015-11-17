@@ -24,6 +24,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.tosca.Tosca;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 
@@ -33,6 +34,9 @@ import org.apache.brooklyn.util.javalang.JavaClassNames;
 @Catalog(name="Tomcat Server",
         description="Apache Tomcat is an open source software implementation of the Java Servlet and JavaServer Pages technologies",
         iconUrl="classpath:///tomcat-logo.png")
+@Tosca(requirements = {
+        @Tosca.Requirement(id = "database_endpoint", capabilityType = "tosca.capabilities.Endpoint.Database", relationshipType = "brooklyn.relationships.Configure", upperBound = 1)
+})
 @ImplementedBy(Tomcat8ServerImpl.class)
 public interface Tomcat8Server extends TomcatServer {
 
