@@ -101,7 +101,7 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
 
 
     @Override
-    public void start(@EffectorParam(name = "locations") Collection<? extends Location> locations) {
+    public void start(Collection<? extends Location> locations) {
         addLocations(locations);
         setExpectedState(this, STARTING);
     }
