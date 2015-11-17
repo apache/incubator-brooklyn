@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.core.typereg;
 
-import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
 
 /** Visitor adapter which can be used to ensure all kinds are supported
  * <p>
@@ -26,17 +26,20 @@ import org.apache.brooklyn.api.typereg.RegisteredType;
  * and subclasses will be responsible for providing the implementation in order to ensure compatibility. */
 public abstract class RegisteredTypeKindVisitor<T> {
     
-    public T visit(RegisteredType type) {
-        if (type==null) throw new NullPointerException("Registered type must not be null");
-        switch (type.getKind()) {
-        case SPEC: return visitSpec(type);
-        case BEAN: return visitBean(type);
-        // others go here
+    public T visit(RegisteredTypeKind kind) {
+        if (kind==null) return visitNull();
+        switch (kind) {
+        case SPEC: return visitSpec();
+        case BEAN: return visitBean();
         default:
-            throw new IllegalStateException("Unexpected registered type: "+type.getClass());
+            throw new IllegalStateException("Unexpected registered type kind: "+kind);
         }
     }
 
-    protected abstract T visitSpec(RegisteredType type);
-    protected abstract T visitBean(RegisteredType type);
+    protected T visitNull() {
+        throw new NullPointerException("Registered type kind must not be null");
+    }
+
+    protected abstract T visitSpec();
+    protected abstract T visitBean();
 }

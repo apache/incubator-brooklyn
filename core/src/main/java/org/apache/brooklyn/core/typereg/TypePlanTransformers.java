@@ -141,7 +141,10 @@ public class TypePlanTransformers {
             if (log.isDebugEnabled()) {
                 log.debug("Failure transforming plan; returning summary failure, but for reference "
                     + "potentially application transformers were "+transformers+", "
-                    + "others available are "+MutableList.builder().addAll(all(mgmt)).removeAll(transformers).build()+"; "
+                    + "available ones are "+MutableList.builder().addAll(all(mgmt))
+                        // when all(mgmt) has a cache, reinstate this and add the word "other" above
+//                        .removeAll(transformers)
+                        .build()+"; "
                     + "failures: "+failuresFromTransformers);
             }
             result = failuresFromTransformers.size()==1 ? Exceptions.create(null, failuresFromTransformers) :
@@ -151,7 +154,9 @@ public class TypePlanTransformers {
                 result = new UnsupportedTypePlanException("Invalid plan; format could not be recognized, none of the available transformers "+all(mgmt)+" support "+type);
             } else {
                 result = new UnsupportedTypePlanException("Invalid plan; potentially applicable transformers "+transformers+" do not support it, and other available transformers "+
-                    MutableList.builder().addAll(all(mgmt)).removeAll(transformers).build()+" do not accept it");
+//                    // the removeAll call below won't work until "all" caches it
+//                    MutableList.builder().addAll(all(mgmt)).removeAll(transformers).build()+" "+
+                    "do not accept it");
             }
         }
         return Maybe.absent(result);

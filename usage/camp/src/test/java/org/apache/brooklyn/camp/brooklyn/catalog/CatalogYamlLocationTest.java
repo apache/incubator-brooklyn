@@ -111,7 +111,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
     private void assertAdded(String symbolicName, String expectedJavaType) {
         RegisteredType item = mgmt().getTypeRegistry().get(symbolicName, TEST_VERSION);
         assertEquals(item.getSymbolicName(), symbolicName);
-        Assert.assertTrue(RegisteredTypes.isAssignableFrom(item, Location.class), "Expected Location, not "+item.getSuperTypes());
+        Assert.assertTrue(RegisteredTypes.isSubtypeOf(item, Location.class), "Expected Location, not "+item.getSuperTypes());
         assertEquals(countCatalogLocations(), 1);
 
         // Item added to catalog should automatically be available in location registry

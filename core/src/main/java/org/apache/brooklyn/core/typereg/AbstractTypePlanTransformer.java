@@ -99,20 +99,20 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
     public Object create(final RegisteredType type, final RegisteredTypeLoadingContext context) {
         try {
             return validate(new RegisteredTypeKindVisitor<Object>() {
-                @Override protected Object visitSpec(RegisteredType type) {
+                @Override protected Object visitSpec() {
                     try { 
                         AbstractBrooklynObjectSpec<?, ?> result = createSpec(type, context);
                         result.catalogItemId(type.getId());
                         return result;
                     } catch (Exception e) { throw Exceptions.propagate(e); }
                 }
-                @Override protected Object visitBean(RegisteredType type) {
+                @Override protected Object visitBean() {
                     try { 
                         return createBean(type, context);
                     } catch (Exception e) { throw Exceptions.propagate(e); }
                 }
                 
-            }.visit(type), type, context);
+            }.visit(type.getKind()), type, context);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             if (!(e instanceof UnsupportedTypePlanException)) {
@@ -122,10 +122,17 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
         }
     }
     
-    protected <T> T validate(T createdObject, RegisteredType type, RegisteredTypeLoadingContext context) {
+    /** Validates the object. Subclasses may do further validation based on the context. 
+     * @throw UnsupportedTypePlanException if we want to quietly abandon this, any other exception to report the problem, when validation fails
+     * @return the created object for fluent usage */
+    protected <T> T validate(T createdObject, RegisteredType type, RegisteredTypeLoadingContext constraint) {
         if (createdObject==null) return null;
-        // TODO validation based on the constraint, throw UnsupportedTypePlanException with details if not matched
-        return createdObject;
+        try {
+            return RegisteredTypes.validate(createdObject, type, constraint);
+        } catch (Exception e) {
+            Exceptions.propagateIfFatal(e);
+            throw new IllegalStateException("Created incompatible object: "+Exceptions.collapseText(e), e);
+        }
     }
 
     protected abstract AbstractBrooklynObjectSpec<?,?> createSpec(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception;

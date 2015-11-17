@@ -37,6 +37,7 @@ import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.core.typereg.JavaClassNameTypePlanTransformer.JavaClassNameTypeImplementationPlan;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -55,7 +56,7 @@ import com.google.common.reflect.TypeToken;
  * Use {@link #bean(String, String, TypeImplementationPlan, Class)} and {@link #spec(String, String, TypeImplementationPlan, Class)}
  * to create {@link RegisteredType} instances.
  * <p>
- * See {@link #isAssignableFrom(RegisteredType, Class)} or {@link #isAssignableFrom(RegisteredType, RegisteredType)} to 
+ * See {@link #isSubtypeOf(RegisteredType, Class)} or {@link #isSubtypeOf(RegisteredType, RegisteredType)} to 
  * inspect the type hierarchy.
  */
 public class RegisteredTypes {
@@ -138,7 +139,7 @@ public class RegisteredTypes {
     @Beta
     public static RegisteredType addSuperType(RegisteredType type, @Nullable RegisteredType superType) {
         if (superType!=null) {
-            if (isAssignableFrom(superType, type)) {
+            if (isSubtypeOf(superType, type)) {
                 throw new IllegalStateException(superType+" declares "+type+" as a supertype; cannot set "+superType+" as a supertype of "+type);
             }
             ((BasicRegisteredType)type).superTypes.add(superType);
@@ -190,11 +191,11 @@ public class RegisteredTypes {
     /** 
      * Queries recursively the supertypes of {@link RegisteredType} to see whether it 
      * inherits from the given {@link RegisteredType} */
-    public static boolean isAssignableFrom(RegisteredType type, RegisteredType superType) {
+    public static boolean isSubtypeOf(RegisteredType type, RegisteredType superType) {
         if (type.equals(superType)) return true;
         for (Object st: type.getSuperTypes()) {
             if (st instanceof RegisteredType) {
-                if (isAssignableFrom((RegisteredType)st, superType)) return true;
+                if (isSubtypeOf((RegisteredType)st, superType)) return true;
             }
         }
         return false;
@@ -203,14 +204,14 @@ public class RegisteredTypes {
     /** 
      * Queries recursively the supertypes of {@link RegisteredType} to see whether it 
      * inherits from the given {@link Class} */
-    public static boolean isAssignableFrom(RegisteredType type, Class<?> superType) {
-        return isAnyTypeAssignableFrom(type.getSuperTypes(), superType);
+    public static boolean isSubtypeOf(RegisteredType type, Class<?> superType) {
+        return isAnyTypeSubtypeOf(type.getSuperTypes(), superType);
     }
     
     /** 
      * Queries recursively the given types (either {@link Class} or {@link RegisteredType}) 
      * to see whether any inherit from the given {@link Class} */
-    public static boolean isAnyTypeAssignableFrom(Set<Object> candidateTypes, Class<?> superType) {
+    public static boolean isAnyTypeSubtypeOf(Set<Object> candidateTypes, Class<?> superType) {
         return isAnyTypeOrSuperSatisfying(candidateTypes, Predicates.assignableFrom(superType));
     }
 
@@ -229,6 +230,113 @@ public class RegisteredTypes {
             }
         }
         return false;
+    }
+
+    public static RegisteredType validate(RegisteredType item, final RegisteredTypeLoadingContext constraint) {
+        if (item==null || constraint==null) return item;
+        if (constraint.getExpectedKind()!=null && !constraint.getExpectedKind().equals(item.getKind()))
+            throw new IllegalStateException(item+" is not the expected kind "+constraint.getExpectedKind());
+        if (constraint.getExpectedJavaSuperType()!=null) {
+            if (!isSubtypeOf(item, constraint.getExpectedJavaSuperType())) {
+                throw new IllegalStateException(item+" is not for the expected type "+constraint.getExpectedJavaSuperType());
+            }
+        }
+        return item;
+    }
+
+    /** 
+     * Checks whether the given object appears to be an instance of the given registered type */
+    private static boolean isSubtypeOf(Class<?> candidate, RegisteredType type) {
+        for (Object st: type.getSuperTypes()) {
+            if (st instanceof RegisteredType) {
+                if (!isSubtypeOf(candidate, (RegisteredType)st)) return false;
+            }
+            if (st instanceof Class) {
+                if (!((Class<?>)st).isAssignableFrom(candidate)) return false;
+            }
+        }
+        return true;
+    }
+
+    public static <T> T validate(final T object, final RegisteredType type, final RegisteredTypeLoadingContext constraint) {
+        RegisteredTypeKind kind = type!=null ? type.getKind() : constraint!=null ? constraint.getExpectedKind() : null;
+        if (kind==null) {
+            if (object instanceof AbstractBrooklynObjectSpec) kind=RegisteredTypeKind.SPEC;
+            else kind=RegisteredTypeKind.BEAN;
+        }
+        return new RegisteredTypeKindVisitor<T>() {
+            @Override
+            protected T visitSpec() {
+                return validateSpec(object, type, constraint);
+            }
+
+            @Override
+            protected T visitBean() {
+                return validateBean(object, type, constraint);
+            }
+        }.visit(kind);
+    }
+
+    private static <T> T validateBean(T object, RegisteredType type, final RegisteredTypeLoadingContext constraint) {
+        if (object==null) return null;
+        
+        if (type!=null) {
+            if (type.getKind()!=RegisteredTypeKind.BEAN)
+                throw new IllegalStateException("Validating a bean when type is "+type.getKind()+" "+type);
+            if (!isSubtypeOf(object.getClass(), type))
+                throw new IllegalStateException(object+" does not have all the java supertypes of "+type);
+        }
+
+        if (constraint!=null) {
+            if (constraint.getExpectedKind()!=RegisteredTypeKind.BEAN)
+                throw new IllegalStateException("Validating a bean when constraint expected "+constraint.getExpectedKind());
+            if (constraint.getExpectedJavaSuperType()!=null && !constraint.getExpectedJavaSuperType().isInstance(object))
+                throw new IllegalStateException(object+" is not of the expected java supertype "+constraint.getExpectedJavaSuperType());
+        }
+        
+        return object;
+    }
+
+    private static <T> T validateSpec(T object, RegisteredType rType, final RegisteredTypeLoadingContext constraint) {
+        if (object==null) return null;
+        
+        if (!(object instanceof AbstractBrooklynObjectSpec)) {
+            throw new IllegalStateException("Found "+object+" when expecting a spec");
+        }
+        Class<?> targetType = ((AbstractBrooklynObjectSpec<?,?>)object).getType();
+        
+        if (targetType==null) {
+            throw new IllegalStateException("Spec "+object+" does not have a target type");
+        }
+        
+        if (rType!=null) {
+            if (rType.getKind()!=RegisteredTypeKind.SPEC)
+                throw new IllegalStateException("Validating a spec when type is "+rType.getKind()+" "+rType);
+            if (!isSubtypeOf(targetType, rType))
+                throw new IllegalStateException(object+" does not have all the java supertypes of "+rType);
+        }
+
+        if (constraint!=null) {
+            if (constraint.getExpectedJavaSuperType()!=null) {
+                if (!constraint.getExpectedJavaSuperType().isAssignableFrom(targetType)) {
+                    throw new IllegalStateException(object+" does not target the expected java supertype "+constraint.getExpectedJavaSuperType());
+                }
+                if (constraint.getExpectedJavaSuperType().isAssignableFrom(BrooklynObjectInternal.class)) {
+                    // don't check spec type; any spec is acceptable
+                } else {
+                    @SuppressWarnings("unchecked")
+                    Class<? extends AbstractBrooklynObjectSpec<?, ?>> specType = RegisteredTypeLoadingContexts.lookupSpecTypeForTarget( (Class<? extends BrooklynObject>) constraint.getExpectedJavaSuperType());
+                    if (specType==null) {
+                        // means a problem in our classification of spec types!
+                        throw new IllegalStateException(object+" is returned as spec for unexpected java supertype "+constraint.getExpectedJavaSuperType());
+                    }
+                    if (!specType.isAssignableFrom(object.getClass())) {
+                        throw new IllegalStateException(object+" is not a spec of the expected java supertype "+constraint.getExpectedJavaSuperType());
+                    }
+                }
+            }
+        }
+        return object;
     }
 
 }

@@ -113,7 +113,7 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
     }
 
     /**
-     * @return The type of the object (or significant interface)
+     * @return The type (often an interface) this spec represents and which will be instantiated from it 
      */
     public Class<? extends T> getType() {
         return type;

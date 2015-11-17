@@ -113,7 +113,9 @@ public class RegisteredTypePredicates {
         return new AnySuperTypeMatches(filter);
     }
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static Predicate<RegisteredType> assignableFrom(final Class<?> filter) {
+    public static Predicate<RegisteredType> subtypeOf(final Class<?> filter) {
+        // the assignableFrom predicate checks if this class is assignable from the subsequent *input*.
+        // in other words, we're checking if any input is a subtype of this class
         return anySuperType((Predicate)Predicates.assignableFrom(filter));
     }
     
@@ -130,11 +132,11 @@ public class RegisteredTypePredicates {
             return RegisteredTypes.isAnyTypeOrSuperSatisfying(item.getSuperTypes(), filter);
         }
     }
-
-    public static final Predicate<RegisteredType> IS_APPLICATION = assignableFrom(Application.class);
-    public static final Predicate<RegisteredType> IS_ENTITY = assignableFrom(Entity.class);
-    public static final Predicate<RegisteredType> IS_LOCATION = assignableFrom(Location.class);
-    public static final Predicate<RegisteredType> IS_POLICY = assignableFrom(Policy.class);
+    
+    public static final Predicate<RegisteredType> IS_APPLICATION = subtypeOf(Application.class);
+    public static final Predicate<RegisteredType> IS_ENTITY = subtypeOf(Entity.class);
+    public static final Predicate<RegisteredType> IS_LOCATION = subtypeOf(Location.class);
+    public static final Predicate<RegisteredType> IS_POLICY = subtypeOf(Policy.class);
 
     public static Predicate<RegisteredType> entitledToSee(final ManagementContext mgmt) {
         return new EntitledToSee(mgmt);

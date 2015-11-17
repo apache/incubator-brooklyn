@@ -100,13 +100,13 @@ class CampResolver {
         String planYaml = RegisteredTypes.getImplementationDataStringForSpec(item);
         MutableSet<Object> supers = MutableSet.copyOf(item.getSuperTypes());
         supers.addIfNotNull(expectedType);
-        if (RegisteredTypes.isAnyTypeAssignableFrom(supers, Policy.class)) {
+        if (RegisteredTypes.isAnyTypeSubtypeOf(supers, Policy.class)) {
             spec = CampInternalUtils.createPolicySpec(planYaml, loader, encounteredTypes);
-        } else if (RegisteredTypes.isAnyTypeAssignableFrom(supers, Location.class)) {
+        } else if (RegisteredTypes.isAnyTypeSubtypeOf(supers, Location.class)) {
             spec = CampInternalUtils.createLocationSpec(planYaml, loader, encounteredTypes);
-        } else if (RegisteredTypes.isAnyTypeAssignableFrom(supers, Application.class)) {
+        } else if (RegisteredTypes.isAnyTypeSubtypeOf(supers, Application.class)) {
             spec = createEntitySpecFromServicesBlock(planYaml, loader, encounteredTypes, true);
-        } else if (RegisteredTypes.isAnyTypeAssignableFrom(supers, Entity.class)) {
+        } else if (RegisteredTypes.isAnyTypeSubtypeOf(supers, Entity.class)) {
             spec = createEntitySpecFromServicesBlock(planYaml, loader, encounteredTypes, false);
         } else {
             throw new IllegalStateException("Cannot detect spec type from "+item.getSuperTypes()+" for "+item+"\n"+planYaml);

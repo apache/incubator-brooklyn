@@ -51,6 +51,7 @@ import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;
 import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
 import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.rest.api.CatalogApi;
 import org.apache.brooklyn.rest.domain.ApiError;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
@@ -148,7 +149,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         try {
-            RegisteredType item = mgmt().getTypeRegistry().get(entityId, RegisteredTypeLoadingContexts.spec(Entity.class));
+            RegisteredType item = RegisteredTypes.validate(mgmt().getTypeRegistry().get(entityId), RegisteredTypeLoadingContexts.spec(Entity.class));
             if (item==null) {
                 throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
             }

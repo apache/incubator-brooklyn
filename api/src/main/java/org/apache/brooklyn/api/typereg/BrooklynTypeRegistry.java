@@ -42,22 +42,22 @@ public interface BrooklynTypeRegistry {
     Iterable<RegisteredType> getAll();
     Iterable<RegisteredType> getAll(Predicate<? super RegisteredType> filter);
 
-    // TODO should we remove the `context` parameter from all these?  i don't think it's useful
     /** @return The item matching the given given 
      * {@link RegisteredType#getSymbolicName() symbolicName} 
      * and optionally {@link RegisteredType#getVersion()},
-     * filtered for the optionally supplied {@link RegisteredTypeLoadingContext}, 
      * taking the best version if the version is null or a default marker,
      * returning null if no matches are found. */
-    RegisteredType get(String symbolicName, String version, @Nullable RegisteredTypeLoadingContext context);
-    /** as {@link #get(String, String, RegisteredTypeLoadingContext)} with no constraints */
     RegisteredType get(String symbolicName, String version);
-    /** as {@link #get(String, String, RegisteredTypeLoadingContext)} but allows <code>"name:version"</code> 
+    /** as {@link #get(String, String)} but allows <code>"name:version"</code> 
      * (the {@link RegisteredType#getId()}) in addition to the unversioned name,
      * using a default marker if no version can be inferred */
-    RegisteredType get(String symbolicNameWithOptionalVersion, @Nullable RegisteredTypeLoadingContext context);
-    /** as {@link #get(String, RegisteredTypeLoadingContext)} but with no constraints */
     RegisteredType get(String symbolicNameWithOptionalVersion);
+    
+    // TODO remove
+//    /** as {@link #get(String, String)}, but applying the optionally supplied {@link RegisteredTypeLoadingContext} */ 
+//    RegisteredType get(String symbolicName, String version, @Nullable RegisteredTypeLoadingContext context);
+//    /** as {@link #get(String)}, but applying the optionally supplied {@link RegisteredTypeLoadingContext} */ 
+//    RegisteredType get(String symbolicNameWithOptionalVersion, @Nullable RegisteredTypeLoadingContext context);
 
     // NB the seemingly more correct generics <T,SpecT extends AbstractBrooklynObjectSpec<T,SpecT>> 
     // cause compile errors, not in Eclipse, but in maven (?) 

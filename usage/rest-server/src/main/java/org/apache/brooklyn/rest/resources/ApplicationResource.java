@@ -58,6 +58,7 @@ import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.EntityAndItem;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements.StringAndArgument;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.entity.group.AbstractGroup;
 import org.apache.brooklyn.rest.api.ApplicationApi;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
@@ -401,7 +402,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     private void checkSpecTypeIsValid(String type, Class<? extends BrooklynObject> subType) {
-        if (mgmt().getTypeRegistry().get(type, RegisteredTypeLoadingContexts.spec(subType)) == null) {
+        if (RegisteredTypes.validate(mgmt().getTypeRegistry().get(type), RegisteredTypeLoadingContexts.spec(subType)) == null) {
             try {
                 brooklyn().getCatalogClassLoader().loadClass(type);
             } catch (ClassNotFoundException e) {

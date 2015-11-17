@@ -35,6 +35,7 @@ import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Identifiers;
@@ -68,8 +69,8 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
     }
 
     @SuppressWarnings("deprecation")
-    @Override
-    public RegisteredType get(String symbolicName, String version, RegisteredTypeLoadingContext constraint) {
+    private RegisteredType get(String symbolicName, String version, RegisteredTypeLoadingContext constraint) {
+        // probably constraint is not useful?
         if (constraint==null) constraint = RegisteredTypeLoadingContexts.any();
         if (version==null) version = BrooklynCatalog.DEFAULT_VERSION;
         
@@ -86,8 +87,8 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         return get(symbolicName, version, null);
     }
     
-    @Override
-    public RegisteredType get(String symbolicNameWithOptionalVersion, RegisteredTypeLoadingContext constraint) {
+    private RegisteredType get(String symbolicNameWithOptionalVersion, RegisteredTypeLoadingContext constraint) {
+        // probably constraint is not useful?
         if (CatalogUtils.looksLikeVersionedId(symbolicNameWithOptionalVersion)) {
             String symbolicName = CatalogUtils.getSymbolicNameFromVersionedId(symbolicNameWithOptionalVersion);
             String version = CatalogUtils.getVersionFromVersionedId(symbolicNameWithOptionalVersion);
@@ -159,8 +160,15 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
                 // above will throw -- so won't come here
                 throw new IllegalStateException("should have failed getting type resolution for "+symbolicName);
             } catch (Exception e0) {
-                // prefer older exception, until the new transformer is the primary pathway
-                throw Exceptions.create("Unable to instantiate "+(symbolicName==null ? "item" : symbolicName), MutableList.of(e0, e));
+                Set<Exception> exceptionsInOrder = MutableSet.of();
+                if (e0.toString().indexOf("none of the available transformers")>=0) {
+                    // put the legacy exception first if none of the new transformers support the type
+                    // (until the new transformer is the primary pathway)
+                    exceptionsInOrder.add(e);
+                }
+                exceptionsInOrder.add(e0);
+                exceptionsInOrder.add(e);
+                throw Exceptions.create("Unable to instantiate "+(symbolicName==null ? "item" : symbolicName), exceptionsInOrder); 
             }
         }
     }
