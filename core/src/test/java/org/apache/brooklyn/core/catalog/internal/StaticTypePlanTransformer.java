@@ -53,8 +53,10 @@ import org.apache.brooklyn.util.text.Identifiers;
  */
 public class StaticTypePlanTransformer extends AbstractTypePlanTransformer {
     
+    public static final String FORMAT = "static-types";
+    
     public StaticTypePlanTransformer() {
-        super("static-types", "Static Type", "Static transformer for use in tests");
+        super(FORMAT, "Static Type", "Static transformer for use in tests");
     }
 
     private static final Map<String, AbstractBrooklynObjectSpec<?, ?>> REGISTERED_SPECS = new ConcurrentHashMap<>();
@@ -101,9 +103,9 @@ public class StaticTypePlanTransformer extends AbstractTypePlanTransformer {
 
     @Override
     protected AbstractBrooklynObjectSpec<?, ?> createSpec(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception {
-        if (REGISTERED_SPECS.containsKey(type.getId()))
-            return get(type.getId());
-        if (REGISTERED_SPECS.containsKey(type.getPlan().getPlanData()))
+        if (REGISTERED_SPECS.containsKey(type.getSymbolicName()))
+            return get(type.getSymbolicName());
+        if (type.getPlan().getPlanData()!=null && REGISTERED_SPECS.containsKey(type.getPlan().getPlanData()))
             return get((String)type.getPlan().getPlanData());
         return null;
     }
