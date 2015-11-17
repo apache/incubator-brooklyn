@@ -39,12 +39,12 @@ import java.util.Random;
 import java.util.UUID;
 
 import static org.apache.brooklyn.test.framework.BaseTest.TARGET_ENTITY;
-import static org.apache.brooklyn.test.framework.SimpleCommand.COMMAND;
-import static org.apache.brooklyn.test.framework.SimpleCommandTest.*;
+import static org.apache.brooklyn.test.framework.SimpleShellCommand.COMMAND;
+import static org.apache.brooklyn.test.framework.SimpleShellCommandTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SimpleCommandIntegrationTest extends BrooklynAppUnitTestSupport {
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandIntegrationTest.class);
+public class SimpleShellCommandIntegrationTest extends BrooklynAppUnitTestSupport {
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleShellCommandIntegrationTest.class);
 
     private static final String UP = "up";
     private LocalhostMachineProvisioningLocation localhost;
@@ -64,7 +64,7 @@ public class SimpleCommandIntegrationTest extends BrooklynAppUnitTestSupport {
     public void shouldInvokeCommand() {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
-        SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+        SimpleShellCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
             .configure(COMMAND, "uptime")
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
@@ -83,7 +83,7 @@ public class SimpleCommandIntegrationTest extends BrooklynAppUnitTestSupport {
     public void shouldNotBeUpIfAssertionFails() {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
-        SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+        SimpleShellCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
             .configure(COMMAND, "uptime")
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 1)));
@@ -106,7 +106,7 @@ public class SimpleCommandIntegrationTest extends BrooklynAppUnitTestSupport {
         String text = "hello world";
         String testUrl = createTempScript("script.sh", "echo " + text);
 
-        SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+        SimpleShellCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
             .configure(DOWNLOAD_URL, testUrl)
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
@@ -125,14 +125,14 @@ public class SimpleCommandIntegrationTest extends BrooklynAppUnitTestSupport {
         TestEntity testEntity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
 
         String remoteTmp = randomName();
-        SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+        SimpleShellCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
             .configure(COMMAND, "mkdir " + remoteTmp)
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0)));
 
         String pwdUrl = createTempScript("pwd.sh", "pwd");
 
-        SimpleCommandTest pwd = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
+        SimpleShellCommandTest pwd = app.createAndManageChild(EntitySpec.create(SimpleShellCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
             .configure(DOWNLOAD_URL, pwdUrl)
             .configure(RUN_DIR, remoteTmp)

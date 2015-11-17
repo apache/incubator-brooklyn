@@ -53,11 +53,11 @@ import static org.apache.brooklyn.util.text.Strings.isBlank;
 import static org.apache.brooklyn.util.text.Strings.isNonBlank;
 
 /**
- * Implementation for {@link SimpleCommand}.
+ * Implementation for {@link SimpleShellCommand}.
  */
-public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
+public class SimpleShellCommandImpl extends AbstractEntity implements SimpleShellCommand {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleShellCommandImpl.class);
     private static final int A_LINE = 80;
     public static final String DEFAULT_NAME = "download.sh";
     private static final String CD = "cd";
@@ -69,14 +69,14 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
         getLifecycleEffectorTasks().attachLifecycleEffectors(this);
     }
 
-    protected SimpleCommandLifecycleEffectorTasks getLifecycleEffectorTasks() {
-        return new SimpleCommandLifecycleEffectorTasks();
+    protected SimpleShellCommandLifecycleEffectorTasks getLifecycleEffectorTasks() {
+        return new SimpleShellCommandLifecycleEffectorTasks();
     }
 
     /**
      * Gives the opportunity to sub-classes to do additional work based on the result of the command.
      */
-    protected void handle(SimpleCommand.Result result) {
+    protected void handle(SimpleShellCommand.Result result) {
         LOG.debug("{}, Result is {}\nwith output [\n{}\n] and error [\n{}\n]", new Object[] {
                 this, result.getExitCode(), shorten(result.getStdout()), shorten(result.getStderr())
         });
@@ -129,7 +129,7 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
 
     private void executeCommand(MachineLocation machineLocation) {
 
-        SimpleCommand.Result result = null;
+        SimpleShellCommand.Result result = null;
         String downloadUrl = getConfig(DOWNLOAD_URL);
         String command = getConfig(COMMAND);
 
@@ -161,7 +161,7 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
         return new IllegalArgumentException(Joiner.on(' ').join(this.toString() + ":", messages));
     }
 
-    private SimpleCommand.Result executeDownloadedScript(MachineLocation machineLocation, String url, String scriptPath) {
+    private SimpleShellCommand.Result executeDownloadedScript(MachineLocation machineLocation, String url, String scriptPath) {
 
         SshMachineLocation machine = getSshMachine(ImmutableList.<Location>of(machineLocation));
 
@@ -178,7 +178,7 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
     }
 
 
-    private SimpleCommand.Result executeShellCommand(MachineLocation machineLocation, String command) {
+    private SimpleShellCommand.Result executeShellCommand(MachineLocation machineLocation, String command) {
 
         SshMachineLocation machine = getSshMachine(ImmutableList.of(machineLocation));
         SshEffectorTasks.SshEffectorTaskFactory<Integer> etf = SshEffectorTasks.ssh(machine, command);
@@ -190,8 +190,8 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
     }
 
 
-    private <T> SimpleCommand.Result buildResult(final ProcessTaskWrapper<Integer> job) {
-        return new SimpleCommand.Result() {
+    private <T> SimpleShellCommand.Result buildResult(final ProcessTaskWrapper<Integer> job) {
+        return new SimpleShellCommand.Result() {
 
             @Override
             public int getExitCode() {

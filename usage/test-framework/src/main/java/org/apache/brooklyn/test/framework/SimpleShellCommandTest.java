@@ -29,8 +29,8 @@ import java.util.Map;
 /**
  * Tests using a simple command execution.
  */
-@ImplementedBy(SimpleCommandTestImpl.class)
-public interface SimpleCommandTest extends SimpleCommand, BaseTest {
+@ImplementedBy(SimpleShellCommandTestImpl.class)
+public interface SimpleShellCommandTest extends SimpleShellCommand, BaseTest {
 
     /**
      * Equals assertion on command result.

@@ -23,9 +23,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,7 +33,7 @@ import java.util.Map;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 import static org.apache.commons.collections.MapUtils.isEmpty;
 
-public class SimpleCommandTestImpl extends SimpleCommandImpl implements SimpleCommandTest {
+public class SimpleShellCommandTestImpl extends SimpleShellCommandImpl implements SimpleShellCommandTest {
 
     public static final int SUCCESS = 0;
 
@@ -53,7 +51,7 @@ public class SimpleCommandTestImpl extends SimpleCommandImpl implements SimpleCo
     }
 
     @Override
-    protected void handle(SimpleCommand.Result result) {
+    protected void handle(SimpleShellCommand.Result result) {
         AssertionSupport support = new AssertionSupport();
         checkAssertions(support, exitCodeAssertions(), "exit code", result.getExitCode());
         checkAssertions(support, getConfig(ASSERT_OUT), "stdout", result.getStdout());

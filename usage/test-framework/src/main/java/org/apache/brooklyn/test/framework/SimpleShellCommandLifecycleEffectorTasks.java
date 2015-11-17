@@ -22,16 +22,15 @@ import com.google.common.base.Supplier;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
-import org.apache.http.util.Asserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.util.Collection;
 
-public class SimpleCommandLifecycleEffectorTasks extends MachineLifecycleEffectorTasks {
+public class SimpleShellCommandLifecycleEffectorTasks extends MachineLifecycleEffectorTasks {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandLifecycleEffectorTasks.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleShellCommandLifecycleEffectorTasks.class);
 
     protected Location getLocation(@Nullable Collection<? extends Location> locations) {
         return super.getLocation(entity().filterLocations(locations));
@@ -52,7 +51,7 @@ public class SimpleCommandLifecycleEffectorTasks extends MachineLifecycleEffecto
         return "Stopped";
     }
 
-    protected SimpleCommandImpl entity() {
-        return (SimpleCommandImpl) super.entity();
+    protected SimpleShellCommandImpl entity() {
+        return (SimpleShellCommandImpl) super.entity();
     }
 }

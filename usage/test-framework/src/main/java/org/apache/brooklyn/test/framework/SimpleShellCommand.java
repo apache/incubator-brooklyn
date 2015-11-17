@@ -34,8 +34,8 @@ import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKey;
  *
  * Invokes the command in the start operation, and declares itself RUNNING.
  */
-@ImplementedBy(SimpleCommandImpl.class)
-public interface SimpleCommand extends Entity, Startable {
+@ImplementedBy(SimpleShellCommandImpl.class)
+public interface SimpleShellCommand extends Entity, Startable {
 
     String TMP_DEFAULT = "/tmp";
 
