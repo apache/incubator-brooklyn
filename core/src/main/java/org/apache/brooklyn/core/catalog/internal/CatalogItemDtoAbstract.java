@@ -18,11 +18,8 @@
  */
 package org.apache.brooklyn.core.catalog.internal;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,7 +29,6 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
-import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.mgmt.rebind.BasicCatalogItemRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
@@ -61,11 +57,10 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @SetFromFlag String iconUrl;
 
     private @SetFromFlag String javaType;
-    /**@deprecated since 0.7.0, left for deserialization backwards compatibility */
+    /**@deprecated since 0.7.0, left for deserialization backwards compatibility (including xml based catalog format) */
     private @Deprecated @SetFromFlag String type;
     private @SetFromFlag String planYaml;
 
-    private @SetFromFlag List<SpecParameter<?>> parameters = ImmutableList.of();
     private @SetFromFlag Collection<CatalogBundle> libraries;
     private @SetFromFlag Set<Object> tags = Sets.newLinkedHashSet();
     private @SetFromFlag boolean deprecated;
@@ -177,16 +172,6 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
     }
-    
-    @Override
-    public List<SpecParameter<?>> getParameters() {
-        if (parameters != null) {
-            return parameters;
-        } else {
-            // Needed for the case when created by xstream
-            return ImmutableList.of();
-        }
-    }
 
     @Nonnull
     @Override
@@ -205,7 +190,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(symbolicName, planYaml, javaType, nullIfEmpty(parameters), nullIfEmpty(libraries), version, getCatalogItemId());
+        return Objects.hashCode(symbolicName, planYaml, javaType, nullIfEmpty(libraries), version, getCatalogItemId());
     }
 
     @Override
@@ -217,7 +202,6 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         if (!Objects.equal(symbolicName, other.symbolicName)) return false;
         if (!Objects.equal(planYaml, other.planYaml)) return false;
         if (!Objects.equal(javaType, other.javaType)) return false;
-        if (!Objects.equal(nullIfEmpty(parameters), nullIfEmpty(other.parameters))) return false;
         if (!Objects.equal(nullIfEmpty(libraries), nullIfEmpty(other.libraries))) return false;
         if (!Objects.equal(getCatalogItemId(), other.getCatalogItemId())) return false;
         if (!Objects.equal(version, other.version)) return false;
@@ -388,10 +372,6 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
 
     protected void setPlanYaml(String planYaml) {
         this.planYaml = planYaml;
-    }
-
-    protected void setParameters(List<SpecParameter<?>> parameters) {
-        this.parameters = checkNotNull(parameters, "parameters");
     }
 
     protected void setLibraries(Collection<CatalogBundle> libraries) {

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.catalog.internal;
+package org.apache.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -24,33 +24,21 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.objs.SpecParameter;
-import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.osgi.OsgiTestResources;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
-public class SpecParameterInMetaTest {
-    private ManagementContext mgmt;
-    private BrooklynCatalog catalog;
-    private String spec;
-
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        mgmt = LocalManagementContextForTests.newInstanceWithOsgi();
-        catalog = mgmt.getCatalog();
-        spec = TestToSpecTransformer.registerSpec(EntitySpec.create(BasicEntity.class));
-    }
+public class SpecParameterParsingTest  extends AbstractYamlTest {
 
     @Test
     public void testYamlInputsParsed() {
@@ -58,13 +46,15 @@ public class SpecParameterInMetaTest {
                 "brooklyn.catalog:",
                 "  id: test.inputs",
                 "  version: 0.0.1",
-                "  parameters:",
-                "  - simple",
-                "  - name: explicit_name",
-                "  - name: third_input",
-                "    type: integer",
-                "  item: " + spec);
-        List<SpecParameter<?>> inputs = item.getParameters();
+                "  item: ",
+                "    type: "+ BasicApplication.class.getName(),
+                "    brooklyn.parameters:",
+                "    - simple",
+                "    - name: explicit_name",
+                "    - name: third_input",
+                "      type: integer");
+        AbstractBrooklynObjectSpec<?,?> spec = createSpec(item);
+        List<SpecParameter<?>> inputs = spec.getParameters();
         assertEquals(inputs.size(), 3);
         SpecParameter<?> firstInput = inputs.get(0);
         assertEquals(firstInput.getLabel(), "simple");
@@ -95,11 +85,13 @@ public class SpecParameterInMetaTest {
                 "  version: 0.0.1",
                 "  libraries:",
                 "  - classpath://" + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH,
-                "  parameters:",
-                "  - name: simple",
-                "    type: " + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY,
-                "  item: " + spec);
-        List<SpecParameter<?>> inputs = item.getParameters();
+                "  item: ",
+                "    type: "+ BasicApplication.class.getName(),
+                "    brooklyn.parameters:",
+                "    - name: simple",
+                "      type: " + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY);
+        AbstractBrooklynObjectSpec<?,?> spec = createSpec(item);
+        List<SpecParameter<?>> inputs = spec.getParameters();
         assertEquals(inputs.size(), 1);
         SpecParameter<?> firstInput = inputs.get(0);
         assertEquals(firstInput.getLabel(), "simple");
@@ -110,6 +102,7 @@ public class SpecParameterInMetaTest {
 
     @Test
     public void testOsgiClassScanned() {
+        TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
 
         addMulti("brooklyn.catalog:",
@@ -117,12 +110,15 @@ public class SpecParameterInMetaTest {
             "    - scanJavaAnnotations: true",
             "      version: 2.0.test_java",
             "      libraries:",
+            "      - classpath://" + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH,
             "      - classpath://" + OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
 
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
+        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
         assertEquals(item.getVersion(), "2.0.test_java");
-        assertEquals(item.getLibraries().size(), 1);
-        SpecParameter<?> input = item.getParameters().get(0);
+        assertEquals(item.getLibraries().size(), 2);
+        AbstractBrooklynObjectSpec<?,?> spec = createSpec(item);
+        List<SpecParameter<?>> inputs = spec.getParameters();
+        SpecParameter<?> input = inputs.get(0);
         assertEquals(input.getLabel(), "more_config");
         assertFalse(input.isPinned());
         assertEquals(input.getType().getName(), "more_config");
@@ -134,6 +130,11 @@ public class SpecParameterInMetaTest {
 
     private Iterable<? extends CatalogItem<?, ?>> addMulti(String... def) {
         return catalog.addItems(Joiner.on('\n').join(def));
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private AbstractBrooklynObjectSpec<?, ?> createSpec(CatalogItem<?, ?> item) {
+        return (AbstractBrooklynObjectSpec<?,?>) catalog.createSpec((CatalogItem)item);
     }
 
 }
