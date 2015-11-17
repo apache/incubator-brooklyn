@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.core.typereg;
 
+import java.util.Set;
+
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
@@ -27,6 +29,7 @@ import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.api.typereg.RegisteredType.TypeImplementationPlan;
 import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
@@ -99,18 +102,27 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         return get(symbolicNameWithOptionalVersion, (RegisteredTypeLoadingContext)null);
     }
 
-    @SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
     @Override
     public <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeLoadingContext constraint, Class<SpecT> specSuperType) {
         Preconditions.checkNotNull(type, "type");
         if (type.getKind()!=RegisteredTypeKind.SPEC) { 
             throw new IllegalStateException("Cannot create spec from type "+type+" (kind "+type.getKind()+")");
         }
+        return createSpec(type, type.getPlan(), type.getSymbolicName(), type.getVersion(), type.getSuperTypes(), constraint, specSuperType);
+    }
+    
+    @SuppressWarnings({ "deprecation", "unchecked", "rawtypes" })
+    private <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(
+            RegisteredType type,
+            TypeImplementationPlan plan,
+            @Nullable String symbolicName, @Nullable String version, Set<Object> superTypes,
+            @Nullable RegisteredTypeLoadingContext constraint, Class<SpecT> specSuperType) {
+        // TODO type is only used to call to "transform"; we should perhaps change transform so it doesn't need the type?
         if (constraint!=null) {
             if (constraint.getExpectedKind()!=null && constraint.getExpectedKind()!=RegisteredTypeKind.SPEC) {
                 throw new IllegalStateException("Cannot create spec with constraint "+constraint);
             }
-            if (constraint.getAlreadyEncounteredTypes().contains(type.getSymbolicName())) {
+            if (constraint.getAlreadyEncounteredTypes().contains(symbolicName)) {
                 // avoid recursive cycle
                 // TODO implement using java if permitted
             }
@@ -122,7 +134,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         
         // fallback: look up in (legacy) catalog
         // TODO remove once all transformers are available in the new style
-        CatalogItem item = (CatalogItem) mgmt.getCatalog().getCatalogItem(type.getSymbolicName(), type.getVersion());
+        CatalogItem item = symbolicName!=null ? (CatalogItem) mgmt.getCatalog().getCatalogItem(symbolicName, version) : null;
         if (item==null) {
             // if not in catalog (because loading a new item?) then look up item based on type
             // (only really used in tests; possibly also for any recursive legacy transformers we might have to create a CI; cross that bridge when we come to it)
@@ -132,9 +144,9 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
                 result.get();
             }
             item = CatalogItemBuilder.newItem(ciType, 
-                    type.getSymbolicName()!=null ? type.getSymbolicName() : Identifiers.makeRandomId(8), 
-                        type.getVersion()!=null ? type.getVersion() : BasicBrooklynCatalog.DEFAULT_VERSION)
-                .plan(RegisteredTypes.getImplementationDataStringForSpec(type))
+                    symbolicName!=null ? symbolicName : Identifiers.makeRandomId(8), 
+                        version!=null ? version : BasicBrooklynCatalog.DEFAULT_VERSION)
+                .plan((String)plan.getPlanData())
                 .build();
         }
         try {
@@ -145,10 +157,10 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
             try {
                 result.get();
                 // above will throw -- so won't come here
-                throw new IllegalStateException("should have failed getting type resolution for "+type);
+                throw new IllegalStateException("should have failed getting type resolution for "+symbolicName);
             } catch (Exception e0) {
                 // prefer older exception, until the new transformer is the primary pathway
-                throw Exceptions.create("Unable to instantiate "+type, MutableList.of(e0, e));
+                throw Exceptions.create("Unable to instantiate "+(symbolicName==null ? "item" : symbolicName), MutableList.of(e0, e));
             }
         }
     }

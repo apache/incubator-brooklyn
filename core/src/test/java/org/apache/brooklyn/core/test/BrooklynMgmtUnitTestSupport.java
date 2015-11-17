@@ -50,6 +50,9 @@ public class BrooklynMgmtUnitTestSupport {
             if (mgmt != null) Entities.destroyAll(mgmt);
         } catch (Throwable t) {
             LOG.error("Caught exception in tearDown method", t);
+            // we should fail here, except almost always that masks a primary failure in the test itself,
+            // so it would be extremely unhelpful to do so. if we could check if test has not already failed,
+            // that would be ideal, but i'm not sure if that's possible with TestNG. ?
         } finally {
             mgmt = null;
         }

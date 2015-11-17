@@ -30,6 +30,7 @@ import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableSet;
 
 /** Instances are usually created by methods in {@link RegisteredTypes}. */
@@ -113,6 +114,7 @@ public class BasicRegisteredType implements RegisteredType {
         return ImmutableSet.copyOf(superTypes);
     }
 
+    @Beta  // TODO depending how useful this is, it might be better to replace by a static WeakHashMap in RegisteredTypes
     public ConfigBag getCache() {
         return cache;
     }

@@ -55,8 +55,12 @@ public class SpecParameterInMetaTest {
     public void setUp() {
         mgmt = LocalManagementContextForTests.newInstanceWithOsgi();
         catalog = mgmt.getCatalog();
+        
+        // TODO ugly, but we need the legacy style TestToSpecTransformer currently to be able to do the transformation;
+        // remove that class and the refs to PlanToSpecFactory here when we're entirely migrated to new-style transformers
         StaticTypePlanTransformer.forceInstall();
         PlanToSpecFactory.forceAvailable(TestToSpecTransformer.class, JavaCatalogToSpecTransformer.class);
+        
         specId = StaticTypePlanTransformer.registerSpec(EntitySpec.create(BasicEntity.class));
     }
 
@@ -79,6 +83,18 @@ public class SpecParameterInMetaTest {
 //        RegisteredType type = mgmt.getTypeRegistry().get(specId);
 //        Assert.assertNotNull(type);
 //    }
+    /* TODO - remove above when @ahgittin and @neykov agree-- discussion from https://github.com/apache/incubator-brooklyn/pull/1017:
+     * 
+     * Being able to create a spec from a plan is different from adding a catalog item so don't agree, it's a separate 
+     * thing. The mechanism could be used for application specs as well, it's not specific to the catalog.
+     * 
+     * Could add a utility method somewhere to add a catalog item for the registered spec, but not useful for the 
+     * following tests.
+     * 
+     * I don't quite follow.  In general if a plan refers to a type, I'd expect that type in the catalog (or a 
+     * java class).  While a transformer can define other rules for instantiating types, I'm not sure that's good 
+     * practice.  (Except it's okay for tests.)
+     */
     
     @Test
     public void testYamlInputsParsed() {

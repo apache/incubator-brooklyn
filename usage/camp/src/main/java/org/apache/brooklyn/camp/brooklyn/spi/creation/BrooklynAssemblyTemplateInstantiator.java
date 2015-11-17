@@ -77,14 +77,6 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     public EntitySpec<? extends Application> createApplicationSpec(
             AssemblyTemplate template,
             CampPlatform platform,
-            BrooklynClassLoadingContext loader) {
-        return createApplicationSpec(template, platform, loader, MutableSet.<String>of());
-    }
-    
-    @Override
-    public EntitySpec<? extends Application> createApplicationSpec(
-            AssemblyTemplate template,
-            CampPlatform platform,
             BrooklynClassLoadingContext loader,
             Set<String> encounteredTypeSymbolicNames) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);

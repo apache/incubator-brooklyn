@@ -24,7 +24,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-public class JavaTypePlanTransformerTest extends BrooklynMgmtUnitTestSupport {
+public class JavaClassNameTypePlanTransformerTest extends BrooklynMgmtUnitTestSupport {
 
     public static class NoArg {
         public String name() { return "no-arg"; }

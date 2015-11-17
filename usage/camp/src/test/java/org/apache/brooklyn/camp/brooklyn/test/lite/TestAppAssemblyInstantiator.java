@@ -62,10 +62,6 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
     }
 
     @Override
-    public EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
-        return createApplicationSpec(template, platform, loader, MutableSet.<String>of());
-    }
-    @Override
     public EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform,
         BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
         EntitySpec<TestApplication> app = EntitySpec.create(TestApplication.class)

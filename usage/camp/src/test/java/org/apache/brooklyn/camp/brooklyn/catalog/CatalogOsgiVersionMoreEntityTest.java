@@ -241,17 +241,17 @@ public class CatalogOsgiVersionMoreEntityTest extends AbstractYamlTest {
         for (RegisteredType item: items) {
             Object spec = types.createSpec(item, null, null);
             int match = 0;
-            if (RegisteredTypes.isSubTypeOf(item, Entity.class)) {
+            if (RegisteredTypes.isAssignableFrom(item, Entity.class)) {
                 assertTrue(spec instanceof EntitySpec, "Not an EntitySpec: " + spec);
                 BrooklynTypes.getDefinedEntityType(((EntitySpec<?>)spec).getType());
                 match++;
             }
-            if (RegisteredTypes.isSubTypeOf(item, Policy.class)) {
+            if (RegisteredTypes.isAssignableFrom(item, Policy.class)) {
                 assertTrue(spec instanceof PolicySpec, "Not a PolicySpec: " + spec);
                 BrooklynTypes.getDefinedBrooklynType(((PolicySpec<?>)spec).getType());
                 match++;
             }
-            if (RegisteredTypes.isSubTypeOf(item, Location.class)) {
+            if (RegisteredTypes.isAssignableFrom(item, Location.class)) {
                 assertTrue(spec instanceof LocationSpec, "Not a LocationSpec: " + spec);
                 BrooklynTypes.getDefinedBrooklynType(((LocationSpec<?>)spec).getType());
                 match++;

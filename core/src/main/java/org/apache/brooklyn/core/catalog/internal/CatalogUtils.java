@@ -72,6 +72,10 @@ public class CatalogUtils {
         return newClassLoadingContext(mgmt, item.getId(), item.getLibraries(), null);
     }
     
+    /** made @Beta in 0.9.0 because we're not sure to what extent to support stacking loaders; 
+     * only a couple places currently rely on such stacking, in general the item and the bundles *are* the context,
+     * and life gets hard if we support complex stacking! */
+    @Beta 
     public static BrooklynClassLoadingContext newClassLoadingContext(ManagementContext mgmt, RegisteredType item, BrooklynClassLoadingContext loader) {
         return newClassLoadingContext(mgmt, item.getId(), item.getLibraries(), loader);
     }
@@ -92,6 +96,7 @@ public class CatalogUtils {
         return newClassLoadingContext(mgmt, catalogItemId, libraries, null);
     }
     
+    @Deprecated /** @deprecated since 0.9.0; becoming private because we should now always have a registered type callers can pass instead of the catalog item id */
     public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> libraries, BrooklynClassLoadingContext loader) {
         BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
 
@@ -100,10 +105,12 @@ public class CatalogUtils {
         }
 
         if (loader !=null) {
+            // TODO determine whether to support stacking
             result.add(loader);
         }
         BrooklynClassLoadingContext threadLocalLoader = BrooklynLoaderTracker.getLoader();
         if (threadLocalLoader != null) {
+            // TODO and determine if this is needed/wanted
             result.add(threadLocalLoader);
         }
 

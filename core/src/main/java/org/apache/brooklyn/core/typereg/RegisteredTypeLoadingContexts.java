@@ -41,7 +41,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class RegisteredTypeLoadingContexts {
 
-    private static final Logger log = LoggerFactory.getLogger(RegisteredTypeLoadingContexts.BasicRegisteredTypeLoadingContext.class);
+    private static final Logger log = LoggerFactory.getLogger(RegisteredTypeLoadingContexts.class);
     
     /** Immutable (from caller's perspective) record of a constraint */
     public final static class BasicRegisteredTypeLoadingContext implements RegisteredTypeLoadingContext {
@@ -58,7 +58,7 @@ public class RegisteredTypeLoadingContexts {
             this.kind = source.getExpectedKind();
             this.expectedSuperType = source.getExpectedJavaSuperType();
             this.encounteredTypes = source.getAlreadyEncounteredTypes();
-            this.loader = (BrooklynClassLoadingContext) source.getLoader();
+            this.loader = source.getLoader();
         }
 
         @Override
@@ -204,14 +204,14 @@ public class RegisteredTypeLoadingContexts {
         BrooklynObjectType best = null;
 
         for (BrooklynObjectType t: BrooklynObjectType.values()) {
-            if (t.getSpecType()==null) continue;
+            if (t.getInterfaceType()==null) continue;
             if (!t.getInterfaceType().isAssignableFrom(targetSuperType)) continue;
             // on equality, exit immediately
             if (t.getInterfaceType().equals(targetSuperType)) return t.getSpecType();
             // else pick which is best
             if (best==null) { best = t; continue; }
             // if t is more specific, it is better (handles case when e.g. a Policy is a subclass of Entity)
-            if (best.getSpecType().isAssignableFrom(t.getSpecType())) { best = t; continue; }
+            if (best.getInterfaceType().isAssignableFrom(t.getInterfaceType())) { best = t; continue; }
         }
         if (best==null) {
             log.warn("Unexpected target supertype ("+targetSuperType+"); unable to infer spec type");

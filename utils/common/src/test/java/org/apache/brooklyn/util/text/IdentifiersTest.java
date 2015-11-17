@@ -88,8 +88,15 @@ public class IdentifiersTest {
 
     @Test
     public void testJavaClassRegex() {
-        Assert.assertTrue("foo".matches(Identifiers.JAVA_BINARY_REGEX));
-        Assert.assertTrue("foo.bar.Baz$1".matches(Identifiers.JAVA_BINARY_REGEX));
+        Assert.assertTrue("foo".matches(Identifiers.JAVA_GOOD_SEGMENT_REGEX));
+        Assert.assertFalse("foo.bar.Baz".matches(Identifiers.JAVA_GOOD_SEGMENT_REGEX));
+        
+        Assert.assertTrue("foo".matches(Identifiers.JAVA_GOOD_PACKAGE_OR_CLASS_REGEX));
+        Assert.assertTrue("foo.bar.Baz".matches(Identifiers.JAVA_GOOD_PACKAGE_OR_CLASS_REGEX));
+        Assert.assertFalse("foo.bar.Baz$1".matches(Identifiers.JAVA_GOOD_PACKAGE_OR_CLASS_REGEX));
+        
+        Assert.assertTrue("foo".matches(Identifiers.JAVA_GOOD_BINARY_REGEX));
+        Assert.assertTrue("foo.bar.Baz$1".matches(Identifiers.JAVA_GOOD_BINARY_REGEX));
     }
     
 }

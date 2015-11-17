@@ -98,7 +98,7 @@ public class TypePlanTransformers {
         Map<Double, Collection<BrooklynTypePlanTransformer>> tree = new TreeMap<Double, Collection<BrooklynTypePlanTransformer>>(byScoreMulti.asMap());
         List<Collection<BrooklynTypePlanTransformer>> highestFirst = new ArrayList<Collection<BrooklynTypePlanTransformer>>(tree.values());
         Collections.reverse(highestFirst);
-        return MutableList.copyOf(Iterables.concat(highestFirst)).asUnmodifiable();
+        return ImmutableList.copyOf(Iterables.concat(highestFirst));
     }
 
     /** transforms the given type to an instance, if possible

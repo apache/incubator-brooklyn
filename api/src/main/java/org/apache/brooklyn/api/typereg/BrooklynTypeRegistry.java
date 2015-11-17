@@ -42,7 +42,7 @@ public interface BrooklynTypeRegistry {
     Iterable<RegisteredType> getAll();
     Iterable<RegisteredType> getAll(Predicate<? super RegisteredType> filter);
 
-    // XXX remove `context` parameter?
+    // TODO should we remove the `context` parameter from all these?  i don't think it's useful
     /** @return The item matching the given given 
      * {@link RegisteredType#getSymbolicName() symbolicName} 
      * and optionally {@link RegisteredType#getVersion()},
@@ -61,10 +61,10 @@ public interface BrooklynTypeRegistry {
 
     // NB the seemingly more correct generics <T,SpecT extends AbstractBrooklynObjectSpec<T,SpecT>> 
     // cause compile errors, not in Eclipse, but in maven (?) 
-    // TODO do these belong here, or in a separate master TypePlanTransformer ?
-    <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeLoadingContext optionalContext, Class<SpecT> optionalSpecSuperType);
-    <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpecFromPlan(String planFormat, Object planData, @Nullable RegisteredTypeLoadingContext optionalContext, Class<SpecT> optionalSpecSuperType);
-    <T> T createBean(RegisteredType type, @Nullable RegisteredTypeLoadingContext optionalContext, Class<T> optionalResultSuperType);
-    <T> T createBeanFromPlan(String planFormat, Object planData, @Nullable RegisteredTypeLoadingContext optionalConstraint, Class<T> optionalBeanSuperType);
+    // TODO do these belong here, or in a separate master TypePlanTransformer ?  see also BrooklynTypePlanTransformer 
+    <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<SpecT> optionalSpecSuperType);
+    <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpecFromPlan(@Nullable String planFormat, Object planData, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<SpecT> optionalSpecSuperType);
+    <T> T createBean(RegisteredType type, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<T> optionalResultSuperType);
+    <T> T createBeanFromPlan(String planFormat, Object planData, @Nullable RegisteredTypeLoadingContext optionalConstraint, @Nullable Class<T> optionalBeanSuperType);
     
 }

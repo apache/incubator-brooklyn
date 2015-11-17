@@ -39,6 +39,7 @@ import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.text.Strings;
+import org.python.google.common.collect.Iterables;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -48,20 +49,22 @@ class CampResolver {
     private RegisteredType type;
     private RegisteredTypeLoadingContext context;
 
-    /** whether to allow parsing of the 'full' syntax for applications,
-     * where items are wrapped in a "services:" block, and if the wrapper is an application,
-     * to promote it */
-    boolean allowApplicationFullSyntax = true;
-
-    /** whether to allow parsing of the legacy 'full' syntax, 
-     * where a non-application items are wrapped:
-     * <li> in a "services:" block for entities,
-     * <li> in a "brooklyn.locations" or "brooklyn.policies" block for locations and policies */
-    boolean allowLegacyFullSyntax = true;
-
-    /** whether to allow parsing of the type syntax, where an item is a map with a "type:" field,
-     * i.e. not wrapped in any "services:" or "brooklyn.{locations,policies}" block */
-    boolean allowTypeSyntax = true;
+    // TODO we have a few different modes, detailed below; this logic should be moved to the new transformer
+    // and allow specifying which modes are permitted to be in effect?
+//    /** whether to allow parsing of the 'full' syntax for applications,
+//     * where items are wrapped in a "services:" block, and if the wrapper is an application,
+//     * to promote it */
+//    boolean allowApplicationFullSyntax = true;
+//
+//    /** whether to allow parsing of the legacy 'full' syntax, 
+//     * where a non-application items are wrapped:
+//     * <li> in a "services:" block for entities,
+//     * <li> in a "brooklyn.locations" or "brooklyn.policies" block for locations and policies */
+//    boolean allowLegacyFullSyntax = true;
+//
+//    /** whether to allow parsing of the type syntax, where an item is a map with a "type:" field,
+//     * i.e. not wrapped in any "services:" or "brooklyn.{locations,policies}" block */
+//    boolean allowTypeSyntax = true;
 
     public CampResolver(ManagementContext mgmt, RegisteredType type, RegisteredTypeLoadingContext context) {
         this.mgmt = mgmt;
@@ -97,18 +100,19 @@ class CampResolver {
         String planYaml = RegisteredTypes.getImplementationDataStringForSpec(item);
         MutableSet<Object> supers = MutableSet.copyOf(item.getSuperTypes());
         supers.addIfNotNull(expectedType);
-        if (RegisteredTypes.isSubTypeOf(supers, Policy.class)) {
+        if (RegisteredTypes.isAnyTypeAssignableFrom(supers, Policy.class)) {
             spec = CampInternalUtils.createPolicySpec(planYaml, loader, encounteredTypes);
-        } else if (RegisteredTypes.isSubTypeOf(supers, Location.class)) {
+        } else if (RegisteredTypes.isAnyTypeAssignableFrom(supers, Location.class)) {
             spec = CampInternalUtils.createLocationSpec(planYaml, loader, encounteredTypes);
-        } else if (RegisteredTypes.isSubTypeOf(supers, Application.class)) {
+        } else if (RegisteredTypes.isAnyTypeAssignableFrom(supers, Application.class)) {
             spec = createEntitySpecFromServicesBlock(planYaml, loader, encounteredTypes, true);
-        } else if (RegisteredTypes.isSubTypeOf(supers, Entity.class)) {
+        } else if (RegisteredTypes.isAnyTypeAssignableFrom(supers, Entity.class)) {
             spec = createEntitySpecFromServicesBlock(planYaml, loader, encounteredTypes, false);
         } else {
-            // try any of them???
-            
             throw new IllegalStateException("Cannot detect spec type from "+item.getSuperTypes()+" for "+item+"\n"+planYaml);
+        }
+        if (expectedType!=null && !expectedType.isAssignableFrom(spec.getType())) {
+            throw new IllegalStateException("Creating spec from "+item+", got "+spec.getType()+" which is incompatible with expected "+expectedType);                
         }
 
         ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(item.getId());
@@ -127,9 +131,8 @@ class CampResolver {
         if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
             EntitySpec<? extends Application> appSpec = ((AssemblyTemplateSpecInstantiator)instantiator).createApplicationSpec(at, camp, loader, encounteredTypes);
 
-            if (!isApplication && EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec) && appSpec.getChildren().size()==1) {
-                CampInternalUtils.resetSpecIfTemplateHasNoExplicitParameters(at, appSpec);
-                EntitySpec<?> childSpec = appSpec.getChildren().get(0);
+            if (!isApplication && EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec)) {
+                EntitySpec<?> childSpec = Iterables.getOnlyElement(appSpec.getChildren());
                 EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, childSpec);
                 return childSpec;
             }

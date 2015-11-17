@@ -29,9 +29,6 @@ import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
 
 public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
-
-    @Deprecated /** @deprecaed since 0.9.0 include encountered types */
-    EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader);
     
     /**
      * Gets the single item returned by {@link #createServiceSpecs}

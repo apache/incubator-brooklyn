@@ -71,7 +71,7 @@ public class ExampleXmlTypePlanTransformer extends AbstractTypePlanTransformer {
     }
 
     private static boolean isApplicationExpected(RegisteredType type, RegisteredTypeLoadingContext context) {
-        return RegisteredTypes.isSubTypeOf(type, Application.class) ||
+        return RegisteredTypes.isAssignableFrom(type, Application.class) ||
             (context.getExpectedJavaSuperType()!=null && context.getExpectedJavaSuperType().isAssignableFrom(Application.class));
     }
 

@@ -30,6 +30,8 @@ import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 
+import com.google.common.annotations.Beta;
+
 /**
  * Interface for use by schemes which provide the capability to transform plans
  * (serialized descriptions) to brooklyn objecs and specs.
@@ -75,8 +77,12 @@ public interface BrooklynTypePlanTransformer extends ManagementContextInjectable
      * Implementations should either return null or throw {@link UnsupportedTypePlanException} 
      * if the {@link RegisteredType#getPlan()} is not supported. */
     @Nullable Object create(@Nonnull RegisteredType type, @Nonnull RegisteredTypeLoadingContext context);
-    
+
+    // TODO sketch methods for loading *catalog* definitions.  note some potential overlap
+    // with BrooklynTypeRegistery.createXxxFromPlan
+    @Beta
     double scoreForTypeDefinition(String formatCode, Object catalogData);
+    @Beta
     List<RegisteredType> createFromTypeDefinition(String formatCode, Object catalogData);
 
 }

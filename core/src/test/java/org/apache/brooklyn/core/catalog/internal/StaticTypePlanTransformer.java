@@ -31,19 +31,25 @@ import org.apache.brooklyn.core.typereg.TypePlanTransformers;
 import org.apache.brooklyn.util.text.Identifiers;
 
 /**
- * Resolves previously registered specs by id.
- * First create a spec and register it, keeping the returned ID:
+ * Allows a caller to register a spec (statically) and get a UID for it --
  * <pre> {@code
  * String specId = StaticTypePlanTransformer.registerSpec(EntitySpec.create(BasicEntity.class));
  * }</pre>
- *
- * Then build a plan to be resolved such as:
+ * and then build a plan referring to that type name, such as:
  * <pre> {@code
  *  brooklyn.catalog:
  *    id: test.inputs
  *    version: 0.0.1
  *    item: <specId>
  * } </pre>
+ * <p>
+ * For use when testing type plan resolution. 
+ * <p>
+ * This is different to {@link JavaClassNameTypePlanTransformer} as that one
+ * does a <code>Class.forName(typeName)</code> to create specs, and this one uses a static registry.
+ * <p>
+ * Use {@link #forceInstall()} to set up and {@link #clearForced()} after use (in a finally or "AfterTest" block)
+ * to prevent interference with other tests.
  */
 public class StaticTypePlanTransformer extends AbstractTypePlanTransformer {
     
@@ -59,6 +65,7 @@ public class StaticTypePlanTransformer extends AbstractTypePlanTransformer {
     
     public static void clearForced() {
         TypePlanTransformers.clearForced();
+        REGISTERED_SPECS.clear();
     }
     
     public static String registerSpec(AbstractBrooklynObjectSpec<?, ?> spec) {

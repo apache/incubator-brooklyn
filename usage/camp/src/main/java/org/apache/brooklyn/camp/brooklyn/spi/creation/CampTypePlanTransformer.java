@@ -25,7 +25,7 @@ import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredType.TypeImplementationPlan;
 import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
-import org.apache.brooklyn.core.typereg.AbstractCustomImplementationPlan;
+import org.apache.brooklyn.core.typereg.AbstractFormatSpecificTypeImplementationPlan;
 import org.apache.brooklyn.core.typereg.AbstractTypePlanTransformer;
 import org.apache.brooklyn.core.typereg.BasicTypeImplementationPlan;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
@@ -47,7 +47,7 @@ public class CampTypePlanTransformer extends AbstractTypePlanTransformer {
 
     @Override
     protected double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeLoadingContext context) {
-        Maybe<Map<Object, Object>> plan = RegisteredTypes.getAsYamlMap(planData);
+        Maybe<Map<?,?>> plan = RegisteredTypes.getAsYamlMap(planData);
         if (plan.isAbsent()) return 0;
         if (plan.get().containsKey("services")) return 0.8;
         if (plan.get().containsKey("type")) return 0.4;
@@ -87,7 +87,7 @@ public class CampTypePlanTransformer extends AbstractTypePlanTransformer {
         return null;
     }
 
-    public static class CampTypeImplementationPlan extends AbstractCustomImplementationPlan<String> {
+    public static class CampTypeImplementationPlan extends AbstractFormatSpecificTypeImplementationPlan<String> {
         public CampTypeImplementationPlan(TypeImplementationPlan otherPlan) {
             super(FORMATS.get(0), String.class, otherPlan);
         }

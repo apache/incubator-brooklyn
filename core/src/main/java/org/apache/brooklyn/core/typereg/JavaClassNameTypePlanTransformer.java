@@ -37,8 +37,8 @@ public class JavaClassNameTypePlanTransformer extends AbstractTypePlanTransforme
     
     public static final String FORMAT = "java-type-name";
 
-    public static class JavaTypeNameImplementation extends AbstractCustomImplementationPlan<String> {
-        public JavaTypeNameImplementation(String javaType) { super(FORMAT, javaType); }
+    public static class JavaClassNameTypeImplementationPlan extends AbstractFormatSpecificTypeImplementationPlan<String> {
+        public JavaClassNameTypeImplementationPlan(String javaType) { super(FORMAT, javaType); }
     }
 
     public JavaClassNameTypePlanTransformer() {
@@ -47,8 +47,9 @@ public class JavaClassNameTypePlanTransformer extends AbstractTypePlanTransforme
 
     @Override
     protected double scoreForNullFormat(Object planData, RegisteredType type, RegisteredTypeLoadingContext context) {
+        // the "good" regex doesn't allow funny unicode chars; we'll accept that for now 
         if (type.getPlan().getPlanData() instanceof String && 
-                ((String)type.getPlan().getPlanData()).matches(Identifiers.JAVA_BINARY_REGEX)) {
+                ((String)type.getPlan().getPlanData()).matches(Identifiers.JAVA_GOOD_BINARY_REGEX)) {
             return 0.1;
         }
         return 0;

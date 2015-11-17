@@ -277,7 +277,7 @@ public class EntityManagementUtils {
         return canPromoteChildrenInWrappedApplication(app);
     }
     
-    /** returns true if the spec is for an empty-ish wrapper app, 
+    /** returns true if the spec is for a wrapper app with no important settings, wrapping a single child. 
      * for use when adding from a plan specifying multiple entities but nothing significant at the application level.
      * @see #WRAPPER_APP_MARKER */
     public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<? extends Application> spec) {

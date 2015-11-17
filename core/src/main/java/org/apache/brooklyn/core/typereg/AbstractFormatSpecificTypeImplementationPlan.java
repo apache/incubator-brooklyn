@@ -22,12 +22,12 @@ import org.apache.brooklyn.api.typereg.RegisteredType.TypeImplementationPlan;
 
 /** Abstract superclass for plans to create {@link TypeImplementationPlan} with strong types on 
  * {@link #getPlanData()} and ensuring the correct format (or null for no format) */
-public abstract class AbstractCustomImplementationPlan<T> extends BasicTypeImplementationPlan {
+public abstract class AbstractFormatSpecificTypeImplementationPlan<T> extends BasicTypeImplementationPlan {
     
-    public AbstractCustomImplementationPlan(String format, T data) {
+    public AbstractFormatSpecificTypeImplementationPlan(String format, T data) {
         super(format, data);
     }
-    public AbstractCustomImplementationPlan(String expectedFormat, Class<T> expectedDataType, TypeImplementationPlan otherPlan) {
+    public AbstractFormatSpecificTypeImplementationPlan(String expectedFormat, Class<T> expectedDataType, TypeImplementationPlan otherPlan) {
         super(expectedFormat!=null ? expectedFormat : otherPlan.getPlanFormat(), otherPlan.getPlanData());
         if (!expectedDataType.isInstance(otherPlan.getPlanData())) {
             throw new IllegalArgumentException("Plan "+otherPlan+" does not have "+expectedDataType+" data so cannot cast to "+this);

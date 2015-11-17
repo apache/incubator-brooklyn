@@ -121,31 +121,17 @@ public class RegisteredTypePredicates {
         private final Predicate<Class<?>> filter;
         
         @SuppressWarnings({ "rawtypes", "unchecked" })
-        private <T> AnySuperTypeMatches(Predicate filter) {
+        private AnySuperTypeMatches(Predicate filter) {
             this.filter = filter;
         }
         @Override
         public boolean apply(@Nullable RegisteredType item) {
             if (item==null) return false;
-            for (Object o: item.getSuperTypes()) {
-                if (o instanceof Class) {
-                    if (filter.apply((Class<?>)o)) return true;
-                }
-            }
-            for (Object o: item.getSuperTypes()) {
-                if (o instanceof RegisteredType) {
-                    if (apply((RegisteredType)o)) return true;
-                }
-            }
-            return false;
+            return RegisteredTypes.isAnyTypeOrSuperSatisfying(item.getSuperTypes(), filter);
         }
     }
 
     public static final Predicate<RegisteredType> IS_APPLICATION = assignableFrom(Application.class);
-    // TODO do we need this?  introduced already deprecated in 0.9.0 so can be removed, or enabled
-    @Deprecated
-    public static final Predicate<RegisteredType> IS_TEMPLATE = IS_APPLICATION;
-    
     public static final Predicate<RegisteredType> IS_ENTITY = assignableFrom(Entity.class);
     public static final Predicate<RegisteredType> IS_LOCATION = assignableFrom(Location.class);
     public static final Predicate<RegisteredType> IS_POLICY = assignableFrom(Policy.class);

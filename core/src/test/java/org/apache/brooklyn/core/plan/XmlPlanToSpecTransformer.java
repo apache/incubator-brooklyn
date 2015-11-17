@@ -43,7 +43,8 @@ import org.w3c.dom.Node;
 public class XmlPlanToSpecTransformer implements PlanToSpecTransformer {
     
     // this is REPLACED by ExampleXmlTypePlanTransformer
-
+    // TODO remove when PlanToSpecTransformer is removed
+    
     @SuppressWarnings("unused")
     private ManagementContext mgmt;
 
