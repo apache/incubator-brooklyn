@@ -26,7 +26,6 @@ import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
-import org.apache.brooklyn.util.os.Os;
 
 import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKey;
 
@@ -38,6 +37,8 @@ import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKey;
 @ImplementedBy(SimpleCommandImpl.class)
 public interface SimpleCommand extends Entity, Startable {
 
+    String TMP_DEFAULT = "/tmp";
+
     /**
      * Result of a command invocation.
      */
@@ -45,6 +46,7 @@ public interface SimpleCommand extends Entity, Startable {
         int getExitCode();
         String getStdout();
         String getStderr();
+
     }
 
     @SetFromFlag(nullable = false)
@@ -55,5 +57,5 @@ public interface SimpleCommand extends Entity, Startable {
     AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;
 
     @SetFromFlag("scriptDir")
-    ConfigKey<String> SCRIPT_DIR = newConfigKey("scriptDir", "directory where downloaded scripts should be put", Os.tmp());
+    ConfigKey<String> SCRIPT_DIR = newConfigKey("scriptDir", "directory where downloaded scripts should be put", TMP_DEFAULT);
 }
