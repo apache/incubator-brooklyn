@@ -49,10 +49,15 @@ public interface SimpleCommand extends Entity, Startable {
 
     }
 
+    /**
+     * Supply the command to invoke directly. Cannot be used together with {@link #DOWNLOAD_URL}.
+     */
     @SetFromFlag(nullable = false)
-    ConfigKey<String> DEFAULT_COMMAND = ConfigKeys.newConfigKey(String.class, "defaultCommand",
-            "Command to invoke if no script is provided via a downloadUrl");
+    ConfigKey<String> COMMAND = ConfigKeys.newConfigKey(String.class, "command", "Command to invoke");
 
+    /**
+     * Download a script to invoke. Cannot be used together with {@link #COMMAND}.
+     */
     @SetFromFlag("downloadUrl")
     AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;
 

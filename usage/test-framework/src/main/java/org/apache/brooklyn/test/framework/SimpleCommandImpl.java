@@ -25,16 +25,13 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
-import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
-import org.apache.brooklyn.util.core.task.ssh.SshPutTaskWrapper;
 import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -66,12 +63,9 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
     private static final String CD = "cd";
     private static final String SHELL_AND = "&&";
 
-    private ResourceUtils resourceUtils;
-
     @Override
     public void init() {
         super.init();
-        resourceUtils = ResourceUtils.create(this);
         getLifecycleEffectorTasks().attachLifecycleEffectors(this);
     }
 
@@ -137,10 +131,10 @@ public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
 
         SimpleCommand.Result result = null;
         String downloadUrl = getConfig(DOWNLOAD_URL);
-        String command = getConfig(DEFAULT_COMMAND);
+        String command = getConfig(COMMAND);
 
         String downloadName = DOWNLOAD_URL.getName();
-        String commandName = DEFAULT_COMMAND.getName();
+        String commandName = COMMAND.getName();
 
         if (isNonBlank(downloadUrl) && isNonBlank(command)) {
             throw illegal("Cannot specify both", downloadName, "and", commandName);

@@ -38,7 +38,7 @@ import org.testng.annotations.Test;
 import java.util.UUID;
 
 import static org.apache.brooklyn.test.framework.BaseTest.TARGET_ENTITY;
-import static org.apache.brooklyn.test.framework.SimpleCommand.DEFAULT_COMMAND;
+import static org.apache.brooklyn.test.framework.SimpleCommand.COMMAND;
 import static org.apache.brooklyn.test.framework.SimpleCommandTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -76,7 +76,7 @@ public class SimpleCommandImplIntegrationTest {
 
         SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
-            .configure(DEFAULT_COMMAND, "uptime")
+            .configure(COMMAND, "uptime")
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0))
             .configure(ASSERT_OUT, ImmutableMap.of(CONTAINS, UP)));
 
@@ -95,7 +95,7 @@ public class SimpleCommandImplIntegrationTest {
 
         SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
-            .configure(DEFAULT_COMMAND, "uptime")
+            .configure(COMMAND, "uptime")
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 1)));
 
         try {

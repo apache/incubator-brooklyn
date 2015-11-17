@@ -18,16 +18,11 @@
  */
 package org.apache.brooklyn.test.framework;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
@@ -36,27 +31,19 @@ import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.http.TestHttpRequestHandler;
 import org.apache.brooklyn.test.http.TestHttpServer;
-import org.apache.brooklyn.util.core.task.Tasks;
-import org.apache.brooklyn.util.core.task.system.internal.SystemProcessTaskFactory;
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.exceptions.FatalRuntimeException;
 import org.apache.brooklyn.util.http.HttpAsserts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.attribute.FileAttribute;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.UUID;
 
 import static org.apache.brooklyn.test.framework.BaseTest.TARGET_ENTITY;
-import static org.apache.brooklyn.test.framework.SimpleCommand.DEFAULT_COMMAND;
+import static org.apache.brooklyn.test.framework.SimpleCommand.COMMAND;
 import static org.apache.brooklyn.test.framework.SimpleCommandTest.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -146,7 +133,7 @@ public class SimpleCommandScriptIntegrationTest {
         String remoteTmp = randomName();
         SimpleCommandTest uptime = app.createAndManageChild(EntitySpec.create(SimpleCommandTest.class)
             .configure(TARGET_ENTITY, testEntity)
-            .configure(DEFAULT_COMMAND, "mkdir " + remoteTmp)
+            .configure(COMMAND, "mkdir " + remoteTmp)
             .configure(ASSERT_STATUS, ImmutableMap.of(EQUALS, 0)));
 
         Path localTmpPath = Paths.get("/tmp/").resolve(randomName());
