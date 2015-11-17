@@ -24,10 +24,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.brooklyn.core.mgmt.persist.FileBasedStoreObjectAccessor;
+import org.apache.brooklyn.test.performance.PerformanceTestDescriptor;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.internal.ssh.process.ProcessTool;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.io.FileUtil;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -71,10 +73,14 @@ public class FilePersistencePerformanceTest extends AbstractPerformanceTest {
          double minRatePerSec = 100 * PERFORMANCE_EXPECTATION;
          final AtomicInteger i = new AtomicInteger();
          
-         measureAndAssert("FileBasedStoreObjectAccessor.put", numIterations, minRatePerSec, new Runnable() {
-             public void run() {
-                 fileAccessor.put(""+i.incrementAndGet());
-             }});
+         measure(PerformanceTestDescriptor.create()
+                 .summary("FilePersistencePerformanceTest.testFileBasedStoreObjectPuts")
+                 .iterations(numIterations)
+                 .minAcceptablePerSecond(minRatePerSec)
+                 .job(new Runnable() {
+                     public void run() {
+                         fileAccessor.put(""+i.incrementAndGet());
+                     }}));
      }
  
      @Test(groups={"Integration", "Acceptance"})
@@ -83,10 +89,14 @@ public class FilePersistencePerformanceTest extends AbstractPerformanceTest {
          int numIterations = numIterations();
          double minRatePerSec = 100 * PERFORMANCE_EXPECTATION;
 
-         measureAndAssert("FileBasedStoreObjectAccessor.get", numIterations, minRatePerSec, new Runnable() {
-             public void run() {
-                 fileAccessor.get();
-             }});
+         measure(PerformanceTestDescriptor.create()
+                 .summary("FilePersistencePerformanceTest.testFileBasedStoreObjectGet")
+                 .iterations(numIterations)
+                 .minAcceptablePerSecond(minRatePerSec)
+                 .job(new Runnable() {
+                     public void run() {
+                         fileAccessor.get();
+                     }}));
      }
  
      @Test(groups={"Integration", "Acceptance"})
@@ -105,12 +115,16 @@ public class FilePersistencePerformanceTest extends AbstractPerformanceTest {
          final AtomicInteger i = new AtomicInteger();
 
          try {
-             measureAndAssert("FileBasedStoreObjectAccessor.delete", numIterations, minRatePerSec, new Runnable() {
-                 public void run() {
-                     File file = files.get(i.getAndIncrement());
-                     FileBasedStoreObjectAccessor fileAccessor = new FileBasedStoreObjectAccessor(file, "mytmpextension");
-                     fileAccessor.delete();
-                 }});
+             measure(PerformanceTestDescriptor.create()
+                     .summary("FilePersistencePerformanceTest.testFileBasedStoreObjectDelete")
+                     .iterations(numIterations)
+                     .minAcceptablePerSecond(minRatePerSec)
+                     .job(new Runnable() {
+                         public void run() {
+                             File file = files.get(i.getAndIncrement());
+                             FileBasedStoreObjectAccessor fileAccessor = new FileBasedStoreObjectAccessor(file, "mytmpextension");
+                             fileAccessor.delete();
+                         }}));
          } finally {
              for (File file : files) {
                  if (file != null) file.delete();
@@ -118,17 +132,51 @@ public class FilePersistencePerformanceTest extends AbstractPerformanceTest {
          }
      }
  
+     @Test(groups={"Integration", "Acceptance"})
+     public void testFileUtilSetFilePermissions() throws IOException {
+         int numIterations = numIterations();
+         double minRatePerSec = 10 * PERFORMANCE_EXPECTATION;
+
+         final File file = File.createTempFile("filePermissions", ".txt");
+         
+         try {
+             measure(PerformanceTestDescriptor.create()
+                     .summary("FilePersistencePerformanceTest.testFileUtilSetFilePermissions")
+                     .iterations(numIterations)
+                     .minAcceptablePerSecond(minRatePerSec)
+                     .job(new Runnable() {
+                         int i = 0;
+                         public void run() {
+                             try {
+                                 if (i % 2 == 0) {
+                                     FileUtil.setFilePermissionsTo600(file);
+                                 } else {
+                                     FileUtil.setFilePermissionsTo700(file);
+                                 }
+                             } catch (Exception e) {
+                                 throw Exceptions.propagate(e);
+                             }
+                         }}));
+         } finally {
+             file.delete();
+         }
+     }
+     
      // fileAccessor.put() is implemented with an execCommands("mv") so look at performance of just that piece
      @Test(groups={"Integration", "Acceptance"})
      public void testProcessToolExecCommand() {
          int numIterations = numIterations();
          double minRatePerSec = 10 * PERFORMANCE_EXPECTATION;
          
-         measureAndAssert("ProcessTool.exec", numIterations, minRatePerSec, new Runnable() {
-             public void run() {
-                 String cmd = "true";
-                 new ProcessTool().execCommands(MutableMap.<String,String>of(), MutableList.of(cmd), null);
-             }});
+         measure(PerformanceTestDescriptor.create()
+                 .summary("FilePersistencePerformanceTest.testProcessToolExecCommand")
+                 .iterations(numIterations)
+                 .minAcceptablePerSecond(minRatePerSec)
+                 .job(new Runnable() {
+                     public void run() {
+                         String cmd = "true";
+                         new ProcessTool().execCommands(MutableMap.<String,String>of(), MutableList.of(cmd), null);
+                     }}));
      }
      
      @Test(groups={"Integration", "Acceptance"})
@@ -139,12 +187,16 @@ public class FilePersistencePerformanceTest extends AbstractPerformanceTest {
          final File parentDir = file.getParentFile();
          final AtomicInteger i = new AtomicInteger();
          
-         measureAndAssert("java.util.File.rename", numIterations, minRatePerSec, new Runnable() {
-             public void run() {
-                 File newFile = new File(parentDir, "fileRename-"+i.incrementAndGet()+".txt");
-                 file.renameTo(newFile);
-                 file = newFile;
-             }});
+         measure(PerformanceTestDescriptor.create()
+                 .summary("FilePersistencePerformanceTest.testJavaUtilFileRenames")
+                 .iterations(numIterations)
+                 .minAcceptablePerSecond(minRatePerSec)
+                 .job(new Runnable() {
+                     public void run() {
+                         File newFile = new File(parentDir, "fileRename-"+i.incrementAndGet()+".txt");
+                         file.renameTo(newFile);
+                         file = newFile;
+                     }}));
      }
      
      @Test(groups={"Integration", "Acceptance"})
@@ -154,14 +206,18 @@ public class FilePersistencePerformanceTest extends AbstractPerformanceTest {
 
          final AtomicInteger i = new AtomicInteger();
          
-         measureAndAssert("guava.Files.write", numIterations, minRatePerSec, new Runnable() {
-             public void run() {
-                 try {
-                     Files.write(""+i.incrementAndGet(), file, Charsets.UTF_8);
-                 } catch (IOException e) {
-                     throw Exceptions.propagate(e);
-                 }
-             }});
+         measure(PerformanceTestDescriptor.create()
+                 .summary("FilePersistencePerformanceTest.testGuavaFileWrites")
+                 .iterations(numIterations)
+                 .minAcceptablePerSecond(minRatePerSec)
+                 .job(new Runnable() {
+                     public void run() {
+                         try {
+                             Files.write(""+i.incrementAndGet(), file, Charsets.UTF_8);
+                         } catch (IOException e) {
+                             throw Exceptions.propagate(e);
+                         }
+                     }}));
      }
      
      @Test(groups={"Integration", "Acceptance"})
@@ -172,15 +228,19 @@ public class FilePersistencePerformanceTest extends AbstractPerformanceTest {
          final File parentDir = file.getParentFile();
          final AtomicInteger i = new AtomicInteger();
          
-         measureAndAssert("guava.Files.move", numIterations, minRatePerSec, new Runnable() {
-             public void run() {
-                 File newFile = new File(parentDir, "fileRename-"+i.incrementAndGet()+".txt");
-                 try {
-                     Files.move(file, newFile);
-                 } catch (IOException e) {
-                     throw Exceptions.propagate(e);
-                 }
-                 file = newFile;
-             }});
+         measure(PerformanceTestDescriptor.create()
+                 .summary("FilePersistencePerformanceTest.testGuavaFileMoves")
+                 .iterations(numIterations)
+                 .minAcceptablePerSecond(minRatePerSec)
+                 .job(new Runnable() {
+                     public void run() {
+                         File newFile = new File(parentDir, "fileRename-"+i.incrementAndGet()+".txt");
+                         try {
+                             Files.move(file, newFile);
+                         } catch (IOException e) {
+                             throw Exceptions.propagate(e);
+                         }
+                         file = newFile;
+                     }}));
      }
 }

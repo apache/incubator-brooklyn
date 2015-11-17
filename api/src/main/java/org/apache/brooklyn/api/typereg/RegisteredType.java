@@ -63,7 +63,7 @@ public interface RegisteredType extends Identifiable {
      * This may include other registered types such as marker interfaces.
      */
     @Beta
-    @Nullable Set<Object> getSuperTypes();
+    Set<Object> getSuperTypes();
 
     /**
      * @return True if the item has been deprecated (i.e. its use is discouraged)

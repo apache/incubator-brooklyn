@@ -61,16 +61,30 @@ public class FileBasedStoreObjectAccessorWriterTest extends PersistenceStoreObje
         FileBasedObjectStoreTest.assertFilePermission600(file);
     }
 
-    @Test(enabled = false)
-    public void testFilePermissionsPerformance() throws Exception {
-        long interval = 10 * 1000; // millis
-        long start = System.currentTimeMillis();
-
-        int count = 0;
-        while (System.currentTimeMillis() < start + interval) {
-            accessor.put("abc" + count);
-            ++count;
+    @Test(groups="Integration")
+    public void testPutCreatesNewFile() throws Exception {
+        File nonExistantFile = Os.newTempFile(getClass(), "txt");
+        nonExistantFile.delete();
+        StoreObjectAccessorLocking accessor = new StoreObjectAccessorLocking(new FileBasedStoreObjectAccessor(nonExistantFile, ".tmp"));
+        try {
+            accessor.put("abc");
+            assertEquals(Files.readLines(nonExistantFile, Charsets.UTF_8), ImmutableList.of("abc"));
+        } finally {
+            accessor.delete();
         }
-        System.out.println("writes per second:" + (count * 1000 / interval));
+    }
+
+    @Test(groups="Integration")
+    public void testPutCreatesNewFileAndParentDir() throws Exception {
+        File nonExistantDir = Os.newTempDir(getClass());
+        nonExistantDir.delete();
+        File nonExistantFile = new File(nonExistantDir, "file.txt");
+        StoreObjectAccessorLocking accessor = new StoreObjectAccessorLocking(new FileBasedStoreObjectAccessor(nonExistantFile, ".tmp"));
+        try {
+            accessor.put("abc");
+            assertEquals(Files.readLines(nonExistantFile, Charsets.UTF_8), ImmutableList.of("abc"));
+        } finally {
+            accessor.delete();
+        }
     }
 }

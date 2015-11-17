@@ -42,7 +42,6 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 
 public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSupport<EntityMemento> {
@@ -101,15 +100,17 @@ public class BasicEntityRebindSupport extends AbstractBrooklynObjectRebindSuppor
     @SuppressWarnings("unchecked")
     @Override
     protected void addConfig(RebindContext rebindContext, EntityMemento memento) {
+        ConfigKey<?> key = null;
         for (Map.Entry<ConfigKey<?>, Object> entry : memento.getConfig().entrySet()) {
             try {
-                ConfigKey<?> key = entry.getKey();
+                key = entry.getKey();
                 Object value = entry.getValue();
                 @SuppressWarnings("unused") // just to ensure we can load the declared type? or maybe not needed
+                        // In what cases key.getType() will be null?
                 Class<?> type = (key.getType() != null) ? key.getType() : rebindContext.loadClass(key.getTypeName());
                 entity.config().set((ConfigKey<Object>)key, value);
-            } catch (ClassNotFoundException e) {
-                throw Throwables.propagate(e);
+            } catch (ClassNotFoundException|IllegalArgumentException e) {
+                rebindContext.getExceptionHandler().onAddConfigFailed(memento, key, e);
             }
         }
         

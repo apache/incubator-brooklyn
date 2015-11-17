@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -35,11 +34,9 @@ import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.objs.BasicSpecParameter;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.javalang.ReflectionScanner;
 import org.apache.brooklyn.util.core.javalang.UrlClassLoader;
@@ -313,7 +310,6 @@ public class CatalogClasspathDo {
         }
         if (log.isTraceEnabled())
             log.trace("adding to catalog: "+c+" (from catalog "+catalog+")");
-        item.setParameters(getJavaTypeParameters(c));
         catalog.addEntry(item);
         return item;
     }
@@ -351,10 +347,6 @@ public class CatalogClasspathDo {
      * the DTO will _not_ be updated. */
     public void addToClasspath(ClassLoader loader) {
         classloader.addFirst(loader);
-    }
-
-    private List<SpecParameter<?>> getJavaTypeParameters(Class<?> c) {
-        return BasicSpecParameter.fromClass(catalog.mgmt, c);
     }
 
 }

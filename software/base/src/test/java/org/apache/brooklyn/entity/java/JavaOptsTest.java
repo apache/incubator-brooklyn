@@ -32,24 +32,19 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
-import org.apache.brooklyn.entity.java.UsesJmx;
-import org.apache.brooklyn.entity.java.VanillaJavaApp;
-import org.apache.brooklyn.entity.java.VanillaJavaAppImpl;
-import org.apache.brooklyn.entity.java.VanillaJavaAppSshDriver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool;
-import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool.ExecCmd;
 import org.apache.brooklyn.util.jmx.jmxmp.JmxmpAgent;
 import org.apache.brooklyn.util.text.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -73,7 +68,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
         super.setUp();
         loc = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", "localhost")
-                .configure(SshTool.PROP_TOOL_CLASS, RecordingSshTool.class.getName()));
+                .configure(SshMachineLocation.SSH_TOOL_CLASS, RecordingSshTool.class.getName()));
     }
     
     @AfterMethod(alwaysRun=true)

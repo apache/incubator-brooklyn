@@ -1,7 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.brooklyn.test.framework;
 
+import java.util.Collection;
+
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Attributes;
@@ -12,9 +31,11 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.concurrent.ExecutionException;
-
+/**
+ * This implementation will start all child entities in parallel.
+ * 
+ * @author Chris Burke
+ */
 public class ParallelTestCaseImpl extends AbstractEntity implements ParallelTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(ParallelTestCaseImpl.class);
@@ -22,7 +43,7 @@ public class ParallelTestCaseImpl extends AbstractEntity implements ParallelTest
     /**
      * {@inheritDoc}
      */
-    public void start(Collection<? extends Location> locations) {
+    public void start(final Collection<? extends Location> locations) {
         // Let everyone know we're starting up (so that the GUI shows the correct icon).
         sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.STARTING);
         try {
@@ -59,6 +80,7 @@ public class ParallelTestCaseImpl extends AbstractEntity implements ParallelTest
             // Submit the task to the ExecutionManager so that they actually get stopped
             // and then wait until all the parallel entities have completed.
             submitTaskAndWait(taskAdaptable);
+            
             // Let everyone know we've stopped successfully (changes the icon in the GUI).
             logger.debug("Tasks successfully run. Update state of {} to STOPPED.", this);
             setServiceState(false, Lifecycle.STOPPED);
@@ -97,27 +119,22 @@ public class ParallelTestCaseImpl extends AbstractEntity implements ParallelTest
 
     /**
      * Submits the task to the ExecutionManager and then waits until the task has completed.
-     *
+     * 
      * @param taskAdaptable the TaskAdaptable to submit for execution.
-     * @throws ExecutionException   if the task threw an exception
-     * @throws InterruptedException if the current thread was interrupted while waiting
      */
-    private void submitTaskAndWait(final TaskAdaptable<?> taskAdaptable)
-            throws InterruptedException, ExecutionException {
-        logger.debug("{}, Submitting taskAdaptable: {}", this, taskAdaptable);
+    private void submitTaskAndWait(final TaskAdaptable<?> taskAdaptable) {
         // Submit the task to the ExecutionManager.
-        final Task<?> task = DynamicTasks.submit(taskAdaptable, this);
-
-        // Block until the task has completed.
-        logger.debug("{}, Blocking until task complete.", this);
-        task.blockUntilEnded();
-        logger.debug("{}, Task complete.", this);
-
-        // Get the result of the task. We don't really care about the
-        // actual result but this will throw an exception if the task failed.
-        task.get();
+        DynamicTasks.queue(taskAdaptable);
+        // Block until the task has completed. This will also throw if anything went wrong.
+        DynamicTasks.waitForLast();
     }
 
+    /**
+     * Sets the state of the Entity. Useful so that the GUI shows the correct icon.
+     * 
+     * @param serviceUpState Whether or not the entity is up.
+     * @param serviceStateActual The actual state of the entity.
+     */
     private void setServiceState(final boolean serviceUpState, final Lifecycle serviceStateActual) {
         sensors().set(SERVICE_UP, serviceUpState);
         sensors().set(Attributes.SERVICE_STATE_ACTUAL, serviceStateActual);

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.core.catalog.internal;
+package org.apache.brooklyn.camp.brooklyn.catalog;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -24,21 +24,16 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.List;
 
-import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
-import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.typereg.RegisteredType;
-import org.apache.brooklyn.core.plan.PlanToSpecFactory;
-import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.entity.stock.BasicEntity;
+import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
@@ -46,55 +41,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 
-public class SpecParameterInMetaTest {
-    private ManagementContext mgmt;
-    private BrooklynCatalog catalog;
-    private String specId;
-
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() {
-        mgmt = LocalManagementContextForTests.newInstanceWithOsgi();
-        catalog = mgmt.getCatalog();
-        
-        // TODO ugly, but we need the legacy style TestToSpecTransformer currently to be able to do the transformation;
-        // remove that class and the refs to PlanToSpecFactory here when we're entirely migrated to new-style transformers
-        StaticTypePlanTransformer.forceInstall();
-        PlanToSpecFactory.forceAvailable(TestToSpecTransformer.class, JavaCatalogToSpecTransformer.class);
-        
-        specId = StaticTypePlanTransformer.registerSpec(EntitySpec.create(BasicEntity.class));
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() {
-        StaticTypePlanTransformer.clearForced();
-        PlanToSpecFactory.clearForced();
-    }
-
-    @Test
-    public void testCanRetrieveWithNew() {
-        AbstractBrooklynObjectSpec<?, ?> spec = mgmt.getTypeRegistry().createSpecFromPlan(null, specId, null, null);
-        Assert.assertNotNull(spec);
-    }
-
-    // it's not actually added to the catalog; probably it would be cleaner if it is;
-    // but for now when we resolve in PlanToSpecFactory we make explicit reference to StaticTypePlanTransformer
-//    @Test
-//    public void testCanLookupNew() {
-//        RegisteredType type = mgmt.getTypeRegistry().get(specId);
-//        Assert.assertNotNull(type);
-//    }
-    /* TODO - remove above when @ahgittin and @neykov agree-- discussion from https://github.com/apache/incubator-brooklyn/pull/1017:
-     * 
-     * Being able to create a spec from a plan is different from adding a catalog item so don't agree, it's a separate 
-     * thing. The mechanism could be used for application specs as well, it's not specific to the catalog.
-     * 
-     * Could add a utility method somewhere to add a catalog item for the registered spec, but not useful for the 
-     * following tests.
-     * 
-     * I don't quite follow.  In general if a plan refers to a type, I'd expect that type in the catalog (or a 
-     * java class).  While a transformer can define other rules for instantiating types, I'm not sure that's good 
-     * practice.  (Except it's okay for tests.)
-     */
+public class SpecParameterParsingTest  extends AbstractYamlTest {
     
     @Test
     public void testYamlInputsParsed() {
@@ -102,14 +49,14 @@ public class SpecParameterInMetaTest {
                 "brooklyn.catalog:",
                 "  id: test.inputs",
                 "  version: 0.0.1",
-                "  parameters:",
-                "  - simple",
-                "  - name: explicit_name",
-                "  - name: third_input",
-                "    type: integer",
-                "  item: " + specId);
-        
-        EntitySpec<?> item = mgmt.getTypeRegistry().createSpec(mgmt.getTypeRegistry().get(itemId), null, EntitySpec.class);
+                "  item: ",
+                "    type: "+ BasicApplication.class.getName(),
+                "    brooklyn.parameters:",
+                "    - simple",
+                "    - name: explicit_name",
+                "    - name: third_input",
+                "      type: integer");
+        EntitySpec<?> item = mgmt().getTypeRegistry().createSpec(mgmt().getTypeRegistry().get(itemId), null, EntitySpec.class);
         List<SpecParameter<?>> inputs = item.getParameters();
         assertEquals(inputs.size(), 3);
         SpecParameter<?> firstInput = inputs.get(0);
@@ -141,12 +88,13 @@ public class SpecParameterInMetaTest {
                 "  version: 0.0.1",
                 "  libraries:",
                 "  - classpath://" + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH,
-                "  parameters:",
-                "  - name: simple",
-                "    type: " + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY,
-                "  item: " + specId);
-        EntitySpec<?> item = mgmt.getTypeRegistry().createSpec(mgmt.getTypeRegistry().get(itemId), null, EntitySpec.class);
-        List<SpecParameter<?>> inputs = item.getParameters();
+                "  item: ",
+                "    type: "+ BasicApplication.class.getName(),
+                "    brooklyn.parameters:",
+                "    - name: simple",
+                "      type: " + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY);
+        AbstractBrooklynObjectSpec<?,?> spec = createSpec(itemId);
+        List<SpecParameter<?>> inputs = spec.getParameters();
         assertEquals(inputs.size(), 1);
         SpecParameter<?> firstInput = inputs.get(0);
         assertEquals(firstInput.getLabel(), "simple");
@@ -168,19 +116,17 @@ public class SpecParameterInMetaTest {
             "      - classpath://" + OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_PATH,
             "      - classpath://" + OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_V2_PATH);
 
-        RegisteredType itemT = mgmt.getTypeRegistry().get(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
-        assertEquals(itemT.getVersion(), "2.0.test_java");
-        assertEquals(itemT.getLibraries().size(), 2);
-        
-        EntitySpec<?> item = mgmt.getTypeRegistry().createSpec(itemT, null, EntitySpec.class);
-        Assert.assertNotNull(item);
-        Assert.assertEquals(item.getType().getName(), OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
-        
-        // TODO scanning for catalog parameters is broken
-//        SpecParameter<?> input = item.getParameters().get(0);
-//        assertEquals(input.getLabel(), "more_config");
-//        assertFalse(input.isPinned());
-//        assertEquals(input.getType().getName(), "more_config");
+        RegisteredType item = mgmt().getTypeRegistry().get(OsgiTestResources.BROOKLYN_TEST_MORE_ENTITIES_MORE_ENTITY);
+        assertEquals(item.getVersion(), "2.0.test_java");
+        assertEquals(item.getLibraries().size(), 2);
+        AbstractBrooklynObjectSpec<?,?> spec = createSpec(item);
+        List<SpecParameter<?>> inputs = spec.getParameters();
+        if (inputs.isEmpty()) Assert.fail("no inputs (if you're in the IDE, mvn clean install may need to be run to rebuild osgi test JARs)");
+        assertEquals(inputs.size(), 1);
+        SpecParameter<?> input = inputs.get(0);
+        assertEquals(input.getLabel(), "more_config");
+        assertFalse(input.isPinned());
+        assertEquals(input.getType().getName(), "more_config");
     }
 
     private String add(String... def) {
@@ -195,6 +141,16 @@ public class SpecParameterInMetaTest {
                     return input.getId();
                 }
             });
+    }
+
+    private AbstractBrooklynObjectSpec<?, ?> createSpec(String itemId) {
+        RegisteredType item = mgmt().getTypeRegistry().get(itemId);
+        Assert.assertNotNull(item, "Could not load: "+itemId);
+        return createSpec(item);
+    }
+    
+    private AbstractBrooklynObjectSpec<?, ?> createSpec(RegisteredType item) {
+        return mgmt().getTypeRegistry().createSpec(item, null, EntitySpec.class);
     }
 
 }

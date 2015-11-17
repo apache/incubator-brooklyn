@@ -20,7 +20,6 @@ package org.apache.brooklyn.core.sensor;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
@@ -43,9 +42,7 @@ import com.google.common.collect.Maps;
 /**
  * A {@link Map} of {@link Entity} attribute values.
  */
-public final class AttributeMap implements Serializable {
-
-    private static final long serialVersionUID = -6834883734250888344L;
+public final class AttributeMap {
 
     static final Logger log = LoggerFactory.getLogger(AttributeMap.class);
 

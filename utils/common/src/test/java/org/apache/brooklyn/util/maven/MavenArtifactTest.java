@@ -198,9 +198,13 @@ public class MavenArtifactTest {
         // Note URLClassLoader.close was only added in Java 7; do not call it until Java 6 support is not needed!
         URL realUrl = followRedirects(new URL(url));
         URLClassLoader classLoader = new URLClassLoader(new URL[] { realUrl });
-        URL innerU = classLoader.findResource(resource);
-        InputStream innerUin = innerU.openConnection().getInputStream();
-        innerUin.close();
+        try {
+            URL innerU = classLoader.findResource(resource);
+            InputStream innerUin = innerU.openConnection().getInputStream();
+            innerUin.close();
+        } finally {
+            classLoader.close();
+        }
     }
 
     /*

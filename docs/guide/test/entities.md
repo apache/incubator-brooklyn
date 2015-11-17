@@ -1,17 +1,31 @@
-# Entities
-
+---
+title: Entities
+layout: website-normal
+---
 ## TestCase
-A logical grouping for tests eg Restart tests
+A logical grouping for tests, e.g. Restart tests.
+
 ```
 type: org.apache.brooklyn.test.framework.TestCase
-  name: Stop Test
-  brooklyn.children:
+name: Stop Test
+brooklyn.children:
+  - ***
+  - ***
+```
+
+## ParallelTestCase
+A logical grouping for tests where each child is started in parallel instead of being run sequentially.
+
+```
+type: org.apache.brooklyn.test.framework.ParallelTestCase
+name: Start Test
+brooklyn.children:
   - ***
   - ***
 ```
 
 ## TestSensor
-Entity that tests a sensor value on another entity eg service.isUp == TRUE
+Entity that tests a sensor value on another entity, e.g. service.isUp == TRUE.
 
 #### Configuration
 | Key | Description | Required |
@@ -37,7 +51,7 @@ timeout: 5m
 ```
 
 ## TestEffector
-Entity that invokes an effector on another entity eg restart
+Entity that invokes an effector on another entity, e.g. restart.
 
 #### Configuration
 | Key | Description | Required |
@@ -64,7 +78,7 @@ params:
 ```
 
 ## TestHtmlCall
-Entity that makes a HTTP Request and tests the response
+Entity that makes a HTTP Request and tests the response.
 
 #### Configuration
 | Key | Description | Required |
@@ -107,3 +121,23 @@ Entity that makes a HTTP Request and tests the response
     assert:
       regex: "(?s).*illustrate(\\s)*how(\\s)*web(\\s)*applications.*"
 ```
+
+
+
+----
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.

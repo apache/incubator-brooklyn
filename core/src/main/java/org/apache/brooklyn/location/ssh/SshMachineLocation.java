@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.location.ssh;
 
+import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKeyWithPrefix;
+import static org.apache.brooklyn.core.config.ConfigKeys.newStringConfigKey;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.io.Closeable;
@@ -66,30 +68,6 @@ import org.apache.brooklyn.core.location.BasicOsDetails;
 import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.location.access.PortForwardManager;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.Beta;
-import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Supplier;
-import com.google.common.base.Throwables;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.RemovalListener;
-import com.google.common.cache.RemovalNotification;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.net.HostAndPort;
-import com.google.common.reflect.TypeToken;
-
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -119,6 +97,29 @@ import org.apache.brooklyn.util.stream.ReaderInputStream;
 import org.apache.brooklyn.util.stream.StreamGobbler;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Supplier;
+import com.google.common.base.Throwables;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.net.HostAndPort;
+import com.google.common.reflect.TypeToken;
 
 import groovy.lang.Closure;
 
@@ -134,13 +135,18 @@ import groovy.lang.Closure;
  */
 public class SshMachineLocation extends AbstractLocation implements MachineLocation, PortSupplier, WithMutexes, Closeable {
 
-    /** @deprecated since 0.7.0 shouldn't be public */
-    public static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
-    /** @deprecated since 0.7.0 shouldn't be public */
-    public static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
+    private static final Logger LOG = LoggerFactory.getLogger(SshMachineLocation.class);
+    private static final Logger logSsh = LoggerFactory.getLogger(BrooklynLogging.SSH_IO);
     
     // Use a sane timeout when doing a connectivity test
     private static final int SSHABLE_CONNECT_TIMEOUT = (int)Duration.minutes(2).toMilliseconds();
+
+    // Note that WinRmTool's implementation class *must* use a different key name. Both may be used 
+    // within a location's configuration to indicate the implementation to use for WinRmTool and 
+    // for SshTool - that will require two different configuration values.
+    public static final ConfigKey<String> SSH_TOOL_CLASS = ConfigKeys.newConfigKeyWithPrefixRemoved(
+            BrooklynConfigKeys.BROOKLYN_SSH_CONFIG_KEY_PREFIX,
+            Preconditions.checkNotNull(BrooklynConfigKeys.SSH_TOOL_CLASS, "static final initializer classload ordering problem"));
 
     public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class,
             "sshCacheExpiryDuration", "Expiry time for unused cached ssh connections", Duration.FIVE_MINUTES);
@@ -253,6 +259,8 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     @Nullable 
     private transient LoadingCache<Map<String, ?>, Pool<SshTool>> sshPoolCacheOrNull;
 
+    private transient volatile boolean loggedLegcySshToolClassConfig;
+    
     public SshMachineLocation() {
         this(MutableMap.of());
     }
@@ -600,7 +608,24 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             }
 
             // look up tool class
-            String sshToolClass = args.get(SshTool.PROP_TOOL_CLASS);
+            String sshToolClass = args.get(SSH_TOOL_CLASS);
+            String legacySshToolClass = args.get(SshTool.PROP_TOOL_CLASS);
+            if (Strings.isNonBlank(legacySshToolClass)) {
+                String msg;
+                if (Strings.isNonBlank(sshToolClass)) {
+                    msg = "Ignoring deprecated config "+SshTool.PROP_TOOL_CLASS.getName()+"="+legacySshToolClass
+                            +", preferring "+SSH_TOOL_CLASS.getName()+"="+sshToolClass+" for "+SshMachineLocation.this;
+                    
+                } else {
+                    sshToolClass = legacySshToolClass;
+                    msg = "Using deprecated config "+SshTool.PROP_TOOL_CLASS.getName()+"="+legacySshToolClass
+                            +", preferring "+SSH_TOOL_CLASS.getName()+"="+sshToolClass+" for "+SshMachineLocation.this;
+                }
+                if (!loggedLegcySshToolClassConfig) {
+                    LOG.warn(msg);
+                    loggedLegcySshToolClassConfig = true;
+                }
+            }
             if (sshToolClass==null) sshToolClass = SshjTool.class.getName();
             SshTool ssh = (SshTool) Class.forName(sshToolClass).getConstructor(Map.class).newInstance(args.getAllConfig());
 

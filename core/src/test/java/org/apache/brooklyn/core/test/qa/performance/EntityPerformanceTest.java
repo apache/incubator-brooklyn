@@ -30,6 +30,7 @@ import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.test.performance.PerformanceTestDescriptor;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.BeforeMethod;
@@ -69,10 +70,14 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         final AtomicInteger i = new AtomicInteger();
         
-        measureAndAssert("updateAttribute", numIterations, minRatePerSec, new Runnable() {
-            public void run() {
-                entity.sensors().set(TestEntity.SEQUENCE, i.getAndIncrement());
-            }});
+        measure(PerformanceTestDescriptor.create()
+                .summary("EntityPerformanceTest.testUpdateAttributeWhenNoListeners")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
+                    public void run() {
+                        entity.sensors().set(TestEntity.SEQUENCE, i.getAndIncrement());
+                    }}));
     }
 
     @Test(groups={"Integration", "Acceptance"})
@@ -87,10 +92,14 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
                     lastVal.set(event.getValue());
                 }});
         
-        measureAndAssert("updateAttributeWithListener", numIterations, minRatePerSec, new Runnable() {
-            public void run() {
-                entity.sensors().set(TestEntity.SEQUENCE, (i.getAndIncrement()));
-            }});
+        measure(PerformanceTestDescriptor.create()
+                .summary("EntityPerformanceTest.testUpdateAttributeWithNoopListeners")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
+                    public void run() {
+                        entity.sensors().set(TestEntity.SEQUENCE, (i.getAndIncrement()));
+                    }}));
         
         Asserts.succeedsEventually(MutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
             public void run() {
@@ -103,10 +112,14 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         int numIterations = numIterations();
         double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         
-        measureAndAssert("invokeEffector", numIterations, minRatePerSec, new Runnable() {
-            public void run() {
-                entity.myEffector();
-            }});
+        measure(PerformanceTestDescriptor.create()
+                .summary("EntityPerformanceTest.testInvokeEffector")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
+                    public void run() {
+                        entity.myEffector();
+                    }}));
     }
     
     @Test(groups={"Integration", "Acceptance"})
@@ -114,31 +127,38 @@ public class EntityPerformanceTest extends AbstractPerformanceTest {
         int numIterations = numIterations();
         double minRatePerSec = 1000 * PERFORMANCE_EXPECTATION;
         
-        measureAndAssert("invokeEffectorAsyncAndGet", numIterations, minRatePerSec, new Runnable() {
-            public void run() {
-                Task<?> task = entity.invoke(TestEntity.MY_EFFECTOR, MutableMap.<String,Object>of());
-                try {
-                    task.get();
-                } catch (Exception e) {
-                    throw Exceptions.propagate(e);
-                }
-            }});
+        measure(PerformanceTestDescriptor.create()
+                .summary("EntityPerformanceTest.testAsyncEffectorInvocation")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
+                    public void run() {
+                        Task<?> task = entity.invoke(TestEntity.MY_EFFECTOR, MutableMap.<String,Object>of());
+                        try {
+                            task.get();
+                        } catch (Exception e) {
+                            throw Exceptions.propagate(e);
+                        }
+                    }}));
     }
     
-    // TODO but surely parallel should be much faster?!
     @Test(groups={"Integration", "Acceptance"})
     public void testMultiEntityConcurrentEffectorInvocation() {
         int numIterations = numIterations();
-        double minRatePerSec = 100 * PERFORMANCE_EXPECTATION; // i.e. 1000 invocations
+        double minRatePerSec = 100 * PERFORMANCE_EXPECTATION; // i.e. 1000 invocations (because 10 entities per time)
         
-        measureAndAssert("invokeEffectorMultiEntityConcurrentAsyncAndGet", numIterations, minRatePerSec, new Runnable() {
-            public void run() {
-                Task<?> task = Entities.invokeEffector(app, entities, TestEntity.MY_EFFECTOR);
-                try {
-                    task.get();
-                } catch (Exception e) {
-                    throw Exceptions.propagate(e);
-                }
-            }});
+        measure(PerformanceTestDescriptor.create()
+                .summary("EntityPerformanceTest.testMultiEntityConcurrentEffectorInvocation")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
+                    public void run() {
+                        Task<?> task = Entities.invokeEffector(app, entities, TestEntity.MY_EFFECTOR);
+                        try {
+                            task.get();
+                        } catch (Exception e) {
+                            throw Exceptions.propagate(e);
+                        }
+                    }}));
     }
 }

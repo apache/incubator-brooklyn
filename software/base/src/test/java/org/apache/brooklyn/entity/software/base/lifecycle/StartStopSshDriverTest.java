@@ -83,10 +83,10 @@ public class StartStopSshDriverTest {
 
     @SuppressWarnings("rawtypes")
     protected static class SshMachineLocationWithSshTool extends SshMachineLocation {
-        private static final long serialVersionUID = 1L;
-
         SshTool lastTool;
         public SshMachineLocationWithSshTool(Map flags) { super(flags); }
+
+        @Override
         public SshTool connectSsh(Map args) {
             SshTool result = super.connectSsh(args);
             lastTool = result;

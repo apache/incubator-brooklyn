@@ -24,22 +24,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.api.mgmt.HasTaskChildren;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.core.task.BasicExecutionContext;
-import org.apache.brooklyn.util.core.task.BasicExecutionManager;
-import org.apache.brooklyn.util.core.task.DynamicSequentialTask;
-import org.apache.brooklyn.util.core.task.DynamicTasks;
-import org.apache.brooklyn.util.core.task.TaskTags;
-import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.math.MathPredicates;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
@@ -50,6 +46,8 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -89,7 +87,7 @@ public class DynamicSequentialTaskTest {
     }
 
     @Test
-    public void testSimple() throws InterruptedException, ExecutionException {
+    public void testSimple() throws Exception {
         Callable<String> mainJob = new Callable<String>() {
             public String call() {
                 log.info("main job - "+Tasks.current());
@@ -160,7 +158,7 @@ public class DynamicSequentialTaskTest {
     }
     
     @Test
-    public void testComplex() throws InterruptedException, ExecutionException {
+    public void testComplex() throws Exception {
         Task<List<?>> t = Tasks.sequential(
                 sayTask("1"),
                 sayTask("2"),
@@ -174,16 +172,14 @@ public class DynamicSequentialTaskTest {
     }
     
     @Test
-    public void testCancelled() throws InterruptedException, ExecutionException {
+    public void testCancelled() throws Exception {
         Task<List<?>> t = Tasks.sequential(
                 sayTask("1"),
                 sayTask("2a", Duration.THIRTY_SECONDS, "2b"),
                 sayTask("3"));
         ec.submit(t);
-        synchronized (messages) {
-            while (messages.size() <= 1)
-                messages.wait();
-        }
+        
+        waitForMessages(Predicates.compose(MathPredicates.greaterThanOrEqual(2), CollectionFunctionals.sizeFunction()), TIMEOUT);
         Assert.assertEquals(messages, Arrays.asList("1", "2a"));
         Time.sleep(Duration.millis(50));
         t.cancel(true);
@@ -212,6 +208,23 @@ public class DynamicSequentialTaskTest {
         Assert.assertEquals(cancellations.availablePermits(), 0);
     }
 
+    protected void waitForMessages(Predicate<? super List<String>> predicate, Duration timeout) throws Exception {
+        long endtime = System.currentTimeMillis() + timeout.toMilliseconds();
+        synchronized (messages) {
+            while (true) {
+                if (predicate.apply(messages)) {
+                    return;
+                }
+                long waittime = endtime - System.currentTimeMillis();
+                if (waittime > 0) {
+                    messages.wait(waittime);
+                } else {
+                    throw new TimeoutException("Timeout after "+timeout+"; messages="+messages+"; predicate="+predicate);
+                }
+            }
+        }
+    }
+    
     protected Task<String> monitorableTask(final String id) {
         return monitorableTask(null, id, null);
     }

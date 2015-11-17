@@ -59,6 +59,28 @@ public class ExceptionsTest {
     }
     
     @Test
+    public void testPropagateCheckedExceptionWithMessage() throws Exception {
+        String extraMsg = "my message";
+        Exception tothrow = new Exception("simulated");
+        try {
+            throw Exceptions.propagate(extraMsg, tothrow);
+        } catch (RuntimeException e) {
+            assertEquals(e.getMessage(), "my message");
+            assertEquals(e.getCause(), tothrow);
+        }
+    }
+    
+    @Test
+    public void testPropagateRuntimeExceptionIgnoresMessage() throws Exception {
+        NullPointerException tothrow = new NullPointerException("simulated");
+        try {
+            throw Exceptions.propagate("my message", tothrow);
+        } catch (NullPointerException e) {
+            assertEquals(e, tothrow);
+        }
+    }
+    
+    @Test
     public void testPropagateIfFatalPropagatesInterruptedException() throws Exception {
         InterruptedException tothrow = new InterruptedException("simulated");
         try {

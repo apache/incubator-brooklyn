@@ -540,12 +540,20 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
     @SuppressWarnings("unchecked")
     protected void registerPollTask() {
         final Runnable job = new Runnable() {
+            private boolean lastFailed;
+            
             @Override public void run() {
                 try {
                     publishAndCheck(false);
+                    lastFailed = false;
                 } catch (Exception e) {
                     if (running) {
-                        LOG.error("Problem in HA-poller: "+e, e);
+                        if (lastFailed) {
+                            if (LOG.isDebugEnabled()) LOG.debug("Recurring problem in HA-poller: "+e, e);
+                        } else {
+                            LOG.error("Problem in HA-poller: "+e, e);
+                            lastFailed = true;
+                        }
                     } else {
                         if (LOG.isDebugEnabled()) LOG.debug("Problem in HA-poller, but no longer running: "+e, e);
                     }
@@ -562,8 +570,9 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
             }
         };
         
-        LOG.debug("Registering poll task for "+this+", period "+getPollPeriod());
-        if (getPollPeriod().equals(Duration.PRACTICALLY_FOREVER)) {
+        Duration pollPeriod = getPollPeriod();
+        LOG.debug("Registering poll task for "+this+", period "+pollPeriod);
+        if (pollPeriod.equals(Duration.PRACTICALLY_FOREVER)) {
             // don't schedule - used for tests
             // (scheduling fires off one initial task in the background before the delay, 
             // which affects tests that want to know exactly when publishing happens;
@@ -571,7 +580,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         } else {
             if (pollingTask!=null) pollingTask.cancel(true);
             
-            ScheduledTask task = new ScheduledTask(MutableMap.of("period", getPollPeriod(), "displayName", "scheduled:[HA poller task]"), taskFactory);
+            ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollPeriod, "displayName", "scheduled:[HA poller task]"), taskFactory);
             pollingTask = managementContext.getExecutionManager().submit(task);
         }
     }

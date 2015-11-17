@@ -31,6 +31,7 @@ import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.TemplatedStringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.core.internal.ssh.ShellTool;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
@@ -180,7 +181,16 @@ public class BrooklynConfigKeys {
     // because they have some funny circular references
     static { assert BROOKLYN_SSH_CONFIG_KEY_PREFIX.equals(SshTool.BROOKLYN_CONFIG_KEY_PREFIX) : "static final initializer classload ordering problem"; }
 
-    public static final ConfigKey<String> SSH_TOOL_CLASS = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, 
+    public static final ConfigKey<String> SSH_TOOL_CLASS = newStringConfigKey(
+            BROOKLYN_SSH_CONFIG_KEY_PREFIX + "sshToolClass", 
+            "SshTool implementation to use (or null for default)", 
+            null);
+
+    /**
+     * @deprecated since 0.9.0; use {@link #SSH_TOOL_CLASS}
+     */
+    @Deprecated
+    public static final ConfigKey<String> LEGACY_SSH_TOOL_CLASS = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, 
             Preconditions.checkNotNull(SshTool.PROP_TOOL_CLASS, "static final initializer classload ordering problem"));
 
     public static final ConfigKey<String> SSH_CONFIG_HOST = newConfigKeyWithPrefix(BROOKLYN_SSH_CONFIG_KEY_PREFIX, SshTool.PROP_HOST);
