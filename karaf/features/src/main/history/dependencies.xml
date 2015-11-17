@@ -19,6 +19,7 @@
         <feature prerequisite="false" dependency="false">jetty</feature>
         <feature prerequisite="false" dependency="false">swagger</feature>
         <feature prerequisite="false" dependency="false">war</feature>
+        <feature prerequisite="false" dependency="false">war</feature>
         <bundle>mvn:ch.qos.logback/logback-classic/1.0.7</bundle>
         <bundle>mvn:ch.qos.logback/logback-core/1.0.7</bundle>
         <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/2.4.5</bundle>
@@ -33,13 +34,17 @@
         <bundle>mvn:com.google.code.gson/gson/2.3</bundle>
         <bundle>mvn:com.google.guava/guava/17.0</bundle>
         <bundle>mvn:com.jayway.jsonpath/json-path/2.0.0</bundle>
-        <bundle>mvn:com.sun.jersey.contribs/jersey-multipart/1.18.1</bundle>
-        <bundle>mvn:com.sun.jersey/jersey-core/1.18.1</bundle>
-        <bundle>mvn:com.sun.jersey/jersey-server/1.18.1</bundle>
-        <bundle>mvn:com.sun.jersey/jersey-servlet/1.18.1</bundle>
-        <bundle>mvn:com.sun.jersey/jersey-servlet/1.18.1</bundle>
+        <bundle>mvn:com.sun.jersey.contribs/jersey-multipart/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-core/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-core/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-server/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-server/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
         <bundle>mvn:com.thoughtworks.xstream/xstream/1.4.7</bundle>
         <bundle>mvn:commons-beanutils/commons-beanutils/1.9.1</bundle>
+        <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
         <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
         <bundle>mvn:commons-collections/commons-collections/3.2.1</bundle>
         <bundle>mvn:commons-io/commons-io/2.4</bundle>
@@ -48,6 +53,7 @@
         <bundle>mvn:io.swagger/swagger-models/1.5.3</bundle>
         <bundle>mvn:javax.servlet/javax.servlet-api/3.1.0</bundle>
         <bundle>mvn:javax.servlet/javax.servlet-api/3.1.0</bundle>
+        <bundle>mvn:javax.ws.rs/jsr311-api/1.1.1</bundle>
         <bundle>mvn:net.minidev/asm/1.0.2</bundle>
         <bundle>mvn:net.minidev/json-smart/2.1.1</bundle>
         <bundle>mvn:net.schmizz/sshj/0.8.1</bundle>

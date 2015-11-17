@@ -22,6 +22,10 @@
     <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
     <repository>mvn:org.apache.karaf.features/spring/${karaf.version}/xml/features</repository>
 
+    <!-- all these are about jax-rs, and will need some love later on -->
+    <!--<bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jsr339-api-2.0/2.4.0</bundle>-->
+    <!--<bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>-->
+    <!--<bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax.ws.rs-api}</bundle>-->
 
     <feature name="swagger" version="${swagger.version}" description="Swagger Annotations+Core+JAXRS+Models">
         <bundle>mvn:io.swagger/swagger-annotations/${swagger.version}</bundle>
@@ -49,8 +53,11 @@
         <bundle dependency="true">mvn:com.google.guava/guava/${guava.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/${groovy.version}</bundle>
         <bundle dependency="true">mvn:commons-io/commons-io/${commons-io.version}</bundle>
+        <bundle dependency="true">mvn:commons-codec/commons-codec/${commons-codec.version}</bundle>
         <bundle dependency="true">mvn:org.slf4j/jul-to-slf4j/${slf4j.version}</bundle>
         <bundle dependency="true">mvn:org.yaml/snakeyaml/${snakeyaml.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient.version}</bundle>
 
         <bundle dependency="true">mvn:ch.qos.logback/logback-classic/${logback.version}</bundle>
         <bundle dependency="true">mvn:ch.qos.logback/logback-core/${logback.version}</bundle>
@@ -67,13 +74,14 @@
 
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-rest-swagger/${project.version}</bundle>
 
-        <!-- TODO: jersey osgi feature -->
+        <!--<feature>jersey</feature>-->
         <bundle dependency="true">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
         <bundle dependency="true">mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
         <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
         <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
-        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
 
+        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
+        <bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>
     </feature>
 
     <feature name="brooklyn-rest-api" version="${project.version}" description="Brooklyn REST API">
@@ -95,6 +103,7 @@
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
 
+        <!--<bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>-->
         <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
     </feature>
 
@@ -125,8 +134,6 @@
         <bundle dependency="true">mvn:org.bouncycastle/bcpkix-jdk15on/${bouncycastle.version}</bundle>
         <bundle dependency="true">mvn:commons-codec/commons-codec/${commons-codec.version}</bundle>
         <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
-        <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient.version}</bundle>
-        <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-jaxrs/${jackson.version}</bundle>
@@ -173,6 +180,13 @@
         <feature>brooklyn-rest-api</feature>
         <feature>brooklyn-camp-brooklyn</feature>
         <feature>brooklyn-camp-base</feature>
+
+        <feature>war</feature>
+
+        <!--<feature>jersey</feature>-->
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
     </feature>
 
     <feature name="brooklyn-jsgui" version="${project.version}" description="Brooklyn REST JavaScript Web GUI">
