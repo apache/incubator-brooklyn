@@ -32,38 +32,23 @@ import java.util.Collection;
 public class SimpleCommandLifecycleEffectorTasks extends MachineLifecycleEffectorTasks {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandLifecycleEffectorTasks.class);
-    private MachineLocation location;
 
     protected Location getLocation(@Nullable Collection<? extends Location> locations) {
         return super.getLocation(entity().filterLocations(locations));
     }
 
-    @Override
-    protected void preStartCustom(MachineLocation machine) {
-        location = machine;
-        super.preStartCustom(location);
-        LOG.debug("Performing lifecycle preStartCustom on simple command");
-        entity().initDriver(location);
-    }
-
-    @Override
-    protected void preRestartCustom() {
-        LOG.debug("Performing lifecycle preStartCustom on simple command");
-        Asserts.notNull(location, "Cannot restart with no location");
-        entity().initDriver(location);
-    }
 
     @Override
     protected String startProcessesAtMachine(Supplier<MachineLocation> machineS) {
         LOG.debug("Performing lifecycle startProcessesAtMachine on simple command");
-        entity().getDriver().start();
-        return "Started with driver " + entity().getDriver();
+        MachineLocation machineLocation = machineS.get();
+        entity().execute(machineLocation);
+        return "Started simple command on " + machineLocation;
     }
 
     @Override
     protected String stopProcessesAtMachine() {
-        LOG.debug("Performing lifecycle stopProcessesAtMachine on simple command");
-        entity().getDriver().stop();
+        LOG.debug("No action needed on simple command stopped");
         return "Stopped";
     }
 

@@ -53,7 +53,7 @@ public class SimpleCommandTestImpl extends SimpleCommandImpl implements SimpleCo
     }
 
     @Override
-    protected void handle(SimpleCommandDriver.Result result) {
+    protected void handle(SimpleCommand.Result result) {
         AssertionSupport support = new AssertionSupport();
         checkAssertions(support, exitCodeAssertions(), "exit code", result.getExitCode());
         checkAssertions(support, getConfig(ASSERT_OUT), "stdout", result.getStdout());

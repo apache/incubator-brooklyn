@@ -18,49 +18,69 @@
  */
 package org.apache.brooklyn.test.framework;
 
-import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
-import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.mgmt.TaskFactory;
 import org.apache.brooklyn.core.annotation.EffectorParam;
+import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.location.Locations;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.ssh.SshPutTaskWrapper;
+import org.apache.brooklyn.util.core.task.ssh.SshTasks;
+import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.Random;
 
 import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.*;
 import static org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.setExpectedState;
+import static org.apache.brooklyn.util.text.Strings.isBlank;
+import static org.apache.brooklyn.util.text.Strings.isNonBlank;
 
 /**
  * Implementation for {@link SimpleCommand}.
  */
-public class SimpleCommandImpl extends AbstractEntity
-        implements SimpleCommand, DriverDependentEntity<SimpleCommandDriver> {
+public class SimpleCommandImpl extends AbstractEntity implements SimpleCommand {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleCommandImpl.class);
     private static final int A_LINE = 80;
-    private transient SimpleCommandDriver driver;
+    public static final String DEFAULT_NAME = "download.sh";
 
-    private Collection<? extends Location> locations;
+    private ResourceUtils resourceUtils;
 
     @Override
-    public SimpleCommandDriver getDriver() {
-        return driver;
+    public void init() {
+        super.init();
+        resourceUtils = ResourceUtils.create(this);
+        getLifecycleEffectorTasks().attachLifecycleEffectors(this);
     }
 
-    @Override
-    public Class<SimpleCommandDriver> getDriverInterface() {
-        return SimpleCommandDriver.class;
+    protected SimpleCommandLifecycleEffectorTasks getLifecycleEffectorTasks () {
+        return new SimpleCommandLifecycleEffectorTasks();
     }
 
     /**
      * Gives the opportunity to sub-classes to do additional work based on the result of the command.
      */
-    protected void handle(SimpleCommandDriver.Result result) {
+    protected void handle(SimpleCommand.Result result) {
         LOG.debug("Result is {}\nwith output [\n{}\n] and error [\n{}\n]", new Object[] {
                 result.getExitCode(), shorten(result.getStdout()), shorten(result.getStderr())
         });
@@ -79,79 +99,10 @@ public class SimpleCommandImpl extends AbstractEntity
 
 
     @Override
-    public void init() {
-        super.init();
-        getLifecycleEffectorTasks().attachLifecycleEffectors(this);
-    }
-
-
-    protected void initDriver(MachineLocation machine) {
-        LOG.debug("Initializing simple command driver");
-        SimpleCommandDriver newDriver = doInitDriver(machine);
-        if (newDriver == null) {
-            throw new UnsupportedOperationException("cannot start "+this+" on "+machine+": no driver available");
-        }
-        driver = newDriver;
-    }
-
-    protected SimpleCommandDriver doInitDriver(MachineLocation machine) {
-        if (driver!=null) {
-            if (machine.equals(driver.getLocation())) {
-                return driver; //just reuse
-            } else {
-                LOG.warn("driver/location change is untested for {} at {}; changing driver and continuing", this, machine);
-                return newDriver(machine);
-            }
-        } else {
-            return newDriver(machine);
-        }
-    }
-
-    protected SimpleCommandDriver newDriver(MachineLocation machine) {
-        LOG.debug("Creating new simple command driver for {} from management context", machine);
-        EntityDriverManager entityDriverManager = getManagementContext().getEntityDriverManager();
-        return entityDriverManager.build(this, machine);
-    }
-
-    @Override
     public void start(@EffectorParam(name = "locations") Collection<? extends Location> locations) {
-        this.locations = locations;
-        startOnLocations();
-    }
-
-    protected void startOnLocations() {
+        addLocations(locations);
         setExpectedState(this, STARTING);
-        int size = locations.size();
-        LOG.debug("Starting simple command at {} locations{}", size,
-                size > 0 ? " beginning " + locations.iterator().next() : "");
-        try {
-            execute(locations);
-            setUpAndRunState(true, RUNNING);
-
-        } catch (final Exception e) {
-            setUpAndRunState(false, ON_FIRE);
-            throw Exceptions.propagate(e);
-        }
     }
-
-    private void execute(Collection<? extends Location> locations) {
-        SimpleCommandDriver.Result result = null;
-        String downloadUrl = getConfig(DOWNLOAD_URL);
-        if (Strings.isNonBlank(downloadUrl)) {
-            String scriptDir = getConfig(SCRIPT_DIR);
-            result = getDriver().executeDownloadedScript(locations, downloadUrl, scriptDir);
-
-        } else {
-            String command = getConfig(DEFAULT_COMMAND);
-            if (Strings.isBlank(command)) {
-                throw new IllegalArgumentException("No default command and no downloadUrl provided");
-            }
-
-            result = getDriver().execute(locations, command);
-        }
-        handle(result);
-    }
-
 
     @Override
     public void stop() {
@@ -170,8 +121,133 @@ public class SimpleCommandImpl extends AbstractEntity
         setExpectedState(this, status);
     }
 
-    protected SimpleCommandLifecycleEffectorTasks getLifecycleEffectorTasks () {
-        return new SimpleCommandLifecycleEffectorTasks();
+    public void execute(MachineLocation machineLocation) {
+        try {
+            executeCommand(machineLocation);
+            setUpAndRunState(true, RUNNING);
+        } catch (Exception e) {
+            setUpAndRunState(false, ON_FIRE);
+            throw Exceptions.propagate(e);
+        }
+    }
+
+    private void executeCommand(MachineLocation machineLocation) {
+
+        SimpleCommand.Result result = null;
+        String downloadUrl = getConfig(DOWNLOAD_URL);
+        String command = getConfig(DEFAULT_COMMAND);
+
+        String downloadName = DOWNLOAD_URL.getName();
+        String commandName = DEFAULT_COMMAND.getName();
+
+        if (isNonBlank(downloadUrl) && isNonBlank(command)) {
+            throw illegal("Cannot specify both", downloadName, "and", commandName);
+        }
+
+        if (isBlank(downloadUrl) && isBlank(commandName)) {
+            throw illegal("No", downloadName, "and no", commandName, "provided");
+        }
+
+        if (Strings.isNonBlank(downloadUrl)) {
+            String scriptDir = getConfig(SCRIPT_DIR);
+            String destPath = calculateDestPath(downloadUrl, scriptDir);
+            result = executeDownloadedScript(machineLocation, downloadUrl, destPath);
+        }
+
+        if (Strings.isNonBlank(command)) {
+            result = executeShellCommand(machineLocation, command);
+        }
+
+        handle(result);
+    }
+
+    private IllegalArgumentException illegal(String ...messages) {
+        return new IllegalArgumentException(Joiner.on(' ').join(this.toString() + ":", messages));
+    }
+
+    private SimpleCommand.Result executeDownloadedScript(MachineLocation machineLocation, String downloadUrl, String destPath) {
+
+        SshMachineLocation machine = getSshMachine(ImmutableList.<Location>of(machineLocation));
+
+        TaskFactory<?> install = SshTasks.installFromUrl(ImmutableMap.<String, Object>of(), machine, downloadUrl, destPath);
+        DynamicTasks.queue(install);
+        DynamicTasks.waitForLast();
+
+        machine.execCommands("make the script executable", ImmutableList.<String>of("chmod u+x " + destPath));
+
+        return executeShellCommand(machineLocation, destPath);
+    }
+
+
+    private SimpleCommand.Result executeShellCommand(MachineLocation machineLocation, String command) {
+
+        SshMachineLocation machine = getSshMachine(ImmutableList.of(machineLocation));
+        SshEffectorTasks.SshEffectorTaskFactory<Integer> etf = SshEffectorTasks.ssh(machine, command);
+
+        LOG.debug("Creating task to execute '{}' on location {}", command, machine);
+        ProcessTaskWrapper<Integer> job = DynamicTasks.queue(etf);
+        DynamicTasks.waitForLast();
+        return buildResult(job);
+    }
+
+
+    private <T> SimpleCommand.Result buildResult(final ProcessTaskWrapper<Integer> job) {
+        return new SimpleCommand.Result() {
+
+            @Override
+            public int getExitCode() {
+                return job.get();
+            }
+
+            @Override
+            public String getStdout() {
+                return job.getStdout().trim();
+            }
+
+            @Override
+            public String getStderr() {
+                return job.getStderr().trim();
+            }
+        };
+    }
+
+    private SshMachineLocation getSshMachine(Collection<? extends Location> hostLocations) {
+        Maybe<SshMachineLocation> host = Locations.findUniqueSshMachineLocation(hostLocations);
+        if (host.isAbsent()) {
+            throw new IllegalArgumentException("No SSH machine found to run command");
+        }
+        return host.get();
+    }
+
+    private String calculateDestPath(String url, String directory) {
+        try {
+            URL asUrl = new URL(url);
+            Iterable<String> path = Splitter.on("/").split(asUrl.getPath());
+            String scriptName = getLastPartOfPath(path, DEFAULT_NAME);
+            return Joiner.on("/").join(directory, "test-" + randomDir(), scriptName);
+        } catch (MalformedURLException e) {
+            throw illegal("Malformed URL:", url);
+        }
+    }
+
+    private String randomDir() {
+        return Integer.valueOf(new Random(System.currentTimeMillis()).nextInt(100000)).toString();
+    }
+
+    private static String getLastPartOfPath(Iterable<String> path, String defaultName) {
+        MutableList<String> parts = MutableList.copyOf(path);
+        Collections.reverse(parts);
+        Iterator<String> it = parts.iterator();
+        String scriptName = null;
+
+        // strip any trailing "/" parts of URL
+        while (isBlank(scriptName) && it.hasNext()) {
+            scriptName = it.next();
+        }
+        if (isBlank(scriptName)) {
+            scriptName = defaultName;
+        }
+        return scriptName;
     }
 
 }

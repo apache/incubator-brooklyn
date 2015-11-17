@@ -38,6 +38,15 @@ import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKey;
 @ImplementedBy(SimpleCommandImpl.class)
 public interface SimpleCommand extends Entity, Startable {
 
+    /**
+     * Result of a command invocation.
+     */
+    interface Result {
+        int getExitCode();
+        String getStdout();
+        String getStderr();
+    }
+
     @SetFromFlag(nullable = false)
     ConfigKey<String> DEFAULT_COMMAND = ConfigKeys.newConfigKey(String.class, "defaultCommand",
             "Command to invoke if no script is provided via a downloadUrl");
