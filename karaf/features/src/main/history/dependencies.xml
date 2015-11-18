@@ -17,7 +17,7 @@
         <feature prerequisite="false" dependency="false">brooklyn-utils-rest-swagger</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-rest-swagger</feature>
         <feature prerequisite="false" dependency="false">jetty</feature>
-        <feature prerequisite="false" dependency="false">swagger</feature>
+        <feature prerequisite="false" dependency="false">swagger-crippled</feature>
         <feature prerequisite="false" dependency="false">war</feature>
         <feature prerequisite="false" dependency="false">war</feature>
         <bundle>mvn:ch.qos.logback/logback-classic/1.0.7</bundle>
@@ -96,8 +96,6 @@
         <bundle>mvn:org.yaml/snakeyaml/1.11</bundle>
         <bundle>wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle>
         <bundle>wrap:mvn:com.maxmind.geoip2/geoip2/0.8.1</bundle>
-        <bundle>wrap:mvn:io.swagger/swagger-core/1.5.3</bundle>
-        <bundle>wrap:mvn:io.swagger/swagger-jaxrs/1.5.3</bundle>
         <bundle>wrap:mvn:javax.validation/validation-api/1.0.0.GA</bundle>
         <bundle>wrap:mvn:org.tukaani/xz/1.4</bundle>
         <bundle>wrap:mvn:xpp3/xpp3_min/1.1.4c</bundle>

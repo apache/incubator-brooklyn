@@ -27,10 +27,11 @@
     <!--<bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>-->
     <!--<bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax.ws.rs-api}</bundle>-->
 
-    <feature name="swagger" version="${swagger.version}" description="Swagger Annotations+Core+JAXRS+Models">
+    <!-- temporary feature until we migrate to swagger-1.5.4, which is properly bundled -->
+    <feature name="swagger-crippled" version="${swagger.version}" description="Swagger Annotations+Core+JAXRS+Models">
         <bundle>mvn:io.swagger/swagger-annotations/${swagger.version}</bundle>
-        <bundle>wrap:mvn:io.swagger/swagger-core/${swagger.version}</bundle>
-        <bundle>wrap:mvn:io.swagger/swagger-jaxrs/${swagger.version}</bundle>
+<!--        <bundle>wrap:mvn:io.swagger/swagger-core/${swagger.version}</bundle>
+        <bundle>wrap:mvn:io.swagger/swagger-jaxrs/${swagger.version}</bundle>-->
         <bundle>mvn:io.swagger/swagger-models/${swagger.version}</bundle>
 
         <!--<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.javassist/${javassist.bundle.version}</bundle>-->
@@ -41,9 +42,6 @@
         <bundle dependency='true'>mvn:com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/${fasterxml.jackson.version}</bundle>
         <bundle dependency='true'>mvn:com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/${fasterxml.jackson.version}</bundle>
         <bundle dependency='true'>mvn:com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/${fasterxml.jackson.version}</bundle>
-        <!--<bundle>mvn:com.thoughtworks.paranamer/paranamer/${thoughtworks.paranamer.version}</bundle>-->
-        <!--<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.json4s/${json4s.bundle.version}</bundle>-->
-        <!--<bundle dependency='true'>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.reflections/${reflections.bundle.version}</bundle>-->
     </feature>
 
     <feature name="brooklyn-utils-common" version="${project.version}" description="Brooklyn Common Utils">
@@ -70,7 +68,7 @@
 
     <feature name="brooklyn-utils-rest-swagger" version="${project.version}" description="Brooklyn REST Swagger Apidoc Utilities">
         <feature>brooklyn-utils-common</feature>
-        <feature version="${swagger.version}">swagger</feature>
+        <feature version="${swagger.version}">swagger-crippled</feature>
 
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-rest-swagger/${project.version}</bundle>
 
