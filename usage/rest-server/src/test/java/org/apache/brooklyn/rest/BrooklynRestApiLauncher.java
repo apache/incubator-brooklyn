@@ -315,6 +315,7 @@ public class BrooklynRestApiLauncher {
     public static Server startRestResourcesViaFilter() {
         return new BrooklynRestApiLauncher()
                 .mode(StartMode.FILTER)
+                .forceUseOfDefaultCatalogWithJavaClassPath(true)
                 .start();
     }
 

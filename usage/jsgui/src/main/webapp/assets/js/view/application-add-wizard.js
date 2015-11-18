@@ -21,7 +21,7 @@
  * Also creates an empty Application model.
  */
 define([
-    "underscore", "jquery", "backbone", "brooklyn-utils", "js-yaml",
+    "underscore", "jquery", "backbone", "brooklyn-utils", "js-yaml", "codemirror", 
     "model/entity", "model/application", "model/location", "model/catalog-application",
     "text!tpl/app-add-wizard/modal-wizard.html",
     "text!tpl/app-add-wizard/create.html",
@@ -33,14 +33,17 @@ define([
     "text!tpl/app-add-wizard/deploy-version-option.html",
     "text!tpl/app-add-wizard/deploy-location-row.html",
     "text!tpl/app-add-wizard/deploy-location-option.html",
-    "bootstrap"
     
-], function (_, $, Backbone, Util, JsYaml, Entity, Application, Location, CatalogApplication,
+    // ↓ not part of the constructor
+    "codemirror-mode-yaml",
+    "codemirror-addon-show-hint",
+    "codemirror-addon-anyword-hint",
+    "bootstrap"
+], function (_, $, Backbone, Util, JsYaml, CodeMirror, Entity, Application, Location, CatalogApplication,
              ModalHtml, CreateHtml, CreateStepTemplateEntryHtml, CreateEntityEntryHtml,
              RequiredConfigEntryHtml, EditConfigEntryHtml, DeployHtml,
              DeployVersionOptionHtml, DeployLocationRowHtml, DeployLocationOptionHtml
 ) {
-
     /** Special ID to indicate that no locations will be provided when starting the server. */
     var NO_LOCATION_INDICATOR = "__NONE__";
 
@@ -187,14 +190,13 @@ define([
             }
             
             // finish from config step, preview step, and from first step if yaml tab selected (and valid)
-            var finishVisible = (this.currentStep >= 1)
-            var finishEnabled = finishVisible
+            var finishVisible = (this.currentStep >= 1);
+            var finishEnabled = finishVisible;
             if (!finishEnabled && this.currentStep==0) {
                 if (this.model.mode == "yaml") {
                     // should do better validation than non-empty
                     finishVisible = true;
-                    var yaml_code = this.$("#yaml_code").val()
-                    if (yaml_code) {
+                    if (self.editor && self.editor && self.editor.getValue()) {
                         finishEnabled = true;
                     }
                 }
@@ -290,7 +292,7 @@ define([
                     }
                     if (yaml) {
                         // it's a yaml catalog template which includes a location, show the yaml tab
-           	            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
+                        $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
                         $("#yaml_code").setCaretToStart();
                     } else {
                         // it's a java catalog template or yaml template without a location, go to wizard
@@ -311,6 +313,9 @@ define([
                 this.renderCurrentStep(function callback(view) {
                     // Drop any "None" locations.
                     that.model.spec.pruneLocations();
+
+                    // TODO: see if this preview has conflicts with codemirror. maybe the id="code"
+                    //       has to be switched back to yaml_code
                     $("textarea#yaml_code").val(JsYaml.safeDump(oldSpecToCamp(that.model.spec.toJSON())));
                     $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
                     $("#yaml_code").setCaretToStart();
@@ -352,6 +357,7 @@ define([
         },
         template:_.template(CreateHtml),
         wizard: null,
+        editor: null,
         initialize:function () {
             var self = this
             self.catalogEntityIds = []
@@ -430,8 +436,17 @@ define([
             window.location.href="#v1/catalog/new";
         },
         showYamlTab: function() {
-            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show')
-            $("#yaml_code").focus();
+            $("ul#app-add-wizard-create-tab").find("a[href='#yamlTab']").tab('show');
+            if (self.editor == null) {
+            	self.editor = CodeMirror.fromTextArea(document.getElementById("yaml_code"), {
+                	lineNumbers: true,
+                    extraKeys: {"Ctrl-Space": "autocomplete"},
+                    mode: {name: "yaml", globalVars: true}
+                });
+            }
+            // TODO: find how (focus, setCaretToStart) can be implemented as CodeMirror events
+            // $("#yaml_code").focus();
+            // $("#yaml_code").setCaretToStart();
         },
         applyFilter: function(e) {
             var filter = $(e.currentTarget).val().toLowerCase()
@@ -601,9 +616,13 @@ define([
                     return true
                 }
             } else if (tabName=='#yamlTab') {
-                this.model.yaml = this.$("#yaml_code").val();
-                if (this.model.yaml) {
-                    return true;
+                if (self.editor !== null) {
+                    this.model.yaml = self.editor.getValue();
+                    if (this.model.yaml) {
+                        return true;
+                    }
+                } else {
+                    console.info("No text in the editor!");
                 }
             } else {
                 console.info("NOT IMPLEMENTED YET")
@@ -801,7 +820,6 @@ define([
                 return candidate.get("id")==loc_id;
             });
             if (!locationValid) {
-                log("invalid location "+loc_id);
                 this.showFailure("Invalid location "+loc_id);
                 this.model.spec.set("locations",[]);
             } else {

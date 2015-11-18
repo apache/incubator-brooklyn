@@ -113,6 +113,7 @@ define([
         if ($input.attr("type") === "checkbox") {
             return $input.is(":checked");
         } else {
+            // TODO: get codemirror.getValue() in case this is a textarea ...
             return $input.val();
         }
     };

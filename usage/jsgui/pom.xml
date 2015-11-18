@@ -276,6 +276,7 @@
                             -->
                             <exclude>**//src/build/optimize-css.json</exclude>
                             <exclude>**//src/build/optimize-js.json</exclude>
+                            <exclude>**//src/**</exclude>
                         </excludes>
                     </configuration>
                 </plugin>
