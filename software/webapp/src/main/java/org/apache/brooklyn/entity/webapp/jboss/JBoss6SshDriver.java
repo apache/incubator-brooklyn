@@ -134,7 +134,7 @@ public class JBoss6SshDriver extends JavaWebAppSshDriver implements JBoss6Driver
     public void launch() {
         Map<String,Integer> ports = new HashMap<String, Integer>();
         ports.put("httpPort",getHttpPort());
-        ports.put("jmxPort",getJmxPort());
+        if (isJmxEnabled()) ports.put("jmxPort",getJmxPort());
 
         Networking.checkPortsValid(ports);
 

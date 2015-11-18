@@ -23,8 +23,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.core.entity.Attributes;
-import org.apache.brooklyn.enricher.stock.Enrichers;
+import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
 import org.apache.brooklyn.feed.jmx.JmxFeed;
@@ -63,40 +62,51 @@ public class JBoss6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         String serverMbeanName = "jboss.system:type=Server";
         boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
 
-        jmxFeed = JmxFeed.builder()
-                .entity(this)
-                .period(500, TimeUnit.MILLISECONDS)
-                .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
-                        // TODO instead of setting SERVICE_UP directly, want to use equivalent of 
-                        // addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS).key("serverMBean")...
-                        // but not supported in feed?
-                        .objectName(serverMbeanName)
-                        .attributeName("Started")
-                        .onException(Functions.constant(false))
-                        .suppressDuplicates(true))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
-                        .objectName(requestProcessorMbeanName)
-                        .attributeName("errorCount")
-                        .enabled(retrieveUsageMetrics))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
-                        .objectName(requestProcessorMbeanName)
-                        .attributeName("requestCount")
-                        .enabled(retrieveUsageMetrics))
-                .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
-                        .objectName(requestProcessorMbeanName)
-                        .attributeName("processingTime")
-                        .enabled(retrieveUsageMetrics))
-                .build();
+        if (isJmxEnabled()) {
+            jmxFeed = JmxFeed.builder()
+                    .entity(this)
+                    .period(500, TimeUnit.MILLISECONDS)
+                    .pollAttribute(new JmxAttributePollConfig<Boolean>(SERVICE_UP)
+                            // TODO instead of setting SERVICE_UP directly, want to use equivalent of 
+                            // addEnricher(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS).key("serverMBean")...
+                            // but not supported in feed?
+                            .objectName(serverMbeanName)
+                            .attributeName("Started")
+                            .onException(Functions.constant(false))
+                            .suppressDuplicates(true))
+                    .pollAttribute(new JmxAttributePollConfig<Integer>(ERROR_COUNT)
+                            .objectName(requestProcessorMbeanName)
+                            .attributeName("errorCount")
+                            .enabled(retrieveUsageMetrics))
+                    .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
+                            .objectName(requestProcessorMbeanName)
+                            .attributeName("requestCount")
+                            .enabled(retrieveUsageMetrics))
+                    .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
+                            .objectName(requestProcessorMbeanName)
+                            .attributeName("processingTime")
+                            .enabled(retrieveUsageMetrics))
+                    .build();
+        } else {
+            // if not using JMX
+            log.warn(this+" running without JMX monitoring; limited visibility of service available");
+            connectServiceUpIsRunning();
+        }
     }
 
     @Override
     public void disconnectSensors() {
         super.disconnectSensors();
         if (jmxFeed != null) jmxFeed.stop();
+        disconnectServiceUpIsRunning();
     }
     
     @Override
     public Class<JBoss6Driver> getDriverInterface() {
         return JBoss6Driver.class;
+    }
+
+    protected boolean isJmxEnabled() {
+        return (this instanceof UsesJmx) && Boolean.TRUE.equals(getConfig(UsesJmx.USE_JMX));
     }
 }
