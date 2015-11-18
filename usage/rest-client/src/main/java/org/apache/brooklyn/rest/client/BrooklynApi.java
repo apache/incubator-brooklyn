@@ -70,7 +70,7 @@ import org.apache.brooklyn.rest.api.VersionApi;
 import org.apache.brooklyn.rest.client.util.http.BuiltResponsePreservingError;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 
-import com.wordnik.swagger.core.ApiOperation;
+import io.swagger.annotations.ApiOperation;
 
 /**
  * @author Adam Lowe
@@ -285,8 +285,7 @@ public class BrooklynApi {
             private Class<?> getClassFromMethodAnnotationOrDefault(Method method, Class<?> def){
                 Class<?> type;
                 try{
-                    String responseClass = method.getAnnotation(ApiOperation.class).responseClass();
-                    type = Class.forName(responseClass);
+                    type = method.getAnnotation(ApiOperation.class).response();
                 } catch (Exception e) {
                     type = def;
                     LOG.debug("Unable to get class from annotation: {}.  Defaulting to {}", e.getMessage(), def.getName());

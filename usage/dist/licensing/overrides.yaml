@@ -114,6 +114,21 @@
   - "  Available at http://sizzlejs.com"
   - "  Used under the MIT license"
 
+- id: jquery-core:1.8.0
+  url: http://jquery.com/
+  description: JS library for manipulating HTML and eventing
+  name: jQuery JavaScript Library
+  files: jquery.js
+  version: 1.8.0
+  organization: { name: "The jQuery Foundation", url: "http://jquery.org/" }
+  license: MIT
+  notices:
+  - Copyright (c) The jQuery Foundation, Inc. and other contributors (2005-2012)
+  - "Includes code fragments from sizzle.js:"
+  # NB: sizzle copyright changed from Dojo Foundation in 1.7.2
+  - "  Copyright (c) The jQuery Foundation, Inc. and other contributors (2012)"
+  - "  Available at http://sizzlejs.com"
+  - "  Used under the MIT license"
 # used in docs (not reported)
 - id: jquery-core:2.1.1
   url: http://jquery.com/
@@ -131,19 +146,19 @@
   - "  Available at http://sizzlejs.com"
   - "  Used under the MIT license"
 
-- id: swagger
+- id: swagger:2.1.6
   name: Swagger JS
-  files: swagger.js
-  version: 1.0.1
-  url: https://github.com/wordnik/swagger-js
+  files: swagger-client.js
+  version: 2.1.6
+  url: https://github.com/swagger-api/swagger-js
   license: ASL2
   notice: Copyright (c) SmartBear Software (2011-2015)
 
-- id: swagger-ui
+- id: swagger-ui:2.1.3
   files: swagger-ui.js
   name: Swagger UI
-  version: 1.0.1
-  url: https://github.com/wordnik/swagger-ui
+  version: 2.1.3
+  url: https://github.com/swagger-api/swagger-ui
   license: ASL2
   notice: Copyright (c) SmartBear Software (2011-2015)
   
@@ -203,6 +218,13 @@
   notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc. (2010-2013)
   license: MIT
 
+- id: backbone.js:1.1.2
+  version: 1.1.2
+  url: http://backbonejs.org
+  organization: { name: "DocumentCloud Inc.", url: "http://www.documentcloud.org/" }
+  notice: Copyright (c) Jeremy Ashkenas, DocumentCloud Inc. (2010-2014)
+  license: MIT
+
 - id: bootstrap.js
   version: 2.0.4
   url: http://twitter.github.com/bootstrap/javascript.html#transitions
@@ -248,6 +270,14 @@
   url: https://github.com/wycats/handlebars.js 
   organization: { name: "Yehuda Katz", url: "https://github.com/wycats/" }
   notice: Copyright (c) Yehuda Katz (2012)
+  license: MIT
+
+- id: handlebars.js:2.0.0
+  files: handlebars*.js
+  version: 2.0.0
+  url: https://github.com/wycats/handlebars.js
+  organization: { name: "Yehuda Katz", url: "https://github.com/wycats/" }
+  notice: Copyright (c) Yehuda Katz (2014)
   license: MIT
 
 - id: jquery.ba-bbq.js
@@ -314,6 +344,14 @@
   url: https://github.com/twitter/typeahead.js
   organization: { name: "Twitter, Inc", url: "http://twitter.com" }
   notice: Copyright (c) Twitter, Inc. and other contributors (2013-2014)
+  license: MIT
+
+# used for CLI to build catalog
+- id: marked.js
+  version: 0.3.1
+  url: https://github.com/chjj/marked
+  organization: { name: "Christopher Jeffrey", url: "https://github.com/chjj" }
+  notice: Copyright (c) Christopher Jeffrey (2011-2014)
   license: MIT
 
 # DOCS files

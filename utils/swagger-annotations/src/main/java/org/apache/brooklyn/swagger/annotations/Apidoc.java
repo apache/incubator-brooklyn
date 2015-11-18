@@ -16,13 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.rest.apidoc;
+package org.apache.brooklyn.swagger.annotations;
 
-import javax.ws.rs.ext.Provider;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import com.wordnik.swagger.jaxrs.ApiHelpMessageBodyWriter;
-
-/** subclassed for convenience */
-@Provider
-public class ApidocHelpMessageBodyWriter extends ApiHelpMessageBodyWriter {
+/** like Swagger Api annotation (and treated similarly) but doesn't require path to be repeated, and supports a name */
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Apidoc {
+    String value();
+    String description() default "";
+    // ? what is 'open' in @Api
 }
