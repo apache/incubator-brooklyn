@@ -19,10 +19,12 @@
 package org.apache.brooklyn.core.mgmt;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Objects;
 
 /** @since 0.7.0 some strongly typed tags for reference; note these may migrate elsewhere! */
 @Beta
@@ -51,9 +53,42 @@ public class BrooklynTags {
             return contents;
         }
     }
+
+    public static class InterfacesTag {
+        @JsonProperty
+        final List<Class<?>> interfaces;
+
+        public InterfacesTag(List<Class<?>> interfaces) {
+            this.interfaces = interfaces;
+        }
+
+        public List<Class<?>> getInterfaces() {
+            return interfaces;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            InterfacesTag that = (InterfacesTag) o;
+
+            return interfaces == null
+                    ? that.interfaces == null
+                    : interfaces.equals(that.interfaces);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(interfaces);
+        }
+    }
     
     public static NamedStringTag newYamlSpecTag(String contents) { return new NamedStringTag(YAML_SPEC_KIND, contents); }
     public static NamedStringTag newNotesTag(String contents) { return new NamedStringTag(NOTES_KIND, contents); }
+    public static InterfacesTag newInterfacesTag(List<Class<?>> interfaces) {
+        return new InterfacesTag(interfaces);
+    }
     
     public static NamedStringTag findFirst(String kind, Iterable<Object> tags) {
         for (Object object: tags) {

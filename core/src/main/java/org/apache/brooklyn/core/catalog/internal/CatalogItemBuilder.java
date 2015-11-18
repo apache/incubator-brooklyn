@@ -126,6 +126,11 @@ public class CatalogItemBuilder<CIConcreteType extends CatalogItemDtoAbstract<?,
         return this;
     }
 
+    public CatalogItemBuilder<CIConcreteType> tag(Object tag) {
+        dto.tags().addTag(tag);
+        return this;
+    }
+
     public CIConcreteType build() {
         Preconditions.checkNotNull(dto.getSymbolicName());
         Preconditions.checkNotNull(dto.getVersion());

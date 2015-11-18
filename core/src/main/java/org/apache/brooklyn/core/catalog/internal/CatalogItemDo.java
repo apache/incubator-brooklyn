@@ -19,7 +19,6 @@
 package org.apache.brooklyn.core.catalog.internal;
 
 import java.util.Collection;
-import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,7 +27,6 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
-import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.core.relations.EmptyRelationSupport;

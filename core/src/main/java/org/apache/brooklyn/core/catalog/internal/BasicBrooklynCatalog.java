@@ -558,7 +558,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             throw new IllegalStateException("Could not resolve plan once id and itemType are known (recursive reference?): "+sourceYaml);
         }
         String sourcePlanYaml = planInterpreter.getPlanYaml();
-        
+
         CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(itemType, symbolicName, version)
             .libraries(libraryBundles)
             .displayName(displayName)
@@ -859,6 +859,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         log.debug("Adding manual catalog item to "+mgmt+": "+yaml);
         checkNotNull(yaml, "yaml");
         List<CatalogItemDtoAbstract<?, ?>> result = collectCatalogItems(yaml);
+
         // do this at the end for atomic updates; if there are intra-yaml references, we handle them specially
         for (CatalogItemDtoAbstract<?, ?> item: result) {
             addItemDto(item, forceUpdate);
