@@ -398,7 +398,7 @@ public class BasicExecutionManager implements ExecutionManager {
                 final Callable<?> oldJob = taskScheduled.getJob();
                 final TaskInternal<?> taskScheduledF = taskScheduled;
                 taskScheduled.setJob(new Callable() { public Object call() {
-                    boolean resubmitted = false;
+                    boolean shouldResubmit = true;
                     task.recentRun = taskScheduledF;
                     try {
                         synchronized (task) {
@@ -407,25 +407,19 @@ public class BasicExecutionManager implements ExecutionManager {
                         Object result;
                         try {
                             result = oldJob.call();
+                            task.lastThrownType = null;
                         } catch (Exception e) {
-                            if (!Tasks.isInterrupted()) {
-                                log.warn("Error executing "+oldJob+" (scheduled job of "+task+" - "+task.getDescription()+"); cancelling scheduled execution", e);
-                            } else {
-                                log.debug("Interrupted executing "+oldJob+" (scheduled job of "+task+" - "+task.getDescription()+"); cancelling scheduled execution: "+e);
-                            }
+                            shouldResubmit = shouldResubmitOnException(oldJob, e);
                             throw Exceptions.propagate(e);
-                        }
-                        task.runCount++;
-                        if (task.period!=null && !task.isCancelled()) {
-                            task.delay = task.period;
-                            submitSubsequentScheduledTask(flags, task);
-                            resubmitted = true;
                         }
                         return result;
                     } finally {
                         // do in finally block in case we were interrupted
-                        if (!resubmitted)
+                        if (shouldResubmit) {
+                            resubmit();
+                        } else {
                             afterEndScheduledTaskAllIterations(flags, task);
+                        }
                     }
                 }});
                 task.nextRun = taskScheduled;
@@ -434,6 +428,36 @@ public class BasicExecutionManager implements ExecutionManager {
                 else return submit(taskScheduled);
             } finally {
                 afterEndScheduledTaskSubmissionIteration(flags, task, taskScheduled);
+            }
+        }
+
+        private void resubmit() {
+            task.runCount++;
+            if (task.period!=null && !task.isCancelled()) {
+                task.delay = task.period;
+                submitSubsequentScheduledTask(flags, task);
+            }
+        }
+
+        private boolean shouldResubmitOnException(Callable<?> oldJob, Exception e) {
+            String message = "Error executing " + oldJob + " (scheduled job of " + task + " - " + task.getDescription() + ")";
+            if (Tasks.isInterrupted()) {
+                log.debug(message + "; cancelling scheduled execution: " + e);
+                return false;
+            } else if (task.cancelOnException) {
+                log.warn(message + "; cancelling scheduled execution.", e);
+                return false;
+            } else {
+                message += "; resubmitting task and throwing: " + e;
+                if (!e.getClass().equals(task.lastThrownType)) {
+                    task.lastThrownType = e.getClass();
+                    message += " (logging subsequent exceptions at trace)";
+                    log.debug(message);
+                } else {
+                    message += " (repeat exception)";
+                    log.trace(message);
+                }
+                return true;
             }
         }
 
