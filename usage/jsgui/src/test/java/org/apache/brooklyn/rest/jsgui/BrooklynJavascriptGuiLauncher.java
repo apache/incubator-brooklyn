@@ -52,7 +52,7 @@ public class BrooklynJavascriptGuiLauncher {
         // For Eclipse, use the default option of ${workspace_loc:brooklyn-jsgui}.
         // If the working directory is not set correctly, Brooklyn will be unable to find the jsgui .war
         // file and the 'gui not available' message will be shown.
-        startJavascriptAndRest();
+        startJavascriptAndRestWithDefaultCatalog();
         
         log.info("Press Ctrl-C to quit.");
     }
