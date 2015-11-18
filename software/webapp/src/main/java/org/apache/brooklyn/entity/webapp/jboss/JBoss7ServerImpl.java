@@ -29,9 +29,9 @@ import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.feed.http.HttpFeed;
 import org.apache.brooklyn.feed.http.HttpPollConfig;
 import org.apache.brooklyn.feed.http.HttpValueFunctions;
+import org.apache.brooklyn.util.guava.Functionals;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.util.guava.Functionals;
 
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
@@ -79,63 +79,72 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         String managementUri = String.format("http://%s:%s/management/subsystem/web/connector/http/read-resource",
                 hp.getHostText(), hp.getPort());
         sensors().set(MANAGEMENT_URL, managementUri);
-        log.debug("JBoss sensors for "+this+" reading from "+managementUri);
-        Map<String, String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
-        boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+
+        if (isHttpMonitoringEnabled()) {
+            log.debug("JBoss sensors for "+this+" reading from "+managementUri);
+            Map<String, String> includeRuntimeUriVars = ImmutableMap.of("include-runtime","true");
+            boolean retrieveUsageMetrics = getConfig(RETRIEVE_USAGE_METRICS);
+
+            httpFeed = HttpFeed.builder()
+                    .entity(this)
+                    .period(200)
+                    .baseUri(managementUri)
+                    .credentials(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
+                    .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
+                            .onSuccess(HttpValueFunctions.responseCode())
+                            .suppressDuplicates(true))
+                    .poll(new HttpPollConfig<Boolean>(MANAGEMENT_URL_UP)
+                            .onSuccess(HttpValueFunctions.responseCodeEquals(200))
+                            .onFailureOrException(Functions.constant(false))
+                            .suppressDuplicates(true))
+                    .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
+                            .vars(includeRuntimeUriVars)
+                            .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class))
+                            .enabled(retrieveUsageMetrics))
+                    .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
+                            .vars(includeRuntimeUriVars)
+                            .onSuccess(HttpValueFunctions.jsonContents("errorCount", Integer.class))
+                            .enabled(retrieveUsageMetrics))
+                    .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
+                            .vars(includeRuntimeUriVars)
+                            .onSuccess(HttpValueFunctions.jsonContents("processingTime", Integer.class))
+                            .enabled(retrieveUsageMetrics))
+                    .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
+                            .vars(includeRuntimeUriVars)
+                            .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class))
+                            .enabled(retrieveUsageMetrics))
+                    .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
+                            .vars(includeRuntimeUriVars)
+                            // jboss seems to report 0 even if it has received lots of requests; dunno why.
+                            .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class))
+                            .enabled(retrieveUsageMetrics))
+                    .poll(new HttpPollConfig<Long>(BYTES_SENT)
+                            .vars(includeRuntimeUriVars)
+                            .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class))
+                            .enabled(retrieveUsageMetrics))
+                    .build();
+            
+            enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
+                    .from(MANAGEMENT_URL_UP)
+                    .computing(Functionals.ifNotEquals(true).value("Management URL not reachable") )
+                    .build());
+        }
         
-        httpFeed = HttpFeed.builder()
-                .entity(this)
-                .period(200)
-                .baseUri(managementUri)
-                .credentials(getConfig(MANAGEMENT_USER), getConfig(MANAGEMENT_PASSWORD))
-                .poll(new HttpPollConfig<Integer>(MANAGEMENT_STATUS)
-                        .onSuccess(HttpValueFunctions.responseCode())
-                        .suppressDuplicates(true))
-                .poll(new HttpPollConfig<Boolean>(MANAGEMENT_URL_UP)
-                        .onSuccess(HttpValueFunctions.responseCodeEquals(200))
-                        .onFailureOrException(Functions.constant(false))
-                        .suppressDuplicates(true))
-                .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class))
-                        .enabled(retrieveUsageMetrics))
-                .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("errorCount", Integer.class))
-                        .enabled(retrieveUsageMetrics))
-                .poll(new HttpPollConfig<Integer>(TOTAL_PROCESSING_TIME)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("processingTime", Integer.class))
-                        .enabled(retrieveUsageMetrics))
-                .poll(new HttpPollConfig<Integer>(MAX_PROCESSING_TIME)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("maxTime", Integer.class))
-                        .enabled(retrieveUsageMetrics))
-                .poll(new HttpPollConfig<Long>(BYTES_RECEIVED)
-                        .vars(includeRuntimeUriVars)
-                        // jboss seems to report 0 even if it has received lots of requests; dunno why.
-                        .onSuccess(HttpValueFunctions.jsonContents("bytesReceived", Long.class))
-                        .enabled(retrieveUsageMetrics))
-                .poll(new HttpPollConfig<Long>(BYTES_SENT)
-                        .vars(includeRuntimeUriVars)
-                        .onSuccess(HttpValueFunctions.jsonContents("bytesSent", Long.class))
-                        .enabled(retrieveUsageMetrics))
-                .build();
-        
-        connectServiceUp();
-    }
-    
-    protected void connectServiceUp() {
         connectServiceUpIsRunning();
-        
-        enrichers().add(Enrichers.builder().updatingMap(Attributes.SERVICE_NOT_UP_INDICATORS)
-            .from(MANAGEMENT_URL_UP)
-            .computing(Functionals.ifNotEquals(true).value("Management URL not reachable") )
-            .build());
     }
     
-    protected void disconnectServiceUp() {
-        disconnectServiceUpIsRunning();
+    /**
+     * @deprecated since 0.9.0; now a no-op; marked final to force anyone sub-classing + overriding it to update their code.
+     */
+    @Deprecated
+    protected final void connectServiceUp() {
+    }
+    
+    /**
+     * @deprecated since 0.9.0; now a no-op; marked final to force anyone sub-classing + overriding it to update their code.
+     */
+    @Deprecated
+    protected final void disconnectServiceUp() {
     }
     
     @Override
@@ -143,7 +152,11 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
         super.disconnectSensors();
         
         if (httpFeed != null) httpFeed.stop();
-        disconnectServiceUp();
+        disconnectServiceUpIsRunning();
+    }
+    
+    protected boolean isHttpMonitoringEnabled() {
+        return Boolean.TRUE.equals(getConfig(USE_HTTP_MONITORING));
     }
     
     public int getManagementHttpsPort() {
