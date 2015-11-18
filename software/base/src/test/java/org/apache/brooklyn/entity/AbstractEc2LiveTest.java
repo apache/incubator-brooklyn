@@ -18,17 +18,29 @@
  */
 package org.apache.brooklyn.entity;
 
+import static org.testng.Assert.fail;
+
+import java.io.ByteArrayOutputStream;
+import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.util.collections.MutableMap;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.jclouds.JcloudsLocationConfig;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,6 +58,8 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
     // to say what combo of provider/region/flags should be used. The problem with that is the
     // IDE integration: one can't just select a single test to run.
     
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractEc2LiveTest.class);
+
     public static final String PROVIDER = "aws-ec2";
     public static final String REGION_NAME = "us-east-1";
     public static final String LOCATION_SPEC = PROVIDER + (REGION_NAME == null ? "" : ":" + REGION_NAME);
@@ -136,4 +150,32 @@ public abstract class AbstractEc2LiveTest extends BrooklynAppLiveTestSupport {
     }
     
     protected abstract void doTest(Location loc) throws Exception;
+    
+    protected void assertExecSsh(SoftwareProcess entity, List<String> commands) {
+        SshMachineLocation machine = Machines.findUniqueMachineLocation(entity.getLocations(), SshMachineLocation.class).get();
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+        int result = machine.execScript(ImmutableMap.of("out", outStream, "err", errStream), "url-reachable", commands);
+        String out = new String(outStream.toByteArray());
+        String err = new String(errStream.toByteArray());
+        if (result == 0) {
+            LOG.debug("Successfully executed: cmds="+commands+"; stderr="+err+"; out="+out);
+        } else {
+            fail("Failed to execute: result="+result+"; cmds="+commands+"; stderr="+err+"; out="+out);
+        }
+    }
+    
+    protected void assertViaSshLocalPortListeningEventually(final SoftwareProcess server, final int port) {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.FIVE_MINUTES), new Runnable() {
+            public void run() {
+                assertExecSsh(server, ImmutableList.of("netstat -antp", "netstat -antp | grep LISTEN | grep "+port));
+            }});
+    }
+    
+    protected void assertViaSshLocalUrlListeningEventually(final SoftwareProcess server, final String url) {
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", Duration.FIVE_MINUTES), new Runnable() {
+            public void run() {
+                assertExecSsh(server, ImmutableList.of(BashCommands.installPackage("curl"), "netstat -antp", "curl -k --retry 3 "+url));
+            }});
+    }
 }

@@ -28,6 +28,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
 import org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Networking;
@@ -115,7 +116,12 @@ public abstract class AbstractMongoDBSshDriver extends AbstractSoftwareProcessSs
     @Override
     public boolean isRunning() {
         try {
-            return MongoDBClientSupport.forServer((AbstractMongoDBServer) entity).ping();
+            if (entity instanceof MongoDBServerImpl && !((MongoDBServerImpl)entity).clientAccessEnabled()) {
+                // No direct access via MongoDB port; only use ssh-port
+                return newScript(MutableMap.of(USE_PID_FILE, getPidFile()), CHECK_RUNNING).execute() == 0;
+            } else {
+                return MongoDBClientSupport.forServer((AbstractMongoDBServer) entity).ping();
+            }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             return false;
