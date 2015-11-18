@@ -22,15 +22,21 @@ import com.google.common.collect.Maps;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import java.util.Map;
+
+import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKey;
 
 /**
  * Tests using a simple command execution.
  */
 @ImplementedBy(SimpleShellCommandTestImpl.class)
-public interface SimpleShellCommandTest extends SimpleShellCommand, BaseTest {
+public interface SimpleShellCommandTest extends BaseTest {
+
+    String TMP_DEFAULT = "/tmp";
 
     /**
      * Equals assertion on command result.
@@ -52,6 +58,29 @@ public interface SimpleShellCommandTest extends SimpleShellCommand, BaseTest {
      */
     String IS_EMPTY = "isEmpty";
 
+    /**
+     * Supply the command to invoke directly. Cannot be used together with {@link #DOWNLOAD_URL}.
+     */
+    @SetFromFlag(nullable = false)
+    ConfigKey<String> COMMAND = ConfigKeys.newConfigKey(String.class, "command", "Command to invoke");
+
+    /**
+     * Download a script to invoke. Cannot be used together with {@link #COMMAND}.
+     */
+    @SetFromFlag("downloadUrl")
+    AttributeSensorAndConfigKey<String, String> DOWNLOAD_URL = SoftwareProcess.DOWNLOAD_URL;
+
+    /**
+     * Where the script will be downloaded on the target machine.
+     */
+    @SetFromFlag("scriptDir")
+    ConfigKey<String> SCRIPT_DIR = newConfigKey("script.dir", "directory where downloaded scripts should be put", TMP_DEFAULT);
+
+    /**
+     * The working directory that the script will be run from on the target machine.
+     */
+    @SetFromFlag("runDir")
+    ConfigKey<String> RUN_DIR = newConfigKey(String.class, "run.dir", "directory where downloaded scripts should be run from");
     /**
      * Assertions on the exit code of the simple command.
      *
