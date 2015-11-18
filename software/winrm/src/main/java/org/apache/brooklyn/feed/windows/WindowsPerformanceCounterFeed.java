@@ -20,7 +20,6 @@ package org.apache.brooklyn.feed.windows;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -49,6 +48,7 @@ import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.feed.windows.WindowsPerformanceCounterPollConfig;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
