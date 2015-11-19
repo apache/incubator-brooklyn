@@ -28,8 +28,8 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
-import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
+import org.apache.brooklyn.rest.util.OsgiCompat;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.eclipse.jetty.server.NetworkConnector;
 
@@ -104,7 +104,7 @@ public abstract class BrooklynRestApiLauncherTestFixture {
     }
 
     public static ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
-        return (ManagementContext) ((ContextHandler) server.getHandler()).getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        return OsgiCompat.getManagementContext((ContextHandler) server.getHandler());
     }
     
 }

@@ -36,11 +36,11 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.WebEntitlementContext;
-import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.sun.jersey.core.util.Base64;
+import org.apache.brooklyn.rest.util.OsgiCompat;
 
 /**
  * Provides basic HTTP authentication.
@@ -155,7 +155,7 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
 
     @Override
     public void init(FilterConfig config) throws ServletException {
-        ManagementContext mgmt = (ManagementContext) config.getServletContext().getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        ManagementContext mgmt = OsgiCompat.getManagementContext(config.getServletContext());
         provider = new DelegatingSecurityProvider(mgmt);
     }
 
