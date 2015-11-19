@@ -7,6 +7,8 @@ menu_parent: index.md
 
 This guide will walk you through deploying an example 3-tier web application to a public cloud, and demonstrate the autoscaling capabilities of the Brooklyn platform.
 
+An overview of core [Brooklyn concepts](./concept-quickstart.html) is available for reference.
+
 This tutorial assumes that you are using Linux or Mac OS X.
 
 ## Install Apache Brooklyn
