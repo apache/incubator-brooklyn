@@ -103,7 +103,7 @@ define([
             }
             var entityHref = this.getEntityHref();
             if (entityHref) {
-                $("a[data-toggle='tab'").each(function(i,a) {
+                $("a[data-toggle='tab']").each(function(i,a) {
                     $(a).attr('href',entityHref+"/"+$(a).attr("data-target").slice(1));
                 });
             } else {

@@ -32,10 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.core.task.BasicExecutionManager;
-import org.apache.brooklyn.util.core.task.BasicTask;
-import org.apache.brooklyn.util.core.task.ScheduledTask;
-import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
@@ -79,6 +75,50 @@ public class ScheduledExecutionTest {
         log.info("ended ({}) {} {}", new Object[] {finalResult, t, t.getStatusDetail(false)});
         assertEquals(finalResult, (Integer)5);
         assertEquals(i.get(), 5);
+    }
+
+    @Test
+    public void testScheduledTaskCancelledIfExceptionThrown() throws Exception {
+        BasicExecutionManager m = new BasicExecutionManager("mycontextid");
+        final AtomicInteger calls = new AtomicInteger(0);
+        ScheduledTask t = new ScheduledTask(MutableMap.of("period", Duration.ONE_MILLISECOND, "maxIterations", 5), new Callable<Task<?>>() {
+            public Task<?> call() throws Exception {
+                return new BasicTask<>(new Callable<Integer>() {
+                    public Integer call() {
+                        calls.incrementAndGet();
+                        throw new RuntimeException("boo");
+                    }});
+            }});
+
+        m.submit(t);
+        Runnable callsIsOne = new Runnable() {
+            @Override public void run() {
+                if (calls.get() != 1) {
+                    throw new RuntimeException("not yet");
+                }
+            }
+
+        };
+        Asserts.succeedsEventually(callsIsOne);
+        Asserts.succeedsContinually(callsIsOne);
+    }
+
+    @Test
+    public void testScheduledTaskResubmittedIfExceptionThrownAndCancelOnExceptionFalse() {
+        BasicExecutionManager m = new BasicExecutionManager("mycontextid");
+        final AtomicInteger calls = new AtomicInteger(0);
+        ScheduledTask t = new ScheduledTask(MutableMap.of("period", Duration.ONE_MILLISECOND, "maxIterations", 5, "cancelOnException", false), new Callable<Task<?>>() {
+            public Task<?> call() throws Exception {
+                return new BasicTask<>(new Callable<Integer>() {
+                    public Integer call() {
+                        calls.incrementAndGet();
+                        throw new RuntimeException("boo");
+                    }});
+            }});
+
+        m.submit(t);
+        t.blockUntilEnded();
+        assertEquals(calls.get(), 5, "Expected task to be resubmitted despite throwing an exception");
     }
 
     /** like testScheduledTask but the loop is terminated by the task itself adjusting the period */
