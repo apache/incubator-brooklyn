@@ -58,7 +58,7 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {
-            LOG.debug("Url [{}] test failed", url);
+            LOG.info("{} Url [{}] test failed", this, url);
             sensors().set(SERVICE_UP, false);
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(t);
@@ -89,16 +89,16 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
 
         for (final Map.Entry<?, ?> entry : assertions.entrySet()) {
             if (Objects.equal(entry.getKey(), "regex")) {
-                LOG.debug("Testing if url [{}] matches regex [{}]",
-                        new Object[]{url, entry.getValue()});
+                LOG.debug("{} Testing if url [{}] matches regex [{}]",
+                        new Object[]{this, url, entry.getValue()});
                 assertContentEventuallyMatches(flags, url, TypeCoercions.coerce(entry.getValue(), String.class));
             } else if (Objects.equal(entry.getKey(), "bodyContains")) {
-                LOG.debug("Testing if url [{}] contains string [{}]",
-                        new Object[]{url, entry.getValue()});
+                LOG.debug("{} Testing if url [{}] contains string [{}]",
+                        new Object[]{this, url, entry.getValue()});
                 assertContentEventuallyContainsText(flags, url, TypeCoercions.coerce(entry.getValue(), String.class));
             } else if (Objects.equal(entry.getKey(), "status")) {
-                LOG.debug("Testing if url [{}] returns status code [{}]",
-                        new Object[]{url, entry.getValue()});
+                LOG.debug("{} Testing if url [{}] returns status code [{}]",
+                        new Object[]{this, url, entry.getValue()});
                 assertHttpStatusCodeEventuallyEquals(flags, url, TypeCoercions.coerce(entry.getValue(), Integer.class));
             }
         }

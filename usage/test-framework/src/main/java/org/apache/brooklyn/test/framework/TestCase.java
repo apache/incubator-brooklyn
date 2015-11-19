@@ -19,7 +19,6 @@
 package org.apache.brooklyn.test.framework;
 
 import org.apache.brooklyn.api.entity.ImplementedBy;
-import org.apache.brooklyn.core.entity.trait.Startable;
 
 /**
  * Entity that logically groups other test entities
