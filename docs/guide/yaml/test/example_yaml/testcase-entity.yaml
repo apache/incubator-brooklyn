@@ -1,2 +1,0 @@
-- type: org.apache.brooklyn.test.framework.TestCase
-  brooklyn.children:

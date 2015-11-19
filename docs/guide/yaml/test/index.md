@@ -6,7 +6,7 @@ children:
 - usage-examples.md
 ---
 
-Brooklyn provides a selection of basic test entities which can be used to validate Blueprints via YAML. These are divided into two groups, structural, which effect the order in which child entities are started, and validation, which are used to confirm the application is deployed as intended:
+Brooklyn provides a selection of basic test entities which can be used to validate Blueprints via YAML. These are divided into two groups; structural, which effect the order in which child entities are started; and validation, which are used to confirm the application is deployed as intended.
 
 Structural test entities include:
 
@@ -17,7 +17,7 @@ Validation test entities include:
 
 - `TestSensor` - perform assertion on a specified sensor.
 - `TestEffector` - invoke effector on specified target entity.
-- `TestHttpCall` - perform assertions on response to specified HTTP GET Request.
+- `TestHttpCall` - perform assertion on response to specified HTTP GET Request.
 
 The following sections provide details on each test entity along with examples of their use.
 

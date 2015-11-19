@@ -1,0 +1,7 @@
+- type: org.apache.brooklyn.test.framework.TestSensor
+  name: Check tomcat isUp
+  target: $brooklyn:component("tomcat")
+  sensor: service.isUp
+  timeout: 10m
+  assert:
+    equals: true

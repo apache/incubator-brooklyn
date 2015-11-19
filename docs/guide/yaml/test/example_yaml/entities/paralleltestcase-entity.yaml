@@ -1,0 +1,6 @@
+- type: org.apache.brooklyn.test.framework.ParallelTestCase
+  brooklyn.children:
+  - type: org.apache.brooklyn.entity.database.mysql.MySqlNode
+    ...
+  - type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+    ...

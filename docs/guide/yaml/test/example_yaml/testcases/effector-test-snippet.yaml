@@ -1,0 +1,27 @@
+- type: org.apache.brooklyn.test.framework.TestCase
+  name: Check Deploy Effector
+  brooklyn.children:
+  - type: org.apache.brooklyn.test.framework.TestSensor
+    name: Check webappcluster isUp
+    targetId: webappcluster
+    sensor: service.isUp
+    timeout: 10m
+    assert:
+      equals: true
+  - type: org.apache.brooklyn.test.framework.TestEffector
+    name: Invoke Deploy Effector
+    targetId: webappcluster
+    effector: deploy
+    timeout: 5m
+    params:
+      url: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+      targetName: newcontext
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Check Deployed Webapp Status Code
+    timeout: 5m
+    url: >
+      $brooklyn:formatString("http://%s:%s/newcontext/",
+      $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
+      $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
+    assert:
+      status: 200
