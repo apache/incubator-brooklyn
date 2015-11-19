@@ -59,7 +59,8 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
         return Maybe.absent("ManagementContext not available for Brooklyn Jersey Resource "+this);
     }
     
-    public void injectManagementContext(ManagementContext managementContext) {
+    @Override
+    public void setManagementContext(ManagementContext managementContext) {
         if (this.managementContext!=null) {
             if (this.managementContext.equals(managementContext)) return;
             throw new IllegalStateException("ManagementContext cannot be changed: specified twice for Brooklyn Jersey Resource "+this);

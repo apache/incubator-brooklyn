@@ -56,7 +56,7 @@ public class TestToSpecTransformer implements PlanToSpecTransformer {
     }
 
     @Override
-    public void injectManagementContext(ManagementContext managementContext) {
+    public void setManagementContext(ManagementContext managementContext) {
     }
 
     @Override

@@ -179,7 +179,7 @@ public class LocalUsageManager implements UsageManager {
         if (listeners != null) {
             for (Object listener : listeners) {
                 if (listener instanceof ManagementContextInjectable) {
-                    ((ManagementContextInjectable)listener).injectManagementContext(managementContext);
+                    ((ManagementContextInjectable)listener).setManagementContext(managementContext);
                 }
                 if (listener instanceof UsageListener) {
                     addUsageListener((UsageListener)listener);

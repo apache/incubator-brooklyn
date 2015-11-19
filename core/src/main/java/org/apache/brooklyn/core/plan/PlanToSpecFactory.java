@@ -69,7 +69,7 @@ public class PlanToSpecFactory {
             result.addAll(getAll());
         }
         for(PlanToSpecTransformer t : result) {
-            t.injectManagementContext(mgmt);
+            t.setManagementContext(mgmt);
         }
         return result;
     }

@@ -383,7 +383,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         if (!getCatalogInitialization().hasRunAnyInitialization()) {
             // catalog init is needed; normally this will be done from start sequence,
             // but if accessed early -- and in tests -- we will load it here
-            getCatalogInitialization().injectManagementContext(this);
+            getCatalogInitialization().setManagementContext(this);
             getCatalogInitialization().populateUnofficial(catalog);
         }
         return catalog;
@@ -481,7 +481,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             Preconditions.checkNotNull(catalogInitialization, "initialization must not be null");
             if (this.catalogInitialization!=null && this.catalogInitialization != catalogInitialization)
                 throw new IllegalStateException("Changing catalog init from "+this.catalogInitialization+" to "+catalogInitialization+"; changes not permitted");
-            catalogInitialization.injectManagementContext(this);
+            catalogInitialization.setManagementContext(this);
             this.catalogInitialization = catalogInitialization;
         }
     }

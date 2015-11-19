@@ -46,7 +46,7 @@ public class XmlPlanToSpecTransformer implements PlanToSpecTransformer {
     private ManagementContext mgmt;
 
     @Override
-    public void injectManagementContext(ManagementContext managementContext) {
+    public void setManagementContext(ManagementContext managementContext) {
         mgmt = managementContext;
     }
 

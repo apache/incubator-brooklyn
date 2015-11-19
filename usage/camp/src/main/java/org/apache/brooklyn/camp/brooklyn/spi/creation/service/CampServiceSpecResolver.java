@@ -39,7 +39,7 @@ public class CampServiceSpecResolver extends DelegatingEntitySpecResolver {
                 .add(new UrlServiceSpecResolver())
                 .build();
         for (EntitySpecResolver resolver : resolvers) {
-            resolver.injectManagementContext(mgmt);
+            resolver.setManagementContext(mgmt);
         }
         return resolvers;
     }

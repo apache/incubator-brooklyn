@@ -123,7 +123,7 @@ public abstract class BrooklynRestApiTest {
             config.getSingletons().add(resource);
         
         if (resource instanceof ManagementContextInjectable) {
-            ((ManagementContextInjectable)resource).injectManagementContext(getManagementContext());
+            ((ManagementContextInjectable)resource).setManagementContext(getManagementContext());
         }
     }
     

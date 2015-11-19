@@ -108,7 +108,7 @@ public class CatalogInitialization implements ManagementContextInjectable {
     }
 
     @Override
-    public void injectManagementContext(ManagementContext managementContext) {
+    public void setManagementContext(ManagementContext managementContext) {
         Preconditions.checkNotNull(managementContext, "management context");
         if (this.managementContext!=null && managementContext!=this.managementContext)
             throw new IllegalStateException("Cannot switch management context, from "+this.managementContext+" to "+managementContext);

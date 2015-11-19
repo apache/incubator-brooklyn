@@ -53,7 +53,7 @@ public class BasicConfigurableObject implements Configurable, Identifiable, Mana
     }
 
     @Override
-    public void injectManagementContext(ManagementContext managementContext) {
+    public void setManagementContext(ManagementContext managementContext) {
         this.managementContext = managementContext;
     }
 
