@@ -19,17 +19,13 @@
 package org.apache.brooklyn.util.core.http;
 
 
-import org.apache.brooklyn.feed.http.HttpPollValue;
-import org.apache.http.HttpResponse;
-
 /**
- * @deprecated since 0.9.0 Prefer org.apache.brooklyn.util.http.HttpToolResponse
+ * @deprecated since 0.9.0. Prefer {@link org.apache.brooklyn.util.http.HttpToolResponse}.
+ *
+ * @see {@link HttpTool}
  */
 @Deprecated
-public class HttpToolResponse extends org.apache.brooklyn.util.http.HttpToolResponse
-    implements HttpPollValue {
+public class HttpToolResponse  {
 
-    public HttpToolResponse(HttpResponse response, long startTime) {
-        super(response, startTime);
-    }
+
 }
