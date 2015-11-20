@@ -220,8 +220,7 @@ public class ResourceUtils {
      */
     public InputStream getResourceFromUrl(String url) {
         try {
-            if (url==null) throw new NullPointerException("Cannot read from null");
-            if (url=="") throw new NullPointerException("Cannot read from empty string");
+            if (Strings.isBlank(url)) throw new IllegalArgumentException("Cannot read from empty string");
             String orig = url;
             String protocol = Urls.getProtocol(url);
             if (protocol!=null) {
