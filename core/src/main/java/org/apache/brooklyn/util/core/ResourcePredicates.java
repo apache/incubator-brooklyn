@@ -23,9 +23,11 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.core.objs.BrooklynObjectPredicate;
+import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 
 public class ResourcePredicates {
 
@@ -37,6 +39,15 @@ public class ResourcePredicates {
      */
     public static Predicate<String> urlExists() {
         return new ResourceExistsPredicate();
+    }
+
+    /**
+     * @return A predicate that tests whether its input is either empty or a resource readable by Brooklyn.
+     * @see StringPredicates#isBlank
+     * @see #urlExists
+     */
+    public static Predicate<String> urlIsBlankOrExists() {
+        return Predicates.or(StringPredicates.isBlank(), urlExists());
     }
 
     private static class ResourceExistsPredicate implements BrooklynObjectPredicate<String> {

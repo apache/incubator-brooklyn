@@ -25,6 +25,7 @@ import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.util.core.ResourcePredicates;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 public interface AbstractMongoDBServer extends SoftwareProcess, Entity, MongoDBAuthenticationMixins {
@@ -36,12 +37,15 @@ public interface AbstractMongoDBServer extends SoftwareProcess, Entity, MongoDBA
     @SetFromFlag("dataDirectory")
     ConfigKey<String> DATA_DIRECTORY = ConfigKeys.newStringConfigKey(
             "mongodb.data.directory", "Data directory to store MongoDB journals");
-    
+
     @SetFromFlag("mongodbConfTemplateUrl")
-    ConfigKey<String> MONGODB_CONF_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
-            "mongodb.config.url", "Template file (in freemarker format) for a MongoDB configuration file",
-            "classpath://org/apache/brooklyn/entity/nosql/mongodb/default.conf");
-    
+    ConfigKey<String> MONGODB_CONF_TEMPLATE_URL = ConfigKeys.builder(String.class)
+            .name("mongodb.config.url")
+            .description("Template file (in freemarker format) for a MongoDB configuration file")
+            .defaultValue("classpath://org/apache/brooklyn/entity/nosql/mongodb/default.conf")
+            .constraint(ResourcePredicates.urlIsBlankOrExists())
+            .build();
+
     @SetFromFlag("version")
     ConfigKey<String> SUGGESTED_VERSION =
             ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.6.5");

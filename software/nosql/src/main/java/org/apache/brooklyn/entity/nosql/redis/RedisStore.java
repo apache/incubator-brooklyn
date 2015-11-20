@@ -27,6 +27,7 @@ import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
+import org.apache.brooklyn.util.core.ResourcePredicates;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 /**
@@ -48,9 +49,12 @@ public interface RedisStore extends SoftwareProcess {
     PortAttributeSensorAndConfigKey REDIS_PORT = new PortAttributeSensorAndConfigKey("redis.port", "Redis port number", "6379+");
 
     @SetFromFlag("redisConfigTemplateUrl")
-    ConfigKey<String> REDIS_CONFIG_TEMPLATE_URL = ConfigKeys.newConfigKey(
-            "redis.config.templateUrl", "Template file (in freemarker format) for the redis.conf config file", 
-            "classpath://org/apache/brooklyn/entity/nosql/redis/redis.conf");
+    ConfigKey<String> REDIS_CONFIG_TEMPLATE_URL = ConfigKeys.builder(String.class)
+            .name("redis.config.templateUrl")
+            .description("Template file (in freemarker format) for the redis.conf config file")
+            .defaultValue("classpath://org/apache/brooklyn/entity/nosql/redis/redis.conf")
+            .constraint(ResourcePredicates.urlExists())
+            .build();
 
     AttributeSensor<Integer> UPTIME = Sensors.newIntegerSensor("redis.uptime", "Redis uptime in seconds");
 
