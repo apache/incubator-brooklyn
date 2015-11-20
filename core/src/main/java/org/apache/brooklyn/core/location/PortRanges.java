@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -31,11 +31,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.primitives.Ints;
 
 public class PortRanges {
 
@@ -188,12 +190,26 @@ public class PortRanges {
         return new SinglePort(x);
     }
     
-    public static PortRange fromCollection(Collection<?> c) {
+    public static PortRange fromIterable(Iterable<?> c) {
         List<PortRange> l = new ArrayList<PortRange>();
         for (Object o: c) {
             if (o instanceof Integer) l.add(fromInteger((Integer)o));
-            else if (o instanceof String) l.add(fromString((String)o));
-            else if (o instanceof Collection) l.add(fromCollection((Collection<?>)o));
+            else if (o instanceof String)
+                for (String string : JavaStringEscapes.unwrapJsonishListIfPossible((String)o))
+                    l.add(fromString(string));
+            else if (o instanceof Iterable) l.add(fromIterable((Iterable<?>)o));
+            else if (o instanceof int[]) l.add(fromIterable(Ints.asList((int[])o)));
+            else if (o instanceof String[])
+                for (String string : (String[])o)
+                    l.add(fromString(string));
+            else if (o instanceof Object[])
+                for (Object object : (Object[])o)
+                    if (object instanceof Integer)
+                        l.add(fromInteger((Integer)object));
+                    else if (object instanceof String)
+                        l.add(fromString((String)object));
+                    else
+                        throw new IllegalArgumentException("'" + object + "' must be of type Integer or String");
             else l.add(TypeCoercions.coerce(o, PortRange.class));
         }
         return new AggregatePortRange(l);
@@ -243,8 +259,8 @@ public class PortRanges {
             TypeCoercions.registerAdapter(String.class, PortRange.class, new Function<String,PortRange>() {
                 public PortRange apply(String x) { return fromString(x); }
             });
-            TypeCoercions.registerAdapter(Collection.class, PortRange.class, new Function<Collection,PortRange>() {
-                public PortRange apply(Collection x) { return fromCollection(x); }
+            TypeCoercions.registerAdapter(Iterable.class, PortRange.class, new Function<Iterable,PortRange>() {
+                public PortRange apply(Iterable x) { return fromIterable(x); }
             });
             initialized.set(true);
         }

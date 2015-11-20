@@ -24,6 +24,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static org.apache.brooklyn.util.ssh.BashCommands.sbinPath;
+import io.cloudsoft.winrm4j.pywinrm.Session;
+import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -56,6 +58,7 @@ import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineLocationCustomizer;
 import org.apache.brooklyn.api.location.MachineManagementMixins;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.mgmt.AccessController;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
@@ -66,6 +69,7 @@ import org.apache.brooklyn.core.location.BasicMachineMetadata;
 import org.apache.brooklyn.core.location.LocationConfigKeys;
 import org.apache.brooklyn.core.location.LocationConfigUtils;
 import org.apache.brooklyn.core.location.LocationConfigUtils.OsCredential;
+import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.location.access.PortForwardManager;
 import org.apache.brooklyn.core.location.access.PortMapping;
 import org.apache.brooklyn.core.location.cloud.AbstractCloudMachineProvisioningLocation;
@@ -115,6 +119,7 @@ import org.apache.brooklyn.util.text.KeyValueParser;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+import org.apache.commons.lang3.ArrayUtils;
 import org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions;
 import org.jclouds.cloudstack.compute.options.CloudStackTemplateOptions;
 import org.jclouds.compute.ComputeService;
@@ -175,9 +180,6 @@ import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.Ints;
-
-import io.cloudsoft.winrm4j.pywinrm.Session;
-import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -1202,7 +1204,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }})
             .put(INBOUND_PORTS, new CustomizeTemplateOptions() {
                     public void apply(TemplateOptions t, ConfigBag props, Object v) {
-                        int[] inboundPorts = toIntArray(v);
+                        int[] inboundPorts = toIntPortArray(v);
                         if (LOG.isDebugEnabled()) LOG.debug("opening inbound ports {} for cloud/type {}", Arrays.toString(inboundPorts), t.getClass());
                         t.inboundPorts(inboundPorts);
                     }})
@@ -2926,52 +2928,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    @VisibleForTesting
-    static int[] toIntArray(Object v) {
-        int[] result;
-        if (v instanceof Iterable) {
-            result = new int[Iterables.size((Iterable<?>)v)];
-            int i = 0;
-            for (Object o : (Iterable<?>)v) {
-                result[i++] = (Integer) o;
-            }
-        } else if (v instanceof int[]) {
-            result = (int[]) v;
-        } else if (v instanceof Object[]) {
-            result = new int[((Object[])v).length];
-            for (int i = 0; i < result.length; i++) {
-                result[i] = (Integer) ((Object[])v)[i];
-            }
-        } else if (v instanceof Integer) {
-            result = new int[] {(Integer)v};
-        } else if (v instanceof String) {
-            Matcher listMatcher = LIST_PATTERN.matcher(v.toString());
-            boolean intList = true;
-            if (listMatcher.matches()) {
-                List<String> strings = KeyValueParser.parseList(listMatcher.group(1));
-                List<Integer> integers = new ArrayList<Integer>();
-                for (String string : strings) {
-                    if (INTEGER_PATTERN.matcher(string).matches()) {
-                        integers.add(Integer.parseInt(string));
-                    } else {
-                        intList = false;
-                        break;
-                    }
-                }
-                result = Ints.toArray(integers);
-            } else {
-                intList = false;
-                result = null;
-            }
-            if (!intList) {
-                throw new IllegalArgumentException("Invalid type for int[]: "+v+" of type "+v.getClass());
-            }
-        } else {
-            throw new IllegalArgumentException("Invalid type for int[]: "+v+" of type "+v.getClass());
-        }
-        return result;
-    }
-
     protected static String[] toStringArray(Object v) {
         return toListOfStrings(v).toArray(new String[0]);
     }
@@ -3002,6 +2958,14 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         } else {
             throw new IllegalArgumentException("Invalid type for byte[]: "+v+" of type "+v.getClass());
         }
+    }
+
+    @VisibleForTesting
+    static int[] toIntPortArray(Object v) {
+        PortRange portRange = PortRanges.fromIterable(Collections.singletonList(v));
+        int[] portArray = ArrayUtils.toPrimitive(Iterables.toArray(portRange, Integer.class));
+
+        return portArray;
     }
 
     // Handles GString
