@@ -282,7 +282,7 @@ public class HighAvailabilityManagerImpl implements HighAvailabilityManager {
         boolean weAreRecognisedAsMaster = existingMaster!=null && ownNodeId.equals(existingMaster.getNodeId());
         boolean weAreMasterLocally = getInternalNodeState()==ManagementNodeState.MASTER;
         
-        // catch error in some tests where mgmt context has a different mgmt context
+        // catch error in some tests where mgmt context has a different HA manager
         if (managementContext.getHighAvailabilityManager()!=this)
             throw new IllegalStateException("Cannot start an HA manager on a management context with a different HA manager!");
         
