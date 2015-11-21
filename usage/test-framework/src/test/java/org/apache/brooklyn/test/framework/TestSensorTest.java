@@ -37,6 +37,10 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -73,12 +77,12 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, BOOLEAN_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("equals", true)));
+                .configure(TestSensor.ASSERTIONS, newAssertion("equals", true)));
         //Add Sensor Test for STRING sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("equals", testId)));
+                .configure(TestSensor.ASSERTIONS, newAssertion("equals", testId)));
 
         //Set BOOLEAN Sensor to true
         app.sensors().set(BOOLEAN_SENSOR, Boolean.TRUE);
@@ -98,7 +102,7 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, BOOLEAN_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("equals", true)));
+                .configure(TestSensor.ASSERTIONS, newAssertion("equals", true)));
 
         //Set BOOLEAN Sensor to false
         app.sensors().set(BOOLEAN_SENSOR, Boolean.FALSE);
@@ -122,7 +126,7 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, BOOLEAN_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("equals", false)));
+                .configure(TestSensor.ASSERTIONS, newAssertion("equals", false)));
 
         try {
             app.start(ImmutableList.of(loc));
@@ -141,12 +145,12 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, BOOLEAN_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("isNull", true)));
+                .configure(TestSensor.ASSERTIONS, newAssertion("isNull", "")));
         //Add Sensor Test for STRING sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("isNull", false)));
+                .configure(TestSensor.ASSERTIONS, newAssertion("notNUll", "")));
 
         //Set STRING sensor to random string
         app.sensors().set(STRING_SENSOR, testId);
@@ -163,7 +167,7 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("isNull", true)));
+                .configure(TestSensor.ASSERTIONS, newAssertion("isNull", "true")));
 
         //Set STRING sensor to random string
         app.sensors().set(STRING_SENSOR, testId);
@@ -182,7 +186,7 @@ public class TestSensorTest {
     }
 
     @Test
-    public void testAssertRegex() {
+    public void testAssertMatches() {
         final long time = System.currentTimeMillis();
         final String sensorValue = String.format("%s%s%s", Identifiers.makeRandomId(8), time, Identifiers.makeRandomId(8));
 
@@ -190,11 +194,11 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", String.format(".*%s.*", time))));
+                .configure(TestSensor.ASSERTIONS, newAssertion("matches", String.format(".*%s.*", time))));
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, BOOLEAN_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", "true")));
+                .configure(TestSensor.ASSERTIONS, newAssertion("matches", "true")));
 
         //Set STRING sensor
         app.sensors().set(STRING_SENSOR, sensorValue);
@@ -205,7 +209,7 @@ public class TestSensorTest {
     }
 
     @Test
-    public void testAssertRegexFail() {
+    public void testAssertmatchesFail() {
         boolean sensorTestFail = false;
         final String sensorValue = String.format("%s%s%s", Identifiers.makeRandomId(8), System.currentTimeMillis(), Identifiers.makeRandomId(8));
 
@@ -213,12 +217,10 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", String.format(".*%s.*", Identifiers.makeRandomId(8)))));
+                .configure(TestSensor.ASSERTIONS, newAssertion("matches", String.format(".*%s.*", Identifiers.makeRandomId(8)))));
 
         //Set STRING sensor
         app.sensors().set(STRING_SENSOR, sensorValue);
-
-
         try {
             app.start(ImmutableList.of(loc));
         } catch (final PropagatedRuntimeException pre) {
@@ -226,18 +228,18 @@ public class TestSensorTest {
             assertThat(assertionError).isNotNull().as("An assertion error should have been thrown");
             sensorTestFail = true;
         } finally {
-            assertThat(sensorTestFail).isTrue().as("regex assert should have failed");
+            assertThat(sensorTestFail).isTrue().as("matches assert should have failed");
         }
     }
 
     @Test
-    public void testAssertRegexOnNullSensor() {
+    public void testAssertmatchesOnNullSensor() {
         boolean sensorTestFail = false;
         //Add Sensor Test for STRING sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", String.format(".*%s.*", Identifiers.makeRandomId(8)))));
+                .configure(TestSensor.ASSERTIONS, newAssertion("matches", String.format(".*%s.*", Identifiers.makeRandomId(8)))));
 
         try {
             app.start(ImmutableList.of(loc));
@@ -246,23 +248,29 @@ public class TestSensorTest {
             assertThat(assertionError).isNotNull().as("An assertion error should have been thrown");
             sensorTestFail = true;
         } finally {
-            assertThat(sensorTestFail).isTrue().as("regex assert should have failed");
+            assertThat(sensorTestFail).isTrue().as("matches assert should have failed");
         }
     }
 
 
     @Test
-    public void testAssertRegexOnNonStringSensor() {
+    public void testAssertMatchesOnNonStringSensor() {
         //Add Sensor Test for OBJECT sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, OBJECT_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, ImmutableMap.of("regex", ".*TestObject.*id=.*")));
+                .configure(TestSensor.ASSERTIONS, newAssertion("matches", ".*TestObject.*id=.*")));
 
         app.sensors().set(OBJECT_SENSOR, new TestObject());
 
         app.start(ImmutableList.of(loc));
 
+    }
+
+    private List<Map<String, Object>> newAssertion(final String assertionKey, final Object assertionValue) {
+        final List<Map<String, Object>> result = new ArrayList<>();
+        result.add(ImmutableMap.<String, Object>of(assertionKey, assertionValue));
+        return result;
     }
 
 

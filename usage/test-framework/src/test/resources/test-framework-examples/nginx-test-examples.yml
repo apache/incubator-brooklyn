@@ -34,7 +34,8 @@ services:
   - type: org.apache.brooklyn.test.framework.TestSensor
     target: $brooklyn:component("nginx1")
     sensor: service.isUp
-    equals: true
+    assert:
+    - equals: true
     timeout: 5m
   - type: org.apache.brooklyn.test.framework.TestEffector
     target: $brooklyn:component("nginx1")
@@ -43,7 +44,7 @@ services:
     target: $brooklyn:component("nginx1")
     sensor: service.isUp
     assert:
-      equals: false
+    - equals: false
 ...
 
 ---
@@ -58,13 +59,15 @@ services:
     id: nginx1
   - type: org.apache.brooklyn.test.framework.TestSensor
     sensor: service.isUp
-    equals: true
+    assert:
+    - equals: true
     timeout: 5m
   - type: org.apache.brooklyn.test.framework.TestEffector
     effector: stop
   - type: org.apache.brooklyn.test.framework.TestSensor
     sensor: service.isUp
-    equals: false
+    assert:
+    - equals: false
 
 
 
@@ -82,7 +85,7 @@ services:
     sensor: service.isUp
     timeout: 5m
     assert:
-      equals: true
+    - equals: true
   - type: org.apache.brooklyn.test.framework.TestEffector
     target: $brooklyn:component("nginx1")
     effector: stop
@@ -90,8 +93,8 @@ services:
     target: $brooklyn:component("nginx1")
     sensor: service.isUp
     assert:
-      equals: false
-      regex: .*
+    - isEqualTo: false
+    - matches: .*
 ...
 
 ---
@@ -105,12 +108,12 @@ services:
   sensor: service.isUp
   timeout: 5m
   assert:
-    equals: true
+  - equals: true
 - type: org.apache.brooklyn.test.framework.TestSensor
   name: Test Regex
   target: $brooklyn:component("nginx1")
   sensor: service.isUp
   timeout: 5m
   assert:
-    regex: .*
+  - matches: .*
 ...

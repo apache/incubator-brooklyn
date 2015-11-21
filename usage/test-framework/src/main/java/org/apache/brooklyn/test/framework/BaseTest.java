@@ -18,13 +18,15 @@
  */
 package org.apache.brooklyn.test.framework;
 
-import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.util.time.Duration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -46,7 +48,9 @@ public interface BaseTest extends Entity, Startable {
     /**
      * The assertions to be made
      */
-    ConfigKey<Map> ASSERTIONS = ConfigKeys.newConfigKey(Map.class, "assert", "Assertions to be evaluated", Maps.newHashMap());
+    ConfigKey<List<Map<String, Object>>> ASSERTIONS = ConfigKeys.newConfigKey(
+            new TypeToken<List<Map<String, Object>>>() {},
+            "assert", "Assertions to be evaluated", new ArrayList<Map<String, Object>>());
 
     /**
      * THe duration to wait
