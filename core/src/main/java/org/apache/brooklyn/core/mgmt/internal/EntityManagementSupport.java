@@ -97,12 +97,18 @@ public class EntityManagementSupport {
      * Whether this entity is managed (i.e. "onManagementStarting" has been called, so the framework knows about it,
      * and it has not been unmanaged).
      */
-    public boolean isDeployed() { return currentlyDeployed.get(); }
+    public boolean isDeployed() {
+        return currentlyDeployed.get();
+    }
+
     public boolean isNoLongerManaged() {
         return wasDeployed() && !isDeployed();
     }
+
     /** whether entity has ever been deployed (managed) */
-    public boolean wasDeployed() { return everDeployed.get(); }
+    public boolean wasDeployed() {
+        return everDeployed.get();
+    }
     
     @Beta
     public void setReadOnly(boolean isReadOnly) {
