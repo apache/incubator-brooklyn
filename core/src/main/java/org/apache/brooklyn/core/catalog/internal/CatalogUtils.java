@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
@@ -34,7 +35,6 @@ import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.entity.EntityInternal;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContextSequential;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.OsgiBrooklynClassLoadingContext;
@@ -42,7 +42,8 @@ import org.apache.brooklyn.core.mgmt.ha.OsgiManager;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl.RebindTracker;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
-import org.apache.brooklyn.core.typereg.RegisteredTypeConstraints;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Time;
@@ -69,14 +70,22 @@ public class CatalogUtils {
     }
     
     public static BrooklynClassLoadingContext newClassLoadingContext(ManagementContext mgmt, RegisteredType item) {
-        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries());
+        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries(), null);
+    }
+    
+    /** made @Beta in 0.9.0 because we're not sure to what extent to support stacking loaders; 
+     * only a couple places currently rely on such stacking, in general the item and the bundles *are* the context,
+     * and life gets hard if we support complex stacking! */
+    @Beta 
+    public static BrooklynClassLoadingContext newClassLoadingContext(ManagementContext mgmt, RegisteredType item, BrooklynClassLoadingContext loader) {
+        return newClassLoadingContext(mgmt, item.getId(), item.getLibraries(), loader);
     }
     
     public static BrooklynClassLoadingContext getClassLoadingContext(Entity entity) {
         ManagementContext mgmt = ((EntityInternal)entity).getManagementContext();
         String catId = entity.getCatalogItemId();
         if (Strings.isBlank(catId)) return JavaBrooklynClassLoadingContext.create(mgmt);
-        RegisteredType cat = mgmt.getTypeRegistry().get(catId, RegisteredTypeConstraints.spec(Entity.class));
+        RegisteredType cat = RegisteredTypes.validate(mgmt.getTypeRegistry().get(catId), RegisteredTypeLoadingContexts.spec(Entity.class));
         if (cat==null) {
             log.warn("Cannot load "+catId+" to get classloader for "+entity+"; will try with standard loader, but might fail subsequently");
             return JavaBrooklynClassLoadingContext.create(mgmt);
@@ -85,15 +94,25 @@ public class CatalogUtils {
     }
 
     public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> libraries) {
+        return newClassLoadingContext(mgmt, catalogItemId, libraries, null);
+    }
+    
+    @Deprecated /** @deprecated since 0.9.0; becoming private because we should now always have a registered type callers can pass instead of the catalog item id */
+    public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> libraries, BrooklynClassLoadingContext loader) {
         BrooklynClassLoadingContextSequential result = new BrooklynClassLoadingContextSequential(mgmt);
 
         if (libraries!=null && !libraries.isEmpty()) {
             result.add(new OsgiBrooklynClassLoadingContext(mgmt, catalogItemId, libraries));
         }
 
-        BrooklynClassLoadingContext loader = BrooklynLoaderTracker.getLoader();
-        if (loader != null) {
+        if (loader !=null) {
+            // TODO determine whether to support stacking
             result.add(loader);
+        }
+        BrooklynClassLoadingContext threadLocalLoader = BrooklynLoaderTracker.getLoader();
+        if (threadLocalLoader != null) {
+            // TODO and determine if this is needed/wanted
+            result.add(threadLocalLoader);
         }
 
         result.addSecondary(JavaBrooklynClassLoadingContext.create(mgmt));
@@ -248,7 +267,7 @@ public class CatalogUtils {
     }
 
     public static boolean isBestVersion(ManagementContext mgmt, CatalogItem<?,?> item) {
-        RegisteredType bestVersion = mgmt.getTypeRegistry().get(item.getSymbolicName(), BrooklynCatalog.DEFAULT_VERSION, null);
+        RegisteredType bestVersion = mgmt.getTypeRegistry().get(item.getSymbolicName(), BrooklynCatalog.DEFAULT_VERSION);
         if (bestVersion==null) return false;
         return (bestVersion.getVersion().equals(item.getVersion()));
     }

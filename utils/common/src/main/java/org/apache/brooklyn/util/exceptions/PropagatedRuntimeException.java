@@ -36,6 +36,12 @@ public class PropagatedRuntimeException extends RuntimeException {
         causeEmbeddedInMessage = message.endsWith(Exceptions.collapseText(getCause()));
     }
 
+    public PropagatedRuntimeException(String messagePart1, String messagePart2PossiblyIncludingPart1, Throwable cause) {
+        super(messagePart2PossiblyIncludingPart1!=null && messagePart2PossiblyIncludingPart1.startsWith(messagePart1) ? messagePart2PossiblyIncludingPart1 : messagePart1+messagePart2PossiblyIncludingPart1, cause);
+        warnIfWrapping(cause);
+        causeEmbeddedInMessage = getMessage().endsWith(Exceptions.collapseText(getCause()));
+    }
+
     public PropagatedRuntimeException(String message, Throwable cause, boolean causeEmbeddedInMessage) {
         super(message, cause);
         warnIfWrapping(cause);

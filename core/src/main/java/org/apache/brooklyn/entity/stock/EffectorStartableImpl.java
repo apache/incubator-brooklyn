@@ -42,8 +42,6 @@ import com.google.common.reflect.TypeToken;
  * (and same for stop and restart) */
 public class EffectorStartableImpl extends AbstractEntity implements BasicStartable {
 
-    private static final long serialVersionUID = -7109357808001370568L;
-    
     private static final Logger log = LoggerFactory.getLogger(EffectorStartableImpl.class);
 
     public static class StartParameters { 

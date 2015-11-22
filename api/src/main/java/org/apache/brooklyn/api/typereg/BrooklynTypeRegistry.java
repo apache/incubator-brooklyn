@@ -33,36 +33,38 @@ public interface BrooklynTypeRegistry {
         /** a registered type which will create an {@link AbstractBrooklynObjectSpec} (e.g. {@link EntitySpec}) 
          * for the type registered (e.g. the {@link Entity} instance) */
         SPEC,
-        // TODO
-//        BEAN 
-        
-        // NB: additional kinds should have the Visitor in RegisteredTypes updated
+        /** a registered type which will create the java type described */
+        BEAN 
+        // note: additional kinds should have the visitor in core/RegisteredTypeKindVisitor updated
+        // to flush out all places which want to implement support for all kinds 
     }
     
     Iterable<RegisteredType> getAll();
     Iterable<RegisteredType> getAll(Predicate<? super RegisteredType> filter);
-    
+
     /** @return The item matching the given given 
      * {@link RegisteredType#getSymbolicName() symbolicName} 
      * and optionally {@link RegisteredType#getVersion()},
-     * filtered for the optionally supplied {@link RegisteredTypeConstraint}, 
      * taking the best version if the version is null or a default marker,
      * returning null if no matches are found. */
-    RegisteredType get(String symbolicName, String version, @Nullable RegisteredTypeConstraint constraint);
-    /** as {@link #get(String, String, RegisteredTypeConstraint)} with no constraints */
     RegisteredType get(String symbolicName, String version);
-    /** as {@link #get(String, String, RegisteredTypeConstraint)} but allows <code>"name:version"</code> 
+    /** as {@link #get(String, String)} but allows <code>"name:version"</code> 
      * (the {@link RegisteredType#getId()}) in addition to the unversioned name,
      * using a default marker if no version can be inferred */
-    RegisteredType get(String symbolicNameWithOptionalVersion, @Nullable RegisteredTypeConstraint constraint);
-    /** as {@link #get(String, RegisteredTypeConstraint)} but with no constraints */
     RegisteredType get(String symbolicNameWithOptionalVersion);
+    
+    // TODO remove
+//    /** as {@link #get(String, String)}, but applying the optionally supplied {@link RegisteredTypeLoadingContext} */ 
+//    RegisteredType get(String symbolicName, String version, @Nullable RegisteredTypeLoadingContext context);
+//    /** as {@link #get(String)}, but applying the optionally supplied {@link RegisteredTypeLoadingContext} */ 
+//    RegisteredType get(String symbolicNameWithOptionalVersion, @Nullable RegisteredTypeLoadingContext context);
 
     // NB the seemingly more correct generics <T,SpecT extends AbstractBrooklynObjectSpec<T,SpecT>> 
     // cause compile errors, not in Eclipse, but in maven (?) 
-    <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeConstraint optionalConstraint, Class<SpecT> optionalSpecSuperType);
-    
-    // TODO when we support beans
-//    <T> T createBean(RegisteredType type, @Nullable RegisteredTypeConstraint optionalConstraint, Class<T> optionalResultSuperType);
+    // TODO do these belong here, or in a separate master TypePlanTransformer ?  see also BrooklynTypePlanTransformer 
+    <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<SpecT> optionalSpecSuperType);
+    <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpecFromPlan(@Nullable String planFormat, Object planData, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<SpecT> optionalSpecSuperType);
+    <T> T createBean(RegisteredType type, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<T> optionalResultSuperType);
+    <T> T createBeanFromPlan(String planFormat, Object planData, @Nullable RegisteredTypeLoadingContext optionalConstraint, @Nullable Class<T> optionalBeanSuperType);
     
 }

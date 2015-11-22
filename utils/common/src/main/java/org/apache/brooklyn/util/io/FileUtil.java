@@ -26,11 +26,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
-import org.apache.brooklyn.util.io.FileUtil;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.stream.StreamGobbler;
 import org.apache.brooklyn.util.stream.Streams;
@@ -40,12 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFilePermission;
-import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Set;
 
 public class FileUtil {
 
@@ -57,7 +49,7 @@ public class FileUtil {
     private static final FilePermissions permissions700 = new FilePermissions(0700);
 
     public static void setFilePermissionsTo700(File file) throws IOException {
-        file.createNewFile();
+        createNewFile(file);
         try {
             permissions700.apply(file);
             if (LOG.isTraceEnabled()) LOG.trace("Set permissions to 700 for file {}", file.getAbsolutePath());
@@ -67,7 +59,7 @@ public class FileUtil {
     }
 
     public static void setFilePermissionsTo600(File file) throws IOException {
-        file.createNewFile();
+        createNewFile(file);
         try {
             permissions600.apply(file);
             if (LOG.isTraceEnabled()) LOG.trace("Set permissions to 600 for file {}", file.getAbsolutePath());
@@ -186,4 +178,10 @@ public class FileUtil {
         }
     }
 
+    private static boolean createNewFile(File file) throws IOException {
+        if (!file.getParentFile().exists()) {
+            file.getParentFile().mkdirs();
+        }
+        return file.createNewFile();
+    }
 }

@@ -18,6 +18,11 @@
  */
 package org.apache.brooklyn.core.plan;
 
+import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
+import org.apache.brooklyn.core.typereg.UnsupportedTypePlanException;
+
+/** @deprecated since 0.9.0 use {@link UnsupportedTypePlanException} as part of switch to {@link BrooklynTypePlanTransformer} */
+@Deprecated 
 public class PlanNotRecognizedException extends RuntimeException {
 
     private static final long serialVersionUID = -5590108442839125317L;

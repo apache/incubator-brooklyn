@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
-import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 
 /**
@@ -56,7 +55,7 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
             if (!exists()) return null;
             return Files.asCharSource(file, Charsets.UTF_8).read();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate("Problem reading String contents of file "+file, e);
         }
     }
 
@@ -66,7 +65,7 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
             if (!exists()) return null;
             return Files.asByteSource(file).read();
         } catch (IOException e) {
-            throw Throwables.propagate(e);
+            throw Exceptions.propagate("Problem reading bytes of file "+file, e);
         }
     }
 
@@ -83,12 +82,13 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
             Files.write(val, tmpFile, Charsets.UTF_8);
             FileBasedObjectStore.moveFile(tmpFile, file);
         } catch (IOException e) {
-            throw Exceptions.propagate(e);
+            throw Exceptions.propagate("Problem writing data to file "+file+" (via temporary file "+tmpFile+")", e);
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }
     }
 
+    // TODO Should this write to the temporary file? Otherwise we'll risk getting a partial view of the write.
     @Override
     public void append(String val) {
         try {
@@ -97,7 +97,7 @@ public class FileBasedStoreObjectAccessor implements PersistenceObjectStore.Stor
             Files.append(val, file, Charsets.UTF_8);
             
         } catch (IOException e) {
-            throw Exceptions.propagate(e);
+            throw Exceptions.propagate("Problem appending to file "+file, e);
         }
     }
 

@@ -24,61 +24,17 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.CampPlatform;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
-import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
-
+@Deprecated /** @deprecated since 0.9.0 use RegisteredType and CampResolver */
 public class CampCatalogUtils {
 
     public static AbstractBrooklynObjectSpec<?, ?> createSpec(ManagementContext mgmt, CatalogItem<?, ?> item, Set<String> parentEncounteredTypes) {
-        // preferred way is to parse the yaml, to resolve references late;
-        // the parsing on load is to populate some fields, but it is optional.
-        // TODO messy for location and policy that we need brooklyn.{locations,policies} root of the yaml, but it works;
-        // see related comment when the yaml is set, in addAbstractCatalogItems
-        // (not sure if anywhere else relies on that syntax; if not, it should be easy to fix!)
-        BrooklynClassLoadingContext loader = CatalogUtils.newClassLoadingContext(mgmt, item);
-        Preconditions.checkNotNull(item.getCatalogItemType(), "catalog item type for "+item.getPlanYaml());
-
-        Set<String> encounteredTypes;
-        // symbolicName could be null if coming from the catalog parser where it tries to load before knowing the id
-        if (item.getSymbolicName() != null) {
-            encounteredTypes = ImmutableSet.<String>builder()
-                    .addAll(parentEncounteredTypes)
-                    .add(item.getSymbolicName())
-                    .build();
-        } else {
-            encounteredTypes = parentEncounteredTypes;
-        }
-
-        AbstractBrooklynObjectSpec<?, ?> spec;
-        switch (item.getCatalogItemType()) {
-            case TEMPLATE:
-            case ENTITY:
-                spec = CampUtils.createRootServiceSpec(item.getPlanYaml(), loader, encounteredTypes);
-                break;
-            case LOCATION: 
-                spec = CampUtils.createLocationSpec(item.getPlanYaml(), loader, encounteredTypes);
-                break;
-            case POLICY: 
-                spec = CampUtils.createPolicySpec(item.getPlanYaml(), loader, encounteredTypes);
-                break;
-            default:
-                throw new IllegalStateException("Unknown CI Type "+item.getCatalogItemType()+" for "+item.getPlanYaml());
-        }
-
-        ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(item.getId());
-
-        if (Strings.isBlank( ((AbstractBrooklynObjectSpec<?, ?>)spec).getDisplayName() ))
-            ((AbstractBrooklynObjectSpec<?, ?>)spec).displayName(item.getDisplayName());
-
-        return spec;
+        return CampResolver.createSpecFromFull(mgmt, RegisteredTypes.of(item), item.getCatalogItemJavaType(), parentEncounteredTypes, null);
     }
-
+    
     public static CampPlatform getCampPlatform(ManagementContext mgmt) {
-        return CampUtils.getCampPlatform(mgmt);
+        return CampInternalUtils.getCampPlatform(mgmt);
     }
 
 }

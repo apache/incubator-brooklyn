@@ -24,6 +24,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.Assembly;
@@ -33,14 +34,13 @@ import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils.CreationResult;
 import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpecInstantiator {
 
@@ -59,7 +59,7 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     private Application create(AssemblyTemplate template, CampPlatform platform) {
         ManagementContext mgmt = getManagementContext(platform);
         BrooklynClassLoadingContext loader = JavaBrooklynClassLoadingContext.create(mgmt);
-        EntitySpec<? extends Application> spec = createApplicationSpec(template, platform, loader);
+        EntitySpec<? extends Application> spec = createApplicationSpec(template, platform, loader, MutableSet.<String>of());
         Application instance = mgmt.getEntityManager().createEntity(spec);
         log.info("CAMP created '{}'", instance);
         return instance;
@@ -77,16 +77,17 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
     public EntitySpec<? extends Application> createApplicationSpec(
             AssemblyTemplate template,
             CampPlatform platform,
-            BrooklynClassLoadingContext loader) {
+            BrooklynClassLoadingContext loader,
+            Set<String> encounteredTypeSymbolicNames) {
         log.debug("CAMP creating application instance for {} ({})", template.getId(), template);
 
         // AssemblyTemplates created via PDP, _specifying_ then entities to put in
 
-        EntitySpec<? extends Application> app = CampUtils.createWrapperApp(template, loader);
+        EntitySpec<? extends Application> app = CampInternalUtils.createWrapperApp(template, loader);
         app.configure(EntityManagementUtils.WRAPPER_APP_MARKER, Boolean.TRUE);
 
         // first build the children into an empty shell app
-        List<EntitySpec<?>> childSpecs = createServiceSpecs(template, platform, loader, Sets.<String>newLinkedHashSet());
+        List<EntitySpec<?>> childSpecs = createServiceSpecs(template, platform, loader, encounteredTypeSymbolicNames);
         for (EntitySpec<?> childSpec : childSpecs) {
             app.child(childSpec);
         }

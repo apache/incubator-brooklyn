@@ -37,15 +37,12 @@ import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.api.objs.SpecParameter;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.objs.BasicSpecParameter;
-import org.apache.brooklyn.core.plan.PlanToSpecFactory;
-import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
@@ -64,7 +61,6 @@ import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
@@ -303,7 +299,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (loadedItem == null) throw new RuntimeException(item+" not in catalog; cannot create spec");
         if (loadedItem.getSpecType()==null) return null;
 
-        SpecT spec = internalCreateSpecWithTransformers(mgmt, loadedItem, MutableSet.<String>of());
+        SpecT spec = internalCreateSpecLegacy(mgmt, loadedItem, MutableSet.<String>of(), true);
         if (spec != null) {
             return spec;
         }
@@ -312,31 +308,22 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
     
     /** @deprecated since introduction in 0.9.0, only used for backwards compatibility, can be removed any time;
-     * uses the type-creation info on the item */
+     * uses the type-creation info on the item.
+     * deprecated transformers must be included by routines which don't use {@link BrooklynTypePlanTransformer} instances;
+     * otherwise deprecated transformers should be excluded. (deprecation is taken as equivalent to having a new-style transformer.) */
     @Deprecated 
-    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT internalCreateSpecWithTransformers(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
+    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT internalCreateSpecLegacy(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes, boolean includeDeprecatedTransformers) {
         // deprecated lookup
         if (encounteredTypes.contains(item.getSymbolicName())) {
             throw new IllegalStateException("Type being resolved '"+item.getSymbolicName()+"' has already been encountered in " + encounteredTypes + "; recursive cycle detected");
         }
-        Maybe<SpecT> specMaybe = PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, SpecT>() {
+        Maybe<SpecT> specMaybe = org.apache.brooklyn.core.plan.PlanToSpecFactory.attemptWithLoaders(mgmt, includeDeprecatedTransformers, new Function<org.apache.brooklyn.core.plan.PlanToSpecTransformer, SpecT>() {
             @Override
-            public SpecT apply(PlanToSpecTransformer input) {
+            public SpecT apply(org.apache.brooklyn.core.plan.PlanToSpecTransformer input) {
                 return input.createCatalogSpec(item, encounteredTypes);
             }
         });
-        if (specMaybe.isPresent() && !item.getParameters().isEmpty()) {
-            specMaybe.get().parameters(item.getParameters());
-        }
         return specMaybe.get();
-    }
-
-    /**
-     * as internalCreateSpecFromItemWithTransformers, but marking contexts where the creation is being attempted
-     * @deprecated since introduction in 0.9.0, only used for backwards compatibility, can be removed any time */
-    @Deprecated
-    public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT internalCreateSpecAttempting(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
-        return internalCreateSpecWithTransformers(mgmt, item, encounteredTypes);
     }
 
     @Deprecated /** @deprecated since 0.7.0 only used by other deprecated items */ 
@@ -425,9 +412,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         // TODO as this may take a while if downloading, the REST call should be async
         // (this load is required for the scan below and I think also for yaml resolution)
         CatalogUtils.installLibraries(mgmt, libraryBundlesNew);
-
-        List<?> parametersRaw = MutableList.copyOf(getFirstAs(itemMetadata, List.class, "brooklyn.parameters", "parameters").orNull());
-        List<SpecParameter<?>> metaParameters = BasicSpecParameter.fromConfigList(parametersRaw, CatalogUtils.newClassLoadingContext(mgmt, "<catalog_input_parser>", libraryBundles));
 
         Boolean scanJavaAnnotations = getFirstAs(itemMetadata, Boolean.class, "scanJavaAnnotations", "scan_java_annotations").orNull();
         if (scanJavaAnnotations==null || !scanJavaAnnotations) {
@@ -577,7 +561,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         
         CatalogItemDtoAbstract<?, ?> dto = createItemBuilder(itemType, symbolicName, version)
             .libraries(libraryBundles)
-            .parameters(getParameters(metaParameters, planInterpreter))
             .displayName(displayName)
             .description(description)
             .deprecated(catalogDeprecated)
@@ -587,14 +570,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         dto.setManagementContext((ManagementContextInternal) mgmt);
         result.add(dto);
-    }
-
-    private List<SpecParameter<?>> getParameters(List<SpecParameter<?>> metaParameters, PlanInterpreterGuessingType planInterpreter) {
-        if (!metaParameters.isEmpty()) {
-            return metaParameters;
-        } else {
-            return planInterpreter.parameters;
-        }
     }
 
     private String setFromItemIfUnset(String oldValue, Map<?,?> item, String fieldAttr) {
@@ -660,7 +635,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         CatalogItemType catalogItemType;
         String planYaml;
         boolean resolved = false;
-        List<SpecParameter<?>> parameters = ImmutableList.of();
         List<Exception> errors = MutableList.of();
         List<Exception> entityErrors = MutableList.of();
         
@@ -698,17 +672,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
             if (!resolved && catalogItemType==CatalogItemType.TEMPLATE) {
                 // anything goes, for an explicit template, because we can't easily recurse into the types
                 planYaml = itemYaml;
-                parameters = getItemParameters();
                 resolved = true;
             }
             
             return this;
         }
 
-        private List<SpecParameter<?>> getItemParameters() {
-            return BasicSpecParameter.fromConfigList((List<?>)item.get("brooklyn.parameters"), CatalogUtils.newClassLoadingContext(mgmt, "<template_parameters_parser>", libraryBundles));
-        }
-        
         public boolean isResolved() { return resolved; }
         
         /** Returns potentially useful errors encountered while guessing types. 
@@ -753,10 +722,6 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                             // matched - exit
                             catalogItemType = candidateCiType;
                             planYaml = candidateYaml;
-                            parameters = getItemParameters();
-                            if (parameters.isEmpty()) {
-                                parameters = candidate.getParameters();
-                            }
                             resolved = true;
                             return true;
                         }
@@ -772,14 +737,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                     .libraries(libraryBundles)
                     .build();
                 @SuppressWarnings("unchecked")
-                AbstractBrooklynObjectSpec<?, ?> spec = internalCreateSpecAttempting(mgmt, itemToAttempt, MutableSet.<String>of());
+                AbstractBrooklynObjectSpec<?, ?> spec = internalCreateSpecLegacy(mgmt, itemToAttempt, MutableSet.<String>of(), true);
                 if (spec!=null) {
                     catalogItemType = candidateCiType;
                     planYaml = candidateYaml;
-                    parameters = getItemParameters();
-                    if (parameters.isEmpty()) {
-                        parameters = spec.getParameters();
-                    }
                     resolved = true;
                 }
                 return true;
@@ -814,11 +775,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
                             .libraries(libraryBundles)
                             .build();
                     @SuppressWarnings("unchecked")
-                    AbstractBrooklynObjectSpec<?, ?> cutdownSpec = internalCreateSpecAttempting(mgmt, itemToAttempt, MutableSet.<String>of());
+                    AbstractBrooklynObjectSpec<?, ?> cutdownSpec = internalCreateSpecLegacy(mgmt, itemToAttempt, MutableSet.<String>of(), true);
                     if (cutdownSpec!=null) {
                         catalogItemType = candidateCiType;
                         planYaml = candidateYaml;
-                        parameters = cutdownSpec.getParameters();
                         resolved = true;
                     }
                     return true;
@@ -856,15 +816,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return Strings.join(lines, "\n");
     }
 
-    private CatalogItemBuilder<?> createItemBuilder(CatalogItemType itemType, String itemId, String version) {
-        Preconditions.checkNotNull(itemType, "itemType required");
-        switch (itemType) {
-        case ENTITY: return CatalogItemBuilder.newEntity(itemId, version);
-        case TEMPLATE: return CatalogItemBuilder.newTemplate(itemId, version);
-        case POLICY: return CatalogItemBuilder.newPolicy(itemId, version);
-        case LOCATION: return CatalogItemBuilder.newLocation(itemId, version);
-        }
-        throw new IllegalStateException("Unexpected itemType: "+itemType);
+    static CatalogItemBuilder<?> createItemBuilder(CatalogItemType itemType, String symbolicName, String version) {
+        return CatalogItemBuilder.newItem(itemType, symbolicName, version);
     }
 
     // these kept as their logic may prove useful; Apr 2015

@@ -80,6 +80,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- Testing -->
+        <assertj.version>2.2.0</assertj.version> <!-- v 2.2.0 is being used as v 3.20 introduces Java8 dependencies-->
         <cobertura.plugin.version>2.7</cobertura.plugin.version>
         <surefire.version>2.18.1</surefire.version>
         <plantuml.version>6121</plantuml.version>
@@ -131,7 +132,7 @@
         <mongodb.version>3.0.3</mongodb.version>
         <riak.version>1.4.0</riak.version>
         <maven-war-plugin.version>2.4</maven-war-plugin.version>
-        <validation-api.version>1.0.0.GA</validation-api.version>
+        <validation-api.version>1.1.0.Final</validation-api.version>
         <geronimo-jms_1.1_spec.version>1.1.1</geronimo-jms_1.1_spec.version>
         <sleepycat-je.version>5.0.34</sleepycat-je.version>
         <org.marre.smsj.version>1.0.0-20051126</org.marre.smsj.version>
@@ -239,6 +240,7 @@
         <module>usage/rest-api</module>
         <module>usage/rest-client</module>
         <module>usage/rest-server</module>
+        <module>usage/test-framework</module>
         <module>usage/test-support</module>
 
         <module>utils/common</module>

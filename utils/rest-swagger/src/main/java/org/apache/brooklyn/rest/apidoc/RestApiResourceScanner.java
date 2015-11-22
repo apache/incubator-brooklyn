@@ -15,15 +15,17 @@
  */
 package org.apache.brooklyn.rest.apidoc;
 
-import com.google.common.collect.Sets;
+
 import io.swagger.annotations.Api;
 import io.swagger.jaxrs.config.AbstractScanner;
 import io.swagger.jaxrs.config.JaxrsScanner;
+
 import java.util.HashSet;
 import java.util.Set;
+
 import javax.servlet.ServletConfig;
 import javax.ws.rs.core.Application;
-import org.apache.brooklyn.util.collections.MutableSet;
+
 
 /**
  * Much like DefaultJaxrsScanner, but looks at annotations of ancestors as well.
@@ -31,19 +33,17 @@ import org.apache.brooklyn.util.collections.MutableSet;
  * For instance, if a resource implementation exposes an annotated interface,
  * that interface will be added as well.
  *
- * @author Ciprian Ciubotariu <cheepeero@gmx.net>
  */
 public class RestApiResourceScanner extends AbstractScanner implements JaxrsScanner {
 
     private Set<Class<?>> apiClasses = null;
 
-
-    private void addAnnotatedClasses(Set<Class<?>> output, Set<Class<?>> classes) {
+    private void addAnnotatedClasses(Set<Class<?>> output, Class<?>[] classes) {
         for (Class<?> clz : classes) {
             if (clz.getAnnotation(Api.class) != null) {
                 output.add(clz);
             }
-            addAnnotatedClasses(output, Sets.newHashSet(clz.getInterfaces()));
+            addAnnotatedClasses(output, clz.getInterfaces());
         }
     }
 
@@ -53,12 +53,14 @@ public class RestApiResourceScanner extends AbstractScanner implements JaxrsScan
             if (app != null) {
                 Set<Class<?>> classes = app.getClasses();
                 if (classes != null) {
-                    addAnnotatedClasses(apiClasses, classes);
+                    final Class<?>[] template = {};
+                    addAnnotatedClasses(apiClasses, classes.toArray(template));
                 }
                 Set<Object> singletons = app.getSingletons();
                 if (singletons != null) {
                     for (Object o : singletons) {
-                        addAnnotatedClasses(apiClasses, (MutableSet<Class<?>>) MutableSet.of(o.getClass()));
+                        Class<?>[] types = {o.getClass()};
+                        addAnnotatedClasses(apiClasses, types);
                     }
                 }
             }

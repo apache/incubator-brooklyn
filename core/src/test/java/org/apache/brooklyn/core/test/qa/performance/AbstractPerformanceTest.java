@@ -20,6 +20,7 @@ package org.apache.brooklyn.core.test.qa.performance;
 
 import static org.testng.Assert.assertTrue;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -27,6 +28,9 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.test.performance.PerformanceTestDescriptor;
+import org.apache.brooklyn.test.performance.PerformanceTestResult;
+import org.apache.brooklyn.test.performance.PerformanceMeasurer;
 import org.apache.brooklyn.util.internal.DoubleSystemProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,11 +84,42 @@ public class AbstractPerformanceTest {
     public void tearDown() throws Exception {
         if (app != null) Entities.destroyAll(app.getManagementContext());
     }
-    
+
+    protected PerformanceTestResult measure(PerformanceTestDescriptor options) {
+        PerformanceTestResult result = PerformanceMeasurer.run(options);
+        System.out.println("test="+options+"; result="+result);
+        return result;
+    }
+
+    /**
+     * @deprecated since 0.9.0; use {@link #measure(PerformanceTestDescriptor)}
+     */
+    @Deprecated
     protected void measureAndAssert(String prefix, int numIterations, double minRatePerSec, Runnable r) {
-        measureAndAssert(prefix, numIterations, minRatePerSec, r, null);
+        measure(PerformanceTestDescriptor.create()
+                .summary(prefix)
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(r));
+    }
+
+    /**
+     * @deprecated since 0.9.0; use {@link #measure(PerformanceTestDescriptor)}
+     */
+    @Deprecated
+    protected void measureAndAssert(String prefix, int numIterations, double minRatePerSec, Runnable r, CountDownLatch completionLatch) {
+        measure(PerformanceTestDescriptor.create()
+                .summary(prefix)
+                .iterations(numIterations)
+                .completionLatch(completionLatch)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(r));
     }
     
+    /**
+     * @deprecated since 0.9.0; use {@link #measure(PerformanceTestDescriptor)}
+     */
+    @Deprecated
     protected void measureAndAssert(String prefix, int numIterations, double minRatePerSec, Runnable r, Runnable postIterationPhase) {
         long durationMillis = measure(prefix, numIterations, r);
         long postIterationDurationMillis = (postIterationPhase != null) ? measure(postIterationPhase) : 0;
@@ -102,6 +137,10 @@ public class AbstractPerformanceTest {
         assertTrue(numPerSecIncludingPostIteration >= minRatePerSec, msg1+msg2);
     }
     
+    /**
+     * @deprecated since 0.9.0; use {@link #measure(PerformanceTestDescriptor)}
+     */
+    @Deprecated
     protected long measure(String prefix, int numIterations, Runnable r) {
         final int logInterval = 5*1000;
         long nextLogTime = logInterval;
@@ -128,6 +167,10 @@ public class AbstractPerformanceTest {
         return stopwatch.elapsed(TimeUnit.MILLISECONDS);
     }
     
+    /**
+     * @deprecated since 0.9.0; use {@link #measure(PerformanceTestDescriptor)}
+     */
+    @Deprecated
     protected long measure(Runnable r) {
         Stopwatch stopwatch = Stopwatch.createStarted();
         r.run();

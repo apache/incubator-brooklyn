@@ -38,10 +38,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -68,6 +68,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+
 import org.apache.brooklyn.util.osgi.OsgiUtils;
 
 public class ResourceUtils {
@@ -219,8 +220,7 @@ public class ResourceUtils {
      */
     public InputStream getResourceFromUrl(String url) {
         try {
-            if (url==null) throw new NullPointerException("Cannot read from null");
-            if (url=="") throw new NullPointerException("Cannot read from empty string");
+            if (Strings.isBlank(url)) throw new IllegalArgumentException("Cannot read from empty string");
             String orig = url;
             String protocol = Urls.getProtocol(url);
             if (protocol!=null) {

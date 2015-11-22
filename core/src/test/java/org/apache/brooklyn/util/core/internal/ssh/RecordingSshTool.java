@@ -51,10 +51,17 @@ public class RecordingSshTool implements SshTool {
     }
     
     public static List<ExecCmd> execScriptCmds = Lists.newCopyOnWriteArrayList();
+    public static List<Map<?,?>> constructorProps = Lists.newCopyOnWriteArrayList();
     
     private boolean connected;
     
+    public static void clear() {
+        execScriptCmds.clear();
+        constructorProps.clear();
+    }
+    
     public RecordingSshTool(Map<?,?> props) {
+        constructorProps.add(props);
     }
     @Override public void connect() {
         connected = true;

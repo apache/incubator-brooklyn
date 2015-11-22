@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.brooklyn.api.AssemblyTemplateSpecInstantiator;
 import org.apache.brooklyn.camp.spi.AbstractResource;
@@ -34,10 +35,10 @@ import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 import org.apache.brooklyn.camp.spi.collection.ResolvableLink;
 import org.apache.brooklyn.camp.spi.instantiate.BasicAssemblyTemplateInstantiator;
 import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import com.google.common.collect.ImmutableList;
@@ -55,13 +56,14 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
         }
         ManagementContext mgmt = ((HasBrooklynManagementContext)platform).getBrooklynManagementContext();
         
-        TestApplication app = (TestApplication) mgmt.getEntityManager().createEntity( createApplicationSpec(template, platform, null) );
+        TestApplication app = (TestApplication) mgmt.getEntityManager().createEntity( createApplicationSpec(template, platform, null, MutableSet.<String>of()) );
 
         return new TestAppAssembly(app);
     }
 
     @Override
-    public EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader) {
+    public EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform,
+        BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes) {
         EntitySpec<TestApplication> app = EntitySpec.create(TestApplication.class)
             .configure(TestEntity.CONF_NAME, template.getName())
             .configure(TestEntity.CONF_MAP_THING, MutableMap.of("type", template.getType(), "desc", template.getDescription()));
@@ -87,7 +89,7 @@ public class TestAppAssemblyInstantiator extends BasicAssemblyTemplateInstantiat
 
     @Override
     public List<EntitySpec<?>> createServiceSpecs(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext itemLoader, Set<String> encounteredCatalogTypes) {
-        EntitySpec<?> createApplicationSpec = createApplicationSpec(template, platform, itemLoader);
+        EntitySpec<?> createApplicationSpec = createApplicationSpec(template, platform, itemLoader, encounteredCatalogTypes);
         return ImmutableList.<EntitySpec<?>>of(createApplicationSpec);
     }
 

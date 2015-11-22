@@ -20,14 +20,7 @@ package org.apache.brooklyn.core.test;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
-import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
-import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
-import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 /**
@@ -35,40 +28,25 @@ import org.testng.annotations.BeforeMethod;
  * <p>
  * Uses a light-weight management context that will not read {@code ~/.brooklyn/brooklyn.properties}.
  */
-public class BrooklynAppUnitTestSupport {
-
-    private static final Logger LOG = LoggerFactory.getLogger(BrooklynAppUnitTestSupport.class);
+public class BrooklynAppUnitTestSupport extends BrooklynMgmtUnitTestSupport {
 
     protected TestApplication app;
-    protected ManagementContextInternal mgmt;
+
+    @BeforeMethod(alwaysRun=true)
+    public void setUp() throws Exception {
+        super.setUp();
+        setUpApp();
+    }
 
     protected boolean shouldSkipOnBoxBaseDirResolution() {
         return true;
     }
 
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() throws Exception {
-        if (mgmt == null) {
-            mgmt = LocalManagementContextForTests.newInstance();
-        }
-        setUpApp();
-    }
-
     protected void setUpApp() {
         EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
                 .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
-        app = ApplicationBuilder.newManagedApp(appSpec, mgmt);
-    }
-
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        try {
-            if (mgmt != null) Entities.destroyAll(mgmt);
-        } catch (Throwable t) {
-            LOG.error("Caught exception in tearDown method", t);
-        } finally {
-            mgmt = null;
-        }
+        
+        app = mgmt.getEntityManager().createEntity(appSpec);
     }
 
 }

@@ -1,0 +1,63 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+---
+name: Tomcat Multi-War Test
+location: localhost
+services:
+- type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+  id: tomcat
+  name: Tomcat
+  brooklyn.config:
+    wars.by.context:
+      hello1: "http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war"
+      hello2: "http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war"
+    start.timeout: 10m
+- type: org.apache.brooklyn.test.framework.TestSensor
+  target: $brooklyn:component("tomcat")
+  sensor: service.isUp
+  assert:
+    equals: true
+  timeout: 10m
+...
+
+---
+name: Tomcat Tests
+location: BYON 1
+services:
+  - type: org.apache.brooklyn.test.framework.TestCase
+    name: Effector - Deploy Test
+    brooklyn.children:
+    - type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+      id: tomcat
+      name: Tomcat
+      war: https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war
+    - type: org.apache.brooklyn.test.framework.TestEffector
+      name: Deploy Another WAR
+      target: $brooklyn:component("tomcat")
+      effector: deploy
+      params:
+        url: https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war
+        targetName: sample1
+#    - type: org.apache.brooklyn.test.framework.TestSensor
+#      target: $brooklyn:component("tomcat")
+#      sensor: webapp.deployedWars
+#      assert:
+#        regex: .*sample1.*
+#      timeout: 1m
+...

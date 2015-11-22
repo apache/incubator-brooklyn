@@ -20,15 +20,25 @@ package org.apache.brooklyn.core.catalog.internal;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
-import org.apache.brooklyn.api.objs.SpecParameter;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 
 import com.google.common.base.Preconditions;
 
-public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?, ?>> {
-    private CatalogItemType dto;
+public class CatalogItemBuilder<CIConcreteType extends CatalogItemDtoAbstract<?, ?>> {
+    private CIConcreteType dto;
+
+    public static CatalogItemBuilder<?> newItem(CatalogItemType itemType, String symbolicName, String version) {
+        Preconditions.checkNotNull(itemType, "itemType required");
+        switch (itemType) {
+        case ENTITY: return newEntity(symbolicName, version);
+        case TEMPLATE: return newTemplate(symbolicName, version);
+        case POLICY: return newPolicy(symbolicName, version);
+        case LOCATION: return newLocation(symbolicName, version);
+        }
+        throw new IllegalStateException("Unexpected itemType: "+itemType);
+    }
 
     public static CatalogItemBuilder<CatalogEntityItemDto> newEntity(String symbolicName, String version) {
         return new CatalogItemBuilder<CatalogEntityItemDto>(new CatalogEntityItemDto())
@@ -54,85 +64,77 @@ public class CatalogItemBuilder<CatalogItemType extends CatalogItemDtoAbstract<?
                 .version(version);
     }
 
-    public CatalogItemBuilder(CatalogItemType dto) {
+    public CatalogItemBuilder(CIConcreteType dto) {
         this.dto = dto;
         this.dto.setLibraries(Collections.<CatalogBundle>emptyList());
     }
 
-    public CatalogItemBuilder<CatalogItemType> symbolicName(String symbolicName) {
+    public CatalogItemBuilder<CIConcreteType> symbolicName(String symbolicName) {
         dto.setSymbolicName(symbolicName);
         return this;
     }
 
     @Deprecated
-    public CatalogItemBuilder<CatalogItemType> javaType(String javaType) {
+    public CatalogItemBuilder<CIConcreteType> javaType(String javaType) {
         dto.setJavaType(javaType);
         return this;
     }
 
     /** @deprecated since 0.7.0 use {@link #displayName}*/
     @Deprecated
-    public CatalogItemBuilder<CatalogItemType> name(String name) {
+    public CatalogItemBuilder<CIConcreteType> name(String name) {
         return displayName(name);
     }
 
-    public CatalogItemBuilder<CatalogItemType> displayName(String displayName) {
+    public CatalogItemBuilder<CIConcreteType> displayName(String displayName) {
         dto.setDisplayName(displayName);
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> description(String description) {
+    public CatalogItemBuilder<CIConcreteType> description(String description) {
         dto.setDescription(description);
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> iconUrl(String iconUrl) {
+    public CatalogItemBuilder<CIConcreteType> iconUrl(String iconUrl) {
         dto.setIconUrl(iconUrl);
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> version(String version) {
+    public CatalogItemBuilder<CIConcreteType> version(String version) {
         dto.setVersion(version);
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> deprecated(boolean deprecated) {
+    public CatalogItemBuilder<CIConcreteType> deprecated(boolean deprecated) {
         dto.setDeprecated(deprecated);
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> disabled(boolean disabled) {
+    public CatalogItemBuilder<CIConcreteType> disabled(boolean disabled) {
         dto.setDisabled(disabled);
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> parameters(List<SpecParameter<?>> inputs) {
-        dto.setParameters(inputs);
-        return this;
-    }
-
-    public CatalogItemBuilder<CatalogItemType> libraries(Collection<CatalogBundle> libraries) {
+    public CatalogItemBuilder<CIConcreteType> libraries(Collection<CatalogBundle> libraries) {
         dto.setLibraries(libraries);
         return this;
     }
 
-    public CatalogItemBuilder<CatalogItemType> plan(String yaml) {
+    public CatalogItemBuilder<CIConcreteType> plan(String yaml) {
         dto.setPlanYaml(yaml);
         return this;
     }
 
-    public CatalogItemType build() {
+    public CIConcreteType build() {
         Preconditions.checkNotNull(dto.getSymbolicName());
         Preconditions.checkNotNull(dto.getVersion());
 
-        if (dto.getParameters() == null) {
-            dto.setParameters(Collections.<SpecParameter<?>>emptyList());
-        }
         if (dto.getLibraries() == null) {
             dto.setLibraries(Collections.<CatalogBundle>emptyList());
         }
 
-        CatalogItemType ret = dto;
+        CIConcreteType ret = dto;
 
         //prevent mutations through the builder
         dto = null;

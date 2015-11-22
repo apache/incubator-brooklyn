@@ -69,7 +69,7 @@
                 <version>2.3.2</version>
                 <configuration>
                     <outputDirectory>../../../resources/brooklyn/osgi</outputDirectory>
-                    <finalName>brooklyn-test-osgi-more-entities_${project.version}</finalName>
+                    <finalName>brooklyn-test-osgi-more-entities_evil-twin_${project.version}</finalName>
                 </configuration>
             </plugin>
             <plugin>

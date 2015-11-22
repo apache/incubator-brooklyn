@@ -18,33 +18,11 @@
  */
 package org.apache.brooklyn.core.mgmt.classloading;
 
-import java.net.URL;
-
-import javax.annotation.Nullable;
-
-import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.util.guava.Maybe;
 
 /** 
- * Provides functionality for loading classes based on the current context
- * (e.g. catalog item, entity, etc). 
+ * @deprecated since 0.9.0; moved to API package; use the super-interface
+ * {@link org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext}
  */
-public interface BrooklynClassLoadingContext {
-
-    public ManagementContext getManagementContext();
-    public Class<?> loadClass(String className);
-    public <T> Class<? extends T> loadClass(String className, @Nullable Class<T> supertype);
-
-    public Maybe<Class<?>> tryLoadClass(String className);
-    public <T> Maybe<Class<? extends T>> tryLoadClass(String className, @Nullable Class<T> supertype);
-
-    /** As {@link ClassLoader#getResource(String)} */
-    public URL getResource(String name);
-
-    /**
-     * As {@link ClassLoader#getResources(String)} but returning an {@link Iterable} rather than
-     * an {@link java.util.Enumeration}.
-     */
-    public Iterable<URL> getResources(String name);
-
+@Deprecated
+public interface BrooklynClassLoadingContext extends org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext {
 }

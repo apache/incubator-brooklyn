@@ -772,17 +772,12 @@ define([
                 if (catalogEntryItem!=null && catalogEntryItem.config!=null) {
                     var that = this
                     _.each(catalogEntryItem.config, function (cfg) {
-                        if (cfg.label) {
-                            configs.push( { priority: cfg.priority, html: _.template(RequiredConfigEntryHtml, {data:cfg}) } )
-                            // only include items with labels
+                        if (cfg.priority !== undefined) {
+                            var html = _.template(RequiredConfigEntryHtml, {data:cfg});
+                            that.$('.config-table').append(html)
                         }
-                        // (others might be included in future with an "expand" option, or priority option)
                     })
                 }
-                for (var c in configs) {
-                    that.$('.config-table').append(configs[c].html)
-                }
-                // TODO add any manual config supplied by user (in previous turn visiting this tab)
             }
         },
         getConfigMap:function() {

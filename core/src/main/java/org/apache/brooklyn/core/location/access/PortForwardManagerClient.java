@@ -39,8 +39,6 @@ import com.google.common.net.HostAndPort;
 @Deprecated
 public class PortForwardManagerClient implements PortForwardManager {
 
-    private static final long serialVersionUID = -295204304305332895L;
-    
     protected final Supplier<PortForwardManager> delegateSupplier;
     private transient volatile PortForwardManager _delegate;
     

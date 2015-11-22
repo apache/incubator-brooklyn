@@ -40,12 +40,13 @@ import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.entity.proxy.nginx.NginxController;
 import org.apache.brooklyn.entity.webapp.tomcat.TomcatServer;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.WebAppMonitor;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
-import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.core.task.BasicExecutionManager;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.repeat.Repeater;
@@ -56,8 +57,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.location.ssh.SshMachineLocationReuseIntegrationTest.RecordingSshjTool;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -93,7 +92,7 @@ public class NginxRebindWithHaIntegrationTest extends RebindTestFixtureWithApp {
         super.setUp();
         loc = origManagementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
             .configure("address", Networking.getLocalHost())
-            .configure(SshTool.PROP_TOOL_CLASS, RecordingSshjTool.class.getName()));
+            .configure(SshMachineLocation.SSH_TOOL_CLASS, RecordingSshjTool.class.getName()));
         executor = Executors.newCachedThreadPool();
         
         feedRegistration = BrooklynFeatureEnablement.isEnabled(BrooklynFeatureEnablement.FEATURE_FEED_REGISTRATION_PROPERTY);

@@ -39,8 +39,7 @@ import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.core.entity.trait.Startable;
-import org.apache.brooklyn.core.plan.PlanToSpecFactory;
-import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -52,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -89,14 +87,9 @@ public class EntityManagementUtils {
         return createUnstarted(mgmt, spec);
     }
     
+    @SuppressWarnings("unchecked")
     public static EntitySpec<? extends Application> createEntitySpecForApplication(ManagementContext mgmt, final String plan) {
-        // TODO-type-registry
-        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, EntitySpec<? extends Application>>() {
-            @Override
-            public EntitySpec<? extends Application> apply(PlanToSpecTransformer input) {
-                return input.createApplicationSpec(plan);
-            }
-        }).get();
+        return mgmt.getTypeRegistry().createSpecFromPlan(null, plan, RegisteredTypeLoadingContexts.spec(Application.class), EntitySpec.class);
     }
 
     @Deprecated /** @deprecated since 0.9.0; use {@link BrooklynTypeRegistry#createSpec(RegisteredType, org.apache.brooklyn.api.typereg.RegisteredTypeConstraint, Class)} */
@@ -108,7 +101,7 @@ public class EntityManagementUtils {
     @Deprecated /** @deprecated since 0.9.0; use {@link BrooklynTypeRegistry#createSpec(RegisteredType, org.apache.brooklyn.api.typereg.RegisteredTypeConstraint, Class)} */
     // not used in Brooklyn
     public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
-        return BasicBrooklynCatalog.internalCreateSpecWithTransformers(mgmt, item, encounteredTypes);
+        return BasicBrooklynCatalog.internalCreateSpecLegacy(mgmt, item, encounteredTypes, true);
     }
 
     /** container for operation which creates something and which wants to return both
@@ -284,7 +277,7 @@ public class EntityManagementUtils {
         return canPromoteChildrenInWrappedApplication(app);
     }
     
-    /** returns true if the spec is for an empty-ish wrapper app, 
+    /** returns true if the spec is for a wrapper app with no important settings, wrapping a single child. 
      * for use when adding from a plan specifying multiple entities but nothing significant at the application level.
      * @see #WRAPPER_APP_MARKER */
     public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<? extends Application> spec) {

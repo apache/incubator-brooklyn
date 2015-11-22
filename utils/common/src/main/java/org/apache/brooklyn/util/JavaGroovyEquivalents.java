@@ -72,6 +72,7 @@ public class JavaGroovyEquivalents {
     public static <T> T elvis(Iterable<?> preferences) {
         return elvis(Iterables.toArray(preferences, Object.class));
     }
+    @SuppressWarnings("unchecked")
     public static <T> T elvis(Object... preferences) {
         if (preferences.length == 0) throw new IllegalArgumentException("preferences must not be empty for elvis");
         for (Object contender : preferences) {
@@ -109,13 +110,13 @@ public class JavaGroovyEquivalents {
         } else if (o instanceof String) {
             return !((String)o).isEmpty();
         } else if (o instanceof Collection) {
-            return !((Collection)o).isEmpty();
+            return !((Collection<?>)o).isEmpty();
         } else if (o instanceof Map) {
-            return !((Map)o).isEmpty();
+            return !((Map<?,?>)o).isEmpty();
         } else if (o instanceof Iterator) {
-            return ((Iterator)o).hasNext();
+            return ((Iterator<?>)o).hasNext();
         } else if (o instanceof Enumeration) {
-            return ((Enumeration)o).hasMoreElements();
+            return ((Enumeration<?>)o).hasMoreElements();
         } else {
             return true;
         }
