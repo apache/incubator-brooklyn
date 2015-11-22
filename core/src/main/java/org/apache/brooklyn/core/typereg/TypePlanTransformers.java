@@ -80,7 +80,7 @@ public class TypePlanTransformers {
             result.addAll(getAll());
         }
         for(BrooklynTypePlanTransformer t : result) {
-            t.injectManagementContext(mgmt);
+            t.setManagementContext(mgmt);
         }
         return result;
     }

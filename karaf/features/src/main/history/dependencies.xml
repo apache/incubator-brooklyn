@@ -96,7 +96,7 @@
         <bundle>mvn:org.yaml/snakeyaml/1.11</bundle>
         <bundle>wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle>
         <bundle>wrap:mvn:com.maxmind.geoip2/geoip2/0.8.1</bundle>
-        <bundle>wrap:mvn:javax.validation/validation-api/1.0.0.GA</bundle>
+        <bundle>wrap:mvn:javax.validation/validation-api/1.1.0.Final</bundle>
         <bundle>wrap:mvn:org.tukaani/xz/1.4</bundle>
         <bundle>wrap:mvn:xpp3/xpp3_min/1.1.4c</bundle>
     </feature>

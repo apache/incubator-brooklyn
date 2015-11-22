@@ -47,7 +47,7 @@ public class JavaClassNameTypePlanTransformerTest extends BrooklynMgmtUnitTestSu
     
     protected BrooklynTypePlanTransformer newTransformer() {
         BrooklynTypePlanTransformer xf = new JavaClassNameTypePlanTransformer();
-        xf.injectManagementContext(mgmt);
+        xf.setManagementContext(mgmt);
         return xf;
     }
     
