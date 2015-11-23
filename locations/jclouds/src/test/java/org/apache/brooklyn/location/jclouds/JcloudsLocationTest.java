@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.location.jclouds;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +41,7 @@ import org.apache.brooklyn.core.location.cloud.names.CustomMachineNamer;
 import org.apache.brooklyn.core.location.geo.HostGeoInfo;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation.UserCreation;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -56,11 +58,14 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.primitives.Ints;
 import com.google.common.reflect.TypeToken;
-
-import org.apache.brooklyn.location.jclouds.JcloudsLocation.UserCreation;
 
 /**
  * @author Shane Witbeck
@@ -102,7 +107,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     public void tearUp() throws Exception {
         if (managementContext != null) Entities.destroyAll(managementContext);
     }
-    
+
     @Test
     public void testCreateWithFlagsDirectly() throws Exception {
         BailOutJcloudsLocation jcl = BailOutJcloudsLocation.newBailOutJcloudsLocation(managementContext);
@@ -123,42 +128,131 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     }
 
     @Test
-    public void testStringListToIntArray() {
+    public void testSingleInttoIntPortArray() {
+        int port = 1;
+        int[] intArray = new int[] {1};
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(port), intArray);
+    }
+
+    @Test
+    public void testSingleStringtoIntPortArray() {
+        String portString = "1";
+        int[] intArray = new int[] {1};
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(portString), intArray);
+    }
+
+    @Test
+    public void testStringListWithBracketstoIntPortArray() {
         String listString = "[1, 2, 3, 4]";
         int[] intArray = new int[] {1, 2, 3, 4};
-        Assert.assertEquals(JcloudsLocation.toIntArray(listString), intArray);
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(listString), intArray);
     }
-    
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    public void testMalformedStringListToIntArray() {
-        String listString = "1, 2, 3, 4";
-        JcloudsLocation.toIntArray(listString);
-    }
-    
+
     @Test
-    public void testEmptyStringListToIntArray() {
+    public void testStringListWithoutBracketstoIntPortArray() {
+        String listString = "1, 2, 3, 4";
+        int[] intArray = new int[] {1, 2, 3, 4};
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(listString), intArray);
+    }
+
+    @Test
+    public void testEmptyStringListtoIntPortArray() {
         String listString = "[]";
         int[] intArray = new int[] {};
-        Assert.assertEquals(JcloudsLocation.toIntArray(listString), intArray);
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(listString), intArray);
     }
-    
+
     @Test
-    public void testIntArrayToIntArray() {
+    public void testIntArraytoIntPortArray() {
         int[] intArray = new int[] {1, 2, 3, 4};
-        Assert.assertEquals(JcloudsLocation.toIntArray(intArray), intArray);
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(intArray), intArray);
     }
-    
+
     @Test
-    public void testObjectArrayToIntArray() {
-        Object[] longArray = new Object[] {1, 2, 3, 4};
+    public void testObjectArrayOfIntegerstoIntPortArray() {
+        Object[] integerObjectArray = new Object[] {1, 2, 3, 4};
         int[] intArray = new int[] {1, 2, 3, 4};
-        Assert.assertEquals(JcloudsLocation.toIntArray(longArray), intArray);
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(integerObjectArray), intArray);
     }
-    
-    @Test(expectedExceptions = ClassCastException.class)
-    public void testInvalidObjectArrayToIntArray() {
+
+    @Test
+    public void testObjectArrayOfStringstoIntPortArray() {
+        Object[] stringObjectArray = new Object[] {"1", "2", "3", "4"};
+        int[] intArray = new int[] {1, 2, 3, 4};
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(stringObjectArray), intArray);
+    }
+
+    @Test
+    public void testStringArraytoIntPortArray() {
         String[] stringArray = new String[] {"1", "2", "3"};
-        JcloudsLocation.toIntArray(stringArray);
+        int[] intArray = new int[] {1, 2, 3};
+        Assert.assertEquals(JcloudsLocation.toIntPortArray(stringArray), intArray);
+    }
+
+    @Test
+    public void testStringPortRangetoIntPortArray() {
+        String portRange = "1-100";
+        int[] intArray = Ints.toArray(ContiguousSet.create(Range.closed(1, 100), DiscreteDomain.integers()));
+        Assert.assertEquals(intArray, JcloudsLocation.toIntPortArray(portRange));
+    }
+
+    @Test
+    public void testStringPortPlustoIntPortArray() {
+        String portPlus = "100+";
+        int[] intArray = Ints.toArray(ContiguousSet.create(Range.closed(100, 65535), DiscreteDomain.integers()));
+        Assert.assertEquals(intArray, JcloudsLocation.toIntPortArray(portPlus));
+    }
+
+    @Test
+    public void testCombinationOfInputstoIntPortArray() {
+        Collection<Object> portInputs = Lists.newLinkedList();
+        portInputs.add(1);
+        portInputs.add("2");
+        portInputs.add("3-100");
+        portInputs.add("101,102,103");
+        portInputs.add("[104,105,106]");
+        portInputs.add(new int[] {107, 108, 109});
+        portInputs.add(new String[] {"110", "111", "112"});
+        portInputs.add(new Object[] {113, 114, 115});
+
+        int[] intArray = Ints.toArray(ContiguousSet.create(Range.closed(1, 115), DiscreteDomain.integers()));
+        Assert.assertEquals(intArray, JcloudsLocation.toIntPortArray(portInputs));
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMalformedStringNumbertoIntPortArray() {
+        String numberStr = "1i";
+        JcloudsLocation.toIntPortArray(numberStr);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMalformedStringRangetoIntPortArray() {
+        String rangeString = "1-";
+        JcloudsLocation.toIntPortArray(rangeString);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMalformedStringListWithBracketstoIntPortArray() {
+        String listString = "[1,2,e]";
+        JcloudsLocation.toIntPortArray(listString);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMalformedStringListWithoutBracketstoIntPortArray() {
+        String listString = "1,2,e";
+        JcloudsLocation.toIntPortArray(listString);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMalformedStringArraytoIntPortArray() {
+        String[] stringArray = new String[] {"1", "2", "e"};
+        JcloudsLocation.toIntPortArray(stringArray);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testIllegalObjectArrayOfDoublestoIntPortArray() {
+        Object[] doubleObjectArray = new Object[] {1.0, 2.0, 3.0};
+        JcloudsLocation.toIntPortArray(doubleObjectArray);
     }
 
     @Test
