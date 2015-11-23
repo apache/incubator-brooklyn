@@ -58,6 +58,7 @@ import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.config.MapConfigKey;
+import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.location.BasicHardwareDetails;
@@ -358,7 +359,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     public Pool<SshTool> load(Map<String, ?> properties) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("{} building ssh pool for {} with properties: {}",
-                                    new Object[] {this, getSshHostAndPort(), properties});
+                                    new Object[] {this, getSshHostAndPort(), Sanitizer.sanitize(properties)});
                         }
                         return buildPool(properties);
                     }
@@ -628,7 +629,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
             // Explicit props trump all.
             args.putAll(props);
 
-            if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+args);
+            if (LOG.isTraceEnabled()) LOG.trace("creating ssh session for "+Sanitizer.sanitize(args));
             if (!user.equals(args.get(SshTool.PROP_USER))) {
                 LOG.warn("User mismatch configuring ssh for "+this+": preferring user "+args.get(SshTool.PROP_USER)+" over "+user);
                 user = args.get(SshTool.PROP_USER);
