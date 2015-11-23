@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
@@ -53,6 +54,8 @@ import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.core.location.cloud.AvailabilityZoneExtension;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.stock.DelegateEntity;
+import org.apache.brooklyn.feed.function.FunctionFeed;
+import org.apache.brooklyn.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
@@ -67,10 +70,12 @@ import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
+import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -94,6 +99,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @SuppressWarnings("serial")
     private static final AttributeSensor<Supplier<Integer>> NEXT_CLUSTER_MEMBER_ID = Sensors.newSensor(new TypeToken<Supplier<Integer>>() {},
             "next.cluster.member.id", "Returns the ID number of the next member to be added");
+
+    private volatile FunctionFeed allMembersUp;
 
     // TODO better mechanism for arbitrary class name to instance type coercion
     static {
@@ -186,6 +193,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     public void init() {
         super.init();
         initialiseMemberId();
+        connectAllMembersUp();
     }
 
     private void initialiseMemberId() {
@@ -193,6 +201,34 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             if (sensors().get(NEXT_CLUSTER_MEMBER_ID) == null) {
                 sensors().set(NEXT_CLUSTER_MEMBER_ID, new NextClusterMemberIdSupplier());
             }
+        }
+    }
+
+    private void connectAllMembersUp() {
+        allMembersUp = FunctionFeed.builder()
+                .entity(this)
+                .period(Duration.FIVE_SECONDS)
+                .poll(new FunctionPollConfig<Boolean, Boolean>(ALL_MEMBERS_UP)
+                        .onException(Functions.constant(Boolean.FALSE))
+                        .callable(new AllMembersUpCallable()))
+                .build();
+    }
+
+    private class AllMembersUpCallable implements Callable<Boolean> {
+
+        @Override
+        public Boolean call() throws Exception {
+            if (DynamicClusterImpl.this.getMembers().isEmpty())
+                return false;
+
+            if (Lifecycle.RUNNING != DynamicClusterImpl.this.sensors().get(SERVICE_STATE_ACTUAL))
+                return false;
+
+            for (Entity member : DynamicClusterImpl.this.getMembers())
+                if (!Boolean.TRUE.equals(member.sensors().get(SERVICE_UP)))
+                    return false;
+
+            return true;
         }
     }
 
@@ -454,6 +490,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         } catch (Exception e) {
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
+        } finally {
+            if (allMembersUp != null) allMembersUp.stop();
         }
     }
 
