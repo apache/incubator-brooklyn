@@ -15,7 +15,7 @@ Brooklyn 0.7.0-incubating.
 
 Apache Brooklyn is a framework for modelling, monitoring, and managing
 applications through autonomic blueprints. More details on Apache Brooklyn
-can be found at http://brooklyn.incubator.apache.org/
+can be found at https://brooklyn.apache.org/
 
 Version 0.7.0 is a major step for Apache Brooklyn. It is the first full
 release of the project as part of the Apache incubator.
@@ -27,13 +27,13 @@ As well as a source code release, we offer a full binary distribution
 download, and a full set of Maven artifacts for developers.
 
 Release notes:
-https://brooklyn.incubator.apache.org/v/0.7.0-incubating/misc/release-notes.html
+https://brooklyn.apache.org/v/0.7.0-incubating/misc/release-notes.html
 
 Download:
-https://brooklyn.incubator.apache.org/download/
+https://brooklyn.apache.org/download/
 
 User guide:
-https://brooklyn.incubator.apache.org/v/0.7.0-incubating/
+https://brooklyn.apache.org/v/0.7.0-incubating/
 
 Maven artifacts have also been made available on repository.apache.org and
 Maven Central.
