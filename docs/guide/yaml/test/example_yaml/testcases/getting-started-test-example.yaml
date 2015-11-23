@@ -1,0 +1,71 @@
+name: Getting Started Blueprint Test
+
+location:
+  jclouds:aws-ec2:
+    identity: ABCDEFGHIJKLMNOPQRST
+    credential: s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
+
+services:
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  name: My Web
+  id: webappcluster
+  brooklyn.config:
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+    java.sysprops:
+      brooklyn.example.db.url: >
+        $brooklyn:formatString("jdbc:%s%s?user=%s&password=%s",
+        component("db").attributeWhenReady("datastore.url"),
+        "visitors", "brooklyn", "br00k11n")
+- type: org.apache.brooklyn.entity.database.mysql.MySqlNode
+  id: db
+  name: My DB
+  brooklyn.config:
+    creationScriptUrl: https://bit.ly/brooklyn-visitors-creation-script
+- type: org.apache.brooklyn.test.framework.TestHttpCall
+  name: Check HTTP Response Status Code
+  url: >
+    $brooklyn:formatString("http://%s:%s",
+    $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
+    $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
+  timeout: 10m
+  applyAssertionTo: status
+  assert:
+  - isEqualTo: 200
+- type: org.apache.brooklyn.test.framework.TestHttpCall
+  name: Check HTTP Response Body
+  url: >
+    $brooklyn:formatString("http://%s:%s",
+    $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
+    $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
+  timeout: 10m
+  applyAssertionTo: body
+  assert:
+  - matches: "(?s).*Br[o]{2}klyn Deployed.*"
+- type: org.apache.brooklyn.test.framework.TestCase
+  name: Check Deploy Effector
+  brooklyn.children:
+  - type: org.apache.brooklyn.test.framework.TestSensor
+    name: Check webappcluster isUp
+    targetId: webappcluster
+    sensor: service.isUp
+    timeout: 10m
+    assert:
+    - equals: true
+  - type: org.apache.brooklyn.test.framework.TestEffector
+    name: Invoke Deploy Effector
+    targetId: webappcluster
+    effector: deploy
+    timeout: 5m
+    params:
+      url: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+      targetName: newcontext
+  - type: org.apache.brooklyn.test.framework.TestHttpCall
+    name: Check Deployed Webapp Status Code
+    timeout: 5m
+    url: >
+      $brooklyn:formatString("http://%s:%s/newcontext/",
+      $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
+      $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
+    applyAssertionTo: status
+    assert:
+    - isEqualTo: 200
