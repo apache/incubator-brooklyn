@@ -100,14 +100,15 @@ public class NetworkingUtilsTest {
     
     @Test
     public void testIsPortAvailableReportsTrueWhenPortIsFree() throws Exception {
+        final int MIN_FREE = 5;
         int port = 58769;
         int numFree = 0;
-        for (int i = 0; i < 10; i++) {
-            if (Networking.isPortAvailable(port))
+        for (int i = 0; i < 50 && numFree < MIN_FREE; i++) {
+            if (Networking.isPortAvailable(port+i))
                 numFree++;
         }
-        if (numFree<=5)
-            fail("This test requires that at least some ports near 58769+ not be in use.");
+        if (numFree < MIN_FREE)
+            fail("This test requires that at least some ports near "+port+"+ not be in use.");
     }
 
     @Test

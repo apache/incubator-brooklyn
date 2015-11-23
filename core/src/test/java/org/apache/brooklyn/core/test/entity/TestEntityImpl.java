@@ -157,7 +157,6 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
     public <T extends Entity> T createAndManageChild(EntitySpec<T> spec) {
         if (!getManagementSupport().isDeployed()) throw new IllegalStateException("Entity "+this+" not managed");
         T child = createChild(spec);
-        getEntityManager().manage(child);
         return child;
     }
 

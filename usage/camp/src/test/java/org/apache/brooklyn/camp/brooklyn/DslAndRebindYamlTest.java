@@ -61,6 +61,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     protected LocalManagementContext newTestManagementContext() {
         if (mementoDir!=null) throw new IllegalStateException("already created mgmt context");
         mementoDir = Files.createTempDir();
+        mementoDir.deleteOnExit();
         LocalManagementContext mgmt = RebindTestUtils.newPersistingManagementContext(mementoDir, classLoader, 1);
         mgmtContexts.add(mgmt);
         return mgmt;
@@ -103,7 +104,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         Entity entity = app.getChildren().iterator().next();
         Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
         
-        return (TestEntity)entity;
+        return entity;
     }
 
     public static <T> T getConfigInTask(final Entity entity, final ConfigKey<T> key) {

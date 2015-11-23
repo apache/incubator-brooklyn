@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.location.LocationResolver;
@@ -60,7 +59,7 @@ public class CatalogLocationResolver implements LocationResolver {
             log.warn("Use of deprecated catalog item "+item.getSymbolicName()+":"+item.getVersion());
         }
         
-        LocationSpec origLocSpec = (LocationSpec) managementContext.getTypeRegistry().createSpec(item, null, LocationSpec.class);
+        LocationSpec<?> origLocSpec = (LocationSpec) managementContext.getTypeRegistry().createSpec(item, null, LocationSpec.class);
         LocationSpec locSpec = LocationSpec.create(origLocSpec)
                 .configure(locationFlags);
         return managementContext.getLocationManager().createLocation(locSpec);

@@ -18,8 +18,6 @@
  */
 package org.apache.brooklyn.location.ssh;
 
-import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKeyWithPrefix;
-import static org.apache.brooklyn.core.config.ConfigKeys.newStringConfigKey;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.io.Closeable;
@@ -147,6 +145,25 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     public static final ConfigKey<String> SSH_TOOL_CLASS = ConfigKeys.newConfigKeyWithPrefixRemoved(
             BrooklynConfigKeys.BROOKLYN_SSH_CONFIG_KEY_PREFIX,
             Preconditions.checkNotNull(BrooklynConfigKeys.SSH_TOOL_CLASS, "static final initializer classload ordering problem"));
+
+    /** 
+     * Prefix for config key:values to be passed to the ssh tool on construction. For example, 
+     * one could define the location below. When executing ssh commands, it would instantiate
+     * an instance of {@code com.acme.brooklyn.MyCustomSshTool}, calling its constructor with a
+     * {@code Map<String, Object>} that contained the configuration. In this case, the map would
+     * include: {@code address=1.2.3.4}; {@code user=myname}; and {@code myparam=myvalue}.
+     * 
+     * <pre>
+     * {@code
+     * brooklyn.location.named.myLocation = byon:(hosts=1.2.3.4,user=myname)
+     * brooklyn.location.named.myLocation.sshToolClass = com.acme.brooklyn.MyCustomSshTool
+     * brooklyn.location.named.myLocation.sshToolClass.myparam = myvalue
+     * }
+     * }
+     * </pre>
+     * <p>
+     */
+    public static final String SSH_TOOL_CLASS_PROPERTIES_PREFIX = SSH_TOOL_CLASS.getName()+".";
 
     public static final ConfigKey<Duration> SSH_CACHE_EXPIRY_DURATION = ConfigKeys.newConfigKey(Duration.class,
             "sshCacheExpiryDuration", "Expiry time for unused cached ssh connections", Duration.FIVE_MINUTES);
@@ -580,10 +597,19 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                 .configure(SshTool.PROP_HOST, address.getHostName());
 
             for (Map.Entry<String,Object> entry: config().getBag().getAllConfig().entrySet()) {
+                boolean include = false;
                 String key = entry.getKey();
                 if (key.startsWith(SshTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                     key = Strings.removeFromStart(key, SshTool.BROOKLYN_CONFIG_KEY_PREFIX);
-                } else if (ALL_SSH_CONFIG_KEY_NAMES.contains(entry.getKey())) {
+                    include = true;
+                }
+                
+                if (key.startsWith(SSH_TOOL_CLASS_PROPERTIES_PREFIX)) {
+                    key = Strings.removeFromStart(key, SSH_TOOL_CLASS_PROPERTIES_PREFIX);
+                    include = true;
+                }
+                
+                if (ALL_SSH_CONFIG_KEY_NAMES.contains(entry.getKey())) {
                     // key should be included, and does not need to be changed
 
                     // TODO make this config-setting mechanism more universal
@@ -591,11 +617,12 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
                     // thinking either we know about the tool here,
                     // or we don't allow unadorned keys to be set
                     // (require use of BROOKLYN_CONFIG_KEY_PREFIX)
-                } else {
-                    // this key is not applicable here; ignore it
-                    continue;
+                    include = true;
                 }
-                args.putStringKey(key, entry.getValue());
+                
+                if (include) {
+                    args.putStringKey(key, entry.getValue());
+                }
             }
 
             // Explicit props trump all.
@@ -891,7 +918,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     @Override
     public String toString() {
-        return "SshMachineLocation["+getDisplayName()+":"+address+":"+getPort()+"@"+getId()+"]";
+        return "SshMachineLocation["+getDisplayName()+":"+user+"@"+address+":"+getPort()+"(id="+getId()+")]";
     }
 
     @Override

@@ -22,7 +22,6 @@ import static org.testng.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessorWithLock;
 import org.apache.brooklyn.util.os.Os;
@@ -30,7 +29,6 @@ import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 
@@ -88,21 +86,5 @@ public class FileBasedStoreObjectAccessorWriterTest extends PersistenceStoreObje
         } finally {
             accessor.delete();
         }
-    }
-
-    @Test(groups={"Integration", "Acceptance"})
-    public void testFilePermissionsPerformance() throws Exception {
-        long interval = 10 * 1000; // millis
-        long start = System.currentTimeMillis();
-
-        int count = 0;
-        Stopwatch stopwatch = Stopwatch.createStarted();
-        while (System.currentTimeMillis() < start + interval) {
-            accessor.put("abc" + count);
-            count++;
-        }
-        stopwatch.stop();
-        double writesPerSec = ((double)count) / stopwatch.elapsed(TimeUnit.MILLISECONDS) * 1000;
-        System.out.println("writes per second: " + writesPerSec);
     }
 }

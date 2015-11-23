@@ -26,6 +26,7 @@ import javax.ws.rs.ext.Provider;
 
 import com.sun.jersey.core.spi.component.ComponentContext;
 import com.sun.jersey.core.spi.component.ComponentScope;
+import com.sun.jersey.spi.container.servlet.WebConfig;
 import com.sun.jersey.spi.inject.Injectable;
 import com.sun.jersey.spi.inject.InjectableProvider;
 
@@ -34,6 +35,10 @@ public class NullServletConfigProvider implements InjectableProvider<Context, Ty
     public Injectable<ServletContext> getInjectable(ComponentContext ic, 
             Context a, Type c) { 
         if (ServletContext.class == c) { 
+            return new Injectable<ServletContext>() {
+                public ServletContext getValue() { return null; }
+            }; 
+        } else if (WebConfig.class == c) {
             return new Injectable<ServletContext>() {
                 public ServletContext getValue() { return null; }
             }; 

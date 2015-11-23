@@ -34,4 +34,20 @@ public interface TestHttpCall extends BaseTest {
     @SetFromFlag(nullable = false)
     ConfigKey<String> TARGET_URL = ConfigKeys.newStringConfigKey("url", "URL to test");
 
+    ConfigKey<HttpAssertionTarget> ASSERTION_TARGET = ConfigKeys.newConfigKey(HttpAssertionTarget.class, "applyAssertionTo", "The HTTP field to apply the assertion to [body,status]", HttpAssertionTarget.body);
+
+    enum HttpAssertionTarget {
+        body("body"), status("status");
+        private final String httpAssertionTarget;
+
+        HttpAssertionTarget(final String httpAssertionTarget) {
+            this.httpAssertionTarget = httpAssertionTarget;
+        }
+
+        @Override
+        public String toString() {
+            return httpAssertionTarget;
+        }
+    }
+
 }

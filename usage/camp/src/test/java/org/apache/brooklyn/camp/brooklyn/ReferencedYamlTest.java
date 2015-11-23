@@ -49,6 +49,7 @@ public class ReferencedYamlTest extends AbstractYamlTest {
             "services:",
             "- type: classpath://yaml-ref-entity.yaml");
         
+        // the name declared at the root trumps the name on the item itself
         checkChildEntitySpec(app, "Basic entity");
     }
 

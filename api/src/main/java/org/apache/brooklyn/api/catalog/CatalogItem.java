@@ -19,15 +19,21 @@
 package org.apache.brooklyn.api.catalog;
 
 import java.util.Collection;
-import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
-import org.apache.brooklyn.api.objs.SpecParameter;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 
 import com.google.common.annotations.Beta;
@@ -40,6 +46,22 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
         ENTITY, 
         POLICY,
         LOCATION;
+        
+        public static CatalogItemType ofSpecClass(Class<? extends AbstractBrooklynObjectSpec<?, ?>> type) {
+            if (type==null) return null;
+            if (PolicySpec.class.isAssignableFrom(type)) return POLICY;
+            if (LocationSpec.class.isAssignableFrom(type)) return LOCATION;
+            if (EntitySpec.class.isAssignableFrom(type)) return ENTITY;
+            return null;
+        }
+        public static CatalogItemType ofTargetClass(Class<? extends BrooklynObject> type) {
+            if (type==null) return null;
+            if (Policy.class.isAssignableFrom(type)) return POLICY;
+            if (Location.class.isAssignableFrom(type)) return LOCATION;
+            if (Application.class.isAssignableFrom(type)) return TEMPLATE;
+            if (Entity.class.isAssignableFrom(type)) return ENTITY;
+            return null;
+        }
     }
     
     public static interface CatalogBundle extends OsgiBundleWithUrl {
@@ -96,8 +118,6 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     public String getSymbolicName();
 
     public String getVersion();
-
-    public List<SpecParameter<?>> getParameters();
 
     public Collection<CatalogBundle> getLibraries();
 

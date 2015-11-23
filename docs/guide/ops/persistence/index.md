@@ -191,6 +191,7 @@ rebind.failureMode.danglingRef=continue
 rebind.failureMode.loadPolicy=continue
 rebind.failureMode.addPolicy=continue
 rebind.failureMode.rebind=fail_at_end
+rebind.failureMode.addConfig=fail_at_end
 {% endhighlight %} 
 
 For each of these configuration options, the possible values are:
@@ -212,6 +213,7 @@ The meaning of the configuration options is:
 * `rebind.failureMode.addPolicy`: if there is an error re-adding the policy or enricher to
   its associated entity... whether to continue (discarding the policy or enricher) 
   or fail.
+* `rebind.failureMode.addConfig`: if there is invalid config value, or some other error occurs when adding a config.
 * `rebind.failureMode.rebind`: any errors on rebind not covered by the more specific error cases described above.
 
 

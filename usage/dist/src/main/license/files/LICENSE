@@ -200,7 +200,7 @@ This project includes the software: aopalliance
   Used under the following license: Public Domain
 
 This project includes the software: asm
-  Available at: http://asm.objectweb.org/asm/
+  Available at: http://asm.objectweb.org/
   Developed by: ObjectWeb (http://www.objectweb.org/)
   Version used: 3.3.1
   Used under the following license: BSD License (http://asm.objectweb.org/license.html)
@@ -231,10 +231,22 @@ This project includes the software: ch.qos.logback
   Version used: 1.0.7
   Used under the following license: Eclipse Public License, version 1.0 (http://www.eclipse.org/legal/epl-v10.html)
 
-This project includes the software: com.fasterxml.jackson
+This project includes the software: com.fasterxml.jackson.core
   Available at: http://wiki.fasterxml.com/JacksonHome
   Developed by: FasterXML (http://fasterxml.com/)
   Version used: 2.4.2; 2.4.0
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: com.fasterxml.jackson.jaxrs
+  Available at: http://wiki.fasterxml.com/JacksonHome
+  Developed by: FasterXML (http://fasterxml.com/)
+  Version used: 2.4.2
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: com.fasterxml.jackson.module
+  Available at: http://wiki.fasterxml.com/JacksonJAXBAnnotations
+  Developed by: FasterXML (http://fasterxml.com/)
+  Version used: 2.4.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.code.findbugs
@@ -249,24 +261,24 @@ This project includes the software: com.google.code.gson
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.guava
-  Available at: http://code.google.com/p/guava-libraries/guava
+  Available at: http://code.google.com/p/guava-libraries
   Version used: 17.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.http-client
-  Available at: http://code.google.com/p/google-http-java-client/google-http-client/
+  Available at: http://code.google.com/p/google-http-java-client/
   Developed by: Google (http://www.google.com/)
   Version used: 1.18.0-rc
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.inject
-  Available at: http://code.google.com/p/google-guice/guice/
+  Available at: http://code.google.com/p/google-guice/
   Developed by: Google, Inc. (http://www.google.com)
   Version used: 3.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.inject.extensions
-  Available at: http://code.google.com/p/google-guice/extensions-parent/
+  Available at: http://code.google.com/p/google-guice/
   Developed by: Google, Inc. (http://www.google.com)
   Version used: 3.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
@@ -305,12 +317,12 @@ This project includes the software: com.maxmind.geoip2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
 
 This project includes the software: com.squareup.okhttp
-  Available at: https://github.com/square/okhttp/okhttp
+  Available at: https://github.com/square/okhttp
   Version used: 2.2.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.squareup.okio
-  Available at: https://github.com/square/okio/okio
+  Available at: https://github.com/square/okio
   Version used: 1.2.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
@@ -321,19 +333,19 @@ This project includes the software: com.sun.jersey
   Used under the following license: Common Development and Distribution License, version 1.1 (http://glassfish.java.net/public/CDDL+GPL_1_1.html)
 
 This project includes the software: com.sun.jersey.contribs
-  Available at: https://jersey.java.net/jersey-contribs/jersey-multipart/
+  Available at: https://jersey.java.net/
   Developed by: Oracle Corporation (http://www.oracle.com/)
   Version used: 1.18.1
   Used under the following license: Common Development and Distribution License, version 1.1 (http://glassfish.java.net/public/CDDL+GPL_1_1.html)
 
 This project includes the software: com.thoughtworks.xstream
-  Available at: http://codehaus.org/xstream-parent/xstream/
+  Available at: http://x-stream.github.io/
   Developed by: XStream (http://xstream.codehaus.org)
   Version used: 1.4.7
   Used under the following license: BSD License (http://xstream.codehaus.org/license.html)
 
 This project includes the software: com.wordnik
-  Available at: https://github.com/wordnik/swagger-core/
+  Available at: https://github.com/wordnik/swagger-core
   Version used: 1.0.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
 
@@ -398,7 +410,7 @@ This project includes the software: io.cloudsoft.windows
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: javax.annotation
-  Available at: http://jcp.org/aboutJava/communityprocess/final/jsr250/index.html
+  Available at: https://jcp.org/en/jsr/detail?id=250
   Version used: 1.0
   Used under the following license: Common Development and Distribution License, version 1.0 (https://glassfish.dev.java.net/public/CDDLv1.0.html)
 
@@ -407,12 +419,18 @@ This project includes the software: javax.inject
   Version used: 1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
+This project includes the software: javax.servlet
+  Available at: http://servlet-spec.java.net
+  Developed by: GlassFish Community (https://glassfish.dev.java.net)
+  Version used: 3.1.0
+  Used under the following license: CDDL + GPLv2 with classpath exception (https://glassfish.dev.java.net/nonav/public/CDDL+GPL.html)
+
 This project includes the software: javax.validation
   Version used: 1.0.0.GA
   Used under the following license: Apache License, version 2.0 (in-project reference: license.txt)
 
 This project includes the software: javax.ws.rs
-  Available at: https://jsr311.dev.java.net
+  Available at: https://jsr311.java.net/
   Developed by: Sun Microsystems, Inc (http://www.sun.com/)
   Version used: 1.1.1
   Used under the following license: CDDL License (http://www.opensource.org/licenses/cddl1.php)
@@ -495,7 +513,7 @@ This project includes the software: net.java.dev.jna
   Used under the following license: Apache License, version 2.0 (http://www.gnu.org/licenses/licenses.html)
 
 This project includes the software: net.minidev
-  Available at: (invalid url reported: http://json-smart/) (invalid url reported: http://asm/)
+  Available at: http://www.minidev.net/
   Developed by: Chemouni Uriel (http://www.minidev.net/)
   Version used: 2.1.1; 1.0.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
@@ -518,18 +536,48 @@ This project includes the software: org.apache.commons
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.felix
-  Available at: http://felix.apache.org/org.apache.felix.framework/
+  Available at: http://felix.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
   Version used: 4.4.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.httpcomponents
-  Available at: http://hc.apache.org/httpcomponents-client http://hc.apache.org/httpcomponents-core-ga
+  Available at: http://hc.apache.org/httpcomponents-client-ga http://hc.apache.org/httpcomponents-core-ga
   Developed by: The Apache Software Foundation (http://www.apache.org/)
   Version used: 4.4.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.jclouds
+  Available at: http://jclouds.apache.org/
+  Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.9.1
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: org.apache.jclouds.api
+  Available at: http://jclouds.apache.org/
+  Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.9.1
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: org.apache.jclouds.common
+  Available at: http://jclouds.apache.org/
+  Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.9.1
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: org.apache.jclouds.driver
+  Available at: http://jclouds.apache.org/
+  Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.9.1
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: org.apache.jclouds.labs
+  Available at: http://jclouds.apache.org/
+  Developed by: The Apache Software Foundation (http://www.apache.org/)
+  Version used: 1.9.1
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: org.apache.jclouds.provider
   Available at: http://jclouds.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
   Version used: 1.9.1
@@ -558,14 +606,8 @@ This project includes the software: org.codehaus.jettison
 
 This project includes the software: org.eclipse.jetty
   Available at: http://www.eclipse.org/jetty
-  Developed by: Mort Bay Consulting (http://www.mortbay.com)
-  Version used: 8.1.17.v20150415
-  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
-
-This project includes the software: org.eclipse.jetty.orbit
-  Available at: http://www.eclipse.org/jetty/jetty-orbit/javax.servlet
-  Developed by: Mort Bay Consulting (http://www.mortbay.com)
-  Version used: 3.0.0.v201112011016
+  Developed by: Webtide (http://webtide.com)
+  Version used: 9.2.13.v20150730
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 
 This project includes the software: org.freemarker
@@ -604,7 +646,7 @@ This project includes the software: org.python
   Used under the following license: Jython Software License (http://www.jython.org/license.html)
 
 This project includes the software: org.reflections
-  Available at: http://code.google.com/p/reflections/reflections/
+  Available at: http://code.google.com/p/reflections/
   Version used: 0.9.9-RC1
   Used under the following license: WTFPL (http://www.wtfpl.net/)
 

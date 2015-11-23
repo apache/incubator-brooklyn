@@ -85,7 +85,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
      * process may not be completely initialised at this stage, so care is
      * required when implementing these stages.
      * <p>
-     * The {@link BrooklynConfigKeys#ENTITY_RUNNING} key can be set on the location
+     * The {@link BrooklynConfigKeys#ENTITY_STARTED} key can be set on the location
      * or the entity to skip the startup process if the entity is already running,
      * according to the {@link #isRunning()} method. To force the startup to be
      * skipped, {@link BrooklynConfigKeys#SKIP_ENTITY_START} can be set on the entity.

@@ -179,11 +179,6 @@ public class CatalogItemDo<T,SpecT> implements CatalogItem<T,SpecT>, BrooklynObj
         return itemDto.getVersion();
     }
 
-    @Override
-    public List<SpecParameter<?>> getParameters() {
-        return itemDto.getParameters();
-    }
-
     @Nonnull  // but it is still null sometimes, see in CatalogDo.loadJavaClass
     @Override
     public Collection<CatalogBundle> getLibraries() {

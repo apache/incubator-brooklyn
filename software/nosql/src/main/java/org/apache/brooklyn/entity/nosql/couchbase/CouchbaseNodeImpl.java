@@ -192,7 +192,8 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
                     Charsets.UTF_8.encode("hostname="+Urls.encode(accessible.getHostText())).array());
             log.debug("Renamed Couchbase server "+this+" via "+apiUri+": "+response);
             if (!HttpTool.isStatusCodeHealthy(response.getResponseCode())) {
-                log.warn("Invalid response code, renaming "+apiUri+": "+response);
+                log.warn("Invalid response code, renaming {} ({}): {}",
+                        new Object[]{apiUri, response.getResponseCode(), response.getContentAsString()});
             }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);

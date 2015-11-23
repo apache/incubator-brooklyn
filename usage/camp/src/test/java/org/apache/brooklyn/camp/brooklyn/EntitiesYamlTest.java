@@ -81,6 +81,8 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml", extras));
         waitForApplicationTasks(app);
 
+        Entities.dumpInfo(app);
+        
         Assert.assertEquals(app.getDisplayName(), "test-entity-basic-template");
 
         log.info("App started:");

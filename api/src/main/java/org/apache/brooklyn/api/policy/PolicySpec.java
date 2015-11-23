@@ -18,19 +18,9 @@
  */
 package org.apache.brooklyn.api.policy;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
-import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.Maps;
 
 /**
  * Gives details of a policy to be created. It describes the policy's configuration, and is
@@ -43,8 +33,6 @@ import com.google.common.collect.Maps;
  * @author aled
  */
 public class PolicySpec<T extends Policy> extends AbstractBrooklynObjectSpec<T,PolicySpec<T>> {
-
-    private static final Logger log = LoggerFactory.getLogger(PolicySpec.class);
 
     private final static long serialVersionUID = 1L;
 
@@ -71,9 +59,6 @@ public class PolicySpec<T extends Policy> extends AbstractBrooklynObjectSpec<T,P
         return PolicySpec.create(type).configure(config);
     }
     
-    private final Map<String, Object> flags = Maps.newLinkedHashMap();
-    private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
-
     protected PolicySpec(Class<T> type) {
         super(type);
     }
@@ -86,66 +71,6 @@ public class PolicySpec<T extends Policy> extends AbstractBrooklynObjectSpec<T,P
     public PolicySpec<T> uniqueTag(String uniqueTag) {
         flags.put("uniqueTag", uniqueTag);
         return this;
-    }
-
-    public PolicySpec<T> configure(Map<?,?> val) {
-        for (Map.Entry<?, ?> entry: val.entrySet()) {
-            if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");
-            if (entry.getKey() instanceof CharSequence)
-                flags.put(entry.getKey().toString(), entry.getValue());
-            else if (entry.getKey() instanceof ConfigKey<?>)
-                config.put((ConfigKey<?>)entry.getKey(), entry.getValue());
-            else if (entry.getKey() instanceof HasConfigKey<?>)
-                config.put(((HasConfigKey<?>)entry.getKey()).getConfigKey(), entry.getValue());
-            else {
-                log.warn("Spec "+this+" ignoring unknown config key "+entry.getKey());
-            }
-        }
-        return this;
-    }
-    
-    public PolicySpec<T> configure(CharSequence key, Object val) {
-        flags.put(checkNotNull(key, "key").toString(), val);
-        return this;
-    }
-    
-    public <V> PolicySpec<T> configure(ConfigKey<V> key, V val) {
-        config.put(checkNotNull(key, "key"), val);
-        return this;
-    }
-
-    public <V> PolicySpec<T> configureIfNotNull(ConfigKey<V> key, V val) {
-        return (val != null) ? configure(key, val) : this;
-    }
-
-    public <V> PolicySpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
-        config.put(checkNotNull(key, "key"), val);
-        return this;
-    }
-
-    public <V> PolicySpec<T> configure(HasConfigKey<V> key, V val) {
-        config.put(checkNotNull(key, "key").getConfigKey(), val);
-        return this;
-    }
-
-    public <V> PolicySpec<T> configure(HasConfigKey<V> key, Task<? extends V> val) {
-        config.put(checkNotNull(key, "key").getConfigKey(), val);
-        return this;
-    }
-
-    /**
-     * @return Read-only construction flags
-     * @see SetFromFlag declarations on the policy type
-     */
-    public Map<String, ?> getFlags() {
-        return Collections.unmodifiableMap(flags);
-    }
-    
-    /**
-     * @return Read-only configuration values
-     */
-    public Map<ConfigKey<?>, Object> getConfig() {
-        return Collections.unmodifiableMap(config);
     }
         
 }

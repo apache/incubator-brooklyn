@@ -21,9 +21,13 @@ package org.apache.brooklyn.core.plan;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.ServiceLoader;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
+import org.apache.brooklyn.core.typereg.TypePlanTransformers;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -36,12 +40,30 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 
+/** @deprecated since 0.9.0 use {@link TypePlanTransformers} as part of switch to {@link BrooklynTypePlanTransformer};
+ * mark transformers as deprecated if there is a preferred corresponding {@link BrooklynTypePlanTransformer} */
+@Deprecated 
 public class PlanToSpecFactory {
     
     private static final Logger log = LoggerFactory.getLogger(PlanToSpecFactory.class);
 
-    private static Collection<PlanToSpecTransformer> getAll() {
-        return ImmutableList.copyOf(ServiceLoader.load(PlanToSpecTransformer.class));
+    private static Collection<PlanToSpecTransformer> getAll(boolean includeDeprecated) {
+        ServiceLoader<PlanToSpecTransformer> loader = ServiceLoader.load(PlanToSpecTransformer.class);
+        return ImmutableList.copyOf(includeDeprecated ? loader : filterDeprecated(loader));
+    }
+
+    private static Iterable<PlanToSpecTransformer> filterDeprecated(ServiceLoader<PlanToSpecTransformer> loader) {
+        List<PlanToSpecTransformer> result = MutableList.of();
+        for (PlanToSpecTransformer t: loader) {
+            if (!isDeprecated(t.getClass())) {
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    private static boolean isDeprecated(Class<? extends PlanToSpecTransformer> c) {
+        return (c.getAnnotation(Deprecated.class)!=null);
     }
 
     private static Collection<Class<? extends PlanToSpecTransformer>> OVERRIDE;
@@ -55,18 +77,22 @@ public class PlanToSpecFactory {
     }
 
     public static Collection<PlanToSpecTransformer> all(ManagementContext mgmt) {
+        return all(mgmt, true);
+    }
+    public static Collection<PlanToSpecTransformer> all(ManagementContext mgmt, boolean includeSuperseded) {
         Collection<Class<? extends PlanToSpecTransformer>> override = OVERRIDE;
         Collection<PlanToSpecTransformer> result = new ArrayList<PlanToSpecTransformer>();
         if (override!=null) {
             for (Class<? extends PlanToSpecTransformer> o1: override) {
                 try {
-                    result.add(o1.newInstance());
+                    if (includeSuperseded || !isDeprecated(o1))
+                        result.add(o1.newInstance());
                 } catch (Exception e) {
                     Exceptions.propagate(e);
                 }
             }
         } else {
-            result.addAll(getAll());
+            result.addAll(getAll(includeSuperseded));
         }
         for(PlanToSpecTransformer t : result) {
             t.injectManagementContext(mgmt);
@@ -87,8 +113,8 @@ public class PlanToSpecFactory {
     
     // TODO primitive loading mechanism, just tries all in order; we'll want something better as we get more plan transformers 
     @Beta
-    public static <T> Maybe<T> attemptWithLoaders(ManagementContext mgmt, Function<PlanToSpecTransformer,T> f) {
-        return attemptWithLoaders(all(mgmt), f);
+    public static <T> Maybe<T> attemptWithLoaders(ManagementContext mgmt, boolean includeDeprecated, Function<PlanToSpecTransformer,T> f) {
+        return attemptWithLoaders(all(mgmt, includeDeprecated), f);
     }
     
     public static <T> Maybe<T> attemptWithLoaders(Iterable<PlanToSpecTransformer> transformers, Function<PlanToSpecTransformer,T> f) {
@@ -107,7 +133,7 @@ public class PlanToSpecFactory {
                     (Strings.isNonBlank(e.getMessage()) ? " ("+e.getMessage()+")" : ""));
             } catch (Throwable e) {
                 Exceptions.propagateIfFatal(e);
-                otherProblemsFromTransformers.add(new PropagatedRuntimeException("Transformer for "+t.getShortDescription()+" gave an error creating this plan: "+
+                otherProblemsFromTransformers.add(new PropagatedRuntimeException("Transformer for "+t.getShortDescription()+" gave an error creating this plan: ",
                     Exceptions.collapseText(e), e));
             }
         }

@@ -20,7 +20,6 @@ package org.apache.brooklyn.api.entity;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,22 +28,15 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.util.collections.MutableList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 /**
@@ -63,8 +55,6 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
 
     private static final long serialVersionUID = -2247153452919128990L;
     
-    private static final Logger log = LoggerFactory.getLogger(EntitySpec.class);
-
     /**
      * Creates a new {@link EntitySpec} instance for an entity of the given type. The returned 
      * {@link EntitySpec} can then be customized.
@@ -112,8 +102,6 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
 
     private Class<? extends T> impl;
     private Entity parent;
-    private final Map<String, Object> flags = Maps.newLinkedHashMap();
-    private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final List<Policy> policies = Lists.newArrayList();
     private final List<PolicySpec<?>> policySpecs = Lists.newArrayList();
     private final List<Enricher> enrichers = Lists.newArrayList();
@@ -133,11 +121,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     @Override
     protected EntitySpec<T> copyFrom(EntitySpec<T> otherSpec) {
         super.copyFrom(otherSpec)
-                .displayName(otherSpec.getDisplayName())
-                .tags(otherSpec.getTags())
                 .additionalInterfaces(otherSpec.getAdditionalInterfaces())
-                .configure(otherSpec.getConfig())
-                .configure(otherSpec.getFlags())
                 .policySpecs(otherSpec.getPolicySpecs())
                 .policies(otherSpec.getPolicies())
                 .enricherSpecs(otherSpec.getEnricherSpecs())
@@ -146,7 +130,6 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
                 .children(otherSpec.getChildren())
                 .members(otherSpec.getMembers())
                 .groups(otherSpec.getGroups())
-                .catalogItemId(otherSpec.getCatalogItemId())
                 .locations(otherSpec.getLocations());
         
         if (otherSpec.getParent() != null) parent(otherSpec.getParent());
@@ -208,27 +191,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
     public Entity getParent() {
         return parent;
     }
-    
-    /**
-     * @return Read-only construction flags
-     * @see SetFromFlag declarations on the entity type
-     */
-    public Map<String, ?> getFlags() {
-        return Collections.unmodifiableMap(flags);
-    }
-    
-    /**
-     * @return Read-only configuration values
-     */
-    public Map<ConfigKey<?>, Object> getConfig() {
-        return Collections.unmodifiableMap(config);
-    }
 
-    /** Clears the config map, removing any config previously set. */
-    public void clearConfig() {
-        config.clear();
-    }
-        
     public List<PolicySpec<?>> getPolicySpecs() {
         return policySpecs;
     }
@@ -336,62 +299,6 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
         parent = checkNotNull(val, "parent");
         return this;
     }
-    
-    /** strings inserted as flags, config keys inserted as config keys; 
-     * if you want to force one or the other, create a ConfigBag and convert to the appropriate map type */
-    public EntitySpec<T> configure(Map<?,?> val) {
-        checkMutable();
-        for (Map.Entry<?, ?> entry: val.entrySet()) {
-            if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");
-            if (entry.getKey() instanceof CharSequence)
-                flags.put(entry.getKey().toString(), entry.getValue());
-            else if (entry.getKey() instanceof ConfigKey<?>)
-                config.put((ConfigKey<?>)entry.getKey(), entry.getValue());
-            else if (entry.getKey() instanceof HasConfigKey<?>)
-                config.put(((HasConfigKey<?>)entry.getKey()).getConfigKey(), entry.getValue());
-            else {
-                log.warn("Spec "+this+" ignoring unknown config key "+entry.getKey());
-            }
-        }
-        return this;
-    }
-    
-    public EntitySpec<T> configure(CharSequence key, Object val) {
-        checkMutable();
-        flags.put(checkNotNull(key, "key").toString(), val);
-        return this;
-    }
-    
-    public <V> EntitySpec<T> configure(ConfigKey<V> key, V val) {
-        checkMutable();
-        config.put(checkNotNull(key, "key"), val);
-        return this;
-    }
-
-    public <V> EntitySpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
-        checkMutable();
-        config.put(checkNotNull(key, "key"), val);
-        return this;
-    }
-
-    public <V> EntitySpec<T> configure(ConfigKey<V> key, Supplier<? extends V> val) {
-        checkMutable();
-        config.put(checkNotNull(key, "key"), val);
-        return this;
-    }
-
-    public <V> EntitySpec<T> configure(HasConfigKey<V> key, V val) {
-        checkMutable();
-        config.put(checkNotNull(key, "key").getConfigKey(), val);
-        return this;
-    }
-
-    public <V> EntitySpec<T> configure(HasConfigKey<V> key, Task<? extends V> val) {
-        checkMutable();
-        config.put(checkNotNull(key, "key").getConfigKey(), val);
-        return this;
-    }
-
 
     /** adds a policy to the spec */
     public <V> EntitySpec<T> policy(Policy val) {

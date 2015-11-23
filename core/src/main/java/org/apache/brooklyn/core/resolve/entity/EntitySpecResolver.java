@@ -24,8 +24,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 
 /**
  * Resolves and decorates {@link EntitySpec entity specifications} based on the {@code serviceType} in a template.
