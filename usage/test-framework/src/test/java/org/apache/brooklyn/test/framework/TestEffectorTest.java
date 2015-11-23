@@ -51,7 +51,8 @@ public class TestEffectorTest {
         app = TestApplication.Factory.newManagedInstanceForTests();
         managementContext = app.getManagementContext();
 
-        loc = managementContext.getLocationManager().createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
+        loc = managementContext.getLocationManager()
+                .createLocation(LocationSpec.create(LocalhostMachineProvisioningLocation.class)
                 .configure("name", testId));
 
     }

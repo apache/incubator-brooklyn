@@ -59,7 +59,7 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {
-            LOG.info("Url [{}] test failed", url);
+            LOG.info("{} Url [{}] test failed", this, url);
             sensors().set(SERVICE_UP, false);
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(t);

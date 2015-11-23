@@ -20,6 +20,7 @@ package org.apache.brooklyn.test.framework;
 
 import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.trait.Startable;
@@ -64,4 +65,5 @@ public interface BaseTest extends Entity, Startable {
      * @throws IllegalArgumentException if the target cannot be found.
      */
     Entity resolveTarget();
+
 }

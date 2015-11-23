@@ -47,6 +47,12 @@
 
         <!--TEST SCOPE :: START-->
         <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-logback-xml</artifactId>
+            <version>${brooklyn.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
