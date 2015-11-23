@@ -50,6 +50,7 @@ import static org.apache.brooklyn.util.text.Strings.isBlank;
 import static org.apache.brooklyn.util.text.Strings.isNonBlank;
 import static org.apache.commons.collections.MapUtils.isEmpty;
 
+// TODO assertions below should use TestFrameworkAssertions but that class needs to be improved to give better error messages
 public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleShellCommandTest {
 
     public static final int SUCCESS = 0;
