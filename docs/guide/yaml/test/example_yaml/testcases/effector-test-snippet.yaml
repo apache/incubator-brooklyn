@@ -7,7 +7,7 @@
     sensor: service.isUp
     timeout: 10m
     assert:
-      equals: true
+    - equals: true
   - type: org.apache.brooklyn.test.framework.TestEffector
     name: Invoke Deploy Effector
     targetId: webappcluster
@@ -23,5 +23,6 @@
       $brooklyn:formatString("http://%s:%s/newcontext/",
       $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
       $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
+    applyAssertionTo: status
     assert:
-      status: 200
+    - isEqualTo: 200

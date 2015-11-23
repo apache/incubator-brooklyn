@@ -47,9 +47,11 @@ The `TestSensor` entity performs an assertion on a specified sensors value.
 - `sensor` - sensor to evaluate. For example `service.isUp`.
 - `timeout` - duration to wait on assertion to return a result. For example `10s`, `10m`, etc
 - `assert` - assertion to perform on the specified sensor value, options include:
-  - `equals` - tests that the sensor value equals the supplied value. For example `true`.
-  - `regex` - tests that the sensor value matches the supplied [regex pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html?is-external=true), for example `".*hello.*"`.
+  - `equals`,`equalTo`,`isEqualTo` - tests that the sensor value equals the supplied value. For example `true`.
+  - `contains` - tests that the sensor value contains the supplied value
+  - `matches` - tests that the sensor value matches the supplied [regex pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html?is-external=true), for example `".*hello.*"`.
   - `isNull` - tests that the sensor value is `null`.
+  - `notNull` - tests that the sensor value is NOT `null`.
 
 ### TestEffector
 The `TestEffector` entity invokes the specified effector on a target entity.
@@ -73,8 +75,11 @@ The `TestHttpCall` entity performs a HTTP GET on the specified URL and performs 
 #### Parameters
 - `url` - URL to perform GET request on, this can use DSL for example `$brooklyn:component("tomcat").attributeWhenReady("webapp.url")`.
 - `timeout` - duration to wait on a HTTP response. For example `10s`, `10m`, etc
+- `applyAssertionTo` - The filed to apply the assertion to. For example `status`, `body`
 - `assert` - assertion to perform on the response, options include:
-  - `status` - response must match the specified status code, for example `200`.
-  - `bodyContains` - response body must contain the supplied string, for example `"hello world"`.
-  - `regex` - response body must match the supplied [regex pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html?is-external=true), for example `".*hello.*"`
+  - `equals`,`equalTo`,`isEqualTo` - tests that the value equals the supplied value. For example `true`.
+  - `contains` - tests that the value contains the supplied value
+  - `matches` - tests that the value matches the supplied [regex pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html?is-external=true), for example `".*hello.*"`.
+  - `isNull` - tests that the value is `null`.
+  - `notNull` - tests that the value is NOT `null`.
 

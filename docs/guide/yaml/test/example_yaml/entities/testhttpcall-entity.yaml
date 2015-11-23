@@ -2,5 +2,6 @@
   name: Check HTTP Response Status Code
   url: $brooklyn:component("tomcat").attributeWhenReady("webapp.url")
   timeout: 60s
+  applyAssertionTo: status
   assert:
-    status: 200
+  - isEqualTo: 200

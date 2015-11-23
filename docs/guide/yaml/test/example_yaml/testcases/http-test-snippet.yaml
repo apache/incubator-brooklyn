@@ -5,8 +5,9 @@
     $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
     $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
   timeout: 10m
+  applyAssertionTo: status
   assert:
-    status: 200
+  - equals: 200
 - type: org.apache.brooklyn.test.framework.TestHttpCall
   name: Check HTTP Response Body
   url: >
@@ -14,5 +15,6 @@
     $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
     $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
   timeout: 10m
+  applyAssertionTo: body
   assert:
-    regex: "(?s).*Br[o]{2}klyn Deployed.*"
+  - matches: "(?s).*Br[o]{2}klyn Deployed.*"
