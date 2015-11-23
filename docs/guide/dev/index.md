@@ -14,7 +14,6 @@ children:
 - tips/
 - tips/logging.md
 - tips/debugging-remote-brooklyn.md
-- rest/rest-api-doc.md
 - { link: "https://brooklyn.apache.org/v/latest/misc/javadoc", title: "Javadoc" }
 ---
 
