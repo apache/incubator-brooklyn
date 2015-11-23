@@ -121,6 +121,7 @@
         <felix.framework.version>4.4.0</felix.framework.version>
         <reflections.version>0.9.9-RC1</reflections.version>
         <jetty.version>9.2.13.v20150730</jetty.version>
+        <jetty-schemas.version>3.1.M0</jetty-schemas.version>
         <airline.version>0.6</airline.version>
         <mockwebserver.version>20121111</mockwebserver.version>
         <freemarker.version>2.3.22</freemarker.version>
