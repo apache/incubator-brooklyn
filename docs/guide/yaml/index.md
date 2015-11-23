@@ -8,6 +8,7 @@ children:
 - clusters.md
 - multiple-services.md
 - clusters-and-policies.md
+- blueprinting-tips.md
 - custom-entities.md
 - winrm/
 - chef/
