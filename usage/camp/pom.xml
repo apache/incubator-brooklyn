@@ -186,6 +186,23 @@
     <build>
         <plugins>
 
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>jar</supportedProjectType>
+                    </supportedProjectTypes>
+                    <instructions>
+                        <Export-Package>org.apache.brooklyn.*</Export-Package>
+                        <Import-Package>
+                            !org.python.google.common.collect
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+
 <!-- if you want to build a WAR, full or skinny:
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
