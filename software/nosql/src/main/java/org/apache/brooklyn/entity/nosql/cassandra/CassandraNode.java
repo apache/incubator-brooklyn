@@ -141,6 +141,9 @@ public interface CassandraNode extends DatastoreMixins.DatastoreCommon, Software
     BasicAttributeSensorAndConfigKey<Set<BigInteger>> TOKENS = new BasicAttributeSensorAndConfigKey<Set<BigInteger>>(
             new TypeToken<Set<BigInteger>>() {}, "cassandra.tokens", "Cassandra Tokens");
 
+    @SetFromFlag("useThriftMonitoring")
+    ConfigKey<Boolean> USE_THRIFT_MONITORING = ConfigKeys.newConfigKey("thriftMonitoring.enabled", "Thrift-port monitoring enabled", Boolean.TRUE);
+
     AttributeSensor<Integer> PEERS = Sensors.newIntegerSensor( "cassandra.peers", "Number of peers in cluster");
 
     AttributeSensor<Integer> LIVE_NODE_COUNT = Sensors.newIntegerSensor( "cassandra.liveNodeCount", "Number of live nodes in cluster");
