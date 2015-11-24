@@ -309,9 +309,6 @@ public class Osgis {
      * When running inside an OSGi container, the container framework is returned.
      * When running standalone a new Apache Felix container is created.
      * 
-     * Calling {@link #ungetFramework(Framework) } is needed in both cases, either to stop
-     * the embedded framework or to release the service reference.
-     *
      * @param felixCacheDir
      * @param clean
      * @return
@@ -337,12 +334,7 @@ public class Osgis {
      */
     public static void ungetFramework(Framework framework) {
         final Bundle bundle = FrameworkUtil.getBundle(Osgis.class);
-        if (bundle != null) {
-//            // already running inside an OSGi container
-//            final BundleContext ctx = bundle.getBundleContext();
-//            final ServiceReference<Framework> ref = ctx.getServiceReference(Framework.class);
-//            ctx.ungetService(ref);
-        } else {
+        if (bundle == null) {
             EmbeddedFelixFramework.stopFramework(framework);
         }
     }

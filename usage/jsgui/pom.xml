@@ -276,8 +276,6 @@
                     </supportedProjectTypes>
                     <instructions>
                         <Web-ContextPath>/</Web-ContextPath>
-                        <Implementation-SHA-1>${buildNumber}</Implementation-SHA-1>
-                        <Implementation-Branch>${scmBranch}</Implementation-Branch>
                     </instructions>
                 </configuration>
             </plugin>
