@@ -18,15 +18,11 @@
  */
 package org.apache.brooklyn.location.winrm;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,65 +33,74 @@ import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.config.ConfigUtils;
+import org.apache.brooklyn.core.config.Sanitizer;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.location.access.PortForwardManager;
+import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmTool;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
+import org.apache.brooklyn.util.core.internal.winrm.pywinrm.Winrm4jTool;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Iterables;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
-
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.stream.Streams;
-import org.apache.brooklyn.util.time.Duration;
-import org.apache.brooklyn.util.time.Time;
-
-import io.cloudsoft.winrm4j.winrm.WinRmTool;
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
 
     private static final Logger LOG = LoggerFactory.getLogger(WinRmMachineLocation.class);
 
-    // FIXME Respect `port` config when using {@link WinRmTool}
-    public static final ConfigKey<Integer> WINRM_PORT = ConfigKeys.newIntegerConfigKey(
-            "port",
-            "WinRM port to use when connecting to the remote machine",
-            5985);
-    
-    // TODO merge with {link SshTool#PROP_USER} and {@link SshMachineLocation#user}
-    public static final ConfigKey<String> USER = ConfigKeys.newStringConfigKey("user",
-            "Username to use when connecting to the remote machine");
-
-    // TODO merge with {link SshTool#PROP_PASSWORD}
-    public static final ConfigKey<String> PASSWORD = ConfigKeys.newStringConfigKey("password",
-            "Password to use when connecting to the remote machine");
-
-    public static final ConfigKey<Integer> COPY_FILE_CHUNK_SIZE_BYTES = ConfigKeys.newIntegerConfigKey("windows.copy.file.size.bytes",
-            "Size of file chunks (in bytes) to be used when copying a file to the remote server", 1024);
-
-     public static final ConfigKey<InetAddress> ADDRESS = ConfigKeys.newConfigKey(
+    public static final ConfigKey<InetAddress> ADDRESS = ConfigKeys.newConfigKey(
             InetAddress.class,
             "address",
             "Address of the remote machine");
 
+    public static final ConfigKey<Integer> WINRM_PORT = WinRmTool.PROP_PORT;
+    
+    // TODO merge with {link SshTool#PROP_USER} and {@link SshMachineLocation#user}?
+    public static final ConfigKey<String> USER = WinRmTool.PROP_USER;
+
+    // TODO merge with {link SshTool#PROP_PASSWORD}?
+    public static final ConfigKey<String> PASSWORD = WinRmTool.PROP_PASSWORD;
+
+    // TODO Delete once winrm4j supports this better?
+    public static final ConfigKey<Integer> COPY_FILE_CHUNK_SIZE_BYTES = WinRmTool.COPY_FILE_CHUNK_SIZE_BYTES;
+
+    // Note that SshTool's implementation class *must* use a different key name. Both may be used 
+    // within a location's configuration to indicate the implementation to use for WinRmTool and 
+    // for SshTool - that will require two different configuration values.
+    public static final ConfigKey<String> WINRM_TOOL_CLASS = ConfigKeys.newConfigKeyWithPrefixRemoved(
+            BrooklynConfigKeys.BROOKLYN_WINRM_CONFIG_KEY_PREFIX,
+            Preconditions.checkNotNull(BrooklynConfigKeys.WINRM_TOOL_CLASS, "static final initializer classload ordering problem"));
+
+    /**
+     * @deprecated since 0.9.0; config never read; will be removed in future version.
+     */
+    @Deprecated
     public static final ConfigKey<Integer> EXECUTION_ATTEMPTS = ConfigKeys.newIntegerConfigKey(
             "windows.exec.attempts",
             "Number of attempts to execute a remote command",
             1);
     
     // TODO See SshTool#PROP_SSH_TRIES, where it was called "sshTries"; remove duplication? Merge into one well-named thing?
-    public static final ConfigKey<Integer> EXEC_TRIES = ConfigKeys.newIntegerConfigKey(
-            "execTries", 
-            "Max number of times to attempt WinRM operations", 
-            10);
+    public static final ConfigKey<Integer> EXEC_TRIES = WinRmTool.PROP_EXEC_TRIES;
 
     public static final ConfigKey<Iterable<String>> PRIVATE_ADDRESSES = ConfigKeys.newConfigKey(
             new TypeToken<Iterable<String>>() {},
@@ -108,6 +113,43 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             "tcpPortMappings",
             "NAT'ed ports, giving the mapping from private TCP port to a public host:port", 
             null);
+
+    public static final Set<HasConfigKey<?>> ALL_WINRM_CONFIG_KEYS =
+            ImmutableSet.<HasConfigKey<?>>builder()
+                    .addAll(ConfigUtils.getStaticKeysOnClass(WinRmMachineLocation.class))
+                    .addAll(ConfigUtils.getStaticKeysOnClass(WinRmTool.class))
+                    .build();
+
+    public static final Set<String> ALL_SSH_CONFIG_KEY_NAMES =
+            ImmutableSet.copyOf(Iterables.transform(ALL_WINRM_CONFIG_KEYS, new Function<HasConfigKey<?>,String>() {
+                @Override
+                public String apply(HasConfigKey<?> input) {
+                    return input.getConfigKey().getName();
+                }
+            }));
+    
+    @Override
+    public void init() {
+        super.init();
+
+        // Register any pre-existing port-mappings with the PortForwardManager
+        Map<Integer, String> tcpPortMappings = getConfig(TCP_PORT_MAPPINGS);
+        if (tcpPortMappings != null) {
+            PortForwardManager pfm = (PortForwardManager) getManagementContext().getLocationRegistry().resolve("portForwardManager(scope=global)");
+            for (Map.Entry<Integer, String> entry : tcpPortMappings.entrySet()) {
+                int targetPort = entry.getKey();
+                HostAndPort publicEndpoint = HostAndPort.fromString(entry.getValue());
+                if (!publicEndpoint.hasPort()) {
+                    throw new IllegalArgumentException("Invalid portMapping ('"+entry.getValue()+"') for port "+targetPort+" in machine "+this);
+                }
+                pfm.associate(publicEndpoint.getHostText(), publicEndpoint, this, targetPort);
+            }
+        }
+    }
+    
+    public String getUser() {
+        return config().get(USER);
+    }
 
     @Override
     public InetAddress getAddress() {
@@ -154,63 +196,66 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public WinRmToolResponse executeScript(List<String> script) {
-        int execTries = getRequiredConfig(EXEC_TRIES);
-        Collection<Throwable> exceptions = Lists.newArrayList();
-        for (int i = 0; i < execTries; i++) {
-            try {
-                return executeScriptNoRetry(script);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                if (i == (execTries+1)) {
-                    LOG.info("Propagating WinRM exception (attempt "+(i+1)+" of "+execTries+")", e);
-                } else if (i == 0) {
-                    LOG.warn("Ignoring WinRM exception and retrying (attempt "+(i+1)+" of "+execTries+")", e);
-                } else {
-                    LOG.debug("Ignoring WinRM exception and retrying (attempt "+(i+1)+" of "+execTries+")", e);
-                }
-                exceptions.add(e);
-            }
-        }
-        throw Exceptions.propagate("failed to execute shell script", exceptions);
+        return executeScript(ImmutableMap.of(), script);
     }
-
-    protected WinRmToolResponse executeScriptNoRetry(List<String> script) {
-        WinRmTool winRmTool = WinRmTool.connect(getHostAndPort(), getUser(), getPassword());
-        WinRmToolResponse response = winRmTool.executeScript(script);
-        return response;
+    
+    public WinRmToolResponse executeScript(Map<?,?> props, List<String> script) {
+        WinRmTool tool = newWinRmTool(props);
+        return tool.executeScript(script);
     }
 
     public WinRmToolResponse executePsScript(String psScript) {
-        return executePsScript(ImmutableList.of(psScript));
+        return executePsScript(ImmutableMap.of(), ImmutableList.of(psScript));
     }
 
     public WinRmToolResponse executePsScript(List<String> psScript) {
-        int execTries = getRequiredConfig(EXEC_TRIES);
-        Collection<Throwable> exceptions = Lists.newArrayList();
-        for (int i = 0; i < execTries; i++) {
-            try {
-                return executePsScriptNoRetry(psScript);
-            } catch (Exception e) {
-                Exceptions.propagateIfFatal(e);
-                if (i == (execTries+1)) {
-                    LOG.info("Propagating WinRM exception (attempt "+(i+1)+" of "+execTries+")", e);
-                } else if (i == 0) {
-                    LOG.warn("Ignoring WinRM exception and retrying after 5 seconds (attempt "+(i+1)+" of "+execTries+")", e);
-                    Time.sleep(Duration.FIVE_SECONDS);
-                } else {
-                    LOG.debug("Ignoring WinRM exception and retrying after 5 seconds (attempt "+(i+1)+" of "+execTries+")", e);
-                    Time.sleep(Duration.FIVE_SECONDS);
-                }
-                exceptions.add(e);
-            }
-        }
-        throw Exceptions.propagate("failed to execute powershell script", exceptions);
+        return executePsScript(ImmutableMap.of(), psScript);
+    }
+    
+    public WinRmToolResponse executePsScript(Map<?,?> props, List<String> psScript) {
+        WinRmTool tool = newWinRmTool(props);
+        return tool.executePs(psScript);
     }
 
-    public WinRmToolResponse executePsScriptNoRetry(List<String> psScript) {
-        WinRmTool winRmTool = WinRmTool.connect(getHostAndPort(), getUser(), getPassword());
-        WinRmToolResponse response = winRmTool.executePs(psScript);
-        return response;
+    protected WinRmTool newWinRmTool(Map<?,?> props) {
+        // TODO See comments/TODOs in SshMachineLocation.connectSsh()
+        try {
+            ConfigBag args = new ConfigBag();
+
+            for (Map.Entry<String,Object> entry: config().getBag().getAllConfig().entrySet()) {
+                String key = entry.getKey();
+                if (key.startsWith(WinRmTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
+                    key = Strings.removeFromStart(key, WinRmTool.BROOKLYN_CONFIG_KEY_PREFIX);
+                    args.putStringKey(key, entry.getValue());
+                }
+            }
+
+            for (Map.Entry<String,Object> entry: config().getBag().getAllConfig().entrySet()) {
+                String key = entry.getKey();
+                if (ALL_SSH_CONFIG_KEY_NAMES.contains(key)) {
+                } else {
+                    // this key is not applicable here; ignore it
+                    continue;
+                }
+                args.putStringKey(key, entry.getValue());
+            }
+
+            args.putAll(props);
+            args.configure(SshTool.PROP_HOST, getAddress().getHostAddress());
+
+            if (LOG.isTraceEnabled()) LOG.trace("creating WinRM session for "+Sanitizer.sanitize(args));
+
+            // look up tool class
+            String toolClass = args.get(WINRM_TOOL_CLASS);
+            if (toolClass == null) toolClass = Winrm4jTool.class.getName();
+            WinRmTool tool = (WinRmTool) Class.forName(toolClass).getConstructor(Map.class).newInstance(args.getAllConfig());
+
+            if (LOG.isTraceEnabled()) LOG.trace("using ssh-tool {} (of type {}); props ", tool, toolClass);
+
+            return tool;
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
     }
 
     public int copyTo(File source, String destination) {
@@ -228,61 +273,15 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     }
 
     public int copyTo(InputStream source, String destination) {
-        executePsScript(ImmutableList.of("rm -ErrorAction SilentlyContinue " + destination));
-        try {
-            int chunkSize = getConfig(COPY_FILE_CHUNK_SIZE_BYTES);
-            byte[] inputData = new byte[chunkSize];
-            int bytesRead;
-            int expectedFileSize = 0;
-            while ((bytesRead = source.read(inputData)) > 0) {
-                byte[] chunk;
-                if (bytesRead == chunkSize) {
-                    chunk = inputData;
-                } else {
-                    chunk = Arrays.copyOf(inputData, bytesRead);
-                }
-                executePsScript(ImmutableList.of("If ((!(Test-Path " + destination + ")) -or ((Get-Item '" + destination + "').length -eq " +
-                        expectedFileSize + ")) {Add-Content -Encoding Byte -path " + destination +
-                        " -value ([System.Convert]::FromBase64String(\"" + new String(Base64.encodeBase64(chunk)) + "\"))}"));
-                expectedFileSize += bytesRead;
-            }
-
-            return 0;
-        } catch (java.io.IOException e) {
-            throw Exceptions.propagate(e);
-        }
-    }
-
-    @Override
-    public void init() {
-        super.init();
-
-        // Register any pre-existing port-mappings with the PortForwardManager
-        Map<Integer, String> tcpPortMappings = getConfig(TCP_PORT_MAPPINGS);
-        if (tcpPortMappings != null) {
-            PortForwardManager pfm = (PortForwardManager) getManagementContext().getLocationRegistry().resolve("portForwardManager(scope=global)");
-            for (Map.Entry<Integer, String> entry : tcpPortMappings.entrySet()) {
-                int targetPort = entry.getKey();
-                HostAndPort publicEndpoint = HostAndPort.fromString(entry.getValue());
-                if (!publicEndpoint.hasPort()) {
-                    throw new IllegalArgumentException("Invalid portMapping ('"+entry.getValue()+"') for port "+targetPort+" in machine "+this);
-                }
-                pfm.associate(publicEndpoint.getHostText(), publicEndpoint, this, targetPort);
-            }
-        }
-    }
-    public String getUser() {
-        return config().get(USER);
-    }
-
-    private String getPassword() {
-        return config().get(PASSWORD);
-    }
-
-    private <T> T getRequiredConfig(ConfigKey<T> key) {
-        return checkNotNull(getConfig(key), "key %s must be set", key);
+        return copyTo(ImmutableMap.of(), source, destination);
     }
     
+    public int copyTo(Map<?,?> props, InputStream source, String destination) {
+        WinRmTool tool = newWinRmTool(props);
+        WinRmToolResponse response = tool.copyToServer(source, destination);
+        return response.getStatusCode();
+    }
+
     public static String getDefaultUserMetadataString() {
         // Using an encoded command obviates the need to escape
         String unencodePowershell = Joiner.on("\r\n").join(ImmutableList.of(

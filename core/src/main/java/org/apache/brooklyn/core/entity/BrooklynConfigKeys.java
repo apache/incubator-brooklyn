@@ -177,6 +177,10 @@ public class BrooklynConfigKeys {
      * and have this prefix pre-prended to the config keys in this class. */
     public static final String BROOKLYN_SSH_CONFIG_KEY_PREFIX = "brooklyn.ssh.config.";
 
+    /** Public-facing global config keys for Brooklyn are defined in ConfigKeys, 
+     * and have this prefix pre-prended to the config keys in this class. */
+    public static final String BROOKLYN_WINRM_CONFIG_KEY_PREFIX = "brooklyn.winrm.config.";
+
     // some checks (this line, and a few Preconditions below) that the remote values aren't null, 
     // because they have some funny circular references
     static { assert BROOKLYN_SSH_CONFIG_KEY_PREFIX.equals(SshTool.BROOKLYN_CONFIG_KEY_PREFIX) : "static final initializer classload ordering problem"; }
@@ -184,6 +188,11 @@ public class BrooklynConfigKeys {
     public static final ConfigKey<String> SSH_TOOL_CLASS = newStringConfigKey(
             BROOKLYN_SSH_CONFIG_KEY_PREFIX + "sshToolClass", 
             "SshTool implementation to use (or null for default)", 
+            null);
+
+    public static final ConfigKey<String> WINRM_TOOL_CLASS = newStringConfigKey(
+            BROOKLYN_WINRM_CONFIG_KEY_PREFIX + "winrmToolClass", 
+            "WinRmTool implementation to use (or null for default)", 
             null);
 
     /**

@@ -34,6 +34,7 @@ import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.test.EntityTestUtils;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,8 +42,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
-
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;

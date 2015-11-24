@@ -39,6 +39,7 @@ import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
@@ -59,8 +60,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
-
 /**
  * Tests execution of commands (batch and powershell) on Windows over WinRM, and of
  * file upload.
@@ -72,8 +71,8 @@ import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
  * Please update the docs if you encountered new situations, or change the behaviuor 
  * of existing use-cases.
  */
-public class WinRmMachineLocationLiveTest {
 
+public class WinRmMachineLocationLiveTest {
     private static final int MAX_EXECUTOR_THREADS = 100;
 
     /*
