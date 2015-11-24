@@ -18,6 +18,11 @@
  */
 package org.apache.brooklyn.rest.client;
 
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -98,11 +103,18 @@ public class BrooklynApiRestClientTest {
         log.info("locations from catalog are: "+locations);
     }
 
+    public void testCatalogCreate()throws Exception {
+        final Response response = api.getCatalogApi().create(getFileContentsAsString("catalog/test-catalog.bom"));
+        Asserts.assertEquals(response.getStatus(),201);
+    }
+
+
+
     public void testApplicationApiList() throws Exception {
         List<ApplicationSummary> apps = api.getApplicationApi().list(null);
         log.info("apps are: "+apps);
     }
-    
+
     public void testApplicationApiCreate() throws Exception {
         Response r1 = api.getApplicationApi().createFromYaml("name: test-1234\n"
             + "services: [ { type: "+TestEntity.class.getName()+" } ]");
@@ -112,14 +124,14 @@ public class BrooklynApiRestClientTest {
         log.info("apps with test: "+apps);
         Asserts.assertStringContains(apps.toString(), "test-1234");
     }
-    
+
     public void testApplicationApiHandledError() throws Exception {
         Response r1 = api.getApplicationApi().createFromYaml("name: test");
         HttpAsserts.assertNotHealthyStatusCode(r1.getStatus());
         // new-style messages first, old-style messages after (during switch to TypePlanTransformer)
-        Asserts.assertStringContainsAtLeastOne(r1.getEntity().toString().toLowerCase(), 
+        Asserts.assertStringContainsAtLeastOne(r1.getEntity().toString().toLowerCase(),
             "invalid plan", "no services");
-        Asserts.assertStringContainsAtLeastOne(r1.getEntity().toString().toLowerCase(), 
+        Asserts.assertStringContainsAtLeastOne(r1.getEntity().toString().toLowerCase(),
             "format could not be recognized", "Unrecognized application blueprint format");
     }
 
@@ -130,5 +142,11 @@ public class BrooklynApiRestClientTest {
         } catch (Exception e) {
             Asserts.expectedFailureContainsIgnoreCase(e, "404", "not found");
         }
+    }
+
+    private String getFileContentsAsString(final String filename) throws Exception {
+        final URL resource = getClass().getClassLoader().getResource(filename);
+        Asserts.assertNotNull(resource);
+        return new String(Files.readAllBytes(Paths.get(resource.toURI())), Charset.defaultCharset());
     }
 }
