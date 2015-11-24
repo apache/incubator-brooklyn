@@ -20,7 +20,10 @@ package org.apache.brooklyn.rest.domain;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -29,6 +32,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /** variant of Catalog*ItemDto objects for JS/JSON serialization;
@@ -55,6 +59,8 @@ public class CatalogItemSummary implements HasId, HasName, Serializable {
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String iconUrl;
     private final String planYaml;
+    @JsonSerialize(include=Inclusion.NON_EMPTY)
+    private final List<Object> tags;
     private final boolean deprecated;
     
     private final Map<String, URI> links;
@@ -67,6 +73,7 @@ public class CatalogItemSummary implements HasId, HasName, Serializable {
             @JsonProperty("planYaml") String planYaml,
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
+            @JsonProperty("tags") Set<Object> tags,
             @JsonProperty("deprecated") boolean deprecated,
             @JsonProperty("links") Map<String, URI> links
             ) {
@@ -79,6 +86,7 @@ public class CatalogItemSummary implements HasId, HasName, Serializable {
         this.planYaml = planYaml;
         this.description = description;
         this.iconUrl = iconUrl;
+        this.tags = (tags == null) ? ImmutableList.of() : ImmutableList.copyOf(tags);
         this.links = (links == null) ? ImmutableMap.<String, URI>of() : ImmutableMap.copyOf(links);
         this.deprecated = deprecated;
     }
@@ -121,6 +129,10 @@ public class CatalogItemSummary implements HasId, HasName, Serializable {
         return iconUrl;
     }
 
+    public Collection<Object> getTags() {
+        return tags;
+    }
+
     public Map<String, URI> getLinks() {
         return links;
     }
@@ -140,7 +152,7 @@ public class CatalogItemSummary implements HasId, HasName, Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(symbolicName, version, name, javaType, deprecated);
+        return Objects.hashCode(symbolicName, version, name, javaType, tags, deprecated);
     }
     
     @Override

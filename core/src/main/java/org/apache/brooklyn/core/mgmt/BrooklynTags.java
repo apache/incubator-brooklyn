@@ -19,10 +19,15 @@
 package org.apache.brooklyn.core.mgmt;
 
 import java.io.Serializable;
+import java.util.List;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 
 /** @since 0.7.0 some strongly typed tags for reference; note these may migrate elsewhere! */
 @Beta
@@ -51,9 +56,59 @@ public class BrooklynTags {
             return contents;
         }
     }
-    
-    public static NamedStringTag newYamlSpecTag(String contents) { return new NamedStringTag(YAML_SPEC_KIND, contents); }
-    public static NamedStringTag newNotesTag(String contents) { return new NamedStringTag(NOTES_KIND, contents); }
+
+    public static class ListTag<T> {
+        @JsonIgnore
+        final List<T> list;
+
+        public ListTag(List<T> list) {
+            this.list = list;
+        }
+
+        public List<T> getList() {
+            return list;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ListTag that = (ListTag) o;
+            return list == null ? that.list == null : list.equals(that.list);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(list);
+        }
+    }
+
+    public static class TraitsTag extends ListTag<String> {
+        public TraitsTag(List<Class<?>> interfaces) {
+            super(Lists.transform(interfaces, new Function<Class<?>, String>() {
+                @Override public String apply(Class<?> input) {
+                    return input.getName();
+                }
+            }));
+        }
+
+        @JsonProperty("traits")
+        public List<String> getTraits() {
+            return super.list;
+        }
+    }
+
+    public static NamedStringTag newYamlSpecTag(String contents) {
+        return new NamedStringTag(YAML_SPEC_KIND, contents);
+    }
+
+    public static NamedStringTag newNotesTag(String contents) {
+        return new NamedStringTag(NOTES_KIND, contents);
+    }
+
+    public static TraitsTag newTraitsTag(List<Class<?>> interfaces) {
+        return new TraitsTag(interfaces);
+    }
     
     public static NamedStringTag findFirst(String kind, Iterable<Object> tags) {
         for (Object object: tags) {

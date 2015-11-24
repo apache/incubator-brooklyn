@@ -29,12 +29,13 @@ import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 public class CatalogEntitySummary extends CatalogItemSummary {
 
     private static final long serialVersionUID = 1063908984191424539L;
-    
+
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<EntityConfigSummary> config;
     
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<SensorSummary> sensors;
+
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<EffectorSummary> effectors;
 
@@ -46,13 +47,14 @@ public class CatalogEntitySummary extends CatalogItemSummary {
             @JsonProperty("planYaml") String planYaml,
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
+            @JsonProperty("tags") Set<Object> tags,
             @JsonProperty("config") Set<EntityConfigSummary> config, 
             @JsonProperty("sensors") Set<SensorSummary> sensors, 
             @JsonProperty("effectors") Set<EffectorSummary> effectors,
             @JsonProperty("deprecated") boolean deprecated,
             @JsonProperty("links") Map<String, URI> links
         ) {
-        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, deprecated, links);
+        super(symbolicName, version, name, javaType, planYaml, description, iconUrl, tags, deprecated, links);
         this.config = config;
         this.sensors = sensors;
         this.effectors = effectors;

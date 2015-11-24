@@ -21,8 +21,7 @@ package org.apache.brooklyn.rest.resources;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.awt.Image;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
@@ -37,6 +36,7 @@ import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
+import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
@@ -44,6 +44,7 @@ import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.domain.CatalogPolicySummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
 import org.eclipse.jetty.http.HttpStatus;
@@ -124,6 +125,16 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         assertEquals(entityItem.getDescription(), "My description");
         assertEquals(entityItem.getIconUrl(), "/v1/catalog/icon/" + symbolicName + "/" + entityItem.getVersion());
         assertEquals(item.getIconUrl(), "classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif");
+
+        // an InterfacesTag should be created for every catalog item
+        assertEquals(entityItem.getTags().size(), 1);
+        Object tag = entityItem.getTags().iterator().next();
+        List<String> actualInterfaces = ((Map<String, List<String>>) tag).get("traits");
+        List<Class<?>> expectedInterfaces = Reflections.getAllInterfaces(TestEntity.class);
+        assertEquals(actualInterfaces.size(), expectedInterfaces.size());
+        for (Class<?> expectedInterface : expectedInterfaces) {
+            assertTrue(actualInterfaces.contains(expectedInterface.getName()));
+        }
 
         byte[] iconData = client().resource("/v1/catalog/icon/" + symbolicName + "/" + TEST_VERSION).get(byte[].class);
         assertEquals(iconData.length, 43);

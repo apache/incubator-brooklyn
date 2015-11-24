@@ -36,6 +36,7 @@ import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.javalang.ReflectionScanner;
@@ -46,6 +47,7 @@ import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Time;
+import org.apache.commons.lang3.ClassUtils;
 import org.reflections.util.ClasspathHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -299,14 +301,17 @@ public class CatalogClasspathDo {
      * @deprecated since 0.7.0 the classpath DO is replaced by libraries */
     @Deprecated
     public CatalogItem<?,?> addCatalogEntry(CatalogItemDtoAbstract<?,?> item, Class<?> c) {
-        Catalog annotations = c.getAnnotation(Catalog.class);
+        Catalog catalogAnnotation = c.getAnnotation(Catalog.class);
         item.setSymbolicName(c.getName());
         item.setJavaType(c.getName());
         item.setDisplayName(firstNonEmpty(c.getSimpleName(), c.getName()));
-        if (annotations!=null) {
-            item.setDisplayName(firstNonEmpty(annotations.name(), item.getDisplayName()));
-            item.setDescription(firstNonEmpty(annotations.description()));
-            item.setIconUrl(firstNonEmpty(annotations.iconUrl()));
+        if (catalogAnnotation!=null) {
+            item.setDisplayName(firstNonEmpty(catalogAnnotation.name(), item.getDisplayName()));
+            item.setDescription(firstNonEmpty(catalogAnnotation.description()));
+            item.setIconUrl(firstNonEmpty(catalogAnnotation.iconUrl()));
+        }
+        if (item instanceof CatalogEntityItemDto || item instanceof CatalogTemplateItemDto) {
+            item.tags().addTag(BrooklynTags.newTraitsTag(ClassUtils.getAllInterfaces(c)));
         }
         if (log.isTraceEnabled())
             log.trace("adding to catalog: "+c+" (from catalog "+catalog+")");

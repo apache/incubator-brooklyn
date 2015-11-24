@@ -35,6 +35,7 @@ import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.core.entity.EntityDynamicType;
+import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.objs.BrooklynTypes;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
@@ -48,7 +49,9 @@ import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.SummaryComparators;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
@@ -63,9 +66,10 @@ public class CatalogTransformer {
         Set<SensorSummary> sensors = Sets.newTreeSet(SummaryComparators.nameComparator());
         Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
 
+        EntitySpec<?> spec = null;
+
         try {
-            @SuppressWarnings({ "unchecked", "rawtypes" })
-            EntitySpec<?> spec = (EntitySpec<?>) b.getCatalog().createSpec((CatalogItem) item);
+            spec = (EntitySpec<?>) b.getCatalog().createSpec((CatalogItem) item);
             EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
             EntityType type = typeMap.getSnapshot();
 
@@ -75,7 +79,7 @@ public class CatalogTransformer {
                 sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
             for (Effector<?> x: type.getEffectors())
                 effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
-            
+
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             
@@ -91,7 +95,7 @@ public class CatalogTransformer {
         return new CatalogEntitySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
             item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
-            config, sensors, effectors,
+            makeTags(spec, item), config, sensors, effectors,
             item.isDeprecated(), makeLinks(item));
     }
 
@@ -115,7 +119,7 @@ public class CatalogTransformer {
         }
         return new CatalogItemSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
-            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), item.isDeprecated(), makeLinks(item));
+            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
@@ -123,7 +127,7 @@ public class CatalogTransformer {
         return new CatalogPolicySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                item.isDeprecated(), makeLinks(item));
+                item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     public static CatalogLocationSummary catalogLocationSummary(BrooklynRestResourceUtils b, CatalogItem<? extends Location,LocationSpec<?>> item) {
@@ -131,7 +135,7 @@ public class CatalogTransformer {
         return new CatalogLocationSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                item.isDeprecated(), makeLinks(item));
+                item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     protected static Map<String, URI> makeLinks(CatalogItem<?,?> item) {
@@ -158,6 +162,23 @@ public class CatalogTransformer {
         if (b.isUrlServerSideAndSafe(iconUrl))
             return "/v1/catalog/icon/"+item.getSymbolicName() + "/" + item.getVersion();
         return iconUrl;
+    }
+
+    private static Set<Object> makeTags(EntitySpec<?> spec, CatalogItem<?, ?> item) {
+        // Combine tags on item with an InterfacesTag.
+        Set<Object> tags = MutableSet.copyOf(item.tags().getTags());
+        if (spec != null) {
+            Class<?> type;
+            if (spec.getImplementation() != null) {
+                type = spec.getImplementation();
+            } else {
+                type = spec.getType();
+            }
+            if (type != null) {
+                tags.add(new BrooklynTags.TraitsTag(Reflections.getAllInterfaces(type)));
+            }
+        }
+        return tags;
     }
     
 }
