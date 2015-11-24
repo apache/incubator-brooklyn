@@ -38,6 +38,7 @@ import org.apache.brooklyn.enricher.stock.reducer.Reducer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.collections.QuorumCheck;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
@@ -891,6 +892,38 @@ public class Enrichers {
         return result;
     }
     
+    @Beta
+    public static class ComputingIsQuorate<T> implements Function<Collection<Boolean>, Boolean> {
+        protected final TypeToken<T> typeToken;
+        protected final QuorumCheck quorumCheck;
+        protected final int totalSize;
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public ComputingIsQuorate(TypeToken<T> typeToken, QuorumCheck quorumCheck, int totalSize) {
+            this.quorumCheck = quorumCheck;
+            this.totalSize = totalSize;
+
+            if (typeToken!=null && TypeToken.of(Boolean.class).isAssignableFrom(typeToken.getType())) {
+                this.typeToken = typeToken;
+            } else if (typeToken==null || typeToken.isAssignableFrom(Boolean.class)) {
+                this.typeToken = (TypeToken)TypeToken.of(Boolean.class);
+            } else {
+                throw new IllegalArgumentException("Type " + typeToken + " is not valid for " + this + " -- expected " + TypeToken.of(Boolean.class));
+            }
+        }
+
+        @Override
+        public Boolean apply(Collection<Boolean> input) {
+            int numTrue = 0;
+
+            for (Boolean inputVal : input)
+                if (Boolean.TRUE.equals(inputVal))
+                    numTrue++;
+
+            return Boolean.valueOf(quorumCheck.isQuorate(numTrue, totalSize));
+        }
+    }
+
     private static <T> Map<T,T> newIdentityMap(Set<T> keys) {
         Map<T,T> result = Maps.newLinkedHashMap();
         for (T key : keys) {
@@ -899,5 +932,4 @@ public class Enrichers {
         return result;
     }
     
-
 }
