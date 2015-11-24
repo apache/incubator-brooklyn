@@ -101,11 +101,7 @@
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>jaxrs-api</artifactId>
         </dependency-->
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-jaxrs</artifactId>
-        </dependency>
-
+        
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
