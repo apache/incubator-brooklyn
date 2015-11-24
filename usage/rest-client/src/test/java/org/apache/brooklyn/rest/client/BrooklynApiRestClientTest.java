@@ -105,7 +105,8 @@ public class BrooklynApiRestClientTest {
 
     public void testCatalogCreate()throws Exception {
         final Response response = api.getCatalogApi().create(getFileContentsAsString("catalog/test-catalog.bom"));
-        Asserts.assertEquals(response.getStatus(),201);
+        Asserts.assertEquals(response.getStatus(), 201);
+        Asserts.assertStringContains(String.valueOf(response.getEntity()), "simple-tomcat:1.0");
     }
 
 

@@ -65,7 +65,7 @@ public interface CatalogApi {
     @Consumes
     @POST
     @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor "
-        + "Return value is map of ID to CatalogItemSummary, with code 201 CREATED.", response = Response.class)
+        + "Return value is map of ID to CatalogItemSummary, with code 201 CREATED.", response = String.class)
     public Response create(
             @ApiParam(name = "yaml", value = "YAML descriptor of catalog item", required = true)
             @Valid String yaml);
