@@ -712,8 +712,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         new Object[] {template, template.getOptions(), setup.getDescription()});
 
                 if (!setup.getUnusedConfig().isEmpty())
-                    LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "+
-                            setup.getUnusedConfig());
+                    if (LOG.isDebugEnabled())
+                        LOG.debug("NOTE: unused flags passed to obtain VM in "+setup.getDescription()+": "
+                                + Sanitizer.sanitize(setup.getUnusedConfig()));
                 
                 nodes = computeService.createNodesInGroup(groupId, 1, template);
                 provisionTimestamp = Duration.of(provisioningStopwatch);
@@ -1097,7 +1098,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     @Override
     public MachineLocation resumeMachine(Map<?, ?> flags) {
         ConfigBag setup = ConfigBag.newInstanceExtending(config().getBag(), flags);
-        LOG.info("{} using resuming node matching properties: {}", this, setup);
+        LOG.info("{} using resuming node matching properties: {}", this, Sanitizer.sanitize(setup));
         ComputeService computeService = getComputeService(setup);
         NodeMetadata node = findNodeOrThrow(setup);
         LOG.debug("{} resuming {}", this, node);
