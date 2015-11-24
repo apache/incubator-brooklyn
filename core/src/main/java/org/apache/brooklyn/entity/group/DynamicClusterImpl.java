@@ -139,18 +139,33 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     private static final Function<Collection<Entity>, Entity> defaultRemovalStrategy = new Function<Collection<Entity>, Entity>() {
         @Override public Entity apply(Collection<Entity> contenders) {
-            // choose newest entity that is stoppable, or if none are stoppable take the newest non-stoppable
-            long newestTime = 0;
+            /*
+             * Choose the newest entity (largest cluster member ID or latest timestamp) that is stoppable.
+             * If none are stoppable, take the newest non-stoppable.
+             * 
+             * Both cluster member ID and timestamp must be taken into consideration to account for legacy
+             * clusters that were created before the addition of the cluster member ID config value.
+             */
+            int largestClusterMemberId = -1;
+            long newestTime = 0L;
             Entity newest = null;
 
             for (Entity contender : contenders) {
-                boolean newer = contender.getCreationTime() > newestTime;
+                Integer contenderClusterMemberId = contender.config().get(CLUSTER_MEMBER_ID);
+                long contenderCreationTime = contender.getCreationTime();
+
+                boolean newer = (contenderClusterMemberId != null && contenderClusterMemberId > largestClusterMemberId) ||
+                        contenderCreationTime > newestTime;
+
                 if ((contender instanceof Startable && newer) || 
                     (!(newest instanceof Startable) && ((contender instanceof Startable) || newer))) {
                     newest = contender;
-                    newestTime = contender.getCreationTime();
+
+                    if (contenderClusterMemberId != null) largestClusterMemberId = contenderClusterMemberId;
+                    newestTime = contenderCreationTime;
                 }
             }
+
             return newest;
         }
     };
