@@ -225,6 +225,7 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
     @Test(groups = {"Integration"})
     public void testAllocatePty() {
         final ShellTool localtool = newTool(MutableMap.of("host", "localhost", SshTool.PROP_ALLOCATE_PTY.getName(), true));
+        connect(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
