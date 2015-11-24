@@ -16,29 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.webapp;
+package org.apache.brooklyn.location.paas;
 
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
-public interface JavaWebAppSoftwareProcess extends SoftwareProcess, JavaWebAppService, JavaWebAppService.CanDeployAndUndeploy {
+/**
+ * It contains the parameters needed to configure an PaasLocation. For example, the ConfigKey
+ * {@link #REQUIRED_MEMORY} allows to specify a initial memory amount used in a location.
+ */
+public interface PaasLocationConfig {
 
-    //TODO:probably, this ConfigKey could be moved to the children classes
-    @SetFromFlag("buildpack")
-    ConfigKey<String> BUILDPACK= ConfigKeys.newStringConfigKey(
-            "cloudFoundryWebApp.application.buildpack", "URL of the required buildpack",
-            "https://github.com/cloudfoundry/java-buildpack.git");
+    @SetFromFlag("profile.instances")
+    ConfigKey<Integer> REQUIRED_INSTANCES = ConfigKeys.newIntegerConfigKey(
+            "instances", "Required instances to deploy the application", 1);
 
-    // exist on the interface for freemarker to pick it up
-    
-    public boolean isHttpEnabled();
-    public boolean isHttpsEnabled();
-    public Integer getHttpPort();
-    public Integer getHttpsPort();
-    public String getHttpsSslKeyAlias();
-    public String getHttpsSslKeystorePassword();
+    @SetFromFlag("profile.instances")
+    ConfigKey<Integer> REQUIRED_MEMORY = ConfigKeys.newIntegerConfigKey(
+            "memory", "Required memory to deploy the application (MB)", 512);
+
+    @SetFromFlag("profile.instances")
+    ConfigKey<Integer> REQUIRED_DISK = ConfigKeys.newIntegerConfigKey(
+            "disk", "Required disk to deploy the application (MB)", 1024);
+
 
 }

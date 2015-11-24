@@ -16,20 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.machine;
+package org.apache.brooklyn.entity.software.base.behaviour.softwareprocess;
 
-import org.apache.brooklyn.api.location.MachineProvisioningLocation;
-import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
-import org.apache.brooklyn.util.core.config.ConfigBag;
 
-import com.google.common.annotations.Beta;
+import org.apache.brooklyn.entity.software.base.behaviour.softwareprocess.flagssupplier.LocationFlagSupplier;
+import org.apache.brooklyn.entity.software.base.lifecycle.LifecycleEffectorTasks;
 
-/** Marker interface for an entity which supplies custom machine provisioning flags;
- * used e.g. in {@link org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks}.
- * @since 0.6.0 */
-@Beta
-public interface ProvidesProvisioningFlags {
+public interface SoftwareProcessImplBehaviourFactory {
 
-    public ConfigBag obtainProvisioningFlags(MachineProvisioningLocation<?> location);
-    
+    public LifecycleEffectorTasks getLifecycleEffectorTasks();
+    public LocationFlagSupplier getLocationFlagSupplier();
+
 }

@@ -16,20 +16,31 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.machine;
+package org.apache.brooklyn.entity.software.base.lifecycle;
 
-import org.apache.brooklyn.api.location.MachineProvisioningLocation;
-import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
-import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import com.google.common.annotations.Beta;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 
-/** Marker interface for an entity which supplies custom machine provisioning flags;
- * used e.g. in {@link org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks}.
- * @since 0.6.0 */
+import java.util.Collection;
+
 @Beta
-public interface ProvidesProvisioningFlags {
+public interface LifecycleEffectorTasks {
 
-    public ConfigBag obtainProvisioningFlags(MachineProvisioningLocation<?> location);
-    
+
+    void attachLifecycleEffectors(Entity entity);
+
+    void start(Collection<? extends Location> locations);
+
+    void restart(ConfigBag parameters);
+
+    void stop(ConfigBag paramters);
+
+    void suspend(ConfigBag paramters);
+
+
+    @Deprecated
+    void stop();
 }

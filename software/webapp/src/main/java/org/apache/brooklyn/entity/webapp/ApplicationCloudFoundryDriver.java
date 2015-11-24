@@ -16,20 +16,35 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.entity.machine;
+package org.apache.brooklyn.entity.webapp;
 
-import org.apache.brooklyn.api.location.MachineProvisioningLocation;
-import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
-import org.apache.brooklyn.util.core.config.ConfigBag;
 
-import com.google.common.annotations.Beta;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
 
-/** Marker interface for an entity which supplies custom machine provisioning flags;
- * used e.g. in {@link org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks}.
- * @since 0.6.0 */
-@Beta
-public interface ProvidesProvisioningFlags {
+public interface ApplicationCloudFoundryDriver extends SoftwareProcessDriver {
 
-    public ConfigBag obtainProvisioningFlags(MachineProvisioningLocation<?> location);
-    
+    //TODO delete?
+    /**
+     * Kills the process, ungracefully and immediately where possible (e.g. with `kill -9`).
+     */
+    void deleteApplication();
+
+    /**
+     * Return the number of instances that are used for an application.
+     * @return
+     */
+    int getInstancesNumber();
+
+    /**
+     * Return the current disk quota used by the application.
+     * @return
+     */
+    int getDisk();
+
+    /**
+     * Return the current assigned memory to the application.
+     * @return
+     */
+    int getMemory();
+
 }

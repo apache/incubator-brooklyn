@@ -206,6 +206,7 @@
 
         <module>locations/jclouds</module>
         <module>karaf</module>
+        <module>locations/cloudfoundry</module>
 
         <!-- module>sandbox/cassandra-multicloud-snitch</module -->
         <!-- module>sandbox/database</module -->

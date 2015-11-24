@@ -18,19 +18,13 @@
  */
 package org.apache.brooklyn.entity.java;
 
-import static org.testng.Assert.fail;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapDifference.ValueDifference;
+import com.google.common.collect.Maps;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableList;
@@ -46,10 +40,15 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.MapDifference.ValueDifference;
-import com.google.common.collect.Maps;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.testng.Assert.fail;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class JavaOptsTest extends BrooklynAppUnitTestSupport {
@@ -150,7 +149,7 @@ public class JavaOptsTest extends BrooklynAppUnitTestSupport {
     }
     
     public static class TestingJavaOptsVanillaJavaAppImpl extends VanillaJavaAppImpl {
-        @Override public VanillaJavaAppSshDriver newDriver(MachineLocation loc) {
+        @Override public VanillaJavaAppSshDriver newDriver(Location loc) {
             return new VanillaJavaAppSshDriver(this, (SshMachineLocation)loc) {
                 @Override protected List<String> getCustomJavaConfigOptions() {
                     return MutableList.<String>builder()

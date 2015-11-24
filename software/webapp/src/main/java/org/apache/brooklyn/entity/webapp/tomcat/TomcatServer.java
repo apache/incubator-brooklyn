@@ -84,4 +84,9 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
 
     AttributeSensor<String> JMX_SERVICE_URL = UsesJmx.JMX_URL;
 
+    @SetFromFlag("buildpack")
+    ConfigKey<String> BUILDPACK= ConfigKeys.newStringConfigKey(
+            "cloudFoundryWebApp.application.buildpack", "URL of the required buildpack",
+            "https://github.com/cloudfoundry/java-buildpack.git");
+
 }
