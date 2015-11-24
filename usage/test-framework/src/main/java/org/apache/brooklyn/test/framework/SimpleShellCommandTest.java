@@ -19,6 +19,7 @@
 package org.apache.brooklyn.test.framework;
 
 import com.google.common.collect.Maps;
+import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
@@ -26,6 +27,8 @@ import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKey;
@@ -87,21 +90,24 @@ public interface SimpleShellCommandTest extends BaseTest {
      * If not explicitly configured, the default assertion is a non-zero exit code.
      */
     @SetFromFlag("assertStatus")
-    ConfigKey<Map> ASSERT_STATUS = ConfigKeys.newConfigKey(Map.class, "assert.status",
-            "Assertions on command exit code", Maps.newLinkedHashMap());
+    ConfigKey<List<Map<String, Object>>> ASSERT_STATUS = ConfigKeys.newConfigKey(
+        new TypeToken<List<Map<String, Object>>>() {},
+        "assert.status", "Assertions on command exit code", new ArrayList<Map<String, Object>>());
 
     /**
      * Assertions on the standard output of the command as a String.
      */
     @SetFromFlag("assertOut")
-    ConfigKey<Map> ASSERT_OUT = ConfigKeys.newConfigKey(Map.class, "assert.out",
-            "Assertions on command standard output", Maps.newLinkedHashMap());
+    ConfigKey<List<Map<String, Object>>> ASSERT_OUT = ConfigKeys.newConfigKey(
+        new TypeToken<List<Map<String, Object>>>() {},
+        "assert.out", "Assertions on command standard output", new ArrayList<Map<String, Object>>());
 
     /**
      * Assertions on the standard error of the command as a String.
      */
     @SetFromFlag("assertErr")
-    ConfigKey<Map> ASSERT_ERR = ConfigKeys.newConfigKey(Map.class, "assert.err",
-            "Assertions on command standard error", Maps.newLinkedHashMap());
+    ConfigKey<List<Map<String, Object>>> ASSERT_ERR = ConfigKeys.newConfigKey(
+        new TypeToken<List<Map<String, Object>>>() {},
+        "assert.err", "Assertions on command standard error", new ArrayList<Map<String, Object>>());
 
 }

@@ -27,6 +27,7 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.time.Duration;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,12 +53,13 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
         final String url = getConfig(TARGET_URL);
         final List<Map<String, Object>> assertions = getConfig(ASSERTIONS);
         final Duration timeout = getConfig(TIMEOUT);
-        final HttpAssertionTarget httpAssertionTarget = getConfig(ASSERTION_TARGET);
+        final HttpAssertionTarget target = getConfig(ASSERTION_TARGET);
+
         try {
-            TestFrameworkAssertions.checkAssertions(buildDataSupplier(httpAssertionTarget, url),
-                    ImmutableMap.of("timeout", timeout), assertions);
+            doRequestAndCheckAssertions(ImmutableMap.of("timeout", timeout), assertions, target, url);
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
+
         } catch (Throwable t) {
             LOG.info("{} Url [{}] test failed", this, url);
             sensors().set(SERVICE_UP, false);
@@ -66,31 +68,35 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
         }
     }
 
-    private Supplier<String> buildDataSupplier(final HttpAssertionTarget httpAssertionTarget, final String url) {
-
-        switch (httpAssertionTarget) {
+    private void doRequestAndCheckAssertions(Map<String, Duration> flags, List<Map<String, Object>> assertions,
+                                             HttpAssertionTarget target, final String url) {
+        switch (target) {
             case body:
-                return new Supplier<String>() {
+                Supplier<String> getBody = new Supplier<String>() {
                     @Override
                     public String get() {
                         return HttpTool.getContent(url);
                     }
                 };
+                TestFrameworkAssertions.checkAssertions(flags, assertions, target.toString(), getBody);
+                break;
             case status:
-                return new Supplier<String>() {
+                Supplier<Integer> getStatusCode = new Supplier<Integer>() {
                     @Override
-                    public String get() {
+                    public Integer get() {
                         try {
-                            return String.valueOf(HttpTool.getHttpStatusCode(url));
+                            return HttpTool.getHttpStatusCode(url);
                         } catch (Exception e) {
-                            LOG.error("HTTP call to [{}] failed due to [{}] ... returning Status code [0 - Unreachable]", url, e.getMessage());
-                            return "0";
+                            LOG.error("HTTP call to [{}] failed due to [{}] ... returning Status code [500]",
+                                url, e.getMessage());
+                            return HttpStatus.SC_INTERNAL_SERVER_ERROR;
                         }
-
                     }
                 };
+                TestFrameworkAssertions.checkAssertions(flags, assertions, target.toString(), getStatusCode);
+                break;
             default:
-                throw new RuntimeException("Unable to build a data supplier to target assertion [" + httpAssertionTarget + "]");
+                throw new RuntimeException("Unexpected assertion target (" + target + ")");
         }
     }
 

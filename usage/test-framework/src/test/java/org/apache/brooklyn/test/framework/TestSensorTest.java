@@ -50,6 +50,7 @@ public class TestSensorTest {
 
     private static final AttributeSensorAndConfigKey<Boolean, Boolean> BOOLEAN_SENSOR = ConfigKeys.newSensorAndConfigKey(Boolean.class, "boolean-sensor", "Boolean Sensor");
     private static final AttributeSensorAndConfigKey<String, String> STRING_SENSOR = ConfigKeys.newSensorAndConfigKey(String.class, "string-sensor", "String Sensor");
+    private static final AttributeSensorAndConfigKey<Integer, Integer> INTEGER_SENSOR = ConfigKeys.newIntegerSensorAndConfigKey("integer-sensor", "Integer Sensor");
     private static final AttributeSensorAndConfigKey<Object, Object> OBJECT_SENSOR = ConfigKeys.newSensorAndConfigKey(Object.class, "object-sensor", "Object Sensor");
 
     private TestApplication app;
@@ -73,6 +74,8 @@ public class TestSensorTest {
 
     @Test
     public void testAssertEqual() {
+        int testInteger = 100;
+
         //Add Sensor Test for BOOLEAN sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
@@ -83,12 +86,20 @@ public class TestSensorTest {
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
                 .configure(TestSensor.ASSERTIONS, newAssertion("equals", testId)));
+        //Add Sensor Test for INTEGER sensor
+        app.createAndManageChild(EntitySpec.create(TestSensor.class)
+                .configure(TestSensor.TARGET_ENTITY, app)
+                .configure(TestSensor.SENSOR_NAME, INTEGER_SENSOR.getName())
+                .configure(TestSensor.ASSERTIONS, newAssertion("equals", testInteger)));
 
         //Set BOOLEAN Sensor to true
         app.sensors().set(BOOLEAN_SENSOR, Boolean.TRUE);
+
+        // Give a value to INTEGER sensor
+        app.sensors().set(INTEGER_SENSOR, testInteger);
+
         //Set STRING sensor to random string
         app.sensors().set(STRING_SENSOR, testId);
-
 
         app.start(ImmutableList.of(loc));
 
@@ -119,7 +130,7 @@ public class TestSensorTest {
     }
 
     @Test
-    public void testAssertEqualOnNullSenor() {
+    public void testAssertEqualOnNullSensor() {
         boolean booleanAssertFailed = false;
 
         //Add Sensor Test for BOOLEAN sensor
@@ -145,12 +156,12 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, BOOLEAN_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, newAssertion("isNull", "")));
+                .configure(TestSensor.ASSERTIONS,  newAssertion("isNull", true)));
         //Add Sensor Test for STRING sensor
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, newAssertion("notNUll", "")));
+                .configure(TestSensor.ASSERTIONS, newAssertion("notNull", true)));
 
         //Set STRING sensor to random string
         app.sensors().set(STRING_SENSOR, testId);
@@ -167,7 +178,7 @@ public class TestSensorTest {
         app.createAndManageChild(EntitySpec.create(TestSensor.class)
                 .configure(TestSensor.TARGET_ENTITY, app)
                 .configure(TestSensor.SENSOR_NAME, STRING_SENSOR.getName())
-                .configure(TestSensor.ASSERTIONS, newAssertion("isNull", "true")));
+                .configure(TestSensor.ASSERTIONS, newAssertion("isNull", true)));
 
         //Set STRING sensor to random string
         app.sensors().set(STRING_SENSOR, testId);

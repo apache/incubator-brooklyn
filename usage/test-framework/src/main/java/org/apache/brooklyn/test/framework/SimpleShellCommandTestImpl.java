@@ -21,6 +21,7 @@ package org.apache.brooklyn.test.framework;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
@@ -28,7 +29,7 @@ import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.test.framework.TestFrameworkAssertions.AssertionSupport;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.ssh.SshTasks;
@@ -36,6 +37,7 @@ import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,10 +47,8 @@ import java.util.*;
 
 import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.*;
 import static org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.setExpectedState;
-import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 import static org.apache.brooklyn.util.text.Strings.isBlank;
 import static org.apache.brooklyn.util.text.Strings.isNonBlank;
-import static org.apache.commons.collections.MapUtils.isEmpty;
 
 // TODO assertions below should use TestFrameworkAssertions but that class needs to be improved to give better error messages
 public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleShellCommandTest {
@@ -107,11 +107,21 @@ public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleSh
         LOG.debug("{}, Result is {}\nwith output [\n{}\n] and error [\n{}\n]", new Object[] {
             this, result.getExitCode(), shorten(result.getStdout()), shorten(result.getStderr())
         });
+        ImmutableMap<String, Duration> flags = ImmutableMap.of("timeout", getConfig(TIMEOUT));
         AssertionSupport support = new AssertionSupport();
-        checkAssertions(support, exitCodeAssertions(), "exit code", result.getExitCode());
-        checkAssertions(support, getConfig(ASSERT_OUT), "stdout", result.getStdout());
-        checkAssertions(support, getConfig(ASSERT_ERR), "stderr", result.getStderr());
+        TestFrameworkAssertions.checkAssertions(support, flags, exitCodeAssertions(), "exit code", supply(result.getExitCode()));
+        TestFrameworkAssertions.checkAssertions(support, flags, getConfig(ASSERT_OUT), "stdout", supply(result.getStdout()));
+        TestFrameworkAssertions.checkAssertions(support, flags, getConfig(ASSERT_ERR), "stderr", supply(result.getStderr()));
         support.validate();
+    }
+
+    private static <T> Supplier<T> supply(final T t) {
+        return new Supplier<T>() {
+            @Override
+            public T get() {
+                return t;
+            }
+        };
     }
 
     private String shorten(String text) {
@@ -228,89 +238,14 @@ public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleSh
         return scriptName;
     }
     
-    private <T> void checkAssertions(AssertionSupport support, Map<?, ?> assertions, String target, T actual) {
-        if (null == assertions) {
-            return;
-        }
-        if (null == actual) {
-            support.fail(target, "no actual value", "");
-            return;
-        }
-        for (Map.Entry<?, ?> assertion : assertions.entrySet()) {
-            String condition = assertion.getKey().toString();
-            Object expected = assertion.getValue();
-            switch (condition) {
-                case EQUALS :
-                    if (!actual.equals(expected)) {
-                        support.fail(target, EQUALS, expected);
-                    }
-                    break;
-                case CONTAINS :
-                    if (!actual.toString().contains(expected.toString())) {
-                        support.fail(target, CONTAINS, expected);
-                    }
-                    break;
-                case IS_EMPTY:
-                    if (!actual.toString().isEmpty() && truth(expected)) {
-                        support.fail(target, IS_EMPTY, expected);
-                    }
-                    break;
-                case MATCHES :
-                    if (!actual.toString().matches(expected.toString())) {
-                        support.fail(target, MATCHES, expected);
-                    }
-                    break;
-                default:
-                    support.fail(target, "unknown condition", condition);
-            }
-        }
-    }
 
-    private Map<?, ?> exitCodeAssertions() {
-        Map<?, ?> assertStatus = getConfig(ASSERT_STATUS);
-        if (isEmpty(assertStatus)) {
-            assertStatus = ImmutableMap.of(EQUALS, SUCCESS);
+    private List<Map<String, Object>> exitCodeAssertions() {
+        List<Map<String, Object>> assertStatus = getConfig(ASSERT_STATUS);
+        if (assertStatus.isEmpty()) {
+            Map<String, Object> shouldSucceed = ImmutableMap.<String,Object>of(EQUALS, SUCCESS);
+            assertStatus.add(shouldSucceed);
         }
         return assertStatus;
     }
 
-    public static class FailedAssertion {
-        String target;
-        String assertion;
-        String expected;
-
-        public FailedAssertion(String target, String assertion, String expected) {
-            this.target = target;
-            this.assertion = assertion;
-            this.expected = expected;
-        }
-        public String description() {
-            return Joiner.on(' ').join(target, assertion, expected);
-        }
-    }
-
-    /**
-     * A convenience to collect and validate any assertion failures.
-     */
-    public static class AssertionSupport {
-        private List<FailedAssertion> failures = new ArrayList<>();
-
-        public void fail(String target, String assertion, Object expected) {
-            failures.add(new FailedAssertion(target, assertion, expected.toString()));
-        }
-
-        /**
-         * @throws AssertionError if any failures were collected.
-         */
-        public void validate() {
-            if (0 < failures.size()) {
-                StringBuilder summary = new StringBuilder();
-                summary.append("Assertion Failures: \n");
-                for (FailedAssertion fail : failures) {
-                    summary.append(fail.description()).append("\n");
-                }
-                Asserts.fail(summary.toString());
-            }
-        }
-    }
 }
