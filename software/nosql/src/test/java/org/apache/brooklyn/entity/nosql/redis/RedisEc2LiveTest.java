@@ -18,10 +18,16 @@
  */
 package org.apache.brooklyn.entity.nosql.redis;
 
+import static org.testng.Assert.assertNotNull;
+
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.EntityAsserts;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
@@ -30,6 +36,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 public class RedisEc2LiveTest extends AbstractEc2LiveTest {
 
@@ -60,6 +67,25 @@ public class RedisEc2LiveTest extends AbstractEc2LiveTest {
 
     }
 
-    @Test(enabled=false)
-    public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
+    @Test(groups = {"Live"})
+    public void testWithOnlyPort22() throws Exception {
+        // CentOS-6.3-x86_64-GA-EBS-02-85586466-5b6c-4495-b580-14f72b4bcf51-ami-bb9af1d2.1
+        jcloudsLocation = mgmt.getLocationRegistry().resolve(LOCATION_SPEC, ImmutableMap.of(
+                "tags", ImmutableList.of(getClass().getName()),
+                "imageId", "us-east-1/ami-a96b01c0", 
+                "hardwareId", SMALL_HARDWARE_ID));
+
+        RedisStore server = app.createAndManageChild(EntitySpec.create(RedisStore.class)
+                .configure(RedisStore.PROVISIONING_PROPERTIES.subKey(CloudLocationConfig.INBOUND_PORTS.getName()), ImmutableList.of(22)));
+        
+        app.start(ImmutableList.of(jcloudsLocation));
+        
+        EntityAsserts.assertAttributeEqualsEventually(server, Attributes.SERVICE_UP, true);
+        EntityAsserts.assertAttributeEqualsEventually(server, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        
+        Integer port = server.getAttribute(RedisStore.REDIS_PORT);
+        assertNotNull(port);
+        
+        assertViaSshLocalPortListeningEventually(server, port);
+    }
 }
