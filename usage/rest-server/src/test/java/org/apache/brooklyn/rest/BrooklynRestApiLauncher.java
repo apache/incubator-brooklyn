@@ -71,6 +71,7 @@ import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
 import org.eclipse.jetty.server.NetworkConnector;
+import org.apache.brooklyn.rest.filter.SwaggerFilter;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -99,7 +100,8 @@ public class BrooklynRestApiLauncher {
             RequestTaggingFilter.class,
             BrooklynPropertiesSecurityFilter.class,
             LoggingFilter.class,
-            HaMasterCheckFilter.class);
+            HaMasterCheckFilter.class,
+            SwaggerFilter.class);
 
     private boolean forceUseOfDefaultCatalogWithJavaClassPath = false;
     private Class<? extends SecurityProvider> securityProvider;

@@ -23,10 +23,6 @@ import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 
 public class PlatformComponentTemplateDto extends ResourceDto {
 
-    // defined as a constant so can be used in Swagger REST API annotations
-    public static final String CLASS_NAME = "org.apache.brooklyn.camp.server.dto.PlatformComponentTemplateDto";
-    static { assert CLASS_NAME.equals(PlatformComponentTemplateDto.class.getCanonicalName()); }
- 
     protected PlatformComponentTemplateDto() {}
     protected PlatformComponentTemplateDto(DtoFactory dtoFactory, PlatformComponentTemplate x) {
         super(dtoFactory, x);

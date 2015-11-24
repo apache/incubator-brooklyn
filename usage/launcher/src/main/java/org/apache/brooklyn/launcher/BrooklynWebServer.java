@@ -37,6 +37,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import javax.servlet.DispatcherType;
 
+import org.apache.brooklyn.rest.filter.SwaggerFilter;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.SessionManager;
@@ -437,6 +438,7 @@ public class BrooklynWebServer {
         }
         rootContext.addFilter(LoggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         rootContext.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+        rootContext.addFilter(SwaggerFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
         installAsServletFilter(rootContext);
 
         server.setHandler(handlers);

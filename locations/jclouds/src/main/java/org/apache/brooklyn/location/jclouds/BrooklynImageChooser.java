@@ -152,7 +152,7 @@ public class BrooklynImageChooser implements Cloneable {
                     // on softlayer, prefer images where family is part of the image id
                     // (this is the only way to identiy official images; but in other clouds
                     // it can cause not-so-good images to get selected!)
-                    if (img.getId().toLowerCase().indexOf(os.getFamily().toString().toLowerCase()) >= 0)
+                    if (img.getId().toLowerCase().contains(os.getFamily().toString().toLowerCase()))
                         score += 0.5;
                 }
             }

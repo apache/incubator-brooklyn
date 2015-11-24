@@ -11,8 +11,8 @@ familiarise yourself with the standard workflow for Apache Brooklyn:
 * [Guide for contributors][CONTRIB]
 * [Guide for committers][COMMIT]
 
-[CONTRIB]: https://brooklyn.incubator.apache.org/community/how-to-contribute-docs.html
-[COMMIT]: https://brooklyn.incubator.apache.org/developers/committers/index.html
+[CONTRIB]: https://brooklyn.apache.org/community/how-to-contribute-docs.html
+[COMMIT]: https://brooklyn.apache.org/developers/committers/index.html
 
 
 Workstation Setup
@@ -131,7 +131,7 @@ The two micro-sites above are installed on the live website as follows:
 * `/v/<version>`: contains specific versions of the guide,
   with the special folder `/v/latest` containing the recent preferred stable/milestone version 
 
-The site itself is hosted at `brooklyn.incubator.apache.org` with a `CNAME`
+The site itself is hosted at `brooklyn.apache.org` with a `CNAME`
 record from `brooklyn.io`.
 
 Content is published to the site by updating an 

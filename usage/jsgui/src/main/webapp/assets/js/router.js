@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
@@ -15,17 +15,17 @@
  * KIND, either express or implied.  See the License for the
  * specific language governing permissions and limitations
  * under the License.
-*/
+ */
 define([
     "brooklyn", "underscore", "jquery", "backbone",
     "model/application", "model/app-tree", "model/location", 
     "model/server-extended-status",
-    "view/home", "view/application-explorer", "view/catalog", "view/apidoc", "view/script-groovy",
+    "view/home", "view/application-explorer", "view/catalog", "view/script-groovy",
     "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-caution.html"
 ], function (Brooklyn, _, $, Backbone,
         Application, AppTree, Location, 
         serverStatus,
-        HomeView, ExplorerView, CatalogView, ApidocView, ScriptGroovyView, 
+        HomeView, ExplorerView, CatalogView, ScriptGroovyView,
         HelpHtml, LabsHtml, ServerCautionHtml) {
 
     var ServerCautionOverlay = Backbone.View.extend({
@@ -128,7 +128,6 @@ define([
             'v1/locations':'catalogPage',
             'v1/catalog/:kind(/:id)':'catalogPage',
             'v1/catalog':'catalogPage',
-            'v1/apidoc':'apidocPage',
             'v1/script/groovy':'scriptGroovyPage',
             'v1/help':'helpPage',
             'labs':'labsPage',
@@ -198,13 +197,6 @@ define([
                 id: id
             });
             this.showView("#application-content", catalogResource);
-        },
-        apidocPage:function () {
-            var apidocResource = new ApidocView({})
-            this.showView("#application-content", apidocResource)
-            $(".nav1").removeClass("active")
-            $(".nav1_script").addClass("active")
-            $(".nav1_apidoc").addClass("active")
         },
         scriptGroovyPage:function () {
             if (this.scriptGroovyResource === undefined)

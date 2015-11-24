@@ -18,8 +18,8 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
-import com.wordnik.swagger.core.ApiOperation;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -28,7 +28,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 @Path("/v1/version")
-@Apidoc("Version")
+@Api("Version")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 /** @deprecated since 0.7.0; use /v1/server/version */
@@ -37,6 +37,7 @@ public interface VersionApi {
 
   @GET
   @ApiOperation(value = "Return version identifier information for this Brooklyn instance; deprecated, use /server/version", 
-          responseClass = "String", multiValueResponse = false)
+          response = String.class,
+          responseContainer = "List")
   public String getVersion();
 }

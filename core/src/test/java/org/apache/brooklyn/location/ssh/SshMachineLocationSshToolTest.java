@@ -18,9 +18,13 @@
  */
 package org.apache.brooklyn.location.ssh;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+import java.util.Map;
+
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool;
 import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool.ExecCmd;
@@ -30,9 +34,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 
 /**
- * Test that the right SshTool is picked up, based on the {@link SshMachineLocation}'s configuration.
+ * Test that the right SshTool is picked up (and configured), based on the 
+ * {@link SshMachineLocation}'s configuration.
  */
 public class SshMachineLocationSshToolTest extends BrooklynAppUnitTestSupport {
 
@@ -41,18 +48,18 @@ public class SshMachineLocationSshToolTest extends BrooklynAppUnitTestSupport {
     // configuration options. If you *just* instantiate the location directly, then it doesn't get the
     // mgmt.config options.
     //
-    // See EntitySshToolTest for an equivalent that configures the SshTool on the management context
-    // and on the entity.
+    // See EntitySshToolTest in software-base for an equivalent that configures the SshTool on the 
+    // management context and on the entity.
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
-        RecordingSshTool.execScriptCmds.clear();
+        RecordingSshTool.clear();
     }
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        RecordingSshTool.execScriptCmds.clear();
+        RecordingSshTool.clear();
         super.tearDown();
     }
 
@@ -82,7 +89,35 @@ public class SshMachineLocationSshToolTest extends BrooklynAppUnitTestSupport {
                 .configure(SshTool.PROP_TOOL_CLASS.getName(), "class.does.not.exist"));
         runCustomSshToolClass(machine);
     }
-    
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCustomSshToolDefinedOnNamedLocation() throws Exception {
+        mgmt.getBrooklynProperties().putAll(ImmutableMap.of(
+                "brooklyn.location.named.localhostWithCustomTool", "localhost",
+                "brooklyn.location.named.localhostWithCustomTool."+SshMachineLocation.SSH_TOOL_CLASS.getName(), RecordingSshTool.class.getName()));
+        MachineProvisioningLocation<SshMachineLocation> loc = (MachineProvisioningLocation<SshMachineLocation>) mgmt.getLocationRegistry().resolve("localhostWithCustomTool");
+        SshMachineLocation machine = loc.obtain(ImmutableMap.of());
+        runCustomSshToolClass(machine);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void testCustomSshToolWithCustomConfigDefinedOnNamedLocation() throws Exception {
+        mgmt.getBrooklynProperties().putAll(ImmutableMap.of(
+                "brooklyn.location.named.localhostWithCustomTool", "byon:(hosts=127.0.0.1, user=myname)",
+                "brooklyn.location.named.localhostWithCustomTool."+SshMachineLocation.SSH_TOOL_CLASS.getName(), RecordingSshTool.class.getName(),
+                "brooklyn.location.named.localhostWithCustomTool."+SshMachineLocation.SSH_TOOL_CLASS.getName()+".myparam", "myvalue"));
+        MachineProvisioningLocation<SshMachineLocation> loc = (MachineProvisioningLocation<SshMachineLocation>) mgmt.getLocationRegistry().resolve("localhostWithCustomTool");
+        SshMachineLocation machine = loc.obtain(ImmutableMap.of());
+        runCustomSshToolClass(machine);
+        
+        Map<?, ?> props = Iterables.getLast(RecordingSshTool.constructorProps);
+        assertEquals(props.get("myparam"), "myvalue", "props="+props);
+        assertEquals(props.get("host"), "127.0.0.1", "props="+props);
+        assertEquals(props.get("user"), "myname", "props="+props);
+    }
+
     protected void runCustomSshToolClass(SshMachineLocation host2) throws Exception {
         host2.execCommands("mySummary", ImmutableList.of("myCommand"));
         

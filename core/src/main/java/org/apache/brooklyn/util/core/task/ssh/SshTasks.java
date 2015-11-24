@@ -215,6 +215,11 @@ public class SshTasks {
         return installFromUrl(ResourceUtils.create(SshTasks.class), ImmutableMap.<String,Object>of(), location, url, destPath);
     }
     /** task to install a file given a url, where the url is resolved remotely first then locally */
+    public static TaskFactory<?> installFromUrl(final Map<String, ?> props, final SshMachineLocation location, final String url, final String destPath) {
+        return installFromUrl(ResourceUtils.create(SshTasks.class), props, location, url, destPath);
+    }
+
+    /** task to install a file given a url, where the url is resolved remotely first then locally */
     public static TaskFactory<?> installFromUrl(final ResourceUtils utils, final Map<String, ?> props, final SshMachineLocation location, final String url, final String destPath) {
         return new TaskFactory<TaskAdaptable<?>>() {
             @Override

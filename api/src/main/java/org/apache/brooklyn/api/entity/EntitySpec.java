@@ -34,6 +34,7 @@ import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.util.collections.MutableList;
 
+import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -127,7 +128,7 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
                 .enricherSpecs(otherSpec.getEnricherSpecs())
                 .enrichers(otherSpec.getEnrichers())
                 .addInitializers(otherSpec.getInitializers())
-                .children(otherSpec.getChildren())
+                .children(copyFromSpecs(otherSpec.getChildren()))
                 .members(otherSpec.getMembers())
                 .groups(otherSpec.getGroups())
                 .locations(otherSpec.getLocations());
@@ -136,6 +137,16 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
         if (otherSpec.getImplementation() != null) impl(otherSpec.getImplementation());
         
         return this;
+    }
+
+    private List<EntitySpec<?>> copyFromSpecs(List<EntitySpec<?>> children) {
+        return Lists.<EntitySpec<?>,EntitySpec<?>>transform(children, new Function<EntitySpec<?>, EntitySpec<?>>() {
+            @Nullable
+            @Override
+            public EntitySpec<?> apply(@Nullable EntitySpec<?> entitySpec) {
+                return create(entitySpec);
+            }
+        });
     }
 
     @Override

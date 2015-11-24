@@ -31,6 +31,7 @@ import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import org.apache.brooklyn.util.core.ResourcePredicates;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.time.Duration;
@@ -61,14 +62,20 @@ public interface TomcatServer extends JavaWebAppSoftwareProcess, UsesJmx, HasSho
             ConfigKeys.newPortSensorAndConfigKey("tomcat.shutdownport", "Suggested shutdown port", PortRanges.fromString("31880+"));
 
     @SetFromFlag("server.xml")
-    ConfigKey<String> SERVER_XML_RESOURCE = ConfigKeys.newStringConfigKey(
-            "tomcat.serverxml", "The file to template and use as the Tomcat process' server.xml",
-            JavaClassNames.resolveClasspathUrl(TomcatServer.class, "server.xml"));
+    ConfigKey<String> SERVER_XML_RESOURCE = ConfigKeys.builder(String.class)
+            .name("tomcat.serverxml")
+            .description("The file to template and use as the Tomcat process' server.xml")
+            .defaultValue(JavaClassNames.resolveClasspathUrl(TomcatServer.class, "server.xml"))
+            .constraint(ResourcePredicates.urlExists())
+            .build();
 
     @SetFromFlag("web.xml")
-    ConfigKey<String> WEB_XML_RESOURCE = ConfigKeys.newStringConfigKey(
-            "tomcat.webxml", "The file to template and use as the Tomcat process' web.xml",
-            JavaClassNames.resolveClasspathUrl(TomcatServer.class, "web.xml"));
+    ConfigKey<String> WEB_XML_RESOURCE = ConfigKeys.builder(String.class)
+            .name("tomcat.webxml")
+            .description("The file to template and use as the Tomcat process' web.xml")
+            .defaultValue(JavaClassNames.resolveClasspathUrl(TomcatServer.class, "web.xml"))
+            .constraint(ResourcePredicates.urlExists())
+            .build();
 
     ConfigKey<Duration> START_TIMEOUT = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.START_TIMEOUT, Duration.FIVE_MINUTES);
 

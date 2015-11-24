@@ -19,6 +19,7 @@
 package org.apache.brooklyn.core.feed;
 
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
@@ -31,6 +32,7 @@ import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.DynamicSequentialTask;
 import org.apache.brooklyn.util.core.task.ScheduledTask;
+import org.apache.brooklyn.util.core.task.TaskTags;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
@@ -155,8 +157,11 @@ public class Poller<V> {
                         return task;
                     }
                 };
-                ScheduledTask task = new ScheduledTask(MutableMap.of("period", pollJob.pollPeriod, "displayName", "scheduled:"+scheduleName), pollingTaskFactory);
-                tasks.add((ScheduledTask)Entities.submit(entity, task));
+                Map<String, ?> taskFlags = MutableMap.of("displayName", "scheduled:" + scheduleName);
+                ScheduledTask task = new ScheduledTask(taskFlags, pollingTaskFactory)
+                        .period(pollJob.pollPeriod)
+                        .cancelOnException(false);
+                tasks.add(Entities.submit(entity, task));
             } else {
                 if (log.isDebugEnabled()) log.debug("Activating poll (but leaving off, as period {}) for {} (using {})", new Object[] {pollJob.pollPeriod, entity, this});
             }

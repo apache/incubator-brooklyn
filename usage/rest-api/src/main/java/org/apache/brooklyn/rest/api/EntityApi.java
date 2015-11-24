@@ -18,15 +18,15 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import io.swagger.annotations.Api;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -36,17 +36,17 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities")
-@Apidoc("Entities")
+@Api("Entities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface EntityApi {
 
     @GET
     @ApiOperation(value = "Fetch the list of entities for a given application",
-            responseClass = "org.apache.brooklyn.rest.domain.EntitySummary",
-            multiValueResponse = true)
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application not found")
+            response = org.apache.brooklyn.rest.domain.EntitySummary.class,
+            responseContainer = "List")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application not found")
     })
     public List<EntitySummary> list(
             @ApiParam(value = "Application ID or name", required = true)
@@ -55,9 +55,9 @@ public interface EntityApi {
     @GET
     @Path("/{entity}")
     @ApiOperation(value = "Fetch details about a specific application entity",
-            responseClass = "org.apache.brooklyn.rest.domain.EntitySummary")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application or entity missing")
+            response = org.apache.brooklyn.rest.domain.EntitySummary.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application or entity missing")
     })
     public EntitySummary get(
             @ApiParam(value = "Application ID or name", required = true)
@@ -68,7 +68,7 @@ public interface EntityApi {
     // TODO rename as "/children" ?
     @GET
     @ApiOperation(value = "Fetch details about a specific application entity's children",
-            responseClass = "org.apache.brooklyn.rest.domain.EntitySummary")
+            response = org.apache.brooklyn.rest.domain.EntitySummary.class)
     @Path("/{entity}/children")
     public List<EntitySummary> getChildren(
             @PathParam("application") final String application,
@@ -83,7 +83,7 @@ public interface EntityApi {
 
     @POST
     @ApiOperation(value = "Add a child or children to this entity given a YAML spec",
-            responseClass = "org.apache.brooklyn.rest.domain.TaskSummary")
+            response = org.apache.brooklyn.rest.domain.TaskSummary.class)
     @Consumes({"application/x-yaml",
             // see http://stackoverflow.com/questions/332129/yaml-mime-type
             "text/yaml", "text/x-yaml", "application/yaml", MediaType.APPLICATION_JSON})
@@ -113,8 +113,8 @@ public interface EntityApi {
     @GET
     @Path("/{entity}/activities")
     @ApiOperation(value = "Fetch list of tasks for this entity")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity")
     })
     public List<TaskSummary> listTasks(
             @ApiParam(value = "Application ID or name", required = true) @PathParam("application") String applicationId,
@@ -122,9 +122,9 @@ public interface EntityApi {
 
     @GET
     @Path("/{entity}/activities/{task}")
-    @ApiOperation(value = "Fetch task details", responseClass = "org.apache.brooklyn.rest.domain.TaskSummary")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or task")
+    @ApiOperation(value = "Fetch task details", response = org.apache.brooklyn.rest.domain.TaskSummary.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or task")
     })
     @Produces("text/json")
     public TaskSummary getTask(
@@ -142,8 +142,8 @@ public interface EntityApi {
     @GET
     @Path("/{entity}/tags")
     @ApiOperation(value = "Fetch list of tags on this entity")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity")
     })
     public List<Object> listTags(
             @ApiParam(value = "Application ID or name", required = true) @PathParam("application") String applicationId,
@@ -153,8 +153,8 @@ public interface EntityApi {
     @ApiOperation(
             value = "Rename an entity"
     )
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Undefined application or entity")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Undefined application or entity")
     })
     @Path("/{entity}/name")
     public Response rename(
@@ -165,10 +165,10 @@ public interface EntityApi {
     @POST
     @ApiOperation(
             value = "Expunge an entity",
-            responseClass = "org.apache.brooklyn.rest.domain.TaskSummary"
+            response = org.apache.brooklyn.rest.domain.TaskSummary.class
     )
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Undefined application or entity")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Undefined application or entity")
     })
     @Path("/{entity}/expunge")
     public Response expunge(
@@ -179,9 +179,9 @@ public interface EntityApi {
     @GET
     @Path("/{entity}/descendants")
     @ApiOperation(value = "Fetch entity info for all (or filtered) descendants",
-            responseClass = "org.apache.brooklyn.rest.domain.EntitySummary")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application or entity missing")
+            response = org.apache.brooklyn.rest.domain.EntitySummary.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application or entity missing")
     })
     public List<EntitySummary> getDescendants(
             @ApiParam(value = "Application ID or name", required = true)
@@ -195,8 +195,8 @@ public interface EntityApi {
     @GET
     @Path("/{entity}/descendants/sensor/{sensor}")
     @ApiOperation(value = "Fetch values of a given sensor for all (or filtered) descendants")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application or entity missing")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application or entity missing")
     })
     public Map<String,Object> getDescendantsSensor(
             @ApiParam(value = "Application ID or name", required = true)
@@ -212,8 +212,8 @@ public interface EntityApi {
     @GET
     @Path("/{entity}/locations")
     @ApiOperation(value = "List the locations set on the entity")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application or entity missing")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application or entity missing")
     })
     public List<LocationSummary> getLocations(
             @ApiParam(value = "Application ID or name", required = true)
@@ -224,8 +224,8 @@ public interface EntityApi {
     @GET
     @Path("/{entity}/spec")
     @ApiOperation(value = "Get the YAML spec used to create the entity, if available")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Application or entity missing")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Application or entity missing")
     })
     public String getSpec(
             @ApiParam(value = "Application ID or name", required = true)

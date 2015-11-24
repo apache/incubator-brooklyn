@@ -37,4 +37,4 @@ brooklyn.catalog:
         sensor: service.isUp
         timeout: 10m
         assert:
-          equals: true
+        - equals: true

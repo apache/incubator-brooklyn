@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.camp.server.rest.resource;
 
+import io.swagger.annotations.Api;
 import java.net.URI;
 
 import javax.ws.rs.GET;
@@ -34,14 +35,13 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.camp.server.dto.AssemblyTemplateDto;
 import org.apache.brooklyn.camp.spi.Assembly;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
-import org.apache.brooklyn.rest.apidoc.Apidoc;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @Path(AssemblyTemplateRestResource.URI_PATH)
-@Apidoc("Assembly Template resources")
+@Api("Assembly Template resources")
 @Produces("application/json")
 public class AssemblyTemplateRestResource extends AbstractCampRestResource {
 
@@ -51,7 +51,7 @@ public class AssemblyTemplateRestResource extends AbstractCampRestResource {
 
     @Path("/{id}")
     @ApiOperation(value = "Get a specific assembly template",
-            responseClass = AssemblyTemplateDto.CLASS_NAME)
+            response = AssemblyTemplateDto.class)
     @GET
     public AssemblyTemplateDto get(
             @ApiParam(value = "ID of item being retrieved", required = true)

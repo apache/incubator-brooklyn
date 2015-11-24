@@ -362,7 +362,7 @@ public class StringEscapes {
             String i1 = input.trim();
             
             boolean inBrackets = (i1.startsWith("[") && i1.endsWith("]"));
-            if (inBrackets) i1 = i1.substring(1, i1.length()-2).trim();
+            if (inBrackets) i1 = i1.substring(1, i1.length()-1).trim();
                 
             QuotedStringTokenizer qst = new QuotedStringTokenizer(i1, "\"", true, ",", false);
             while (qst.hasMoreTokens()) {

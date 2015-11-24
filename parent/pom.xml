@@ -142,6 +142,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>com.sun.jersey.jersey-test-framework</groupId>
+                <artifactId>jersey-test-framework-grizzly2</artifactId>
+                <version>${jersey.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${commons-lang3.version}</version>
@@ -160,6 +166,11 @@
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
                 <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty.toolchain</groupId>
+                <artifactId>jetty-schemas</artifactId>
+                <version>${jetty-schemas.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.jackson</groupId>
@@ -183,6 +194,16 @@
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${fasterxml.jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${fasterxml.jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${fasterxml.jackson.version}</version>
             </dependency>
@@ -192,8 +213,18 @@
                 <version>${fasterxml.jackson.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.wordnik</groupId>
-                <artifactId>swagger-core_2.9.1</artifactId>
+                <groupId>com.fasterxml.jackson.module</groupId>
+                <artifactId>jackson-module-jaxb-annotations</artifactId>
+                <version>${fasterxml.jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-core</artifactId>
                 <version>${swagger.version}</version>
                 <exclusions>
                     <exclusion>
@@ -203,8 +234,8 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>com.wordnik</groupId>
-                <artifactId>swagger-jaxrs_2.9.1</artifactId>
+                <groupId>io.swagger</groupId>
+                <artifactId>swagger-jaxrs</artifactId>
                 <version>${swagger.version}</version>
             </dependency>
             <dependency>
@@ -629,6 +660,7 @@
                             <phase>verify</phase>
                             <goals>
                                 <goal>jar-no-fork</goal>
+                                <goal>test-jar-no-fork</goal>
                             </goals>
                         </execution>
                     </executions>

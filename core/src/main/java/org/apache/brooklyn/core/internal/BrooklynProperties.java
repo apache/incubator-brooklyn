@@ -85,7 +85,7 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
         }
 
         public static Builder builderEmpty() {
-            return new Builder(true);
+            return new Builder(false);
         }
 
         public static class Builder {
@@ -100,7 +100,6 @@ public class BrooklynProperties extends LinkedHashMap implements StringConfigMap
                 this(true);
             }
             
-            // TODO it's always called with true here, perhaps we don't need the argument?
             private Builder(boolean setGlobalFileDefaults) {
                 resetDefaultLocationMetadataUrl();
                 if (setGlobalFileDefaults) {

@@ -26,6 +26,7 @@ import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.entity.machine.MachineEntity;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocationSshToolTest;
 import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool;
 import org.apache.brooklyn.util.core.internal.ssh.RecordingSshTool.ExecCmd;
 import org.testng.annotations.AfterMethod;
@@ -36,6 +37,9 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Test that the right SshTool is picked up, based on the entity's configuration.
+ * See {@link SshMachineLocationSshToolTest} for more tests. These ones are just
+ * for those involving the entity (and the config on the top-level brooklyn properties,
+ * as we need a {@link MachineEntity} to do that.
  */
 public class EntitySshToolTest extends BrooklynAppUnitTestSupport {
 
@@ -44,7 +48,7 @@ public class EntitySshToolTest extends BrooklynAppUnitTestSupport {
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
         super.setUp();
-        RecordingSshTool.execScriptCmds.clear();
+        RecordingSshTool.clear();
         
         machine = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", "localhost"));
@@ -52,7 +56,7 @@ public class EntitySshToolTest extends BrooklynAppUnitTestSupport {
 
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        RecordingSshTool.execScriptCmds.clear();
+        RecordingSshTool.clear();
         super.tearDown();
     }
 

@@ -18,10 +18,10 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import io.swagger.annotations.Api;
 import org.apache.brooklyn.rest.domain.ScriptExecutionSummary;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -32,7 +32,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 @Path("/v1/script")
-@Apidoc(value="Scripting")
+@Api("Scripting")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface ScriptApi {
@@ -44,7 +44,7 @@ public interface ScriptApi {
     @Path("/groovy")
     @Consumes("application/text")
     @ApiOperation(value = "Execute a groovy script",
-            responseClass = "org.apache.brooklyn.rest.domain.SensorSummary")
+            response = org.apache.brooklyn.rest.domain.SensorSummary.class)
     public ScriptExecutionSummary groovy(
             @Context HttpServletRequest request,
             @ApiParam(name = "script", value = "Groovy script to execute", required = true)
