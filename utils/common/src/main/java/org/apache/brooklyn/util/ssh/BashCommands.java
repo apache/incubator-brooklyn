@@ -375,11 +375,14 @@ public class BashCommands {
                         ok(sudo("apt-get update")), 
                         sudo(aptInstall))));
         if (yumInstall != null)
+            // Need to upgrade ca-certificates sometimes:
+            // http://serverfault.com/questions/637549/epel-repo-for-centos-6-causing-error?newreg=7c6019c0d0ae483c8bb3af387166ce49
             commands.add(ifExecutableElse1("yum", 
                     chainGroup(
                         "echo yum exists, doing update",
                         ok(sudo("yum check-update")),
                         ok(sudo("yum -y install epel-release")),
+                        ok(sudo("yum upgrade -y ca-certificates --disablerepo=epel")),
                         sudo(yumInstall))));
         if (brewInstall != null)
             commands.add(ifExecutableElse1("brew", brewInstall));
