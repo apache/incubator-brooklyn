@@ -51,7 +51,7 @@ import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.commons.lang.ClassUtils;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
@@ -165,17 +165,20 @@ public class CatalogTransformer {
     }
 
     private static Set<Object> makeTags(EntitySpec<?> spec, CatalogItem<?, ?> item) {
-        Class<?> type = null;
-        if (spec.getImplementation() != null) {
-            type = spec.getImplementation();
-        } else {
-            type = spec.getType();
+        // Combine tags on item with an InterfacesTag.
+        Set<Object> tags = MutableSet.copyOf(item.tags().getTags());
+        if (spec != null) {
+            Class<?> type;
+            if (spec.getImplementation() != null) {
+                type = spec.getImplementation();
+            } else {
+                type = spec.getType();
+            }
+            if (type != null) {
+                tags.add(new BrooklynTags.TraitsTag(Reflections.getAllInterfaces(type)));
+            }
         }
-
-        return MutableSet.builder()
-                .addAll(item.tags().getTags())
-                .add(new BrooklynTags.InterfacesTag(ClassUtils.getAllInterfaces(type)))
-                .build();
+        return tags;
     }
     
 }

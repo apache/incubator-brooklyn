@@ -44,7 +44,7 @@ import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.domain.CatalogPolicySummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
-import org.apache.commons.lang3.ClassUtils;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
 import org.eclipse.jetty.http.HttpStatus;
@@ -128,14 +128,12 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
         // an InterfacesTag should be created for every catalog item
         assertEquals(entityItem.getTags().size(), 1);
-        for (Object tag : entityItem.getTags()) {
-            // As tags are treated as object, an InterfacesTag is return as a Map<String, List<String>> to match what the API expose
-            List<String> actualInterfaces = ((Map<String, List<String>>) tag).get("interfaces");
-            List<Class<?>> expectedInterfaces = ClassUtils.getAllInterfaces(TestEntity.class);
-            assertEquals(actualInterfaces.size(), expectedInterfaces.size());
-            for (Class<?> expectedInterface : expectedInterfaces) {
-                assertTrue(actualInterfaces.contains(expectedInterface.getName()));
-            }
+        Object tag = entityItem.getTags().iterator().next();
+        List<String> actualInterfaces = ((Map<String, List<String>>) tag).get("traits");
+        List<Class<?>> expectedInterfaces = Reflections.getAllInterfaces(TestEntity.class);
+        assertEquals(actualInterfaces.size(), expectedInterfaces.size());
+        for (Class<?> expectedInterface : expectedInterfaces) {
+            assertTrue(actualInterfaces.contains(expectedInterface.getName()));
         }
 
         byte[] iconData = client().resource("/v1/catalog/icon/" + symbolicName + "/" + TEST_VERSION).get(byte[].class);

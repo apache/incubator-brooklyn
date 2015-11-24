@@ -311,7 +311,7 @@ public class CatalogClasspathDo {
             item.setIconUrl(firstNonEmpty(catalogAnnotation.iconUrl()));
         }
         if (item instanceof CatalogEntityItemDto || item instanceof CatalogTemplateItemDto) {
-            item.tags().addTag(BrooklynTags.newInterfacesTag(ClassUtils.getAllInterfaces(c)));
+            item.tags().addTag(BrooklynTags.newTraitsTag(ClassUtils.getAllInterfaces(c)));
         }
         if (log.isTraceEnabled())
             log.trace("adding to catalog: "+c+" (from catalog "+catalog+")");

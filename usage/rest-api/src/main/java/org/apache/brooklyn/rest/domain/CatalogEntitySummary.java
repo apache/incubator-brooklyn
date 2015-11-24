@@ -35,6 +35,7 @@ public class CatalogEntitySummary extends CatalogItemSummary {
     
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<SensorSummary> sensors;
+
     @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final Set<EffectorSummary> effectors;
 
