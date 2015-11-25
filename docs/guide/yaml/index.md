@@ -12,6 +12,7 @@ children:
 - winrm/
 - chef/
 - test/
+- advanced-example.md
 - { path: yaml-reference.md, title: YAML Blueprint Reference }
 - { link: 'https://github.com/brooklyncentral/blueprint-library', title: 'GitHub Blueprint Library' }
 ---

@@ -107,12 +107,12 @@ public class CollectionFunctionals {
     }
 
     public static final class FirstElementFunction<T> implements Function<Iterable<? extends T>, T> {
-        private FirstElementFunction() {
+        public FirstElementFunction() {
         }
 
         @Override
         public T apply(Iterable<? extends T> input) {
-            if (input==null) return null;
+            if (input==null || Iterables.isEmpty(input)) return null;
             return Iterables.get(input, 0);
         }
 
