@@ -31,6 +31,10 @@ define([
     var EditorView = Backbone.View.extend({
         tagName:"div",
         className:"container container-fluid",
+        events: {
+            'click #button-run':'runBlueprint',
+            'click #button-delete':'removeBlueprint',
+        },
         editorTemplate:_.template(EditorHtml),
 
         editor: null,
@@ -84,6 +88,44 @@ define([
             }
 
             this.refreshEditor();
+        },
+        validate: function() {
+            log("validate");
+            return true;
+        },
+        runBlueprint: function() {
+            log("runBlueprint");
+            if (this.validate())
+                this.submitApplication();
+        },
+        removeBlueprint: function() {
+            log("removeBlueprint");
+
+        },
+        onSubmissionComplete: function(succeeded, data) {
+            log("[onSubmissionComplete] succeeded:", succeeded);
+            log("[onSubmissionComplete] data:", data);
+            var that = this;
+        },
+        submitApplication:function (event) {
+            log("submitApplication");
+            var that = this
+
+            $.ajax({
+                url:'/v1/applications',
+                type:'post',
+                contentType:'application/yaml',
+                processData:false,
+                data: "yaml",
+                success:function (data) {
+                    that.onSubmissionComplete(true, data)
+                },
+                error:function (data) {
+                    that.onSubmissionComplete(false, data)
+                }
+            });
+
+            return false
         }
     })
 
