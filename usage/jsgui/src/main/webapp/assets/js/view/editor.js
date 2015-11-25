@@ -17,7 +17,7 @@
  * under the License.
 */
 define([
-    "underscore", "jquery", "backbone",
+    "underscore", "jquery", "backbone", "codemirror",
     "text!tpl/editor/page.html",
 
     // no constructor
@@ -26,58 +26,66 @@ define([
     "jquery-ba-bbq",
     "handlebars",
     "bootstrap"
-], function (_, $, Backbone, SwaggerHtml) {
+], function (_, $, Backbone, CodeMirror, EditorHtml) {
 
     var EditorView = Backbone.View.extend({
         tagName:"div",
         className:"container container-fluid",
-        swaggerTemplate:_.template(SwaggerHtml),
+        editorTemplate:_.template(EditorHtml),
+
+        editor: null,
 
         initialize:function () {
+            console.log("initialize");
+
+            /* this.editor = CodeMirror.fromTextArea(document.getElementById("user"), {
+                lineNumbers: true,
+                extraKeys: {"Ctrl-Space": "autocomplete"},
+                // TODO: feature request: to allow custom theme: http://codemirror.net/demo/theme.html#base16-light
+                mode: {
+                    name: "yaml",
+                    globalVars: true
+                }
+            }); */
         },
         render:function (eventName) {
-            this.$el.html(_.template(SwaggerHtml, {}))
-            this.loadSwagger()
-            return this
+            log(document.getElementById("yaml_code"));
+            this.$el.html(_.template(EditorHtml, {}));
+            this.loadEditor();
+            log("render this:", this);
+            return this;
         },
-        
-        loadSwagger: function() {
-            var that = this;
-            
-            require([
-               "/assets/js/libs/swagger.js",
-                "/assets/js/libs/swagger-ui.js"
-            ], function() {
-                $('.throbber', that.$el).hide().delay(100).fadeTo(250, 0.9);
-                $('div#message-bar.swagger-ui-wrap', that.$el).hide().delay(100).fadeTo(250, 1);
-                var swaggerUi = new SwaggerUi({
-                    basePath:"",
-                    discoveryUrl:"/v1/apidoc",
-                    dom_id:"swagger-ui-container",
-                    supportHeaderParams: false,
-                    supportedSubmitMethods: ['get', 'post', 'put', 'delete'],
-                    onComplete: function(swaggerApi, swaggerUi){
-                        that.$el.fadeTo(200, 1);
-                        $('.throbber', that.$el).hide();
-                        $('div#message-bar.swagger-ui-wrap', that.$el).hide();
-                        console.info("Loaded SwaggerUI");
-                    },
-                    onFailure: function(data) {
-                        that.$el.fadeTo(200, 0.2);
-                        $('.throbber', that.$el).hide();
-                        $('div#message-bar.swagger-ui-wrap', that.$el).hide();
-                        console.error("Unable to Load SwaggerUI");
-                        console.debug(data);
-                    },
-                    docExpansion: "none"
+        refreshEditor: function() {
+            log("this: ", this);
+            var cm = this.editor;
+            if (typeof(cm) !== "undefined") {
+                log("CodeMirror", cm);
+                // cm.ensureFocus();
+                cm.setCursor(cm.lineCount(), 0);
+                cm.focus();
+                cm.refresh();
+                // set cursor to End of Document
+            }
+        },
+        loadEditor: function() {
+            log("loadEditor:", this);
+            log( this.$("#yaml_code")[0] );
+            if (this.editor == null) {
+                log("creating editor")
+                this.editor = CodeMirror.fromTextArea(this.$("#yaml_code")[0], {
+                    lineNumbers: true,
+                    extraKeys: {"Ctrl-Space": "autocomplete"},
+                    // TODO: feature request: to allow custom theme: http://codemirror.net/demo/theme.html#base16-light
+                    mode: {
+                        name: "yaml",
+                        globalVars: true
+                    }
                 });
+            }
 
-                swaggerUi.load();
-            })
-            
+            this.refreshEditor();
         }
-
     })
-    
+
     return EditorView;
 })
