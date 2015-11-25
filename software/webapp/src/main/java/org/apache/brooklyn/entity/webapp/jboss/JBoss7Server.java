@@ -25,9 +25,9 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.Sensors;
-import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
 import org.apache.brooklyn.util.core.ResourcePredicates;
@@ -93,6 +93,9 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, HasShortName {
     @SetFromFlag("managementPassword")
     ConfigKey<String> MANAGEMENT_PASSWORD =
             ConfigKeys.newStringConfigKey("webapp.jboss.managementPassword", "Password for MANAGEMENT_USER.");
+
+    @SetFromFlag("useHttpMonitoring")
+    ConfigKey<Boolean> USE_HTTP_MONITORING = ConfigKeys.newConfigKey("httpMonitoring.enabled", "HTTP(S) monitoring enabled", Boolean.TRUE);
 
     AttributeSensor<String> MANAGEMENT_URL =
             Sensors.newStringSensor("webapp.jboss.managementUrl", "URL where management endpoint is available");

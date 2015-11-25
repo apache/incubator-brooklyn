@@ -44,9 +44,9 @@ import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.time.Duration;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Function;
 import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.Range;
@@ -116,74 +116,76 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         connectServiceUpIsRunning();
         HostAndPort accessible = BrooklynAccessUtils.getBrooklynAccessibleAddress(this, getRiakWebPort());
 
-        HttpFeed.Builder httpFeedBuilder = HttpFeed.builder()
-                .entity(this)
-                .period(500, TimeUnit.MILLISECONDS)
-                .baseUri(String.format("http://%s/stats", accessible.toString()))
-                .poll(new HttpPollConfig<Integer>(NODE_GETS)
-                        .onSuccess(HttpValueFunctions.jsonContents("node_gets", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(NODE_GETS_TOTAL)
-                        .onSuccess(HttpValueFunctions.jsonContents("node_gets_total", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(NODE_PUTS)
-                        .onSuccess(HttpValueFunctions.jsonContents("node_puts", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(NODE_PUTS_TOTAL)
-                        .onSuccess(HttpValueFunctions.jsonContents("node_puts_total", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(VNODE_GETS)
-                        .onSuccess(HttpValueFunctions.jsonContents("vnode_gets", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(VNODE_GETS_TOTAL)
-                        .onSuccess(HttpValueFunctions.jsonContents("vnode_gets_total", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(VNODE_PUTS)
-                        .onSuccess(HttpValueFunctions.jsonContents("vnode_puts", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(VNODE_PUTS_TOTAL)
-                        .onSuccess(HttpValueFunctions.jsonContents("vnode_puts_total", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(READ_REPAIRS_TOTAL)
-                        .onSuccess(HttpValueFunctions.jsonContents("read_repairs_total", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(COORD_REDIRS_TOTAL)
-                        .onSuccess(HttpValueFunctions.jsonContents("coord_redirs_total", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(MEMORY_PROCESSES_USED)
-                        .onSuccess(HttpValueFunctions.jsonContents("memory_processes_used", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(SYS_PROCESS_COUNT)
-                        .onSuccess(HttpValueFunctions.jsonContents("sys_process_count", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(PBC_CONNECTS)
-                        .onSuccess(HttpValueFunctions.jsonContents("pbc_connects", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<Integer>(PBC_ACTIVE)
-                        .onSuccess(HttpValueFunctions.jsonContents("pbc_active", Integer.class))
-                        .onFailureOrException(Functions.constant(-1)))
-                .poll(new HttpPollConfig<List<String>>(RING_MEMBERS)
-                        .onSuccess(Functionals.chain(
-                                HttpValueFunctions.jsonContents("ring_members", String[].class),
-                                new Function<String[], List<String>>() {
-                                    @Nullable
-                                    @Override
-                                    public List<String> apply(@Nullable String[] strings) {
-                                        return Arrays.asList(strings);
+        if (isHttpMonitoringEnabled()) {
+            HttpFeed.Builder httpFeedBuilder = HttpFeed.builder()
+                    .entity(this)
+                    .period(500, TimeUnit.MILLISECONDS)
+                    .baseUri(String.format("http://%s/stats", accessible.toString()))
+                    .poll(new HttpPollConfig<Integer>(NODE_GETS)
+                            .onSuccess(HttpValueFunctions.jsonContents("node_gets", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(NODE_GETS_TOTAL)
+                            .onSuccess(HttpValueFunctions.jsonContents("node_gets_total", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(NODE_PUTS)
+                            .onSuccess(HttpValueFunctions.jsonContents("node_puts", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(NODE_PUTS_TOTAL)
+                            .onSuccess(HttpValueFunctions.jsonContents("node_puts_total", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(VNODE_GETS)
+                            .onSuccess(HttpValueFunctions.jsonContents("vnode_gets", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(VNODE_GETS_TOTAL)
+                            .onSuccess(HttpValueFunctions.jsonContents("vnode_gets_total", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(VNODE_PUTS)
+                            .onSuccess(HttpValueFunctions.jsonContents("vnode_puts", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(VNODE_PUTS_TOTAL)
+                            .onSuccess(HttpValueFunctions.jsonContents("vnode_puts_total", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(READ_REPAIRS_TOTAL)
+                            .onSuccess(HttpValueFunctions.jsonContents("read_repairs_total", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(COORD_REDIRS_TOTAL)
+                            .onSuccess(HttpValueFunctions.jsonContents("coord_redirs_total", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(MEMORY_PROCESSES_USED)
+                            .onSuccess(HttpValueFunctions.jsonContents("memory_processes_used", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(SYS_PROCESS_COUNT)
+                            .onSuccess(HttpValueFunctions.jsonContents("sys_process_count", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(PBC_CONNECTS)
+                            .onSuccess(HttpValueFunctions.jsonContents("pbc_connects", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<Integer>(PBC_ACTIVE)
+                            .onSuccess(HttpValueFunctions.jsonContents("pbc_active", Integer.class))
+                            .onFailureOrException(Functions.constant(-1)))
+                    .poll(new HttpPollConfig<List<String>>(RING_MEMBERS)
+                            .onSuccess(Functionals.chain(
+                                    HttpValueFunctions.jsonContents("ring_members", String[].class),
+                                    new Function<String[], List<String>>() {
+                                        @Nullable
+                                        @Override
+                                        public List<String> apply(@Nullable String[] strings) {
+                                            return Arrays.asList(strings);
+                                        }
                                     }
-                                }
-                        ))
-                        .onFailureOrException(Functions.constant(Arrays.asList(new String[0]))));
-
-        for (AttributeSensor<Integer> sensor : ONE_MINUTE_SENSORS) {
-            httpFeedBuilder.poll(new HttpPollConfig<Integer>(sensor)
-                    .period(Duration.ONE_MINUTE)
-                    .onSuccess(HttpValueFunctions.jsonContents(sensor.getName().substring(5), Integer.class))
-                    .onFailureOrException(Functions.constant(-1)));
+                            ))
+                            .onFailureOrException(Functions.constant(Arrays.asList(new String[0]))));
+    
+            for (AttributeSensor<Integer> sensor : ONE_MINUTE_SENSORS) {
+                httpFeedBuilder.poll(new HttpPollConfig<Integer>(sensor)
+                        .period(Duration.ONE_MINUTE)
+                        .onSuccess(HttpValueFunctions.jsonContents(sensor.getName().substring(5), Integer.class))
+                        .onFailureOrException(Functions.constant(-1)));
+            }
+    
+            httpFeed = httpFeedBuilder.build();
         }
-
-        httpFeed = httpFeedBuilder.build();
-
+        
         enrichers().add(Enrichers.builder().combining(NODE_GETS, NODE_PUTS).computingSum().publishing(NODE_OPS).build());
         enrichers().add(Enrichers.builder().combining(NODE_GETS_TOTAL, NODE_PUTS_TOTAL).computingSum().publishing(NODE_OPS_TOTAL).build());
         WebAppServiceMethods.connectWebAppServerPolicies(this);
@@ -243,6 +245,9 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
         getDriver().recoverFailedNode(nodeName);
     }
 
+    protected boolean isHttpMonitoringEnabled() {
+        return Boolean.TRUE.equals(getConfig(USE_HTTP_MONITORING));
+    }
     @Override
     public Integer getRiakWebPort() {
         return getAttribute(RiakNode.RIAK_WEB_PORT);
