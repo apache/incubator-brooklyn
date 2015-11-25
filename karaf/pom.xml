@@ -30,7 +30,7 @@
   <packaging>pom</packaging>
 
   <properties>
-    <karaf.version>4.0.2</karaf.version>
+    <karaf.version>4.0.3</karaf.version>
 
     <org.osgi.core.version>6.0.0</org.osgi.core.version>
     <org.osgi.compendium.version>5.0.0</org.osgi.compendium.version>
@@ -41,6 +41,10 @@
     <pax.exam.version>4.5.0</pax.exam.version>
     <pax.url.version>2.4.1</pax.url.version>
     <ops4j.base.version>1.5.0</ops4j.base.version>
+
+    <!-- feature repositories -->
+    <servicemix.version>6.0.0</servicemix.version>
+    <reflections.bundle.version>0.9.9_1</reflections.bundle.version> <!-- see reflections.version -->
 
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>

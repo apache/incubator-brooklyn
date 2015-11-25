@@ -50,7 +50,7 @@ public class JavaCatalogToSpecTransformer implements PlanToSpecTransformer {
     private ManagementContext mgmt;
 
     @Override
-    public void injectManagementContext(ManagementContext mgmt) {
+    public void setManagementContext(ManagementContext mgmt) {
         this.mgmt = mgmt;
     }
 

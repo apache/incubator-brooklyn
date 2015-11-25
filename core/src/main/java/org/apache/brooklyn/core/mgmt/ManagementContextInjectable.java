@@ -28,6 +28,6 @@ public interface ManagementContextInjectable {
     /**
      * Sets the {@link ManagementContext} reference.
      */
-    public void injectManagementContext(ManagementContext managementContext);
+    public void setManagementContext(ManagementContext managementContext);
 
 }

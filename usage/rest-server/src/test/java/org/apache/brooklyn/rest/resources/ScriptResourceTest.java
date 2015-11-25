@@ -42,7 +42,7 @@ public class ScriptResourceTest {
             Entities.start(app, Collections.<Location>emptyList());
 
             ScriptResource s = new ScriptResource();
-            s.injectManagementContext(mgmt);
+            s.setManagementContext(mgmt);
 
             ScriptExecutionSummary result = s.groovy(null, "def apps = []; mgmt.applications.each { println 'app:'+it; apps << it.id }; apps");
             Assert.assertEquals(Collections.singletonList(app.getId()).toString(), result.getResult());

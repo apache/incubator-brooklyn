@@ -66,7 +66,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         public void setObject(Object object) { this.object = object; }
 
         @Override
-        public void injectManagementContext(ManagementContext managementContext) {
+        public void setManagementContext(ManagementContext managementContext) {
             log.info("Detected injection of {}", managementContext);
             managementContextInjected.set(true);
         }

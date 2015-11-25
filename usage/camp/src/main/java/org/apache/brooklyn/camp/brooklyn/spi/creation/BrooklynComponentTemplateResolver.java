@@ -369,7 +369,7 @@ public class BrooklynComponentTemplateResolver {
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);
-                ((ManagementContextInjectable) flag).injectManagementContext(loader.getManagementContext());
+                ((ManagementContextInjectable) flag).setManagementContext(loader.getManagementContext());
             }
 
             return flag;

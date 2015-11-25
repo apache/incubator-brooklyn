@@ -55,7 +55,7 @@ public abstract class AbstractEntitySpecResolver implements EntitySpecResolver {
     }
 
     @Override
-    public void injectManagementContext(ManagementContext mgmt) {
+    public void setManagementContext(ManagementContext mgmt) {
         this.mgmt = mgmt;
     }
 

@@ -309,21 +309,16 @@ public class Osgis {
      * When running inside an OSGi container, the container framework is returned.
      * When running standalone a new Apache Felix container is created.
      * 
-     * Calling {@link #ungetFramework(Framework) } is needed in both cases, either to stop
-     * the embedded framework or to release the service reference.
-     *
      * @param felixCacheDir
      * @param clean
      * @return
      * @todo Use felixCacheDir ?
      */
     public static Framework getFramework(String felixCacheDir, boolean clean) {
-        final Bundle frameworkBundle = FrameworkUtil.getBundle(Framework.class);
-        if (frameworkBundle != null) {
+        final Bundle bundle = FrameworkUtil.getBundle(Osgis.class);
+        if (bundle != null) {
             // already running inside an OSGi container
-            final BundleContext ctx = frameworkBundle.getBundleContext();
-            final ServiceReference<?> ref = ctx.getServiceReference(Framework.class);
-            return (Framework) ctx.getService(ref);
+            return (Framework) bundle.getBundleContext().getBundle(0);
         } else {
             // not running inside OSGi container
             return EmbeddedFelixFramework.newFrameworkStarted(felixCacheDir, clean, null);
@@ -338,13 +333,8 @@ public class Osgis {
      * @param framework
      */
     public static void ungetFramework(Framework framework) {
-        final Bundle frameworkBundle = FrameworkUtil.getBundle(Framework.class);
-        if (frameworkBundle != null) {
-            // already running inside an OSGi container
-            final BundleContext ctx = frameworkBundle.getBundleContext();
-            final ServiceReference<?> ref = ctx.getServiceReference(Framework.class);
-            ctx.ungetService(ref);
-        } else {
+        final Bundle bundle = FrameworkUtil.getBundle(Osgis.class);
+        if (bundle == null) {
             EmbeddedFelixFramework.stopFramework(framework);
         }
     }
@@ -352,7 +342,7 @@ public class Osgis {
 
     /** Tells if Brooklyn is running in an OSGi environment or not. */
     public static boolean isBrooklynInsideFramework() {
-        return FrameworkUtil.getBundle(Framework.class) != null;
+        return FrameworkUtil.getBundle(Osgis.class) != null;
     }
 
     /** @deprecated since 0.9.0, replaced with {@link OsgiUtils#getVersionedId(org.osgi.framework.Bundle) } */

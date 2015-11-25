@@ -70,8 +70,9 @@ import com.google.common.io.Files;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
-import org.eclipse.jetty.server.NetworkConnector;
 import org.apache.brooklyn.rest.filter.SwaggerFilter;
+import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.eclipse.jetty.server.NetworkConnector;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -358,7 +359,7 @@ public class BrooklynRestApiLauncher {
         FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
 
-        ManagementContext mgmt = (ManagementContext) context.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        ManagementContext mgmt = OsgiCompat.getManagementContext(context);
         config.getSingletons().add(new ManagementContextProvider(mgmt));
         config.getSingletons().add(new ShutdownHandlerProvider(shutdownListener));
     }

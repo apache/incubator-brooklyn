@@ -43,7 +43,7 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
     protected ManagementContext mgmt;
 
     @Override
-    public void injectManagementContext(ManagementContext mgmt) {
+    public void setManagementContext(ManagementContext mgmt) {
         this.mgmt = mgmt;
     }
 

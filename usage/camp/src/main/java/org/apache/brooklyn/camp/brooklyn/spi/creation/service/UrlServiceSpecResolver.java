@@ -75,7 +75,7 @@ public class UrlServiceSpecResolver implements EntitySpecResolver {
     }
 
     @Override
-    public void injectManagementContext(ManagementContext managementContext) {
+    public void setManagementContext(ManagementContext managementContext) {
     }
 
 }

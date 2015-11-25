@@ -95,7 +95,7 @@ public class PlanToSpecFactory {
             result.addAll(getAll(includeSuperseded));
         }
         for(PlanToSpecTransformer t : result) {
-            t.injectManagementContext(mgmt);
+            t.setManagementContext(mgmt);
         }
         return result;
     }

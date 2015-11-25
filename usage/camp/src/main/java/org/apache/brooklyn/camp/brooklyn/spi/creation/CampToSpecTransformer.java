@@ -103,7 +103,7 @@ public class CampToSpecTransformer implements PlanToSpecTransformer {
     }
 
     @Override
-    public void injectManagementContext(ManagementContext mgmt) {
+    public void setManagementContext(ManagementContext mgmt) {
         this.mgmt = mgmt;
     }
 

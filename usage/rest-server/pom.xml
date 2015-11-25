@@ -247,8 +247,43 @@
                 <!-- Required to set values in build-metadata.properties -->
                 <filtering>true</filtering>
             </resource>
+            <resource>
+                <directory>${basedir}/src/main/webapp</directory>
+            </resource>
         </resources>
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <extensions>true</extensions>
+                <!-- configure plugin to generate MANIFEST.MF
+                     adapted from http://blog.knowhowlab.org/2010/06/osgi-tutorial-from-project-structure-to.html -->
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>jar</supportedProjectType>
+                    </supportedProjectTypes>
+                    <instructions>
+                        <Import-Package>
+                            com.sun.jersey.spi.container.servlet;version="[1.18.1,2.0)",
+                            *
+                        </Import-Package>
+                        <Export-Package>org.apache.brooklyn.*</Export-Package>
+                        <Web-ContextPath>/</Web-ContextPath>
+                        <_wab>src/main/webapp</_wab>
+                    </instructions>
+                </configuration>
+            </plugin>
+
 
 <!-- if you want to build a WAR, full or skinny:
             <plugin>

@@ -21,7 +21,29 @@
     <repository>mvn:org.apache.karaf.features/standard/${karaf.version}/xml/features</repository>
     <repository>mvn:org.apache.karaf.features/enterprise/${karaf.version}/xml/features</repository>
     <repository>mvn:org.apache.karaf.features/spring/${karaf.version}/xml/features</repository>
-  
+
+    <!-- all these are about jax-rs, and will need some love later on -->
+    <!--<bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jsr339-api-2.0/2.4.0</bundle>-->
+    <!--<bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>-->
+    <!--<bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax.ws.rs-api}</bundle>-->
+
+    <!-- temporary feature until we migrate to swagger-1.5.4, which is properly bundled -->
+    <feature name="swagger-crippled" version="${swagger.version}" description="Swagger Annotations+Core+JAXRS+Models">
+        <bundle>mvn:io.swagger/swagger-annotations/${swagger.version}</bundle>
+<!--        <bundle>wrap:mvn:io.swagger/swagger-core/${swagger.version}</bundle>
+        <bundle>wrap:mvn:io.swagger/swagger-jaxrs/${swagger.version}</bundle>-->
+        <bundle>mvn:io.swagger/swagger-models/${swagger.version}</bundle>
+
+        <!--<bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.javassist/${javassist.bundle.version}</bundle>-->
+        <!--<bundle dependency='true'>mvn:com.google.guava/guava/${guava.version}</bundle>-->
+        <bundle dependency='true'>mvn:com.fasterxml.jackson.core/jackson-annotations/${fasterxml.jackson.version}</bundle>
+        <bundle dependency='true'>mvn:com.fasterxml.jackson.core/jackson-core/${fasterxml.jackson.version}</bundle>
+        <bundle dependency='true'>mvn:com.fasterxml.jackson.core/jackson-databind/${fasterxml.jackson.version}</bundle>
+        <bundle dependency='true'>mvn:com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/${fasterxml.jackson.version}</bundle>
+        <bundle dependency='true'>mvn:com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/${fasterxml.jackson.version}</bundle>
+        <bundle dependency='true'>mvn:com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/${fasterxml.jackson.version}</bundle>
+    </feature>
+
     <feature name="brooklyn-utils-common" version="${project.version}" description="Brooklyn Common Utils">
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/${project.version}</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-logback-includes/${project.version}</bundle>
@@ -29,8 +51,11 @@
         <bundle dependency="true">mvn:com.google.guava/guava/${guava.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.groovy/groovy-all/${groovy.version}</bundle>
         <bundle dependency="true">mvn:commons-io/commons-io/${commons-io.version}</bundle>
+        <bundle dependency="true">mvn:commons-codec/commons-codec/${commons-codec.version}</bundle>
         <bundle dependency="true">mvn:org.slf4j/jul-to-slf4j/${slf4j.version}</bundle>
         <bundle dependency="true">mvn:org.yaml/snakeyaml/${snakeyaml.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient.version}</bundle>
 
         <bundle dependency="true">mvn:ch.qos.logback/logback-classic/${logback.version}</bundle>
         <bundle dependency="true">mvn:ch.qos.logback/logback-core/${logback.version}</bundle>
@@ -39,6 +64,45 @@
     <feature name="brooklyn-utils-groovy" version="${project.version}" description="Brooklyn Groovy Utils">
         <feature>brooklyn-utils-common</feature>
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/${project.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-utils-rest-swagger" version="${project.version}" description="Brooklyn REST Swagger Apidoc Utilities">
+        <feature>brooklyn-utils-common</feature>
+        <feature version="${swagger.version}">swagger-crippled</feature>
+
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-rest-swagger/${project.version}</bundle>
+
+        <!--<feature>jersey</feature>-->
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
+
+        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
+        <bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-rest-api" version="${project.version}" description="Brooklyn REST API">
+        <feature>brooklyn-utils-rest-swagger</feature>
+        <feature>brooklyn-api</feature>
+
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-api/${project.version}</bundle>
+
+        <bundle dependency="true">mvn:com.sun.jersey.contribs/jersey-multipart/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:org.jvnet.mimepull/mimepull/1.9.3</bundle>
+        <bundle dependency="true">mvn:commons-lang/commons-lang/${commons-lang.version}</bundle>
+
+        <!-- TODO: version 1.1.0.Final has OSGi manifest; check if upgrade doesn't get rid of wrap -->
+        <bundle dependency="true">wrap:mvn:javax.validation/validation-api/${validation-api.version}</bundle>
+
+        <!--<feature>jersey</feature>-->
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
+
+        <!--<bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>-->
+        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
     </feature>
 
     <feature name="brooklyn-api"  version="${project.version}" description="Brooklyn API">
@@ -68,17 +132,64 @@
         <bundle dependency="true">mvn:org.bouncycastle/bcpkix-jdk15on/${bouncycastle.version}</bundle>
         <bundle dependency="true">mvn:commons-codec/commons-codec/${commons-codec.version}</bundle>
         <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
-        <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpclient.version}</bundle>
-        <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclient.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-jaxrs/${jackson.version}</bundle>
 
-        <!-- TODO: don't use wrap: -->
+        <!-- TODO: don't use wrap -->
         <bundle dependency="true">wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle> <!-- from geoip -->
         <bundle dependency="true">wrap:mvn:com.maxmind.geoip2/geoip2/${maxmind.version}</bundle> <!-- from geoip2 -->
         <bundle dependency="true">wrap:mvn:xpp3/xpp3_min/1.1.4c</bundle> <!-- from com.thoughtworks.xstream/xstream -->
-        <bundle dependency="true">wrap:mvn:org.reflections/reflections/${reflections.version}</bundle>
+
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.reflections/${reflections.bundle.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-camp-brooklyn" version="${project.version}" description="Brooklyn CAMP REST API">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-camp/${project.version}</bundle>
+
+        <feature>brooklyn-core</feature>
+        <feature>brooklyn-camp-base</feature>
+        <bundle dependency="true">mvn:commons-beanutils/commons-beanutils/${commons-beanutils.version}</bundle>
+        <bundle dependency="true">mvn:commons-collections/commons-collections/${commons-collections.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-camp-base" version="${project.version}" description="Brooklyn CAMP Base">
+        <bundle>mvn:org.apache.brooklyn.camp/camp-base/${project.version}</bundle>
+
+        <feature>brooklyn-utils-common</feature>
+        <bundle dependency="true">mvn:org.apache.commons/commons-compress/${commons-compress.version}</bundle>
+        <bundle dependency="true">wrap:mvn:org.tukaani/xz/${commons-compress.version}</bundle>
+        <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-camp-server" version="${project.version}" description="Brooklyn CAMP Server">
+        <bundle>mvn:org.apache.brooklyn.camp/camp-server/${project.version}</bundle>
+
+        <feature>brooklyn-camp-base</feature>
+        <feature>brooklyn-utils-rest-swagger</feature>
+        <feature>jetty</feature> <!-- TODO: pax-jetty??? -->
+
+        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-rest-server" version="${project.version}" description="Brooklyn REST Server">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-server/${project.version}</bundle>
+        <feature>brooklyn-core</feature>
+        <feature>brooklyn-rest-api</feature>
+        <feature>brooklyn-camp-brooklyn</feature>
+        <feature>brooklyn-camp-base</feature>
+
+        <feature>war</feature>
+
+        <!--<feature>jersey</feature>-->
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
+        <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-jsgui" version="${project.version}" description="Brooklyn REST JavaScript Web GUI">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-jsgui/${project.version}/war</bundle>
+        <feature>war</feature>
     </feature>
   
     <feature name="brooklyn-commands"  version="${project.version}"  description="Brooklyn Shell Commands">

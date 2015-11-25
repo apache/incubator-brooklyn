@@ -28,6 +28,7 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
+import org.apache.brooklyn.rest.util.OsgiCompat;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -158,14 +159,11 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
     }
 
     public static ManagementContext getManagementContext(ServletContext servletContext) {
-        if (servletContext == null)
-            return null;
-
-        return (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        return OsgiCompat.getManagementContext(servletContext);
     }
 
     @Override
-    public void injectManagementContext(ManagementContext mgmt) {
+    public void setManagementContext(ManagementContext mgmt) {
         this.mgmt = mgmt;
     }
 }
