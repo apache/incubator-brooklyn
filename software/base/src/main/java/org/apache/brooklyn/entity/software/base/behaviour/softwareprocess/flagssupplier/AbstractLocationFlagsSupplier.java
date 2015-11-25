@@ -18,24 +18,19 @@
  */
 package org.apache.brooklyn.entity.software.base.behaviour.softwareprocess.flagssupplier;
 
-import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.entity.AbstractEntity;
-
-import java.util.Map;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 
 public abstract class AbstractLocationFlagsSupplier implements LocationFlagSupplier{
 
-    AbstractEntity entity;
+    SoftwareProcess entity;
 
-    public AbstractLocationFlagsSupplier(AbstractEntity entity){
+    public AbstractLocationFlagsSupplier(SoftwareProcess entity){
         this.entity = entity;
     }
 
     @Override
-    public AbstractEntity entity() {
+    public SoftwareProcess entity() {
         return entity;
     }
 
-    @Override
-    public abstract Map<String, Object> obtainFlagsForLocation(Location location);
 }

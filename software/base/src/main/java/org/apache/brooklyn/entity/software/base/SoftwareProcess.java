@@ -35,6 +35,7 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle.Transition;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.entity.software.base.lifecycle.LifecycleEffectorTasks;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.time.Duration;
@@ -239,9 +240,11 @@ public interface SoftwareProcess extends Entity, Startable {
      */
     @Beta
     @SetFromFlag("lifecycleEffectorTasks")
-    ConfigKey<SoftwareProcessDriverLifecycleEffectorTasks> LIFECYCLE_EFFECTOR_TASKS = ConfigKeys.newConfigKey(SoftwareProcessDriverLifecycleEffectorTasks.class,
-            "softwareProcess.lifecycleTasks", "An object that handles lifecycle of an entity's associated machine.",
-            new SoftwareProcessDriverLifecycleEffectorTasks());
+    ConfigKey<LifecycleEffectorTasks> LIFECYCLE_EFFECTOR_TASKS = ConfigKeys.newConfigKey(
+            LifecycleEffectorTasks.class,
+            "softwareProcess.lifecycleTasks", "An object that handles lifecycle of an entity's associated machine."
+
+    );
 
     ConfigKey<Boolean> RETRIEVE_USAGE_METRICS = ConfigKeys.newBooleanConfigKey(
             "metrics.usage.retrieve",

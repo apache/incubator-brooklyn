@@ -21,6 +21,8 @@ package org.apache.brooklyn.entity.software.base;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 import groovy.time.TimeDuration;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -29,10 +31,12 @@ import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Attributes;
@@ -53,7 +57,9 @@ import org.apache.brooklyn.feed.function.FunctionPollConfig;
 import org.apache.brooklyn.location.paas.PaasLocation;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -68,6 +74,7 @@ import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
@@ -134,6 +141,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     @Override
     public void init() {
         super.init();
+        LIFECYCLE_TASKS = getConfig(SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS);
     }
     
     @Override
@@ -477,9 +485,41 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return locationFlagSupplier.obtainFlagsForLocation(location);
     }
 
-    //FIXME better, it could be called getRequiredPorts because it is focus on IaaS and PaaS
-    protected Collection<Integer> getRequiredOpenPorts(){
-        return locationFlagSupplier.getRequiredOpenPorts();
+    /** returns the ports that this entity wants to use;
+     * default implementation returns {@link SoftwareProcess#REQUIRED_OPEN_LOGIN_PORTS} plus first value
+     * for each {@link org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey} config key {@link org.apache.brooklyn.api.location.PortRange}
+     * plus any ports defined with a config keys ending in {@code .port}.
+     */
+    @SuppressWarnings("serial")
+    public Collection<Integer> getRequiredOpenPorts() {
+        Set<Integer> ports = MutableSet.copyOf(getConfig(REQUIRED_OPEN_LOGIN_PORTS));
+        Map<ConfigKey<?>, ?> allConfig = config().getBag().getAllConfigAsConfigKeyMap();
+        Set<ConfigKey<?>> configKeys = Sets.newHashSet(allConfig.keySet());
+        configKeys.addAll(getEntityType().getConfigKeys());
+
+        /* TODO: This won't work if there's a port collision, which will cause the corresponding port attribute
+           to be incremented until a free port is found. In that case the entity will use the free port, but the
+           firewall will open the initial port instead. Mostly a problem for SameServerEntity, localhost location.
+         */
+        for (ConfigKey<?> k: configKeys) {
+            if (PortRange.class.isAssignableFrom(k.getType()) || k.getName().matches(".*\\.port")) {
+                Object value = config().get(k);
+                Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, new TypeToken<PortRange>() {
+                });
+                if (maybePortRange.isPresentAndNonNull()) {
+                    PortRange p = maybePortRange.get();
+                    if (p != null && !p.isEmpty())
+                        ports.add(p.iterator().next());
+                }
+            }
+        }
+
+        if(locationFlagSupplier!=null){
+            ports.addAll(locationFlagSupplier.getRequiredBehaviorOpenPorts());
+        }
+
+        log.debug("getRequiredOpenPorts detected default {} for {}", ports, this);
+        return ports;
     }
 
     protected void initDriver(Location location) {
@@ -591,10 +631,15 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             fabric =  new SoftwareProcessImplPaasBehaviourFactory(this);
         }
 
-        LIFECYCLE_TASKS = fabric.getLifecycleEffectorTasks();
-        locationFlagSupplier= fabric.getLocationFlagSupplier();
+        if(getConfig(SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS)==null){
+            LIFECYCLE_TASKS = fabric.getLifecycleEffectorTasks();
+            locationFlagSupplier= fabric.getLocationFlagSupplier();
+            log.info("Lifecycle {} was inferred for {} from location {}",
+                    new Object[]{LIFECYCLE_TASKS, this, location});
+        } else {
+            log.info("Default Lifecycle {} is used for {}", LIFECYCLE_TASKS, this);
+        }
 
-        log.info("Lifecycle {} was selected for {}", LIFECYCLE_TASKS, this);
     }
 
     /**
@@ -658,8 +703,13 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     }
     
     protected LifecycleEffectorTasks getLifecycleEffectorTasks() {
+        if (LIFECYCLE_TASKS == null) {
+            log.warn("A lifecycle was not selected for entity {}, so it will be use a default " +
+                    "SoftwareProcessDriverLifecycleEffectorTasks lifecycle. Using start Effector" +
+                    " to select a target lifecycle according to the target location", this);
+            return new SoftwareProcessDriverLifecycleEffectorTasks();
+        }
         return LIFECYCLE_TASKS;
     }
-
 
 }

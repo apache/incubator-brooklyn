@@ -20,6 +20,7 @@ package org.apache.brooklyn.entity.software.base;
 
 import static org.testng.Assert.assertEquals;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -63,7 +64,12 @@ public class SoftwareProcessSubclassTest extends BrooklynAppUnitTestSupport {
         @Override
         public void init() {
             super.init();
-            getMutableEntityType().addEffector(new EffectorAndBody<Void>(SoftwareProcess.RESTART, new MethodEffector<Void>(SubSoftwareProcess.class, "customRestart").getBody()));
+            //getMutableEntityType().addEffector(new EffectorAndBody<Void>(SoftwareProcess.RESTART, new MethodEffector<Void>(SubSoftwareProcess.class, "customRestart").getBody()));
+        }
+
+        public void attachRestartEffector(){
+            getMutableEntityType().addEffector(new EffectorAndBody<Void>(SoftwareProcess.RESTART,
+                    new MethodEffector<Void>(SubSoftwareProcess.class, "customRestart").getBody()));
         }
         
         @Override
@@ -71,10 +77,16 @@ public class SoftwareProcessSubclassTest extends BrooklynAppUnitTestSupport {
             return callHistory;
         }
 
+
         @Override
         public void preStart() {
             callHistory.add("doStart");
             super.preStart();
+            //TODO: find a better attachment mechanism.
+            /*
+            Restart effector is redefined by start method depending on the target location.
+             */
+            attachRestartEffector();
         }
         
         @Override

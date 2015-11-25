@@ -115,7 +115,7 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
+    public Collection<Integer> getRequiredOpenPorts() {
         // TODO this creates a huge list of inbound ports; much better to define on a security group using range syntax!
         int erlangRangeStart = getConfig(NODE_DATA_EXCHANGE_PORT_RANGE_START).iterator().next();
         int erlangRangeEnd = getConfig(NODE_DATA_EXCHANGE_PORT_RANGE_END).iterator().next();

@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.software.base.behaviour.softwareprocess.flagssupplier;
 
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +33,7 @@ public class PaasLocationFlagsSupplier extends AbstractLocationFlagsSupplier {
     private static final Logger log = LoggerFactory.getLogger(PaasLocationFlagsSupplier.class);
 
 
-    public PaasLocationFlagsSupplier(AbstractEntity entity) {
+    public PaasLocationFlagsSupplier(SoftwareProcess entity) {
         super(entity);
     }
 
@@ -43,7 +43,7 @@ public class PaasLocationFlagsSupplier extends AbstractLocationFlagsSupplier {
     }
 
     @Override
-    public Collection<Integer> getRequiredOpenPorts() {
+    public Collection<Integer> getRequiredBehaviorOpenPorts() {
         return new ArrayList<>();
     }
 

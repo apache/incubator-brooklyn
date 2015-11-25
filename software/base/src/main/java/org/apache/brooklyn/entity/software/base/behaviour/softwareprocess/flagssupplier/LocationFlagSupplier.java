@@ -19,16 +19,16 @@
 package org.apache.brooklyn.entity.software.base.behaviour.softwareprocess.flagssupplier;
 
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 
 import java.util.Collection;
 import java.util.Map;
 
 public interface LocationFlagSupplier {
 
-    public AbstractEntity entity();
+    public SoftwareProcess entity();
 
     public Map<String, Object> obtainFlagsForLocation(Location location);
-    public Collection<Integer> getRequiredOpenPorts();
+    public Collection<Integer> getRequiredBehaviorOpenPorts();
 
 }

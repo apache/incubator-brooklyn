@@ -98,7 +98,7 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
+    public Collection<Integer> getRequiredOpenPorts() {
         // TODO this creates a huge list of inbound ports; much better to define on a security group using range syntax!
         int erlangRangeStart = getConfig(ERLANG_PORT_RANGE_START).iterator().next();
         int erlangRangeEnd = getConfig(ERLANG_PORT_RANGE_END).iterator().next();
