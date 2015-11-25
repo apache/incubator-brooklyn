@@ -18,19 +18,30 @@ under the License.
 -->
 <div id="catalog-resource">
     <div class="row row-fluid">
-        <div class="span4" id="accord">
+        <div class="span12 composer" id="composer">
             <div class="navbar_top">
-                <h3>Catalog</h3>
-                <div class="apps-tree-toolbar">
+                <h3>Blueprint</h3>
+                <!-- div class="apps-tree-toolbar">
                     <i class="icon-br-refresh refresh handy"></i>
+                </div -->
+                <div class="apps-tree-toolbar">
+                    <button id="button-run" class="btn btn-success btn-sm">Run</button>
+                    <button id="button-delete" class="btn btn-danger btn-sm">Delete</button>
                 </div>
             </div>
             <div class="navbar_main_wrapper">
-                <div class="catalog-accordion-parent catalog-accordion-wrapper"></div>
+                <div class="navbar_main">
+                    <div class="composer-editor">
+                        <div class="composer-toolbar">
+                            <!-- the toolbar -->
+                        </div>
+                        <textarea id="yaml_code" placeholder="no details available" mode="yaml" class="code-textarea" style="height:760px; width:98%"></textarea>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="span8" id="details">
+        <!-- div class="span8" id="details">
             <ul class="nav nav-tabs entity-tabs">
                 <li><a data-target="#details" data-toggle="tab">Details</a></li>
                 <li><a data-target="#yaml" data-toggle="tab">blueprint</a></li>
@@ -41,6 +52,6 @@ under the License.
                     <textarea id='run-blueprint' name='yaml'></textarea>
                 </div>
             </div>
-        </div>
+        </div -->
     </div>
 </div>

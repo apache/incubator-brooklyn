@@ -274,14 +274,9 @@ button.catalog-submit-button.btn {
 }
 
 .CodeMirror .cm-s-default {
-	height: 150px;
+	height: 560px;
 }
 
-.CodeMirror pre.CodeMirror-placeholder {
+.CodeMirror .CodeMirror-placeholder {
     color: #999;
-}
-
-.margin-fix {
-margin-left: 20px;
-margin-top: 10px;
 }
