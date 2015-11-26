@@ -50,12 +50,15 @@ package org.apache.brooklyn.util.text;
 
 import java.util.Comparator;
 
-/** comparator which takes two strings and puts them in an order with special rules for numbers to be placed in numeric order;
+/** comparator which takes two strings and puts them in an order 
+ * with special rules for numbers (whole number) to be placed in numeric order;
  * e.g. "10">"9", including when those numbers occur in the midst of equal text; e.g. "a10" > "a9";
  * but not if the text differs; e.g. "a10" < "b9"
  * <p>
  * class is thread-safe. nulls not supported. (to support nulls, wrap in guava:
  * <code>Ordering.from(NaturalOrderComparator.INSTANCE).nullsFirst()</code>)
+ * <p>
+ * NOTE: decimals are treated like a word-split, not a decimal point, i.e. 1.9 < 1.10 
  */
 public class NaturalOrderComparator implements Comparator<String> {
     
@@ -136,6 +139,17 @@ public class NaturalOrderComparator implements Comparator<String> {
                 if ((result = compareRight(a.substring(ia), b.substring(ib))) != 0) {
                     return result;
                 }
+            } else if ((Character.isDigit(ca) || nza>0) && (Character.isDigit(cb) || nzb>0)) {
+                // both sides are numbers, but at least one is a sequence of zeros
+                if (nza==0) {
+                    // b=0, a>0
+                    return 1;
+                }
+                if (nzb==0) {
+                    // inverse
+                    return -1;
+                }
+                // both sides were zero, continue to next check below
             }
 
             if (ca == 0 && cb == 0) {

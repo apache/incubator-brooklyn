@@ -138,19 +138,6 @@ public class Strings {
         }
     }
 
-    /** removes the first suffix in the list which is present at the end of string
-     * and returns that string; ignores subsequent suffixes if a matching one is found;
-     * returns the original string if no suffixes are at the end
-     * @deprecated since 0.7.0 use {@link #removeFromEnd(String, String)} or {@link #removeAllFromEnd(String, String...)}
-     */
-    @Deprecated
-    public static String removeFromEnd(String string, String ...suffixes) {
-        if (isEmpty(string)) return string;
-        for (String suffix : suffixes)
-            if (suffix!=null && string.endsWith(suffix)) return string.substring(0, string.length() - suffix.length());
-        return string;
-    }
-
     /**
      * As removeFromEnd, but repeats until all such suffixes are gone
      */
@@ -182,19 +169,6 @@ public class Strings {
         } else {
             return string;
         }
-    }
-
-    /** removes the first prefix in the list which is present at the start of string
-     * and returns that string; ignores subsequent prefixes if a matching one is found;
-     * returns the original string if no prefixes match
-     * @deprecated since 0.7.0 use {@link #removeFromStart(String, String)}
-     */
-    @Deprecated
-    public static String removeFromStart(String string, String ...prefixes) {
-        if (isEmpty(string)) return string;
-        for (String prefix : prefixes)
-            if (prefix!=null && string.startsWith(prefix)) return string.substring(prefix.length());
-        return string;
     }
 
     /**
