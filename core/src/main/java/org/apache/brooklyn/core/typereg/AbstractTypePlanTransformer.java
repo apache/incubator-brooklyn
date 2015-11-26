@@ -128,7 +128,7 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
     protected <T> T validate(T createdObject, RegisteredType type, RegisteredTypeLoadingContext constraint) {
         if (createdObject==null) return null;
         try {
-            return RegisteredTypes.validate(createdObject, type, constraint);
+            return RegisteredTypes.validate(createdObject, type, constraint).get();
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             throw new IllegalStateException("Created incompatible object: "+Exceptions.collapseText(e), e);

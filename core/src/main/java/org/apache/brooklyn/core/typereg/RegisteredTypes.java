@@ -19,6 +19,8 @@
 package org.apache.brooklyn.core.typereg;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +32,6 @@ import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind;
-import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredType.TypeImplementationPlan;
 import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
@@ -39,15 +40,18 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.core.typereg.JavaClassNameTypePlanTransformer.JavaClassNameTypeImplementationPlan;
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.NaturalOrderComparator;
+import org.apache.brooklyn.util.text.VersionComparator;
 import org.apache.brooklyn.util.yaml.Yamls;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.reflect.TypeToken;
 
 /**
@@ -88,16 +92,18 @@ public class RegisteredTypes {
         }
         
         BasicRegisteredType type = (BasicRegisteredType) spec(item.getSymbolicName(), item.getVersion(), impl, item.getCatalogItemJavaType());
-        type.bundles = item.getLibraries()==null ? ImmutableList.<OsgiBundleWithUrl>of() : ImmutableList.<OsgiBundleWithUrl>copyOf(item.getLibraries());
         type.displayName = item.getDisplayName();
         type.description = item.getDescription();
         type.iconUrl = item.getIconUrl();
+        
+        if (item.getLibraries()!=null) type.bundles.addAll(item.getLibraries());
         type.disabled = item.isDisabled();
         type.deprecated = item.isDeprecated();
+        if (item.getLibraries()!=null) type.bundles.addAll(item.getLibraries());
+        // aliases aren't on item
+        if (item.tags()!=null) type.tags.addAll(item.tags().getTags());
 
-        // TODO
-        // probably not: javaType, specType, registeredTypeName ...
-        // maybe: tags ?
+        // these things from item we ignore: javaType, specType, registeredTypeName ...
         return type;
     }
 
@@ -135,7 +141,6 @@ public class RegisteredTypes {
         }
         return type;
     }
-
     @Beta
     public static RegisteredType addSuperType(RegisteredType type, @Nullable RegisteredType superType) {
         if (superType!=null) {
@@ -143,6 +148,53 @@ public class RegisteredTypes {
                 throw new IllegalStateException(superType+" declares "+type+" as a supertype; cannot set "+superType+" as a supertype of "+type);
             }
             ((BasicRegisteredType)type).superTypes.add(superType);
+        }
+        return type;
+    }
+    @Beta
+    public static RegisteredType addSuperTypes(RegisteredType type, Iterable<Object> superTypesAsClassOrRegisteredType) {
+        if (superTypesAsClassOrRegisteredType!=null) {
+            for (Object superType: superTypesAsClassOrRegisteredType) {
+                if (superType==null) {
+                    // nothing
+                } else if (superType instanceof Class) {
+                    addSuperType(type, (Class<?>)superType);
+                } else if (superType instanceof RegisteredType) {
+                    addSuperType(type, (RegisteredType)superType);
+                } else {
+                    throw new IllegalStateException(superType+" supplied as a supertype of "+type+" but it is not a supported supertype");
+                }
+            }
+        }
+        return type;
+    }
+
+    @Beta
+    public static RegisteredType addAlias(RegisteredType type, String alias) {
+        if (alias!=null) {
+            ((BasicRegisteredType)type).aliases.add( alias );
+        }
+        return type;
+    }
+    @Beta
+    public static RegisteredType addAliases(RegisteredType type, Iterable<String> aliases) {
+        if (aliases!=null) {
+            for (String alias: aliases) addAlias(type, alias);
+        }
+        return type;
+    }
+
+    @Beta
+    public static RegisteredType addTag(RegisteredType type, Object tag) {
+        if (tag!=null) {
+            ((BasicRegisteredType)type).tags.add( tag );
+        }
+        return type;
+    }
+    @Beta
+    public static RegisteredType addTags(RegisteredType type, Iterable<?> tags) {
+        if (tags!=null) {
+            for (Object tag: tags) addTag(type, tag);
         }
         return type;
     }
@@ -232,16 +284,16 @@ public class RegisteredTypes {
         return false;
     }
 
-    public static RegisteredType validate(RegisteredType item, final RegisteredTypeLoadingContext constraint) {
-        if (item==null || constraint==null) return item;
+    public static Maybe<RegisteredType> validate(RegisteredType item, final RegisteredTypeLoadingContext constraint) {
+        if (item==null || constraint==null) return Maybe.of(item);
         if (constraint.getExpectedKind()!=null && !constraint.getExpectedKind().equals(item.getKind()))
-            throw new IllegalStateException(item+" is not the expected kind "+constraint.getExpectedKind());
+            return Maybe.absent(item+" is not the expected kind "+constraint.getExpectedKind());
         if (constraint.getExpectedJavaSuperType()!=null) {
             if (!isSubtypeOf(item, constraint.getExpectedJavaSuperType())) {
-                throw new IllegalStateException(item+" is not for the expected type "+constraint.getExpectedJavaSuperType());
+                return Maybe.absent(item+" is not for the expected type "+constraint.getExpectedJavaSuperType());
             }
         }
-        return item;
+        return Maybe.of(item);
     }
 
     /** 
@@ -258,68 +310,87 @@ public class RegisteredTypes {
         return true;
     }
 
-    public static <T> T validate(final T object, final RegisteredType type, final RegisteredTypeLoadingContext constraint) {
+    public static RegisteredType getBestVersion(Iterable<RegisteredType> types) {
+        if (types==null || !types.iterator().hasNext()) return null;
+        return Collections.max(MutableList.copyOf(types), RegisteredTypeComparator.INSTANCE);
+    }
+    
+    public static class RegisteredTypeComparator implements Comparator<RegisteredType> {
+        public static Comparator<RegisteredType> INSTANCE = new RegisteredTypeComparator();
+        private RegisteredTypeComparator() {}
+        @Override
+        public int compare(RegisteredType o1, RegisteredType o2) {
+            return ComparisonChain.start()
+                .compareTrueFirst(o1.isDisabled(), o2.isDisabled())
+                .compareTrueFirst(o1.isDeprecated(), o2.isDeprecated())
+                .compare(o1.getSymbolicName(), o2.getSymbolicName(), NaturalOrderComparator.INSTANCE)
+                .compare(o1.getVersion(), o2.getVersion(), VersionComparator.INSTANCE)
+                .result();
+        }
+    }
+
+    public static <T> Maybe<T> validate(final T object, final RegisteredType type, final RegisteredTypeLoadingContext constraint) {
         RegisteredTypeKind kind = type!=null ? type.getKind() : constraint!=null ? constraint.getExpectedKind() : null;
         if (kind==null) {
             if (object instanceof AbstractBrooklynObjectSpec) kind=RegisteredTypeKind.SPEC;
             else kind=RegisteredTypeKind.BEAN;
         }
-        return new RegisteredTypeKindVisitor<T>() {
+        return new RegisteredTypeKindVisitor<Maybe<T>>() {
             @Override
-            protected T visitSpec() {
+            protected Maybe<T> visitSpec() {
                 return validateSpec(object, type, constraint);
             }
 
             @Override
-            protected T visitBean() {
+            protected Maybe<T> visitBean() {
                 return validateBean(object, type, constraint);
             }
         }.visit(kind);
     }
 
-    private static <T> T validateBean(T object, RegisteredType type, final RegisteredTypeLoadingContext constraint) {
-        if (object==null) return null;
+    private static <T> Maybe<T> validateBean(T object, RegisteredType type, final RegisteredTypeLoadingContext constraint) {
+        if (object==null) return Maybe.absent("object is null");
         
         if (type!=null) {
             if (type.getKind()!=RegisteredTypeKind.BEAN)
-                throw new IllegalStateException("Validating a bean when type is "+type.getKind()+" "+type);
+                return Maybe.absent("Validating a bean when type is "+type.getKind()+" "+type);
             if (!isSubtypeOf(object.getClass(), type))
-                throw new IllegalStateException(object+" does not have all the java supertypes of "+type);
+                return Maybe.absent(object+" does not have all the java supertypes of "+type);
         }
 
         if (constraint!=null) {
             if (constraint.getExpectedKind()!=RegisteredTypeKind.BEAN)
-                throw new IllegalStateException("Validating a bean when constraint expected "+constraint.getExpectedKind());
+                return Maybe.absent("Validating a bean when constraint expected "+constraint.getExpectedKind());
             if (constraint.getExpectedJavaSuperType()!=null && !constraint.getExpectedJavaSuperType().isInstance(object))
-                throw new IllegalStateException(object+" is not of the expected java supertype "+constraint.getExpectedJavaSuperType());
+                return Maybe.absent(object+" is not of the expected java supertype "+constraint.getExpectedJavaSuperType());
         }
         
-        return object;
+        return Maybe.of(object);
     }
 
-    private static <T> T validateSpec(T object, RegisteredType rType, final RegisteredTypeLoadingContext constraint) {
-        if (object==null) return null;
+    private static <T> Maybe<T> validateSpec(T object, RegisteredType rType, final RegisteredTypeLoadingContext constraint) {
+        if (object==null) return Maybe.absent("object is null");
         
         if (!(object instanceof AbstractBrooklynObjectSpec)) {
-            throw new IllegalStateException("Found "+object+" when expecting a spec");
+            Maybe.absent("Found "+object+" when expecting a spec");
         }
         Class<?> targetType = ((AbstractBrooklynObjectSpec<?,?>)object).getType();
         
         if (targetType==null) {
-            throw new IllegalStateException("Spec "+object+" does not have a target type");
+            Maybe.absent("Spec "+object+" does not have a target type");
         }
         
         if (rType!=null) {
             if (rType.getKind()!=RegisteredTypeKind.SPEC)
-                throw new IllegalStateException("Validating a spec when type is "+rType.getKind()+" "+rType);
+                Maybe.absent("Validating a spec when type is "+rType.getKind()+" "+rType);
             if (!isSubtypeOf(targetType, rType))
-                throw new IllegalStateException(object+" does not have all the java supertypes of "+rType);
+                Maybe.absent(object+" does not have all the java supertypes of "+rType);
         }
 
         if (constraint!=null) {
             if (constraint.getExpectedJavaSuperType()!=null) {
                 if (!constraint.getExpectedJavaSuperType().isAssignableFrom(targetType)) {
-                    throw new IllegalStateException(object+" does not target the expected java supertype "+constraint.getExpectedJavaSuperType());
+                    Maybe.absent(object+" does not target the expected java supertype "+constraint.getExpectedJavaSuperType());
                 }
                 if (constraint.getExpectedJavaSuperType().isAssignableFrom(BrooklynObjectInternal.class)) {
                     // don't check spec type; any spec is acceptable
@@ -328,15 +399,15 @@ public class RegisteredTypes {
                     Class<? extends AbstractBrooklynObjectSpec<?, ?>> specType = RegisteredTypeLoadingContexts.lookupSpecTypeForTarget( (Class<? extends BrooklynObject>) constraint.getExpectedJavaSuperType());
                     if (specType==null) {
                         // means a problem in our classification of spec types!
-                        throw new IllegalStateException(object+" is returned as spec for unexpected java supertype "+constraint.getExpectedJavaSuperType());
+                        Maybe.absent(object+" is returned as spec for unexpected java supertype "+constraint.getExpectedJavaSuperType());
                     }
                     if (!specType.isAssignableFrom(object.getClass())) {
-                        throw new IllegalStateException(object+" is not a spec of the expected java supertype "+constraint.getExpectedJavaSuperType());
+                        Maybe.absent(object+" is not a spec of the expected java supertype "+constraint.getExpectedJavaSuperType());
                     }
                 }
             }
         }
-        return object;
+        return Maybe.of(object);
     }
 
 }

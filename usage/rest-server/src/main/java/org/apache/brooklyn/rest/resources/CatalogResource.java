@@ -149,7 +149,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         try {
-            RegisteredType item = RegisteredTypes.validate(mgmt().getTypeRegistry().get(entityId), RegisteredTypeLoadingContexts.spec(Entity.class));
+            RegisteredType item = RegisteredTypes.validate(mgmt().getTypeRegistry().get(entityId), RegisteredTypeLoadingContexts.spec(Entity.class)).get();
             if (item==null) {
                 throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
             }

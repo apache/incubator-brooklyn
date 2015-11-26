@@ -21,22 +21,25 @@ package org.apache.brooklyn.core.catalog.internal;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.catalog.CatalogItem;
-import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
-import org.apache.brooklyn.core.catalog.internal.CatalogItemComparator;
+import org.testng.annotations.Test;
 
 public class CatalogItemComparatorTest {
     private static final String RC2 = "10.5.8-rc2";
     private static final String STABLE = "10.5.8";
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testComparison() {
         compare("0.0.1", "0.0.2", 1);
         compare("0.0.2", "0.0.1", -1);
         compare("0.0.1-qual", "0.0.2", 1);
         compare("0.0.1.qual", "0.0.2", 1);
-        compare("0.0.1-qual", "0.0.1_qual", 0);
+        
+        // NB: semantics of this changed in 090-SNAPSHOT not to be 0 unless identical
+        // (remove when we're used to this)
+//        compare("0.0.1-qual", "0.0.1_qual", 0);
+        
         compare("0.0.1.qual", "0.0.1.qual", 0);
         compare("0.0.1", "0.0.2-SNAPSHOT", -1);
         compare("0.0.1", "0.0.2.SNAPSHOT", -1);
@@ -70,6 +73,7 @@ public class CatalogItemComparatorTest {
         assertTrue(cmp.compare(v(RC2), v("10.5.8-beta1")) == cmp.compare(v(RC2), v("10.5.8-beta3")));
     }
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void compare(String v1, String v2, int expected) {
         CatalogItemComparator cmp = CatalogItemComparator.INSTANCE;
         assertEquals(cmp.compare(v(v1), v(v2)), expected);

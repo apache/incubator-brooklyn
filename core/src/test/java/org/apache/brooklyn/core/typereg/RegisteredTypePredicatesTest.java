@@ -24,28 +24,13 @@ import static org.testng.Assert.assertTrue;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
-import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
-import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.apache.brooklyn.core.test.BrooklynMgmtUnitTestSupport;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Predicates;
 
 
-public class RegisteredTypePredicatesTest {
-    private LocalManagementContext mgmt;
-    
-    @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception {
-        mgmt = LocalManagementContextForTests.newInstance();
-    }
-    
-    @AfterMethod(alwaysRun = true)
-    public void tearDown() throws Exception {
-        if (mgmt != null) Entities.destroyAll(mgmt);
-    }
+public class RegisteredTypePredicatesTest extends BrooklynMgmtUnitTestSupport {
 
     @Test
     public void testDisplayName() {

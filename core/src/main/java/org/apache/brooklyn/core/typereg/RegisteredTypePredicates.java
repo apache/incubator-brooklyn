@@ -20,14 +20,15 @@ package org.apache.brooklyn.core.typereg;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.typereg.RegisteredType;
+import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
@@ -93,6 +94,9 @@ public class RegisteredTypePredicates {
         }
     }
 
+    public static Predicate<RegisteredType> symbolicName(final String name) {
+        return symbolicName(Predicates.equalTo(name));
+    }
     public static Predicate<RegisteredType> symbolicName(final Predicate<? super String> filter) {
         return new SymbolicNameMatches(filter);
     }
@@ -106,6 +110,63 @@ public class RegisteredTypePredicates {
         @Override
         public boolean apply(@Nullable RegisteredType item) {
             return (item != null) && filter.apply(item.getSymbolicName());
+        }
+    }
+
+    public static Predicate<RegisteredType> version(final String name) {
+        return version(Predicates.equalTo(name));
+    }
+    public static Predicate<RegisteredType> version(final Predicate<? super String> filter) {
+        return new versionMatches(filter);
+    }
+    
+    private static class versionMatches implements Predicate<RegisteredType> {
+        private final Predicate<? super String> filter;
+        
+        public versionMatches(Predicate<? super String> filter) {
+            this.filter = filter;
+        }
+        @Override
+        public boolean apply(@Nullable RegisteredType item) {
+            return (item != null) && filter.apply(item.getVersion());
+        }
+    }
+
+    public static Predicate<RegisteredType> alias(final String alias) {
+        return aliases(CollectionFunctionals.any(Predicates.equalTo(alias)));
+    }
+    public static Predicate<RegisteredType> aliases(final Predicate<Iterable<String>> filter) {
+        return new AliasesMatch(filter);
+    }
+    
+    private static class AliasesMatch implements Predicate<RegisteredType> {
+        private final Predicate<Iterable<String>> filter;
+        
+        public AliasesMatch(Predicate<Iterable<String>> filter) {
+            this.filter = filter;
+        }
+        @Override
+        public boolean apply(@Nullable RegisteredType item) {
+            return (item != null) && filter.apply(item.getAliases());
+        }
+    }
+
+    public static Predicate<RegisteredType> tag(final Object tag) {
+        return tags(CollectionFunctionals.any(Predicates.equalTo(tag)));
+    }
+    public static Predicate<RegisteredType> tags(final Predicate<Iterable<Object>> filter) {
+        return new TagsMatch(filter);
+    }
+    
+    private static class TagsMatch implements Predicate<RegisteredType> {
+        private final Predicate<Iterable<Object>> filter;
+        
+        public TagsMatch(Predicate<Iterable<Object>> filter) {
+            this.filter = filter;
+        }
+        @Override
+        public boolean apply(@Nullable RegisteredType item) {
+            return (item != null) && filter.apply(item.getTags());
         }
     }
 
@@ -158,7 +219,6 @@ public class RegisteredTypePredicates {
     public static Predicate<RegisteredType> isBestVersion(final ManagementContext mgmt) {
         return new IsBestVersion(mgmt);
     }
-
     private static class IsBestVersion implements Predicate<RegisteredType> {
         private final ManagementContext mgmt;
 
@@ -170,11 +230,28 @@ public class RegisteredTypePredicates {
             return isBestVersion(mgmt, item);
         }
     }
- 
     public static boolean isBestVersion(ManagementContext mgmt, RegisteredType item) {
-        RegisteredType bestVersion = mgmt.getTypeRegistry().get(item.getSymbolicName(), BrooklynCatalog.DEFAULT_VERSION);
-        if (bestVersion==null) return false;
-        return (bestVersion.getVersion().equals(item.getVersion()));
+        if (item==null) return false;
+        Iterable<RegisteredType> matches = mgmt.getTypeRegistry().getAll(
+            RegisteredTypePredicates.symbolicName(item.getSymbolicName()) );
+        if (!matches.iterator().hasNext()) return false;
+        RegisteredType best = RegisteredTypes.getBestVersion(matches);
+        return (best.getVersion().equals(item.getVersion()));
+    }
+    
+    public static Predicate<RegisteredType> satisfies(RegisteredTypeLoadingContext context) {
+        return new SatisfiesContext(context);
+    }
+    private static class SatisfiesContext implements Predicate<RegisteredType> {
+        private final RegisteredTypeLoadingContext context;
+
+        public SatisfiesContext(RegisteredTypeLoadingContext context) {
+            this.context = context;
+        }
+        @Override
+        public boolean apply(@Nullable RegisteredType item) {
+            return RegisteredTypes.validate(item, context).isPresent();
+        }
     }
 
 }

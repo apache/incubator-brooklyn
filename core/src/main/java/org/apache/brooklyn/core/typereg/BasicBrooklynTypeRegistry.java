@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.core.typereg;
 
+import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -34,7 +35,8 @@ import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogItemBuilder;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -43,16 +45,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.api.client.util.Preconditions;
+import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 
 public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
 
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(BasicBrooklynTypeRegistry.class);
     
     private ManagementContext mgmt;
+    private Map<String,RegisteredType> localRegisteredTypes = MutableMap.of();
 
     public BasicBrooklynTypeRegistry(ManagementContext mgmt) {
         this.mgmt = mgmt;
@@ -62,40 +65,95 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         return getAll(Predicates.alwaysTrue());
     }
     
-    @SuppressWarnings("deprecation")
-    @Override
-    public Iterable<RegisteredType> getAll(Predicate<? super RegisteredType> filter) {
-        return Iterables.filter(Iterables.transform(mgmt.getCatalog().getCatalogItems(), RegisteredTypes.CI_TO_RT), filter);
+    private Iterable<RegisteredType> getAllWithoutCatalog(Predicate<? super RegisteredType> filter) {
+        // TODO thread safety
+        // TODO optimisation? make indexes and look up?
+        return Iterables.filter(localRegisteredTypes.values(), filter);
+    }
+
+    private RegisteredType getExactWithoutLegacyCatalog(String symbolicName, String version, RegisteredTypeLoadingContext constraint) {
+        // TODO look in any nested/private registries
+        RegisteredType item = localRegisteredTypes.get(symbolicName+":"+version);
+        return RegisteredTypes.validate(item, constraint).orNull();
     }
 
     @SuppressWarnings("deprecation")
-    private RegisteredType get(String symbolicName, String version, RegisteredTypeLoadingContext constraint) {
-        // probably constraint is not useful?
-        if (constraint==null) constraint = RegisteredTypeLoadingContexts.any();
+    @Override
+    public Iterable<RegisteredType> getAll(Predicate<? super RegisteredType> filter) {
+        return Iterables.filter(Iterables.concat(
+                getAllWithoutCatalog(filter),
+                Iterables.transform(mgmt.getCatalog().getCatalogItems(), RegisteredTypes.CI_TO_RT)), 
+            filter);
+    }
+
+    @SuppressWarnings("deprecation")
+    private Maybe<RegisteredType> getSingle(String symbolicNameOrAliasIfNoVersion, final String versionFinal, final RegisteredTypeLoadingContext contextFinal) {
+        RegisteredTypeLoadingContext context = contextFinal;
+        if (context==null) context = RegisteredTypeLoadingContexts.any();
+        String version = versionFinal;
         if (version==null) version = BrooklynCatalog.DEFAULT_VERSION;
+
+        RegisteredType type;
+        if (!BrooklynCatalog.DEFAULT_VERSION.equals(version)) {
+            type = getExactWithoutLegacyCatalog(symbolicNameOrAliasIfNoVersion, version, context);
+            if (type!=null) return Maybe.of(type);
+        }
         
-        // TODO lookup here, using constraints
+        if (BrooklynCatalog.DEFAULT_VERSION.equals(version)) {
+            Iterable<RegisteredType> types = getAll(Predicates.and(RegisteredTypePredicates.symbolicName(symbolicNameOrAliasIfNoVersion), 
+                RegisteredTypePredicates.satisfies(context)));
+            if (Iterables.isEmpty(types)) {
+                // look for alias if no exact symbolic name match AND no version is specified
+                types = getAll(Predicates.and(RegisteredTypePredicates.alias(symbolicNameOrAliasIfNoVersion), 
+                    RegisteredTypePredicates.satisfies(context) ) );
+                // if there are multiple symbolic names then throw?
+                Set<String> uniqueSymbolicNames = MutableSet.of();
+                for (RegisteredType t: types) {
+                    uniqueSymbolicNames.add(t.getSymbolicName());
+                }
+                if (uniqueSymbolicNames.size()>1) {
+                    log.warn("Multiple matches found for alias '"+symbolicNameOrAliasIfNoVersion+"': "+uniqueSymbolicNames+"; "
+                        + "picking highest version across different symbolic names. Use symbolic_name:version syntax to prevent this lookup.");
+                }
+            }
+            if (!Iterables.isEmpty(types)) {
+                type = RegisteredTypes.getBestVersion(types);
+                if (type!=null) return Maybe.of(type);
+            }
+        }
         
         // fallback to catalog
-        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(symbolicName, version);
-        // TODO apply constraint
-        return RegisteredTypes.CI_TO_RT.apply( item );
+        CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(symbolicNameOrAliasIfNoVersion, version);
+        if (item!=null) 
+            return Maybe.of( RegisteredTypes.CI_TO_RT.apply( item ) );
+        
+        return Maybe.absent("No matches for "+symbolicNameOrAliasIfNoVersion+
+            (versionFinal!=null ? ":"+versionFinal : "")+
+            (contextFinal!=null ? " ("+contextFinal+")" : "") );
     }
 
     @Override
     public RegisteredType get(String symbolicName, String version) {
-        return get(symbolicName, version, null);
+        return getSingle(symbolicName, version, null).orNull();
     }
     
-    private RegisteredType get(String symbolicNameWithOptionalVersion, RegisteredTypeLoadingContext constraint) {
-        // probably constraint is not useful?
+    @Override
+    public RegisteredType get(String symbolicNameWithOptionalVersion, RegisteredTypeLoadingContext context) {
+        return getMaybe(symbolicNameWithOptionalVersion, context).orNull();
+    }
+    @Override
+    public Maybe<RegisteredType> getMaybe(String symbolicNameWithOptionalVersion, RegisteredTypeLoadingContext context) {
+        Maybe<RegisteredType> r1 = null;
         if (CatalogUtils.looksLikeVersionedId(symbolicNameWithOptionalVersion)) {
             String symbolicName = CatalogUtils.getSymbolicNameFromVersionedId(symbolicNameWithOptionalVersion);
             String version = CatalogUtils.getVersionFromVersionedId(symbolicNameWithOptionalVersion);
-            return get(symbolicName, version, constraint);
-        } else {
-            return get(symbolicNameWithOptionalVersion, BrooklynCatalog.DEFAULT_VERSION, constraint);
+            r1 = getSingle(symbolicName, version, context);
+            if (r1.isPresent()) return r1;
         }
+
+        Maybe<RegisteredType> r2 = getSingle(symbolicNameWithOptionalVersion, BrooklynCatalog.DEFAULT_VERSION, context);
+        if (r2.isPresent() || r1==null) return r2;
+        return r1;
     }
 
     @Override
@@ -191,7 +249,8 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
             }
             if (constraint.getAlreadyEncounteredTypes().contains(type.getSymbolicName())) {
                 // avoid recursive cycle
-                // TODO implement using java if permitted
+                // TODO create type using java if permitted?
+                // OR remove this creator from those permitted
             }
         }
         constraint = RegisteredTypeLoadingContexts.withBeanSuperType(constraint, optionalResultSuperType);
@@ -207,4 +266,26 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
             optionalConstraint, optionalBeanSuperType);
     }
 
+    @Beta // API is stabilising
+    public void addToLocalUnpersistedTypeRegistry(RegisteredType type, boolean canForce) {
+        Preconditions.checkNotNull(type);
+        Preconditions.checkNotNull(type.getSymbolicName());
+        Preconditions.checkNotNull(type.getVersion());
+        Preconditions.checkNotNull(type.getId());
+        if (!type.getId().equals(type.getSymbolicName()+":"+type.getVersion()))
+            Asserts.fail("Registered type "+type+" has ID / symname mismatch");
+        
+        RegisteredType oldType = localRegisteredTypes.get(type.getId());
+        if (oldType==null || canForce) {
+            log.debug("Inserting "+type+" into "+this);
+            localRegisteredTypes.put(type.getId(), type);
+        } else {
+            if (oldType == type) {
+                // ignore if same instance
+                // (equals not yet implemented, so would be the same, but misleading)
+                return;
+            }
+            throw new IllegalStateException("Cannot add "+type+" to catalog; different "+oldType+" is already present");
+        }
+    }
 }

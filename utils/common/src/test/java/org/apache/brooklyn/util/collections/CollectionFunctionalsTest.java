@@ -22,6 +22,7 @@ import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -55,4 +56,27 @@ public class CollectionFunctionalsTest {
         Assert.assertEquals(CollectionFunctionals.firstElement().apply(ImmutableList.of("a")), "a");
         Assert.assertEquals(CollectionFunctionals.firstElement().apply(ImmutableList.of("a", "b", "c")), "a");
     }
+
+    @Test
+    public void testAllAndAny() {
+        Assert.assertEquals(CollectionFunctionals.all(Predicates.equalTo(1)).apply(
+            MutableList.of(1, 1, 1)), true);
+        Assert.assertEquals(CollectionFunctionals.all(Predicates.equalTo(1)).apply(
+            MutableList.<Integer>of()), true);
+        Assert.assertEquals(CollectionFunctionals.all(Predicates.equalTo(1)).apply(
+            MutableList.of(1, 0, 1)), false);
+        Assert.assertEquals(CollectionFunctionals.all(Predicates.equalTo(1)).apply(
+            MutableList.of(0, 0, 0)), false);
+        
+        Assert.assertEquals(CollectionFunctionals.any(Predicates.equalTo(1)).apply(
+            MutableList.of(1, 1, 1)), true);
+        Assert.assertEquals(CollectionFunctionals.any(Predicates.equalTo(1)).apply(
+            MutableList.<Integer>of()), false);
+        Assert.assertEquals(CollectionFunctionals.any(Predicates.equalTo(1)).apply(
+            MutableList.of(1, 0, 1)), true);
+        Assert.assertEquals(CollectionFunctionals.any(Predicates.equalTo(1)).apply(
+            MutableList.of(0, 0, 0)), false);
+        
+    }
+    
 }

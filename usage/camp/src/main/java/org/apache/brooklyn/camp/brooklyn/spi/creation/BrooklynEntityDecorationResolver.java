@@ -115,7 +115,7 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
             String policyType = decoLoader.getTypeName().get();
             ManagementContext mgmt = instantiator.loader.getManagementContext();
             
-            RegisteredType item = RegisteredTypes.validate(mgmt.getTypeRegistry().get(policyType), RegisteredTypeLoadingContexts.spec(Policy.class));
+            RegisteredType item = RegisteredTypes.validate(mgmt.getTypeRegistry().get(policyType), RegisteredTypeLoadingContexts.spec(Policy.class)).get();
             PolicySpec<?> spec;
             if (item!=null) {
                 spec = mgmt.getTypeRegistry().createSpec(item, null, PolicySpec.class);

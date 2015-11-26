@@ -23,7 +23,9 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.util.guava.Maybe;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
 
 
@@ -48,23 +50,29 @@ public interface BrooklynTypeRegistry {
      * taking the best version if the version is null or a default marker,
      * returning null if no matches are found. */
     RegisteredType get(String symbolicName, String version);
-    /** as {@link #get(String, String)} but allows <code>"name:version"</code> 
-     * (the {@link RegisteredType#getId()}) in addition to the unversioned name,
-     * using a default marker if no version can be inferred */
+    /** as {@link #get(String, String)} but the given string here 
+     * is allowed to match any of:
+     * <li>the given string as an ID including version (<code>"name:version"</code>) 
+     * <li>the symbolic name unversioned, or
+     * <li>an alias */
     RegisteredType get(String symbolicNameWithOptionalVersion);
-    
-    // TODO remove
-//    /** as {@link #get(String, String)}, but applying the optionally supplied {@link RegisteredTypeLoadingContext} */ 
-//    RegisteredType get(String symbolicName, String version, @Nullable RegisteredTypeLoadingContext context);
-//    /** as {@link #get(String)}, but applying the optionally supplied {@link RegisteredTypeLoadingContext} */ 
-//    RegisteredType get(String symbolicNameWithOptionalVersion, @Nullable RegisteredTypeLoadingContext context);
+
+    /** as {@link #get(String)} but further filtering for the additional context */
+    public RegisteredType get(String symbolicNameOrAliasWithOptionalVersion, RegisteredTypeLoadingContext context);
+    /** returns a wrapper of the result of {@link #get(String, RegisteredTypeLoadingContext)} 
+     * including a detailed message if absent */
+    public Maybe<RegisteredType> getMaybe(String symbolicNameOrAliasWithOptionalVersion, RegisteredTypeLoadingContext context);
 
     // NB the seemingly more correct generics <T,SpecT extends AbstractBrooklynObjectSpec<T,SpecT>> 
     // cause compile errors, not in Eclipse, but in maven (?) 
-    // TODO do these belong here, or in a separate master TypePlanTransformer ?  see also BrooklynTypePlanTransformer 
+    // TODO do these belong here, or in a separate master TypePlanTransformer ?  see also BrooklynTypePlanTransformer
+    @Beta
     <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpec(RegisteredType type, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<SpecT> optionalSpecSuperType);
+    @Beta
     <SpecT extends AbstractBrooklynObjectSpec<?,?>> SpecT createSpecFromPlan(@Nullable String planFormat, Object planData, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<SpecT> optionalSpecSuperType);
+    @Beta
     <T> T createBean(RegisteredType type, @Nullable RegisteredTypeLoadingContext optionalContext, @Nullable Class<T> optionalResultSuperType);
+    @Beta
     <T> T createBeanFromPlan(String planFormat, Object planData, @Nullable RegisteredTypeLoadingContext optionalConstraint, @Nullable Class<T> optionalBeanSuperType);
     
 }
