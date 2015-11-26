@@ -162,7 +162,15 @@ public class BashCommands {
      * (having a tty for sudo seems like another case of imaginary security which is just irritating.
      * like water restrictions at airport security.) */
     public static String dontRequireTtyForSudo() {
-        return ifFileExistsElse0("/etc/sudoers", sudo("sed -i.brooklyn.bak 's/.*requiretty.*/#brooklyn-removed-require-tty/' /etc/sudoers"));
+        String sudoersFileName =  "/etc/sudoers";
+
+        // Visudo's quiet mode (-q) is not enabled. visudo's output is used for diagnostic purposes 
+        return ifFileExistsElse0(sudoersFileName, 
+                chainGroup(
+                  sudo(format("cp %1$s %1$s.tmp", sudoersFileName)),
+                  sudo(format("sed -i.brooklyn.bak 's/.*requiretty.*/#brooklyn-removed-require-tty/' %1$s.tmp", sudoersFileName)),
+                  sudo(format("visudo -c -f %1$s.tmp", sudoersFileName)), 
+                  sudo(format("mv %1$s.tmp %1$s", sudoersFileName))));
     }
 
     /** generates ~/.ssh/id_rsa if that file does not exist */
