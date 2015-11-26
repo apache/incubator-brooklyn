@@ -24,6 +24,7 @@ import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineLocation;
@@ -35,6 +36,8 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.Sanitizer;
+import org.apache.brooklyn.core.effector.EffectorBody;
+import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
@@ -42,6 +45,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.entity.trait.StartableMethods;
 import org.apache.brooklyn.core.feed.ConfigToAttributes;
 import org.apache.brooklyn.core.location.AbstractLocation;
@@ -113,6 +117,53 @@ public abstract class MachineLifecycleEffectorTasks extends AbstractLifecycleEff
 
     protected final MachineInitTasks machineInitTasks = new MachineInitTasks();
 
+    @Override
+    /** @see {@link #newStartEffector()} */
+    public Effector<Void> newRestartEffector() {
+        return Effectors.effector(Startable.RESTART)
+                .parameter(RestartSoftwareParameters.RESTART_CHILDREN)
+                .parameter(RestartSoftwareParameters.RESTART_MACHINE)
+                .impl(newRestartEffectorTask())
+                .build();
+    }
+
+    @Override
+    /** @see {@link #newStartEffector()} */
+    public Effector<Void> newStopEffector() {
+        return Effectors.effector(Startable.STOP)
+                .parameter(StopSoftwareParameters.STOP_PROCESS_MODE)
+                .parameter(StopSoftwareParameters.STOP_MACHINE_MODE)
+                .impl(newStopEffectorTask())
+                .build();
+    }
+
+    /** @see {@link #newStartEffector()} */
+    public Effector<Void> newSuspendEffector() {
+        return Effectors.effector(Void.class, "suspend")
+                .description("Suspend the process/service represented by an entity")
+                .parameter(StopSoftwareParameters.STOP_PROCESS_MODE)
+                .parameter(StopSoftwareParameters.STOP_MACHINE_MODE)
+                .impl(newSuspendEffectorTask())
+                .build();
+    }
+
+    /**
+     * Calls {@link #suspend(ConfigBag)}.
+     *
+     * @see {@link #newStartEffectorTask()}
+     */
+    public EffectorBody<Void> newSuspendEffectorTask() {
+        return new SuspendEffectorBody();
+    }
+
+    private class SuspendEffectorBody extends EffectorBody<Void> {
+        @Override
+        public Void call(ConfigBag parameters) {
+            suspend(parameters);
+            return null;
+        }
+    }
+    
     /** runs the tasks needed to start, wrapped by setting {@link Attributes#SERVICE_STATE_EXPECTED} appropriately */ 
     public void start(Collection<? extends Location> locations) {
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STARTING);
@@ -411,6 +462,7 @@ public abstract class MachineLifecycleEffectorTasks extends AbstractLifecycleEff
      * <p>
      * Stops processes if possible, then starts the entity again.
      */
+    @Override
     public void restart(ConfigBag parameters) {
         ServiceStateLogic.setExpectedState(entity(), Lifecycle.STOPPING);
 

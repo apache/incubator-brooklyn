@@ -140,11 +140,6 @@ public class PaasLifecycleEffectorTasks extends AbstractLifecycleEffectorTasks {
         }
     }
 
-    @Override
-    public void suspend(ConfigBag parameters) {
-        //TODO
-    }
-
     protected void preStopProcess() {
         entity().preStop();
     }

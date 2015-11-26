@@ -38,9 +38,6 @@ public interface LifecycleEffectorTasks {
 
     void stop(ConfigBag paramters);
 
-    void suspend(ConfigBag paramters);
-
-
     @Deprecated
     void stop();
 }

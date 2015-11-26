@@ -19,7 +19,7 @@
 package org.apache.brooklyn.entity.software.base.behaviour.softwareprocess;
 
 
-import org.apache.brooklyn.entity.software.base.SoftwareProcessDriverLifecycleEffectorTasks;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.entity.software.base.behaviour.softwareprocess.flagssupplier.LocationFlagSupplier;
 import org.apache.brooklyn.entity.software.base.behaviour.softwareprocess.flagssupplier.MachineProvisioningLocationFlagsSupplier;
@@ -36,7 +36,7 @@ public class SoftwareProcessImplMachineBehaviourFactory
 
     @Override
     public LifecycleEffectorTasks getLifecycleEffectorTasks() {
-        return new SoftwareProcessDriverLifecycleEffectorTasks();
+        return entity.getConfig(SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS);
     }
 
     @Override

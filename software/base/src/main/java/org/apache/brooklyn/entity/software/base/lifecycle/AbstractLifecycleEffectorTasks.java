@@ -75,8 +75,6 @@ public abstract class AbstractLifecycleEffectorTasks implements LifecycleEffecto
     /** @see {@link #newStartEffector()} */
     public Effector<Void> newRestartEffector() {
         return Effectors.effector(Startable.RESTART)
-                .parameter(RestartSoftwareParameters.RESTART_CHILDREN)
-                .parameter(RestartSoftwareParameters.RESTART_MACHINE)
                 .impl(newRestartEffectorTask())
                 .build();
     }
@@ -84,19 +82,7 @@ public abstract class AbstractLifecycleEffectorTasks implements LifecycleEffecto
     /** @see {@link #newStartEffector()} */
     public Effector<Void> newStopEffector() {
         return Effectors.effector(Startable.STOP)
-                .parameter(StopSoftwareParameters.STOP_PROCESS_MODE)
-                .parameter(StopSoftwareParameters.STOP_MACHINE_MODE)
                 .impl(newStopEffectorTask())
-                .build();
-    }
-
-    /** @see {@link #newStartEffector()} */
-    public Effector<Void> newSuspendEffector() {
-        return Effectors.effector(Void.class, "suspend")
-                .description("Suspend the process/service represented by an entity")
-                .parameter(StopSoftwareParameters.STOP_PROCESS_MODE)
-                .parameter(StopSoftwareParameters.STOP_MACHINE_MODE)
-                .impl(newSuspendEffectorTask())
                 .build();
     }
 
@@ -195,23 +181,6 @@ public abstract class AbstractLifecycleEffectorTasks implements LifecycleEffecto
         }
     }
 
-    /**
-     * Calls {@link #suspend(ConfigBag)}.
-     *
-     * @see {@link #newStartEffectorTask()}
-     */
-    public EffectorBody<Void> newSuspendEffectorTask() {
-        return new SuspendEffectorBody();
-    }
-
-    private class SuspendEffectorBody extends EffectorBody<Void> {
-        @Override
-        public Void call(ConfigBag parameters) {
-            suspend(parameters);
-            return null;
-        }
-    }
-
     protected EntityInternal entity() {
         return (EntityInternal) BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
     }
@@ -262,8 +231,5 @@ public abstract class AbstractLifecycleEffectorTasks implements LifecycleEffecto
 
     @Override
     public abstract void stop(ConfigBag parameters);
-
-    @Override
-    public abstract void suspend(ConfigBag parameters);
 
 }

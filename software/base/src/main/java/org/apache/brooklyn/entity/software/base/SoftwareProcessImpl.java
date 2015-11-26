@@ -141,7 +141,6 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     @Override
     public void init() {
         super.init();
-        LIFECYCLE_TASKS = getConfig(SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS);
     }
     
     @Override
@@ -631,15 +630,10 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
             fabric =  new SoftwareProcessImplPaasBehaviourFactory(this);
         }
 
-        if(getConfig(SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS)==null){
-            LIFECYCLE_TASKS = fabric.getLifecycleEffectorTasks();
-            locationFlagSupplier= fabric.getLocationFlagSupplier();
-            log.info("Lifecycle {} was inferred for {} from location {}",
-                    new Object[]{LIFECYCLE_TASKS, this, location});
-        } else {
-            log.info("Default Lifecycle {} is used for {}", LIFECYCLE_TASKS, this);
-        }
-
+        LIFECYCLE_TASKS = fabric.getLifecycleEffectorTasks();
+        locationFlagSupplier= fabric.getLocationFlagSupplier();
+        log.info("Lifecycle {} was inferred for {} from location {}",
+                new Object[]{LIFECYCLE_TASKS, this, location});
     }
 
     /**
@@ -705,9 +699,9 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     protected LifecycleEffectorTasks getLifecycleEffectorTasks() {
         if (LIFECYCLE_TASKS == null) {
             log.warn("A lifecycle was not selected for entity {}, so it will be use a default " +
-                    "SoftwareProcessDriverLifecycleEffectorTasks lifecycle. Using start Effector" +
+                    "SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS lifecycle. Using start Effector" +
                     " to select a target lifecycle according to the target location", this);
-            return new SoftwareProcessDriverLifecycleEffectorTasks();
+            return getConfig(SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS);
         }
         return LIFECYCLE_TASKS;
     }

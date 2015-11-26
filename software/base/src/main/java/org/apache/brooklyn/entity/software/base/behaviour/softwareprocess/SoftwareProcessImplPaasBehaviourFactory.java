@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.entity.software.base.behaviour.softwareprocess;
 
-import org.apache.brooklyn.entity.software.base.PaasLifecycleEffectorTasks;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.entity.software.base.behaviour.softwareprocess.flagssupplier.LocationFlagSupplier;
 import org.apache.brooklyn.entity.software.base.behaviour.softwareprocess.flagssupplier.PaasLocationFlagsSupplier;
@@ -35,7 +35,7 @@ public class SoftwareProcessImplPaasBehaviourFactory
 
     @Override
     public LifecycleEffectorTasks getLifecycleEffectorTasks() {
-        return new PaasLifecycleEffectorTasks();
+        return entity.getConfig(SoftwareProcess.PAAS_LIFECYCLE_EFFECTOR_TASKS);
     }
 
     @Override
