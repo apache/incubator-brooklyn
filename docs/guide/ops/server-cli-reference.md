@@ -1,5 +1,5 @@
 ---
-title: CLI Reference
+title: Server CLI Reference
 layout: website-normal
 ---
 
@@ -39,14 +39,14 @@ It is important that Brooklyn is launched with either `nohup ... &` or `... & di
 it keeps running after the shell terminates.
 
 
-### Other CLI Arguments
+### Other Server CLI Arguments
 
-The CLI arguments for [persistence and HA](persistence/) are described separately.
+The Server CLI arguments for [persistence and HA](persistence/) are described separately.
 
 
 ### Path Setup
 
-In order to have easy access to the cli it is useful to configure the PATH environment 
+In order to have easy access to the server cli it is useful to configure the PATH environment 
 variable to also point to the cli's bin directory:
 
 {% highlight bash %}

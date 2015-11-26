@@ -1,0 +1,31 @@
+name: My Web Cluster
+
+location: localhost
+
+services:
+
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  name: My Web
+  brooklyn.config:
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+    java.sysprops:
+      brooklyn.example.db.url: >
+        $brooklyn:formatString("jdbc:%s%s?user=%s&password=%s",
+        component("db").attributeWhenReady("datastore.url"),
+        "visitors", "brooklyn", "br00k11n")
+  brooklyn.policies:
+  - type: org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
+    brooklyn.config:
+      metric: webapp.reqs.perSec.windowed.perNode
+      metricLowerBound: 0.1
+      metricUpperBound: 10
+      minPoolSize: 1
+      maxPoolSize: 4
+      resizeUpStabilizationDelay: 10s
+      resizeDownStabilizationDelay: 1m
+
+- type: org.apache.brooklyn.entity.database.mysql.MySqlNode
+  id: db
+  name: My DB
+  brooklyn.config:
+    creationScriptUrl: https://bit.ly/brooklyn-visitors-creation-script
