@@ -38,6 +38,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
+
 /**
  * {@inheritDoc}
  */
@@ -56,7 +58,7 @@ public class TestSensorImpl extends AbstractTest implements TestSensor {
         final Entity target = resolveTarget();
         final String sensor = getConfig(SENSOR_NAME);
         final Duration timeout = getConfig(TIMEOUT);
-        final List<Map<String, Object>> assertions = getConfig(ASSERTIONS);
+        final List<Map<String, Object>> assertions = getAssertions(this, ASSERTIONS);
         try {
             TestFrameworkAssertions.checkAssertions(ImmutableMap.of("timeout", timeout), assertions, sensor,
                 new Supplier<Object>() {

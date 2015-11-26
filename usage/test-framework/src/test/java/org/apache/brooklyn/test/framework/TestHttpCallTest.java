@@ -50,7 +50,7 @@ public class TestHttpCallTest {
     private LocalhostMachineProvisioningLocation loc;
     private String testId;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void setup() {
         testId = Identifiers.makeRandomId(8);
         server = new TestHttpServer()

@@ -19,7 +19,6 @@
 package org.apache.brooklyn.test.framework;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
@@ -44,6 +43,8 @@ import java.util.Map;
 
 import static org.apache.brooklyn.test.framework.BaseTest.TARGET_ENTITY;
 import static org.apache.brooklyn.test.framework.SimpleShellCommandTest.*;
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.CONTAINS;
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.EQUALS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SimpleShellCommandIntegrationTest extends BrooklynAppUnitTestSupport {

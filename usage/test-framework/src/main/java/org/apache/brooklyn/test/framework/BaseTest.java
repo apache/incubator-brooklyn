@@ -47,16 +47,16 @@ public interface BaseTest extends Entity, Startable {
     ConfigKey<String> TARGET_ID = ConfigKeys.newStringConfigKey("targetId", "Id of the entity under test");
 
     /**
-     * The assertions to be made
+     * The assertions to be made.
      */
-    ConfigKey<List<Map<String, Object>>> ASSERTIONS = ConfigKeys.newConfigKey(
-            new TypeToken<List<Map<String, Object>>>() {},
-            "assert", "Assertions to be evaluated", new ArrayList<Map<String, Object>>());
+    ConfigKey<Object> ASSERTIONS = ConfigKeys.newConfigKey(Object.class, "assert", "Assertions to be evaluated",
+        new ArrayList<Map<String, Object>>());
 
     /**
-     * THe duration to wait
+     * THe duration to wait for an assertion to succeed or fail before throwing an exception.
      */
-    ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "Time to wait on result", new Duration(1L, TimeUnit.SECONDS));
+    ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "Time to wait on result",
+        new Duration(1L, TimeUnit.SECONDS));
 
     /**
      * Get the target of the test.

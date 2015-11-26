@@ -18,7 +18,8 @@
  */
 package org.apache.brooklyn.test.framework;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
@@ -39,27 +40,10 @@ import static org.apache.brooklyn.core.config.ConfigKeys.newConfigKey;
 @ImplementedBy(SimpleShellCommandTestImpl.class)
 public interface SimpleShellCommandTest extends BaseTest {
 
+    /**
+     * Default location for temporary files.
+     */
     String TMP_DEFAULT = "/tmp";
-
-    /**
-     * Equals assertion on command result.
-     */
-    String EQUALS = "equals";
-
-    /**
-     * String contains assertion on command result.
-     */
-    String CONTAINS = "contains";
-
-    /**
-     * Regex match assertion on command result.
-     */
-    String MATCHES = "matches";
-
-    /**
-     * Is-empty match assertion on command result.
-     */
-    String IS_EMPTY = "isEmpty";
 
     /**
      * Supply the command to invoke directly. Cannot be used together with {@link #DOWNLOAD_URL}.
@@ -84,30 +68,35 @@ public interface SimpleShellCommandTest extends BaseTest {
      */
     @SetFromFlag("runDir")
     ConfigKey<String> RUN_DIR = newConfigKey(String.class, "run.dir", "directory where downloaded scripts should be run from");
+
+
+    /**
+     * If no assertions are configured in the test then the default is this assertion that exit status of the command
+     * is zero (successful).
+     */
+    Map<String, Object> DEFAULT_ASSERTION = ImmutableMap.<String,Object>of(TestFrameworkAssertions.EQUALS, 0);
+
     /**
      * Assertions on the exit code of the simple command.
      *
      * If not explicitly configured, the default assertion is a non-zero exit code.
      */
     @SetFromFlag("assertStatus")
-    ConfigKey<List<Map<String, Object>>> ASSERT_STATUS = ConfigKeys.newConfigKey(
-        new TypeToken<List<Map<String, Object>>>() {},
-        "assert.status", "Assertions on command exit code", new ArrayList<Map<String, Object>>());
+    ConfigKey<Object> ASSERT_STATUS = ConfigKeys.newConfigKey(Object.class, "assert.status", "Assertions on command exit code",
+        new ArrayList<Map<String, Object>>());
 
     /**
      * Assertions on the standard output of the command as a String.
      */
     @SetFromFlag("assertOut")
-    ConfigKey<List<Map<String, Object>>> ASSERT_OUT = ConfigKeys.newConfigKey(
-        new TypeToken<List<Map<String, Object>>>() {},
-        "assert.out", "Assertions on command standard output", new ArrayList<Map<String, Object>>());
+    ConfigKey<Object> ASSERT_OUT = ConfigKeys.newConfigKey(Object.class, "assert.out", "Assertions on command standard output",
+        new ArrayList<Map<String, Object>>());
 
     /**
      * Assertions on the standard error of the command as a String.
      */
     @SetFromFlag("assertErr")
-    ConfigKey<List<Map<String, Object>>> ASSERT_ERR = ConfigKeys.newConfigKey(
-        new TypeToken<List<Map<String, Object>>>() {},
-        "assert.err", "Assertions on command standard error", new ArrayList<Map<String, Object>>());
+    ConfigKey<Object> ASSERT_ERR = ConfigKeys.newConfigKey(Object.class, "assert.err", "Assertions on command standard error",
+        new ArrayList<Map<String, Object>>());
 
 }

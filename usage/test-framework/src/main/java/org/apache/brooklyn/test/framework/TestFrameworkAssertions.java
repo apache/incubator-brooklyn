@@ -20,11 +20,18 @@ package org.apache.brooklyn.test.framework;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
+import com.google.common.reflect.TypeToken;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
+import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +58,43 @@ public class TestFrameworkAssertions {
 
     private TestFrameworkAssertions() {
     }
+
+
+    /**
+     *  Get assertions tolerantly from a configuration key.
+     *  This supports either a simple map of assertions, such as
+     *
+     <pre>
+     assertOut:
+       contains: 2 users
+       matches: .*[\d]* days.*
+     </pre>
+     * or a list of such maps, (which allows you to repeat keys):
+     <pre>
+     assertOut:
+     - contains: 2 users
+     - contains: 2 days
+     </pre>
+     or
+    private static List<Map<String,Object>> getAssertions(ConfigKey<Object> key) {
+    }
+    */
+    public static List<Map<String, Object>> getAssertions(Entity entity, ConfigKey<Object> key) {
+        Object config = entity.getConfig(key);
+        Maybe<Map<String, Object>> maybeMap = TypeCoercions.tryCoerce(config, new TypeToken<Map<String, Object>>() {});
+        if (maybeMap.isPresent()) {
+            return Collections.singletonList(maybeMap.get());
+        }
+
+        Maybe<List<Map<String, Object>>> maybeList = TypeCoercions.tryCoerce(config,
+            new TypeToken<List<Map<String, Object>>>() {});
+        if (maybeList.isPresent()) {
+            return maybeList.get();
+        }
+
+        throw new FatalConfigurationRuntimeException(key.getDescription() + " is not a map or list of maps");
+    }
+
 
     public static <T> void checkAssertions(Map<String,?> flags,
                                            Map<String, Object> assertions,

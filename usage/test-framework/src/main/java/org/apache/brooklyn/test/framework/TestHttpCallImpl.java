@@ -27,13 +27,14 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.time.Duration;
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
 
 /**
  * {@inheritDoc}
@@ -51,7 +52,7 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
         }
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         final String url = getConfig(TARGET_URL);
-        final List<Map<String, Object>> assertions = getConfig(ASSERTIONS);
+        final List<Map<String, Object>> assertions = getAssertions(this, ASSERTIONS);
         final Duration timeout = getConfig(TIMEOUT);
         final HttpAssertionTarget target = getConfig(ASSERTION_TARGET);
 
@@ -87,9 +88,8 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
                         try {
                             return HttpTool.getHttpStatusCode(url);
                         } catch (Exception e) {
-                            LOG.error("HTTP call to [{}] failed due to [{}] ... returning Status code [500]",
-                                url, e.getMessage());
-                            return HttpStatus.SC_INTERNAL_SERVER_ERROR;
+                            LOG.info("HTTP call to [{}] failed due to [{}]", url, e.getMessage());
+                            throw Exceptions.propagate(e);
                         }
                     }
                 };

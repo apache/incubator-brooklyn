@@ -21,10 +21,11 @@ package org.apache.brooklyn.test.framework;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.location.Machines;
@@ -47,13 +48,13 @@ import java.util.*;
 
 import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.*;
 import static org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.setExpectedState;
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.checkAssertions;
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
 import static org.apache.brooklyn.util.text.Strings.isBlank;
 import static org.apache.brooklyn.util.text.Strings.isNonBlank;
 
 // TODO assertions below should use TestFrameworkAssertions but that class needs to be improved to give better error messages
 public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleShellCommandTest {
-
-    public static final int SUCCESS = 0;
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleShellCommandTestImpl.class);
     private static final int A_LINE = 80;
@@ -109,19 +110,10 @@ public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleSh
         });
         ImmutableMap<String, Duration> flags = ImmutableMap.of("timeout", getConfig(TIMEOUT));
         AssertionSupport support = new AssertionSupport();
-        TestFrameworkAssertions.checkAssertions(support, flags, exitCodeAssertions(), "exit code", supply(result.getExitCode()));
-        TestFrameworkAssertions.checkAssertions(support, flags, getConfig(ASSERT_OUT), "stdout", supply(result.getStdout()));
-        TestFrameworkAssertions.checkAssertions(support, flags, getConfig(ASSERT_ERR), "stderr", supply(result.getStderr()));
+        checkAssertions(support, flags, exitCodeAssertions(), "exit code", Suppliers.ofInstance(result.getExitCode()));
+        checkAssertions(support, flags, getAssertions(this, ASSERT_OUT), "stdout", Suppliers.ofInstance(result.getStdout()));
+        checkAssertions(support, flags, getAssertions(this, ASSERT_ERR), "stderr", Suppliers.ofInstance(result.getStderr()));
         support.validate();
-    }
-
-    private static <T> Supplier<T> supply(final T t) {
-        return new Supplier<T>() {
-            @Override
-            public T get() {
-                return t;
-            }
-        };
     }
 
     private String shorten(String text) {
@@ -240,9 +232,12 @@ public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleSh
     
 
     private List<Map<String, Object>> exitCodeAssertions() {
-        List<Map<String, Object>> assertStatus = getConfig(ASSERT_STATUS);
-        if (assertStatus.isEmpty()) {
-            Map<String, Object> shouldSucceed = ImmutableMap.<String,Object>of(EQUALS, SUCCESS);
+        List<Map<String, Object>> assertStatus = getAssertions(this, ASSERT_STATUS);
+        List<Map<String, Object>> assertOut = getAssertions(this, ASSERT_OUT);
+        List<Map<String, Object>> assertErr = getAssertions(this, ASSERT_ERR);
+
+        if (assertStatus.isEmpty() && assertOut.isEmpty() && assertErr.isEmpty()) {
+            Map<String, Object> shouldSucceed = DEFAULT_ASSERTION;
             assertStatus.add(shouldSucceed);
         }
         return assertStatus;
