@@ -120,13 +120,8 @@ public class DynamicGroupTest {
     
     @Test
     public void testGroupDetectsNewlyManagedMatchingMember() throws Exception {
-        final Entity e3 = new AbstractEntity() {};
-        group.setEntityFilter(EntityPredicates.idEqualTo(e3.getId()));
-        e3.setParent(app);
-        
-        assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of());
-        
-        Entities.manage(e3);
+        group.setEntityFilter(EntityPredicates.displayNameEqualTo("myname"));
+        final Entity e3 = app.addChild(EntitySpec.create(TestEntity.class).displayName("myname"));
         
         Asserts.succeedsEventually(new Runnable() {
             public void run() {
@@ -136,9 +131,9 @@ public class DynamicGroupTest {
 
     @Test
     public void testGroupUsesNewFilter() throws Exception {
-        Entity e3 = new AbstractEntity(app) {};
-        Entities.manage(e3);
-        group.setEntityFilter(EntityPredicates.idEqualTo(e3.getId()));
+        final Entity e3 = app.addChild(EntitySpec.create(TestEntity.class).displayName("myname"));
+
+        group.setEntityFilter(EntityPredicates.displayNameEqualTo("myname"));
         
         assertEqualsIgnoringOrder(group.getMembers(), ImmutableSet.of(e3));
     }
@@ -146,7 +141,7 @@ public class DynamicGroupTest {
     @Test
     public void testGroupDetectsChangedEntities() throws Exception {
         final AttributeSensor<String> MY_ATTRIBUTE = Sensors.newStringSensor("test.myAttribute", "My test attribute");
-    
+        
         group.setEntityFilter(EntityPredicates.attributeEqualTo(MY_ATTRIBUTE, "yes"));
         group.addSubscription(null, MY_ATTRIBUTE);
         
@@ -395,7 +390,9 @@ public class DynamicGroupTest {
     }
     
     // See Deadlock in https://github.com/brooklyncentral/brooklyn/issues/378
-    @Test
+    // TODO Now that entities are auto-managed, this test is no longer appropriate.
+    // Should it be re-written or deleted?
+    @Test(groups="WIP")
     public void testDoesNotDeadlockOnManagedAndMemberAddedConcurrently() throws Exception {
         final CountDownLatch rescanReachedLatch = new CountDownLatch(1);
         final CountDownLatch entityAddedReachedLatch = new CountDownLatch(1);

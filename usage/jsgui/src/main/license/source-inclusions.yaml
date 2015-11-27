@@ -38,4 +38,5 @@
 - id: js-uri
 - id: js-yaml.js
 - id: jquery.form.js
+- id: marked.js
 - id: codemirror.js

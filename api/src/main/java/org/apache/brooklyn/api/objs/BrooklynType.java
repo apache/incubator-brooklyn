@@ -30,6 +30,9 @@ import org.apache.brooklyn.config.ConfigKey;
  * were added or removed on-the-fly then those changes will be included in subsequent
  * snapshots. Therefore instances of a given class could have different {@link BrooklynType}s.
  */
+// TODO rename as BrooklynObjectSignature or BrooklynObjectMetadata;
+// or (perhaps better and easier to retire deprecated usage, if that is required?)
+// introduce new mechanism for storing accessing this information
 public interface BrooklynType extends Serializable {
 
     /**

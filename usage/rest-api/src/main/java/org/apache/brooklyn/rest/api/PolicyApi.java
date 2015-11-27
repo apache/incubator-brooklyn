@@ -18,13 +18,13 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import io.swagger.annotations.Api;
 import org.apache.brooklyn.rest.domain.PolicySummary;
 import org.apache.brooklyn.rest.domain.Status;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -33,17 +33,17 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/policies")
-@Apidoc("Entity Policies")
+@Api("Entity Policies")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface PolicyApi {
     
     @GET
     @ApiOperation(value = "Fetch the policies attached to a specific application entity",
-            responseClass = "org.apache.brooklyn.rest.domain.PolicySummary",
-            multiValueResponse = true)
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity")
+            response = org.apache.brooklyn.rest.domain.PolicySummary.class,
+            responseContainer = "List")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity")
     })
     public List<PolicySummary> list(
             @ApiParam(value = "Application ID or name", required = true)
@@ -65,9 +65,9 @@ public interface PolicyApi {
 
     @POST
     @ApiOperation(value = "Add a policy", notes = "Returns a summary of the new policy")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity"),
-            @ApiError(code = 400, reason = "Type is not a class implementing Policy")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity"),
+            @ApiResponse(code = 400, message = "Type is not a class implementing Policy")
     })
     public PolicySummary addPolicy(
             @ApiParam(name = "application", value = "Application ID or name", required = true)
@@ -87,8 +87,8 @@ public interface PolicyApi {
     @GET
     @Path("/{policy}")
     @ApiOperation(value = "Gets status of a policy (RUNNING / SUSPENDED)")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or policy")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or policy")
     })
     public Status getStatus(
             @ApiParam(name = "application", value = "Application ID or name", required = true)
@@ -103,8 +103,8 @@ public interface PolicyApi {
     @POST
     @Path("/{policy}/start")
     @ApiOperation(value = "Start or resume a policy")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or policy")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or policy")
     })
     public Response start(
             @ApiParam(name = "application", value = "Application ID or name", required = true)
@@ -119,8 +119,8 @@ public interface PolicyApi {
     @POST
     @Path("/{policy}/stop")
     @ApiOperation(value = "Suspends a policy")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or policy")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or policy")
     })
     public Response stop(
             @ApiParam(name = "application", value = "Application ID or name", required = true)
@@ -136,8 +136,8 @@ public interface PolicyApi {
     @POST
     @Path("/{policy}/destroy")
     @ApiOperation(value = "Destroy a policy", notes="Removes a policy from being associated with the entity and destroys it (stopping first if running)")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or policy")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or policy")
     })
     public Response destroy(
             @ApiParam(name = "application", value = "Application ID or name", required = true)

@@ -90,7 +90,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
             feeds.addAll(other.getFeeds());
             members.addAll(other.getMembers());
             effectors.addAll(other.getEffectors());
-            tags.addAll(other.getTags());
             return this;
         }
         public EntityMemento build() {
@@ -319,7 +318,6 @@ public class BasicEntityMemento extends AbstractTreeNodeMemento implements Entit
                 .add("attributes", Sanitizer.sanitize(getAttributes()))
                 .add("policies", getPolicies())
                 .add("enrichers", getEnrichers())
-                .add("tags", getTags())
                 .add("locations", getLocations());
     }
 

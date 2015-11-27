@@ -29,11 +29,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.service.CampServiceSpecResolver;
@@ -49,7 +50,6 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
 import org.apache.brooklyn.util.collections.MutableList;
@@ -65,7 +65,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
@@ -145,20 +144,20 @@ public class BrooklynComponentTemplateResolver {
         return serviceSpecResolver.accepts(type, loader);
     }
 
-    public <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredCatalogTypes) {
+    public <T extends Entity> EntitySpec<T> resolveSpec(Set<String> encounteredRegisteredTypeSymbolicNames) {
         if (alreadyBuilt.getAndSet(true))
             throw new IllegalStateException("Spec can only be used once: "+this);
 
-        EntitySpec<?> spec = serviceSpecResolver.resolve(type, loader, encounteredCatalogTypes);
+        EntitySpec<?> spec = serviceSpecResolver.resolve(type, loader, encounteredRegisteredTypeSymbolicNames);
 
         if (spec == null) {
             // Try to provide some troubleshooting details
             final String msgDetails;
-            CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt, Strings.removeFromStart(type, "catalog:"));
+            RegisteredType item = mgmt.getTypeRegistry().get(Strings.removeFromStart(type, "catalog:"));
             String proto = Urls.getProtocol(type);
-            if (item != null && encounteredCatalogTypes.contains(item.getSymbolicName())) {
+            if (item != null && encounteredRegisteredTypeSymbolicNames.contains(item.getSymbolicName())) {
                 msgDetails = "Cycle between catalog items detected, starting from " + type +
-                        ". Other catalog items being resolved up the stack are " + encounteredCatalogTypes +
+                        ". Other catalog items being resolved up the stack are " + encounteredRegisteredTypeSymbolicNames +
                         ". Tried loading it as a Java class instead but failed.";
             } else if (proto != null) {
                 msgDetails = "The reference " + type + " looks like a URL (running the CAMP Brooklyn assembly-template instantiator) but the protocol " +
@@ -170,7 +169,7 @@ public class BrooklynComponentTemplateResolver {
             throw new IllegalStateException("Unable to create spec for type " + type + ". " + msgDetails);
         }
 
-        populateSpec(spec, encounteredCatalogTypes);
+        populateSpec(spec, encounteredRegisteredTypeSymbolicNames);
 
         @SuppressWarnings("unchecked")
         EntitySpec<T> typedSpec = (EntitySpec<T>) spec;
@@ -187,7 +186,7 @@ public class BrooklynComponentTemplateResolver {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Entity> void populateSpec(EntitySpec<T> spec, Set<String> encounteredCatalogTypes) {
+    private <T extends Entity> void populateSpec(EntitySpec<T> spec, Set<String> encounteredRegisteredTypeIds) {
         String name, source=null, templateId=null, planId=null;
         if (template.isPresent()) {
             name = template.get().getName();
@@ -205,9 +204,9 @@ public class BrooklynComponentTemplateResolver {
             Iterable<Map<String,?>> children = (Iterable<Map<String,?>>)childrenObj;
             for (Map<String,?> childAttrs : children) {
                 BrooklynComponentTemplateResolver entityResolver = BrooklynComponentTemplateResolver.Factory.newInstance(loader, childAttrs);
-                // encounteredCatalogTypes must contain the items currently being loaded (the dependency chain),
-                // but not parent items in this catalog item already resolved.
-                EntitySpec<? extends Entity> childSpec = entityResolver.resolveSpec(encounteredCatalogTypes);
+                // encounteredRegisteredTypeIds must contain the items currently being loaded (the dependency chain),
+                // but not parent items in this type already resolved.
+                EntitySpec<? extends Entity> childSpec = entityResolver.resolveSpec(encounteredRegisteredTypeIds);
                 spec.child(childSpec);
             }
         }
@@ -226,19 +225,20 @@ public class BrooklynComponentTemplateResolver {
         if (childLocations != null)
             spec.locations(childLocations);
 
-        decorateSpec(spec);
+        decorateSpec(spec, encounteredRegisteredTypeIds);
     }
 
-    private <T extends Entity> void decorateSpec(EntitySpec<T> spec) {
+    private <T extends Entity> void decorateSpec(EntitySpec<T> spec, Set<String> encounteredRegisteredTypeIds) {
         new BrooklynEntityDecorationResolver.PolicySpecResolver(yamlLoader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.EnricherSpecResolver(yamlLoader).decorate(spec, attrs);
         new BrooklynEntityDecorationResolver.InitializerResolver(yamlLoader).decorate(spec, attrs);
+        new BrooklynEntityDecorationResolver.SpecParameterResolver(yamlLoader).decorate(spec, attrs);
 
-        configureEntityConfig(spec);
+        configureEntityConfig(spec, encounteredRegisteredTypeIds);
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private void configureEntityConfig(EntitySpec<?> spec) {
+    private void configureEntityConfig(EntitySpec<?> spec, Set<String> encounteredRegisteredTypeIds) {
         // first take *recognised* flags and config keys from the top-level, and put them in the bag (of brooklyn.config)
         // attrs will contain only brooklyn.xxx properties when coming from BrooklynEntityMatcher.
         // Any top-level flags will go into "brooklyn.flags". When resolving a spec from $brooklyn:entitySpec
@@ -263,12 +263,12 @@ public class BrooklynComponentTemplateResolver {
         Set<String> keyNamesUsed = new LinkedHashSet<String>();
         for (FlagConfigKeyAndValueRecord r: records) {
             if (r.getFlagMaybeValue().isPresent()) {
-                Object transformed = new SpecialFlagsTransformer(loader).apply(r.getFlagMaybeValue().get());
+                Object transformed = new SpecialFlagsTransformer(loader, encounteredRegisteredTypeIds).apply(r.getFlagMaybeValue().get());
                 spec.configure(r.getFlagName(), transformed);
                 keyNamesUsed.add(r.getFlagName());
             }
             if (r.getConfigKeyMaybeValue().isPresent()) {
-                Object transformed = new SpecialFlagsTransformer(loader).apply(r.getConfigKeyMaybeValue().get());
+                Object transformed = new SpecialFlagsTransformer(loader, encounteredRegisteredTypeIds).apply(r.getConfigKeyMaybeValue().get());
                 spec.configure((ConfigKey<Object>)r.getConfigKey(), transformed);
                 keyNamesUsed.add(r.getConfigKey().getName());
             }
@@ -281,7 +281,7 @@ public class BrooklynComponentTemplateResolver {
             // we don't let a flag with the same name as a config key override the config key
             // (that's why we check whether it is used)
             if (!keyNamesUsed.contains(key)) {
-                Object transformed = new SpecialFlagsTransformer(loader).apply(bag.getStringKey(key));
+                Object transformed = new SpecialFlagsTransformer(loader, encounteredRegisteredTypeIds).apply(bag.getStringKey(key));
                 spec.configure(ConfigKeys.newConfigKey(Object.class, key.toString()), transformed);
             }
         }
@@ -299,6 +299,7 @@ public class BrooklynComponentTemplateResolver {
         for (Class<?> iface : spec.getAdditionalInterfaces()) {
             allKeys.addAll(FlagUtils.findAllFlagsAndConfigKeys(null, iface, bagFlags));
         }
+        allKeys.addAll(FlagUtils.findAllParameterConfigKeys(spec.getParameters(), bagFlags));
         return allKeys;
     }
 
@@ -307,16 +308,18 @@ public class BrooklynComponentTemplateResolver {
         /* TODO find a way to make do without loader here?
          * it is not very nice having to serialize it; but serialization of BLCL is now relatively clean.
          *
-         * it is only used to instantiate classes, and now most things should be registered with catalog;
+         * it is only used to instantiate classes, and now most types should be registered;
          * the notable exception is when one entity in a bundle is creating another in the same bundle,
          * it wants to use his bundle CLC to do that.  but we can set up some unique reference to the entity
          * which can be used to find it from mgmt, rather than pass the loader.
          */
         private BrooklynClassLoadingContext loader = null;
+        private Set<String> encounteredRegisteredTypeIds;
 
-        public SpecialFlagsTransformer(BrooklynClassLoadingContext loader) {
+        public SpecialFlagsTransformer(BrooklynClassLoadingContext loader, Set<String> encounteredRegisteredTypeIds) {
             this.loader = loader;
             mgmt = loader.getManagementContext();
+            this.encounteredRegisteredTypeIds = encounteredRegisteredTypeIds;
         }
         @Override
         public Object apply(Object input) {
@@ -362,11 +365,11 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(ImmutableSet.<String>of());
+                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(encounteredRegisteredTypeIds);
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);
-                ((ManagementContextInjectable) flag).injectManagementContext(loader.getManagementContext());
+                ((ManagementContextInjectable) flag).setManagementContext(loader.getManagementContext());
             }
 
             return flag;

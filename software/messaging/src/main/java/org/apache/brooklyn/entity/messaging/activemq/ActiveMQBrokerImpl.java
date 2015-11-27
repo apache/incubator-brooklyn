@@ -74,7 +74,6 @@ public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTop
     @Override
     public ActiveMQQueue createQueue(Map properties) {
         ActiveMQQueue result = addChild(EntitySpec.create(ActiveMQQueue.class).configure(properties));
-        Entities.manage(result);
         result.create();
         return result;
     }
@@ -82,7 +81,6 @@ public class ActiveMQBrokerImpl extends JMSBrokerImpl<ActiveMQQueue, ActiveMQTop
     @Override
     public ActiveMQTopic createTopic(Map properties) {
         ActiveMQTopic result = addChild(EntitySpec.create(ActiveMQTopic.class).configure(properties));
-        Entities.manage(result);
         result.create();
         return result;
     }

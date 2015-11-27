@@ -22,10 +22,19 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.Rebindable;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.policy.PolicySpec;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 
 import com.google.common.annotations.Beta;
 
@@ -37,14 +46,26 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
         ENTITY, 
         POLICY,
         LOCATION;
+        
+        public static CatalogItemType ofSpecClass(Class<? extends AbstractBrooklynObjectSpec<?, ?>> type) {
+            if (type==null) return null;
+            if (PolicySpec.class.isAssignableFrom(type)) return POLICY;
+            if (LocationSpec.class.isAssignableFrom(type)) return LOCATION;
+            if (EntitySpec.class.isAssignableFrom(type)) return ENTITY;
+            return null;
+        }
+        public static CatalogItemType ofTargetClass(Class<? extends BrooklynObject> type) {
+            if (type==null) return null;
+            if (Policy.class.isAssignableFrom(type)) return POLICY;
+            if (Location.class.isAssignableFrom(type)) return LOCATION;
+            if (Application.class.isAssignableFrom(type)) return TEMPLATE;
+            if (Entity.class.isAssignableFrom(type)) return ENTITY;
+            return null;
+        }
     }
     
-    public static interface CatalogBundle {
-        public String getSymbolicName();
-        public String getVersion();
-        public String getUrl();
-
-        /** @return true if the bundle reference contains both name and version*/
+    public static interface CatalogBundle extends OsgiBundleWithUrl {
+        /** @deprecated since 0.9.0, use {@link #isNameResolved()} */
         public boolean isNamed();
     }
 
@@ -59,7 +80,8 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
      */
     @Override
     SubscriptionSupport subscriptions();
-    
+
+    /** @deprecated since 0.7.0 in favour of {@link CatalogBundle}, kept for rebind compatibility */
     @Deprecated
     public static interface CatalogItemLibraries {
         Collection<String> getBundles();
@@ -73,7 +95,12 @@ public interface CatalogItem<T,SpecT> extends BrooklynObject, Rebindable {
     /** @return The type of the spec e.g. EntitySpec corresponding to {@link #getCatalogItemJavaType()} */
     public Class<SpecT> getSpecType();
     
-    /** @return The underlying java type of the item represented, or null if not known (e.g. if it comes from yaml) */
+    /**
+     * @return The underlying java type of the item represented, if not described via a YAML spec.
+     * Normally null (and the type comes from yaml).
+     * @deprecated since 0.9.0. Use plan based items instead ({@link #getPlanYaml()})
+     */
+    @Deprecated
     @Nullable public String getJavaType();
 
     /** @deprecated since 0.7.0. Use {@link #getDisplayName} */

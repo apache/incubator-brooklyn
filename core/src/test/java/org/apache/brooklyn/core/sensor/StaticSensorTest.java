@@ -19,11 +19,9 @@
 package org.apache.brooklyn.core.sensor;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.core.sensor.Sensors;
-import org.apache.brooklyn.core.sensor.StaticSensor;
+import org.apache.brooklyn.core.entity.EntityAsserts;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.entity.stock.BasicEntity;
-import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.testng.annotations.Test;
 
@@ -39,7 +37,7 @@ public class StaticSensorTest extends BrooklynAppUnitTestSupport {
                         StaticSensor.SENSOR_TYPE, String.class.getName(),
                         StaticSensor.STATIC_VALUE, "myval")))));
         
-        EntityTestUtils.assertAttributeEquals(entity, Sensors.newSensor(String.class, "myname"), "myval");
+        EntityAsserts.assertAttributeEquals(entity, Sensors.newSensor(String.class, "myname"), "myval");
     }
     
     @Test
@@ -50,6 +48,6 @@ public class StaticSensorTest extends BrooklynAppUnitTestSupport {
                         StaticSensor.SENSOR_TYPE, Integer.class.getName(),
                         StaticSensor.STATIC_VALUE, "1")))));
         
-        EntityTestUtils.assertAttributeEquals(entity, Sensors.newSensor(Integer.class, "myname"), 1);
+        EntityAsserts.assertAttributeEquals(entity, Sensors.newSensor(Integer.class, "myname"), 1);
     }
 }

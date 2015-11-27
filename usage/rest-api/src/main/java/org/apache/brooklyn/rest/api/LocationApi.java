@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.api;
 
+import io.swagger.annotations.Api;
 import java.util.List;
 import java.util.Map;
 
@@ -34,16 +35,15 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
 import org.apache.brooklyn.rest.domain.LocationSpec;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 @SuppressWarnings("deprecation")
 @Path("/v1/locations")
-@Apidoc("Locations")
+@Api("Locations")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface LocationApi {
@@ -53,8 +53,8 @@ public interface LocationApi {
      */
     @GET
     @ApiOperation(value = "Fetch the list of location definitions",
-            responseClass = "org.apache.brooklyn.rest.domain.LocationSummary",
-            multiValueResponse = true)
+            response = org.apache.brooklyn.rest.domain.LocationSummary.class,
+            responseContainer = "List")
     @Deprecated
     public List<LocationSummary> list();
 
@@ -71,8 +71,8 @@ public interface LocationApi {
     @GET
     @Path("/{locationId}")
     @ApiOperation(value = "Fetch details about a location instance, or a location definition",
-            responseClass = "org.apache.brooklyn.rest.domain.LocationSummary",
-            multiValueResponse = true)
+            response = org.apache.brooklyn.rest.domain.LocationSummary.class,
+            responseContainer = "List")
     public LocationSummary get(
             @ApiParam(value = "Location id to fetch", required = true)
             @PathParam("locationId") String locationId,
@@ -82,7 +82,7 @@ public interface LocationApi {
 
     /** @deprecated since 0.7.0 use {@link CatalogApi#create(String)} with a location definition */
     @POST
-    @ApiOperation(value = "Create a new location definition", responseClass = "String")
+    @ApiOperation(value = "Create a new location definition", response = String.class)
     @Deprecated
     public Response create(
             @ApiParam(name = "locationSpec", value = "Location specification object", required = true)

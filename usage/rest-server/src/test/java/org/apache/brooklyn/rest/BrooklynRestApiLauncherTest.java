@@ -24,13 +24,15 @@ import static org.apache.brooklyn.rest.BrooklynRestApiLauncher.StartMode.WEB_XML
 
 import java.util.concurrent.Callable;
 
-import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.http.HttpStatus;
-import org.eclipse.jetty.server.Server;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtilsTest.SampleNoOpApplication;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.http.HttpAsserts;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.http.HttpStatus;
+import org.eclipse.jetty.server.NetworkConnector;
+import org.eclipse.jetty.server.Server;
+import org.testng.annotations.Test;
 
 public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixture {
 
@@ -56,11 +58,11 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
     }
     
     private static void checkRestCatalogApplications(Server server) throws Exception {
-        final String rootUrl = "http://localhost:"+server.getConnectors()[0].getLocalPort();
+        final String rootUrl = "http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort();
         int code = Asserts.succeedsEventually(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                int code = HttpTestUtils.getHttpStatusCode(rootUrl+"/v1/catalog/applications");
+                int code = HttpTool.getHttpStatusCode(rootUrl+"/v1/catalog/applications");
                 if (code == HttpStatus.SC_FORBIDDEN) {
                     throw new RuntimeException("Retry request");
                 } else {
@@ -68,8 +70,8 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
                 }
             }
         });
-        HttpTestUtils.assertHealthyStatusCode(code);
-        HttpTestUtils.assertContentContainsText(rootUrl+"/v1/catalog/applications", SampleNoOpApplication.class.getSimpleName());
+        HttpAsserts.assertHealthyStatusCode(code);
+        HttpAsserts.assertContentContainsText(rootUrl+"/v1/catalog/applications", SampleNoOpApplication.class.getSimpleName());
     }
     
 }

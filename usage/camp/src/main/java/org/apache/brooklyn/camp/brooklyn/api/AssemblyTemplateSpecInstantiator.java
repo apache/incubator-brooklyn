@@ -23,19 +23,20 @@ import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.CampPlatform;
 import org.apache.brooklyn.camp.spi.AssemblyTemplate;
 import org.apache.brooklyn.camp.spi.instantiate.AssemblyTemplateInstantiator;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 
 public interface AssemblyTemplateSpecInstantiator extends AssemblyTemplateInstantiator {
-
+    
     /**
      * Gets the single item returned by {@link #createServiceSpecs}
      * and wraps it in an Application if needed, applying top-level
      * attributes and locations to the root entity.
      */
-    EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader);
+    EntitySpec<? extends Application> createApplicationSpec(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext loader, Set<String> encounteredCatalogTypes);
+    
     /** Returns specs for each item in the services list */
     List<EntitySpec<?>> createServiceSpecs(AssemblyTemplate template, CampPlatform platform, BrooklynClassLoadingContext itemLoader, Set<String> encounteredCatalogTypes);
 

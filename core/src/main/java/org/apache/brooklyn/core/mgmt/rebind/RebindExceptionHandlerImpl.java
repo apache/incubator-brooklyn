@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.api.mgmt.rebind.mementos.EntityMemento;
+import org.apache.brooklyn.config.ConfigKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -55,6 +57,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
 
     protected final RebindManager.RebindFailureMode danglingRefFailureMode;
     protected final RebindManager.RebindFailureMode rebindFailureMode;
+    protected final RebindManager.RebindFailureMode addConfigFailureMode;
     protected final RebindFailureMode addPolicyFailureMode;
     protected final RebindFailureMode loadPolicyFailureMode;
     protected final QuorumCheck danglingRefsQuorumRequiredHealthy;
@@ -65,6 +68,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     protected final Set<String> missingEnrichers = Sets.newConcurrentHashSet();
     protected final Set<String> missingFeeds = Sets.newConcurrentHashSet();
     protected final Set<String> missingCatalogItems = Sets.newConcurrentHashSet();
+    protected final Set<String> missingUntypedItems = Sets.newConcurrentHashSet();
     protected final Set<String> creationFailedIds = Sets.newConcurrentHashSet();
     
     protected final Set<Exception> addPolicyFailures = Sets.newConcurrentHashSet();
@@ -84,6 +88,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     public static class Builder {
         private RebindManager.RebindFailureMode danglingRefFailureMode = RebindManager.RebindFailureMode.CONTINUE;
         private RebindManager.RebindFailureMode rebindFailureMode = RebindManager.RebindFailureMode.FAIL_AT_END;
+        private RebindManager.RebindFailureMode addConfigFailureMode = RebindManager.RebindFailureMode.FAIL_AT_END;
         private RebindManager.RebindFailureMode addPolicyFailureMode = RebindManager.RebindFailureMode.CONTINUE;
         private RebindManager.RebindFailureMode deserializePolicyFailureMode = RebindManager.RebindFailureMode.CONTINUE;
         private QuorumCheck danglingRefsQuorumRequiredHealthy = RebindManagerImpl.DANGLING_REFERENCES_MIN_REQUIRED_HEALTHY.getDefaultValue();
@@ -104,6 +109,10 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             deserializePolicyFailureMode = val;
             return this;
         }
+        public Builder addConfigFailureMode(RebindManager.RebindFailureMode val) {
+            this.addConfigFailureMode = val;
+            return this;
+        }
         public Builder danglingRefQuorumRequiredHealthy(QuorumCheck val) {
             danglingRefsQuorumRequiredHealthy = val;
             return this;
@@ -116,6 +125,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     public RebindExceptionHandlerImpl(Builder builder) {
         this.danglingRefFailureMode = checkNotNull(builder.danglingRefFailureMode, "danglingRefFailureMode");
         this.rebindFailureMode = checkNotNull(builder.rebindFailureMode, "rebindFailureMode");
+        this.addConfigFailureMode = checkNotNull(builder.addConfigFailureMode, "addConfigFailureMode");
         this.addPolicyFailureMode = checkNotNull(builder.addPolicyFailureMode, "addPolicyFailureMode");
         this.loadPolicyFailureMode = checkNotNull(builder.deserializePolicyFailureMode, "deserializePolicyFailureMode");
         this.danglingRefsQuorumRequiredHealthy = checkNotNull(builder.danglingRefsQuorumRequiredHealthy, "danglingRefsQuorumRequiredHealthy");
@@ -237,6 +247,17 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
     }
 
     @Override
+    public CatalogItem<?, ?> onDanglingUntypedItemRef(String id) {
+        missingUntypedItems.add(id);
+        if (danglingRefFailureMode == RebindManager.RebindFailureMode.FAIL_FAST) {
+            throw new IllegalStateException("No item found with id "+id);
+        } else {
+            warn("No item found with id "+id+"; dangling reference on rebind");
+            return null;
+        }
+    }
+
+    @Override
     public void onCreateFailed(BrooklynObjectType type, String id, String instanceType, Exception e) {
         Exceptions.propagateIfFatal(e);
         String errmsg = "problem creating "+type+" "+id+" of type "+instanceType;
@@ -283,6 +304,24 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             exceptions.add(new IllegalStateException(errmsg, e));
             onErrorImpl(errmsg, e);
             break;
+        }
+    }
+
+    public void onAddConfigFailed(EntityMemento entityMemento, ConfigKey<?> key, Exception e) {
+        Exceptions.propagateIfFatal(e);
+
+        String errmsg = "Failed to rebind " + key + " with value " + entityMemento.getConfig().get(key) + " for entity " + entityMemento;
+        switch (addConfigFailureMode) {
+            case FAIL_FAST:
+                throw new IllegalStateException(errmsg, e);
+            case FAIL_AT_END:
+                exceptions.add(new IllegalStateException(errmsg, e));
+                break;
+            case CONTINUE:
+                warn(errmsg + "; continuing", e);
+                break;
+            default:
+                throw new IllegalStateException("Unexpected state '"+addPolicyFailureMode+"' for addPolicyFailureMode");
         }
     }
 
@@ -395,7 +434,7 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
         }
         done = true;
         
-        List<String> danglingIds = MutableList.copyOf(missingEntities).appendAll(missingLocations).appendAll(missingPolicies).appendAll(missingEnrichers).appendAll(missingFeeds).appendAll(missingCatalogItems);
+        List<String> danglingIds = MutableList.copyOf(missingEntities).appendAll(missingLocations).appendAll(missingPolicies).appendAll(missingEnrichers).appendAll(missingFeeds).appendAll(missingCatalogItems).appendAll(missingUntypedItems);
         int totalDangling = danglingIds.size();
         if (totalDangling>0) {
             int totalFound = context.getAllBrooklynObjects().size();
@@ -440,6 +479,9 @@ public class RebindExceptionHandlerImpl implements RebindExceptionHandler {
             }
             if (!missingCatalogItems.isEmpty()) {
                 allExceptions.add(new IllegalStateException("Missing referenced catalog item" + Strings.s(missingCatalogItems) + ": " + missingCatalogItems));
+            }
+            if (!missingUntypedItems.isEmpty()) {
+                allExceptions.add(new IllegalStateException("Missing referenced untyped items" + Strings.s(missingUntypedItems) + ": " + missingUntypedItems));
             }
         }
         if (rebindFailureMode != RebindManager.RebindFailureMode.CONTINUE) {

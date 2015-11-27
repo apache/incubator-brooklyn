@@ -336,6 +336,7 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testScriptHeader() {
         final ShellTool localtool = newTool();
+        connect(localtool);
         String out = execScript(MutableMap.of("scriptHeader", "#!/bin/bash -e\necho hello world\n"), 
                 localtool, Arrays.asList("echo goodbye world"), null);
         assertTrue(out.contains("goodbye world"), "no goodbye in output: "+out);
@@ -345,6 +346,7 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testStdErr() {
         final ShellTool localtool = newTool();
+        connect(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -359,6 +361,7 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testRunAsRoot() {
         final ShellTool localtool = newTool();
+        connect(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();
@@ -379,6 +382,7 @@ public abstract class ShellToolAbstractTest {
     @Test(groups = {"Integration"})
     public void testExecScriptEchosDontExecuteWhenToldNoExtraOutput() throws Exception {
         final ShellTool localtool = newTool();
+        connect(localtool);
         Map<String,Object> props = new LinkedHashMap<String, Object>();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         ByteArrayOutputStream err = new ByteArrayOutputStream();

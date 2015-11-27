@@ -21,16 +21,19 @@ package org.apache.brooklyn.core.mgmt.rebind.dto;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.codehaus.jackson.annotate.JsonAutoDetect;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class BasicCatalogItemMemento extends AbstractMemento implements CatalogItemMemento, Serializable {
@@ -48,6 +51,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
         protected String javaType;
         protected String version;
         protected String planYaml;
+        protected List<SpecParameter<?>> parameters;
         protected Collection<CatalogItem.CatalogBundle> libraries;
         protected CatalogItem.CatalogItemType catalogItemType;
         protected Class<?> catalogItemJavaType;
@@ -82,6 +86,11 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
 
         public Builder planYaml(String planYaml) {
             this.planYaml = planYaml;
+            return self();
+        }
+
+        public Builder parameters(List<SpecParameter<?>> params) {
+            this.parameters = params;
             return self();
         }
 
@@ -123,6 +132,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
             javaType = other.getJavaType();
             version = other.getVersion();
             planYaml = other.getPlanYaml();
+            parameters = other.getParameters();
             libraries = other.getLibraries();
             catalogItemType = other.getCatalogItemType();
             catalogItemJavaType = other.getCatalogItemJavaType();
@@ -143,6 +153,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     private String javaType;
     private String version;
     private String planYaml;
+    private List<SpecParameter<?>> parameters;
     private Collection<CatalogItem.CatalogBundle> libraries;
     private CatalogItem.CatalogItemType catalogItemType;
     private Class<?> catalogItemJavaType;
@@ -160,6 +171,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
         this.iconUrl = builder.iconUrl;
         this.version = builder.version;
         this.planYaml = builder.planYaml;
+        this.parameters = builder.parameters;
         this.libraries = builder.libraries;
         this.catalogItemJavaType = builder.catalogItemJavaType;
         this.catalogItemType = builder.catalogItemType;
@@ -206,6 +218,15 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
     @Override
     public String getJavaType() {
         return javaType;
+    }
+
+    @Override
+    public List<SpecParameter<?>> getParameters() {
+        if (parameters != null) {
+            return parameters;
+        } else {
+            return ImmutableList.of();
+        }
     }
 
     @Override
@@ -259,6 +280,7 @@ public class BasicCatalogItemMemento extends AbstractMemento implements CatalogI
                 .add("iconUrl", getIconUrl())
                 .add("version", getVersion())
                 .add("planYaml", getPlanYaml())
+                .add("parameters", getParameters())
                 .add("libraries", getLibraries())
                 .add("catalogItemJavaType", getCatalogItemJavaType())
                 .add("catalogItemType", getCatalogItemType())

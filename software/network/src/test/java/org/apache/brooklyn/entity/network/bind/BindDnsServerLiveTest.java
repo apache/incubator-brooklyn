@@ -59,8 +59,6 @@ public class BindDnsServerLiveTest {
         dns = sse.addChild((EntitySpec.create(BindDnsServer.class)
                 .configure(BindDnsServer.ENTITY_FILTER, Predicates.instanceOf(EmptySoftwareProcess.class))
                 .configure(BindDnsServer.HOSTNAME_SENSOR, PrefixAndIdEnricher.SENSOR)));
-        Entities.manage(cluster);
-        Entities.manage(dns);
 
         app.start(ImmutableList.of(testLocation));
         assertAttributeEqualsEventually(dns, Attributes.SERVICE_UP, true);

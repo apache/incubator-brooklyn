@@ -23,9 +23,20 @@ import java.util.Random;
 public class Identifiers {
     
     private static Random random = new Random();
-    
+
+    /** @see #JAVA_GOOD_PACKAGE_OR_CLASS_REGEX */ 
     public static final String JAVA_GOOD_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_";
+    /** @see #JAVA_GOOD_PACKAGE_OR_CLASS_REGEX */ 
     public static final String JAVA_GOOD_NONSTART_CHARS = JAVA_GOOD_START_CHARS+"1234567890";
+    /** @see #JAVA_GOOD_PACKAGE_OR_CLASS_REGEX */ 
+    public static final String JAVA_GOOD_SEGMENT_REGEX = "["+JAVA_GOOD_START_CHARS+"]"+"["+JAVA_GOOD_NONSTART_CHARS+"]*";
+    /** regex for a java package or class name using "good" chars, that is no accents or funny unicodes.
+     * see http://docs.oracle.com/javase/specs/jls/se7/html/jls-3.html#jls-3.8 for the full set supported by the spec;
+     * but it's rare to deviate from this subset and it causes problems when charsets aren't respected (tsk tsk but not uncommon!).
+     * our use cases so far only require testing for "good" names. */
+    public static final String JAVA_GOOD_PACKAGE_OR_CLASS_REGEX = "("+JAVA_GOOD_SEGMENT_REGEX+"\\."+")*"+JAVA_GOOD_SEGMENT_REGEX;
+    /** as {@link #JAVA_GOOD_PACKAGE_OR_CLASS_REGEX} but allowing a dollar sign inside a class name (e.g. Foo$1) */
+    public static final String JAVA_GOOD_BINARY_REGEX = JAVA_GOOD_PACKAGE_OR_CLASS_REGEX+"(\\$["+JAVA_GOOD_NONSTART_CHARS+"]+)*";
     
     public static final String JAVA_GENERATED_IDENTIFIER_START_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     public static final String JAVA_GENERATED_IDENTIFIERNONSTART_CHARS = JAVA_GENERATED_IDENTIFIER_START_CHARS+"1234567890";

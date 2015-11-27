@@ -34,7 +34,7 @@ import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdom
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.util.collections.MutableSet;
-import org.apache.brooklyn.util.core.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
 

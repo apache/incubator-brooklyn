@@ -20,8 +20,8 @@ package org.apache.brooklyn.feed.http;
 
 import java.net.URI;
 
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import com.google.common.collect.ImmutableMap;

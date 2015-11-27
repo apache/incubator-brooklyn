@@ -216,15 +216,9 @@ public interface Entity extends BrooklynObject {
      * via code like {@code sensors().get(key)}.
      */
     <T> T getAttribute(AttributeSensor<T> sensor);
-
-    /**
-     * Convenience for calling {@link ConfigurationSupport#get(ConfigKey)},
-     * via code like {@code config().get(key)}.
-     */
-    <T> T getConfig(ConfigKey<T> key);
     
     /**
-     * @see #getConfig(ConfigKey)}
+     * @see {@link #getConfig(ConfigKey)}
      */
     <T> T getConfig(HasConfigKey<T> key);
     
@@ -314,6 +308,9 @@ public interface Entity extends BrooklynObject {
 
     GroupSupport groups();
 
+    @Override
+    RelationSupport<Entity> relations();
+    
     @Beta
     public interface SensorSupport {
 
@@ -365,6 +362,9 @@ public interface Entity extends BrooklynObject {
          * @return A read-only thread-safe iterator over all the instances.
          */
         Iterator<T> iterator();
+        
+        int size();
+        boolean isEmpty();
         
         /**
          * Adds an instance.
@@ -435,5 +435,8 @@ public interface Entity extends BrooklynObject {
          */
         @Override
         Iterator<Group> iterator();
+        
+        int size();
+        boolean isEmpty();
     }
 }

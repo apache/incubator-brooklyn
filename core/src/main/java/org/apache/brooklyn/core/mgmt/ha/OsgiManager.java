@@ -29,17 +29,14 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleException;
-import org.osgi.framework.launch.Framework;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.server.BrooklynServerPaths;
+import org.apache.brooklyn.rt.felix.EmbeddedFelixFramework;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.osgi.Osgis;
@@ -51,10 +48,13 @@ import org.apache.brooklyn.util.os.Os.DeletionResult;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.launch.Framework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 public class OsgiManager {
 
@@ -77,24 +77,14 @@ public class OsgiManager {
             osgiCacheDir = BrooklynServerPaths.getOsgiCacheDirCleanedIfNeeded(mgmt);
             
             // any extra OSGi startup args could go here
-            framework = Osgis.newFrameworkStarted(osgiCacheDir.getAbsolutePath(), false, MutableMap.of());
-            
+            framework = Osgis.getFramework(osgiCacheDir.getAbsolutePath(), false);
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }
     }
 
     public void stop() {
-        try {
-            if (framework!=null) {
-                framework.stop();
-                framework.waitForStop(0); // 0 means indefinite
-            }
-        } catch (BundleException e) {
-            throw Exceptions.propagate(e);
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        }
+        Osgis.ungetFramework(framework);
         if (BrooklynServerPaths.isOsgiCacheForCleaning(mgmt, osgiCacheDir)) {
             // See exception reported in https://issues.apache.org/jira/browse/BROOKLYN-72
             // We almost always fail to delete he OSGi temp directory due to a concurrent modification.
@@ -102,6 +92,7 @@ public class OsgiManager {
             final AtomicReference<DeletionResult> deletionResult = new AtomicReference<DeletionResult>();
             Repeater.create("Delete OSGi cache dir")
                     .until(new Callable<Boolean>() {
+                        @Override
                         public Boolean call() {
                             deletionResult.set(Os.deleteRecursively(osgiCacheDir));
                             return deletionResult.get().wasSuccessful();
@@ -182,26 +173,26 @@ public class OsgiManager {
     }
 
     public static boolean isBundleNameEqualOrAbsent(CatalogBundle bundle, Bundle b) {
-        return !bundle.isNamed() ||
+        return !bundle.isNameResolved() ||
                 (bundle.getSymbolicName().equals(b.getSymbolicName()) &&
                 bundle.getVersion().equals(b.getVersion().toString()));
     }
 
-    public <T> Maybe<Class<T>> tryResolveClass(String type, CatalogBundle... catalogBundles) {
-        return tryResolveClass(type, Arrays.asList(catalogBundles));
+    public <T> Maybe<Class<T>> tryResolveClass(String type, OsgiBundleWithUrl... osgiBundles) {
+        return tryResolveClass(type, Arrays.asList(osgiBundles));
     }
-    public <T> Maybe<Class<T>> tryResolveClass(String type, Iterable<CatalogBundle> catalogBundles) {
-        Map<CatalogBundle,Throwable> bundleProblems = MutableMap.of();
+    public <T> Maybe<Class<T>> tryResolveClass(String type, Iterable<? extends OsgiBundleWithUrl> osgiBundles) {
+        Map<OsgiBundleWithUrl,Throwable> bundleProblems = MutableMap.of();
         Set<String> extraMessages = MutableSet.of();
-        for (CatalogBundle catalogBundle: catalogBundles) {
+        for (OsgiBundleWithUrl osgiBundle: osgiBundles) {
             try {
-                Maybe<Bundle> bundle = findBundle(catalogBundle);
+                Maybe<Bundle> bundle = findBundle(osgiBundle);
                 if (bundle.isPresent()) {
                     Bundle b = bundle.get();
                     Class<T> clazz;
                     //Extension bundles don't support loadClass.
                     //Instead load from the app classpath.
-                    if (Osgis.isExtensionBundle(b)) {
+                    if (EmbeddedFelixFramework.isExtensionBundle(b)) {
                         @SuppressWarnings("unchecked")
                         Class<T> c = (Class<T>)Class.forName(type);
                         clazz = c;
@@ -212,13 +203,13 @@ public class OsgiManager {
                     }
                     return Maybe.of(clazz);
                 } else {
-                    bundleProblems.put(catalogBundle, ((Maybe.Absent<?>)bundle).getException());
+                    bundleProblems.put(osgiBundle, ((Maybe.Absent<?>)bundle).getException());
                 }
                 
             } catch (Exception e) {
                 // should come from classloading now; name formatting or missing bundle errors will be caught above 
                 Exceptions.propagateIfFatal(e);
-                bundleProblems.put(catalogBundle, e);
+                bundleProblems.put(osgiBundle, e);
 
                 Throwable cause = e.getCause();
                 if (cause != null && cause.getMessage().contains("Unresolved constraint in bundle")) {
@@ -229,7 +220,7 @@ public class OsgiManager {
                         extraMessages.add("Your development environment may not have created necessary files. Doing a maven build then retrying may fix the issue.");
                     }
                     if (!extraMessages.isEmpty()) log.warn(Strings.join(extraMessages, " "));
-                    log.warn("Unresolved constraint resolving OSGi bundle "+catalogBundle+" to load "+type+": "+cause.getMessage());
+                    log.warn("Unresolved constraint resolving OSGi bundle "+osgiBundle+" to load "+type+": "+cause.getMessage());
                     if (log.isDebugEnabled()) log.debug("Trace for OSGi resolution failure", e);
                 }
             }
@@ -247,7 +238,7 @@ public class OsgiManager {
         }
     }
 
-    public Maybe<Bundle> findBundle(CatalogBundle catalogBundle) {
+    public Maybe<Bundle> findBundle(OsgiBundleWithUrl catalogBundle) {
         //Either fail at install time when the user supplied name:version is different
         //from the one reported from the bundle
         //or
@@ -268,10 +259,10 @@ public class OsgiManager {
     /**
      * Iterates through catalogBundles until one contains a resource with the given name.
      */
-    public URL getResource(String name, Iterable<CatalogBundle> catalogBundles) {
-        for (CatalogBundle catalogBundle: catalogBundles) {
+    public URL getResource(String name, Iterable<? extends OsgiBundleWithUrl> osgiBundles) {
+        for (OsgiBundleWithUrl osgiBundle: osgiBundles) {
             try {
-                Maybe<Bundle> bundle = findBundle(catalogBundle);
+                Maybe<Bundle> bundle = findBundle(osgiBundle);
                 if (bundle.isPresent()) {
                     URL result = bundle.get().getResource(name);
                     if (result!=null) return result;
@@ -284,11 +275,11 @@ public class OsgiManager {
     }
 
     /**
-     * @return An iterable of all resources matching name in catalogBundles.
+     * @return URL's to all resources matching the given name (using {@link Bundle#getResources(String)} in the referenced osgi bundles.
      */
-    public Iterable<URL> getResources(String name, Iterable<CatalogBundle> catalogBundles) {
-        List<URL> resources = Lists.newArrayList();
-        for (CatalogBundle catalogBundle : catalogBundles) {
+    public Iterable<URL> getResources(String name, Iterable<? extends OsgiBundleWithUrl> osgiBundles) {
+        Set<URL> resources = Sets.newLinkedHashSet();
+        for (OsgiBundleWithUrl catalogBundle : osgiBundles) {
             try {
                 Maybe<Bundle> bundle = findBundle(catalogBundle);
                 if (bundle.isPresent()) {

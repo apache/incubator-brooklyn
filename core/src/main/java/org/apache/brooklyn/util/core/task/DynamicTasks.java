@@ -28,6 +28,7 @@ import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
 import org.apache.brooklyn.api.mgmt.TaskQueueingContext;
 import org.apache.brooklyn.api.mgmt.TaskWrapper;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
@@ -331,6 +332,22 @@ public class DynamicTasks {
      * {@link Task#getUnchecked()} or {@link Task#blockUntilEnded()} */
     public static <T> Task<T> submit(TaskAdaptable<T> task, Entity entity) {
         return queueIfPossible(task).orSubmitAsync(entity).asTask();
+    }
+
+    /** Breaks the parent-child relation between Tasks.current() and the task passed,
+     *  making the new task a top-level one at the target entity.
+     *  To make it visible in the UI, also tag the task with:
+     *    .tag(BrooklynTaskTags.tagForContextEntity(entity))
+     *    .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
+     */
+    public static <T> Task<T> submitTopLevelTask(TaskAdaptable<T> task, Entity entity) {
+        Task<?> currentTask = BasicExecutionManager.getPerThreadCurrentTask().get();
+        BasicExecutionManager.getPerThreadCurrentTask().set(null);
+        try {
+            return Entities.submit(entity, task).asTask();
+        } finally {
+            BasicExecutionManager.getPerThreadCurrentTask().set(currentTask);
+        }
     }
 
 }

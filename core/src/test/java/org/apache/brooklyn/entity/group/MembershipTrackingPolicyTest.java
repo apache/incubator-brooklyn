@@ -75,7 +75,6 @@ public class MembershipTrackingPolicyTest extends BrooklynAppUnitTestSupport {
     private TestEntity createAndManageChildOf(Entity parent) {
         EntityManager entityManager = app.getManagementContext().getEntityManager();
         TestEntity result = entityManager.createEntity(EntitySpec.create(TestEntity.class).parent(parent));
-        Entities.manage(result);
         return result;
     }
 

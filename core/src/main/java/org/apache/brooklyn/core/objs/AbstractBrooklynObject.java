@@ -28,6 +28,7 @@ import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl;
 import org.apache.brooklyn.core.objs.proxy.InternalFactory;
+import org.apache.brooklyn.core.relations.ByObjectBasicRelationSupport;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.text.Identifiers;
@@ -51,12 +52,15 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
 
     private String catalogItemId;
 
-    /** subclasses should synchronize on this for all access */
+    /** callers (only in TagSupport) should synchronize on this for all access */
     @SetFromFlag(value = "tags")
     private final Set<Object> tags = Sets.newLinkedHashSet();
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private final RelationSupportInternal relations = new ByObjectBasicRelationSupport(this, new RelationChangedCallback());
+    
     private volatile ManagementContext managementContext;
-
+    
     public abstract void setDisplayName(String newName);
 
     public AbstractBrooklynObject() {
@@ -86,7 +90,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
      * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
      */
     @Deprecated
-    protected AbstractBrooklynObject configure() {
+    protected BrooklynObjectInternal configure() {
         return configure(Collections.emptyMap());
     }
 
@@ -105,7 +109,7 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
      * @deprecated since 0.7.0; only used for legacy brooklyn types where constructor is called directly
      */
     @Deprecated
-    protected abstract AbstractBrooklynObject configure(Map<?, ?> flags);
+    protected abstract BrooklynObjectInternal configure(Map<?, ?> flags);
 
     protected boolean isLegacyConstruction() {
         return _legacyConstruction;
@@ -242,6 +246,19 @@ public abstract class AbstractBrooklynObject implements BrooklynObjectInternal {
             }
             onTagsChanged();
             return result;
+        }
+    }
+
+    // always override to get casting correct
+    @Override
+    public RelationSupportInternal<?> relations() {
+        return relations;
+    }
+
+    private class RelationChangedCallback implements Runnable {
+        @Override
+        public void run() {
+            requestPersist();
         }
     }
 

@@ -36,8 +36,8 @@ import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.test.config.render.TestRendererHints;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.http.HttpAsserts;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.StringFunctions;
 import org.testng.annotations.AfterClass;
@@ -156,7 +156,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
             response = req.get(ClientResponse.class);
         }
         if (expectedValue!=null) {
-            HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+            HttpAsserts.assertHealthyStatusCode(response.getStatus());
             Object value = response.getEntity(expectedValue.getClass());
             assertEquals(value, expectedValue);
         }

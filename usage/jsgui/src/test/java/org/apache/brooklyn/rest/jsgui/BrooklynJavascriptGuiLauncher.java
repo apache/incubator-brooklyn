@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.util.net.Networking;
+import org.eclipse.jetty.server.NetworkConnector;
 
 /** launches Javascript GUI programmatically. and used for tests.
  * see {@link BrooklynRestApiLauncher} for more information.
@@ -48,7 +49,7 @@ public class BrooklynJavascriptGuiLauncher {
     public static void main(String[] args) throws Exception {
         // NOTE: When running Brooklyn from an IDE (i.e. by launching BrooklynJavascriptGuiLauncher.main())
         // you will need to ensure that the working directory is set to the jsgui folder. For IntelliJ,
-        // set the 'Working directory' of the Run/Debug Configuration to $MODULE_DIR/../jsgui.
+        // set the 'Working directory' of the Run/Debug Configuration to $MODULE_DIR$/../jsgui.
         // For Eclipse, use the default option of ${workspace_loc:brooklyn-jsgui}.
         // If the working directory is not set correctly, Brooklyn will be unable to find the jsgui .war
         // file and the 'gui not available' message will be shown.
@@ -81,7 +82,7 @@ public class BrooklynJavascriptGuiLauncher {
         Server server = new Server(new InetSocketAddress(Networking.LOOPBACK, Networking.nextAvailablePort(FAVOURITE_PORT)));
         server.setHandler(context);
         server.start();
-        log.info("JS GUI server started (no REST) at  http://localhost:"+server.getConnectors()[0].getLocalPort()+"/");
+        log.info("JS GUI server started (no REST) at  http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort()+"/");
         
         return server;
     }

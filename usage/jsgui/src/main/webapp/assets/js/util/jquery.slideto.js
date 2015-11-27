@@ -16,19 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  *
- * 
- * Based on jquery.slideto.min.js in Swagger UI, added in:
- * https://github.com/wordnik/swagger-ui/commit/d2eb882e5262e135dfa3f5919796bbc3785880b8#diff-bd86720650a2ebd1ab11e870dc475564
+ * ---
  *
- * Swagger UI is distributed under ASL but it is not clear that this code originated in that project.
- * No other original author could be identified.
+ * This code has been created by the Apache Brooklyn contributors.
+ * It is heavily based on earlier software but rewritten for readability 
+ * and to preserve license integrity.
  *
- * Nearly identical code is referenced here:
- * http://stackoverflow.com/questions/12375440/scrolling-works-in-chrome-but-not-in-firefox-or-ie
+ * Our influences are:
  *
- * The project https://github.com/Sleavely/jQuery-slideto is NOT this.
+ * * jquery.slideto.min.js in Swagger UI, provenance unknown, added in:
+ *   https://github.com/wordnik/swagger-ui/commit/d2eb882e5262e135dfa3f5919796bbc3785880b8#diff-bd86720650a2ebd1ab11e870dc475564
  *
- * Rewritten for readability and to preserve license integrity.
+ *   Swagger UI is distributed under ASL but it is not clear that this code originated in that project.
+ *   No other original author could be identified.
+ *
+ * * Nearly identical code referenced here:
+ *   http://stackoverflow.com/questions/12375440/scrolling-works-in-chrome-but-not-in-firefox-or-ie
+ *
+ * Note that the project https://github.com/Sleavely/jQuery-slideto is NOT this.
+ *
  */
 (function(jquery){
 jquery.fn.slideto=function(opts) {

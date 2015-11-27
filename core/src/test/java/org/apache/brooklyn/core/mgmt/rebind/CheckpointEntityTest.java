@@ -68,7 +68,6 @@ public class CheckpointEntityTest extends RebindTestFixtureWithApp {
     @Test
     public void testAutoCheckpointsOnManageDynamicEntity() throws Exception {
         final MyEntity origE2 = origApp.createAndManageChild(EntitySpec.create(MyEntity.class).configure("myconfig", "myval2"));
-        Entities.manage(origE2);
         
         newApp = rebind();
         MyEntity newE2 = (MyEntity) Iterables.find(newApp.getChildren(), new Predicate<Entity>() {

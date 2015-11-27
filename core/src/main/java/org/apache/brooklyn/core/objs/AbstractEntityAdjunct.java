@@ -121,7 +121,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         _legacyNoConstructionInit = (properties != null) && Boolean.TRUE.equals(properties.get("noConstructionInit"));
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(properties);
+            AbstractEntityAdjunct checkWeGetThis = configure(properties);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
@@ -148,7 +148,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
             if (entry.getKey() instanceof ConfigKey) {
                 ConfigKey key = (ConfigKey)entry.getKey();
                 if (adjunctType.getConfigKeys().contains(key)) {
-                    setConfig(key, entry.getValue());
+                    config().set(key, entry.getValue());
                 } else {
                     log.warn("Unknown configuration key {} for policy {}; ignoring", key, this);
                     iter.remove();
@@ -161,25 +161,20 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         FlagUtils.setAllConfigKeys(this, bag, false);
         leftoverProperties.putAll(bag.getUnusedConfig());
 
-        //replace properties _contents_ with leftovers so subclasses see leftovers only
-        flags.clear();
-        flags.putAll(leftoverProperties);
-        leftoverProperties = flags;
-        
-        if (!truth(name) && flags.containsKey("displayName")) {
+        if (!truth(name) && leftoverProperties.containsKey("displayName")) {
             //TODO inconsistent with entity and location, where name is legacy and displayName is encouraged!
             //'displayName' is a legacy way to refer to a policy's name
-            Preconditions.checkArgument(flags.get("displayName") instanceof CharSequence, "'displayName' property should be a string");
-            setDisplayName(flags.remove("displayName").toString());
+            Preconditions.checkArgument(leftoverProperties.get("displayName") instanceof CharSequence, "'displayName' property should be a string");
+            setDisplayName(leftoverProperties.remove("displayName").toString());
         }
         
-        // set leftover flags should as config items; particularly useful when these have come from a brooklyn.config map 
-        for (Object flag: flags.keySet()) {
+        // set leftover leftoverProperties should as config items; particularly useful when these have come from a brooklyn.config map 
+        for (Object flag: leftoverProperties.keySet()) {
             ConfigKey<Object> key = ConfigKeys.newConfigKey(Object.class, Strings.toString(flag));
             if (config().getRaw(key).isPresent()) {
                 log.warn("Config '"+flag+"' on "+this+" conflicts with key already set; ignoring");
             } else {
-                config().set(key, flags.get(flag));
+                config().set(key, leftoverProperties.get(flag));
             }
         }
         
@@ -366,6 +361,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         }
     }
 
+    @Override
     public <T> T getConfig(ConfigKey<T> key) {
         return config().get(key);
     }
@@ -417,6 +413,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return getClass().getCanonicalName();
     }
     
+    @Override
     public void setDisplayName(String name) {
         this.name = name;
     }
@@ -560,6 +557,7 @@ public abstract class AbstractEntityAdjunct extends AbstractBrooklynObject imple
         return uniqueTag;
     }
 
+    @Override
     public TagSupport tags() {
         return new AdjunctTagSupport();
     }

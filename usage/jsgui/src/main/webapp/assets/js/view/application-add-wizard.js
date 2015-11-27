@@ -88,6 +88,13 @@ define([
         if (entity.config && _.size(entity.config)) result["brooklyn.config"] = entity.config;
         return result;
     }
+    function getConvertedConfigValue(value) {
+        try {
+            return $.parseJSON(value);
+        } catch (e) {
+            return value;
+        }
+    }
     
     var ModalWizard = Backbone.View.extend({
         tagName:'div',
@@ -525,7 +532,10 @@ define([
         getConfigMap:function (root) {
             var map = {}
             $('.app-add-wizard-config-entry',root).each( function (index,elt) {
-                map[$('#key',elt).val()] = $('#value',elt).val()
+                var value = getConvertedConfigValue($('#value',elt).val());
+                if (value !== null) {
+                    map[$('#key',elt).val()] = value;
+                }
             })
             return map;
         },
@@ -783,26 +793,22 @@ define([
                 if (catalogEntryItem!=null && catalogEntryItem.config!=null) {
                     var that = this
                     _.each(catalogEntryItem.config, function (cfg) {
-                        if (cfg.label) {
-                            configs.push( { priority: cfg.priority, html: _.template(RequiredConfigEntryHtml, {data:cfg}) } )
-                            // only include items with labels
+                        if (cfg.priority !== undefined) {
+                            var html = _.template(RequiredConfigEntryHtml, {data:cfg});
+                            that.$('.config-table').append(html)
                         }
-                        // (others might be included in future with an "expand" option, or priority option)
                     })
                 }
-                configs = configs.sort( function(a,b) { return b.priority - a.priority } )
-                for (var c in configs) {
-                    that.$('.config-table').append(configs[c].html)
-                }
-                // TODO add any manual config supplied by user (in previous turn visiting this tab)
             }
         },
         getConfigMap:function() {
-            var map = {}
+            var map = {};
             $('.app-add-wizard-config-entry').each( function (index,elt) {
-                map[$('#key',elt).val()] = 
-                    $('#checkboxValue',elt).length ? $('#checkboxValue',elt).is(':checked') :
-                    $('#value',elt).val()
+                var value = $('#checkboxValue',elt).length ? $('#checkboxValue',elt).is(':checked') :
+                    getConvertedConfigValue($('#value',elt).val());
+                if (value !== null) {
+                    map[$('#key',elt).val()] = value;
+                }
             })
             return map;
         },

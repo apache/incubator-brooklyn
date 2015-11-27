@@ -35,8 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.brooklyn.util.stream.StreamGobbler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

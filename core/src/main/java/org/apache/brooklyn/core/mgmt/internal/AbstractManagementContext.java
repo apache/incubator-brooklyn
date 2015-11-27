@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.drivers.EntityDriverManager;
@@ -44,10 +43,13 @@ import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.mgmt.entitlement.EntitlementManager;
 import org.apache.brooklyn.api.mgmt.ha.HighAvailabilityManager;
 import org.apache.brooklyn.api.mgmt.rebind.RebindManager;
 import org.apache.brooklyn.api.objs.BrooklynObject;
+import org.apache.brooklyn.api.typereg.BrooklynTypeRegistry;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogInitialization;
@@ -64,11 +66,11 @@ import org.apache.brooklyn.core.internal.storage.impl.BrooklynStorageImpl;
 import org.apache.brooklyn.core.internal.storage.impl.inmemory.InMemoryDataGridFactory;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.ha.HighAvailabilityManagerImpl;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl;
+import org.apache.brooklyn.core.typereg.BasicBrooklynTypeRegistry;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
@@ -83,6 +85,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
@@ -124,7 +127,8 @@ public abstract class AbstractManagementContext implements ManagementContextInte
                 if (input instanceof EntityInternal) {
                     EntityInternal internal = (EntityInternal)input;
                     if (internal.getCatalogItemId() != null) {
-                        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(internal.getManagementContext(), internal.getCatalogItemId());
+                        RegisteredType item = internal.getManagementContext().getTypeRegistry().get(internal.getCatalogItemId());
+
                         if (item != null) {
                             return CatalogUtils.newClassLoadingContext(internal.getManagementContext(), item);
                         } else {
@@ -150,6 +154,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     protected BrooklynProperties configMap;
     protected BasicLocationRegistry locationRegistry;
     protected final BasicBrooklynCatalog catalog;
+    protected final BrooklynTypeRegistry typeRegistry;
     protected ClassLoader baseClassLoader;
     protected Iterable<URL> baseClassPathForScanning;
 
@@ -188,6 +193,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         DataGrid datagrid = datagridFactory.newDataGrid(this);
 
         this.catalog = new BasicBrooklynCatalog(this);
+        this.typeRegistry = new BasicBrooklynTypeRegistry(this);
         
         this.storage = new BrooklynStorageImpl(datagrid);
         this.rebindManager = new RebindManagerImpl(this); // TODO leaking "this" reference; yuck
@@ -242,7 +248,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     public ExecutionContext getExecutionContext(Entity e) {
         // BEC is a thin wrapper around EM so fine to create a new one here; but make sure it gets the real entity
         if (e instanceof AbstractEntity) {
-            return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.tagForContextEntity(e)), getExecutionManager());
+            ImmutableSet<Object> tags = ImmutableSet.<Object>of(
+                    BrooklynTaskTags.tagForContextEntity(e),
+                    this
+            );
+            return new BasicExecutionContext(MutableMap.of("tags", tags), getExecutionManager());
         } else {
             return ((EntityInternal)e).getManagementSupport().getExecutionContext();
         }
@@ -251,7 +261,11 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     @Override
     public ExecutionContext getServerExecutionContext() {
         // BEC is a thin wrapper around EM so fine to create a new one here
-        return new BasicExecutionContext(MutableMap.of("tag", BrooklynTaskTags.BROOKLYN_SERVER_TASK_TAG), getExecutionManager());
+        ImmutableSet<Object> tags = ImmutableSet.<Object>of(
+                this,
+                BrooklynTaskTags.BROOKLYN_SERVER_TASK_TAG
+        );
+        return new BasicExecutionContext(MutableMap.of("tags", tags), getExecutionManager());
     }
 
     @Override
@@ -369,10 +383,15 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         if (!getCatalogInitialization().hasRunAnyInitialization()) {
             // catalog init is needed; normally this will be done from start sequence,
             // but if accessed early -- and in tests -- we will load it here
-            getCatalogInitialization().injectManagementContext(this);
+            getCatalogInitialization().setManagementContext(this);
             getCatalogInitialization().populateUnofficial(catalog);
         }
         return catalog;
+    }
+    
+    @Override
+    public BrooklynTypeRegistry getTypeRegistry() {
+        return typeRegistry;
     }
     
     @Override
@@ -462,7 +481,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
             Preconditions.checkNotNull(catalogInitialization, "initialization must not be null");
             if (this.catalogInitialization!=null && this.catalogInitialization != catalogInitialization)
                 throw new IllegalStateException("Changing catalog init from "+this.catalogInitialization+" to "+catalogInitialization+"; changes not permitted");
-            catalogInitialization.injectManagementContext(this);
+            catalogInitialization.setManagementContext(this);
             this.catalogInitialization = catalogInitialization;
         }
     }

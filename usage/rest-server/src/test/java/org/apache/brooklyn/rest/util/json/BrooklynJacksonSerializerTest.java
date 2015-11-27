@@ -47,7 +47,7 @@ import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.core.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
@@ -56,6 +56,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.gson.Gson;
+import org.eclipse.jetty.server.NetworkConnector;
 
 public class BrooklynJacksonSerializerTest {
 
@@ -290,7 +291,7 @@ public class BrooklynJacksonSerializerTest {
 
             TestApplication app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
 
-            String serverAddress = "http://localhost:"+server.getConnectors()[0].getLocalPort();
+            String serverAddress = "http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort();
             String appUrl = serverAddress + "/v1/applications/" + app.getId();
             String entityUrl = appUrl + "/entities/" + app.getId();
             URI configUri = new URIBuilder(entityUrl + "/config/" + TestEntity.CONF_OBJECT.getName())
@@ -323,7 +324,7 @@ public class BrooklynJacksonSerializerTest {
 
             TestApplication app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
 
-            String serverAddress = "http://localhost:"+server.getConnectors()[0].getLocalPort();
+            String serverAddress = "http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort();
             String appUrl = serverAddress + "/v1/applications/" + app.getId();
             String entityUrl = appUrl + "/entities/" + app.getId();
             URI configUri = new URIBuilder(entityUrl + "/config/" + TestEntity.CONF_OBJECT.getName())

@@ -25,7 +25,7 @@ import org.apache.brooklyn.core.feed.PollConfig;
 import org.apache.brooklyn.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.feed.http.JsonFunctions;
 import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;

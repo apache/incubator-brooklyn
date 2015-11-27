@@ -51,7 +51,6 @@ public class ConfigToAttributesTest {
     public void testApplyTemplatedConfigWithEntity() {
         TestApplication app = managementContext.getEntityManager().createEntity(EntitySpec.create(TestApplication.class)
                 .configure(TestEntity.CONF_NAME, "myval"));
-        Entities.startManagement(app, managementContext);
         
         BasicAttributeSensorAndConfigKey<String> key = new TemplatedStringAttributeSensorAndConfigKey("mykey", "my descr", "${config['test.confName']!'notfound'}");
         String val = ConfigToAttributes.apply(app, key);

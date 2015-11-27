@@ -89,5 +89,8 @@ public interface LocationInternal extends BrooklynObjectInternal, Location {
     @Beta
     RebindSupport<LocationMemento> getRebindSupport();
     
+    @Override
+    RelationSupportInternal<Location> relations();
+    
     ManagementContext getManagementContext();
 }

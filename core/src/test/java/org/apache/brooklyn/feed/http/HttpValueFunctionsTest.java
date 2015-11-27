@@ -25,8 +25,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.NoSuchElementException;
 
-import org.apache.brooklyn.feed.http.HttpValueFunctions;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 

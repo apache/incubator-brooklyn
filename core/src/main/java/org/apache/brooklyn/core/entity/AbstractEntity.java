@@ -44,6 +44,7 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.EntityMemento;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -95,6 +96,7 @@ import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.DeferredSupplier;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.TypeTokens;
 import org.apache.brooklyn.util.javalang.Equals;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -152,8 +154,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     public static final BasicNotificationSensor<Location> LOCATION_REMOVED = new BasicNotificationSensor<Location>(
             Location.class, "entity.location.removed", "Location dynamically removed from entity");
 
+    @SuppressWarnings("rawtypes")
     public static final BasicNotificationSensor<Sensor> SENSOR_ADDED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.added", "Sensor dynamically added to entity");
+    @SuppressWarnings("rawtypes")
     public static final BasicNotificationSensor<Sensor> SENSOR_REMOVED = new BasicNotificationSensor<Sensor>(Sensor.class,
             "entity.sensor.removed", "Sensor dynamically removed from entity");
 
@@ -163,6 +167,13 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             "entity.effector.removed", "Effector dynamically removed from entity");
     public static final BasicNotificationSensor<String> EFFECTOR_CHANGED = new BasicNotificationSensor<String>(String.class,
             "entity.effector.changed", "Effector dynamically changed on entity");
+
+    @SuppressWarnings("rawtypes")
+    public static final BasicNotificationSensor<ConfigKey> CONFIG_KEY_ADDED = new BasicNotificationSensor<ConfigKey>(ConfigKey.class,
+            "entity.config_key.added", "ConfigKey dynamically added to entity");
+    @SuppressWarnings("rawtypes")
+    public static final BasicNotificationSensor<ConfigKey> CONFIG_KEY_REMOVED = new BasicNotificationSensor<ConfigKey>(ConfigKey.class,
+            "entity.config_key.removed", "ConfigKey dynamically removed from entity");
 
     public static final BasicNotificationSensor<PolicyDescriptor> POLICY_ADDED = new BasicNotificationSensor<PolicyDescriptor>(PolicyDescriptor.class,
             "entity.policy.added", "Policy dynamically added to entity");
@@ -287,7 +298,7 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         entityType = new EntityDynamicType(this);
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(flags);
+            AbstractEntity checkWeGetThis = configure(flags);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (flags.containsKey("deferConstructionChecks") && TypeCoercions.coerce(flags.get("deferConstructionChecks"), Boolean.class));
@@ -385,6 +396,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         }
 
         return this;
+    }
+
+    /**
+     * Adds the config keys to the entity dynamic type
+     * @since 0.9.0
+     */
+    public void configure(Iterable<ConfigKey<?>> configKeys) {
+        entityType.addConfigKeys(configKeys);
     }
 
     @Override
@@ -662,13 +681,16 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     @Override
     public <T extends Entity> T addChild(EntitySpec<T> spec) {
         if (spec.getParent()==null) {
-            spec = EntitySpec.create(spec).parent(this);
+            spec = EntitySpec.create(spec).parent(getProxyIfAvailable());
         }
         if (!this.equals(spec.getParent())) {
             throw new IllegalArgumentException("Attempt to create child of "+this+" with entity spec "+spec+
                 " failed because spec has different parent: "+spec.getParent());
         }
-        return addChild(getEntityManager().createEntity(spec));
+        
+        // The spec now includes this as the parent, so no need to call addChild; 
+        // that is done by InternalEntityFactory.
+        return getEntityManager().createEntity(spec);
     }
     
     @Override
@@ -711,6 +733,14 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         @Override
         public Iterator<Group> iterator() { 
             return asList().iterator();
+        }
+        @Override
+        public int size() {
+            return asList().size();
+        }
+        @Override
+        public boolean isEmpty() {
+            return asList().isEmpty();
         }
         
         protected List<Group> asList() { 
@@ -1595,6 +1625,15 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             return asList().iterator();
         }
 
+        @Override
+        public int size() {
+            return policiesInternal.size();
+        }
+        @Override
+        public boolean isEmpty() {
+            return policiesInternal.isEmpty();
+        }
+        
         protected List<Policy> asList() {
             return ImmutableList.<Policy>copyOf(policiesInternal);
         }
@@ -1658,6 +1697,15 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             return asList().iterator();
         }
 
+        @Override
+        public int size() {
+            return enrichersInternal.size();
+        }
+        @Override
+        public boolean isEmpty() {
+            return enrichersInternal.isEmpty();
+        }
+        
         protected List<Enricher> asList() {
             return ImmutableList.<Enricher>copyOf(enrichersInternal);
         }
@@ -2079,4 +2127,11 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
         super.onTagsChanged();
         getManagementSupport().getEntityChangeListener().onTagsChanged();
     }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Entity> relations() {
+        return (RelationSupportInternal<Entity>) super.relations();
+    }
+    
 }

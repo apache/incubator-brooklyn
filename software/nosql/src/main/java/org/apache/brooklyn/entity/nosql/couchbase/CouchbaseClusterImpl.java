@@ -50,6 +50,7 @@ import org.apache.brooklyn.feed.http.HttpFeed;
 import org.apache.brooklyn.feed.http.HttpPollConfig;
 import org.apache.brooklyn.feed.http.HttpValueFunctions;
 import org.apache.brooklyn.feed.http.JsonFunctions;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
@@ -562,8 +563,8 @@ public class CouchbaseClusterImpl extends DynamicClusterImpl implements Couchbas
                                         .onFailureOrException(new Function<Object, Boolean>() {
                                             @Override
                                             public Boolean apply(Object input) {
-                                                if (input instanceof org.apache.brooklyn.util.core.http.HttpToolResponse) {
-                                                    if (((org.apache.brooklyn.util.core.http.HttpToolResponse) input).getResponseCode() == 404) {
+                                                if (input instanceof HttpToolResponse) {
+                                                    if (((HttpToolResponse) input).getResponseCode() == 404) {
                                                         return true;
                                                     }
                                                 }

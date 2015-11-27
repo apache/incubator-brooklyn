@@ -21,7 +21,6 @@ package org.apache.brooklyn.util.collections;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.brooklyn.util.collections.MutableList;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -38,6 +37,11 @@ public class MutableListTest {
     public void testBuilderAddVarargs() throws Exception {
         List<Object> vals = MutableList.builder().add(1,2,3).build();
         Assert.assertEquals(vals, ImmutableList.of(1,2,3));
+    }
+    
+    public void testBuilderAddIfNotNull() throws Exception {
+        List<Object> vals = MutableList.builder().addIfNotNull(1).addIfNotNull(null).build();
+        Assert.assertEquals(vals, ImmutableList.of(1));
     }
     
     public void testBuilderAddIterable() throws Exception {

@@ -22,6 +22,7 @@ import static java.lang.String.format;
 import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_CURL;
 import static org.apache.brooklyn.util.ssh.BashCommands.INSTALL_TAR;
 import static org.apache.brooklyn.util.ssh.BashCommands.addSbinPathCommand;
+import static org.apache.brooklyn.util.ssh.BashCommands.sbinPath;
 import static org.apache.brooklyn.util.ssh.BashCommands.alternatives;
 import static org.apache.brooklyn.util.ssh.BashCommands.chainGroup;
 import static org.apache.brooklyn.util.ssh.BashCommands.commandToDownloadUrlAs;
@@ -63,7 +64,6 @@ import com.google.common.collect.Lists;
 public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements RiakNodeDriver {
 
     private static final Logger LOG = LoggerFactory.getLogger(RiakNodeSshDriver.class);
-    private static final String sbinPath = "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
     private static final String INSTALLING_FALLBACK = INSTALLING + "_fallback";
 
     public RiakNodeSshDriver(final RiakNodeImpl entity, final SshMachineLocation machine) {
@@ -170,7 +170,7 @@ public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements R
         }
         String apt = chainGroup(
                 //debian fix
-                "export PATH=" + sbinPath,
+                addSbinPathCommand(),
                 "which apt-get",
                 ok(sudo("apt-get -y --allow-unauthenticated install logrotate libpam0g-dev libssl0.9.8")),
                 "export OS_NAME=" + Strings.toLowerCase(osDetails.getName()),
@@ -602,7 +602,7 @@ public class RiakNodeSshDriver extends JavaSoftwareProcessSshDriver implements R
     }
 
     private void addRiakOnPath(ScriptHelper scriptHelper) {
-        Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath);
+        Map<String, String> newPathVariable = ImmutableMap.of("PATH", sbinPath());
 //        log.warn("riak command not found on PATH. Altering future commands' environment variables from {} to {}", getShellEnvironment(), newPathVariable);
         scriptHelper.environmentVariablesReset(newPathVariable);
     }

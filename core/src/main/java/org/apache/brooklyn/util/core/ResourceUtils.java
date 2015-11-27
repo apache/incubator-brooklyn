@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
-import java.net.JarURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,10 +38,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog.BrooklynLoaderTracker;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -55,8 +54,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpTool.HttpClientBuilder;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpTool.HttpClientBuilder;
 import org.apache.brooklyn.util.core.text.DataUriSchemeParser;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.Threads;
@@ -69,6 +68,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
+
+import org.apache.brooklyn.util.osgi.OsgiUtils;
 
 public class ResourceUtils {
     
@@ -219,8 +220,7 @@ public class ResourceUtils {
      */
     public InputStream getResourceFromUrl(String url) {
         try {
-            if (url==null) throw new NullPointerException("Cannot read from null");
-            if (url=="") throw new NullPointerException("Cannot read from empty string");
+            if (Strings.isBlank(url)) throw new IllegalArgumentException("Cannot read from empty string");
             String orig = url;
             String protocol = Urls.getProtocol(url);
             if (protocol!=null) {
@@ -559,36 +559,7 @@ public class ResourceUtils {
     }
 
     public static URL getContainerUrl(URL url, String resourceInThatDir) {
-        //Switching from manual parsing of jar: and file: URLs to java provided functionality.
-        //The old code was breaking on any Windows path and instead of fixing it, using
-        //the provided Java APIs seemed like the better option since they are already tested
-        //on multiple platforms.
-        boolean isJar = "jar".equals(url.getProtocol());
-        if(isJar) {
-            try {
-                //let java handle the parsing of jar URL, no network connection is established.
-                //Strips the jar protocol:
-                //  jar:file:/<path to jar>!<resourceInThatDir>
-                //  becomes
-                //  file:/<path to jar>
-                JarURLConnection connection = (JarURLConnection) url.openConnection();
-                url = connection.getJarFileURL();
-            } catch (IOException e) {
-                throw new IllegalStateException(e);
-            }
-        } else {
-            //Remove the trailing resouceInThatDir path from the URL, thus getting the parent folder.
-            String path = url.toString();
-            int i = path.indexOf(resourceInThatDir);
-            if (i==-1) throw new IllegalStateException("Resource path ("+resourceInThatDir+") not in url substring ("+url+")");
-            String parent = path.substring(0, i);
-            try {
-                url = new URL(parent);
-            } catch (MalformedURLException e) {
-                throw new IllegalStateException("Resource ("+resourceInThatDir+") found at invalid URL parent (" + parent + ")", e);
-            }
-        }
-        return url;
+        return OsgiUtils.getContainerUrl(url, resourceInThatDir);
     }
     
     /** @deprecated since 0.7.0 use {@link Streams#readFullyString(InputStream) */ @Deprecated

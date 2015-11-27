@@ -23,12 +23,11 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
-import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
+import org.apache.brooklyn.rest.util.OsgiCompat;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import org.apache.brooklyn.util.core.task.Tasks;
@@ -54,13 +53,14 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
     
     protected synchronized Maybe<ManagementContext> mgmtMaybe() {
         if (managementContext!=null) return Maybe.of(managementContext);
-        managementContext = (ManagementContext) servletContext.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        managementContext = OsgiCompat.getManagementContext(servletContext);
         if (managementContext!=null) return Maybe.of(managementContext);
         
         return Maybe.absent("ManagementContext not available for Brooklyn Jersey Resource "+this);
     }
     
-    public void injectManagementContext(ManagementContext managementContext) {
+    @Override
+    public void setManagementContext(ManagementContext managementContext) {
         if (this.managementContext!=null) {
             if (this.managementContext.equals(managementContext)) return;
             throw new IllegalStateException("ManagementContext cannot be changed: specified twice for Brooklyn Jersey Resource "+this);

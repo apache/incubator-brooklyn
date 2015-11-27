@@ -23,10 +23,7 @@ import static com.google.common.collect.Iterables.transform;
 import java.util.List;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.entity.Entities;
@@ -41,6 +38,8 @@ import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.ValueResolver;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -54,7 +53,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
 
     @Override
     public List<EntityConfigSummary> list(final String application, final String entityToken) {
-        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        final Entity entity = brooklyn().getEntity(application, entityToken);
         // TODO merge with keys which have values
         return Lists.newArrayList(transform(
                 entity.getEntityType().getConfigKeys(),
@@ -71,7 +70,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     @Override
     public Map<String, Object> batchConfigRead(String application, String entityToken, Boolean raw) {
         // TODO: add test
-        EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        Entity entity = brooklyn().getEntity(application, entityToken);
         Map<ConfigKey<?>, ?> source = ((EntityInternal) entity).config().getBag().getAllConfigAsConfigKeyMap();
         Map<String, Object> result = Maps.newLinkedHashMap();
         for (Map.Entry<ConfigKey<?>, ?> ek : source.entrySet()) {
@@ -93,13 +92,13 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     }
 
     public Object get(boolean preferJson, String application, String entityToken, String configKeyName, Boolean raw) {
-        EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        Entity entity = brooklyn().getEntity(application, entityToken);
         ConfigKey<?> ck = findConfig(entity, configKeyName);
         Object value = ((EntityInternal)entity).config().getRaw(ck).orNull();
         return resolving(value).preferJson(preferJson).asJerseyOutermostReturnValue(true).raw(raw).context(entity).timeout(ValueResolver.PRETTY_QUICK_WAIT).renderAs(ck).resolve();
     }
 
-    private ConfigKey<?> findConfig(EntityLocal entity, String configKeyName) {
+    private ConfigKey<?> findConfig(Entity entity, String configKeyName) {
         ConfigKey<?> ck = entity.getEntityType().getConfigKey(configKeyName);
         if (ck == null)
             ck = new BasicConfigKey<Object>(Object.class, configKeyName);
@@ -109,7 +108,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void setFromMap(String application, String entityToken, Boolean recurse, Map newValues) {
-        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        final Entity entity = brooklyn().getEntity(application, entityToken);
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
                     Entitlements.getEntitlementContext().user(), entity);
@@ -134,7 +133,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void set(String application, String entityToken, String configName, Boolean recurse, Object newValue) {
-        final EntityLocal entity = brooklyn().getEntity(application, entityToken);
+        final Entity entity = brooklyn().getEntity(application, entityToken);
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, entity)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
                     Entitlements.getEntitlementContext().user(), entity);

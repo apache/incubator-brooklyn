@@ -231,7 +231,7 @@ public class JavaWebAppsIntegrationTest {
             Entity cluster = brooklynMgmt.getEntityManager().getEntity(clusterComponent.getId());
             log.info("pc1 - "+clusterComponent+" - "+cluster);
             
-            Assert.assertEquals(cluster.getPolicies().size(), 1);
+            Assert.assertEquals(cluster.policies().size(), 1);
             Policy policy = cluster.policies().iterator().next();
             Assert.assertNotNull(policy);
             Assert.assertTrue(policy instanceof AutoScalerPolicy, "policy="+policy);

@@ -66,7 +66,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         public void setObject(Object object) { this.object = object; }
 
         @Override
-        public void injectManagementContext(ManagementContext managementContext) {
+        public void setManagementContext(ManagementContext managementContext) {
             log.info("Detected injection of {}", managementContext);
             managementContextInjected.set(true);
         }
@@ -96,6 +96,11 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         public Double getDouble() { return value; }
         public void setDouble(Double value) { this.value = value; }
 
+        @Override
+        public <T> T getConfig(ConfigKey<T> key) {
+            return config().get(key);
+        }
+        
         @Override
         public <T> T setConfig(ConfigKey<T> key, T value) {
             return config().set(key, value);

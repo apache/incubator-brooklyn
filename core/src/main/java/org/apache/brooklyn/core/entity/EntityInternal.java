@@ -175,6 +175,9 @@ public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Reb
     @Beta
     RebindSupport<EntityMemento> getRebindSupport();
 
+    @Override
+    RelationSupportInternal<Entity> relations();
+    
     /**
      * Can be called to request that the entity be persisted.
      * This persistence may happen asynchronously, or may not happen at all if persistence is disabled.

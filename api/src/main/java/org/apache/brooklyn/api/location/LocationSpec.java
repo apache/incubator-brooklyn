@@ -24,11 +24,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
-import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Maps;
 
@@ -46,8 +42,6 @@ public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec
 
     // TODO Would like to add `configure(ConfigBag)`, but `ConfigBag` is in core rather than api
     
-    private static final Logger log = LoggerFactory.getLogger(LocationSpec.class);
-
     private final static long serialVersionUID = 1L;
 
     /**
@@ -81,29 +75,25 @@ public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec
         @SuppressWarnings("unchecked")
         Class<T> exactType = (Class<T>)spec.getType();
         
-        LocationSpec<T> result = create(exactType)
-                .displayName(spec.getDisplayName())
-                .tags(spec.getTags())
-                .configure(spec.getConfig())
-                .configure(spec.getFlags())
-                .catalogItemId(spec.getCatalogItemId())
-                .extensions(spec.getExtensions());
-        
-        if (spec.getParent() != null) result.parent(spec.getParent());
-        
-        return (LocationSpec<T>) result;
+        return create(exactType).copyFrom(spec);
     }
 
     private String id;
     private Location parent;
-    private final Map<String, Object> flags = Maps.newLinkedHashMap();
-    private final Map<ConfigKey<?>, Object> config = Maps.newLinkedHashMap();
     private final Map<Class<?>, Object> extensions = Maps.newLinkedHashMap();
 
     protected LocationSpec(Class<T> type) {
         super(type);
     }
      
+    @Override
+    protected LocationSpec<T> copyFrom(LocationSpec<T> otherSpec) {
+        LocationSpec<T> result = super.copyFrom(otherSpec).extensions(otherSpec.getExtensions());
+        if (otherSpec.getParent() != null) result.parent(otherSpec.getParent());
+        if (otherSpec.getId() != null) result.id(otherSpec.getId());
+        return result;
+    }
+    
     protected void checkValidType(Class<? extends T> type) {
         checkIsImplementation(type, Location.class);
         checkIsNewStyleImplementation(type);
@@ -120,56 +110,6 @@ public class LocationSpec<T extends Location> extends AbstractBrooklynObjectSpec
 
     public LocationSpec<T> parent(Location val) {
         parent = checkNotNull(val, "parent");
-        return this;
-    }
-
-    public LocationSpec<T> configure(Map<?,?> val) {
-        for (Map.Entry<?, ?> entry: val.entrySet()) {
-            if (entry.getKey()==null) throw new NullPointerException("Null key not permitted");
-            if (entry.getKey() instanceof CharSequence)
-                flags.put(entry.getKey().toString(), entry.getValue());
-            else if (entry.getKey() instanceof ConfigKey<?>)
-                config.put((ConfigKey<?>)entry.getKey(), entry.getValue());
-            else if (entry.getKey() instanceof HasConfigKey<?>)
-                config.put(((HasConfigKey<?>)entry.getKey()).getConfigKey(), entry.getValue());
-            else {
-                log.warn("Spec "+this+" ignoring unknown config key "+entry.getKey());
-            }
-        }
-        return this;
-    }
-    
-    public LocationSpec<T> configure(CharSequence key, Object val) {
-        flags.put(checkNotNull(key, "key").toString(), val);
-        return this;
-    }
-    
-    public <V> LocationSpec<T> configure(ConfigKey<V> key, V val) {
-        config.put(checkNotNull(key, "key"), val);
-        return this;
-    }
-
-    public <V> LocationSpec<T> configureIfNotNull(ConfigKey<V> key, V val) {
-        return (val != null) ? configure(key, val) : this;
-    }
-
-    public <V> LocationSpec<T> configure(ConfigKey<V> key, Task<? extends V> val) {
-        config.put(checkNotNull(key, "key"), val);
-        return this;
-    }
-
-    public <V> LocationSpec<T> configure(HasConfigKey<V> key, V val) {
-        config.put(checkNotNull(key, "key").getConfigKey(), val);
-        return this;
-    }
-
-    public <V> LocationSpec<T> configure(HasConfigKey<V> key, Task<? extends V> val) {
-        config.put(checkNotNull(key, "key").getConfigKey(), val);
-        return this;
-    }
-
-    public <V> LocationSpec<T> removeConfig(ConfigKey<V> key) {
-        config.remove( checkNotNull(key, "key") );
         return this;
     }
 

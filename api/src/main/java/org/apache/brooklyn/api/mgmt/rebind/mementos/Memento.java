@@ -21,6 +21,7 @@ package org.apache.brooklyn.api.mgmt.rebind.mementos;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
@@ -77,7 +78,8 @@ public interface Memento extends Serializable {
 
     public Collection<Object> getTags();
     
+    public Map<String,Set<String>> getRelations();
+    
     /** Null for {@link Entity}, but important for adjuncts; see {@link EntityAdjunct#getUniqueTag()} */
     public String getUniqueTag();
-    
 }

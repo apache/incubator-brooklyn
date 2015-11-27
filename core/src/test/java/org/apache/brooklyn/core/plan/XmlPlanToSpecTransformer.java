@@ -41,12 +41,15 @@ import org.w3c.dom.Node;
 /** Example implementation of {@link PlanToSpecTransformer} showing 
  * how implementations are meant to be written. */
 public class XmlPlanToSpecTransformer implements PlanToSpecTransformer {
-
+    
+    // this is REPLACED by ExampleXmlTypePlanTransformer
+    // TODO remove when PlanToSpecTransformer is removed
+    
     @SuppressWarnings("unused")
     private ManagementContext mgmt;
 
     @Override
-    public void injectManagementContext(ManagementContext managementContext) {
+    public void setManagementContext(ManagementContext managementContext) {
         mgmt = managementContext;
     }
 

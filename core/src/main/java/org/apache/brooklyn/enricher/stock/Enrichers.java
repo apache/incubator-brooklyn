@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
@@ -37,6 +38,7 @@ import org.apache.brooklyn.enricher.stock.reducer.Reducer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.collections.QuorumCheck;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
@@ -493,6 +495,7 @@ public class Enrichers {
         protected final Boolean propagatingAll;
         protected final Iterable<? extends Sensor<?>> propagatingAllBut;
         protected Entity fromEntity;
+        protected Task<? extends Entity> fromEntitySupplier;
         
         public AbstractPropagatorBuilder(Map<? extends Sensor<?>, ? extends Sensor<?>> vals) {
             super(Propagator.class);
@@ -520,6 +523,10 @@ public class Enrichers {
             this.fromEntity = checkNotNull(val);
             return self();
         }
+        public B from(Task<? extends Entity> val) {
+            this.fromEntitySupplier = checkNotNull(val);
+            return self();
+        }
         @Override
         protected String getDefaultUniqueTag() {
             List<String> summary = MutableList.of();
@@ -539,11 +546,15 @@ public class Enrichers {
                 summary.add("ALL_BUT:"+com.google.common.base.Joiner.on(",").join(allBut));
             }
             
-            return "propagating["+fromEntity.getId()+":"+com.google.common.base.Joiner.on(",").join(summary)+"]";
+            // TODO What to use as the entity id if using fromEntitySupplier? 
+            String fromId = (fromEntity != null) ? fromEntity.getId() : fromEntitySupplier.getId();
+            
+            return "propagating["+fromId+":"+com.google.common.base.Joiner.on(",").join(summary)+"]";
         }
         public EnricherSpec<? extends Enricher> build() {
             return super.build().configure(MutableMap.builder()
                             .putIfNotNull(Propagator.PRODUCER, fromEntity)
+                            .putIfNotNull(Propagator.PRODUCER, fromEntitySupplier)
                             .putIfNotNull(Propagator.SENSOR_MAPPING, propagating)
                             .putIfNotNull(Propagator.PROPAGATING_ALL, propagatingAll)
                             .putIfNotNull(Propagator.PROPAGATING_ALL_BUT, propagatingAllBut)
@@ -555,6 +566,7 @@ public class Enrichers {
             return Objects.toStringHelper(this)
                     .omitNullValues()
                     .add("fromEntity", fromEntity)
+                    .add("fromEntitySupplier", fromEntitySupplier)
                     .add("propagating", propagating)
                     .add("propagatingAll", propagatingAll)
                     .add("propagatingAllBut", propagatingAllBut)
@@ -880,6 +892,38 @@ public class Enrichers {
         return result;
     }
     
+    @Beta
+    public static class ComputingIsQuorate<T> implements Function<Collection<Boolean>, Boolean> {
+        protected final TypeToken<T> typeToken;
+        protected final QuorumCheck quorumCheck;
+        protected final int totalSize;
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        public ComputingIsQuorate(TypeToken<T> typeToken, QuorumCheck quorumCheck, int totalSize) {
+            this.quorumCheck = quorumCheck;
+            this.totalSize = totalSize;
+
+            if (typeToken!=null && TypeToken.of(Boolean.class).isAssignableFrom(typeToken.getType())) {
+                this.typeToken = typeToken;
+            } else if (typeToken==null || typeToken.isAssignableFrom(Boolean.class)) {
+                this.typeToken = (TypeToken)TypeToken.of(Boolean.class);
+            } else {
+                throw new IllegalArgumentException("Type " + typeToken + " is not valid for " + this + " -- expected " + TypeToken.of(Boolean.class));
+            }
+        }
+
+        @Override
+        public Boolean apply(Collection<Boolean> input) {
+            int numTrue = 0;
+
+            for (Boolean inputVal : input)
+                if (Boolean.TRUE.equals(inputVal))
+                    numTrue++;
+
+            return Boolean.valueOf(quorumCheck.isQuorate(numTrue, totalSize));
+        }
+    }
+
     private static <T> Map<T,T> newIdentityMap(Set<T> keys) {
         Map<T,T> result = Maps.newLinkedHashMap();
         for (T key : keys) {
@@ -888,5 +932,4 @@ public class Enrichers {
         return result;
     }
     
-
 }

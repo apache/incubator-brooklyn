@@ -49,8 +49,6 @@ import com.google.common.collect.Sets;
  */
 public class SimulatedLocation extends AbstractLocation implements MachineProvisioningLocation<MachineLocation>, MachineLocation, PortSupplier {
 
-    private static final long serialVersionUID = 1L;
-    
     private static final InetAddress address;
     static {
         address = Networking.getLocalHost();

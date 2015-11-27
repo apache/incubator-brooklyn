@@ -127,6 +127,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-rt-osgi</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-software-base</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -178,6 +185,23 @@
 
     <build>
         <plugins>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>jar</supportedProjectType>
+                    </supportedProjectTypes>
+                    <instructions>
+                        <Export-Package>org.apache.brooklyn.*</Export-Package>
+                        <Import-Package>
+                            !org.python.google.common.collect
+                            *
+                        </Import-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
 
 <!-- if you want to build a WAR, full or skinny:
             <plugin>

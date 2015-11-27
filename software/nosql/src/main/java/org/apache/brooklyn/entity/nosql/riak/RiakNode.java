@@ -109,6 +109,9 @@ public interface RiakNode extends SoftwareProcess, UsesJava {
     @SetFromFlag("riakPbPort")
     PortAttributeSensorAndConfigKey RIAK_PB_PORT = new PortAttributeSensorAndConfigKey("riak.pbPort", "Riak Protocol Buffers Port", "8087+");
 
+    @SetFromFlag("useHttpMonitoring")
+    ConfigKey<Boolean> USE_HTTP_MONITORING = ConfigKeys.newConfigKey("httpMonitoring.enabled", "HTTP(S) monitoring enabled", Boolean.TRUE);
+
     AttributeSensor<Boolean> RIAK_PACKAGE_INSTALL = Sensors.newBooleanSensor(
             "riak.install.package", "Flag to indicate whether Riak was installed using an OS package");
     AttributeSensor<Boolean> RIAK_ON_PATH = Sensors.newBooleanSensor(

@@ -24,7 +24,9 @@ import java.io.File;
 import java.net.URI;
 import java.util.Set;
 
+import com.google.common.net.HostAndPort;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
@@ -93,11 +95,13 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
         if (isProtocolEnabled("https")) {
             Integer port = getHttpsPort();
             checkNotNull(port, "HTTPS_PORT sensors not set; is an acceptable port available?");
-            return String.format("https://%s:%s/", getSubnetHostname(), port);
+            HostAndPort accessibleAddress = BrooklynAccessUtils.getBrooklynAccessibleAddress(getEntity(), port);
+            return String.format("https://%s:%s/", accessibleAddress.getHostText(), accessibleAddress.getPort());
         } else if (isProtocolEnabled("http")) {
             Integer port = getHttpPort();
             checkNotNull(port, "HTTP_PORT sensors not set; is an acceptable port available?");
-            return String.format("http://%s:%s/", getSubnetHostname(), port);
+            HostAndPort accessibleAddress = BrooklynAccessUtils.getBrooklynAccessibleAddress(getEntity(), port);
+            return String.format("http://%s:%s/", accessibleAddress.getHostText(), accessibleAddress.getPort());
         } else {
             throw new IllegalStateException("HTTP and HTTPS protocols not enabled for "+entity+"; enabled protocols are "+getEnabledProtocols());
         }

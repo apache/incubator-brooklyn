@@ -117,7 +117,6 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
         sensors().set(WEB_CLUSTER_SPEC, webClusterSpec);
         
         DynamicWebAppCluster cluster = addChild(webClusterSpec);
-        if (Entities.isManaged(this)) Entities.manage(cluster);
         sensors().set(CLUSTER, cluster);
         setEntityFilter(EntityPredicates.isMemberOf(cluster));
         
@@ -132,8 +131,10 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
                 log.debug("creating controller using custom spec for {}", this);
             }
             controller = addChild(controllerSpec);
-            enrichers().add(Enrichers.builder().propagating(LoadBalancer.PROXY_HTTP_PORT, LoadBalancer.PROXY_HTTPS_PORT).from(controller).build());
-            if (Entities.isManaged(this)) Entities.manage(controller);
+            enrichers().add(Enrichers.builder()
+                    .propagating(LoadBalancer.PROXY_HTTP_PORT, LoadBalancer.PROXY_HTTPS_PORT)
+                    .from(controller)
+                    .build());
             sensors().set(CONTROLLER, controller);
         }
         

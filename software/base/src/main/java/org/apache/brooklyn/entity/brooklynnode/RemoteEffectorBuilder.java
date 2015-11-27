@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.effector.Effectors.EffectorBuilder;
 import org.apache.brooklyn.entity.brooklynnode.BrooklynEntityMirrorImpl.RemoteEffector;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.base.Function;
 

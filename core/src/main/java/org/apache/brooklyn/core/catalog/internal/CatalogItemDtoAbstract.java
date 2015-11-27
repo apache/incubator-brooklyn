@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.mgmt.rebind.BasicCatalogItemRebindSupport;
 import org.apache.brooklyn.core.objs.AbstractBrooklynObject;
+import org.apache.brooklyn.core.relations.EmptyRelationSupport;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
@@ -56,7 +57,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     private @SetFromFlag String iconUrl;
 
     private @SetFromFlag String javaType;
-    /**@deprecated since 0.7.0, left for deserialization backwards compatibility */
+    /**@deprecated since 0.7.0, left for deserialization backwards compatibility (including xml based catalog format) */
     private @Deprecated @SetFromFlag String type;
     private @SetFromFlag String planYaml;
 
@@ -82,6 +83,11 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
     }
     
     @Override
+    public <U> U getConfig(ConfigKey<U> key) {
+        return config().get(key);
+    }
+    
+    @Override
     public <U> U setConfig(ConfigKey<U> key, U val) {
         return config().set(key, val);
     }
@@ -102,11 +108,13 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         return type;
     }
 
+    @Override
     @Deprecated
     public String getName() {
         return getDisplayName();
     }
 
+    @Override
     @Deprecated
     public String getRegisteredTypeName() {
         return getSymbolicName();
@@ -218,6 +226,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         return getClass().getSimpleName()+"["+getId()+"/"+getDisplayName()+"]";
     }
 
+    @Override
     public abstract Class<SpecT> getSpecType();
 
     transient CatalogXmlSerializer serializer;
@@ -239,13 +248,23 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
         return new BasicCatalogItemRebindSupport(this);
     }
 
+    /**
+     * Overrides the parent so that relations are not visible.
+     * @return an immutable empty relation support object; relations are not supported,
+     * but we do not throw on access to enable reads in a consistent manner
+     */
+    @Override
+    public RelationSupportInternal<CatalogItem<T,SpecT>> relations() {
+        return new EmptyRelationSupport<CatalogItem<T,SpecT>>(this);
+    }
+
     @Override
     public void setDisplayName(String newName) {
         this.displayName = newName;
     }
 
     @Override
-    protected AbstractBrooklynObject configure(Map<?, ?> flags) {
+    protected CatalogItemDtoAbstract<T, SpecT> configure(Map<?, ?> flags) {
         FlagUtils.setFieldsFromFlags(flags, this);
         return this;
     }
@@ -395,7 +414,7 @@ public abstract class CatalogItemDtoAbstract<T, SpecT> extends AbstractBrooklynO
                     url = inlineRef;
                 } else if (CatalogUtils.looksLikeVersionedId(inlineRef)) {
                     //looks like a name+version ref
-                    name = CatalogUtils.getIdFromVersionedId(inlineRef);
+                    name = CatalogUtils.getSymbolicNameFromVersionedId(inlineRef);
                     version = CatalogUtils.getVersionFromVersionedId(inlineRef);
                     url = null;
                 } else {

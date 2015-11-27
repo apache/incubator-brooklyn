@@ -5,7 +5,7 @@ landing: true
 children:
 - learnmore/
 - { path: download/, menu: null }
-- { path: /guide/start/running.md, title: Get Started }
+- { path: /guide/start/index.md, title_in_menu: Get Started, href_path: /guide/start/running.md}
 - path: documentation/
   menu:
   - { path: /guide/index.md, title_in_menu: "User Guide", 
@@ -70,7 +70,7 @@ View and modify using the *web console* or automate using the *REST API*
 <div style="text-align: center" markdown="1">
 
 <a class="btn btn-primary btn-lg" role="button" href="learnmore/">learn more</a>
-<a class="btn btn-primary btn-lg" role="button" href="{{ site.path.guide }}/start/running.html">get started</a>
+<a class="btn btn-primary btn-lg" role="button" href="{{ site.path.guide }}/start/concept-quickstart.html">get started</a>
 
 </div>
 

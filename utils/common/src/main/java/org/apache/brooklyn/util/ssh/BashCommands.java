@@ -138,7 +138,11 @@ public class BashCommands {
 //    }
 
     public static String addSbinPathCommand() {
-        return "export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
+        return "export PATH=" + sbinPath();
+    }
+
+    public static String sbinPath() {
+        return "$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin";
     }
 
     /** executes a command, then as user tees the output to the given file. 
@@ -158,7 +162,15 @@ public class BashCommands {
      * (having a tty for sudo seems like another case of imaginary security which is just irritating.
      * like water restrictions at airport security.) */
     public static String dontRequireTtyForSudo() {
-        return ifFileExistsElse0("/etc/sudoers", sudo("sed -i.brooklyn.bak 's/.*requiretty.*/#brooklyn-removed-require-tty/' /etc/sudoers"));
+        String sudoersFileName =  "/etc/sudoers";
+
+        // Visudo's quiet mode (-q) is not enabled. visudo's output is used for diagnostic purposes 
+        return ifFileExistsElse0(sudoersFileName, 
+                chainGroup(
+                  sudo(format("cp %1$s %1$s.tmp", sudoersFileName)),
+                  sudo(format("sed -i.brooklyn.bak 's/.*requiretty.*/#brooklyn-removed-require-tty/' %1$s.tmp", sudoersFileName)),
+                  sudo(format("visudo -c -f %1$s.tmp", sudoersFileName)), 
+                  sudo(format("mv %1$s.tmp %1$s", sudoersFileName))));
     }
 
     /** generates ~/.ssh/id_rsa if that file does not exist */
@@ -371,11 +383,14 @@ public class BashCommands {
                         ok(sudo("apt-get update")), 
                         sudo(aptInstall))));
         if (yumInstall != null)
+            // Need to upgrade ca-certificates sometimes:
+            // http://serverfault.com/questions/637549/epel-repo-for-centos-6-causing-error?newreg=7c6019c0d0ae483c8bb3af387166ce49
             commands.add(ifExecutableElse1("yum", 
                     chainGroup(
                         "echo yum exists, doing update",
                         ok(sudo("yum check-update")),
                         ok(sudo("yum -y install epel-release")),
+                        ok(sudo("yum upgrade -y ca-certificates --disablerepo=epel")),
                         sudo(yumInstall))));
         if (brewInstall != null)
             commands.add(ifExecutableElse1("brew", brewInstall));

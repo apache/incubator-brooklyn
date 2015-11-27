@@ -21,8 +21,8 @@ package org.apache.brooklyn.camp.brooklyn.catalog;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertNull;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
@@ -41,6 +41,7 @@ import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoPersister;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlRebindTest;
 import org.apache.brooklyn.core.BrooklynFeatureEnablement;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
@@ -48,11 +49,13 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.StartableApplication;
 import org.apache.brooklyn.core.mgmt.persist.BrooklynMementoPersisterToObjectStore;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
+import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessor;
 import org.apache.brooklyn.core.mgmt.rebind.RebindOptions;
 import org.apache.brooklyn.core.test.policy.TestEnricher;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.text.Strings;
 import org.testng.annotations.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -123,7 +126,7 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
         runRebindWithCatalogAndApp(RebindWithCatalogTestMode.STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM);
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings({ "unused", "deprecation" })
     protected void runRebindWithCatalogAndApp(RebindWithCatalogTestMode mode) throws Exception {
         String appSymbolicName = "my.catalog.app.id.load";
         String appVersion = "0.1.0";
@@ -168,20 +171,12 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
         // Depending on test-mode, delete the catalog item, and then rebind
         switch (mode) {
             case DEPRECATE_CATALOG:
-                appItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), appSymbolicName+":"+appVersion);
-                appItem.setDeprecated(true);
-                mgmt().getCatalog().persist(appItem);
-                locItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), locSymbolicName+":"+locVersion);
-                locItem.setDeprecated(true);
-                mgmt().getCatalog().persist(locItem);
+                CatalogUtils.setDeprecated(mgmt(), appSymbolicName, appVersion, true);
+                CatalogUtils.setDeprecated(mgmt(), locSymbolicName, locVersion, true);
                 break;
             case DISABLE_CATALOG:
-                appItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), appSymbolicName+":"+appVersion);
-                appItem.setDisabled(true);
-                mgmt().getCatalog().persist(appItem);
-                locItem = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), locSymbolicName+":"+locVersion);
-                locItem.setDisabled(true);
-                mgmt().getCatalog().persist(locItem);
+                CatalogUtils.setDisabled(mgmt(), appSymbolicName, appVersion, true);
+                CatalogUtils.setDisabled(mgmt(), locSymbolicName, locVersion, true);
                 break;
             case DELETE_CATALOG:
                 mgmt().getCatalog().deleteCatalogItem(appSymbolicName, appVersion);
@@ -196,6 +191,12 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
                 addCatalogItems(String.format(locCatalogFormat, locVersion));
                 break;
             case STRIP_DEPRECATION_AND_ENABLEMENT_FROM_CATALOG_ITEM:
+                // set everything false -- then below we rebind with these fields removed to ensure that we can rebind
+                CatalogUtils.setDeprecated(mgmt(), appSymbolicName, appVersion, false);
+                CatalogUtils.setDeprecated(mgmt(), locSymbolicName, locVersion, false);
+                CatalogUtils.setDisabled(mgmt(), appSymbolicName, appVersion, false);
+                CatalogUtils.setDisabled(mgmt(), locSymbolicName, locVersion, false);
+                break;
             case NO_OP:
                 break; // no-op
             default:
@@ -209,19 +210,21 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
                     .stateTransformer(new Function<BrooklynMementoPersister, Void>() {
                         @Override public Void apply(BrooklynMementoPersister input) {
                             PersistenceObjectStore objectStore = ((BrooklynMementoPersisterToObjectStore)input).getObjectStore();
-                            String appItemMemento = checkNotNull(objectStore.newAccessor("catalog/"+appItemId.replace(":", "_")).get(), "appItem in catalog");
-                            String locItemMemento = checkNotNull(objectStore.newAccessor("catalog/"+locItemId.replace(":", "_")).get(), "locItem in catalog");
+                            StoreObjectAccessor appItemAccessor = objectStore.newAccessor("catalog/"+Strings.makeValidFilename(appItemId));
+                            StoreObjectAccessor locItemAccessor = objectStore.newAccessor("catalog/"+Strings.makeValidFilename(locItemId));
+                            String appItemMemento = checkNotNull(appItemAccessor.get(), "appItem in catalog");
+                            String locItemMemento = checkNotNull(locItemAccessor.get(), "locItem in catalog");
                             String newAppItemMemento = removeFromXml(appItemMemento, ImmutableList.of("catalogItem/deprecated", "catalogItem/disabled"));
-                            String newLocItemMemento = removeFromXml(appItemMemento, ImmutableList.of("catalogItem/deprecated", "catalogItem/disabled"));
-                            objectStore.newAccessor("catalog/"+appItemId).put(newAppItemMemento);
-                            objectStore.newAccessor("catalog/"+locItemId).put(newLocItemMemento);
+                            String newLocItemMemento = removeFromXml(locItemMemento, ImmutableList.of("catalogItem/deprecated", "catalogItem/disabled"));
+                            appItemAccessor.put(newAppItemMemento);
+                            locItemAccessor.put(newLocItemMemento);
                             return null;
                         }}));
         } else {
             rebind();
         }
 
-        // Ensure app is still there, and that it is usabe - e.g. "stop" effector functions as expected
+        // Ensure app is still there, and that it is usable - e.g. "stop" effector functions as expected
         BasicEntity newEntity = (BasicEntity) Iterables.getOnlyElement(newApp.getChildren());
         Policy newPolicy = Iterables.getOnlyElement(newEntity.policies());
         Enricher newEnricher = Iterables.tryFind(newEntity.enrichers(), Predicates.instanceOf(TestEnricher.class)).get();
@@ -232,8 +235,8 @@ public class CatalogYamlRebindTest extends AbstractYamlRebindTest {
         assertFalse(Entities.isManaged(newEntity));
         
         // Ensure catalog item is as expecpted
-        CatalogItem<?, ?> newAppItem = mgmt().getCatalog().getCatalogItem(appSymbolicName, appVersion);
-        CatalogItem<?, ?> newLocItem = mgmt().getCatalog().getCatalogItem(locSymbolicName, locVersion);
+        RegisteredType newAppItem = mgmt().getTypeRegistry().get(appSymbolicName, appVersion);
+        RegisteredType newLocItem = mgmt().getTypeRegistry().get(locSymbolicName, locVersion);
 
         boolean itemDeployable;
         switch (mode) {

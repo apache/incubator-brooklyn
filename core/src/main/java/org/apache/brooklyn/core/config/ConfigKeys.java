@@ -157,6 +157,14 @@ public class ConfigKeys {
         return newConfigKeyRenamed(prefix+key.getName(), key);
     }
 
+    public static <T> ConfigKey<T> newConfigKeyWithPrefixRemoved(String prefix, ConfigKey<T> key) {
+        if (key.getName().startsWith(prefix)) {
+            return newConfigKeyRenamed(key.getName().substring(prefix.length()), key);
+        } else {
+            throw new IllegalArgumentException("key "+key+" does not start with prefix "+prefix);
+        }
+    }
+
     /** converts the name of the key from one case-strategy (e.g. lowerCamel) to andother (e.g. lower-hyphen) */
     public static <T> ConfigKey<T> convert(ConfigKey<T> key, CaseFormat inputCaseStrategy, CaseFormat outputCaseStrategy) {
         return newConfigKeyRenamed(inputCaseStrategy.to(outputCaseStrategy, key.getName()), key);

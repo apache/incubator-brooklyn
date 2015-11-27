@@ -36,6 +36,7 @@ import java.util.List;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.task.BasicExecutionContext;
 import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
@@ -72,6 +73,7 @@ public class BashCommandsIntegrationTest {
     private File sourceNonExistantFile;
     private File sourceFile1;
     private File sourceFile2;
+    private File tmpSudoersFile;
     private String sourceNonExistantFileUrl;
     private String sourceFileUrl1;
     private String sourceFileUrl2;
@@ -108,6 +110,11 @@ public class BashCommandsIntegrationTest {
         localRepoEntityBasePath.mkdirs();
         Files.write("mylocal1".getBytes(), localRepoEntityFile);
 
+        tmpSudoersFile = Os.newTempFile(getClass(), "sudoers" + Identifiers.makeRandomId(8));
+
+        String sudoers = ResourceUtils.create(this).getResourceAsString("classpath://brooklyn/util/ssh/test_sudoers");
+        Files.write(sudoers.getBytes(), tmpSudoersFile);
+        
         loc = mgmt.getLocationManager().createLocation(LocalhostMachineProvisioningLocation.spec()).obtain();
     }
     
@@ -117,9 +124,31 @@ public class BashCommandsIntegrationTest {
         if (sourceFile2 != null) sourceFile2.delete();
         if (destFile != null) destFile.delete();
         if (localRepoEntityFile != null) localRepoEntityFile.delete();
+        if (tmpSudoersFile != null) tmpSudoersFile.delete();
         if (localRepoEntityBasePath != null) FileUtils.deleteDirectory(localRepoEntityBasePath);
         if (loc != null) loc.close();
         if (mgmt != null) Entities.destroyAll(mgmt);
+    }
+    
+    @Test(groups="Integration")
+    public void testRemoveRequireTtyFromSudoersFile() throws Exception {
+        String cmds = BashCommands.dontRequireTtyForSudo();
+
+        
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+
+        String cmdsWithReplacedSudoersName = Strings.replaceAllNonRegex(cmds, "/etc/sudoers", tmpSudoersFile.getAbsolutePath());
+        int exitcode = loc.execCommands(ImmutableMap.of("out", outStream, "err", errStream), "removeRequireTtyFromSudoersFile", ImmutableList.of(cmdsWithReplacedSudoersName));
+
+        String outstr = new String(outStream.toByteArray());
+        String errstr = new String(errStream.toByteArray());
+
+        assertEquals(0, exitcode);
+        
+        // visudo returns "parsed OK"
+        assertTrue(outstr.contains("parsed OK"), "out="+outstr+"; err="+errstr);
+        assertTrue(errstr.isEmpty(), "out="+outstr+"; err="+errstr);
     }
     
     @Test(groups="Integration")

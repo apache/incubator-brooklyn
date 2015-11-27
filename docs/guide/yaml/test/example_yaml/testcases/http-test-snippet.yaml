@@ -1,0 +1,20 @@
+- type: org.apache.brooklyn.test.framework.TestHttpCall
+  name: Check HTTP Response Status Code
+  url: >
+    $brooklyn:formatString("http://%s:%s/newcontext/",
+    $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
+    $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
+  timeout: 10m
+  applyAssertionTo: status
+  assert:
+  - equals: 200
+- type: org.apache.brooklyn.test.framework.TestHttpCall
+  name: Check HTTP Response Body
+  url: >
+    $brooklyn:formatString("http://%s:%s/newcontext/",
+    $brooklyn:component("webappcluster").attributeWhenReady("host.address"),
+    $brooklyn:component("webappcluster").attributeWhenReady("proxy.http.port"))
+  timeout: 10m
+  applyAssertionTo: body
+  assert:
+  - matches: "(?s).*Br[o]{2}klyn Deployed.*"

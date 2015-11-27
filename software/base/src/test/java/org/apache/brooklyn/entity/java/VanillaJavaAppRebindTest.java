@@ -95,7 +95,6 @@ public class VanillaJavaAppRebindTest {
         VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, TestingJavaOptsVanillaJavaAppImpl.class)
             .configure("main", MAIN_CLASS.getCanonicalName()).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH)));
 
-        Entities.manage(javaProcess);
         app.start(ImmutableList.of(loc));
 
         rebind();
@@ -108,7 +107,7 @@ public class VanillaJavaAppRebindTest {
     public void testRebindToKilledJavaApp() throws Exception {
         VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, TestingJavaOptsVanillaJavaAppImpl.class)
             .configure("main", MAIN_CLASS.getCanonicalName()).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH)));
-        Entities.manage(javaProcess);
+
         app.start(ImmutableList.of(loc));
         javaProcess.kill();
         
@@ -129,7 +128,6 @@ public class VanillaJavaAppRebindTest {
         VanillaJavaApp javaProcess = app.addChild(EntitySpec.create(VanillaJavaApp.class, EnrichedVanillaJavaAppImpl.class)
             .configure("main", MAIN_CLASS.getCanonicalName()).configure("classpath", ImmutableList.of(BROOKLYN_THIS_CLASSPATH)));
 
-        Entities.manage(javaProcess);
         app.start(ImmutableList.of(loc));
 
         EntityTestUtils.assertAttributeEventuallyNonNull(javaProcess, EnrichedVanillaJavaAppImpl.AVG1);

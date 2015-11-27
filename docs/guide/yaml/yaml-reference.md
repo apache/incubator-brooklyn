@@ -56,14 +56,43 @@ the entity being defined, with these being the most common:
 
   * `org.apache.brooklyn.core.sensor.ssh.SshCommandSensor`: takes a `name` and `command`,
     and optionally a `period`, to create a sensor feed which populates the sensor with
-    the given name by running the given command (on an entity which as an ssh-able machine) 
+    the given name by running the given command (on an entity which as an ssh-able machine)
 
-Entities, policies, and initializers may accept additional key-value pairs, 
+* `brooklyn.parameters`: documents a list of typed parameters the entity accepts. If none
+  are specified the config keys declared in the entity's class are used (including the
+  information from the `@CatalogConfig` annotation). The items have the following properties:
+  * `name` (required): identifier by which to reference the parameter when setting
+    or retrieving its value
+  * `label`: a value to present to the user, same as `name` if empty
+  * `description`: short text describing the parameter behaviour/usage, presented
+    to the user
+  * `type`: the type of the parameter, one of `string`, `integer`, `long`, `float`,
+    `double`, `timestamp`, `port`, a fully qualified Java type name. Default is `string`.
+  * `default`: a default value, converted to the type above
+  * `constraints`: a list of constraints the parameter should meet, currently
+    `required` is supported
+
+  A shorthand notation is also supported where the name of the parameter is directly
+  passed as an item in the list. For example:
+
+~~~ yaml
+brooklyn.parameters:
+- displayName
+- name: user.name
+  constraints:
+  - required
+- name: user.age
+  type: integer
+~~~
+
+Entities, policies, and initializers may accept additional key-value pairs,
 usually documented in their documentation (e.g. javadoc), or in the case of Java
 often as static fields in the underlying Java class.
 Often there are config keys or flags (indicated by `@SetFromFlag`) declared on the class; 
 these declared flags and config keys may be passed in at the root of the `ServiceSpecification` or in `brooklyn.config`.
 (Undeclared config is only accepted in the `brooklyn.config` map.)
+Referencing the parameters from within java classes is identical to using config keys. In yaml it's
+usually referenced using `$brooklyn:scopeRoot().config("displayName")`. See below for more details on scopes.
 
 
 ## Location Specification Elements
@@ -165,6 +194,10 @@ concise DSL defined here:
   * `sibling`: looks for the `ID` anywhere among children of the parent entity
   * `parent`: returns the parent entity (ignores the `ID`)
   * `this`: returns this entity (ignores the `ID`)
+* `$brooklyn:root()` will return the topmost entity (the application)
+* `$broopklyn:scopeRoot()` will return the root entity in the current plan scope.
+  For catalog items it's the topmost entity in the plan, for application plans it is the same as
+  `$brooklyn:root()`.
 * `$brooklyn:formatString("pattern e.g. %s %s", "field 1", "field 2")` returns a future which creates the formatted string
   with the given parameters, where parameters may be strings *or* other tasks such as `attributeWhenReady`
 * `$brooklyn:literal("string")` returns the given string as a literal (suppressing any `$brooklyn:` expansion)

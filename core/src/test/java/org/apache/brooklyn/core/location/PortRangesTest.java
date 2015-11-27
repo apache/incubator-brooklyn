@@ -40,8 +40,8 @@ public class PortRangesTest {
     }
 
     @Test
-    public void testFromCollection() {
-        PortRange r = PortRanges.fromCollection(ImmutableList.of(1234, 2345));
+    public void testFromIterable() {
+        PortRange r = PortRanges.fromIterable(ImmutableList.of(1234, 2345));
         assertContents(r, 1234, 2345);
     }
 

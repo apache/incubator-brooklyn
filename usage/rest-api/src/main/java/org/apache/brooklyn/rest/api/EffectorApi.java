@@ -18,12 +18,12 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import org.apache.brooklyn.rest.apidoc.Apidoc;
+import io.swagger.annotations.Api;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
-import com.wordnik.swagger.core.ApiError;
-import com.wordnik.swagger.core.ApiErrors;
-import com.wordnik.swagger.core.ApiOperation;
-import com.wordnik.swagger.core.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 
 import javax.validation.Valid;
 import javax.ws.rs.*;
@@ -33,17 +33,17 @@ import java.util.List;
 import java.util.Map;
 
 @Path("/v1/applications/{application}/entities/{entity}/effectors")
-@Apidoc("Entity Effectors")
+@Api("Entity Effectors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public interface EffectorApi {
 
     @GET
     @ApiOperation(value = "Fetch the list of effectors",
-            responseClass = "org.apache.brooklyn.rest.domain.EffectorSummary",
-            multiValueResponse = true)
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application or entity")
+            response = org.apache.brooklyn.rest.domain.EffectorSummary.class,
+            responseContainer = "List")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application or entity")
     })
     public List<EffectorSummary> list(
             @ApiParam(name = "application", value = "Application name", required = true)
@@ -55,8 +55,8 @@ public interface EffectorApi {
     @Path("/{effector}")
     @ApiOperation(value = "Trigger an effector",
             notes="Returns the return value (status 200) if it completes, or an activity task ID (status 202) if it times out")
-    @ApiErrors(value = {
-            @ApiError(code = 404, reason = "Could not find application, entity or effector")
+    @ApiResponses(value = {
+            @ApiResponse(code = 404, message = "Could not find application, entity or effector")
     })
     @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_FORM_URLENCODED})
     public Response invoke(

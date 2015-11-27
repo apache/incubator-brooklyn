@@ -25,5 +25,6 @@ public interface BrooklynCampReservedKeys {
     public static final String BROOKLYN_ENRICHERS = "brooklyn.enrichers";
     public static final String BROOKLYN_CHILDREN = "brooklyn.children";
     public static final String BROOKLYN_INITIALIZERS = "brooklyn.initializers";
+    public static final String BROOKLYN_PARAMETERS = "brooklyn.parameters";
     public static final String BROOKLYN_CATALOG = "brooklyn.catalog";
 }

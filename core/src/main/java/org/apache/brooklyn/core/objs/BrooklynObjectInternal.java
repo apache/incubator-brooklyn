@@ -35,8 +35,8 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
     
     void setCatalogItemId(String id);
     
-    @SuppressWarnings("rawtypes")  // subclasses typically apply stronger typing
-    RebindSupport getRebindSupport();
+    // subclasses typically apply stronger typing
+    RebindSupport<?> getRebindSupport();
     
     @Override
     ConfigurationSupportInternal config();
@@ -122,5 +122,12 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
     @Beta
     public interface SubscriptionSupportInternal extends BrooklynObject.SubscriptionSupport {
         public void unsubscribeAll();
+    }
+    
+    RelationSupportInternal<?> relations();
+    
+    public interface RelationSupportInternal<T extends BrooklynObject> extends BrooklynObject.RelationSupport<T> {
+        @Beta
+        RelationSupport<T> getLocalBackingStore();
     }
 }

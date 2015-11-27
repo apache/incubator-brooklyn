@@ -192,7 +192,11 @@ public class BrooklynLauncher {
      * subsequently call {@link #start()} or {@link #getApplications()}.
      * 
      * @see #application(ApplicationBuilder)
+     * 
+     * @deprecated since 0.9.0; instead use {@link #application(String)} for YAML apps, or {@link #application(EntitySpec)}.
+     *             Note that apps are now auto-managed on construction through EntitySpec/YAML.
      */
+    @Deprecated
     public BrooklynLauncher application(Application app) {
         if (Entities.isManaged(app)) throw new IllegalArgumentException("Application must not already be managed");
         appsToManage.add(checkNotNull(app, "app"));

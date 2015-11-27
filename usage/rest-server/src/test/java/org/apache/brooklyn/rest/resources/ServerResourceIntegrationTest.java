@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import static org.apache.brooklyn.util.core.http.HttpTool.httpClientBuilder;
+import static org.apache.brooklyn.util.http.HttpTool.httpClientBuilder;
 import static org.testng.Assert.assertEquals;
 
 import java.net.URI;
@@ -33,8 +33,8 @@ import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
 import org.apache.brooklyn.test.HttpTestUtils;
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;

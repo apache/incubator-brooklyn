@@ -11,8 +11,8 @@ familiarise yourself with the standard workflow for Apache Brooklyn:
 * [Guide for contributors][CONTRIB]
 * [Guide for committers][COMMIT]
 
-[CONTRIB]: https://brooklyn.incubator.apache.org/community/how-to-contribute-docs.html
-[COMMIT]: https://brooklyn.incubator.apache.org/developers/committers/index.html
+[CONTRIB]: https://brooklyn.apache.org/community/how-to-contribute-docs.html
+[COMMIT]: https://brooklyn.apache.org/developers/committers/index.html
 
 
 Workstation Setup
@@ -131,7 +131,7 @@ The two micro-sites above are installed on the live website as follows:
 * `/v/<version>`: contains specific versions of the guide,
   with the special folder `/v/latest` containing the recent preferred stable/milestone version 
 
-The site itself is hosted at `brooklyn.incubator.apache.org` with a `CNAME`
+The site itself is hosted at `brooklyn.apache.org` with a `CNAME`
 record from `brooklyn.io`.
 
 Content is published to the site by updating an 
@@ -226,15 +226,15 @@ copied to `${BROOKLYN_SITE_DIR-../../incubator-brooklyn-site-public}`:
     svn up
     cd -
 
-    # main website, relative to / 
-    _build/build.sh website-root --install
-    
-    # latest guide, relative to /v/latest/
-    _build/build.sh guide-latest --install
-    
-    # versioned guide, relative to /v/<version>/
+    # versioned guide, safe for snapshots, relative to /v/<version>/
     _build/build.sh guide-version --install
 
+    # main website, if desired, relative to / 
+    _build/build.sh website-root --install
+    
+    # this version as the latest guide, if desired, relative to /v/latest/
+    _build/build.sh guide-latest --install
+    
 (If HTML-Proofer find failures, then fix the links etc. Unfortunately, the javadoc build 
 gives a lot of warnings. Fixing those is not part of this activity).
 

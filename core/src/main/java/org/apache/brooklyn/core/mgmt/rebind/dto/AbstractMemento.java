@@ -27,12 +27,13 @@ import java.util.Set;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.Memento;
 import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.core.config.Sanitizer;
-import org.apache.brooklyn.core.entity.Entities;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 
 public abstract class AbstractMemento implements Memento, Serializable {
 
@@ -47,7 +48,8 @@ public abstract class AbstractMemento implements Memento, Serializable {
         protected String catalogItemId;
         protected Map<String, Object> customFields = Maps.newLinkedHashMap();
         protected List<Object> tags = Lists.newArrayList();
-        
+        protected Map<String,Set<String>> relations = Maps.newLinkedHashMap();
+
         // only supported for EntityAdjuncts
         protected String uniqueTag;
 
@@ -65,29 +67,10 @@ public abstract class AbstractMemento implements Memento, Serializable {
             catalogItemId = other.getCatalogItemId();
             customFields.putAll(other.getCustomFields());
             tags.addAll(other.getTags());
+            relations.putAll(other.getRelations());
             uniqueTag = other.getUniqueTag();
             return self();
         }
-        // this method set is incomplete; and they are not used, as the protected fields are set directly
-        // kept in case we want to expose this elsewhere, but we should complete the list
-//        public B brooklynVersion(String val) {
-//            brooklynVersion = val; return self();
-//        }
-//        public B id(String val) {
-//            id = val; return self();
-//        }
-//        public B type(String val) {
-//            type = val; return self();
-//        }
-//        public B typeClass(Class<?> val) {
-//            typeClass = val; return self();
-//        }
-//        public B displayName(String val) {
-//            displayName = val; return self();
-//        }
-//        public B catalogItemId(String val) {
-//            catalogItemId = val; return self();
-//        }
         
         /**
          * @deprecated since 0.7.0; use config/attributes so generic persistence will work, rather than requiring "custom fields"
@@ -104,6 +87,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
     private String displayName;
     private String catalogItemId;
     private List<Object> tags;
+    private Map<String,Set<String>> relations;
     
     // for EntityAdjuncts; not used for entity
     private String uniqueTag;
@@ -124,6 +108,7 @@ public abstract class AbstractMemento implements Memento, Serializable {
         catalogItemId = builder.catalogItemId;
         setCustomFields(builder.customFields);
         tags = toPersistedList(builder.tags);
+        relations = toPersistedMap(builder.relations);
         uniqueTag = builder.uniqueTag;
     }
 
@@ -172,6 +157,11 @@ public abstract class AbstractMemento implements Memento, Serializable {
     }
 
     @Override
+    public Map<String,Set<String>> getRelations() {
+        return fromPersistedMap(relations);
+    }
+    
+    @Override
     public String getUniqueTag() {
         return uniqueTag;
     }
@@ -199,7 +189,10 @@ public abstract class AbstractMemento implements Memento, Serializable {
     
     protected ToStringHelper newVerboseStringHelper() {
         return Objects.toStringHelper(this).add("id", getId()).add("type", getType())
-                .add("displayName", getDisplayName()).add("customFields", Sanitizer.sanitize(getCustomFields()));
+                .add("displayName", getDisplayName())
+                .add("tags", getTags())
+                .add("relations", getRelations())
+                .add("customFields", Sanitizer.sanitize(getCustomFields()));
     }
     
     protected <T> List<T> fromPersistedList(List<T> l) {
@@ -223,6 +216,14 @@ public abstract class AbstractMemento implements Memento, Serializable {
         return Collections.unmodifiableMap(m);
     }
     protected <K,V> Map<K,V> toPersistedMap(Map<K,V> m) {
+        if (m==null || m.isEmpty()) return null;
+        return m;
+    }
+    protected <K,V> Multimap<K,V> fromPersistedMultimap(Multimap<K,V> m) {
+        if (m==null) return ImmutableMultimap.of();
+        return ImmutableMultimap.copyOf(m);
+    }
+    protected <K,V> Multimap<K,V> toPersistedMultimap(Multimap<K,V> m) {
         if (m==null || m.isEmpty()) return null;
         return m;
     }

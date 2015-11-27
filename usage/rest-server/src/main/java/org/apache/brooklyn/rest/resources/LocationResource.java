@@ -27,12 +27,9 @@ import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationDefinition;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.location.LocationConfigKeys;
 import org.apache.brooklyn.rest.api.LocationApi;
 import org.apache.brooklyn.rest.domain.LocationSpec;
@@ -46,6 +43,8 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.NaturalOrderComparator;
 import org.apache.brooklyn.util.text.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -177,7 +176,7 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
     }
     
     private int deleteAllVersions(String locationId) {
-        CatalogItem<?, ?> item = CatalogUtils.getCatalogItemOptionalVersion(mgmt(), locationId);
+        RegisteredType item = mgmt().getTypeRegistry().get(locationId);
         if (item==null) return 0; 
         brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
         return 1 + deleteAllVersions(locationId);

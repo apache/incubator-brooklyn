@@ -208,6 +208,12 @@ public abstract class AbstractFeed extends AbstractEntityAdjunct implements Feed
         return new BasicFeedRebindSupport(this);
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Feed> relations() {
+        return (RelationSupportInternal<Feed>) super.relations();
+    }
+    
     @Override
     protected void onChanged() {
         // TODO Auto-generated method stub

@@ -45,7 +45,7 @@ import com.google.common.collect.Iterables;
  */
 public class RedisStoreImpl extends SoftwareProcessImpl implements RedisStore {
     @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(RedisStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RedisStoreImpl.class);
 
     private transient SshFeed sshFeed;
 

@@ -26,6 +26,8 @@ import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.test.FixedLocaleTest;
 import org.apache.brooklyn.util.core.text.TemplateProcessor;
 import org.testng.Assert;
@@ -99,6 +101,22 @@ public class TemplateProcessorTest extends BrooklynAppUnitTestSupport {
         String templateContents = "${entity.id}";
         String result = TemplateProcessor.processTemplateContents(templateContents, app, ImmutableMap.<String,Object>of());
         assertEquals(result, app.getId());
+    }
+    
+    @Test
+    public void testLocationGetterMethod() {
+        LocalhostMachineProvisioningLocation location = app.newLocalhostProvisioningLocation();
+        String templateContents = "${location.id}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, location, ImmutableMap.<String,Object>of());
+        assertEquals(result, location.getId());
+    }
+    
+    @Test
+    public void testLocationConfig() {
+        LocalhostMachineProvisioningLocation location = app.newLocalhostProvisioningLocation(ImmutableMap.of("mykey", "myval"));
+        String templateContents = "${config['mykey']}";//"+TestEntity.CONF_NAME.getName()+"']}";
+        String result = TemplateProcessor.processTemplateContents(templateContents, location, ImmutableMap.<String,Object>of());
+        assertEquals(result, "myval");
     }
     
     @Test

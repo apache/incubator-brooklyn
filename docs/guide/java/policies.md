@@ -16,7 +16,7 @@ When a policy runs it can:
 
 *	perform calculations,
 *	look up other values,
-*	invoke efectors  (management policies) or,
+*	invoke effectors  (management policies) or,
 *	cause the entity associated with the policy to emit sensor values (enricher policies). 
 
 Entities can have zero or more ``Policy`` instances attached to them.

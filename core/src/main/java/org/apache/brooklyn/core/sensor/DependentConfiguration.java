@@ -68,6 +68,7 @@ import org.apache.brooklyn.util.exceptions.RuntimeTimeoutException;
 import org.apache.brooklyn.util.groovy.GroovyJavaMethods;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.text.StringFunctions;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
@@ -180,7 +181,7 @@ public class DependentConfiguration {
     public static <T> T waitInTaskForAttributeReady(final Entity source, final AttributeSensor<T> sensor, Predicate<? super T> ready, List<AttributeAndSensorCondition<?>> abortConditions, String blockingDetails) {
         return new WaitInTaskForAttributeReady<T,T>(source, sensor, ready, abortConditions, blockingDetails).call();
     }
-    
+
     protected static class WaitInTaskForAttributeReady<T,V> implements Callable<V> {
 
         /* This is a change since before Oct 2014. Previously it would continue to poll,
@@ -483,7 +484,100 @@ public class DependentConfiguration {
             taskArgs);
     }
 
-    /** returns a task for parallel execution returning a list of values for the given sensor for the given entity list, 
+    public static Task<String> regexReplacement(Object source, Object pattern, Object replacement) {
+        List<TaskAdaptable<Object>> taskArgs = getTaskAdaptable(source, pattern, replacement);
+        Function<List<Object>, String> transformer = new RegexTransformerString(source, pattern, replacement);
+        return transformMultiple(
+                MutableMap.of("displayName", String.format("creating regex replacement function (%s:%s)", pattern, replacement)),
+                transformer,
+                taskArgs
+        );
+    }
+
+    public static Task<Function<String, String>> regexReplacement(Object pattern, Object replacement) {
+        List<TaskAdaptable<Object>> taskArgs = getTaskAdaptable(pattern, replacement);
+        Function<List<Object>, Function<String, String>> transformer = new RegexTransformerFunction(pattern, replacement);
+        return transformMultiple(
+                MutableMap.of("displayName", String.format("creating regex replacement function (%s:%s)", pattern, replacement)),
+                transformer,
+                taskArgs
+        );
+    }
+
+    private static List<TaskAdaptable<Object>> getTaskAdaptable(Object... args){
+        List<TaskAdaptable<Object>> taskArgs = Lists.newArrayList();
+        for (Object arg: args) {
+            if (arg instanceof TaskAdaptable) {
+                taskArgs.add((TaskAdaptable<Object>)arg);
+            } else if (arg instanceof TaskFactory) {
+                taskArgs.add(((TaskFactory<TaskAdaptable<Object>>)arg).newTask());
+            }
+        }
+        return taskArgs;
+    }
+
+    public static class RegexTransformerString implements Function<List<Object>, String> {
+
+        private final Object source;
+        private final Object pattern;
+        private final Object replacement;
+
+        public RegexTransformerString(Object source, Object pattern, Object replacement){
+            this.source = source;
+            this.pattern = pattern;
+            this.replacement = replacement;
+        }
+
+        @Nullable
+        @Override
+        public String apply(@Nullable List<Object> input) {
+            Iterator<?> taskArgsIterator = input.iterator();
+            String resolvedSource = resolveArgument(source, taskArgsIterator);
+            String resolvedPattern = resolveArgument(pattern, taskArgsIterator);
+            String resolvedReplacement = resolveArgument(replacement, taskArgsIterator);
+            return new StringFunctions.RegexReplacer(resolvedPattern, resolvedReplacement).apply(resolvedSource);
+        }
+    }
+
+    @Beta
+    public static class RegexTransformerFunction implements Function<List<Object>, Function<String, String>> {
+
+        private final Object pattern;
+        private final Object replacement;
+
+        public RegexTransformerFunction(Object pattern, Object replacement){
+            this.pattern = pattern;
+            this.replacement = replacement;
+        }
+
+        @Override
+        public Function<String, String> apply(List<Object> input) {
+            Iterator<?> taskArgsIterator = input.iterator();
+            return new StringFunctions.RegexReplacer(resolveArgument(pattern, taskArgsIterator), resolveArgument(replacement, taskArgsIterator));
+        }
+
+    }
+
+    /**
+     * Resolves the argument as follows:
+     *
+     * If the argument is a DeferredSupplier, we will block and wait for it to resolve. If the argument is TaskAdaptable or TaskFactory,
+     * we will assume that the resolved task has been queued on the {@code taskArgsIterator}, otherwise the argument has already been resolved.
+     */
+    private static String resolveArgument(Object argument, Iterator<?> taskArgsIterator) {
+        Object resolvedArgument;
+        if (argument instanceof TaskAdaptable) {
+            resolvedArgument = taskArgsIterator.next();
+        } else if (argument instanceof DeferredSupplier) {
+            resolvedArgument = ((DeferredSupplier<?>) argument).get();
+        } else {
+            resolvedArgument = argument;
+        }
+        return String.valueOf(resolvedArgument);
+    }
+
+
+    /** returns a task for parallel execution returning a list of values for the given sensor for the given entity list,
      * optionally when the values satisfy a given readiness predicate (defaulting to groovy truth if not supplied) */
     public static <T> Task<List<T>> listAttributesWhenReady(AttributeSensor<T> sensor, Iterable<Entity> entities) {
         return listAttributesWhenReady(sensor, entities, GroovyJavaMethods.truthPredicate());

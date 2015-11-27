@@ -286,8 +286,6 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     }
     
     public static class MyOldStyleLocation extends AbstractLocation {
-        private static final long serialVersionUID = 1L;
-        
         @SetFromFlag
         String myfield;
 
@@ -297,8 +295,6 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     }
     
     public static class MyLocation extends AbstractLocation {
-        private static final long serialVersionUID = 1L;
-        
         @SetFromFlag
         public static final ConfigKey<String> MY_CONFIG_WITH_SETFROMFLAG_NO_SHORT_NAME = ConfigKeys.newStringConfigKey("myconfig.withSetfromflag.noShortName");
 
@@ -335,8 +331,6 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     }
     
     public static class MyLocationReffingOthers extends AbstractLocation {
-        private static final long serialVersionUID = 1L;
-        
         @SetFromFlag(defaultVal="a")
         String myfield;
 
@@ -355,8 +349,6 @@ public class RebindLocationTest extends RebindTestFixtureWithApp {
     }
     
     public static class MyLocationCustomProps extends AbstractLocation {
-        private static final long serialVersionUID = 1L;
-        
         String myfield;
         boolean rebound;
 

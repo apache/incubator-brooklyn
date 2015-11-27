@@ -224,12 +224,11 @@ public class LoadTest {
         }
     }
     
-    protected <T extends StartableApplication> Callable<T> newProvisionAppTask(final ManagementContext managementContext, final EntitySpec<T> entitySpec) {
+    protected <T extends StartableApplication> Callable<T> newProvisionAppTask(final ManagementContext managementContext, final EntitySpec<T> appSpec) {
         return new Callable<T>() {
             public T call() {
                 Stopwatch stopwatch = Stopwatch.createStarted();
-                T app = managementContext.getEntityManager().createEntity(entitySpec);
-                Entities.startManagement(app, managementContext);
+                T app = managementContext.getEntityManager().createEntity(appSpec);
                 app.start(ImmutableList.of(localhost));
                 Duration duration = Duration.of(stopwatch.elapsed(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
                 LOG.info("Provisioning time: "+duration);

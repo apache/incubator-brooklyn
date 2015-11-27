@@ -24,8 +24,9 @@ import java.util.Set;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.Reflections;
 
@@ -36,6 +37,13 @@ public class JavaEntitySpecResolver extends AbstractEntitySpecResolver{
         super(RESOLVER_NAME);
     }
 
+    @Override
+    protected String getLocalType(String type) {
+        type = super.getLocalType(type);
+        type = DeserializingClassRenamesProvider.findMappedName(type);
+        return type;
+    }
+    
     @Override
     protected boolean canResolve(String type, BrooklynClassLoadingContext loader) {
         String localType = getLocalType(type);

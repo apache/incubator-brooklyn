@@ -33,9 +33,9 @@ import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.BrooklynLogging;
 import org.apache.brooklyn.core.config.ConfigKeys;
-import org.apache.brooklyn.enricher.stock.Enrichers.ComputingAverage;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.StringPredicates;
@@ -64,6 +64,13 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     public static final ConfigKey<Function<? super Collection<?>, ?>> TRANSFORMATION = ConfigKeys.newConfigKey(new TypeToken<Function<? super Collection<?>, ?>>() {}, "enricher.transformation");
     
     public static final ConfigKey<Boolean> EXCLUDE_BLANK = ConfigKeys.newBooleanConfigKey("enricher.aggregator.excludeBlank", "Whether explicit nulls or blank strings should be excluded (default false); this only applies if no value filter set", false);
+
+    /**
+     * @see QuorumChecks
+     */
+    public static final ConfigKey<String> QUORUM_CHECK_TYPE = ConfigKeys.newStringConfigKey("quorum.check.type", "The requirement to be considered quorate -- possible values: 'all', 'allAndAtLeastOne', 'atLeastOne', 'atLeastOneUnlessEmpty', 'alwaysHealthy'", "allAndAtLeastOne");
+
+    public static final ConfigKey<Integer> QUORUM_TOTAL_SIZE = ConfigKeys.newIntegerConfigKey("quorum.total.size", "The total size to consider when determining if quorate", 1);
 
     protected Sensor<T> sourceSensor;
     protected Function<? super Collection<T>, ? extends U> transformation;
@@ -103,7 +110,9 @@ public class Aggregator<T,U> extends AbstractAggregator<T,U> implements SensorEv
     @SuppressWarnings({ "rawtypes", "unchecked" })
     protected Function<? super Collection<?>, ?> lookupTransformation(String t1) {
         if ("average".equalsIgnoreCase(t1)) return new Enrichers.ComputingAverage(null, null, targetSensor.getTypeToken());
-        if ("sum".equalsIgnoreCase(t1)) return new Enrichers.ComputingAverage(null, null, targetSensor.getTypeToken());
+        if ("sum".equalsIgnoreCase(t1)) return new Enrichers.ComputingSum(null, null, targetSensor.getTypeToken());
+        if ("isQuorate".equalsIgnoreCase(t1)) return new Enrichers.ComputingIsQuorate(targetSensor.getTypeToken(),
+                QuorumChecks.of(config().get(QUORUM_CHECK_TYPE)), config().get(QUORUM_TOTAL_SIZE));
         if ("list".equalsIgnoreCase(t1)) return new ComputingList();
         return null;
     }

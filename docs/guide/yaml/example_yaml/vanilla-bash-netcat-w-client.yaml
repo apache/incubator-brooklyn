@@ -32,11 +32,13 @@ services:
   - type: org.apache.brooklyn.core.sensor.ssh.SshCommandSensor
     brooklyn.config:
       name: output.last
+      period: 1s
       command: tail -1 server-input
       
   - type: org.apache.brooklyn.core.sensor.ssh.SshCommandSensor
     brooklyn.config:
       name: output.all
+      period: 1s
       command: cat server-input
 
 # a client to hit netcat

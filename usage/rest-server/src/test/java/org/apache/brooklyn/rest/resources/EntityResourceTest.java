@@ -35,9 +35,9 @@ import org.apache.brooklyn.rest.domain.EntitySpec;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
-import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.http.HttpAsserts;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
@@ -110,7 +110,7 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
                 .queryParam("name", "New Name")
                 .post(ClientResponse.class);
 
-            HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+            HttpAsserts.assertHealthyStatusCode(response.getStatus());
             Assert.assertTrue(entity.getDisplayName().equals("New Name"));
         } finally {
             // restore it for other tests!
@@ -127,7 +127,7 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
                 .entity("services: [ { type: "+TestEntity.class.getName()+" }]", "application/yaml")
                 .post(ClientResponse.class);
 
-            HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+            HttpAsserts.assertHealthyStatusCode(response.getStatus());
             Assert.assertEquals(entity.getChildren().size(), 1);
             Entity child = Iterables.getOnlyElement(entity.getChildren());
             Assert.assertTrue(Entities.isManaged(child));
@@ -152,7 +152,7 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
                 .get(ClientResponse.class);
         String raw = response.getEntity(String.class);
         log.info("TAGS raw: "+raw);
-        HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+        HttpAsserts.assertHealthyStatusCode(response.getStatus());
         
         Assert.assertTrue(raw.contains(entity.getParent().getId()), "unexpected app tag, does not include ID: "+raw);
         

@@ -24,9 +24,8 @@ import static org.testng.Assert.assertFalse;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.brooklyn.core.test.TestHttpRequestHandler;
-import org.apache.brooklyn.core.test.TestHttpServer;
-import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.test.http.TestHttpRequestHandler;
+import org.apache.brooklyn.test.http.TestHttpServer;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.http.HttpException;

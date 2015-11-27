@@ -37,10 +37,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class PlatformDto extends ResourceDto {
 
-    // defined as a constant so can be used in Swagger REST API annotations
-    public static final String CLASS_NAME = "org.apache.brooklyn.camp.server.dto.PlatformDto";
-    static { assert CLASS_NAME.equals(PlatformDto.class.getCanonicalName()); }
-
     protected PlatformDto() {}
     protected PlatformDto(DtoFactory dtoFactory, PlatformRootSummary x) {
         super(dtoFactory, x);

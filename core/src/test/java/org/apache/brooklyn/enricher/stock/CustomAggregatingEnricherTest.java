@@ -47,7 +47,6 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
 
     public static final Logger log = LoggerFactory.getLogger(CustomAggregatingEnricherTest.class);
             
-    private static final long TIMEOUT_MS = 10*1000;
     private static final long SHORT_WAIT_MS = 50;
     
     TestEntity entity;
@@ -358,12 +357,11 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testAggregatesExistingMembersOfGroup() {
         BasicGroup group = app.addChild(EntitySpec.create(BasicGroup.class));
-        TestEntity p1 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
-        TestEntity p2 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
+        TestEntity p1 = group.addChild(EntitySpec.create(TestEntity.class)); 
+        TestEntity p2 = group.addChild(EntitySpec.create(TestEntity.class)); 
         group.addMember(p1);
         group.addMember(p2);
         p1.sensors().set(intSensor, 1);
-        Entities.manage(group);
         
         group.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)
@@ -385,12 +383,11 @@ public class CustomAggregatingEnricherTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testAggregatesMembersOfProducer() {
         BasicGroup group = app.addChild(EntitySpec.create(BasicGroup.class));
-        TestEntity p1 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
-        TestEntity p2 = app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(TestEntity.class).parent(group)); 
+        TestEntity p1 = group.addChild(EntitySpec.create(TestEntity.class)); 
+        TestEntity p2 = group.addChild(EntitySpec.create(TestEntity.class)); 
         group.addMember(p1);
         group.addMember(p2);
         p1.sensors().set(intSensor, 1);
-        Entities.manage(group);
         
         app.enrichers().add(Enrichers.builder()
                 .aggregating(intSensor)

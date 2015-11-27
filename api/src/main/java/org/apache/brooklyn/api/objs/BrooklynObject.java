@@ -28,6 +28,7 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.SubscriptionManager;
+import org.apache.brooklyn.api.relations.RelationshipType;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 
@@ -70,6 +71,12 @@ public interface BrooklynObject extends Identifiable, Configurable {
      */
     SubscriptionSupport subscriptions();
 
+    /**
+     * Relations specify a typed, directed connection between two entities.
+     * Generic type is overridden in sub-interfaces.
+     */
+    public RelationSupport<?> relations();
+    
     public interface TagSupport {
         /**
          * @return An immutable copy of the set of tags on this entity. 
@@ -140,5 +147,23 @@ public interface BrooklynObject extends Identifiable, Configurable {
          * see {@link SubscriptionSupport#unsubscribe(Entity, SubscriptionHandle)} 
          */
         boolean unsubscribe(SubscriptionHandle handle);
+    }
+    
+    public interface RelationSupport<T extends BrooklynObject> {
+        /** Adds a relationship of the given type from this object pointing at the given target, 
+         * and ensures that the inverse relationship (if there is one) is present at the target pointing back at this object. 
+         */
+        public <U extends BrooklynObject> void add(RelationshipType<? super T,? super U> relationship, U target);
+        
+        /** Removes any and all relationships of the given type from this object pointing at the given target,
+         * and ensures that the inverse relationships (if there are one) are also removed. 
+         */
+        public <U extends BrooklynObject> void remove(RelationshipType<? super T,? super U> relationship, U target);
+        
+        /** @return the {@link RelationshipType}s originating from this object */
+        public Set<RelationshipType<? super T,? extends BrooklynObject>> getRelationshipTypes();
+        
+        /** @return the {@link BrooklynObject}s which are targets of the given {@link RelationshipType} */
+        public <U extends BrooklynObject> Set<U> getRelations(RelationshipType<? super T,U> relationshipType);
     }
 }

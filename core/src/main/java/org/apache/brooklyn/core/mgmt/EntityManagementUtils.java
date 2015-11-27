@@ -28,19 +28,18 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.core.entity.trait.Startable;
-import org.apache.brooklyn.core.plan.PlanToSpecFactory;
-import org.apache.brooklyn.core.plan.PlanToSpecTransformer;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -52,13 +51,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
-import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.Runnables;
 
 /** Utility methods for working with entities and applications */
 public class EntityManagementUtils {
@@ -79,7 +78,6 @@ public class EntityManagementUtils {
     /** creates an application from the given app spec, managed by the given management context */
     public static <T extends Application> T createUnstarted(ManagementContext mgmt, EntitySpec<T> spec) {
         T app = mgmt.getEntityManager().createEntity(spec);
-        Entities.startManagement(app, mgmt);
         return app;
     }
 
@@ -89,29 +87,21 @@ public class EntityManagementUtils {
         return createUnstarted(mgmt, spec);
     }
     
+    @SuppressWarnings("unchecked")
     public static EntitySpec<? extends Application> createEntitySpecForApplication(ManagementContext mgmt, final String plan) {
-        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, EntitySpec<? extends Application>>() {
-            @Override
-            public EntitySpec<? extends Application> apply(PlanToSpecTransformer input) {
-                return input.createApplicationSpec(plan);
-            }
-        }).get();
+        return mgmt.getTypeRegistry().createSpecFromPlan(null, plan, RegisteredTypeLoadingContexts.spec(Application.class), EntitySpec.class);
     }
 
+    @Deprecated /** @deprecated since 0.9.0; use {@link BrooklynTypeRegistry#createSpec(RegisteredType, org.apache.brooklyn.api.typereg.RegisteredTypeConstraint, Class)} */
+    // not used in Brooklyn
     public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, CatalogItem<T, SpecT> item) {
         return createCatalogSpec(mgmt, item, ImmutableSet.<String>of());
     }
 
+    @Deprecated /** @deprecated since 0.9.0; use {@link BrooklynTypeRegistry#createSpec(RegisteredType, org.apache.brooklyn.api.typereg.RegisteredTypeConstraint, Class)} */
+    // not used in Brooklyn
     public static <T,SpecT extends AbstractBrooklynObjectSpec<? extends T, SpecT>> SpecT createCatalogSpec(ManagementContext mgmt, final CatalogItem<T, SpecT> item, final Set<String> encounteredTypes) {
-        if (encounteredTypes.contains(item.getSymbolicName())) {
-            throw new IllegalStateException("Already encountered types " + encounteredTypes + " must not contain catalog item being resolver " + item.getSymbolicName());
-        }
-        return PlanToSpecFactory.attemptWithLoaders(mgmt, new Function<PlanToSpecTransformer, SpecT>() {
-            @Override
-            public SpecT apply(PlanToSpecTransformer input) {
-                return input.createCatalogSpec(item, encounteredTypes);
-            }
-        }).get();
+        return BasicBrooklynCatalog.internalCreateSpecLegacy(mgmt, item, encounteredTypes, true);
     }
 
     /** container for operation which creates something and which wants to return both
@@ -146,21 +136,21 @@ public class EntityManagementUtils {
     }
 
     public static <T extends Application> CreationResult<T,Void> start(T app) {
-        Task<Void> task = Entities.invokeEffector((EntityLocal)app, app, Startable.START,
+        Task<Void> task = Entities.invokeEffector(app, app, Startable.START,
             // locations already set in the entities themselves;
             // TODO make it so that this arg does not have to be supplied to START !
             MutableMap.of("locations", MutableList.of()));
         return CreationResult.of(app, task);
     }
     
-    public static CreationResult<List<Entity>, List<String>> addChildren(final EntityLocal parent, String yaml, Boolean start) {
+    public static CreationResult<List<Entity>, List<String>> addChildren(final Entity parent, String yaml, Boolean start) {
         if (Boolean.FALSE.equals(start))
             return CreationResult.of(addChildrenUnstarted(parent, yaml), null);
         return addChildrenStarting(parent, yaml);
     }
     
     /** adds entities from the given yaml, under the given parent; but does not start them */
-    public static List<Entity> addChildrenUnstarted(final EntityLocal parent, String yaml) {
+    public static List<Entity> addChildrenUnstarted(final Entity parent, String yaml) {
         log.debug("Creating child of "+parent+" from yaml:\n{}", yaml);
 
         ManagementContext mgmt = parent.getApplication().getManagementContext();
@@ -188,14 +178,13 @@ public class EntityManagementUtils {
         final List<Entity> children = MutableList.of();
         for (EntitySpec<?> spec: specs) {
             Entity child = (Entity)parent.addChild(spec);
-            Entities.manage(child);
             children.add(child);
         }
 
         return children;
     }
 
-    public static CreationResult<List<Entity>,List<String>> addChildrenStarting(final EntityLocal parent, String yaml) {
+    public static CreationResult<List<Entity>,List<String>> addChildrenStarting(final Entity parent, String yaml) {
         final List<Entity> children = addChildrenUnstarted(parent, yaml);
         String childrenCountString;
 
@@ -220,7 +209,7 @@ public class EntityManagementUtils {
             } else {
                 // include a task, just to give feedback in the GUI
                 taskS.add(Tasks.builder().displayName("create").description("Skipping start (not a Startable Entity)")
-                    .body(new Runnable() { public void run() {} })
+                    .body(Runnables.doNothing())
                     .tag(BrooklynTaskTags.tagForTargetEntity(child))
                     .build());
             }
@@ -251,10 +240,13 @@ public class EntityManagementUtils {
      * See {@link #WRAPPER_APP_MARKER}. */
     @Beta //where should this live long-term?
     public static void mergeWrapperParentSpecToChildEntity(EntitySpec<? extends Application> wrapperParent, EntitySpec<?> wrappedChild) {
-        if (Strings.isEmpty(wrappedChild.getDisplayName()))
+        if (Strings.isNonEmpty(wrapperParent.getDisplayName()))
             wrappedChild.displayName(wrapperParent.getDisplayName());
         if (!wrapperParent.getLocations().isEmpty())
             wrappedChild.locations(wrapperParent.getLocations());
+        if (!wrapperParent.getParameters().isEmpty()) {
+            wrappedChild.parameters(wrapperParent.getParameters());
+        }
 
         // NB: this clobbers child config; might prefer to deeply merge maps etc
         // (but this should not be surprising, as unwrapping is often parameterising the nested blueprint, so outer config should dominate) 
@@ -275,7 +267,7 @@ public class EntityManagementUtils {
      * for use when adding from a plan specifying an application which was wrapped because it had to be.
      * @see #WRAPPER_APP_MARKER */
     public static boolean canPromoteWrappedApplication(EntitySpec<? extends Application> app) {
-        if (app.getChildren().size()!=1)
+        if (!hasSingleChild(app))
             return false;
 
         EntitySpec<?> childSpec = Iterables.getOnlyElement(app.getChildren());
@@ -285,42 +277,25 @@ public class EntityManagementUtils {
         return canPromoteChildrenInWrappedApplication(app);
     }
     
-    /** returns true if the spec is for an empty-ish wrapper app, 
+    /** returns true if the spec is for a wrapper app with no important settings, wrapping a single child. 
      * for use when adding from a plan specifying multiple entities but nothing significant at the application level.
      * @see #WRAPPER_APP_MARKER */
-    public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<?> spec) {
-        return canPromoteBasedOnName(spec) &&
-                isWrapperApp(spec) &&
+    public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<? extends Application> spec) {
+        return isWrapperApp(spec) && hasSingleChild(spec) &&
                 //equivalent to no keys starting with "brooklyn."
                 spec.getEnrichers().isEmpty() &&
+                spec.getEnricherSpecs().isEmpty() &&
                 spec.getInitializers().isEmpty() &&
-                spec.getPolicies().isEmpty();
+                spec.getPolicies().isEmpty() &&
+                spec.getPolicySpecs().isEmpty();
     }
 
     public static boolean isWrapperApp(EntitySpec<?> spec) {
         return Boolean.TRUE.equals(spec.getConfig().get(EntityManagementUtils.WRAPPER_APP_MARKER));
     }
 
-    private static boolean canPromoteBasedOnName(EntitySpec<?> spec) {
-        if (!Strings.isEmpty(spec.getDisplayName())) {
-            if (spec.getChildren().size()==1) {
-                String childName = Iterables.getOnlyElement(spec.getChildren()).getDisplayName();
-                if (Strings.isEmpty(childName) || childName.equals(spec.getDisplayName())) {
-                    // if child has no name, or it's the same, could still promote
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                // if name set at root and promoting children would be ambiguous, do not promote 
-                return false;
-            }
-        } else if (spec.getChildren().size()>1) {
-            // don't allow multiple children if a name is specified as a root
-            return false;
-        } else {
-            return true;
-        }
+    private static boolean hasSingleChild(EntitySpec<?> spec) {
+        return spec.getChildren().size() == 1;
     }
 
 }

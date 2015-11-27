@@ -19,21 +19,21 @@
 package org.apache.brooklyn.entity.database.mysql;
 
 import org.apache.brooklyn.api.catalog.Catalog;
+import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.objs.HasShortName;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.annotation.Effector;
 import org.apache.brooklyn.core.annotation.EffectorParam;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.MapConfigKey;
-import org.apache.brooklyn.core.effector.MethodEffector;
+import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.Sensors;
-import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.database.DatastoreMixins.DatastoreCommon;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
@@ -86,10 +86,39 @@ public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommo
 
     AttributeSensor<Double> QUERIES_PER_SECOND_FROM_MYSQL = Sensors.newDoubleSensor("mysql.queries.perSec.fromMysql");
 
-    MethodEffector<String> EXECUTE_SCRIPT = new MethodEffector<String>(MySqlNode.class, "executeScript");
-    String EXECUTE_SCRIPT_COMMANDS = "commands";
+    interface ExportDumpEffector {
+        ConfigKey<String> PATH = ConfigKeys.newStringConfigKey("path", "Where to export the dump to. Resolved against runtime directory if relative.", "dump.sql");
+        ConfigKey<String> ADDITIONAL_OPTIONS = ConfigKeys.newStringConfigKey("additionalOptions", "Additional command line options to pass to mysqldump");
 
-    @Effector(description = "Execute SQL script on the node as the root user")
-    String executeScript(@EffectorParam(name=EXECUTE_SCRIPT_COMMANDS) String commands);
+        Effector<Void> EXPORT_DUMP = Effectors.effector(Void.class, "export_dump")
+                .description("Invokes mysqldump against the node")
+                .parameter(PATH)
+                .parameter(ADDITIONAL_OPTIONS)
+                .buildAbstract();
+    }
+    Effector<Void> EXPORT_DUMP = ExportDumpEffector.EXPORT_DUMP;
+
+    interface ImportDumpEffector {
+        ConfigKey<String> PATH = ConfigKeys.newStringConfigKey("path", "Path to a file with SQL statements to import as the root user");
+
+        Effector<Void> IMPORT_DUMP = Effectors.effector(Void.class, "import_dump")
+                .description("Runs the sql statements in the file as the root user")
+                .parameter(PATH)
+                .buildAbstract();
+    }
+    Effector<Void> IMPORT_DUMP = ImportDumpEffector.IMPORT_DUMP;
+
+    interface ChangePasswordEffector {
+        ConfigKey<String> PASSWORD = ConfigKeys.newStringConfigKey("password", "New password to set");
+
+        Effector<Void> CHANGE_PASSWORD = Effectors.effector(Void.class, "change_password")
+                .description("Change the mysql root password")
+                .parameter(PASSWORD)
+                .buildAbstract();
+    }
+    Effector<Void> CHANGE_PASSWORD = ChangePasswordEffector.CHANGE_PASSWORD;
+
+    @org.apache.brooklyn.core.annotation.Effector(description = "Execute SQL script on the node as the root user")
+    public String executeScript(@EffectorParam(name="commands") String commands);
 
 }

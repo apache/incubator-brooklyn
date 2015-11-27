@@ -181,7 +181,6 @@ public class DynamicMultiGroupImpl extends DynamicGroupImpl implements DynamicMu
                 BasicGroup bucket = buckets.get(name);
                 if (bucket == null) {
                     bucket = addChild(EntitySpec.create(bucketSpec).displayName(name));
-                    Entities.manage(bucket);
                     buckets.put(name, bucket);
                 }
                 bucket.setMembers(entityMapping.get(name));

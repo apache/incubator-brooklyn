@@ -71,7 +71,7 @@ public class CatalogVersioningTest {
             Assert.assertFalse(CatalogUtils.looksLikeVersionedId(versionedId));
         } else {
             Assert.assertTrue(CatalogUtils.looksLikeVersionedId(versionedId));
-            Assert.assertEquals(CatalogUtils.getIdFromVersionedId(versionedId), id);
+            Assert.assertEquals(CatalogUtils.getSymbolicNameFromVersionedId(versionedId), id);
             Assert.assertEquals(CatalogUtils.getVersionFromVersionedId(versionedId), version);
         }
     }

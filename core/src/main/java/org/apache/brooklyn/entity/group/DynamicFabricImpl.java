@@ -247,7 +247,11 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
                 ((EntityLocal)entity).setDisplayName(entity.getDisplayName() +" ("+locationName+")");
         }
         if (entity.getParent()==null) entity.setParent(this);
+        
+        // Continue to call manage(), because some uses of NodeFactory (in tests) still instantiate the
+        // entity via its constructor
         Entities.manage(entity);
+        
         addMember(entity);
         
         return entity;

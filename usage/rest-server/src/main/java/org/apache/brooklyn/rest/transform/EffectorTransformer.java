@@ -26,7 +26,6 @@ import javax.annotation.Nullable;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.effector.ParameterType;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.rest.domain.EffectorSummary;
 import org.apache.brooklyn.rest.domain.EffectorSummary.ParameterSummary;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
@@ -42,7 +41,7 @@ import com.google.common.collect.Iterables;
 
 public class EffectorTransformer {
 
-    public static EffectorSummary effectorSummary(final EntityLocal entity, Effector<?> effector) {
+    public static EffectorSummary effectorSummary(final Entity entity, Effector<?> effector) {
         String applicationUri = "/v1/applications/" + entity.getApplicationId();
         String entityUri = applicationUri + "/entities/" + entity.getId();
         return new EffectorSummary(effector.getName(), effector.getReturnTypeName(),

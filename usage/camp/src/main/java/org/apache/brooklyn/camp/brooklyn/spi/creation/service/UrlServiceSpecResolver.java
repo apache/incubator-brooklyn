@@ -18,15 +18,18 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.creation.service;
 
-import java.util.List;
 import java.util.Set;
 
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampConstants;
-import org.apache.brooklyn.camp.brooklyn.spi.creation.CampUtils;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
+import org.apache.brooklyn.camp.brooklyn.spi.creation.CampTypePlanTransformer;
 import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.net.Urls;
 import org.slf4j.Logger;
@@ -57,16 +60,22 @@ public class UrlServiceSpecResolver implements EntitySpecResolver {
             log.warn("AssemblyTemplate type " + type + " looks like a URL that can't be fetched.", e);
             return null;
         }
-        // Referenced specs are expected to be CAMP format as well.
-        List<EntitySpec<?>> serviceSpecs = CampUtils.createServiceSpecs(yaml, loader, encounteredTypes);
-        if (serviceSpecs.size() > 1) {
-            throw new UnsupportedOperationException("Only supporting single service in remotely referenced plans: got "+serviceSpecs);
+        if (encounteredTypes.contains(type)) {
+            throw new IllegalStateException("URL " + type + " is self referential.");
         }
-        return serviceSpecs.get(0);
+        
+        // Referenced specs are expected to be CAMP format as well.
+        // TODO somehow specify to allow full syntax for services
+        EntitySpec<?> item = loader.getManagementContext().getTypeRegistry().createSpecFromPlan(
+            CampTypePlanTransformer.FORMAT,
+            yaml,
+            RegisteredTypeLoadingContexts.loaderAlreadyEncountered(loader, encounteredTypes, type), 
+            EntitySpec.class);
+        return item;
     }
 
     @Override
-    public void injectManagementContext(ManagementContext managementContext) {
+    public void setManagementContext(ManagementContext managementContext) {
     }
 
 }

@@ -130,8 +130,6 @@ public class LocationUsageTrackingTest extends BrooklynAppUnitTestSupport {
     }
 
     public static class DynamicLocalhostMachineProvisioningLocation extends LocalhostMachineProvisioningLocation {
-        private static final long serialVersionUID = 4822009936654077946L;
-
         @Override
         public SshMachineLocation obtain(Map<?, ?> flags) throws NoMachinesAvailableException {
             System.out.println("called DynamicLocalhostMachineProvisioningLocation.obtain");

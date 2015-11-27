@@ -21,6 +21,7 @@ package org.apache.brooklyn.rest.testing.mocks;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
 
+@SuppressWarnings("deprecation")
 public class CapitalizePolicy extends AbstractPolicy {
 
     @Override

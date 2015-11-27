@@ -18,11 +18,8 @@
  */
 package org.apache.brooklyn.core.test.qa.performance;
 
-import static org.testng.Assert.assertTrue;
-
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,8 +28,8 @@ import org.apache.brooklyn.api.mgmt.SubscriptionManager;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.test.performance.PerformanceTestDescriptor;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -41,7 +38,6 @@ import com.google.common.collect.Lists;
 
 public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
 
-    private static final long LONG_TIMEOUT_MS = 30*1000;
     private static final int NUM_ITERATIONS = 10000;
     
     TestEntity entity;
@@ -81,22 +77,15 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
                 }});
         }
         
-        measureAndAssert("updateAttributeWithManyPublishedOneSubscriber", numIterations, minRatePerSec,
-                new Runnable() {
+        measure(PerformanceTestDescriptor.create()
+                .summary("SubscriptionPerformanceTest.testManyPublishedOneSubscriber")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
                     public void run() {
                         entity.sensors().set(TestEntity.SEQUENCE, (iter.getAndIncrement()));
-                    }
-                },
-                new Runnable() {
-                    public void run() {
-                        try {
-                            completionLatch.await(LONG_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                        } catch (InterruptedException e) {
-                            throw Exceptions.propagate(e);
-                        }
-                        assertTrue(completionLatch.getCount() <= 0);
-                    }
-                });
+                    }})
+                .completionLatch(completionLatch));
     }
     
     @Test(groups={"Integration", "Acceptance"})
@@ -118,20 +107,15 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
                 }});
         }
         
-        measureAndAssert("updateAttributeWithManyListeners", numIterations, minRatePerSec,
-                new Runnable() {
+        measure(PerformanceTestDescriptor.create()
+                .summary("SubscriptionPerformanceTest.testManyListenersForSensorEvent")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
                     @Override public void run() {
                         entity.sensors().set(TestEntity.SEQUENCE, (iter.getAndIncrement()));
-                    }},
-                new Runnable() {
-                        public void run() {
-                            try {
-                                completionLatch.await(LONG_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                            } catch (InterruptedException e) {
-                                throw Exceptions.propagate(e);
-                            } 
-                            assertTrue(completionLatch.getCount() <= 0);
-                        }});
+                    }})
+                .completionLatch(completionLatch));
     }
     
     @Test(groups={"Integration", "Acceptance"})
@@ -155,10 +139,14 @@ public class SubscriptionPerformanceTest extends AbstractPerformanceTest {
                 }});
         }
         
-        measureAndAssert("updateAttributeWithUnrelatedListeners", numIterations, minRatePerSec, new Runnable() {
-            @Override public void run() {
-                entity.sensors().set(TestEntity.SEQUENCE, (iter.incrementAndGet()));
-            }});
+        measure(PerformanceTestDescriptor.create()
+                .summary("SubscriptionPerformanceTest.testUpdateAttributeWithNoListenersButManyUnrelatedListeners")
+                .iterations(numIterations)
+                .minAcceptablePerSecond(minRatePerSec)
+                .job(new Runnable() {
+                    @Override public void run() {
+                        entity.sensors().set(TestEntity.SEQUENCE, (iter.incrementAndGet()));
+                    }}));
         
         if (exception.get() != null) {
             throw exception.get();

@@ -22,10 +22,6 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
-import org.slf4j.LoggerFactory;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.entity.EntityDynamicType;
-import org.apache.brooklyn.core.objs.BrooklynTypes;
 import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.effector.Effector;
@@ -34,9 +30,13 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.EntityType;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.core.entity.EntityDynamicType;
+import org.apache.brooklyn.core.mgmt.BrooklynTags;
+import org.apache.brooklyn.core.objs.BrooklynTypes;
 import org.apache.brooklyn.rest.domain.CatalogEntitySummary;
 import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
@@ -49,7 +49,10 @@ import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.rest.domain.SummaryComparators;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.Reflections;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -59,22 +62,24 @@ public class CatalogTransformer {
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(CatalogTransformer.class);
     
     public static <T extends Entity> CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<T,EntitySpec<? extends T>> item) {
-        Set<EntityConfigSummary> config = Sets.newTreeSet(SummaryComparators.nameComparator());
+        Set<EntityConfigSummary> config = Sets.newLinkedHashSet();
         Set<SensorSummary> sensors = Sets.newTreeSet(SummaryComparators.nameComparator());
         Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
 
+        EntitySpec<?> spec = null;
+
         try {
-            EntitySpec<?> spec = (EntitySpec<?>) b.getCatalog().createSpec((CatalogItem) item);
+            spec = (EntitySpec<?>) b.getCatalog().createSpec((CatalogItem) item);
             EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
             EntityType type = typeMap.getSnapshot();
 
-            for (ConfigKey<?> x: type.getConfigKeys())
-                config.add(EntityTransformer.entityConfigSummary(x, typeMap.getConfigKeyField(x.getName())));
+            for (SpecParameter<?> input: spec.getParameters())
+                config.add(EntityTransformer.entityConfigSummary(input));
             for (Sensor<?> x: type.getSensors())
                 sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
             for (Effector<?> x: type.getEffectors())
                 effectors.add(EffectorTransformer.effectorSummaryForCatalog(x));
-            
+
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             
@@ -90,7 +95,7 @@ public class CatalogTransformer {
         return new CatalogEntitySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
             item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
-            config, sensors, effectors,
+            makeTags(spec, item), config, sensors, effectors,
             item.isDeprecated(), makeLinks(item));
     }
 
@@ -114,7 +119,7 @@ public class CatalogTransformer {
         }
         return new CatalogItemSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
-            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), item.isDeprecated(), makeLinks(item));
+            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
@@ -122,7 +127,7 @@ public class CatalogTransformer {
         return new CatalogPolicySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                item.isDeprecated(), makeLinks(item));
+                item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     public static CatalogLocationSummary catalogLocationSummary(BrooklynRestResourceUtils b, CatalogItem<? extends Location,LocationSpec<?>> item) {
@@ -130,7 +135,7 @@ public class CatalogTransformer {
         return new CatalogLocationSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
                 item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                item.isDeprecated(), makeLinks(item));
+                item.tags().getTags(), item.isDeprecated(), makeLinks(item));
     }
 
     protected static Map<String, URI> makeLinks(CatalogItem<?,?> item) {
@@ -157,6 +162,23 @@ public class CatalogTransformer {
         if (b.isUrlServerSideAndSafe(iconUrl))
             return "/v1/catalog/icon/"+item.getSymbolicName() + "/" + item.getVersion();
         return iconUrl;
+    }
+
+    private static Set<Object> makeTags(EntitySpec<?> spec, CatalogItem<?, ?> item) {
+        // Combine tags on item with an InterfacesTag.
+        Set<Object> tags = MutableSet.copyOf(item.tags().getTags());
+        if (spec != null) {
+            Class<?> type;
+            if (spec.getImplementation() != null) {
+                type = spec.getImplementation();
+            } else {
+                type = spec.getType();
+            }
+            if (type != null) {
+                tags.add(new BrooklynTags.TraitsTag(Reflections.getAllInterfaces(type)));
+            }
+        }
+        return tags;
     }
     
 }

@@ -18,11 +18,14 @@
  */
 package org.apache.brooklyn.entity.webapp.jboss;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertNotNull;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.EntityAsserts;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.HttpTestUtils;
@@ -30,6 +33,7 @@ import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * A simple test of installing+running on AWS-EC2, using various OS distros and versions. 
@@ -70,6 +74,31 @@ public class JBoss7ServerAwsEc2LiveTest extends AbstractEc2LiveTest {
         super.test_CentOS_6_3();
     }
 
+    @Test(groups = {"Live"})
+    public void testWithOnlyPort22() throws Exception {
+        // CentOS-6.3-x86_64-GA-EBS-02-85586466-5b6c-4495-b580-14f72b4bcf51-ami-bb9af1d2.1
+        jcloudsLocation = mgmt.getLocationRegistry().resolve(LOCATION_SPEC, ImmutableMap.of(
+                "tags", ImmutableList.of(getClass().getName()),
+                "imageId", "us-east-1/ami-a96b01c0", 
+                "hardwareId", SMALL_HARDWARE_ID));
+
+        JBoss7Server server = app.createAndManageChild(EntitySpec.create(JBoss7Server.class)
+                .configure(JBoss7Server.PROVISIONING_PROPERTIES.subKey(CloudLocationConfig.INBOUND_PORTS.getName()), ImmutableList.of(22))
+                .configure(JBoss7Server.USE_HTTP_MONITORING, false)
+                .configure(JBoss7Server.OPEN_IPTABLES, true)
+                .configure("war", getTestWar()));
+        
+        app.start(ImmutableList.of(jcloudsLocation));
+        
+        EntityAsserts.assertAttributeEqualsEventually(server, Attributes.SERVICE_UP, true);
+        EntityAsserts.assertAttributeEqualsEventually(server, Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        
+        String url = server.getAttribute(JBoss7Server.ROOT_URL);
+        assertNotNull(url);
+        
+        assertViaSshLocalUrlListeningEventually(server, url);
+    }
+    
     @Test(enabled=false)
     public void testDummy() {} // Convince testng IDE integration that this really does have test methods  
 }

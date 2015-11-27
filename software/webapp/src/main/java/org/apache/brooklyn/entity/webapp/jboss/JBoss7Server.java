@@ -25,11 +25,12 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey;
+import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.Sensors;
-import org.apache.brooklyn.core.sensor.BasicAttributeSensorAndConfigKey.StringAttributeSensorAndConfigKey;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
+import org.apache.brooklyn.util.core.ResourcePredicates;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 
@@ -76,10 +77,13 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, HasShortName {
     @SetFromFlag("deploymentTimeout")
     ConfigKey<Integer> DEPLOYMENT_TIMEOUT =
             ConfigKeys.newConfigKey("webapp.jboss.deploymentTimeout", "Deployment timeout, in seconds", 600);
-    
-    ConfigKey<String> TEMPLATE_CONFIGURATION_URL = ConfigKeys.newConfigKey(
-            "webapp.jboss.templateConfigurationUrl", "Template file (in freemarker format) for the standalone.xml file", 
-            JavaClassNames.resolveClasspathUrl(JBoss7Server.class, "jboss7-standalone.xml"));
+
+    ConfigKey<String> TEMPLATE_CONFIGURATION_URL = ConfigKeys.builder(String.class)
+            .name("webapp.jboss.templateConfigurationUrl")
+            .description("Template file (in freemarker format) for the standalone.xml file")
+            .defaultValue(JavaClassNames.resolveClasspathUrl(JBoss7Server.class, "jboss7-standalone.xml"))
+            .constraint(ResourcePredicates.urlExists())
+            .build();
 
     @SetFromFlag("managementUser")
     ConfigKey<String> MANAGEMENT_USER = ConfigKeys.newConfigKey("webapp.jboss.managementUser",
@@ -90,6 +94,9 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, HasShortName {
     ConfigKey<String> MANAGEMENT_PASSWORD =
             ConfigKeys.newStringConfigKey("webapp.jboss.managementPassword", "Password for MANAGEMENT_USER.");
 
+    @SetFromFlag("useHttpMonitoring")
+    ConfigKey<Boolean> USE_HTTP_MONITORING = ConfigKeys.newConfigKey("httpMonitoring.enabled", "HTTP(S) monitoring enabled", Boolean.TRUE);
+
     AttributeSensor<String> MANAGEMENT_URL =
             Sensors.newStringSensor("webapp.jboss.managementUrl", "URL where management endpoint is available");
 
@@ -99,6 +106,6 @@ public interface JBoss7Server extends JavaWebAppSoftwareProcess, HasShortName {
     AttributeSensor<Boolean> MANAGEMENT_URL_UP = 
             Sensors.newBooleanSensor("webapp.jboss.managementUp", "Management server is responding with OK");
     
-    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor( "jboss.pid.file", "PID file");
+    public static final AttributeSensor<String> PID_FILE = Sensors.newStringSensor("jboss.pid.file", "PID file");
 
 }

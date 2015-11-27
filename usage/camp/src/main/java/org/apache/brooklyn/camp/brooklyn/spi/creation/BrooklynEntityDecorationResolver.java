@@ -21,22 +21,25 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.brooklyn.api.catalog.BrooklynCatalog;
-import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.EntityInitializer;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampReservedKeys;
 import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynYamlTypeInstantiator.InstantiatorFromKey;
-import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.core.objs.BasicSpecParameter;
+import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
+import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
 import com.google.common.annotations.Beta;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Pattern for resolving "decorations" on service specs / entity specs, such as policies, enrichers, etc.
@@ -53,26 +56,30 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
     
     public abstract void decorate(EntitySpec<?> entitySpec, ConfigBag attrs);
 
-    protected Iterable<? extends DT> buildListOfTheseDecorationsFromEntityAttributes(ConfigBag attrs) {
+    protected List<? extends DT> buildListOfTheseDecorationsFromEntityAttributes(ConfigBag attrs) {
         Object value = getDecorationAttributeJsonValue(attrs); 
-        List<DT> decorations = MutableList.of();
-        if (value==null) return decorations;
+        if (value==null) return MutableList.of();
         if (value instanceof Iterable) {
-            for (Object decorationJson: (Iterable<?>)value)
-                addDecorationFromJsonMap(checkIsMap(decorationJson), decorations);
+            return buildListOfTheseDecorationsFromIterable((Iterable<?>)value);
         } else {
             // in future may support types other than iterables here, 
             // e.g. a map short form where the key is the type
             throw new IllegalArgumentException(getDecorationKind()+" body should be iterable, not " + value.getClass());
         }
-        return decorations;
     }
-    
+
     protected Map<?,?> checkIsMap(Object decorationJson) {
         if (!(decorationJson instanceof Map))
             throw new IllegalArgumentException(getDecorationKind()+" value must be a Map, not " + 
                 (decorationJson==null ? null : decorationJson.getClass()) );
         return (Map<?,?>) decorationJson;
+    }
+
+    protected List<DT> buildListOfTheseDecorationsFromIterable(Iterable<?> value) {
+        List<DT> decorations = MutableList.of();
+        for (Object decorationJson: value)
+            addDecorationFromJsonMap(checkIsMap(decorationJson), decorations);
+        return decorations;
     }
 
     protected abstract String getDecorationKind();
@@ -102,34 +109,23 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<PolicySpec<?>> decorations) {
             InstantiatorFromKey decoLoader = instantiator.from(decorationJson).prefix("policy");
 
             String policyType = decoLoader.getTypeName().get();
             ManagementContext mgmt = instantiator.loader.getManagementContext();
-            BrooklynCatalog catalog = mgmt.getCatalog();
-            CatalogItem<Policy, PolicySpec<?>> item = getPolicyCatalogItem(catalog, policyType);
-            PolicySpec<? extends Policy> spec;
-            if (item != null) {
-                spec = (PolicySpec) catalog.createSpec((CatalogItem) item);
-                spec.configure(decoLoader.getConfigMap());
+            
+            RegisteredType item = RegisteredTypes.validate(mgmt.getTypeRegistry().get(policyType), RegisteredTypeLoadingContexts.spec(Policy.class));
+            PolicySpec<?> spec;
+            if (item!=null) {
+                spec = mgmt.getTypeRegistry().createSpec(item, null, PolicySpec.class);
             } else {
-                // this pattern of creating a spec could be simplified with a "Configurable" superinterface on *Spec  
-                spec = PolicySpec.create(decoLoader.getType(Policy.class))
-                    .configure( decoLoader.getConfigMap() );
+                Class<? extends Policy> type = decoLoader.getType(Policy.class);
+                spec = PolicySpec.create(type)
+                        .parameters(BasicSpecParameter.fromClass(mgmt, type));
             }
+            spec.configure( decoLoader.getConfigMap() );
             decorations.add(spec);
-        }
-        @SuppressWarnings({ "unchecked", "rawtypes" })
-        private CatalogItem<Policy, PolicySpec<?>> getPolicyCatalogItem(BrooklynCatalog catalog, String policyType) {
-            if (CatalogUtils.looksLikeVersionedId(policyType)) {
-                String id = CatalogUtils.getIdFromVersionedId(policyType);
-                String version = CatalogUtils.getVersionFromVersionedId(policyType);
-                return (CatalogItem) catalog.getCatalogItem(id, version);
-            } else {
-                return (CatalogItem) catalog.getCatalogItem(policyType, BrooklynCatalog.DEFAULT_VERSION);
-            }
         }
     }
 
@@ -151,8 +147,10 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
         @Override
         protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<EnricherSpec<?>> decorations) {
             InstantiatorFromKey decoLoader = instantiator.from(decorationJson).prefix("enricher");
-            decorations.add(EnricherSpec.create(decoLoader.getType(Enricher.class))
-                .configure( decoLoader.getConfigMap() ));
+            Class<? extends Enricher> type = decoLoader.getType(Enricher.class);
+            decorations.add(EnricherSpec.create(type)
+                .configure(decoLoader.getConfigMap())
+                .parameters(BasicSpecParameter.fromClass(instantiator.loader.getManagementContext(), type)));
         }
     }
     
@@ -176,6 +174,38 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
             decorations.add(instantiator.from(decorationJson).prefix("initializer").newInstance(EntityInitializer.class));
         }
     }
-    
+
+    // Not much value from extending from BrooklynEntityDecorationResolver, but let's not break the convention
+    public static class SpecParameterResolver extends BrooklynEntityDecorationResolver<SpecParameter<?>> {
+
+        protected SpecParameterResolver(BrooklynYamlTypeInstantiator.Factory instantiator) { super(instantiator); }
+        @Override protected String getDecorationKind() { return "Spec Parameter initializer"; }
+
+        @Override
+        public void decorate(EntitySpec<?> entitySpec, ConfigBag attrs) {
+            List<? extends SpecParameter<?>> explicitParams = buildListOfTheseDecorationsFromEntityAttributes(attrs);
+            if (!explicitParams.isEmpty()) {
+                entitySpec.parameters(explicitParams);
+            }
+            if (entitySpec.getParameters().isEmpty()) {
+                entitySpec.parameters(BasicSpecParameter.fromSpec(instantiator.loader.getManagementContext(), entitySpec));
+            }
+        }
+
+        @Override
+        protected List<SpecParameter<?>> buildListOfTheseDecorationsFromIterable(Iterable<?> value) {
+            return BasicSpecParameter.fromConfigList(ImmutableList.copyOf(value), instantiator.loader);
+        }
+
+        @Override
+        protected Object getDecorationAttributeJsonValue(ConfigBag attrs) {
+            return attrs.getStringKey(BrooklynCampReservedKeys.BROOKLYN_PARAMETERS);
+        }
+
+        @Override
+        protected void addDecorationFromJsonMap(Map<?, ?> decorationJson, List<SpecParameter<?>> decorations) {
+            throw new IllegalStateException("Not called");
+        }
+    }
 
 }

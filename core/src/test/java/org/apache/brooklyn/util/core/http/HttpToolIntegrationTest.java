@@ -28,8 +28,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.test.HttpService;
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 
 import com.google.common.collect.ImmutableMap;
 

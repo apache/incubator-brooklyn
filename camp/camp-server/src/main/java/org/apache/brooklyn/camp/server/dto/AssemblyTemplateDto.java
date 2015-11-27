@@ -29,10 +29,6 @@ import org.apache.brooklyn.camp.spi.PlatformComponentTemplate;
 
 public class AssemblyTemplateDto extends ResourceDto {
 
-    // defined as a constant so can be used in Swagger REST API annotations
-    public static final String CLASS_NAME = "org.apache.brooklyn.camp.server.dto.AssemblyTemplateDto";
-    static { assert CLASS_NAME.equals(AssemblyTemplateDto.class.getCanonicalName()); }
-
     protected AssemblyTemplateDto() {}
     protected AssemblyTemplateDto(DtoFactory dtoFactory, AssemblyTemplate x) {
         super(dtoFactory, x);

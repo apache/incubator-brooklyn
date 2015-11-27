@@ -28,16 +28,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.policy.Policy;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
@@ -50,9 +51,8 @@ import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.entity.trait.StartableMethods;
 import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.core.location.cloud.AvailabilityZoneExtension;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.stock.DelegateEntity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
@@ -67,11 +67,14 @@ import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.javalang.Reflections;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,11 +84,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.reflect.TypeToken;
 
 /**
  * A cluster of entities that can dynamically increase or decrease the number of entities.
  */
 public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicCluster {
+
+    @SuppressWarnings("serial")
+    private static final AttributeSensor<Supplier<Integer>> NEXT_CLUSTER_MEMBER_ID = Sensors.newSensor(new TypeToken<Supplier<Integer>>() {},
+            "next.cluster.member.id", "Returns the ID number of the next member to be added");
 
     // TODO better mechanism for arbitrary class name to instance type coercion
     static {
@@ -131,21 +139,45 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     private static final Function<Collection<Entity>, Entity> defaultRemovalStrategy = new Function<Collection<Entity>, Entity>() {
         @Override public Entity apply(Collection<Entity> contenders) {
-            // choose newest entity that is stoppable, or if none are stoppable take the newest non-stoppable
-            long newestTime = 0;
+            /*
+             * Choose the newest entity (largest cluster member ID or latest timestamp) that is stoppable.
+             * If none are stoppable, take the newest non-stoppable.
+             * 
+             * Both cluster member ID and timestamp must be taken into consideration to account for legacy
+             * clusters that were created before the addition of the cluster member ID config value.
+             */
+            int largestClusterMemberId = -1;
+            long newestTime = 0L;
             Entity newest = null;
 
             for (Entity contender : contenders) {
-                boolean newer = contender.getCreationTime() > newestTime;
+                Integer contenderClusterMemberId = contender.config().get(CLUSTER_MEMBER_ID);
+                long contenderCreationTime = contender.getCreationTime();
+
+                boolean newer = (contenderClusterMemberId != null && contenderClusterMemberId > largestClusterMemberId) ||
+                        contenderCreationTime > newestTime;
+
                 if ((contender instanceof Startable && newer) || 
                     (!(newest instanceof Startable) && ((contender instanceof Startable) || newer))) {
                     newest = contender;
-                    newestTime = contender.getCreationTime();
+
+                    if (contenderClusterMemberId != null) largestClusterMemberId = contenderClusterMemberId;
+                    newestTime = contenderCreationTime;
                 }
             }
+
             return newest;
         }
     };
+
+    private static class NextClusterMemberIdSupplier implements Supplier<Integer> {
+        private AtomicInteger nextId = new AtomicInteger(0);
+
+        @Override
+        public Integer get() {
+            return nextId.getAndIncrement();
+        }
+    }
 
     public DynamicClusterImpl() {
     }
@@ -153,6 +185,15 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     @Override
     public void init() {
         super.init();
+        initialiseMemberId();
+    }
+
+    private void initialiseMemberId() {
+        synchronized (mutex) {
+            if (sensors().get(NEXT_CLUSTER_MEMBER_ID) == null) {
+                sensors().set(NEXT_CLUSTER_MEMBER_ID, new NextClusterMemberIdSupplier());
+            }
+        }
     }
 
     @Override
@@ -293,7 +334,6 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             QuarantineGroup quarantineGroup = getAttribute(QUARANTINE_GROUP);
             if (quarantineGroup==null || !Entities.isManaged(quarantineGroup)) {
                 quarantineGroup = addChild(EntitySpec.create(QuarantineGroup.class).displayName("quarantine"));
-                Entities.manage(quarantineGroup);
                 sensors().set(QUARANTINE_GROUP, quarantineGroup);
             }
         }
@@ -761,21 +801,28 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     @Override
-    public Entity addNode(Location loc, Map<?,?> extraFlags) {
-        Map<?,?> createFlags = MutableMap.builder()
+    public Entity addNode(Location loc, Map<?, ?> extraFlags) {
+        // In case subclasses are foolish and do not call super.init() when overriding.
+        initialiseMemberId();
+        Map<?, ?> createFlags = MutableMap.builder()
                 .putAll(getCustomChildFlags())
                 .putAll(extraFlags)
+                .put(CLUSTER_MEMBER_ID, sensors().get(NEXT_CLUSTER_MEMBER_ID).get())
                 .build();
         if (LOG.isDebugEnabled()) {
             LOG.debug("Creating and adding a node to cluster {}({}) with properties {}", new Object[] { this, getId(), createFlags });
         }
 
+        // TODO should refactor to have a createNodeSpec; and spec should support initial sensor values 
         Entity entity = createNode(loc, createFlags);
 
         entity.sensors().set(CLUSTER_MEMBER, true);
         entity.sensors().set(CLUSTER, this);
 
+        // Continue to call manage(), because some uses of NodeFactory (in tests) still instantiate the
+        // entity via its constructor
         Entities.manage(entity);
+
         addMember(entity);
         return entity;
     }

@@ -35,11 +35,13 @@ import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoPersister.LookupContext;
 import org.apache.brooklyn.api.objs.Identifiable;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.Enricher;
 import org.apache.brooklyn.api.sensor.Feed;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.catalog.internal.CatalogBundleDto;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.BasicConfigKey;
@@ -47,7 +49,6 @@ import org.apache.brooklyn.core.effector.BasicParameterType;
 import org.apache.brooklyn.core.effector.EffectorAndBody;
 import org.apache.brooklyn.core.effector.EffectorTasks.EffectorBodyTaskFactory;
 import org.apache.brooklyn.core.effector.EffectorTasks.EffectorTaskFactory;
-import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContextSequential;
 import org.apache.brooklyn.core.mgmt.classloading.ClassLoaderFromBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
@@ -71,7 +72,6 @@ import com.thoughtworks.xstream.converters.SingleValueConverter;
 import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import com.thoughtworks.xstream.converters.reflection.ReflectionConverter;
 import com.thoughtworks.xstream.core.ReferencingMarshallingContext;
-import com.thoughtworks.xstream.core.util.HierarchicalStreams;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 import com.thoughtworks.xstream.io.path.PathTrackingReader;
@@ -335,7 +335,8 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
         @Override
         public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
             if (reader.hasMoreChildren()) {
-                Class<?> type = HierarchicalStreams.readClassType(reader, mapper);
+                Class<?> type = readClassType(reader, mapper);
+//                Class<?> type2 = context.getRequiredType();
                 reader.moveDown();
                 Object result = context.convertAnother(null, type);
                 reader.moveUp();
@@ -345,7 +346,36 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             }
         }
     }
-    
+
+    // TODO: readClassType() and readClassAttribute()
+    // Temporarily copied until osgification is finished from bundle-private class
+    //   com.thoughtworks.xstream.core.util.HierarchicalStreams
+    // Perhaps context.getRequiredType(); can be used instead?
+    // Other users of xstream (e.g. jenkinsci) manually check for resoved-to and class attributes
+    //   for compatibility with older versions of xstream
+    private static Class readClassType(HierarchicalStreamReader reader, Mapper mapper) {
+        String classAttribute = readClassAttribute(reader, mapper);
+        Class type;
+        if (classAttribute == null) {
+            type = mapper.realClass(reader.getNodeName());
+        } else {
+            type = mapper.realClass(classAttribute);
+        }
+        return type;
+    }
+
+    private static String readClassAttribute(HierarchicalStreamReader reader, Mapper mapper) {
+        String attributeName = mapper.aliasForSystemAttribute("resolves-to");
+        String classAttribute = attributeName == null ? null : reader.getAttribute(attributeName);
+        if (classAttribute == null) {
+            attributeName = mapper.aliasForSystemAttribute("class");
+            if (attributeName != null) {
+                classAttribute = reader.getAttribute(attributeName);
+            }
+        }
+        return classAttribute;
+    }
+
     public class ManagementContextConverter implements Converter {
         @Override
         public boolean canConvert(@SuppressWarnings("rawtypes") Class type) {
@@ -410,7 +440,7 @@ public class XmlMementoSerializer<T> extends XmlSerializer<T> implements Memento
             try {
                 if (Strings.isNonBlank(catalogItemId)) {
                     if (lookupContext==null) throw new NullPointerException("lookupContext required to load catalog item "+catalogItemId);
-                    CatalogItem<?, ?> cat = CatalogUtils.getCatalogItemOptionalVersion(lookupContext.lookupManagementContext(), catalogItemId);
+                    RegisteredType cat = lookupContext.lookupManagementContext().getTypeRegistry().get(catalogItemId);
                     if (cat==null) throw new NoSuchElementException("catalog item: "+catalogItemId);
                     BrooklynClassLoadingContext clcNew = CatalogUtils.newClassLoadingContext(lookupContext.lookupManagementContext(), cat);
                     pushXstreamCustomClassLoader(clcNew);

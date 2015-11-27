@@ -18,9 +18,17 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
+import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -31,6 +39,8 @@ import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.software.base.lifecycle.NativeWindowsScriptRunner;
 import org.apache.brooklyn.entity.software.base.lifecycle.WinRmExecuteHelper;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmTool;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.ReferenceWithError;
@@ -42,16 +52,9 @@ import org.python.core.PyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-
-import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 
 public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwareProcessDriver implements NativeWindowsScriptRunner {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractSoftwareProcessWinRmDriver.class);
@@ -260,7 +263,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     }
 
     public int executePsScriptNoRetry(List<String> psScript) {
-        return getLocation().executePsScriptNoRetry(psScript).getStatusCode();
+        return getLocation().executePsScript(ImmutableMap.of(WinRmTool.PROP_EXEC_TRIES, 1), psScript).getStatusCode();
     }
 
     public int executePsScript(List<String> psScript) {

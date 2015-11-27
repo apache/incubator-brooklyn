@@ -11,6 +11,7 @@ children:
 - custom-entities.md
 - winrm/
 - chef/
+- test/
 - { path: yaml-reference.md, title: YAML Blueprint Reference }
 - { link: 'https://github.com/brooklyncentral/blueprint-library', title: 'GitHub Blueprint Library' }
 ---

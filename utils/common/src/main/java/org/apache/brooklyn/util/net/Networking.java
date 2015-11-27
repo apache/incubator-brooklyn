@@ -26,6 +26,7 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -486,6 +487,12 @@ public class Networking {
     }
     
     public static boolean isReachable(HostAndPort endpoint) {
+        // TODO Should we create an unconnected socket, and then use the calls below (see jclouds' InetSocketAddressConnect):
+        //      socket.setReuseAddress(false);
+        //      socket.setSoLinger(false, 1);
+        //      socket.setSoTimeout(timeout);
+        //      socket.connect(socketAddress, timeout);
+        
         try {
             Socket s = new Socket(endpoint.getHostText(), endpoint.getPort());
             closeQuietly(s);

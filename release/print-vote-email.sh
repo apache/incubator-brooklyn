@@ -34,6 +34,7 @@ base=apache-brooklyn-${VERSION_NAME}-rc${RC_NUMBER}
 
 if [ -z "$1" ] ; then fail "A single argument being the staging repo ID must be supplied, e.g. orgapachebrooklyn-1234" ; fi
 
+staging_repo_id=$1
 archetype_check=`curl https://repository.apache.org/content/repositories/${staging_repo_id}/archetype-catalog.xml 2> /dev/null`
 if ! echo $archetype_check | grep brooklyn-archetype-quickstart > /dev/null ; then
   fail staging repo looks wrong at https://repository.apache.org/content/repositories/${staging_repo_id}

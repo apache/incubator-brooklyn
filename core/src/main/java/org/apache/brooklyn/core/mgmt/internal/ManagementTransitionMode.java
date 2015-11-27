@@ -44,7 +44,7 @@ public class ManagementTransitionMode {
         return new ManagementTransitionMode(Preconditions.checkNotNull(modeBefore, "modeBefore"), Preconditions.checkNotNull(modeAfter, "modeAfter"));
     }
 
-    @Deprecated /** @deprecated marking places where we aren't sure */
+    @Deprecated /** @deprecated since 0.9.0 - used to mark places where we aren't sure, remove once we are satisfied */
     public static ManagementTransitionMode guessing(BrooklynObjectManagementMode modeBefore, BrooklynObjectManagementMode modeAfter) {
         return transitioning(modeBefore, modeAfter);
     }

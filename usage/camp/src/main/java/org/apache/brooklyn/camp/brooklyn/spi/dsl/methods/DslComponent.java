@@ -108,6 +108,10 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
                     entitiesToSearch = ((EntityManagerInternal)getEntity().getManagementContext().getEntityManager())
                         .getAllEntitiesInApplication( entity().getApplication() );
                     break;
+                case ROOT:
+                    return getEntity().getApplication();
+                case SCOPE_ROOT:
+                    return Entities.catalogItemScopeRoot(getEntity());
                 case DESCENDANT:
                     entitiesToSearch = Entities.descendants(getEntity());
                     break;
@@ -154,6 +158,12 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
     }
     public DslComponent ancestor(String scopeOrId) {
         return new DslComponent(this, Scope.ANCESTOR, scopeOrId);
+    }
+    public DslComponent root() {
+        return new DslComponent(this, Scope.ROOT, "");
+    }
+    public DslComponent scopeRoot() {
+        return new DslComponent(this, Scope.SCOPE_ROOT, "");
     }
     
     @Deprecated /** @deprecated since 0.7.0 */
@@ -277,9 +287,11 @@ public class DslComponent extends BrooklynDslDeferredSupplier<Entity> {
         SIBLING ("sibling"),
         DESCENDANT ("descendant"),
         ANCESTOR("ancestor"),
+        ROOT("root"),
+        SCOPE_ROOT("scopeRoot"),
         THIS ("this");
         
-        public static final Set<Scope> VALUES = ImmutableSet.of(GLOBAL, CHILD, PARENT, SIBLING, DESCENDANT, ANCESTOR, THIS);
+        public static final Set<Scope> VALUES = ImmutableSet.of(GLOBAL, CHILD, PARENT, SIBLING, DESCENDANT, ANCESTOR, ROOT, SCOPE_ROOT, THIS);
         
         private final String name;
         

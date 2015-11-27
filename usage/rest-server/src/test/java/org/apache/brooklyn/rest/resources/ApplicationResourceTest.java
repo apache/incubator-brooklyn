@@ -36,7 +36,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.brooklyn.api.entity.Application;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityFunctions;
@@ -68,9 +67,9 @@ import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
 import org.apache.brooklyn.rest.testing.mocks.RestMockAppBuilder;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.http.HttpAsserts;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.http.HttpHeaders;
 import org.apache.http.entity.ContentType;
@@ -159,7 +158,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     public void testDeployApplication() throws Exception {
         ClientResponse response = clientDeploy(simpleSpec);
 
-        HttpTestUtils.assertHealthyStatusCode(response.getStatus());
+        HttpAsserts.assertHealthyStatusCode(response.getStatus());
         assertEquals(getManagementContext().getApplications().size(), 1);
         assertRegexMatches(response.getLocation().getPath(), "/v1/applications/.*");
         // Object taskO = response.getEntity(Object.class);
@@ -244,12 +243,12 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         assertEquals(client().resource(appUri).get(ApplicationSummary.class).getSpec().getName(), "simple-app-yaml");
     }
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testReferenceCatalogEntity() throws Exception {
-        getManagementContext().getCatalog().addItem(BasicEntity.class);
+        getManagementContext().getCatalog().addItems("{ name: "+BasicEntity.class.getName()+", "
+            + "services: [ { type: "+BasicEntity.class.getName()+" } ] }");
 
-        String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: " + BasicEntity.class.getName() + " } ] }";
+        String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { type: " + BasicEntity.class.getName() + " } ] }";
 
         ClientResponse response = client().resource("/v1/applications")
                 .entity(yaml, "application/x-yaml")
@@ -335,7 +334,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
                 .get(ApplicationSummary.class);
         assertEquals(summary.getStatus(), Status.RUNNING);
 
-        ((EntityLocal)app).sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        app.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         try {
             ApplicationSummary summary2 = client().resource("/v1/applications/"+app.getId())
                     .get(ApplicationSummary.class);
@@ -343,7 +342,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             assertEquals(summary2.getStatus(), Status.ERROR);
             
         } finally {
-            ((EntityLocal)app).sensors().set(Attributes.SERVICE_STATE_ACTUAL, origState);
+            app.sensors().set(Attributes.SERVICE_STATE_ACTUAL, origState);
         }
     }
 
@@ -620,7 +619,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             ClientResponse response = client().resource("/v1/applications")
                     .entity(yaml, "application/x-yaml")
                     .post(ClientResponse.class);
-            assertTrue(response.getStatus()/100 == 2, "response is "+response);
+            HttpAsserts.assertHealthyStatusCode(response.getStatus());
             waitForPageFoundResponse("/v1/applications/my-app", ApplicationSummary.class);
     
             // Deprecate
@@ -631,7 +630,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             ClientResponse response2 = client().resource("/v1/applications")
                     .entity(yaml2, "application/x-yaml")
                     .post(ClientResponse.class);
-            assertTrue(response2.getStatus()/100 == 2, "response is "+response2);
+            HttpAsserts.assertHealthyStatusCode(response2.getStatus());
             waitForPageFoundResponse("/v1/applications/my-app2", ApplicationSummary.class);
     
             // Disable
@@ -642,7 +641,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             ClientResponse response3 = client().resource("/v1/applications")
                     .entity(yaml3, "application/x-yaml")
                     .post(ClientResponse.class);
-            assertTrue(response3.getStatus()/100 == 4, "response is "+response3);
+            HttpAsserts.assertClientErrorStatusCode(response3.getStatus());
             assertTrue(response3.getEntity(String.class).contains("cannot be matched"));
             waitForPageNotFoundResponse("/v1/applications/my-app3", ApplicationSummary.class);
             

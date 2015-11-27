@@ -70,6 +70,9 @@ import com.google.common.io.Files;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
+import org.apache.brooklyn.rest.filter.SwaggerFilter;
+import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.eclipse.jetty.server.NetworkConnector;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -98,7 +101,8 @@ public class BrooklynRestApiLauncher {
             RequestTaggingFilter.class,
             BrooklynPropertiesSecurityFilter.class,
             LoggingFilter.class,
-            HaMasterCheckFilter.class);
+            HaMasterCheckFilter.class,
+            SwaggerFilter.class);
 
     private boolean forceUseOfDefaultCatalogWithJavaClassPath = false;
     private Class<? extends SecurityProvider> securityProvider;
@@ -297,7 +301,7 @@ public class BrooklynRestApiLauncher {
             throw Exceptions.propagate(e);
         }
         log.info("Brooklyn REST server started ("+summary+") on");
-        log.info("  http://localhost:"+server.getConnectors()[0].getLocalPort()+"/");
+        log.info("  http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort()+"/");
 
         return server;
     }
@@ -362,7 +366,7 @@ public class BrooklynRestApiLauncher {
         FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
         context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
 
-        ManagementContext mgmt = (ManagementContext) context.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        ManagementContext mgmt = OsgiCompat.getManagementContext(context);
         config.getSingletons().add(new ManagementContextProvider(mgmt));
         config.getSingletons().add(new ShutdownHandlerProvider(shutdownListener));
     }

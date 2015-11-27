@@ -119,8 +119,21 @@ public class ApplicationBuilderOverridingTest {
         assertEquals(expectedChild.get().getParent(), app);
     }
 
-    @Test
+    @Test(enabled=false)
     public void testAppHierarchyIsManaged() {
+        app = new ApplicationBuilder() {
+            @Override public void doBuild() {
+                Entity entity = addChild(EntitySpec.create(TestEntity.class));
+            }
+        }.manage();
+        
+        assertIsManaged(app);
+        assertIsManaged(Iterables.get(app.getChildren(), 0));
+    }
+
+    // TODO Can't assert the child added in doBuild is unmanaged
+    @Test(enabled=false)
+    public void testEntityAddedInDoBuildIsUnmanagedUntilAppIsManaged() {
         app = new ApplicationBuilder() {
             @Override public void doBuild() {
                 Entity entity = addChild(EntitySpec.create(TestEntity.class));

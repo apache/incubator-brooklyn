@@ -51,8 +51,6 @@ public class CreateUserPolicyTest extends BrooklynAppUnitTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(CreateUserPolicyTest.class);
 
     public static class RecordingSshMachineLocation extends SshMachineLocation {
-        private static final long serialVersionUID = 1641930081769106380L;
-        
         public static List<List<String>> execScriptCalls = Lists.newArrayList();
 
         @Override 

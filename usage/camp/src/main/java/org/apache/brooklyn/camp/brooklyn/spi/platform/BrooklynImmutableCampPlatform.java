@@ -63,6 +63,7 @@ public class BrooklynImmutableCampPlatform extends CampPlatform implements HasBr
 
     // --- brooklyn setup
     
+    @Override
     public ManagementContext getBrooklynManagementContext() {
         return bmc;
     }

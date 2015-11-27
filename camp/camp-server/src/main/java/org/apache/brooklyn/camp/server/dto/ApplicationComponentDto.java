@@ -31,10 +31,6 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 public class ApplicationComponentDto extends ResourceDto {
 
-    // defined as a constant so can be used in Swagger REST API annotations
-    public static final String CLASS_NAME = "org.apache.brooklyn.camp.server.dto.ApplicationComponentDto";
-    static { assert CLASS_NAME.equals(ApplicationComponentDto.class.getCanonicalName()); }
-
     protected ApplicationComponentDto() {}
     protected ApplicationComponentDto(DtoFactory dtoFactory, ApplicationComponent x) {
         super(dtoFactory, x);

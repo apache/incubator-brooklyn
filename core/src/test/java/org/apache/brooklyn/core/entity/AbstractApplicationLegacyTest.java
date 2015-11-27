@@ -26,13 +26,13 @@ import java.util.List;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
-import org.apache.brooklyn.core.entity.AbstractApplication;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.entity.TestApplicationImpl;
 import org.apache.brooklyn.core.test.entity.TestEntity;
+import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -61,8 +61,8 @@ public class AbstractApplicationLegacyTest extends BrooklynAppUnitTestSupport {
     @Test
     public void testStartAndStopUnmanagedAppAutomanagesTheAppAndChildren() throws Exception {
         // deliberately unmanaged
-        TestApplication app2 = mgmt.getEntityManager().createEntity(EntitySpec.create(TestApplication.class));
-        TestEntity child = app2.addChild(EntitySpec.create(TestEntity.class));
+        TestApplication app2 = new TestApplicationImpl();
+        TestEntity child = new TestEntityImpl(app2);
         assertFalse(Entities.isManaged(app2));
         assertFalse(Entities.isManaged(child));
         
@@ -96,7 +96,9 @@ public class AbstractApplicationLegacyTest extends BrooklynAppUnitTestSupport {
     
     @Test
     public void testStartOnManagedAppDoesNotStartPremanagedChildren() {
-        TestEntity child = app.addChild(EntitySpec.create(TestEntity.class));
+        // deliberately unmanaged
+        TestEntity child = new TestEntityImpl(app);
+        assertFalse(Entities.isManaged(child));
         
         app.start(locs);
         assertEquals(child.getCallHistory(), ImmutableList.of());
@@ -128,7 +130,9 @@ public class AbstractApplicationLegacyTest extends BrooklynAppUnitTestSupport {
     public void testStopOnManagedAppDoesNotStopPremanagedChildren() {
         app.start(locs);
         
-        TestEntity child = app.addChild(EntitySpec.create(TestEntity.class));
+        // deliberately unmanaged
+        TestEntity child = new TestEntityImpl(app);
+        assertFalse(Entities.isManaged(child));
         
         app.stop();
         assertEquals(child.getCallHistory(), ImmutableList.of());

@@ -50,6 +50,9 @@ public interface MongoDBServer extends AbstractMongoDBServer {
     ConfigKey<Boolean> ENABLE_REST_INTERFACE = ConfigKeys.newBooleanConfigKey(
             "mongodb.config.enable_rest", "Adds --rest to server startup flags when true", Boolean.FALSE);
 
+    @SetFromFlag("useClientMonitoring")
+    ConfigKey<Boolean> USE_CLIENT_MONITORING = ConfigKeys.newConfigKey("clientMonitoring.enabled", "Monitoring via the MongoDB client enabled", Boolean.TRUE);
+
     AttributeSensor<String> HTTP_INTERFACE_URL = Sensors.newStringSensor(
             "mongodb.server.http_interface", "URL of the server's HTTP console");
 

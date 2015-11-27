@@ -3,6 +3,7 @@ package org.apache.brooklyn.core.mgmt.classloading;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.base.Objects;
@@ -25,7 +26,9 @@ import com.google.common.base.Objects;
  * specific language governing permissions and limitations
  * under the License.
  */
-public abstract class AbstractBrooklynClassLoadingContext implements BrooklynClassLoadingContext {
+@SuppressWarnings("deprecation")
+public abstract class AbstractBrooklynClassLoadingContext implements BrooklynClassLoadingContext,
+    org.apache.brooklyn.core.mgmt.classloading.BrooklynClassLoadingContext {
 
     protected final ManagementContext mgmt;
 

@@ -2,7 +2,8 @@
 title: Operations
 layout: website-normal
 children:
-- cli-reference.md
+- server-cli-reference.md
+- gui/
 - brooklyn_properties.md
 - locations/
 - persistence/
@@ -10,6 +11,7 @@ children:
 - catalog/
 - rest.md
 - logging.md
+- externalized-configuration.md
 - requirements.md
 - production-installation.md
 - troubleshooting/

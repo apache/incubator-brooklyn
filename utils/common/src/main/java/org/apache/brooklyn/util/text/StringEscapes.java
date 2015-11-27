@@ -32,6 +32,8 @@ import org.apache.brooklyn.util.net.URLParamEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
+
 public class StringEscapes {
 
     private static final Logger log = LoggerFactory.getLogger(StringEscapes.class);
@@ -92,7 +94,17 @@ public class StringEscapes {
     public static class BashStringEscapes {
         // single quotes don't permit escapes!  e.g. echo 'hello \' world' doesn't work;
         // you must do 'hello '\'' world' (to get "hello ' world")
-        
+
+        public static class WrapBashFunction implements Function<String, String> {
+            @Override
+            public String apply(String input) {
+                return wrapBash(input);
+            }
+        }
+        public static Function<String, String> wrapBash() {
+            return new WrapBashFunction();
+        }
+
         /** wraps plain text in double quotes escaped for use in bash double-quoting */
         public static String wrapBash(String value) {
             StringBuilder out = new StringBuilder();
@@ -350,7 +362,7 @@ public class StringEscapes {
             String i1 = input.trim();
             
             boolean inBrackets = (i1.startsWith("[") && i1.endsWith("]"));
-            if (inBrackets) i1 = i1.substring(1, i1.length()-2).trim();
+            if (inBrackets) i1 = i1.substring(1, i1.length()-1).trim();
                 
             QuotedStringTokenizer qst = new QuotedStringTokenizer(i1, "\"", true, ",", false);
             while (qst.hasMoreTokens()) {

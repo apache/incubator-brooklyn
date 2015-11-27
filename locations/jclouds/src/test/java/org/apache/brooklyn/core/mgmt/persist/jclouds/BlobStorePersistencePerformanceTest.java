@@ -26,6 +26,7 @@ import org.apache.brooklyn.core.mgmt.persist.PersistMode;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore.StoreObjectAccessor;
 import org.apache.brooklyn.core.mgmt.persist.jclouds.JcloudsBlobStoreBasedObjectStore;
 import org.apache.brooklyn.core.test.qa.performance.AbstractPerformanceTest;
+import org.apache.brooklyn.test.performance.PerformanceTestDescriptor;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -75,10 +76,14 @@ public class BlobStorePersistencePerformanceTest extends AbstractPerformanceTest
          double minRatePerSec = 10 * PERFORMANCE_EXPECTATION;
          final AtomicInteger i = new AtomicInteger();
          
-         measureAndAssert("StoreObjectAccessor.put", numIterations, minRatePerSec, new Runnable() {
-             public void run() {
-                 blobstoreAccessor.put(""+i.incrementAndGet());
-             }});
+         measure(PerformanceTestDescriptor.create()
+                 .summary("StoreObjectAccessor.put")
+                 .iterations(numIterations)
+                 .minAcceptablePerSecond(minRatePerSec)
+                 .job(new Runnable() {
+                     public void run() {
+                         blobstoreAccessor.put(""+i.incrementAndGet());
+                     }}));
      }
  
      @Test(groups={"Live", "Acceptance"})
@@ -87,10 +92,14 @@ public class BlobStorePersistencePerformanceTest extends AbstractPerformanceTest
          int numIterations = numIterations();
          double minRatePerSec = 10 * PERFORMANCE_EXPECTATION;
 
-         measureAndAssert("FileBasedStoreObjectAccessor.get", numIterations, minRatePerSec, new Runnable() {
-             public void run() {
-                 blobstoreAccessor.get();
-             }});
+         measure(PerformanceTestDescriptor.create()
+                 .summary("FileBasedStoreObjectAccessor.get")
+                 .iterations(numIterations)
+                 .minAcceptablePerSecond(minRatePerSec)
+                 .job(new Runnable() {
+                     public void run() {
+                         blobstoreAccessor.get();
+                     }}));
      }
  
      @Test(groups={"Live", "Acceptance"})
@@ -107,11 +116,15 @@ public class BlobStorePersistencePerformanceTest extends AbstractPerformanceTest
          final AtomicInteger i = new AtomicInteger();
 
          try {
-             measureAndAssert("FileBasedStoreObjectAccessor.delete", numIterations, minRatePerSec, new Runnable() {
-                 public void run() {
-                     StoreObjectAccessor blobstoreAccessor = blobstoreAccessors.get(i.getAndIncrement());
-                     blobstoreAccessor.delete();
-                 }});
+             measure(PerformanceTestDescriptor.create()
+                     .summary("FileBasedStoreObjectAccessor.delete")
+                     .iterations(numIterations)
+                     .minAcceptablePerSecond(minRatePerSec)
+                     .job(new Runnable() {
+                         public void run() {
+                             StoreObjectAccessor blobstoreAccessor = blobstoreAccessors.get(i.getAndIncrement());
+                             blobstoreAccessor.delete();
+                         }}));
          } finally {
              for (StoreObjectAccessor blobstoreAccessor : blobstoreAccessors) {
                  blobstoreAccessor.delete();

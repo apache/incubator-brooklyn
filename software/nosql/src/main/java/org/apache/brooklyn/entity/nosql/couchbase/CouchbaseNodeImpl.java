@@ -45,8 +45,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.config.ConfigBag;
-import org.apache.brooklyn.util.core.http.HttpTool;
-import org.apache.brooklyn.util.core.http.HttpToolResponse;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Functionals;
@@ -192,7 +192,8 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
                     Charsets.UTF_8.encode("hostname="+Urls.encode(accessible.getHostText())).array());
             log.debug("Renamed Couchbase server "+this+" via "+apiUri+": "+response);
             if (!HttpTool.isStatusCodeHealthy(response.getResponseCode())) {
-                log.warn("Invalid response code, renaming "+apiUri+": "+response);
+                log.warn("Invalid response code, renaming {} ({}): {}",
+                        new Object[]{apiUri, response.getResponseCode(), response.getContentAsString()});
             }
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);

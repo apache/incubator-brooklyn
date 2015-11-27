@@ -56,11 +56,6 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
     }
 
-    private void manage(Entity ...entities) {
-        for (Entity e: entities)
-            Entities.manage(e);
-    }
-
     @Test
     public void testSubscribeToEntityAttributeChange() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
@@ -117,7 +112,6 @@ public class LocalSubscriptionManagerTest extends BrooklynAppUnitTestSupport {
     public void testSubscribeToMemberAttributeChange() throws Exception {
         BasicGroup group = app.createAndManageChild(EntitySpec.create(BasicGroup.class));
         TestEntity member = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        manage(group, member);
         
         group.addMember(member);
 

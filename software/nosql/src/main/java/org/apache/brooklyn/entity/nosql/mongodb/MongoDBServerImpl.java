@@ -71,54 +71,58 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         sensors().set(HTTP_INTERFACE_URL, String.format("http://%s:%d",
                 accessibleAddress.getHostText(), httpConsolePort));
 
-        try {
-            client = MongoDBClientSupport.forServer(this);
-        } catch (UnknownHostException e) {
-            LOG.warn("Unable to create client connection to {}, not connecting sensors: {} ", this, e.getMessage());
-            return;
-        }
-
-        serviceStats = FunctionFeed.builder()
-                .entity(this)
-                .poll(new FunctionPollConfig<Object, BasicBSONObject>(STATUS_BSON)
-                        .period(2, TimeUnit.SECONDS)
-                        .callable(new Callable<BasicBSONObject>() {
-                            @Override
-                            public BasicBSONObject call() throws Exception {
-                                return MongoDBServerImpl.this.sensors().get(SERVICE_UP)
-                                    ? client.getServerStatus()
-                                    : null;
-                            }
-                        })
-                        .onException(Functions.<BasicBSONObject>constant(null)))
-                .build();
-
-        if (isReplicaSetMember()) {
-            replicaSetStats = FunctionFeed.builder()
+        if (clientAccessEnabled()) {
+            try {
+                client = MongoDBClientSupport.forServer(this);
+            } catch (UnknownHostException e) {
+                LOG.warn("Unable to create client connection to {}, not connecting sensors: {} ", this, e.getMessage());
+                return;
+            }
+    
+            serviceStats = FunctionFeed.builder()
                     .entity(this)
-                    .poll(new FunctionPollConfig<Object, ReplicaSetMemberStatus>(REPLICA_SET_MEMBER_STATUS)
+                    .poll(new FunctionPollConfig<Object, BasicBSONObject>(STATUS_BSON)
                             .period(2, TimeUnit.SECONDS)
-                            .callable(new Callable<ReplicaSetMemberStatus>() {
-                                /**
-                                 * Calls {@link MongoDBClientSupport#getReplicaSetStatus} and
-                                 * extracts <code>myState</code> from the response.
-                                 * @return
-                                 *      The appropriate {@link org.apache.brooklyn.entity.nosql.mongodb.ReplicaSetMemberStatus}
-                                 *      if <code>myState</code> was non-null, {@link ReplicaSetMemberStatus#UNKNOWN} otherwise.
-                                 */
+                            .callable(new Callable<BasicBSONObject>() {
                                 @Override
-                                public ReplicaSetMemberStatus call() {
-                                    BasicBSONObject serverStatus = client.getReplicaSetStatus();
-                                    int state = serverStatus.getInt("myState", -1);
-                                    return ReplicaSetMemberStatus.fromCode(state);
+                                public BasicBSONObject call() throws Exception {
+                                    return MongoDBServerImpl.this.sensors().get(SERVICE_UP)
+                                        ? client.getServerStatus()
+                                        : null;
                                 }
                             })
-                            .onException(Functions.constant(ReplicaSetMemberStatus.UNKNOWN))
-                            .suppressDuplicates(true))
+                            .onException(Functions.<BasicBSONObject>constant(null)))
                     .build();
+    
+            if (isReplicaSetMember()) {
+                replicaSetStats = FunctionFeed.builder()
+                        .entity(this)
+                        .poll(new FunctionPollConfig<Object, ReplicaSetMemberStatus>(REPLICA_SET_MEMBER_STATUS)
+                                .period(2, TimeUnit.SECONDS)
+                                .callable(new Callable<ReplicaSetMemberStatus>() {
+                                    /**
+                                     * Calls {@link MongoDBClientSupport#getReplicaSetStatus} and
+                                     * extracts <code>myState</code> from the response.
+                                     * @return
+                                     *      The appropriate {@link org.apache.brooklyn.entity.nosql.mongodb.ReplicaSetMemberStatus}
+                                     *      if <code>myState</code> was non-null, {@link ReplicaSetMemberStatus#UNKNOWN} otherwise.
+                                     */
+                                    @Override
+                                    public ReplicaSetMemberStatus call() {
+                                        BasicBSONObject serverStatus = client.getReplicaSetStatus();
+                                        int state = serverStatus.getInt("myState", -1);
+                                        return ReplicaSetMemberStatus.fromCode(state);
+                                    }
+                                })
+                                .onException(Functions.constant(ReplicaSetMemberStatus.UNKNOWN))
+                                .suppressDuplicates(true))
+                        .build();
+            } else {
+                sensors().set(IS_PRIMARY_FOR_REPLICA_SET, false);
+                sensors().set(IS_SECONDARY_FOR_REPLICA_SET, false);
+            }
         } else {
-            sensors().set(IS_PRIMARY_FOR_REPLICA_SET, false);
-            sensors().set(IS_SECONDARY_FOR_REPLICA_SET, false);
+            LOG.info("Not monitoring "+this+" to retrieve state via client API");
         }
 
         // Take interesting details from STATUS.
@@ -163,6 +167,10 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         if (replicaSetStats != null) replicaSetStats.stop();
     }
 
+    protected boolean clientAccessEnabled() {
+        return Boolean.TRUE.equals(config().get(MongoDBServer.USE_CLIENT_MONITORING));
+    }
+    
     @Override
     public MongoDBReplicaSet getReplicaSet() {
         return config().get(MongoDBServer.REPLICA_SET);
@@ -190,6 +198,9 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
             LOG.warn("Attempted to add {} to replica set at server that is not primary: {}", secondary, this);
             return false;
         }
+        if (!clientAccessEnabled()) {
+            throw new IllegalStateException("client-access disabled for "+this+"; cannot add to replica set member "+secondary+" -> "+id);
+        }
         return client.addMemberToReplicaSet(secondary, id);
     }
 
@@ -198,6 +209,9 @@ public class MongoDBServerImpl extends SoftwareProcessImpl implements MongoDBSer
         if (!sensors().get(IS_PRIMARY_FOR_REPLICA_SET)) {
             LOG.warn("Attempted to remove {} from replica set at server that is not primary: {}", server, this);
             return false;
+        }
+        if (!clientAccessEnabled()) {
+            throw new IllegalStateException("client-access disabled for "+this+"; cannot remove from replica set member "+server);
         }
         return client.removeMemberFromReplicaSet(server);
     }

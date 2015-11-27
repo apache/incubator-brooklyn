@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.entity.group;
 
+import static org.apache.brooklyn.entity.group.DynamicCluster.CLUSTER_MEMBER_ID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertNotNull;
@@ -25,6 +26,7 @@ import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -39,9 +41,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
@@ -60,9 +59,6 @@ import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
-import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.entity.group.QuarantineGroup;
-import org.apache.brooklyn.entity.group.StopFailedRuntimeException;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
@@ -71,6 +67,9 @@ import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Time;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
 import com.google.common.base.Predicates;
@@ -79,6 +78,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Atomics;
 
 
@@ -966,6 +966,82 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertEquals(ImmutableList.copyOf(member.getLocations()), ImmutableList.of(loc2));
     }
 
+    @Test
+    public void testAllClusterMemberIdsAddedInOrderOnCreation() throws Exception {
+        int clusterSize = 5;
+
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure("factory", new EntityFactory() {
+                    @Override
+                    public Entity newEntity(Map flags, Entity parent) {
+                        return new TestEntityImpl(flags);
+                    }
+                }).configure("initialSize", clusterSize));
+
+        cluster.start(ImmutableList.of(loc));
+
+        Iterator<Entity> clusterMembersIterator = cluster.getMembers().iterator();
+
+        for (Integer expectedClusterMemberId = 0; expectedClusterMemberId < clusterSize; expectedClusterMemberId++) {
+            Entity clusterMember = clusterMembersIterator.next();
+            assertEquals(clusterMember.config().get(CLUSTER_MEMBER_ID), expectedClusterMemberId);
+        }
+    }
+
+    @Test
+    public void testAllClusterMemberIdsAddedInOrderOnPositiveResize() throws Exception {
+        int clusterSize = 5;
+
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure("factory", new EntityFactory() {
+                    @Override
+                    public Entity newEntity(Map flags, Entity parent) {
+                        return new TestEntityImpl(flags);
+                    }
+                }).configure("initialSize", clusterSize));
+
+        cluster.start(ImmutableList.of(loc));
+
+        int positiveResizeDelta = 3;
+        cluster.resizeByDelta(positiveResizeDelta);
+
+        Iterator<Entity> clusterMembersIterator = cluster.getMembers().iterator();
+
+        for (Integer expectedClusterMemberId = 0; expectedClusterMemberId < clusterSize + positiveResizeDelta; expectedClusterMemberId++) {
+            Entity clusterMember = clusterMembersIterator.next();
+            assertEquals(clusterMember.config().get(CLUSTER_MEMBER_ID), expectedClusterMemberId);
+        }
+    }
+
+    @Test
+    public void testAllClusterMemberIdsAddedInOrderOnNegativeThenPositiveResize() throws Exception {
+        int clusterSize = 5;
+
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure("factory", new EntityFactory() {
+                    @Override
+                    public Entity newEntity(Map flags, Entity parent) {
+                        return new TestEntityImpl(flags);
+                    }
+                }).configure("initialSize", clusterSize));
+
+        cluster.start(ImmutableList.of(loc));
+
+        int negativeResizeDelta = -3;
+        cluster.resizeByDelta(negativeResizeDelta);
+
+        int positiveResizeDelta = 2;
+        cluster.resizeByDelta(positiveResizeDelta);
+
+        Iterator<Entity> clusterMembersIterator = cluster.getMembers().iterator();
+
+        Integer[] expectedClusterMemberIds = {0, 1, 5, 6};
+
+        for (Integer expectedClusterMemberId : expectedClusterMemberIds) {
+            Entity clusterMember = clusterMembersIterator.next();
+            assertEquals(clusterMember.config().get(CLUSTER_MEMBER_ID), expectedClusterMemberId);
+        }
+    }
 
     private void assertFirstAndNonFirstCounts(Collection<Entity> members, int expectedFirstCount, int expectedNonFirstCount) {
         Set<Entity> found = MutableSet.of();

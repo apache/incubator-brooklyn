@@ -35,16 +35,13 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.core.mgmt.BrooklynTags;
+import org.apache.brooklyn.core.mgmt.BrooklynTags.NamedStringTag;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
-import org.apache.brooklyn.core.mgmt.BrooklynTags.NamedStringTag;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils.CreationResult;
 import org.apache.brooklyn.core.mgmt.entitlement.EntitlementPredicates;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
@@ -61,6 +58,8 @@ import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
@@ -112,7 +111,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
 
     @Override
     public Response addChildren(String applicationToken, String entityToken, Boolean start, String timeoutS, String yaml) {
-        final EntityLocal parent = brooklyn().getEntity(applicationToken, entityToken);
+        final Entity parent = brooklyn().getEntity(applicationToken, entityToken);
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, parent)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
                     Entitlements.getEntitlementContext().user(), entityToken);
@@ -159,7 +158,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
 
     @Override
     public Response getIcon(String applicationId, String entityId) {
-        EntityLocal entity = brooklyn().getEntity(applicationId, entityId);
+        Entity entity = brooklyn().getEntity(applicationId, entityId);
         String url = entity.getIconUrl();
         if (url == null)
             return Response.status(Status.NO_CONTENT).build();
@@ -186,7 +185,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
 
     @Override
     public Response expunge(String application, String entity, boolean release) {
-        EntityLocal entityLocal = brooklyn().getEntity(application, entity);
+        Entity entityLocal = brooklyn().getEntity(application, entity);
         Task<?> task = brooklyn().expunge(entityLocal, release);
         TaskSummary summary = TaskTransformer.FROM_TASK.apply(task);
         return status(ACCEPTED).entity(summary).build();
@@ -206,7 +205,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
     @Override
     public List<LocationSummary> getLocations(String application, String entity) {
         List<LocationSummary> result = Lists.newArrayList();
-        EntityLocal e = brooklyn().getEntity(application, entity);
+        Entity e = brooklyn().getEntity(application, entity);
         for (Location l : e.getLocations()) {
             result.add(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.NONE));
         }
@@ -215,7 +214,7 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
 
     @Override
     public String getSpec(String applicationToken, String entityToken) {
-        EntityLocal entity = brooklyn().getEntity(applicationToken, entityToken);
+        Entity entity = brooklyn().getEntity(applicationToken, entityToken);
         NamedStringTag spec = BrooklynTags.findFirst(BrooklynTags.YAML_SPEC_KIND, entity.tags().getTags());
         if (spec == null)
             return null;

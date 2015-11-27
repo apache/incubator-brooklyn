@@ -34,6 +34,7 @@ import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -66,6 +67,9 @@ import org.apache.brooklyn.util.collections.SetFromLiveMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.task.DeferredSupplier;
+import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
@@ -92,8 +96,6 @@ import com.google.common.reflect.TypeToken;
  */
 public abstract class AbstractLocation extends AbstractBrooklynObject implements LocationInternal, HasHostGeoInfo, Configurable {
     
-    private static final long serialVersionUID = -7495805474138619830L;
-
     /** @deprecated since 0.7.0 shouldn't be public */
     @Deprecated
     public static final Logger LOG = LoggerFactory.getLogger(AbstractLocation.class);
@@ -171,7 +173,7 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
         locationType = new LocationDynamicType(this);
         
         if (isLegacyConstruction()) {
-            AbstractBrooklynObject checkWeGetThis = configure(properties);
+            AbstractLocation checkWeGetThis = configure(properties);
             assert this.equals(checkWeGetThis) : this+" configure method does not return itself; returns "+checkWeGetThis+" instead of "+this;
 
             boolean deferConstructionChecks = (properties.containsKey("deferConstructionChecks") && TypeCoercions.coerce(properties.get("deferConstructionChecks"), Boolean.class));
@@ -386,17 +388,33 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
 
         @Override
         public <T> T get(ConfigKey<T> key) {
-            if (hasConfig(key, false)) return getLocalBag().get(key);
-            if (getParent() != null && isInherited(key)) {
-                return getParent().getConfig(key);
-            }
-            
-            // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
-            // TODO when locations become entities, the duplication of this compared to EntityConfigMap.getConfig will disappear.
-            @SuppressWarnings("unchecked")
-            ConfigKey<T> ownKey = (ConfigKey<T>) elvis(locationType.getConfigKey(key.getName()), key);
+            Object result = null;
+            if (hasConfig(key, false)) {
+                result = getLocalBag().getAllConfigRaw().get(key.getName());
 
-            return ownKey.getDefaultValue();
+            } else if (getParent() != null && isInherited(key)) {
+                result = getParent().getConfig(key);
+
+            } else {
+                // In case this entity class has overridden the given key (e.g. to set default), then retrieve this entity's key
+                // TODO when locations become entities, the duplication of this compared to EntityConfigMap.getConfig will disappear.
+                @SuppressWarnings("unchecked")
+                ConfigKey<T> ownKey = (ConfigKey<T>) elvis(locationType.getConfigKey(key.getName()), key);
+                result = ownKey.getDefaultValue();
+            }
+
+            if (result instanceof DeferredSupplier<?>) {
+                try {
+                    ManagementContext mgmt = AbstractLocation.this.getManagementContext();
+                    ExecutionContext exec = mgmt.getServerExecutionContext();
+                    result = Tasks.resolveValue(result, key.getType(), exec);
+
+                } catch (Exception e) {
+                    throw Exceptions.propagate(e);
+                }
+            }
+
+            return TypeCoercions.coerce(result, key.getTypeToken());
         }
 
         @Override
@@ -733,6 +751,12 @@ public abstract class AbstractLocation extends AbstractBrooklynObject implements
     @Override
     public RebindSupport<LocationMemento> getRebindSupport() {
         return new BasicLocationRebindSupport(this);
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public RelationSupportInternal<Location> relations() {
+        return (RelationSupportInternal<Location>) super.relations();
     }
     
     @Override

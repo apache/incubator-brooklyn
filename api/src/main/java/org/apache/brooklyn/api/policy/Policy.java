@@ -60,11 +60,6 @@ public interface Policy extends EntityAdjunct, Rebindable, Configurable {
     boolean isSuspended();
     
     /**
-     * Convenience method for {@code config().get(key)}
-     */
-    <T> T getConfig(ConfigKey<T> key);
-    
-    /**
      * @deprecated since 0.7.0; use {@link #config()}, such as {@code policy.config().set(key, val)}
      */
     @Deprecated
@@ -78,4 +73,8 @@ public interface Policy extends EntityAdjunct, Rebindable, Configurable {
     @Override
     @Beta
     RebindSupport<PolicyMemento> getRebindSupport();
+    
+    @Override
+    RelationSupport<Policy> relations();
+    
 }

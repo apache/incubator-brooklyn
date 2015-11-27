@@ -36,7 +36,6 @@ import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.test.Asserts;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
@@ -46,20 +45,25 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+/**
+ * A utility class containing tests on Entities.
+ *
+ * @deprecated since 0.9.0. Prefer core assertions class org.apache.brooklyn.core.entity.EntityAsserts.
+ */
+@Deprecated
 public class EntityTestUtils {
 
-    // TODO would be nice to have this... perhaps moving this class, or perhaps this whole project, to core/src/test ?
 //    public static LocalManagementContext newManagementContext() { return new LocalManagementContextForTests(); }
     
     // TODO Delete methods from TestUtils, to just have them here (or switch so TestUtils delegates here,
     // and deprecate methods in TestUtils until deleted).
     
     public static <T> void assertAttributeEquals(Entity entity, AttributeSensor<T> attribute, T expected) {
-        assertEquals(entity.getAttribute(attribute), expected, "entity="+entity+"; attribute="+attribute);
+        assertEquals(entity.getAttribute(attribute), expected, "entity=" + entity + "; attribute=" + attribute);
     }
     
     public static <T> void assertConfigEquals(Entity entity, ConfigKey<T> configKey, T expected) {
-        assertEquals(entity.getConfig(configKey), expected, "entity="+entity+"; configKey="+configKey);
+        assertEquals(entity.getConfig(configKey), expected, "entity=" + entity + "; configKey=" + configKey);
     }
     
     public static <T> void assertAttributeEqualsEventually(final Entity entity, final AttributeSensor<T> attribute, final T expected) {
@@ -68,10 +72,12 @@ public class EntityTestUtils {
 
     public static <T> void assertAttributeEqualsEventually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final T expected) {
         // Not using assertAttributeEventually(predicate) so get nicer error message
-        Asserts.succeedsEventually((Map)flags, new Runnable() {
-            @Override public void run() {
+        Asserts.succeedsEventually((Map) flags, new Runnable() {
+            @Override
+            public void run() {
                 assertAttributeEquals(entity, attribute, expected);
-            }});
+            }
+        });
     }
 
     public static <T> T assertAttributeEventuallyNonNull(final Entity entity, final AttributeSensor<T> attribute) {
@@ -108,10 +114,12 @@ public class EntityTestUtils {
     }
 
     public static <T extends Entity> void assertPredicateEventuallyTrue(Map<?,?> flags, final T entity, final Predicate<? super T> predicate) {
-        Asserts.succeedsEventually((Map)flags, new Runnable() {
-                @Override public void run() {
-                    assertTrue(predicate.apply(entity));
-                }});
+        Asserts.succeedsEventually((Map) flags, new Runnable() {
+            @Override
+            public void run() {
+                assertTrue(predicate.apply(entity));
+            }
+        });
     }
 
     public static <T> void assertAttributeEqualsContinually(final Entity entity, final AttributeSensor<T> attribute, final T expected) {
@@ -120,9 +128,11 @@ public class EntityTestUtils {
     
     public static <T> void assertAttributeEqualsContinually(Map<?,?> flags, final Entity entity, final AttributeSensor<T> attribute, final T expected) {
         Asserts.succeedsContinually(flags, new Runnable() {
-                @Override public void run() {
-                    assertAttributeEquals(entity, attribute, expected);
-                }});
+            @Override
+            public void run() {
+                assertAttributeEquals(entity, attribute, expected);
+            }
+        });
     }
 
     public static void assertGroupSizeEqualsEventually(final Group group, int expected) {
@@ -130,11 +140,13 @@ public class EntityTestUtils {
     }
     
     public static void assertGroupSizeEqualsEventually(Map<?,?> flags, final Group group, final int expected) {
-        Asserts.succeedsEventually((Map)flags, new Runnable() {
-            @Override public void run() {
+        Asserts.succeedsEventually((Map) flags, new Runnable() {
+            @Override
+            public void run() {
                 Collection<Entity> members = group.getMembers();
-                assertEquals(members.size(), expected, "members="+members);
-            }});
+                assertEquals(members.size(), expected, "members=" + members);
+            }
+        });
     }
 
     /** checks that the entity's value for this attribute changes, by registering a subscription and checking the value */
@@ -161,8 +173,8 @@ public class EntityTestUtils {
      * with simpler code, for comparison */
     @Beta
     public static <T> void assertAttributeChangesEventually2(final Entity entity, final AttributeSensor<T> attribute) {
-        assertAttributeEventually(entity, attribute, 
-            Predicates.not(Predicates.equalTo(entity.getAttribute(attribute))));
+        assertAttributeEventually(entity, attribute,
+                Predicates.not(Predicates.equalTo(entity.getAttribute(attribute))));
     }
 
     @Beta
