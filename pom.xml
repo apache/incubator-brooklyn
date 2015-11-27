@@ -135,6 +135,7 @@
         <maven-war-plugin.version>2.4</maven-war-plugin.version>
         <validation-api.version>1.1.0.Final</validation-api.version>
         <geronimo-jms_1.1_spec.version>1.1.1</geronimo-jms_1.1_spec.version>
+        <geronimo-jta_1.1_spec.version>1.1.1</geronimo-jta_1.1_spec.version>
         <sleepycat-je.version>5.0.34</sleepycat-je.version>
         <org.marre.smsj.version>1.0.0-20051126</org.marre.smsj.version>
         <mysql-connector-java.version>5.1.18</mysql-connector-java.version>

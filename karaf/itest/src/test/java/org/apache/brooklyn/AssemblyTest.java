@@ -19,15 +19,12 @@
 package org.apache.brooklyn;
 
 import static org.ops4j.pax.exam.CoreOptions.maven;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.configureConsole;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 import static org.ops4j.pax.exam.MavenUtils.asInProject;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
 
 import java.io.File;
 
@@ -35,23 +32,25 @@ import javax.inject.Inject;
 
 import org.apache.karaf.features.BootFinished;
 import org.apache.karaf.features.FeaturesService;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import org.junit.runner.RunWith;
+import org.junit.Test;
 import org.ops4j.pax.exam.Configuration;
+import static org.ops4j.pax.exam.CoreOptions.junitBundles;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption.LogLevel;
-import org.ops4j.pax.exam.options.MavenArtifactProvisionOption;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.options.MavenUrlReference;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
-import org.ops4j.pax.exam.testng.listener.PaxExam;
 import org.osgi.framework.BundleContext;
-import org.testng.annotations.Listeners;
-import org.testng.annotations.Test;
 
 /**
  * Tests the apache-brooklyn karaf runtime assembly.
  */
-@Listeners(PaxExam.class)
+@RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class AssemblyTest {
 
@@ -79,15 +78,8 @@ public class AssemblyTest {
             logLevel(LogLevel.INFO),
             keepRuntimeFolder(),
             features(karafStandardFeaturesRepository(), "eventadmin"),
-            addTestNGBundle()
+            junitBundles()
         };
-    }
-
-    private static MavenArtifactProvisionOption addTestNGBundle() {
-        return mavenBundle()
-                .groupId("org.testng")
-                .artifactId("testng")
-                .version(asInProject());
     }
 
     private static MavenArtifactUrlReference brooklynKarafDist() {

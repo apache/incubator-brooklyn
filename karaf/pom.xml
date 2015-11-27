@@ -38,7 +38,7 @@
     <lifecycle-mapping-plugin.version>1.0.0</lifecycle-mapping-plugin.version>
 
     <!-- pax-exam -->
-    <pax.exam.version>4.5.0</pax.exam.version>
+    <pax.exam.version>4.6.0</pax.exam.version>
     <pax.url.version>2.4.1</pax.url.version>
     <ops4j.base.version>1.5.0</ops4j.base.version>
 
@@ -54,7 +54,7 @@
     <module>features</module>
     <module>apache-brooklyn</module>
     <module>commands</module>
-    <!-- module>itest</module -->
+    <module>itest</module>
   </modules>
   
   <dependencyManagement>
