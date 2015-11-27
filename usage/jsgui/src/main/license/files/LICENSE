@@ -396,6 +396,14 @@ This project includes the software: marked.js
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Christopher Jeffrey (2011-2014)
 
+This project includes the software: CodeMirror
+  Available at: https://codemirror.net/
+  Developed by: CodeMirror (https://codemirror.net)
+  Inclusive of: codemirror*.{js,css}
+  Version used: 5.7.0
+  Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
+  Copyright (c) Marijn Haverbeke (2015)
+
 ---------------------------------------------------
 
 (3) Licenses for bundled software

@@ -320,6 +320,13 @@ public class BrooklynRestApiLauncher {
                 .mode(StartMode.FILTER)
                 .start();
     }
+    
+    public static Server startRestResourcesViaFilterWithDefaultCatalog() {
+    	return new BrooklynRestApiLauncher()
+                .mode(StartMode.FILTER)
+                .forceUseOfDefaultCatalogWithJavaClassPath(true)
+                .start();
+    }
 
     public static Server startRestResourcesViaServlet() throws Exception {
         return new BrooklynRestApiLauncher()

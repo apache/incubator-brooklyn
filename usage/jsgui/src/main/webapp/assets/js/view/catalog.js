@@ -17,22 +17,23 @@
  * under the License.
 */
 define([
-    "underscore", "jquery", "backbone", "brooklyn",
+    "underscore", "jquery", "backbone", "brooklyn", "codemirror",
     "model/location", "model/entity",
     "text!tpl/catalog/page.html",
     "text!tpl/catalog/details-entity.html",
     "text!tpl/catalog/details-generic.html",
     "text!tpl/catalog/details-location.html",
     "text!tpl/catalog/add-catalog-entry.html",
-    "text!tpl/catalog/add-yaml.html",
-    "text!tpl/catalog/add-location.html",
     "text!tpl/catalog/nav-entry.html",
-
+    // ↓ not part of the constructor
+    "codemirror-mode-yaml",
+    "codemirror-addon-show-hint",
+    "codemirror-addon-anyword-hint",
     "bootstrap", "jquery-form"
-], function(_, $, Backbone, Brooklyn,
+], function(_, $, Backbone, Brooklyn, CodeMirror,
         Location, Entity,
         CatalogPageHtml, DetailsEntityHtml, DetailsGenericHtml, LocationDetailsHtml,
-        AddCatalogEntryHtml, AddYamlHtml, AddLocationHtml, EntryHtml) {
+        AddCatalogEntryHtml, EntryHtml) {
 
     // Holds the currently active details type, e.g. applications, policies. Bit of a workaround
     // to share the active view with all instances of AccordionItemView, so clicking the 'reload
@@ -134,54 +135,58 @@ define([
         initialize: function() {
             _.bindAll(this);
         },
+        editor: null,
         render: function (initialView) {
             this.$el.html(this.template());
-            if (initialView) {
-                if (initialView == "entity") initialView = "yaml";
-                
-                this.$("[data-context='"+initialView+"']").addClass("active");
-                this.showFormForType(initialView)
-            }
             return this;
         },
         clearWithHtml: function(template) {
             if (this.contextView) this.contextView.close();
             this.context = undefined;
-            this.$(".btn").removeClass("active");
             this.$("#catalog-add-form").html(template);
         },
         beforeClose: function () {
             if (this.contextView) this.contextView.close();
         },
-        showContext: function(event) {
-            var $event = $(event.currentTarget);
-            var context = $event.data("context");
-            if (this.context !== context) {
-                if (this.contextView) {
-                    this.contextView.close();
-                }
-                this.showFormForType(context)
+        setupCodeEditor: function() {
+            if (this.editor === null) {
+                this.editor = CodeMirror.fromTextArea(document.getElementById("new-blueprint"), {
+                    height: "150px",
+                    lineNumbers: true,
+                    extraKeys: {"Ctrl-Space": "autocomplete"},
+                    textWrapping: true,
+                    mode: {name: "yaml", globalVars: true}
+                });
+
+                this.editor.setValue("# Please add your blueprint here\n");
             }
         },
-        showFormForType: function (type) {
-            this.context = type;
-            if (type == "yaml" || type == "entity") {
-                this.contextView = newYamlForm(this, this.options.parent);
-            } else if (type == "location") {
-                this.contextView = newLocationForm(this, this.options.parent);
-            } else if (type !== undefined) {
-                console.log("unknown catalog type " + type);
-                this.showFormForType("yaml");
-                return;
-            }
-            Backbone.history.navigate("/v1/catalog/new/" + type);
-            this.$("#catalog-add-form").html(this.contextView.$el);
+        showContext: function(event) {
+            var $event = $(event.currentTarget);
+            
+            // de-select other tab menu entries
+            $event.parent().find("li.btn.btn-large.show-context").removeClass("active");
+            
+            // setup code editor
+            this.setupCodeEditor(); 
+            
+            // display appropriate tab
+            $(event.currentTarget).parent().parent().parent().find("div.context").css({
+            	display: "none"
+            }).filter("#context-" + $event.data("context")).css({
+            	display: "block"
+            });
+            
+            // restore cursor position
+            this.editor.refresh();
+            this.editor.focus();        	
         }
     });
 
     function newYamlForm(addView, addViewParent) {
+    	log("newYamlForm(" + addView + ", " + addViewParent + ")");
         return new Brooklyn.view.Form({
-            template: _.template(AddYamlHtml),
+            template: null,
             onSubmit: function (model) {
                 var submitButton = this.$(".catalog-submit-button");
                 // "loading" is an indicator to Bootstrap, not a string to display
@@ -218,6 +223,7 @@ define([
 
     // Could adapt to edit existing locations too.
     function newLocationForm(addView, addViewParent) {
+    	log("newLocationForm(" + addView + ", " + addViewParent + ")");
         // Renders with config key list
         var body = new (Backbone.View.extend({
             beforeClose: function() {
@@ -227,7 +233,7 @@ define([
             },
             render: function() {
                 this.configKeyList = new Brooklyn.view.ConfigKeyInputPairList().render();
-                var template = _.template(AddLocationHtml);
+                var template = null;
                 this.$el.html(template);
                 this.$("#new-location-config").html(this.configKeyList.$el);
             },

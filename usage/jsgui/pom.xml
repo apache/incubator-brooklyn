@@ -294,6 +294,13 @@
                             <exclude>**/src/main/webapp/assets/js/libs/*</exclude>
                             <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
 
+                            <!-- CodeMirror assets -->
+                            <exclude>**/src/main/webapp/assets/js/lib/codemirror.js</exclude>
+                            <exclude>**/src/main/webapp/assets/js/mode/**</exclude>
+                            <exclude>**/src/main/webapp/assets/js/addon/**</exclude>
+                            <exclude>**/src/main/webapp/assets/css/addon/**</exclude>
+                            <exclude>**/src/main/webapp/assets/css/codemirror.css</exclude>
+
                             <!--
                                 Copy of swagger-ui from https://github.com/swagger-api/swagger-ui tag::v2.1.3
                             -->

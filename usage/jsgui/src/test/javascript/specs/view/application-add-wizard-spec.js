@@ -20,7 +20,8 @@
  * Test the ModalWizard can build a modal to view, edit and submit an application.
  */
 define([
-    "underscore", "jquery", "backbone", "view/application-add-wizard", "model/application", "model/location"
+    "underscore", "jquery", "backbone", "codemirror",
+    "view/application-add-wizard", "model/application", "model/location"
 //    "text!tpl/home/step1.html", "text!tpl/home/step2.html", "text!tpl/home/step3.html",
 //    "text!tpl/home/step1-location-row.html", "text!tpl/home/step1-location-option.html",
 //    "text!tpl/home/step2-entity-entry.html", "text!tpl/home/step2-config-entry.html"
