@@ -26,6 +26,7 @@ import static org.testng.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
@@ -33,9 +34,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.core.internal.ssh.ShellTool;
-import org.apache.brooklyn.util.core.internal.ssh.SshException;
-import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.text.Identifiers;
@@ -53,17 +51,25 @@ import com.google.common.io.Files;
 
 /**
  * Test the operation of the {@link SshTool} utility class; to be extended to test concrete implementations.
- * 
- * Requires keys set up, e.g. running:
- * 
- * <pre>
- * cd ~/.ssh
- * ssh-keygen
- * id_rsa_with_passphrase
- * mypassphrase
- * mypassphrase
- * </pre>
- * 
+ * <p>
+ * The test <strong>assumes that</strong> you have configured keys for accessing localhost with the following keys:
+ * <ul>
+ * <li>passwordless ~/.ssh/id_rsa</li>
+ * <li>~/.ssh/id_rsa_with_passphrase with password mypassphrase </li>
+ * </ul>
+ *
+ * <br>
+ * Paths for the keys above can override the from Java System Properties.
+ * Here are the system properties you can override:
+ *
+ * <ul>
+ * <li>brooklyn.sshPrivateKeyWithPassphrase by default it is ~/.ssh/id_rsa_with_passphrase<br>
+ * <li>brooklyn.sshPrivateKeyPassphrase     by default it is mypassphrase<br>
+ * <li>brooklyn.sshDefaultPrivateKeyFile    by default it is ~/.ssh/id_rsa<br>
+ * </ul>
+ *
+ * Note that {@link #testSshKeyWithNoKeyDefaultsToIdrsa} requires a passwordless ~/.ssh/id_rsa
+ * </p>
  */
 public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTest {
 
@@ -74,8 +80,9 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
 
     // TODO No tests for retry logic and exception handing yet
 
-    public static final String SSH_KEY_WITH_PASSPHRASE = System.getProperty("sshPrivateKeyWithPassphrase", "~/.ssh/id_rsa_with_passphrase");
-    public static final String SSH_PASSPHRASE = System.getProperty("sshPrivateKeyPassphrase", "mypassphrase");
+    public static final String SSH_KEY_WITH_PASSPHRASE = System.getProperty("brooklyn.sshPrivateKeyWithPassphrase", "~/.ssh/id_rsa_with_passphrase");
+    public static final String SSH_PASSPHRASE = System.getProperty("brooklyn.sshPrivateKeyPassphrase", "mypassphrase");
+    public static final String SSH_DEFAULT_KEYFILE = System.getProperty("brooklyn.sshDefaultPrivateKeyFile", "~/.ssh/id_rsa");
 
     protected String remoteFilePath;
 
@@ -85,7 +92,7 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
 
     @Override
     protected SshTool newTool() {
-        return newTool(ImmutableMap.of("host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
+        return newTool(ImmutableMap.of("host", "localhost", "privateKeyFile", SSH_DEFAULT_KEYFILE));
     }
     
     @Override
@@ -264,8 +271,44 @@ public abstract class SshToolAbstractIntegrationTest extends ShellToolAbstractTe
     }
 
     @Test(groups = {"Integration"})
+    public void testSshKeyWithNoKeyDefaultsToIdrsa() throws Exception {
+        final SshTool localtool = newTool(ImmutableMap.<String,Object>builder()
+                .put(SshTool.PROP_HOST.getName(), "localhost")
+                .build());
+        tools.add(localtool);
+        localtool.connect();
+        assertEquals(localtool.execScript(MutableMap.<String,Object>of(), ImmutableList.of("date")), 0);
+    }
+
+    @Test(groups = {"Integration"})
+    public void testSshKeyWithPrivateKeyData() throws Exception {
+        final SshTool localtool = newTool(ImmutableMap.<String,Object>builder()
+                .put(SshTool.PROP_HOST.getName(), "localhost")
+                .put(SshTool.PROP_PRIVATE_KEY_DATA.getName(), new String(Files.toByteArray(new File(Os.tidyPath(SSH_DEFAULT_KEYFILE))), StandardCharsets.UTF_8))
+                .build());
+        localtool.connect();
+
+        assertEquals(localtool.execScript(MutableMap.<String,Object>of(), ImmutableList.of("date")), 0);
+
+        // Also needs the negative test to prove that we're really using an ssh-key with a passphrase
+        try {
+            final SshTool localtool2 = newTool(ImmutableMap.<String,Object>builder()
+                    .put(SshTool.PROP_HOST.getName(), "localhost")
+                    .put(SshTool.PROP_PRIVATE_KEY_DATA.getName(), "invalid data")
+                    .build());
+            localtool2.connect();
+            localtool2.execScript(MutableMap.<String,Object>of(), ImmutableList.of("date"));
+            // Notice that executing a command may succeed for SshCliToolIntegrationTest.testSshKeyWithPrivateKeyData if you already have valid keys loaded in the ssh-agent
+            fail();
+        } catch (Exception e) {
+            SshException se = Exceptions.getFirstThrowableOfType(e, SshException.class);
+            if (se == null) throw e;
+        }
+    }
+
+    @Test(groups = {"Integration"})
     public void testConnectWithInvalidUserThrowsException() throws Exception {
-        final ShellTool localtool = newTool(ImmutableMap.of("user", "wronguser", "host", "localhost", "privateKeyFile", "~/.ssh/id_rsa"));
+        final ShellTool localtool = newTool(ImmutableMap.of("user", "wronguser", "host", "localhost", "privateKeyFile", SSH_DEFAULT_KEYFILE));
         tools.add(localtool);
         try {
             connect(localtool);
