@@ -18,7 +18,6 @@
  */
 define([
     "brooklyn", "underscore", "jquery", "backbone",
-    "codemirror",
     "model/application", "model/app-tree", "model/location", 
     "model/server-extended-status",
     "view/home", "view/editor", "view/application-explorer", "view/catalog", "view/script-groovy",
