@@ -1,0 +1,23 @@
+name: My Web Cluster
+
+location:
+  jclouds:aws-ec2:
+    identity: ABCDEFGHIJKLMNOPQRST
+    credential: s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
+
+services:
+- type: org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster
+  name: My Web
+  id: webappcluster
+  brooklyn.config:
+    wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0/brooklyn-example-hello-world-sql-webapp-0.6.0.war
+    java.sysprops:
+      brooklyn.example.db.url: >
+        $brooklyn:formatString("jdbc:%s%s?user=%s&password=%s",
+        component("db").attributeWhenReady("datastore.url"),
+        "visitors", "brooklyn", "br00k11n")
+- type: org.apache.brooklyn.entity.database.mysql.MySqlNode
+  name: My DB
+  id: db
+  brooklyn.config:
+    creationScriptUrl: https://bit.ly/brooklyn-visitors-creation-script
