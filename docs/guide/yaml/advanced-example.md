@@ -5,7 +5,7 @@ layout: website-normal
 
 By this point you should be familiar with the fundamental concepts behind both Apache Brooklyn and YAML blueprints. This section of the documentation is intended to show a complete, advanced example of a YAML blueprint.
 
-The intention is that this example is used to learn the more in-depth concepts, but also to serve as a reference point when writing your own blueprints. This page will first exaplin what the example is and how to run it, then it will spotlight interesting features.
+The intention is that this example is used to learn the more in-depth concepts, but also to serve as a reference point when writing your own blueprints. This page will first explain what the example is and how to run it, then it will spotlight interesting features.
 
 
 ### The Example
@@ -31,7 +31,7 @@ There are four blueprints that make up this application. Each of them are used t
 * [ELK](example_yaml/brooklyn-elk-catalog.bom)
 
 #### Running the example
-First, add all four blueprints to the Brooklyn Catalog. This can be done by clicking the 'Catalog' tab, clinking the '+' symbol and pasting the YAML. Once this is done , click the 'Application' then the '+' button to bring up the add application wizard. A new Catalog item will be available called 'ELK Stack'. Using the add application wizard, you should be able to deploy an ELK stack to a location of your choosing.
+First, add all four blueprints to the Brooklyn Catalog. This can be done by clicking the 'Catalog' tab, clinking the '+' symbol and pasting the YAML. Once this is done, click the 'Application' tab, then the '+' button to bring up the add application wizard. A new Catalog item will be available called 'ELK Stack'. Using the add application wizard, you should be able to deploy an ELK stack to a location of your choosing.
 
 #### Exploring the example
 After the example has been deployed, you can ensure it is working as expected by checking the following:
@@ -101,7 +101,7 @@ brooklyn.enrichers:
       enricher.targetValue: $brooklyn:formatString("%s:%s", $brooklyn:attributeWhenReady("host.address"), $brooklyn:config("elasticsearch.tcp.port"))  
 ~~~
 
-In this example, we take the host.address and append the TCP port, outputting the result as url.tcp. After this has been done, we now need to collet all the URLs into a list in the Cluster entity, as follows:
+In this example, we take the host.address and append the TCP port, outputting the result as url.tcp. After this has been done, we now need to collect all the URLs into a list in the Cluster entity, as follows:
 
 ~~~yaml
 brooklyn.enrichers:
@@ -112,7 +112,7 @@ brooklyn.enrichers:
       enricher.aggregating.fromMembers: true
 
 ~~~
-In the proceeding example, we aggregate all of the TCP urls generated in the early example. These are then stored in a sensor called urls.tcp.list. This list is then joined together into one long string:
+In the preceding example, we aggregate all of the TCP urls generated in the early example. These are then stored in a sensor called urls.tcp.list. This list is then joined together into one long string:
 
 ~~~yaml
 - type: org.apache.brooklyn.enricher.stock.Joiner

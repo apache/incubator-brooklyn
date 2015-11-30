@@ -4,8 +4,6 @@ brooklyn.catalog:
   iconUrl: https://avatars0.githubusercontent.com/u/6764390?v=3&s=400
   name: Elasticsearch
   license: Apache-2.0
-  maintainer_name: Graeme Miller
-  maintainer_email: graeme.miller@cloudsoftcorp.com
   issues_url: https://github.com/Graeme-Miller/brooklyn-elasticsearch/issues
   item:
     type: brooklyn.entity.group.DynamicCluster
