@@ -18,20 +18,23 @@
  */
 package org.apache.brooklyn.test.framework;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
+import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
+import com.google.common.reflect.TypeToken;
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
+import org.apache.brooklyn.util.exceptions.FatalConfigurationRuntimeException;
 import org.apache.brooklyn.util.guava.Maybe;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.util.text.Strings;
 
-import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
+
 
 /**
  * Utility class to evaluate test-framework assertions
@@ -39,122 +42,216 @@ import java.util.regex.Pattern;
  * @author m4rkmckenna on 11/11/2015.
  */
 public class TestFrameworkAssertions {
-    private static final Logger LOG = LoggerFactory.getLogger(TestFrameworkAssertions.class);
+
+    public static final String IS_NULL = "isNull";
+    public static final String NOT_NULL = "notNull";
+    public static final String IS_EQUAL_TO = "isEqualTo";
+    public static final String EQUAL_TO = "equalTo";
+    public static final String EQUALS = "equals";
+    public static final String MATCHES = "matches";
+    public static final String CONTAINS = "contains";
+    public static final String IS_EMPTY = "isEmpty";
+    public static final String NOT_EMPTY = "notEmpty";
+    public static final String HAS_TRUTH_VALUE = "hasTruthValue";
+    public static final String UNKNOWN_CONDITION = "unknown condition";
+
 
     private TestFrameworkAssertions() {
     }
 
+
     /**
-     * Evaluates all assertions against dataSupplier
+     *  Get assertions tolerantly from a configuration key.
+     *  This supports either a simple map of assertions, such as
      *
-     * @param dataSupplier
-     * @param flags
-     * @param assertions
-     */
-    public static void checkAssertions(final Supplier<String> dataSupplier, final Map flags, final List<Map<String, Object>> assertions) {
-        //Iterate through assert array
-        for (final Map<String, Object> assertionsMap : assertions) {
-            checkAssertions(dataSupplier, flags, assertionsMap);
+     <pre>
+     assertOut:
+       contains: 2 users
+       matches: .*[\d]* days.*
+     </pre>
+     * or a list of such maps, (which allows you to repeat keys):
+     <pre>
+     assertOut:
+     - contains: 2 users
+     - contains: 2 days
+     </pre>
+     or
+    private static List<Map<String,Object>> getAssertions(ConfigKey<Object> key) {
+    }
+    */
+    public static List<Map<String, Object>> getAssertions(Entity entity, ConfigKey<Object> key) {
+        Object config = entity.getConfig(key);
+        Maybe<Map<String, Object>> maybeMap = TypeCoercions.tryCoerce(config, new TypeToken<Map<String, Object>>() {});
+        if (maybeMap.isPresent()) {
+            return Collections.singletonList(maybeMap.get());
+        }
+
+        Maybe<List<Map<String, Object>>> maybeList = TypeCoercions.tryCoerce(config,
+            new TypeToken<List<Map<String, Object>>>() {});
+        if (maybeList.isPresent()) {
+            return maybeList.get();
+        }
+
+        throw new FatalConfigurationRuntimeException(key.getDescription() + " is not a map or list of maps");
+    }
+
+
+    public static <T> void checkAssertions(Map<String,?> flags,
+                                           Map<String, Object> assertions,
+                                           String target,
+                                           final Supplier<T> actualSupplier) {
+
+        AssertionSupport support = new AssertionSupport();
+        checkAssertions(support, flags, assertions, target, actualSupplier);
+        support.validate();
+    }
+
+
+    public static <T> void checkAssertions(Map<String,?> flags,
+                                           List<Map<String, Object>> assertions,
+                                           String target,
+                                           final Supplier<T> actualSupplier) {
+
+        AssertionSupport support = new AssertionSupport();
+        for (Map<String, Object> assertionMap : assertions) {
+            checkAssertions(support, flags, assertionMap, target, actualSupplier);
+        }
+        support.validate();
+    }
+
+    public static <T> void checkAssertions(final AssertionSupport support,
+                                           Map<String,?> flags,
+                                           final List<Map<String, Object>> assertions,
+                                           final String target,
+                                           final Supplier<T> actualSupplier) {
+
+        for (Map<String, Object> assertionMap : assertions) {
+            checkAssertions(support, flags, assertionMap, target, actualSupplier);
         }
     }
 
-    /**
-     * Evaluates all assertions against dataSupplier
-     *
-     * @param dataSupplier
-     * @param flags
-     * @param assertionsMap
-     */
-    public static void checkAssertions(final Supplier<String> dataSupplier, final Map flags, final Map<String, Object> assertionsMap) {
-        for (final Map.Entry<String, Object> assertion : assertionsMap.entrySet()) {
-            final Maybe<Predicate<String>> optionalPredicate = getPredicate(assertion.getKey(), assertion.getValue());
-            Asserts.succeedsEventually(flags, new PredicateChecker(dataSupplier, optionalPredicate.get()));
+    public static <T> void checkAssertions(final AssertionSupport support,
+                                           Map<String,?> flags,
+                                           final Map<String, Object> assertions,
+                                           final String target,
+                                           final Supplier<T> actualSupplier) {
+
+        if (null == assertions) {
+            return;
+        }
+        try {
+            Asserts.succeedsEventually(flags, new Runnable() {
+                @Override
+                public void run() {
+                    T actual = actualSupplier.get();
+                    checkActualAgainstAssertions(support, assertions, target, actual);
+                }
+            });
+        } catch (Throwable t) {
+            support.fail(t);
         }
     }
 
-    /**
-     * Returns the predicate associated with the predicateKey if one exists
-     *
-     * @param predicateKey
-     * @param predicateTarget
-     * @return {@link Maybe} of {@Link Predicate}
-     */
-    public static Maybe<Predicate<String>> getPredicate(final String predicateKey, final Object predicateTarget) {
-        if (StringUtils.equalsIgnoreCase("isNull", predicateKey)) {
-            return Maybe.of(Predicates.<String>isNull());
-        } else if (StringUtils.equalsIgnoreCase("notNull", predicateKey)) {
-            return Maybe.of(Predicates.<String>notNull());
-        } else if (StringUtils.equalsIgnoreCase("isEqualTo", predicateKey)
-                || StringUtils.equalsIgnoreCase("equalTo", predicateKey)
-                || StringUtils.equalsIgnoreCase("equals", predicateKey)) {
-            return Maybe.of(Predicates.equalTo(TypeCoercions.coerce(predicateTarget.toString(), String.class)));
-        } else if (StringUtils.equalsIgnoreCase("matches", predicateKey)) {
-            return Maybe.of(buildMatchesPredicate(TypeCoercions.coerce(predicateTarget, String.class)));
-        } else if (StringUtils.equalsIgnoreCase("contains", predicateKey)) {
-            return Maybe.of(buildContainsPredicate(TypeCoercions.coerce(predicateTarget, String.class)));
+    private static <T> void checkActualAgainstAssertions(AssertionSupport support, Map<String, Object> assertions,
+                                                         String target, T actual) {
+        for (Map.Entry<String, Object> assertion : assertions.entrySet()) {
+            String condition = assertion.getKey().toString();
+            Object expected = assertion.getValue();
+            switch (condition) {
+
+                case IS_EQUAL_TO :
+                case EQUAL_TO :
+                case EQUALS :
+                    if (null == actual || !actual.equals(expected)) {
+                        support.fail(target, EQUALS, expected);
+                    }
+                    break;
+
+                case IS_NULL :
+                    if (isTrue(expected) != (null == actual)) {
+                        support.fail(target, IS_NULL, expected);
+                    }
+                    break;
+
+                case NOT_NULL :
+                    if (isTrue(expected) != (null != actual)) {
+                        support.fail(target, NOT_NULL, expected);
+                    }
+                    break;
+
+                case CONTAINS :
+                    if (null == actual || !actual.toString().contains(expected.toString())) {
+                        support.fail(target, CONTAINS, expected);
+                    }
+                    break;
+
+                case IS_EMPTY :
+                    if (isTrue(expected) != (null == actual || Strings.isEmpty(actual.toString()))) {
+                        support.fail(target, IS_EMPTY, expected);
+                    }
+                    break;
+
+                case NOT_EMPTY :
+                    if (isTrue(expected) != ((null != actual && Strings.isNonEmpty(actual.toString())))) {
+                        support.fail(target, NOT_EMPTY, expected);
+                    }
+                    break;
+
+                case MATCHES :
+                    if (null == actual || !actual.toString().matches(expected.toString())) {
+                        support.fail(target, MATCHES, expected);
+                    }
+                    break;
+
+                case HAS_TRUTH_VALUE :
+                    if (isTrue(expected) != isTrue(actual)) {
+                        support.fail(target, HAS_TRUTH_VALUE, expected);
+                    }
+                    break;
+
+                default:
+                    support.fail(target, UNKNOWN_CONDITION, condition);
+            }
         }
-        return Maybe.absent(String.format("No predicate found with signature [%s]", predicateKey));
+    }
+
+    private static boolean isTrue(Object object) {
+        return null != object && Boolean.valueOf(object.toString());
     }
 
     /**
-     * Builds a predicate that checks if a string contains the supplied value
-     *
-     * @param predicateTarget
-     * @return {@link Predicate}
+     * A convenience to collect multiple assertion failures.
      */
-    private static Predicate<String> buildContainsPredicate(final String predicateTarget) {
-        return new Predicate<String>() {
+    public static class AssertionSupport {
+        private List<AssertionError> failures = new ArrayList<>();
 
-            @Override
-            public boolean apply(@Nullable final String input) {
-                return StringUtils.contains(input, predicateTarget);
-            }
-
-            @Override
-            public String toString() {
-                return String.format("TestFrameworkAssertions.contains(%s)", predicateTarget);
-            }
-        };
-    }
-
-    /**
-     * Builds a predicate that checks if a string matches the supplied pattern
-     *
-     * @param predicateTarget The pattern to check
-     * @return {@link Predicate}
-     */
-    private static Predicate<String> buildMatchesPredicate(final String predicateTarget) {
-        final Pattern pattern = Pattern.compile(predicateTarget);
-        return new Predicate<String>() {
-            public boolean apply(final String input) {
-                return (input != null) && pattern.matcher(input.toString()).matches();
-            }
-
-            @Override
-            public String toString() {
-                return String.format("TestFrameworkAssertions.matches(%s)", predicateTarget);
-            }
-        };
-    }
-
-    /**
-     * Runnable that will be passed to {@link Asserts#succeedsEventually}
-     */
-    private static class PredicateChecker implements Runnable {
-        private final Supplier<String> dataSupplier;
-        private final Predicate<String> predicate;
-
-        public PredicateChecker(final Supplier<String> dataSupplier, final Predicate<String> predicate) {
-            this.dataSupplier = dataSupplier;
-            this.predicate = predicate;
+        public void fail(String target, String assertion, Object expected) {
+            failures.add(new AssertionError(Joiner.on(' ').join(
+                null != target ? target : "null",
+                null != assertion ? assertion : "null",
+                null != expected ? expected : "null")));
         }
 
-        @Override
-        public void run() {
-            final String value = dataSupplier.get();
-            LOG.debug("Evaluating predicate [{}] with value [{}]", predicate.toString(), value);
-            Asserts.assertEquals(predicate.apply(value), true);
-            LOG.debug("Evaluation of predicate [{}] with value [{}] ... PASSED", predicate.toString(), value);
+        public void fail(Throwable throwable) {
+            failures.add(new AssertionError(throwable.getMessage(), throwable));
+        }
+
+        /**
+         * @throws AssertionError if any failures were collected.
+         */
+        public void validate() {
+            if (0 < failures.size()) {
+
+                if (1 == failures.size()) {
+                    throw failures.get(0);
+                }
+
+                StringBuilder builder = new StringBuilder();
+                for (AssertionError assertionError : failures) {
+                    builder.append(assertionError.getMessage()).append("\n");
+                }
+                throw new AssertionError("Assertions failed:\n" + builder, new CompoundRuntimeException("Assertions", failures));
+            }
         }
     }
 }

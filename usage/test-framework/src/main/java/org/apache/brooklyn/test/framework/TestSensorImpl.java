@@ -28,7 +28,6 @@ import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.sensor.Sensors;
-import org.apache.brooklyn.util.core.flags.ClassCoercionException;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
@@ -38,6 +37,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
 
 /**
  * {@inheritDoc}
@@ -57,20 +58,16 @@ public class TestSensorImpl extends AbstractTest implements TestSensor {
         final Entity target = resolveTarget();
         final String sensor = getConfig(SENSOR_NAME);
         final Duration timeout = getConfig(TIMEOUT);
-        final List<Map<String, Object>> assertions = getConfig(ASSERTIONS);
+        final List<Map<String, Object>> assertions = getAssertions(this, ASSERTIONS);
         try {
-            TestFrameworkAssertions.checkAssertions(new Supplier<String>() {
+            TestFrameworkAssertions.checkAssertions(ImmutableMap.of("timeout", timeout), assertions, sensor,
+                new Supplier<Object>() {
                 @Override
-                public String get() {
+                public Object get() {
                     final Object sensorValue = target.sensors().get(Sensors.newSensor(Object.class, sensor));
-                    try {
-                        return TypeCoercions.coerce(sensorValue, String.class);
-                    } catch (ClassCoercionException cce) {
-                        LOG.debug("Could mot coerce sensor value to a string ... invoking toString() instead");
-                        return (sensorValue != null) ? sensorValue.toString() : null;
-                    }
+                    return sensorValue;
                 }
-            }, ImmutableMap.of("timeout", timeout), assertions);
+            });
 
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);

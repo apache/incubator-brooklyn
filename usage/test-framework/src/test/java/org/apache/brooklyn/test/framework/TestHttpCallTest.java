@@ -29,6 +29,7 @@ import org.apache.brooklyn.test.http.TestHttpRequestHandler;
 import org.apache.brooklyn.test.http.TestHttpServer;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.time.Duration;
+import org.apache.http.HttpStatus;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -49,7 +50,7 @@ public class TestHttpCallTest {
     private LocalhostMachineProvisioningLocation loc;
     private String testId;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void setup() {
         testId = Identifiers.makeRandomId(8);
         server = new TestHttpServer()
@@ -71,7 +72,7 @@ public class TestHttpCallTest {
     }
 
 
-    @Test
+    @Test(groups = "Integration")
     public void testHttpBodyAssertions() {
         app.createAndManageChild(EntitySpec.create(TestHttpCall.class)
                 .configure(TestHttpCall.TARGET_URL, server.getUrl() + "/201")
@@ -92,18 +93,18 @@ public class TestHttpCallTest {
         app.start(ImmutableList.of(loc));
     }
 
-    @Test
+    @Test(groups = "Integration")
     public void testHttpStatusAssertions() {
         app.createAndManageChild(EntitySpec.create(TestHttpCall.class)
                 .configure(TestHttpCall.TARGET_URL, server.getUrl() + "/201")
                 .configure(TestHttpCall.TIMEOUT, new Duration(10L, TimeUnit.SECONDS))
                 .configure(TestHttpCall.ASSERTION_TARGET, TestHttpCall.HttpAssertionTarget.status)
-                .configure(TestSensor.ASSERTIONS, newAssertion("notNull", "")));
+                .configure(TestSensor.ASSERTIONS, newAssertion("notNull", Boolean.TRUE)));
         app.createAndManageChild(EntitySpec.create(TestHttpCall.class)
                 .configure(TestHttpCall.TARGET_URL, server.getUrl() + "/204")
                 .configure(TestHttpCall.TIMEOUT, new Duration(10L, TimeUnit.SECONDS))
                 .configure(TestHttpCall.ASSERTION_TARGET, TestHttpCall.HttpAssertionTarget.status)
-                .configure(TestSensor.ASSERTIONS, newAssertion("isEqualTo", "204")));
+                .configure(TestSensor.ASSERTIONS, newAssertion("isEqualTo", HttpStatus.SC_NO_CONTENT)));
         app.createAndManageChild(EntitySpec.create(TestHttpCall.class)
                 .configure(TestHttpCall.TARGET_URL, server.getUrl() + "/body.json")
                 .configure(TestHttpCall.TIMEOUT, new Duration(10L, TimeUnit.SECONDS))
