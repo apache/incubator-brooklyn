@@ -1,0 +1,52 @@
+brooklyn.catalog:
+  version: 0.0.2
+  iconUrl: http://blog.arungupta.me/wp-content/uploads/2015/07/kibana-logo.png
+  items:
+  - id: kibana-standalone
+    name: "Kibana server"
+    description: "Single Kibana server"
+    description: |
+       Kibana server. Callers should configure 'kibana.elasticsearch.ip'
+    item:
+      type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
+      provisioning.properties:
+        osFamily: ubuntu
+
+      brooklyn.config:
+        install.version: "4.1.1"
+        kibana.elasticsearch.ip: 127.0.0.1  # must be supplied by caller!
+        kibana.elasticsearch.port: 9200  # must be supplied by caller!
+        kibana.port: 5601
+
+      shell.env:
+        KIBANA_VERSION: $brooklyn:config("install.version")
+        ELASTICSEARCH_IP: $brooklyn:config("kibana.elasticsearch.ip")
+        ELASTICSEARCH_PORT: $brooklyn:config("kibana.elasticsearch.port")
+        KIBANA_PORT: $brooklyn:config("kibana.port")
+
+      install.command: |
+        # Install required dependencies
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated tzdata openjdk-7-jdk wget
+
+        # download kibana
+        sudo mkdir -p /opt/kibana/
+        cd /opt/kibana
+        sudo chmod -R 777 /opt/kibana
+        wget -qO - https://download.elastic.co/kibana/kibana/kibana-${KIBANA_VERSION}-linux-x64.tar.gz | tar xz
+
+        # customize config file for kibana
+        sed -i 's|http://localhost:9200|http://'"${ELASTICSEARCH_IP}"':'"${ELASTICSEARCH_PORT}"'|g' /opt/kibana/kibana-${KIBANA_VERSION}-linux-x64/config/kibana.yml
+        sed -i 's|5601|'"${KIBANA_PORT}"'|g' /opt/kibana/kibana-${KIBANA_VERSION}-linux-x64/config/kibana.yml
+        sed -i 's|# log_file: ./kibana.log|log_file: ./kibana.log|g' /opt/kibana/kibana-${KIBANA_VERSION}-linux-x64/config/kibana.yml
+
+      launch.command: |
+        nohup /opt/kibana/kibana-${KIBANA_VERSION}-linux-x64/bin/kibana  &
+        echo $! > $PID_FILE
+
+      brooklyn.enrichers:
+        - type: org.apache.brooklyn.enricher.stock.Transformer
+          brooklyn.config:
+            enricher.sourceSensor: $brooklyn:sensor("host.address")
+            enricher.targetSensor: $brooklyn:sensor("main.uri")
+            enricher.targetValue: $brooklyn:formatString("http://%s:%s", $brooklyn:attributeWhenReady("host.address"), $brooklyn:config("kibana.port"))

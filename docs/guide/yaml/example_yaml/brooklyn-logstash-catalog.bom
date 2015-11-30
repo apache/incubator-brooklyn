@@ -1,0 +1,59 @@
+brooklyn.catalog:
+  version: 1.5.5
+  iconUrl: http://logstash.net/images/logstash.png
+  items:
+  - id: logstash-standalone
+    name: "Logstash server"
+    description: "Single Logstash server"
+    item:
+      type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
+      provisioning.properties:
+        osFamily: ubuntu
+
+      brooklyn.config:
+        install.version: "1.5.4"
+        logstash.config.input: input { file { path => "/var/log/*" } }
+        logstash.config.filter: ''
+        logstash.config.output: output { stdout { } }
+        logstash.config.dir: /etc/logstash/conf.d/
+
+      shell.env:
+        VERSION: $brooklyn:config("install.version")
+        INPUT_CONFIG: $brooklyn:config("logstash.config.input")
+        FILTER_CONFIG: $brooklyn:config("logstash.config.filter")
+        OUTPUT_CONFIG: $brooklyn:config("logstash.config.output")
+        CONFIG_DIR: $brooklyn:config("logstash.config.dir")
+
+      install.command: |
+        # Install required dependencies
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --allow-unauthenticated tzdata openjdk-7-jdk wget
+
+        # download logstash
+        sudo mkdir -p /opt/logstash/
+        cd /opt/logstash
+        sudo chmod -R 777 /opt/logstash
+        wget -qO - https://download.elastic.co/logstash/logstash/logstash-${VERSION}.tar.gz | tar xz
+
+        # add a config file for logstash
+        sudo mkdir -p ${CONFIG_DIR}
+        echo "${INPUT_CONFIG} ${FILTER_CONFIG} ${OUTPUT_CONFIG}" | sudo tee ${CONFIG_DIR}/01-basic.conf
+
+      launch.command: |
+        sudo mkdir -p /var/log/logstash/
+        sudo chmod -R 777 /var/log/logstash/
+        nohup /opt/logstash/logstash-${VERSION}/bin/logstash agent -f ${CONFIG_DIR} -l /var/log/logstash/logstash.log &
+        echo $! > $PID_FILE
+  - id: logstash-child
+    name: "Logstash Child"
+    description: |
+       Logstash server to be embedded as a child of a SoftwareProcess who
+       publishes his 'log.location' as a sensor.
+       Callers should configure 'logstash.elasticsearch.host' (if using ES)
+       or 'logstash.config.output'.
+    item:
+      type: logstash-standalone
+      brooklyn.config:
+        logstash.config.input: $brooklyn:formatString("input { file { path => \"%s\" start_position => \"beginning\" } }", $brooklyn:parent().attributeWhenReady("log.location"))
+        logstash.elasticsearch.host: 127.0.0.1:9200  # must be supplied by caller!
+        logstash.config.output: $brooklyn:formatString("output { elasticsearch { host => %s protocol => \"http\" embedded => false } }", $brooklyn:config("logstash.elasticsearch.host"))
