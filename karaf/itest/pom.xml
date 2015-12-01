@@ -194,6 +194,15 @@
                 </executions>
             </plugin>
 
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                   <systemPropertyVariables>
+                       <org.ops4j.pax.url.mvn.localRepository>${settings.localRepository}</org.ops4j.pax.url.mvn.localRepository>
+                   </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>
