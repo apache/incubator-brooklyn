@@ -41,7 +41,7 @@
 
     <!-- pax-exam -->
     <pax.exam.version>4.6.0</pax.exam.version>
-    <pax.url.version>2.4.1</pax.url.version>
+    <pax.url.version>2.4.3</pax.url.version>
     <ops4j.base.version>1.5.0</ops4j.base.version>
 
     <!-- feature repositories -->
