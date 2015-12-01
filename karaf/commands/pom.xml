@@ -20,16 +20,15 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-    <artifactId>brooklyn-karaf</artifactId>
-    <groupId>org.apache.brooklyn</groupId>
-    <version>0.9.0-SNAPSHOT</version>
-  </parent>
-
-    <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn-commands</artifactId>
     <packaging>bundle</packaging>
-    <version>0.9.0-SNAPSHOT</version>
+
+    <parent>
+    <groupId>org.apache.brooklyn</groupId>
+    <artifactId>brooklyn-karaf</artifactId>
+    <version>0.9.0-SNAPSHOT</version> <!-- BROOKLYN_VERSION -->
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
     <name>Brooklyn Karaf Shell Commands</name>
     <description>Provides brooklyn commands within karaf's shell</description>
