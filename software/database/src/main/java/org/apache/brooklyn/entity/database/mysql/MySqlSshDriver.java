@@ -100,7 +100,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
 
     public String getDataDir() {
         String result = entity.getConfig(MySqlNode.DATA_DIR);
-        return (result == null) ? "." : result;
+        return Strings.isBlank(result) ? "." : result;
     }
 
     public String getLogFile() {
