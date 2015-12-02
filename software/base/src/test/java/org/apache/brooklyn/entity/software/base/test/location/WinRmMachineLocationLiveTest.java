@@ -79,7 +79,7 @@ public class WinRmMachineLocationLiveTest {
      * TODO: Deferred implementing copyFrom or environment variables.
      */
     
-    private static final Logger LOG = LoggerFactory.getLogger(BrooklynAppLiveTestSupport.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WinRmMachineLocationLiveTest.class);
 
     private static final String INVALID_CMD = "thisCommandDoesNotExistAEFafiee3d";
     private static final String PS_ERR_ACTION_PREF_EQ_STOP = "$ErrorActionPreference = \"Stop\"";
@@ -88,7 +88,7 @@ public class WinRmMachineLocationLiveTest {
     protected TestApplication app;
     protected ManagementContextInternal mgmt;
 
-    private WinRmMachineLocation machine;
+    protected WinRmMachineLocation machine;
     
     private ListeningExecutorService executor;
     
@@ -98,7 +98,7 @@ public class WinRmMachineLocationLiveTest {
         
         mgmt = new LocalManagementContextForTests(BrooklynProperties.Factory.newDefault());
         
-        loc = WindowsTestFixture.setUpWindowsLocation(mgmt);
+        loc = newLoc(mgmt);
         machine = loc.obtain(ImmutableMap.of());
         
         LOG.info("PROVISIONED: "+machine.getAddress()+":"+machine.config().get(WinRmMachineLocation.WINRM_PORT)
@@ -119,6 +119,15 @@ public class WinRmMachineLocationLiveTest {
         }
     }
 
+    /**
+     * Returns a location for obtaining a single WinRM machine. This method will be called once during 
+     * {@code @BeforeClass}, then {@code loc.obtain()} will be called. The obtained machine will be
+     * released in {@code @AfterClass}. 
+     */
+    protected MachineProvisioningLocation<WinRmMachineLocation> newLoc(ManagementContextInternal mgmt) throws Exception {
+        return WindowsTestFixture.setUpWindowsLocation(mgmt);
+    }
+    
     @Test(groups="Live")
     public void testCopyTo() throws Exception {
         String contents = "abcdef";
