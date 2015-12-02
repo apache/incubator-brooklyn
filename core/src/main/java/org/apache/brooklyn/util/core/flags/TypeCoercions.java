@@ -55,6 +55,7 @@ import org.apache.brooklyn.util.JavaGroovyEquivalents;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.collections.QuorumCheck;
 import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
+import org.apache.brooklyn.util.core.task.DeferredSupplier;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -137,6 +138,10 @@ public class TypeCoercions {
     public static <T> T coerce(Object value, TypeToken<T> targetTypeToken) {
         if (value==null) return null;
         Class<? super T> targetType = targetTypeToken.getRawType();
+
+        if (value instanceof DeferredSupplier<?>) {
+            value = ((DeferredSupplier<?>) value).get();
+        }
 
         //recursive coercion of parameterized collections and map entries
         if (targetTypeToken.getType() instanceof ParameterizedType) {
