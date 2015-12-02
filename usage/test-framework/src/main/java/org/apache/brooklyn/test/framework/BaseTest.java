@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
@@ -50,7 +51,7 @@ public interface BaseTest extends Entity, Startable {
      * The assertions to be made.
      */
     ConfigKey<Object> ASSERTIONS = ConfigKeys.newConfigKey(Object.class, "assert", "Assertions to be evaluated",
-        new ArrayList<Map<String, Object>>());
+        ImmutableList.<Map<String, Object>>of());
 
     /**
      * THe duration to wait for an assertion to succeed or fail before throwing an exception.
