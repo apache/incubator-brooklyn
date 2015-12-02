@@ -14,6 +14,7 @@ children:
 - externalized-configuration.md
 - requirements.md
 - production-installation.md
+- security-guidelines.md
 - troubleshooting/
 ---
 
