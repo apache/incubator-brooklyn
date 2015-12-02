@@ -27,13 +27,18 @@ import java.util.Collections;
 import java.util.Enumeration;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.mgmt.persist.DeserializingClassRenamesProvider;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 
 public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadingContext {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JavaBrooklynClassLoadingContext.class);
 
     // on deserialization this loader is replaced with the catalog's root loader;
     // may cause problems for non-osgi catalog items, but that's a reasonable trade-off,
@@ -82,6 +87,10 @@ public class JavaBrooklynClassLoadingContext extends AbstractBrooklynClassLoadin
         try {
             className = DeserializingClassRenamesProvider.findMappedName(className);
             return (Maybe) Maybe.of(getClassLoader().loadClass(className));
+        } catch (NoClassDefFoundError e) {
+            String msg = "Invalid linkage in (transitive dependencies of) class "+className+": "+e.toString();
+            LOG.debug(msg);
+            return Maybe.absent(msg, e);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             return Maybe.absent("Invalid class: "+className, e);
