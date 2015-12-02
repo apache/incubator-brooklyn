@@ -32,6 +32,7 @@ import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.test.framework.TestFrameworkAssertions.AssertionSupport;
 import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
@@ -232,15 +233,19 @@ public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleSh
     
 
     private List<Map<String, Object>> exitCodeAssertions() {
+
         List<Map<String, Object>> assertStatus = getAssertions(this, ASSERT_STATUS);
         List<Map<String, Object>> assertOut = getAssertions(this, ASSERT_OUT);
         List<Map<String, Object>> assertErr = getAssertions(this, ASSERT_ERR);
 
+        List<Map<String, Object>> result;
         if (assertStatus.isEmpty() && assertOut.isEmpty() && assertErr.isEmpty()) {
             Map<String, Object> shouldSucceed = DEFAULT_ASSERTION;
-            assertStatus.add(shouldSucceed);
+            result = MutableList.of(shouldSucceed);
+        } else {
+            result = assertStatus;
         }
-        return assertStatus;
+        return result;
     }
 
 }

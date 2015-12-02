@@ -83,20 +83,20 @@ public interface SimpleShellCommandTest extends BaseTest {
      */
     @SetFromFlag("assertStatus")
     ConfigKey<Object> ASSERT_STATUS = ConfigKeys.newConfigKey(Object.class, "assert.status", "Assertions on command exit code",
-        new ArrayList<Map<String, Object>>());
+        ImmutableList.<Map<String, Object>>of());
 
     /**
      * Assertions on the standard output of the command as a String.
      */
     @SetFromFlag("assertOut")
     ConfigKey<Object> ASSERT_OUT = ConfigKeys.newConfigKey(Object.class, "assert.out", "Assertions on command standard output",
-        new ArrayList<Map<String, Object>>());
+        ImmutableList.<Map<String, Object>>of());
 
     /**
      * Assertions on the standard error of the command as a String.
      */
     @SetFromFlag("assertErr")
     ConfigKey<Object> ASSERT_ERR = ConfigKeys.newConfigKey(Object.class, "assert.err", "Assertions on command standard error",
-        new ArrayList<Map<String, Object>>());
+        ImmutableList.<Map<String, Object>>of());
 
 }
