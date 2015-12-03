@@ -1608,6 +1608,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
+    
     /**
      * Create the user immediately - executing ssh commands as required.
      */
@@ -1638,7 +1639,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 }
 
                 String initialUser = initialCredentials.getUser();
-                String address = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
+                String address = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : getFirstReachableAddress(node, config);
                 int port = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPort() : node.getLoginPort();
                 
                 // TODO Retrying lots of times as workaround for vcloud-director. There the guest customizations
@@ -2161,7 +2162,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             LOG.debug("Could not resolve reported address '"+address+"' for "+vmHostname+" ("+setup.getDescription()+"/"+node+"), requesting reachable address");
             if (computeService==null) throw Exceptions.propagate(e);
             // this has sometimes already been done in waitForReachable (unless skipped) but easy enough to do again
-            address = JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
+            address = getFirstReachableAddress(node, setup);
         }
 
         if (LOG.isDebugEnabled())
@@ -2498,6 +2499,25 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         return null;
     }
 
+    protected String getFirstReachableAddress(NodeMetadata node, ConfigBag setup) {
+        String pollForFirstReachable = setup.get(POLL_FOR_FIRST_REACHABLE_ADDRESS);
+        
+        boolean enabled = !"false".equalsIgnoreCase(pollForFirstReachable);
+        String result;
+        if (enabled) {
+            Duration timeout = "true".equals(pollForFirstReachable) ? Duration.FIVE_MINUTES : Duration.of(pollForFirstReachable); 
+            result = JcloudsUtil.getFirstReachableAddress(node, timeout);
+            LOG.debug("Using first-reachable address "+result+" for node "+node+" in "+this);
+        } else {
+            result = Iterables.getFirst(Iterables.concat(node.getPublicAddresses(), node.getPrivateAddresses()), null);
+            if (result == null) {
+                throw new IllegalStateException("No addresses available for node "+node+" in "+this);
+            }
+            LOG.debug("Using first address "+result+" for node "+node+" in "+this);
+        }
+        return result;
+    }
+
     protected LoginCredentials waitForWinRmAvailable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, ConfigBag setup) {
         return waitForWinRmAvailable(computeService, node, hostAndPortOverride, node.getCredentials(), setup);
     }
@@ -2524,9 +2544,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 : 5985; // WinRM port
         String vmIp = hostAndPortOverride.isPresent() 
                 ? hostAndPortOverride.get().getHostText() 
-                : JcloudsUtil.getFirstReachableAddress(
-                        computeService.getContext(), 
-                        NodeMetadataBuilder.fromNodeMetadata(node).loginPort(vmPort).build());
+                : getFirstReachableAddress(NodeMetadataBuilder.fromNodeMetadata(node).loginPort(vmPort).build(), setup);
 
         final Session session = WinRMFactory.INSTANCE.createSession(vmIp+":"+vmPort, user, password);
 
@@ -2593,7 +2611,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             users.add(creds.getUser());
         }
         String user = (users.size() == 1) ? Iterables.getOnlyElement(users) : "{" + Joiner.on(",").join(users) + "}";
-        String vmIp = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : JcloudsUtil.getFirstReachableAddress(computeService.getContext(), node);
+        String vmIp = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : getFirstReachableAddress(node, setup);
         if (vmIp==null) LOG.warn("Unable to extract IP for "+node+" ("+setup.getDescription()+"): subsequent connection attempt will likely fail");
         int vmPort = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPortOrDefault(22) : 22;
 
@@ -2760,7 +2778,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             HostAndPort inferredHostAndPort = null;
             if (!sshHostAndPort.isPresent()) {
                 try {
-                    String vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
+                    String vmIp = getFirstReachableAddress(node, setup);
                     int port = node.getLoginPort();
                     inferredHostAndPort = HostAndPort.fromParts(vmIp, port);
                 } catch (Exception e) {
@@ -2794,12 +2812,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     private String getPublicHostnameGeneric(NodeMetadata node, @Nullable ConfigBag setup) {
-        // JcloudsUtil.getFirstReachableAddress() already succeeded so at least one of the provided
+        // JcloudsUtil.getFirstReachableAddress() (probably) already succeeded so at least one of the provided
         // public and private IPs is reachable. Prefer the public IP. Don't use hostname as a fallback
         // from the public address - if public address is missing why would hostname resolve to a 
         // public IP? It is sometimes wrong/abbreviated, resolving to the wrong IP, also e.g. on
         // rackspace, the hostname lacks the domain.
         //
+        // TODO If POLL_FOR_FIRST_REACHABLE_ADDRESS=false, then won't have checked if any node is reachable.
         // TODO Some of the private addresses might not be reachable, should check connectivity before
         // making a choice.
         // TODO Choose an IP once and stick to it - multiple places call JcloudsUtil.getFirstReachableAddress(),
@@ -2868,7 +2887,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         HostAndPort inferredHostAndPort = null;
         if (!sshHostAndPort.isPresent()) {
             try {
-                String vmIp = JcloudsUtil.getFirstReachableAddress(this.getComputeService().getContext(), node);
+                String vmIp = getFirstReachableAddress(node, setup);
                 int port = node.getLoginPort();
                 inferredHostAndPort = HostAndPort.fromParts(vmIp, port);
             } catch (Exception e) {
