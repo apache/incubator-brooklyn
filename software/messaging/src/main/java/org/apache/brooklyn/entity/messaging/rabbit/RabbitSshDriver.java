@@ -147,7 +147,7 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
             .body.append(
                 "nohup ./sbin/rabbitmq-server > console-out.log 2> console-err.log &",
-                "for i in {1..10}\n" +
+                "for i in {1..30}\n" +
                     "do\n" +
                      "    grep 'broker running' console-out.log && exit\n" +
                      "    sleep 1\n" +

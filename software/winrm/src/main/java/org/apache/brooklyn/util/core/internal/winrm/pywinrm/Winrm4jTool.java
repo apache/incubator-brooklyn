@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -38,15 +39,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import io.cloudsoft.winrm4j.winrm.WinRmTool;
 import io.cloudsoft.winrm4j.winrm.WinRmToolResponse;
 
 @Beta
 public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm.WinRmTool {
 
     private static final Logger LOG = LoggerFactory.getLogger(Winrm4jTool.class);
+
+    // TODO Should we move this up to the interface?
+    @Beta
+    public static final ConfigKey<Boolean> LOG_CREDENTIALS = ConfigKeys.newBooleanConfigKey(
+            "logCredentials", 
+            "Whether to log the WinRM credentials used - strongly recommended never be used in production, as it is a big security hole!",
+            false);
 
     private final ConfigBag bag;
     private final String host;
@@ -55,7 +67,8 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
     private final String password;
     private final int execTries;
     private final Duration execRetryDelay;
-
+    private final boolean logCredentials;
+    
     public Winrm4jTool(Map<String,?> config) {
         this(ConfigBag.newInstance(config));
     }
@@ -68,22 +81,23 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
         password = getRequiredConfig(config, PROP_PASSWORD);
         execTries = getRequiredConfig(config, PROP_EXEC_TRIES);
         execRetryDelay = getRequiredConfig(config, PROP_EXEC_RETRY_DELAY);
+        logCredentials = getRequiredConfig(config, LOG_CREDENTIALS);
     }
     
     @Override
     public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executeScript(final List<String> commands) {
-        return exec(new Callable<io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {
-            @Override public WinRmToolResponse call() throws Exception {
-                return connect().executeScript(commands);
+        return exec(new Function<io.cloudsoft.winrm4j.winrm.WinRmTool, io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {
+            @Override public WinRmToolResponse apply(io.cloudsoft.winrm4j.winrm.WinRmTool tool) {
+                return tool.executeScript(commands);
             }
         });
     }
 
     @Override
     public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executePs(final List<String> commands) {
-        return exec(new Callable<io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {
-            @Override public WinRmToolResponse call() throws Exception {
-                return connect().executePs(commands);
+        return exec(new Function<io.cloudsoft.winrm4j.winrm.WinRmTool, io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {
+            @Override public WinRmToolResponse apply(io.cloudsoft.winrm4j.winrm.WinRmTool tool) {
+                return tool.executePs(commands);
             }
         });
     }
@@ -115,21 +129,47 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
         }
     }
 
-    private org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse exec(Callable<io.cloudsoft.winrm4j.winrm.WinRmToolResponse> task) {
+    private org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse exec(Function<io.cloudsoft.winrm4j.winrm.WinRmTool, io.cloudsoft.winrm4j.winrm.WinRmToolResponse> task) {
         Collection<Throwable> exceptions = Lists.newArrayList();
+        Stopwatch totalStopwatch = Stopwatch.createStarted();
+        
         for (int i = 0; i < execTries; i++) {
+            Stopwatch stopwatch = Stopwatch.createStarted();
+            Duration connectTimestamp = null;
+            Duration execTimestamp = null;
             try {
-                return wrap(task.call());
+                WinRmTool tool = connect();
+                connectTimestamp = Duration.of(stopwatch);
+                WinRmToolResponse result = task.apply(tool);
+                execTimestamp = Duration.of(stopwatch);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Finished WinRM exec on "+user+"@"+host+":"+port+" "
+                            + (logCredentials ? "password=" + password : "")
+                            + " done after "+Duration.of(execTimestamp).toStringRounded()
+                            + " (connected in "+Duration.of(connectTimestamp).toStringRounded() + ")");
+                }
+                return wrap(result);
             } catch (Exception e) {
                 Exceptions.propagateIfFatal(e);
                 Duration sleep = Duration.millis(Math.min(Math.pow(2, i) * 1000, execRetryDelay.toMilliseconds()));
+                Duration failTimestamp = Duration.of(stopwatch);
+                String timeMsg = "total time "+Duration.of(totalStopwatch).toStringRounded()
+                        + ", this attempt failed after "+Duration.of(failTimestamp).toStringRounded()
+                        + (connectTimestamp != null ? ", connected in "+Duration.of(connectTimestamp).toStringRounded() : "");
+                
                 if (i == (execTries+1)) {
-                    LOG.info("Propagating WinRM exception (attempt "+(i+1)+" of "+execTries+")", e);
+                    LOG.info("Propagating exception - WinRM failed on "+user+"@"+host+":"+port+" "
+                            + (logCredentials ? "password=" + password : "")
+                            + "; (attempt "+(i+1)+" of "+execTries+"; "+timeMsg+")", e);
                 } else if (i == 0) {
-                    LOG.warn("Ignoring WinRM exception and will retry after "+sleep+" (attempt "+(i+1)+" of "+execTries+")", e);
+                    LOG.warn("Ignoring WinRM exception on "+user+"@"+host+":"+port+" "
+                            + (logCredentials ? "password=" + password : "")
+                            + " and will retry after "+sleep+" (attempt "+(i+1)+" of "+execTries+"; "+timeMsg+")", e);
                     Time.sleep(sleep);
                 } else {
-                    LOG.debug("Ignoring WinRM exception and will retry after "+sleep+" (attempt "+(i+1)+" of "+execTries+")", e);
+                    LOG.debug("Ignoring WinRM exception on "+user+"@"+host+":"+port+" "
+                            + (logCredentials ? "password=" + password : "")
+                            + " and will retry after "+sleep+" (attempt "+(i+1)+" of "+execTries+"; "+timeMsg+")", e);
                     Time.sleep(sleep);
                 }
                 exceptions.add(e);

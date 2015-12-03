@@ -69,6 +69,11 @@ public interface CloudLocationConfig {
         "vmNameSaltLength", "Number of characters to use for a random identifier inserted in hostname "
             + "to uniquely identify machines", 4);
 
+    public static final ConfigKey<String> POLL_FOR_FIRST_REACHABLE_ADDRESS = ConfigKeys.newStringConfigKey("pollForFirstReachableAddress", 
+            "Whether and how long to wait for reaching the VM's ip:port; "
+            + "if 'false', will default to the node's first public IP (or privae if no public IPs); "
+            + "if 'true' uses default duration; otherwise accepts a time string e.g. '5m' (the default) or a number of milliseconds", "5m");
+
     public static final ConfigKey<String> WAIT_FOR_SSHABLE = ConfigKeys.newStringConfigKey("waitForSshable", 
             "Whether and how long to wait for a newly provisioned VM to be accessible via ssh; " +
             "if 'false', won't check; if 'true' uses default duration; otherwise accepts a time string e.g. '5m' (the default) or a number of milliseconds", "5m");
