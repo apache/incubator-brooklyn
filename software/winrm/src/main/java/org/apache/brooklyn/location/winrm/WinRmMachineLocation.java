@@ -90,6 +90,25 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             BrooklynConfigKeys.BROOKLYN_WINRM_CONFIG_KEY_PREFIX,
             Preconditions.checkNotNull(BrooklynConfigKeys.WINRM_TOOL_CLASS, "static final initializer classload ordering problem"));
 
+    /** 
+     * Prefix for config key:values to be passed to the winrm tool on construction. For example, 
+     * one could define the location below. When executing winrm commands, it would instantiate
+     * an instance of {@code com.acme.brooklyn.MyCustomWinrmTool}, calling its constructor with a
+     * {@code Map<String, Object>} that contained the configuration. In this case, the map would
+     * include: {@code address=1.2.3.4}; {@code user=myname}; and {@code myparam=myvalue}.
+     * 
+     * <pre>
+     * {@code
+     * brooklyn.location.named.myLocation = byon:(hosts=1.2.3.4,user=myname)
+     * brooklyn.location.named.myLocation.winrmToolClass = com.acme.brooklyn.MyCustomWinrmTool
+     * brooklyn.location.named.myLocation.winrmToolClass.myparam = myvalue
+     * }
+     * }
+     * </pre>
+     * <p>
+     */
+    public static final String WINRM_TOOL_CLASS_PROPERTIES_PREFIX = WINRM_TOOL_CLASS.getName()+".";
+
     /**
      * @deprecated since 0.9.0; config never read; will be removed in future version.
      */
@@ -102,12 +121,14 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     // TODO See SshTool#PROP_SSH_TRIES, where it was called "sshTries"; remove duplication? Merge into one well-named thing?
     public static final ConfigKey<Integer> EXEC_TRIES = WinRmTool.PROP_EXEC_TRIES;
 
+    @SuppressWarnings("serial")
     public static final ConfigKey<Iterable<String>> PRIVATE_ADDRESSES = ConfigKeys.newConfigKey(
             new TypeToken<Iterable<String>>() {},
             "privateAddresses",
             "Private addresses of this machine, e.g. those within the private network", 
             null);
 
+    @SuppressWarnings("serial")
     public static final ConfigKey<Map<Integer, String>> TCP_PORT_MAPPINGS = ConfigKeys.newConfigKey(
             new TypeToken<Map<Integer, String>>() {},
             "tcpPortMappings",
@@ -120,7 +141,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
                     .addAll(ConfigUtils.getStaticKeysOnClass(WinRmTool.class))
                     .build();
 
-    public static final Set<String> ALL_SSH_CONFIG_KEY_NAMES =
+    public static final Set<String> ALL_WINRM_CONFIG_KEY_NAMES =
             ImmutableSet.copyOf(Iterables.transform(ALL_WINRM_CONFIG_KEYS, new Function<HasConfigKey<?>,String>() {
                 @Override
                 public String apply(HasConfigKey<?> input) {
@@ -223,23 +244,36 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             ConfigBag args = new ConfigBag();
 
             for (Map.Entry<String,Object> entry: config().getBag().getAllConfig().entrySet()) {
+    
+                boolean include = false;
                 String key = entry.getKey();
                 if (key.startsWith(WinRmTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                     key = Strings.removeFromStart(key, WinRmTool.BROOKLYN_CONFIG_KEY_PREFIX);
+                    include = true;
+                }
+                
+                if (key.startsWith(WINRM_TOOL_CLASS_PROPERTIES_PREFIX)) {
+                    key = Strings.removeFromStart(key, WINRM_TOOL_CLASS_PROPERTIES_PREFIX);
+                    include = true;
+                }
+                
+                if (ALL_WINRM_CONFIG_KEY_NAMES.contains(entry.getKey())) {
+                    // key should be included, and does not need to be changed
+    
+                    // TODO make this config-setting mechanism more universal
+                    // currently e.g. it will not admit a tool-specific property.
+                    // thinking either we know about the tool here,
+                    // or we don't allow unadorned keys to be set
+                    // (require use of BROOKLYN_CONFIG_KEY_PREFIX)
+                    include = true;
+                }
+                
+    
+                if (include) {
                     args.putStringKey(key, entry.getValue());
                 }
             }
-
-            for (Map.Entry<String,Object> entry: config().getBag().getAllConfig().entrySet()) {
-                String key = entry.getKey();
-                if (ALL_SSH_CONFIG_KEY_NAMES.contains(key)) {
-                } else {
-                    // this key is not applicable here; ignore it
-                    continue;
-                }
-                args.putStringKey(key, entry.getValue());
-            }
-
+            
             args.putAll(props);
             args.configure(SshTool.PROP_HOST, getAddress().getHostAddress());
 
