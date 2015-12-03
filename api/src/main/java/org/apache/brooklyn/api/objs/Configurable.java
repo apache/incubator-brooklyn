@@ -44,6 +44,8 @@ public interface Configurable {
     /**
      * Convenience for calling {@link ConfigurationSupport#get(ConfigKey)},
      * via code like {@code config().get(key)}.
+     * 
+     * @since 0.9.0
      */
     <T> T getConfig(ConfigKey<T> key);
 
