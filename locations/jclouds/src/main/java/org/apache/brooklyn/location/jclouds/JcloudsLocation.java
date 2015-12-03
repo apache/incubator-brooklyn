@@ -24,8 +24,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static org.apache.brooklyn.util.ssh.BashCommands.sbinPath;
-import io.cloudsoft.winrm4j.pywinrm.Session;
-import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -47,7 +45,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
@@ -96,6 +93,8 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.internal.ssh.ShellTool;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmTool;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
 import org.apache.brooklyn.util.core.text.TemplateProcessor;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -179,7 +178,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
-import com.google.common.primitives.Ints;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -1608,7 +1606,35 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    
+    /**
+     * Creates a temporary WinRM machine location (i.e. will not be persisted), which uses the given credentials.
+     * It ignores any credentials (e.g. password, key-phrase, etc) that are supplied in the config.
+     */
+    protected WinRmMachineLocation createTemporaryWinRmMachineLocation(HostAndPort hostAndPort, LoginCredentials creds, ConfigBag config) {
+        String initialUser = creds.getUser();
+        Optional<String> initialPassword = creds.getOptionalPassword();
+        Optional<String> initialPrivateKey = creds.getOptionalPrivateKey();
+
+        Map<String,Object> winrmProps = Maps.newLinkedHashMap(config.getAllConfig());
+        winrmProps.put("user", initialUser);
+        winrmProps.put("address", hostAndPort.getHostText());
+        winrmProps.put("port", hostAndPort.getPort());
+        winrmProps.put(AbstractLocation.TEMPORARY_LOCATION.getName(), true);
+        winrmProps.remove("password");
+        winrmProps.remove("privateKeyData");
+        winrmProps.remove("privateKeyFile");
+        winrmProps.remove("privateKeyPassphrase");
+
+        if (initialPassword.isPresent()) winrmProps.put("password", initialPassword.get());
+        if (initialPrivateKey.isPresent()) winrmProps.put("privateKeyData", initialPrivateKey.get());
+
+        if (isManaged()) {
+            return getManagementContext().getLocationManager().createLocation(winrmProps, WinRmMachineLocation.class);
+        } else {
+            throw new UnsupportedOperationException("Cannot create temporary WinRmMachineLocation because " + this + " is not managed");
+        }
+    }
+
     /**
      * Create the user immediately - executing ssh commands as required.
      */
@@ -2519,10 +2545,10 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     }
 
     protected LoginCredentials waitForWinRmAvailable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, ConfigBag setup) {
-        return waitForWinRmAvailable(computeService, node, hostAndPortOverride, node.getCredentials(), setup);
+        return waitForWinRmAvailable(computeService, node, hostAndPortOverride, ImmutableList.of(node.getCredentials()), setup);
     }
     
-    protected LoginCredentials waitForWinRmAvailable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, LoginCredentials expectedCredentials, ConfigBag setup) {
+    protected LoginCredentials waitForWinRmAvailable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, List<LoginCredentials> credentialsToTry, ConfigBag setup) {
         String waitForWinrmAvailable = setup.get(WAIT_FOR_WINRM_AVAILABLE);
         checkArgument(!"false".equalsIgnoreCase(waitForWinrmAvailable), "waitForWinRmAvailable called despite waitForWinRmAvailable=%s", waitForWinrmAvailable);
         Duration timeout = null;
@@ -2537,28 +2563,53 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             timeout = Duration.parse(WAIT_FOR_WINRM_AVAILABLE.getDefaultValue());
         }
         
-        String user = expectedCredentials.getUser();
-        String password = expectedCredentials.getOptionalPassword().orNull();
-        int vmPort = hostAndPortOverride.isPresent() 
-                ? hostAndPortOverride.get().getPortOrDefault(5985) 
-                : 5985; // WinRM port
-        String vmIp = hostAndPortOverride.isPresent() 
-                ? hostAndPortOverride.get().getHostText() 
-                : getFirstReachableAddress(NodeMetadataBuilder.fromNodeMetadata(node).loginPort(vmPort).build(), setup);
-
-        final Session session = WinRMFactory.INSTANCE.createSession(vmIp+":"+vmPort, user, password);
-
+        Set<String> users = Sets.newLinkedHashSet();
+        for (LoginCredentials creds : credentialsToTry) {
+            users.add(creds.getUser());
+        }
+        String user = (users.size() == 1) ? Iterables.getOnlyElement(users) : "{" + Joiner.on(",").join(users) + "}";
+        String vmIp = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getHostText() : getFirstReachableAddress(node, setup);
         if (vmIp==null) LOG.warn("Unable to extract IP for "+node+" ("+setup.getDescription()+"): subsequent connection attempt will likely fail");
+        int vmPort = hostAndPortOverride.isPresent() ? hostAndPortOverride.get().getPortOrDefault(5985) : 5985;
 
-        Callable<Boolean> checker = new Callable<Boolean>() {
-            public Boolean call() {
-                return session.run_cmd("hostname").getStatusCode() == 0;
-            }};
         String connectionDetails = user + "@" + vmIp + ":" + vmPort;
+        final HostAndPort hostAndPort = hostAndPortOverride.isPresent() ? hostAndPortOverride.get() : HostAndPort.fromParts(vmIp, vmPort);
+        final AtomicReference<LoginCredentials> credsSuccessful = new AtomicReference<LoginCredentials>();
 
-        waitForReachable(checker, connectionDetails, ImmutableList.of(expectedCredentials), setup, timeout);
-        
-        return expectedCredentials;
+        // Don't use config that relates to the final user credentials (those have nothing to do 
+        // with the initial credentials of the VM returned by the cloud provider).
+        // The createTemporaryWinRmMachineLocation deals with removing that.
+        ConfigBag winrmProps = ConfigBag.newInstanceCopying(setup);
+
+        final Map<WinRmMachineLocation, LoginCredentials> machinesToTry = Maps.newLinkedHashMap();
+        for (LoginCredentials creds : credentialsToTry) {
+            machinesToTry.put(createTemporaryWinRmMachineLocation(hostAndPort, creds, winrmProps), creds);
+        }
+        try {
+            Callable<Boolean> checker = new Callable<Boolean>() {
+                public Boolean call() {
+                    for (Map.Entry<WinRmMachineLocation, LoginCredentials> entry : machinesToTry.entrySet()) {
+                        WinRmMachineLocation machine = entry.getKey();
+                        WinRmToolResponse response = machine.executeScript(
+                                ImmutableMap.of(WinRmTool.PROP_EXEC_TRIES.getName(), 1), 
+                                ImmutableList.of("echo testing"));
+                        boolean success = (response.getStatusCode() == 0);
+                        if (success) {
+                            credsSuccessful.set(entry.getValue());
+                            return true;
+                        }
+                    }
+                    return false;
+                }};
+    
+            waitForReachable(checker, connectionDetails, credentialsToTry, setup, timeout);
+        } finally {
+            for (WinRmMachineLocation machine : machinesToTry.keySet()) {
+                getManagementContext().getLocationManager().unmanage(machine);
+            }
+        }
+
+        return credsSuccessful.get();
     }
 
     protected LoginCredentials waitForSshable(final ComputeService computeService, final NodeMetadata node, Optional<HostAndPort> hostAndPortOverride, ConfigBag setup) {
