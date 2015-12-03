@@ -186,23 +186,33 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
     public void populateServiceNotUpDiagnostics() {
         if (getDriver() == null) {
             ServiceStateLogic.updateMapSensorEntry(this, ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, "driver", "No driver");
+            ServiceStateLogic.clearMapSensorEntry(this, ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, "sshable");
+            ServiceStateLogic.clearMapSensorEntry(this, ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, SERVICE_PROCESS_IS_RUNNING.getName());
             return;
+        } else {
+            ServiceStateLogic.clearMapSensorEntry(this, ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, "driver");
         }
 
         Location loc = getDriver().getLocation();
         if (loc instanceof SshMachineLocation) {
-            if (!((SshMachineLocation)loc).isSshable()) {
+            if (((SshMachineLocation)loc).isSshable()) {
+                ServiceStateLogic.clearMapSensorEntry(this, ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, "sshable");
+            } else {
                 ServiceStateLogic.updateMapSensorEntry(
                         this, 
                         ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, 
                         "sshable", 
                         "The machine for this entity does not appear to be sshable");
             }
-            return;
         }
 
         boolean processIsRunning = getDriver().isRunning();
-        if (!processIsRunning) {
+        if (processIsRunning) {
+            ServiceStateLogic.clearMapSensorEntry(
+                    this, 
+                    ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, 
+                    SERVICE_PROCESS_IS_RUNNING.getName());
+        } else {
             ServiceStateLogic.updateMapSensorEntry(
                     this, 
                     ServiceStateLogic.SERVICE_NOT_UP_DIAGNOSTICS, 
