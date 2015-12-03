@@ -2515,11 +2515,6 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         Tasks.setBlockingDetails(origDetails);
                     }
                 } else {
-                    // Not executing inside an execution context; can't submit!
-                    // It's not enough to just do:
-                    //     getManagementContext().getExecutionManager().submit(queueResult);
-                    // (see CompoundTask.submitIfNecessary, which gets called in ParallelTask).
-                    // Instead, we'll fall back to executing sequentially.
                     LOG.warn("Releasing port-forwarding of "+machine+" not executing in execution-context "
                             + "(e.g. not invoked inside effector); falling back to executing sequentially");
                     for (Runnable subtask : subtasks.values()) {
