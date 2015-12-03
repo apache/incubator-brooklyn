@@ -26,39 +26,45 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class WindowsTestFixture {
 
-    @SuppressWarnings("unchecked")
     public static MachineProvisioningLocation<WinRmMachineLocation> setUpWindowsLocation(ManagementContext mgmt) throws Exception {
+        return setUpWindowsLocation(mgmt, ImmutableMap.<String, Object>of());
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static MachineProvisioningLocation<WinRmMachineLocation> setUpWindowsLocation(ManagementContext mgmt, Map<String, ?> props) throws Exception {
         // Commented out / unused code included here to make it easy to supply a 
         // pre-existing Windows VM for use in a bunch of different tests.
 //        return (MachineProvisioningLocation<WinRmMachineLocation>) newByonLocation((ManagementContextInternal) mgmt);
-        return (MachineProvisioningLocation<WinRmMachineLocation>) newJcloudsLocation((ManagementContextInternal) mgmt);
+        return (MachineProvisioningLocation<WinRmMachineLocation>) newJcloudsLocation((ManagementContextInternal) mgmt, props);
     }
     
-    private static MachineProvisioningLocation<?> newJcloudsLocation(ManagementContextInternal mgmt) {
+    private static MachineProvisioningLocation<?> newJcloudsLocation(ManagementContextInternal mgmt, Map<String, ?> props) {
         // Requires no userMetadata to be set, so that we use WinRmMachineLocation.getDefaultUserMetadataString()
         mgmt.getBrooklynProperties().remove("brooklyn.location.jclouds.aws-ec2.userMetadata");
         mgmt.getBrooklynProperties().remove("brooklyn.location.jclouds.userMetadata");
         mgmt.getBrooklynProperties().remove("brooklyn.location.userMetadata");
         
-        return (JcloudsLocation) mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-west-2", ImmutableMap.<String, Object>builder()
+        return (JcloudsLocation) mgmt.getLocationRegistry().resolve("jclouds:aws-ec2:us-west-2", MutableMap.<String, Object>builder()
                 .put("inboundPorts", ImmutableList.of(5985, 3389))
                 .put("displayName", "AWS Oregon (Windows)")
                 .put("imageOwner", "801119661308")
                 .put("imageNameRegex", "Windows_Server-2012-R2_RTM-English-64Bit-Base-.*")
                 .put("hardwareId", "m3.medium")
                 .put("useJcloudsSshInit", false)
+                .putAll(props)
                 .build());
     }
     
     @SuppressWarnings("unused")
-    private static MachineProvisioningLocation<?> newByonLocation(ManagementContextInternal mgmt) {
-        Map<String, String> config = new LinkedHashMap<>();
+    private static MachineProvisioningLocation<?> newByonLocation(ManagementContextInternal mgmt, Map<String, ?> props) {
+        Map<String, Object> config = new LinkedHashMap<>();
         config.put("hosts", "52.12.211.123:5985");
         config.put("osFamily", "windows");
         config.put("winrm", "52.12.211.123:5985");
@@ -66,6 +72,7 @@ public class WindowsTestFixture {
         config.put("password", "pa55w0rd");
         config.put("useJcloudsSshInit", "false");
         config.put("byonIdentity", "123");
+        config.putAll(props);
         return (MachineProvisioningLocation<?>) mgmt.getLocationRegistry().resolve("byon", config);
     }
 }
