@@ -2743,7 +2743,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         Stopwatch stopwatch = Stopwatch.createStarted();
 
         ReferenceWithError<Boolean> reachable = new Repeater()
-                .every(1,SECONDS)
+                .backoff(Duration.ONE_SECOND, 2, Duration.TEN_SECONDS) // exponential backoff, to 10 seconds
                 .until(checker)
                 .limitTimeTo(timeout)
                 .runKeepingError();
