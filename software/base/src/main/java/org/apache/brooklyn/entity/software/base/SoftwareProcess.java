@@ -146,6 +146,9 @@ public interface SoftwareProcess extends Entity, Startable {
             "modify the machine so that a tty is not subsequently required.",
             false);
     
+    public static final ConfigKey<Integer> STOP_SEQUENCE_POSITION = ConfigKeys.newConfigKey(Integer.class, "stop.sequence.position",
+            "The numerical position in the order of entities to stop, starting with 1 and increasing sequentially.");
+
     /**
      * Files to be copied to the server before pre-install.
      * <p>

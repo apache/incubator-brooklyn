@@ -20,12 +20,15 @@ package org.apache.brooklyn.core.entity.trait;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityPredicates;
@@ -44,6 +47,9 @@ import com.google.common.collect.Lists;
 public class StartableMethods {
 
     public static final Logger log = LoggerFactory.getLogger(StartableMethods.class);
+
+    private static final ConfigKey<Integer> STOP_SEQUENCE_POSITION = ConfigKeys.newConfigKey(Integer.class, "stop.sequence.position",
+            "The numerical position in the order of entities to stop, starting with 1 and increasing sequentially.");
         
     private StartableMethods() {}
 
@@ -110,7 +116,13 @@ public class StartableMethods {
 
     /** unsubmitted task for stopping children of the given entity */
     public static TaskAdaptable<?> stoppingChildren(Entity entity) {
-        return Effectors.invocation(Startable.STOP, Collections.emptyMap(), filterStartableManagedEntities(entity.getChildren()));
+        Iterable<Entity> startableManagedEntities = filterStartableManagedEntities(entity.getChildren());
+
+        if (hasStopSequence(startableManagedEntities)) {
+            return Effectors.invocationSequential(Startable.STOP, Collections.emptyMap(), sortEntitiesByStopSequence(startableManagedEntities));
+        } else {
+            return Effectors.invocation(Startable.STOP, Collections.emptyMap(), startableManagedEntities);
+        }
     }
 
     /** unsubmitted task for restarting children of the given entity */
@@ -122,4 +134,26 @@ public class StartableMethods {
         return restartingChildren(entity, ConfigBag.EMPTY);
     }
 
+    private static boolean hasStopSequence(Iterable<Entity> entities) {
+        for (Entity entity : entities)
+            if (entity.config().get(STOP_SEQUENCE_POSITION) == null)
+                return false;
+
+        return true;
+    }
+
+    private static Iterable<Entity> sortEntitiesByStopSequence(Iterable<Entity> entities) {
+        List<Entity> sortedEntities = Lists.newArrayList(entities);
+        Collections.sort(sortedEntities, stopSequenceComparator);
+
+        return sortedEntities;
+    }
+
+    private static Comparator<Entity> stopSequenceComparator = new Comparator<Entity>() {
+
+        @Override
+        public int compare(Entity o1, Entity o2) {
+            return Integer.compare(o1.config().get(STOP_SEQUENCE_POSITION), o2.config().get(STOP_SEQUENCE_POSITION));
+        }
+    };
 }

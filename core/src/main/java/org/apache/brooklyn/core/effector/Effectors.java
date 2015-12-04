@@ -181,6 +181,12 @@ public class Effectors {
         return Tasks.parallel("invoking "+eff+" on "+tasks.size()+" node"+(Strings.s(tasks.size())), tasks.toArray(new TaskAdaptable[tasks.size()]));
     }
 
+    public static TaskAdaptable<List<?>> invocationSequential(Effector<?> eff, Map<?,?> params, Iterable<? extends Entity> entities) {
+        List<TaskAdaptable<?>> tasks = new ArrayList<TaskAdaptable<?>>();
+        for (Entity e: entities) tasks.add(invocation(e, eff, params));
+        return Tasks.sequential("invoking "+eff+" on "+tasks.size()+" node"+(Strings.s(tasks.size())), tasks.toArray(new TaskAdaptable[tasks.size()]));
+    }
+
     /** returns an unsubmitted task which will invoke the given effector on the given entities
      * (this form of method is a convenience for {@link #invocation(Effector, Map, Iterable)}) */
     public static TaskAdaptable<List<?>> invocation(Effector<?> eff, MutableMap<?, ?> params, Entity ...entities) {
