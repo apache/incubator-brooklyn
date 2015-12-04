@@ -26,6 +26,7 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.os.Os;
 
 import com.google.common.collect.Iterables;
@@ -166,6 +167,7 @@ public abstract class SshAbstractTool extends ShellAbstractTool implements SshTo
     }
 
     protected SshException propagate(Exception e, String message) throws SshException {
+        Exceptions.propagateIfFatal(e);
         throw new SshException("(" + toString() + ") " + message + ": " + e.getMessage(), e);
     }
     
