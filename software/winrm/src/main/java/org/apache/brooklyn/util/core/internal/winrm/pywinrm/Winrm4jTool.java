@@ -30,6 +30,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmException;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
@@ -123,7 +124,7 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
 
             return new org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse("", "", 0);
         } catch (java.io.IOException e) {
-            throw Exceptions.propagate(e);
+            throw propagate(e, "Failed copying to server at "+destination);
         }
     }
 
@@ -173,7 +174,7 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
                 exceptions.add(e);
             }
         }
-        throw Exceptions.propagate("failed to execute command", exceptions);
+        throw propagate(Exceptions.create("failed to execute command", exceptions), "");
     }
 
     private io.cloudsoft.winrm4j.winrm.WinRmTool connect() {
@@ -190,5 +191,19 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
     
     private org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse wrap(io.cloudsoft.winrm4j.winrm.WinRmToolResponse resp) {
         return new org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse(resp.getStdOut(), resp.getStdErr(), resp.getStatusCode());
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s@%s:%d", user, host, port);
+    }
+    
+    /**
+     * @throws WinRmException If the given {@code e} is not fatal (e.g. not an {@link Error} or {@link InterruptedException},
+     *         then wraps it in a {@link WinRmException}.
+     */
+    protected WinRmException propagate(Exception e, String message) throws WinRmException {
+        Exceptions.propagateIfFatal(e);
+        throw new WinRmException("(" + toString() + ") " + message + ": " + e.getMessage(), e);
     }
 }
