@@ -73,6 +73,7 @@ import org.apache.brooklyn.core.location.cloud.AbstractCloudMachineProvisioningL
 import org.apache.brooklyn.core.location.cloud.AvailabilityZoneExtension;
 import org.apache.brooklyn.core.location.cloud.names.AbstractCloudMachineNamer;
 import org.apache.brooklyn.core.location.cloud.names.CloudMachineNamer;
+import org.apache.brooklyn.core.mgmt.internal.LocalLocationManager;
 import org.apache.brooklyn.core.mgmt.persist.LocationWithObjectStore;
 import org.apache.brooklyn.core.mgmt.persist.PersistenceObjectStore;
 import org.apache.brooklyn.core.mgmt.persist.jclouds.JcloudsBlobStoreBasedObjectStore;
@@ -1591,6 +1592,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         sshProps.put("address", hostAndPort.getHostText());
         sshProps.put("port", hostAndPort.getPort());
         sshProps.put(AbstractLocation.TEMPORARY_LOCATION.getName(), true);
+        sshProps.put(LocalLocationManager.CREATE_UNMANAGED.getName(), true);
         sshProps.remove("password");
         sshProps.remove("privateKeyData");
         sshProps.remove("privateKeyFile");
@@ -1620,6 +1622,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         winrmProps.put("address", hostAndPort.getHostText());
         winrmProps.put("port", hostAndPort.getPort());
         winrmProps.put(AbstractLocation.TEMPORARY_LOCATION.getName(), true);
+        winrmProps.put(LocalLocationManager.CREATE_UNMANAGED.getName(), true);
         winrmProps.remove("password");
         winrmProps.remove("privateKeyData");
         winrmProps.remove("privateKeyFile");
