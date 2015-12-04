@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
@@ -40,7 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
-import com.google.common.base.Joiner;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -157,7 +155,7 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
                         + ", this attempt failed after "+Duration.of(failTimestamp).toStringRounded()
                         + (connectTimestamp != null ? ", connected in "+Duration.of(connectTimestamp).toStringRounded() : "");
                 
-                if (i == (execTries+1)) {
+                if ((i + 1) == execTries) {
                     LOG.info("Propagating exception - WinRM failed on "+user+"@"+host+":"+port+" "
                             + (logCredentials ? "password=" + password : "")
                             + "; (attempt "+(i+1)+" of "+execTries+"; "+timeMsg+")", e);
