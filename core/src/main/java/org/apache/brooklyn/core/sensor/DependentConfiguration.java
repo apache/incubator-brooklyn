@@ -635,10 +635,12 @@ public class DependentConfiguration {
     public static class ProtoBuilder {
         /**
          * Will wait for the attribute on the given entity.
-         * If that entity reports {@link Lifecycle#ON_FIRE} for its {@link Attributes#SERVICE_STATE} then it will abort. 
+         * If that entity reports {@link Lifecycle#ON_FIRE} for its {@link Attributes#SERVICE_STATE} then it will abort.
+         * If that entity reports {@link Lifecycle#STOPPING}, {@link Lifecycle#STOPPED}, or {@link Lifecycle#DESTROYED}
+         * then it will timeout after 1 minute.
          */
         public <T2> Builder<T2,T2> attributeWhenReady(Entity source, AttributeSensor<T2> sensor) {
-            return new Builder<T2,T2>(source, sensor).abortIfOnFire();
+            return new Builder<T2,T2>(source, sensor).abortIfOnFireOrTimeoutIfNecessary();
         }
 
         /**
@@ -722,6 +724,13 @@ public class DependentConfiguration {
             abortIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.ON_FIRE));
             return this;
         }
+        public Builder<T,V> abortIfOnFireOrTimeoutIfNecessary() {
+            abortIfOnFire();
+            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.STOPPING), Duration.ONE_MINUTE);
+            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.STOPPED), Duration.ONE_MINUTE);
+            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.DESTROYED), Duration.ONE_MINUTE);
+            return this;
+        }
         public Builder<T,V> blockingDetails(String val) {
             blockingDetails = val;
             return this;
@@ -729,6 +738,11 @@ public class DependentConfiguration {
         /** specifies an optional timeout; by default it waits forever, or until unmanaged or other abort condition */
         public Builder<T,V> timeout(Duration val) {
             timeout = val;
+            return this;
+        }
+        /** specifies the supplied timeout if the condition is met */
+        public <T2> Builder<T,V> timeoutIf(Entity source, AttributeSensor<T2> sensor, Predicate<? super T2> predicate, Duration val) {
+            if (predicate.apply(source.sensors().get(sensor))) timeout(val);
             return this;
         }
         public Builder<T,V> onTimeoutReturn(V val) {
