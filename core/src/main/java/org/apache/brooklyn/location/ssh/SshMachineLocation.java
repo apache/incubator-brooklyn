@@ -532,9 +532,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         String host = getConfig(SSH_HOST);
         if (host == null || Strings.isEmpty(host))
             host = address.getHostName();
-        Integer port = getConfig(SSH_PORT);
-        if (port == null || port == 0)
-            port = 22;
+        Integer port = getPort();
         return HostAndPort.fromParts(host, port);
     }
 
