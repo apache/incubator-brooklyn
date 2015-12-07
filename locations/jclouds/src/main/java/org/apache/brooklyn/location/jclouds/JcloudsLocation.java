@@ -58,7 +58,6 @@ import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.mgmt.AccessController;
 import org.apache.brooklyn.api.mgmt.Task;
-import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.config.ConfigUtils;
@@ -184,6 +183,9 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
+
+import io.cloudsoft.winrm4j.pywinrm.Session;
+import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -2449,15 +2451,23 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         final JcloudsPortForwarderExtension portForwarder = machine.getConfig(PORT_FORWARDER);
         PortForwardManager portForwardManager = machine.getConfig(PORT_FORWARDING_MANAGER);
         final NodeMetadata node = (machine instanceof JcloudsSshMachineLocation) ? ((JcloudsSshMachineLocation) machine).getNode() : null;
+        final Map<String, Runnable> subtasks = Maps.newLinkedHashMap();
 
         if (portForwarder == null) {
             LOG.debug("No port-forwarding to close (because portForwarder null) on release of " + machine);
         } else {
-            // Release the port-forwarding for the login-port, which was explicilty created by JcloudsLocation
+            // Release the port-forwarding for the login-port, which was explicitly created by JcloudsLocation
             if (usePortForwarding && node != null) {
-                HostAndPort sshHostAndPortOverride = machine.getSshHostAndPort();
-                LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, sshHostAndPortOverride, node.getLoginPort()});
-                portForwarder.closePortForwarding(node, node.getLoginPort(), sshHostAndPortOverride, Protocol.TCP);
+                final HostAndPort sshHostAndPortOverride = machine.getSshHostAndPort();
+                final int loginPort = node.getLoginPort();
+                subtasks.put(
+                        "Close port-forward "+sshHostAndPortOverride+"->"+node.getLoginPort(),
+                        new Runnable() {
+                            public void run() {
+                                LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, sshHostAndPortOverride, node.getLoginPort()});
+                                portForwarder.closePortForwarding(node, loginPort, sshHostAndPortOverride, Protocol.TCP);
+                            }
+                        });
             }
 
             // Get all the other port-forwarding mappings for this VM, and release all of those
@@ -2472,34 +2482,50 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 mappings = ImmutableSet.of();
             }
 
-            final TaskBuilder<Void> builder = TaskBuilder.<Void>builder()
-                    .parallel(true)
-                    .displayName("close port-forwarding at "+machine);
-
             for (final PortMapping mapping : mappings) {
                 final HostAndPort publicEndpoint = mapping.getPublicEndpoint();
                 final int targetPort = mapping.getPrivatePort();
                 final Protocol protocol = Protocol.TCP;
                 if (publicEndpoint != null) {
-                    builder.add(TaskBuilder.builder().displayName("Close port-forward at " +machine).body(new Runnable() {
-                        @Override
-                        public void run() {
-                            LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, publicEndpoint, targetPort});
-                            portForwarder.closePortForwarding(node, targetPort, publicEndpoint, protocol);
-                        }
-                    }).build());
+                    subtasks.put(
+                            "Close port-forward "+publicEndpoint+"->"+targetPort,
+                            new Runnable() {
+                                public void run() {
+                                    LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, publicEndpoint, targetPort});
+                                    portForwarder.closePortForwarding(node, targetPort, publicEndpoint, protocol);
+                                }
+                            });
                 }
             }
-            final Task<Void> task = builder.build();
-            final DynamicTasks.TaskQueueingResult<Void> queueResult = DynamicTasks.queueIfPossible(task);
-            if(!queueResult.isQueuedOrSubmitted()){
-                getManagementContext().getExecutionManager().submit(queueResult);
-            }
-            final String origDetails = Tasks.setBlockingDetails("waiting for closing port-forwarding of "+machine);
-            try {
-                task.blockUntilEnded();
-            } finally {
-                Tasks.setBlockingDetails(origDetails);
+
+            if (subtasks.size() > 0) {
+                final TaskBuilder<Void> builder = TaskBuilder.<Void>builder()
+                        .parallel(true)
+                        .displayName("close port-forwarding at "+machine);
+                for (Map.Entry<String, Runnable> entry : subtasks.entrySet()) {
+                    builder.add(TaskBuilder.builder().displayName(entry.getKey()).body(entry.getValue()).build());
+                }
+                final Task<Void> task = builder.build();
+                final DynamicTasks.TaskQueueingResult<Void> queueResult = DynamicTasks.queueIfPossible(task);
+                if(queueResult.isQueuedOrSubmitted()){
+                    final String origDetails = Tasks.setBlockingDetails("waiting for closing port-forwarding of "+machine);
+                    try {
+                        task.blockUntilEnded();
+                    } finally {
+                        Tasks.setBlockingDetails(origDetails);
+                    }
+                } else {
+                    // Not executing inside an execution context; can't submit!
+                    // It's not enough to just do:
+                    //     getManagementContext().getExecutionManager().submit(queueResult);
+                    // (see CompoundTask.submitIfNecessary, which gets called in ParallelTask).
+                    // Instead, we'll fall back to executing sequentially.
+                    LOG.warn("Releasing port-forwarding of "+machine+" not executing in execution-context "
+                            + "(e.g. not invoked inside effector); falling back to executing sequentially");
+                    for (Runnable subtask : subtasks.values()) {
+                        subtask.run();
+                    }
+                }
             }
         }
 
