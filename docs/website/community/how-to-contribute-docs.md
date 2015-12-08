@@ -49,7 +49,7 @@ In particular, note that the Brooklyn documentation is split into two parts:
   
 - **Version-specific user guide**. These pages have a URL with a path that
   begins /v/*version-number*: for example,
-  https://brooklyn.incubator.apache.org/v/0.8.0-incubating and {% comment %}BROOKLYN_VERSION{% endcomment %}
+  https://brooklyn.incubator.apache.org/v/0.8.1-SNAPSHOT and {% comment %}BROOKLYN_VERSION{% endcomment %}
   the special *latest* set at https://brooklyn.incubator.apache.org/v/latest. Content for this is in the `guide` directory.
 
 The main user guide shown on this site is for the most recent stable version,
