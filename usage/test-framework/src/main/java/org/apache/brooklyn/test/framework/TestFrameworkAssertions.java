@@ -144,7 +144,7 @@ public class TestFrameworkAssertions {
                 @Override
                 public void run() {
                     T actual = actualSupplier.get();
-                    checkActualAgainstAssertions(support, assertions, target, actual);
+                    checkActualAgainstAssertions(assertions, target, actual);
                 }
             });
         } catch (Throwable t) {
@@ -152,7 +152,7 @@ public class TestFrameworkAssertions {
         }
     }
 
-    private static <T> void checkActualAgainstAssertions(AssertionSupport support, Map<String, Object> assertions,
+    private static <T> void checkActualAgainstAssertions(Map<String, Object> assertions,
                                                          String target, T actual) {
         for (Map.Entry<String, Object> assertion : assertions.entrySet()) {
             String condition = assertion.getKey().toString();
@@ -163,56 +163,63 @@ public class TestFrameworkAssertions {
                 case EQUAL_TO :
                 case EQUALS :
                     if (null == actual || !actual.equals(expected)) {
-                        support.fail(target, EQUALS, expected);
+                        failAssertion(target, EQUALS, expected);
                     }
                     break;
 
                 case IS_NULL :
                     if (isTrue(expected) != (null == actual)) {
-                        support.fail(target, IS_NULL, expected);
+                        failAssertion(target, IS_NULL, expected);
                     }
                     break;
 
                 case NOT_NULL :
                     if (isTrue(expected) != (null != actual)) {
-                        support.fail(target, NOT_NULL, expected);
+                        failAssertion(target, NOT_NULL, expected);
                     }
                     break;
 
                 case CONTAINS :
                     if (null == actual || !actual.toString().contains(expected.toString())) {
-                        support.fail(target, CONTAINS, expected);
+                        failAssertion(target, CONTAINS, expected);
                     }
                     break;
 
                 case IS_EMPTY :
                     if (isTrue(expected) != (null == actual || Strings.isEmpty(actual.toString()))) {
-                        support.fail(target, IS_EMPTY, expected);
+                        failAssertion(target, IS_EMPTY, expected);
                     }
                     break;
 
                 case NOT_EMPTY :
                     if (isTrue(expected) != ((null != actual && Strings.isNonEmpty(actual.toString())))) {
-                        support.fail(target, NOT_EMPTY, expected);
+                        failAssertion(target, NOT_EMPTY, expected);
                     }
                     break;
 
                 case MATCHES :
                     if (null == actual || !actual.toString().matches(expected.toString())) {
-                        support.fail(target, MATCHES, expected);
+                        failAssertion(target, MATCHES, expected);
                     }
                     break;
 
                 case HAS_TRUTH_VALUE :
                     if (isTrue(expected) != isTrue(actual)) {
-                        support.fail(target, HAS_TRUTH_VALUE, expected);
+                        failAssertion(target, HAS_TRUTH_VALUE, expected);
                     }
                     break;
 
                 default:
-                    support.fail(target, UNKNOWN_CONDITION, condition);
+                    failAssertion(target, UNKNOWN_CONDITION, condition);
             }
         }
+    }
+
+    static void failAssertion(String target, String assertion, Object expected) {
+        throw new AssertionError(Joiner.on(' ').join(
+            null != target ? target : "null",
+            null != assertion ? assertion : "null",
+            null != expected ? expected : "null"));
     }
 
     private static boolean isTrue(Object object) {
