@@ -48,6 +48,11 @@ public interface AbstractGeoDnsService extends Entity {
     ConfigKey<Group> ENTITY_PROVIDER = ConfigKeys.newConfigKey(Group.class,
             "geodns.entityProvider", "The group whose members should be tracked");
 
+    /** @see Lifecycle#RUNNING */
+    @SetFromFlag("filterForRunning")
+    ConfigKey<Boolean> FILTER_FOR_RUNNING = ConfigKeys.newBooleanConfigKey(
+            "geodns.filterForRunning", "Whether to only track targets whose status is \"RUNNING\"", true);
+
     AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
     AttributeSensor<Boolean> SERVICE_UP = Startable.SERVICE_UP;
     AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;

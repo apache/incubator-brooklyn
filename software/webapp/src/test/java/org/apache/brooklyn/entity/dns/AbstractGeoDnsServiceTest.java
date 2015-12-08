@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.entity.dns;
 
+import static org.apache.brooklyn.core.entity.EntityAsserts.assertAttributeEqualsContinually;
+import static org.apache.brooklyn.core.entity.EntityAsserts.assertAttributeEventually;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -36,7 +38,9 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityAsserts;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
 import org.apache.brooklyn.core.location.LocationConfigKeys;
 import org.apache.brooklyn.core.location.Locations;
@@ -247,6 +251,32 @@ public class AbstractGeoDnsServiceTest extends BrooklynAppUnitTestSupport {
         assertIsTarget("West child");
         assertIsTarget("East child with location");
         assertIsNotTarget("North child");
+    }
+
+    @Test
+    public void testFiltersForRunningEntities() {
+        app.start(ImmutableList.of(westChildWithLocation, eastChildWithLocationAndWithPrivateHostname));
+        publishSensors(2, true, true, true);
+
+        TestEntity problemChild = Entities.descendants(app, TestEntity.class).iterator().next();
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+        problemChild.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(1));
+        problemChild.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+    }
+
+    @Test
+    public void testCanDisableFilterForRunningEntities() throws Exception {
+        geoDns.config().set(AbstractGeoDnsService.FILTER_FOR_RUNNING, false);
+        app.start(ImmutableList.of(westChildWithLocation, eastChildWithLocationAndWithPrivateHostname));
+        publishSensors(2, true, true, true);
+
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+        final Map<String, String> targets = ImmutableMap.copyOf(geoDns.sensors().get(AbstractGeoDnsService.TARGETS));
+        TestEntity problemChild = Entities.descendants(app, TestEntity.class).iterator().next();
+        problemChild.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        assertAttributeEqualsContinually(geoDns, AbstractGeoDnsService.TARGETS, targets);
     }
 
     private void assertIsTarget(String target) {
