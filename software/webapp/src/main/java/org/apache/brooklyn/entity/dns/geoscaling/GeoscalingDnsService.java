@@ -23,10 +23,9 @@ import java.net.URI;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Attributes;
-import org.apache.brooklyn.core.sensor.BasicAttributeSensor;
+import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
@@ -35,36 +34,45 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 public interface GeoscalingDnsService extends AbstractGeoDnsService {
     
     @SetFromFlag("sslTrustAll")
-    public static final ConfigKey<Boolean> SSL_TRUST_ALL = ConfigKeys.newBooleanConfigKey(
+    ConfigKey<Boolean> SSL_TRUST_ALL = ConfigKeys.newBooleanConfigKey(
             "ssl.trustAll",
             "Whether to trust all certificates, or to fail with 'peer not authenticated' if untrusted (default false)",
             false);
+
     @SetFromFlag("randomizeSubdomainName")
-    public static final ConfigKey<Boolean> RANDOMIZE_SUBDOMAIN_NAME = new BasicConfigKey<Boolean>(
-            Boolean.class, "randomize.subdomain.name");
+    ConfigKey<Boolean> RANDOMIZE_SUBDOMAIN_NAME = ConfigKeys.newBooleanConfigKey(
+            "randomize.subdomain.name");
+
     @SetFromFlag("username")
-    public static final ConfigKey<String> GEOSCALING_USERNAME = new BasicConfigKey<String>(
-            String.class, "geoscaling.username");
+    ConfigKey<String> GEOSCALING_USERNAME = ConfigKeys.newStringConfigKey(
+            "geoscaling.username");
+
     @SetFromFlag("password")
-    public static final ConfigKey<String> GEOSCALING_PASSWORD = new BasicConfigKey<String>(
-            String.class, "geoscaling.password");
+    ConfigKey<String> GEOSCALING_PASSWORD = ConfigKeys.newStringConfigKey(
+            "geoscaling.password");
+
     @SetFromFlag("primaryDomainName")
-    public static final ConfigKey<String> GEOSCALING_PRIMARY_DOMAIN_NAME = new BasicConfigKey<String>(
-            String.class, "geoscaling.primary.domain.name");
+    ConfigKey<String> GEOSCALING_PRIMARY_DOMAIN_NAME = ConfigKeys.newStringConfigKey(
+            "geoscaling.primary.domain.name");
+
     @SetFromFlag("smartSubdomainName")
-    public static final ConfigKey<String> GEOSCALING_SMART_SUBDOMAIN_NAME = new BasicConfigKey<String>(
-            String.class, "geoscaling.smart.subdomain.name");
+    ConfigKey<String> GEOSCALING_SMART_SUBDOMAIN_NAME = ConfigKeys.newStringConfigKey(
+            "geoscaling.smart.subdomain.name");
     
-    public static final AttributeSensor<String> GEOSCALING_ACCOUNT = new BasicAttributeSensor<String>(
-            String.class, "geoscaling.account", "Active user account for the GeoScaling.com service");
-    public static final AttributeSensor<URI> MAIN_URI = Attributes.MAIN_URI;
-    public static final AttributeSensor<String> ROOT_URL = WebAppServiceConstants.ROOT_URL;
-    public static final AttributeSensor<String> MANAGED_DOMAIN = new BasicAttributeSensor<String>(
-            String.class, "geoscaling.managed.domain", "Fully qualified domain name that will be geo-redirected; " +
+    AttributeSensor<String> GEOSCALING_ACCOUNT = Sensors.newStringSensor(
+            "geoscaling.account", "Active user account for the GeoScaling.com service");
+
+    AttributeSensor<URI> MAIN_URI = Attributes.MAIN_URI;
+
+    AttributeSensor<String> ROOT_URL = WebAppServiceConstants.ROOT_URL;
+
+    AttributeSensor<String> MANAGED_DOMAIN = Sensors.newStringSensor(
+            "geoscaling.managed.domain",
+            "Fully qualified domain name that will be geo-redirected; " +
                     "this will be the same as "+ROOT_URL.getName()+" but the latter will only be set when the domain has active targets");
     
-    public void applyConfig();
+    void applyConfig();
     
     /** minimum/default TTL here is 300s = 5m */
-    public long getTimeToLiveSeconds();
+    long getTimeToLiveSeconds();
 }
