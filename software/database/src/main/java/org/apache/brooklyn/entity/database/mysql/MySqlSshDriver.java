@@ -111,6 +111,11 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return "mymysql.cnf";
     }
 
+    // Only invoked to determine the default download URL form the specified version.
+    public String getMajorVersion() {
+        return getEntity().config().get(MySqlNode.SUGGESTED_VERSION).replaceAll("(\\d+\\.\\d+)\\.\\d+", "$1");
+    }
+
     public String getDefaultUnpackedDirectoryName() {
         return Strings.removeAllFromEnd(resolver.getFilename(), ".tar.gz");
     }
