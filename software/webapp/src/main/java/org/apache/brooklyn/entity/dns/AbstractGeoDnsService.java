@@ -30,17 +30,24 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.location.geo.HostGeoInfo;
 import org.apache.brooklyn.core.sensor.Sensors;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 import com.google.common.reflect.TypeToken;
 
 public interface AbstractGeoDnsService extends Entity {
     
+    @SetFromFlag("includeHomelessEntities")
     ConfigKey<Boolean> INCLUDE_HOMELESS_ENTITIES = ConfigKeys.newBooleanConfigKey(
             "geodns.includeHomeless", "Whether to include entities whose geo-coordinates cannot be inferred", false);
 
+    @SetFromFlag("useHostnames")
     ConfigKey<Boolean> USE_HOSTNAMES = ConfigKeys.newBooleanConfigKey(
             "geodns.useHostnames", "Whether to use the hostname for the returned value for routing, rather than IP address (defaults to true)", true);
-    
+
+    @SetFromFlag("provider")
+    ConfigKey<Group> ENTITY_PROVIDER = ConfigKeys.newConfigKey(Group.class,
+            "geodns.entityProvider", "The group whose members should be tracked");
+
     AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
     AttributeSensor<Boolean> SERVICE_UP = Startable.SERVICE_UP;
     AttributeSensor<String> HOSTNAME = Attributes.HOSTNAME;

@@ -83,6 +83,15 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
     }
     
     @Override
+    public void init() {
+        super.init();
+        Group initialProvider = config().get(ENTITY_PROVIDER);
+        if (initialProvider != null) {
+            setTargetEntityProvider(initialProvider);
+        }
+    }
+
+    @Override
     public Map<Entity, HostGeoInfo> getTargetHosts() {
         return targetHosts;
     }
@@ -174,14 +183,13 @@ public abstract class AbstractGeoDnsServiceImpl extends AbstractEntity implement
             }
             // anything left in previousOnes is no longer applicable
             for (Entity e: previousOnes) {
-                changed = true;
-                removeTargetHost(e, false);
+                changed |= removeTargetHost(e, false);
             }
             
             // do a periodic full update hourly once we are active (the latter is probably not needed)
-            if (changed || (lastUpdate>0 && Time.hasElapsedSince(lastUpdate, Duration.ONE_HOUR)))
+            if (changed || (lastUpdate > 0 && Time.hasElapsedSince(lastUpdate, Duration.ONE_HOUR))) {
                 update();
-            
+            }
         } catch (Exception e) {
             log.error("Problem refreshing group membership: "+e, e);
         }
