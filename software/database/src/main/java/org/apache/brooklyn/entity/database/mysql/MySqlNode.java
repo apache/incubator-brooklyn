@@ -50,7 +50,7 @@ public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommo
     //http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-5.6.26-linux-glibc2.5-x86_64.tar.gz
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new StringAttributeSensorAndConfigKey(
-            Attributes.DOWNLOAD_URL, "http://dev.mysql.com/get/Downloads/MySQL-5.6/mysql-${version}-${driver.osTag}.tar.gz");
+            Attributes.DOWNLOAD_URL, "http://dev.mysql.com/get/Downloads/MySQL-${driver.majorVersion}/mysql-${version}-${driver.osTag}.tar.gz");
 
     @SetFromFlag("port")
     PortAttributeSensorAndConfigKey MYSQL_PORT = new PortAttributeSensorAndConfigKey("mysql.port", "MySQL port", PortRanges.fromString("3306, 13306+"));
