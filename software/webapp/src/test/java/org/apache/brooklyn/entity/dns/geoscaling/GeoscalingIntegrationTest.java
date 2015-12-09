@@ -22,20 +22,19 @@ import static org.testng.Assert.assertEquals;
 
 import java.net.InetAddress;
 
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Attributes;
-import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.location.geo.HostGeoInfo;
 import org.apache.brooklyn.core.location.geo.HostGeoLookup;
 import org.apache.brooklyn.core.location.geo.MaxMind2HostGeoLookup;
 import org.apache.brooklyn.core.location.geo.UtraceHostGeoLookup;
-import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
-import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingScriptGenerator;
 import org.apache.brooklyn.entity.group.DynamicGroup;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -44,6 +43,7 @@ import org.apache.brooklyn.util.internal.BrooklynSystemProperties;
 import org.apache.brooklyn.util.net.Networking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -55,7 +55,7 @@ import com.google.common.collect.ImmutableList;
 /**
  * {@link GeoscalingScriptGenerator} unit tests.
  */
-public class GeoscalingIntegrationTest {
+public class GeoscalingIntegrationTest extends BrooklynAppUnitTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(GeoscalingIntegrationTest.class);
 
@@ -64,8 +64,6 @@ public class GeoscalingIntegrationTest {
     private final InetAddress addrWithGeo = Networking.getLocalHost();
     private final InetAddress addrWithoutGeo = Networking.getInetAddressWithFixedName(StubHostGeoLookup.HOMELESS_IP);
     
-    private ManagementContext mgmt;
-    private TestApplication app;
     private TestEntity target;
     private DynamicGroup group;
     private GeoscalingDnsService geoDns;
@@ -73,28 +71,35 @@ public class GeoscalingIntegrationTest {
 
     private SshMachineLocation locWithGeo;
     private SshMachineLocation locWithoutGeo;
-    
+
+    @Override
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
+        // Want to load username and password from user's properties.
+        mgmt = LocalManagementContextForTests.newInstance(BrooklynProperties.Factory.newDefault());
+        super.setUp();
+
         origGeoLookupImpl = BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getValue();
         HostGeoInfo.clearCachedLookup();
 
-        app = TestApplication.Factory.newManagedInstanceForTests();
-        mgmt = app.getManagementContext();
-        
         target = app.createAndManageChild(EntitySpec.create(TestEntity.class));
-        
         group = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
                 .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
-        
+
+        String username = getBrooklynProperty(mgmt, "brooklyn.geoscaling.username");
+        String password = getBrooklynProperty(mgmt, "brooklyn.geoscaling.password");
+        if (username == null || password == null) {
+            throw new SkipException("Set brooklyn.geoscaling.username and brooklyn.geoscaling.password in brooklyn.properties to enable test");
+        }
+
         geoDns = app.createAndManageChild(EntitySpec.create(GeoscalingDnsService.class)
                 .displayName("Geo-DNS")
-                .configure("username", "cloudsoft")
-                .configure("password", "cl0uds0ft")
-                .configure("primaryDomainName", primaryDomain)
-                .configure("smartSubdomainName", subDomain)
-                .configure("targetEntityProvider", group));
-        
+                .configure(GeoscalingDnsService.GEOSCALING_USERNAME, username)
+                .configure(GeoscalingDnsService.GEOSCALING_PASSWORD, password)
+                .configure(GeoscalingDnsService.GEOSCALING_PRIMARY_DOMAIN_NAME, primaryDomain)
+                .configure(GeoscalingDnsService.GEOSCALING_SMART_SUBDOMAIN_NAME, subDomain)
+                .configure(GeoscalingDnsService.ENTITY_PROVIDER, group));
+
         locWithGeo = mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .configure("address", addrWithGeo)
                 .configure("name", "Edinburgh")
@@ -106,22 +111,27 @@ public class GeoscalingIntegrationTest {
                 .configure("address", addrWithoutGeo)
                 .configure("name", "Nowhere"));
     }
-    
+
+    @Override
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
+        super.tearDown();
         if (origGeoLookupImpl != null) {
             System.setProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName(), origGeoLookupImpl);
         } else {
             System.clearProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName());
         }
-        if (mgmt != null) Entities.destroyAll(mgmt);
         HostGeoInfo.clearCachedLookup();
     }
-    
+
+    private String getBrooklynProperty(ManagementContext mgmt, String property) {
+        return ((ManagementContextInternal) mgmt).getBrooklynProperties().getFirst(property);
+    }
+
     @Test(groups={"Integration"})
     public void testRoutesToExpectedLocation() {
         // Without this config, running on a home network (i.e. no public IP) the entity will have a private IP and will be ignored
-        ((EntityLocal)geoDns).config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
+        geoDns.config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
         
         target.sensors().set(Attributes.HOSTNAME,addrWithGeo.getHostName());
         
@@ -135,7 +145,7 @@ public class GeoscalingIntegrationTest {
     @Test(groups={"Integration"})
     public void testIgnoresAddressWithoutGeography() throws Exception {
         System.setProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName(), StubHostGeoLookup.class.getName());
-        ((EntityLocal)geoDns).config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, false); // false is default
+        geoDns.config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, false); // false is default
         
         app.start(ImmutableList.of(locWithoutGeo));
         target.sensors().set(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);
@@ -152,7 +162,7 @@ public class GeoscalingIntegrationTest {
     @Test(groups={"Integration"})
     public void testIncludesAddressWithoutGeography() {
         System.setProperty(BrooklynSystemProperties.HOST_GEO_LOOKUP_IMPL.getPropertyName(), StubHostGeoLookup.class.getName());
-        ((EntityLocal)geoDns).config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
+        geoDns.config().set(GeoscalingDnsService.INCLUDE_HOMELESS_ENTITIES, true);
         
         app.start(ImmutableList.of(locWithoutGeo));
         target.sensors().set(Attributes.HOSTNAME, StubHostGeoLookup.HOMELESS_IP);

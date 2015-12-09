@@ -26,11 +26,17 @@ import static org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.PROV
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.test.BrooklynMgmtUnitTestSupport;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.Domain;
 import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.SmartSubdomain;
 import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.http.client.HttpClient;
+import org.testng.SkipException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -100,12 +106,9 @@ at org.apache.brooklyn.entity.dns.geoscaling.GeoscalingWebClient.login(Geoscalin
 ... 31 more
  */
 @Test(groups="Broken", enabled=false)
-public class GeoscalingWebClientTest {
+public class GeoscalingWebClientTest extends BrooklynMgmtUnitTestSupport {
     
     private final static String GEOSCALING_URL = "https://www.geoscaling.com";
-    private final static String USERNAME = "cloudsoft";
-    private final static String PASSWORD = "cl0uds0ft";
-    
     private final static String PRIMARY_DOMAIN = "domain-" + Strings.makeRandomId(5) + ".test.org";
     private final static String SUBDOMAIN = "subdomain-" + Strings.makeRandomId(5);
     
@@ -115,18 +118,29 @@ public class GeoscalingWebClientTest {
     
     private Domain domain;
     private SmartSubdomain smartSubdomain;
-    
-    @BeforeMethod(alwaysRun=true)
-    public void setUp() {
+
+    @Override
+    @BeforeMethod(alwaysRun = true)
+    public void setUp() throws Exception {
+        // Want to load username and password from user's properties.
+        mgmt = LocalManagementContextForTests.newInstance(BrooklynProperties.Factory.newDefault());
+
+        String username = getBrooklynProperty(mgmt, "brooklyn.geoscaling.username");
+        String password = getBrooklynProperty(mgmt, "brooklyn.geoscaling.password");
+        if (username == null || password == null) {
+            throw new SkipException("Set brooklyn.geoscaling.username and brooklyn.geoscaling.password in brooklyn.properties to enable test");
+        }
+
         // Insecurely use "trustAll" so that don't need to import signature into trust store
         // before test will work on jenkins machine.
         HttpClient httpClient = HttpTool.httpClientBuilder().uri(GEOSCALING_URL).trustAll().build();
         geoscaling = new GeoscalingWebClient(httpClient);
-        geoscaling.login(USERNAME, PASSWORD);
+        geoscaling.login(username, password);
+        super.setUp();
     }
     
     @AfterMethod(alwaysRun=true)
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (smartSubdomain != null)
             smartSubdomain.delete();
         
@@ -135,8 +149,15 @@ public class GeoscalingWebClientTest {
         
         if (geoscaling != null)
             geoscaling.logout();
+
+        super.tearDown();
+
     }
-    
+
+    private String getBrooklynProperty(ManagementContext mgmt, String property) {
+        return ((ManagementContextInternal) mgmt).getBrooklynProperties().getFirst(property);
+    }
+
     @Test(groups = "Integration")
     public void testSimpleNames() {
         testWebClient(PRIMARY_DOMAIN, SUBDOMAIN);
