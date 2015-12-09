@@ -30,6 +30,14 @@ import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
 import org.apache.brooklyn.entity.webapp.WebAppServiceConstants;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
+/**
+ * A geo-DNS service using geoscaling.com.
+ * <p>
+ * AWS users should note that if the Brooklyn server managing this entity is in the same
+ * region as the server being geoscaled then they must set {@link #INCLUDE_HOMELESS_ENTITIES}
+ * to true, as IP lookups of the server will resolve the private address and it will be
+ * ignored by default.
+ */
 @ImplementedBy(GeoscalingDnsServiceImpl.class)
 public interface GeoscalingDnsService extends AbstractGeoDnsService {
     
