@@ -1,0 +1,27 @@
+name: simpleShellCommandTest 
+location: mybyonhost
+services:
+- type: org.apache.brooklyn.test.framework.TestCase
+  name: testcase1
+  targetId: testprocess
+  brooklyn.children:
+    - type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
+      id: testprocess
+
+    - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
+      defaultCommand: hostname
+      assertStatus:
+        equals: 0
+      assertOut: 
+        equals: mybyonhost
+      assertErr: 
+        isEmpty: true
+
+    - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
+      downloadUrl: http://localhost:8080/script1.sh
+      assertStatus:
+        equals: 0
+      assertOut: 
+        equals: hello world
+      assertErr: 
+        isEmpty: true

@@ -6,6 +6,16 @@ layout: website-normal
 
 {% include fields.md %}
 
+- [Structural Test Entities](#structural-test-entities)
+  - [TestCase](#testcase)
+  - [ParallelTestCase](#paralleltestcase)
+- [Validation Test Entities](#validation-test-entities)
+  - [TestSensor](#testsensor)
+  - [TestEffector](#testeffector)
+  - [TestHttpCall](#testhttpcall)
+  - [SimpleShellCommandTest](#simpleshellcommandtest)
+- [Assertions](#assertions)
+
 ## Structural Test Entities
 
 ### TestCase
@@ -46,12 +56,7 @@ The `TestSensor` entity performs an assertion on a specified sensors value.
 - `targetId` - alternative to the `target` parameter which wraps the DSL component lookup requiring only the `id` be supplied. For example, `tomcat`.
 - `sensor` - sensor to evaluate. For example `service.isUp`.
 - `timeout` - duration to wait on assertion to return a result. For example `10s`, `10m`, etc
-- `assert` - assertion to perform on the specified sensor value, options include:
-  - `equals`,`equalTo`,`isEqualTo` - tests that the sensor value equals the supplied value. For example `true`.
-  - `contains` - tests that the sensor value contains the supplied value
-  - `matches` - tests that the sensor value matches the supplied [regex pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html?is-external=true), for example `".*hello.*"`.
-  - `isNull` - tests that the sensor value is `null`.
-  - `notNull` - tests that the sensor value is NOT `null`.
+- `assert` - assertion to perform on the specified sensor value.
 
 ### TestEffector
 The `TestEffector` entity invokes the specified effector on a target entity.
@@ -76,10 +81,58 @@ The `TestHttpCall` entity performs a HTTP GET on the specified URL and performs 
 - `url` - URL to perform GET request on, this can use DSL for example `$brooklyn:component("tomcat").attributeWhenReady("webapp.url")`.
 - `timeout` - duration to wait on a HTTP response. For example `10s`, `10m`, etc
 - `applyAssertionTo` - The filed to apply the assertion to. For example `status`, `body`
-- `assert` - assertion to perform on the response, options include:
-  - `equals`,`equalTo`,`isEqualTo` - tests that the value equals the supplied value. For example `true`.
-  - `contains` - tests that the value contains the supplied value
-  - `matches` - tests that the value matches the supplied [regex pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html?is-external=true), for example `".*hello.*"`.
-  - `isNull` - tests that the value is `null`.
-  - `notNull` - tests that the value is NOT `null`.
+- `assert` - assertion to perform on the response.
 
+### SimpleShellCommandTest
+
+The purpose of a SimpleShellCommandTest is to run a command, on the host of the target entity,
+that is expected to "do something", finishing quickly, and return a result (process exit code), along with its 
+standard out and error streams, which can then be tested using assertions.
+If no assertions are explicitly configured, the default is to assert a non-zero exit code.
+
+Either a shell command may be provided in the YAML, or a URL for a script which will be executed.
+
+{% highlight yaml %}
+{% readj example_yaml/entities/simpleshellcommandtest-entity.yaml %}
+{% endhighlight %}
+
+#### Parameters
+- `command` - The shell command to execute. (This and `downloadUrl` are mutually exclusive.)
+- `downloadUrl` - URL for a script to download and execute. (This and `command` are mutually exclusive.)
+- `scriptDir` - if `downloadUrl` is used.  The directory on the target host where downloaded scripts should be copied to.
+- `runDir` - the working directory where the command or script will be executed on the target host.
+- `assertStatus` - Assertions on the exit code of the command or script. 
+- `assertOut` - Assertions on the standard output of the command as a String.
+- `assertErr` -  Assertions on the standard error of the command as a String.
+
+## Assertions
+
+The following conditions are provided by those test entities above that include assertions
+
+- `isNull` - asserts that the actual value is `null`.
+- `notNull` - asserts that the actual value is NOT `null`.
+- `isEqualTo` - asserts that the actual value equals an expected value.
+- `equalTo` - a synonym for `isEqualTo`
+- `equals` - a synonym for `isEqualTo`
+- `matches` - asserts that the actual value matches a [regex pattern](http://docs.oracle.com/javase/7/docs/api/java/util/regex/Pattern.html?is-external=true), for example `".*hello.*"`.
+- `contains` - asserts that the actual value contains the supplied value
+- `isEmpty` - asserts that the actual value is an empty string
+- `notEmpty` - asserts that the actual value is a non empty string
+- `hasTruthValue` - asserts that the actual value has the expected interpretation as a boolean
+
+Assertions may be provided as a simple map:
+
+```yaml
+  assert:
+       contains: 2 users
+       matches: .*[\d]* days.*
+```
+
+If there is the need to make multiple assertions with the same key, the assertions can be specified 
+as a list of such maps:
+
+```yaml
+  assert:
+       - contains: 2 users
+       - contains: 2 days
+```
