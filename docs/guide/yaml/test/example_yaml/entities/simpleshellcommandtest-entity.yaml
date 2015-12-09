@@ -1,24 +1,21 @@
-name: simpleShellCommandTest 
-location: mybyonhost
-services:
 - type: org.apache.brooklyn.test.framework.TestCase
   name: testcase1
   targetId: testprocess
   brooklyn.children:
-    - type: org.apache.brooklyn.entity.software.base.EmptySoftwareProcess
+    - type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
       id: testprocess
 
     - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
-      defaultCommand: hostname
+      command: ps -ef
       assertStatus:
         equals: 0
-      assertOut: 
-        equals: mybyonhost
+      assertOut:
+        contains: tomcat
       assertErr: 
         isEmpty: true
 
     - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
-      downloadUrl: http://localhost:8080/script1.sh
+      downloadUrl: https://raw.githubusercontent.com/apache/incubator-brooklyn/master/docs/guide/yaml/test/entities/script1.sh
       assertStatus:
         equals: 0
       assertOut: 

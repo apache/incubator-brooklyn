@@ -6,15 +6,6 @@ layout: website-normal
 
 {% include fields.md %}
 
-- [Structural Test Entities](#structural-test-entities)
-  - [TestCase](#testcase)
-  - [ParallelTestCase](#paralleltestcase)
-- [Validation Test Entities](#validation-test-entities)
-  - [TestSensor](#testsensor)
-  - [TestEffector](#testeffector)
-  - [TestHttpCall](#testhttpcall)
-  - [SimpleShellCommandTest](#simpleshellcommandtest)
-- [Assertions](#assertions)
 
 ## Structural Test Entities
 
@@ -56,7 +47,7 @@ The `TestSensor` entity performs an assertion on a specified sensors value.
 - `targetId` - alternative to the `target` parameter which wraps the DSL component lookup requiring only the `id` be supplied. For example, `tomcat`.
 - `sensor` - sensor to evaluate. For example `service.isUp`.
 - `timeout` - duration to wait on assertion to return a result. For example `10s`, `10m`, etc
-- `assert` - assertion to perform on the specified sensor value.
+- `assert` - assertion to perform on the specified sensor value. See section on assertions below.
 
 ### TestEffector
 The `TestEffector` entity invokes the specified effector on a target entity.
@@ -81,12 +72,12 @@ The `TestHttpCall` entity performs a HTTP GET on the specified URL and performs 
 - `url` - URL to perform GET request on, this can use DSL for example `$brooklyn:component("tomcat").attributeWhenReady("webapp.url")`.
 - `timeout` - duration to wait on a HTTP response. For example `10s`, `10m`, etc
 - `applyAssertionTo` - The filed to apply the assertion to. For example `status`, `body`
-- `assert` - assertion to perform on the response.
+- `assert` - assertion to perform on the response.  See section on assertions below.
 
 ### SimpleShellCommandTest
 
-The purpose of a SimpleShellCommandTest is to run a command, on the host of the target entity,
-that is expected to "do something", finishing quickly, and return a result (process exit code), along with its 
+The SimpleShellCommandTest runs a command on the host of the target entity.
+The script is expected not to run indefinitely, but to return a result (process exit code), along with its 
 standard out and error streams, which can then be tested using assertions.
 If no assertions are explicitly configured, the default is to assert a non-zero exit code.
 
@@ -101,7 +92,7 @@ Either a shell command may be provided in the YAML, or a URL for a script which 
 - `downloadUrl` - URL for a script to download and execute. (This and `command` are mutually exclusive.)
 - `scriptDir` - if `downloadUrl` is used.  The directory on the target host where downloaded scripts should be copied to.
 - `runDir` - the working directory where the command or script will be executed on the target host.
-- `assertStatus` - Assertions on the exit code of the command or script. 
+- `assertStatus` - Assertions on the exit code of the command or script. See section on assertions below.
 - `assertOut` - Assertions on the standard output of the command as a String.
 - `assertErr` -  Assertions on the standard error of the command as a String.
 
