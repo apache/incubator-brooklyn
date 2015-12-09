@@ -135,8 +135,8 @@ public class MySqlNodeImpl extends SoftwareProcessImpl implements MySqlNode {
     public int getPort() {
         return getAttribute(MYSQL_PORT);
     }
-    
-    public String getSocketUid() {
+
+    public synchronized String getSocketUid() {
         String result = getAttribute(MySqlNode.SOCKET_UID);
         if (Strings.isBlank(result)) {
             result = Identifiers.makeRandomId(6);
