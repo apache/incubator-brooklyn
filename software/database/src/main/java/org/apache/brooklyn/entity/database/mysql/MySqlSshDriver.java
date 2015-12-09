@@ -80,7 +80,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
     public String getOsTag() {
         // e.g. "osx10.6-x86_64"; see http://www.mysql.com/downloads/mysql/#downloads
         OsDetails os = getLocation().getOsDetails();
-        if (os == null) return "linux-glibc2.5-x86_64";
+        if (os == null) return "linux2.6-x86_64";
         if (os.isMac()) {
             String osp1 = os.getVersion()==null ? "osx10.8" //lowest common denominator
                 : new ComparableVersion(os.getVersion()).isGreaterThanOrEqualTo(OsVersions.MAC_10_9) ? "osx10.9"
@@ -91,7 +91,7 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
             return osp1+"-x86_64";
         }
         //assume generic linux
-        String osp1 = "linux-glibc2.5";
+        String osp1 = "linux2.6";
         String osp2 = os.is64bit() ? "x86_64" : "i686";
         return osp1+"-"+osp2;
     }
