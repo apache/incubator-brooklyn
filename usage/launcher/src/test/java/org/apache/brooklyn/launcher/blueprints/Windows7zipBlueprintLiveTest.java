@@ -20,6 +20,7 @@ package org.apache.brooklyn.launcher.blueprints;
 
 import java.io.StringReader;
 
+import com.google.common.collect.Iterables;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.core.entity.Entities;
@@ -28,7 +29,6 @@ import org.apache.brooklyn.entity.software.base.test.location.WindowsTestFixture
 import org.apache.brooklyn.location.winrm.AdvertiseWinrmLoginPolicy;
 import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
 import org.apache.brooklyn.util.text.Strings;
-import org.python.google.common.collect.Iterables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;

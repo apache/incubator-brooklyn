@@ -19,10 +19,10 @@
 package org.apache.brooklyn.test.framework;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.time.Duration;
-import org.python.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;

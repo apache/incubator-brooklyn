@@ -20,6 +20,7 @@ package org.apache.brooklyn.rest.resources;
 
 
 import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -53,7 +54,6 @@ import org.apache.brooklyn.rest.api.EffectorApi;
 import org.apache.brooklyn.rest.api.EntityApi;
 import org.apache.brooklyn.rest.filter.SwaggerFilter;
 import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
-import org.python.google.common.base.Joiner;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
