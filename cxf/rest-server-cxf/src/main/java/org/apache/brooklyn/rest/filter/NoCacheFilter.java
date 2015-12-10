@@ -18,23 +18,21 @@
  */
 package org.apache.brooklyn.rest.filter;
 
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
-
-import com.sun.jersey.spi.container.ContainerRequest;
-import com.sun.jersey.spi.container.ContainerResponse;
-import com.sun.jersey.spi.container.ContainerResponseFilter;
 
 public class NoCacheFilter implements ContainerResponseFilter {
 
     @Override
-    public ContainerResponse filter(ContainerRequest request, ContainerResponse response) {
+    public void filter(ContainerRequestContext request, ContainerResponseContext response) {
         //https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching_FAQ
-        MultivaluedMap<String, Object> headers = response.getHttpHeaders();
+        MultivaluedMap<String, Object> headers = response.getHeaders();
         headers.putSingle(HttpHeaders.CACHE_CONTROL, "no-cache, no-store");
         headers.putSingle("Pragma", "no-cache");
         headers.putSingle(HttpHeaders.EXPIRES, "0");
-        return response;
     }
 
 }

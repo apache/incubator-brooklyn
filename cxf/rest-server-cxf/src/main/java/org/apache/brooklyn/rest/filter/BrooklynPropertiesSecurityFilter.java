@@ -39,8 +39,8 @@ import org.apache.brooklyn.core.mgmt.entitlement.WebEntitlementContext;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
 import org.apache.brooklyn.util.text.Strings;
 
-import com.sun.jersey.core.util.Base64;
 import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.apache.commons.codec.binary.Base64;
 
 /**
  * Provides basic HTTP authentication.
@@ -139,7 +139,7 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
         String user = null, pass = null;
         String authorization = request.getHeader("Authorization");
         if (authorization != null) {
-            String userpass = Base64.base64Decode(authorization.substring(6));
+            String userpass = new String(Base64.decodeBase64(authorization.substring(6)));
             user = userpass.substring(0, userpass.indexOf(":"));
             pass = userpass.substring(userpass.indexOf(":") + 1);
         }

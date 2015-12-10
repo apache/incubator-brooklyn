@@ -35,8 +35,7 @@ import javax.ws.rs.ext.Provider;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.sun.jersey.core.impl.provider.entity.FormMultivaluedMapProvider;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
+import org.apache.cxf.jaxrs.provider.MultipartProvider;
 
 /**
  * A MessageBodyReader producing a <code>Map&lt;String, Object&gt;</code>, where Object
@@ -61,9 +60,11 @@ public class FormMapProvider implements MessageBodyReader<Map<String, Object>> {
     public Map<String, Object> readFrom(Class<Map<String, Object>> type, Type genericType, Annotation[] annotations,
             MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
             throws IOException, WebApplicationException {
-        FormMultivaluedMapProvider delegate = new FormMultivaluedMapProvider();
-        MultivaluedMap<String, String> multi = new MultivaluedMapImpl();
-        multi = delegate.readFrom(multi, mediaType, entityStream);
+        MultipartProvider delegate = new MultipartProvider();
+        Class<? extends Object> sameType = type;
+        MultivaluedMap<String, String> multi = 
+                (MultivaluedMap<String, String>) delegate.readFrom((Class<Object>) sameType, genericType, annotations,
+                        mediaType, httpHeaders, entityStream);
 
         Map<String, Object> map = Maps.newHashMapWithExpectedSize(multi.keySet().size());
         for (String key : multi.keySet()) {

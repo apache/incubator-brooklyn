@@ -24,7 +24,6 @@ import java.util.List;
 import org.apache.brooklyn.rest.resources.AbstractBrooklynRestResource;
 import org.apache.brooklyn.rest.resources.AccessResource;
 import org.apache.brooklyn.rest.resources.ActivityResource;
-import org.apache.brooklyn.rest.resources.ApidocResource;
 import org.apache.brooklyn.rest.resources.ApplicationResource;
 import org.apache.brooklyn.rest.resources.CatalogResource;
 import org.apache.brooklyn.rest.resources.EffectorResource;
@@ -43,7 +42,6 @@ import org.apache.brooklyn.rest.util.FormMapProvider;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 
 import com.google.common.collect.Iterables;
-import io.swagger.jaxrs.listing.SwaggerSerializers;
 
 @SuppressWarnings("deprecation")
 public class BrooklynRestApi {
@@ -68,13 +66,6 @@ public class BrooklynRestApi {
         return resources;
     }
 
-    public static Iterable<Object> getApidocResources() {
-        List<Object> resources = new ArrayList<>();
-        resources.add(new SwaggerSerializers());
-        resources.add(new ApidocResource());
-        return resources;
-    }
-
     public static Iterable<Object> getMiscResources() {
         List<Object> resources = new ArrayList<>();
         resources.add(new DefaultExceptionMapper());
@@ -84,6 +75,6 @@ public class BrooklynRestApi {
     }
 
     public static Iterable<Object> getAllResources() {
-        return Iterables.concat(getBrooklynRestResources(), getApidocResources(), getMiscResources());
+        return Iterables.concat(getBrooklynRestResources(), getMiscResources());
     }
 }

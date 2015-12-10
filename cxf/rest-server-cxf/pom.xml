@@ -69,11 +69,6 @@
             <artifactId>brooklyn-software-base</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-utils-rest-swagger</artifactId>
-            <version>${project.version}</version>
-        </dependency>
 
         <dependency>
             <groupId>org.yaml</groupId>
@@ -221,67 +216,5 @@
                 <directory>${basedir}/src/main/webapp</directory>
             </resource>
         </resources>
-        <plugins>
-
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <extensions>true</extensions>
-                <!-- configure plugin to generate MANIFEST.MF
-                     adapted from http://blog.knowhowlab.org/2010/06/osgi-tutorial-from-project-structure-to.html -->
-                <executions>
-                    <execution>
-                        <id>bundle-manifest</id>
-                        <phase>process-classes</phase>
-                        <goals>
-                            <goal>manifest</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <supportedProjectTypes>
-                        <supportedProjectType>jar</supportedProjectType>
-                    </supportedProjectTypes>
-                    <instructions>
-                        <Export-Package>org.apache.brooklyn.*</Export-Package>
-                        <Web-ContextPath>/</Web-ContextPath>
-                        <_wab>src/main/webapp</_wab>
-                    </instructions>
-                </configuration>
-            </plugin>
-
-
-<!-- if you want to build a WAR, full or skinny:
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>${maven-war-plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>make-skinny-war</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>war</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>skinny</classifier>
-                            <packagingExcludes>WEB-INF/lib/*.jar,WEB-INF/classes/**/*.class</packagingExcludes>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>make-full-war</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>war</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>full</classifier>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
--->
-
-        </plugins>
     </build>
 </project>

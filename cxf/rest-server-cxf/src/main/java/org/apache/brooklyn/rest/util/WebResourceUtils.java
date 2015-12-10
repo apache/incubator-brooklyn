@@ -38,7 +38,6 @@ import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableMap;
-import com.sun.jersey.spi.container.ContainerResponse;
 
 public class WebResourceUtils {
 
@@ -150,8 +149,8 @@ public class WebResourceUtils {
     }
 
     /** Sets the {@link HttpServletResponse} target (last argument) from the given source {@link Response};
-     * useful in filters where we might have a {@link Response} and need to set up an {@link HttpServletResponse}. 
-     * Similar to {@link ContainerResponse#setResponse(Response)}; nothing like that seems to be available for {@link HttpServletResponse}. */
+     * useful in filters where we might have a {@link Response} and need to set up an {@link HttpServletResponse}.
+     */
     public static void applyJsonResponse(ServletContext servletContext, Response source, HttpServletResponse target) throws IOException {
         target.setStatus(source.getStatus());
         target.setContentType(MediaType.APPLICATION_JSON);
