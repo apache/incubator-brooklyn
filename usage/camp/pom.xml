@@ -195,9 +195,6 @@
                     </supportedProjectTypes>
                     <instructions>
                         <Export-Package>org.apache.brooklyn.*</Export-Package>
-                        <Import-Package>
-                            *
-                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

@@ -929,7 +929,7 @@
                             </module>
                             <module name="TreeWalker">
                                 <module name="IllegalImport">
-                                    <property name="illegalPkgs" value="com.google.api.client.repackaged"/>
+                                    <property name="illegalPkgs" value="com.google.api.client.repackaged,org.python.google"/>
                                 </module>
                             </module>
                         </module>
