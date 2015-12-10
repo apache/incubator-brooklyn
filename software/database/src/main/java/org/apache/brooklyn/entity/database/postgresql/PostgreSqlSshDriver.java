@@ -151,6 +151,7 @@ public class PostgreSqlSshDriver extends AbstractSoftwareProcessSshDriver implem
             .queue();
         
         // check that the proposed install dir is one that user postgres can access
+        // TODO if command above fails then the following `getUnchecked` blocks forever
         if (DynamicTasks.queue(SshEffectorTasks.ssh(sudoAsUser("postgres", "ls "+getInstallDir())).allowingNonZeroExitCode()
                 .summary("check postgres user can access install dir")).asTask().getUnchecked()!=0) {
             log.info("Postgres install dir "+getInstallDir()+" for "+getEntity()+" is not accessible to user 'postgres'; " + "using "+altInstallDir+" instead");

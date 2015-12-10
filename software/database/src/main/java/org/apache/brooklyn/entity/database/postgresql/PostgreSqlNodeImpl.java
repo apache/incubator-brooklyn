@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSqlNode {
 
+    @SuppressWarnings("unused")
     private static final Logger LOG = LoggerFactory.getLogger(PostgreSqlNodeImpl.class);
 
     public Class<?> getDriverInterface() {
@@ -60,6 +61,10 @@ public class PostgreSqlNodeImpl extends SoftwareProcessImpl implements PostgreSq
     protected void connectSensors() {
         super.connectSensors();
         connectServiceUpIsRunning();
+        // in jdbc url it is postgresql:// but elsewhere it is usually postgres://
+        // TODO add a public JDBC_URL ?  
+        // include user:pass@url ?  (for all datastore types, and if so, 
+        // make sure ".with_credentials" or similar is in name so it is masked in ui)
         sensors().set(DATASTORE_URL, String.format("postgresql://%s:%s/", getAttribute(HOSTNAME), getAttribute(POSTGRESQL_PORT)));
     }
 
