@@ -35,7 +35,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
 
-@Path("/v1/applications/{application}/entities")
+@Path("/applications/{application}/entities")
 @Api("Entities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

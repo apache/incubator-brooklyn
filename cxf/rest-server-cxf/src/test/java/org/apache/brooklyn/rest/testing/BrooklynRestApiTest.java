@@ -42,7 +42,7 @@ public abstract class BrooklynRestApiTest {
     protected boolean useLocalScannedCatalog = false;
     protected TestShutdownHandler shutdownListener = createShutdownHandler();
 
-    protected final static String ENDPOINT_ADDRESS = "local://testResource";
+    protected final static String ENDPOINT_ADDRESS = "local://v1";
 
     @BeforeMethod(alwaysRun = true)
     public void resetShutdownListener() {

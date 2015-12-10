@@ -44,7 +44,7 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-@Path("/v1/server")
+@Path("/server")
 @Api("Server")
 @Produces(MediaType.APPLICATION_JSON)
 @Beta

@@ -46,7 +46,7 @@ import io.swagger.annotations.ApiParam;
 import java.io.InputStream;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 
-@Path("/v1/catalog")
+@Path("/catalog")
 @Api("Catalog")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
