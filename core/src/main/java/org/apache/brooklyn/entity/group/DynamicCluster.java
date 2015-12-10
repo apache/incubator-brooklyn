@@ -179,8 +179,8 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
     AttributeSensor<Entity> CLUSTER = Sensors.newSensor(Entity.class,
             "cluster.entity", "The cluster an entity is a member of");
 
-    AttributeSensor<Boolean> ALL_MEMBERS_UP = Sensors.newBooleanSensor(
-            "all.members.up", "True if all members' service.isUp is true");
+    AttributeSensor<Boolean> CLUSTER_ONE_AND_ALL_MEMBERS_UP = Sensors.newBooleanSensor(
+            "cluster.one_and_all.members.up", "True cluster is running, there is on member, and all members are service.isUp");
 
     /**
      * Changes the cluster size by the given number.

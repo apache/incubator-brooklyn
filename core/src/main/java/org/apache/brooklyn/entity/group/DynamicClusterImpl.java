@@ -35,6 +35,7 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
+import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -100,7 +101,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     private static final AttributeSensor<Supplier<Integer>> NEXT_CLUSTER_MEMBER_ID = Sensors.newSensor(new TypeToken<Supplier<Integer>>() {},
             "next.cluster.member.id", "Returns the ID number of the next member to be added");
 
-    private volatile FunctionFeed allMembersUp;
+    private volatile FunctionFeed clusterOneAndAllMembersUp;
 
     // TODO better mechanism for arbitrary class name to instance type coercion
     static {
@@ -205,26 +206,32 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     private void connectAllMembersUp() {
-        allMembersUp = FunctionFeed.builder()
+        clusterOneAndAllMembersUp = FunctionFeed.builder()
                 .entity(this)
                 .period(Duration.FIVE_SECONDS)
-                .poll(new FunctionPollConfig<Boolean, Boolean>(ALL_MEMBERS_UP)
+                .poll(new FunctionPollConfig<Boolean, Boolean>(CLUSTER_ONE_AND_ALL_MEMBERS_UP)
                         .onException(Functions.constant(Boolean.FALSE))
-                        .callable(new AllMembersUpCallable()))
+                        .callable(new ClusterOneAndAllMembersUpCallable(this)))
                 .build();
     }
 
-    private class AllMembersUpCallable implements Callable<Boolean> {
+    private static class ClusterOneAndAllMembersUpCallable implements Callable<Boolean> {
 
+        private final Group cluster;
+        
+        public ClusterOneAndAllMembersUpCallable(Group cluster) {
+            this.cluster = cluster;
+        }
+        
         @Override
         public Boolean call() throws Exception {
-            if (DynamicClusterImpl.this.getMembers().isEmpty())
+            if (cluster.getMembers().isEmpty())
                 return false;
 
-            if (Lifecycle.RUNNING != DynamicClusterImpl.this.sensors().get(SERVICE_STATE_ACTUAL))
+            if (Lifecycle.RUNNING != cluster.sensors().get(SERVICE_STATE_ACTUAL))
                 return false;
 
-            for (Entity member : DynamicClusterImpl.this.getMembers())
+            for (Entity member : cluster.getMembers())
                 if (!Boolean.TRUE.equals(member.sensors().get(SERVICE_UP)))
                     return false;
 
@@ -491,7 +498,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(e);
         } finally {
-            if (allMembersUp != null) allMembersUp.stop();
+            if (clusterOneAndAllMembersUp != null) clusterOneAndAllMembersUp.stop();
         }
     }
 
