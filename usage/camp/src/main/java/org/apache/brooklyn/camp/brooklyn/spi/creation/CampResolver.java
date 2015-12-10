@@ -20,6 +20,7 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
 import java.util.Set;
 
+import com.google.common.collect.Iterables;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -39,7 +40,6 @@ import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.text.Strings;
-import org.python.google.common.collect.Iterables;
 
 import com.google.common.collect.ImmutableSet;
 

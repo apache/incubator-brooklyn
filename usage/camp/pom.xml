@@ -196,7 +196,6 @@
                     <instructions>
                         <Export-Package>org.apache.brooklyn.*</Export-Package>
                         <Import-Package>
-                            !org.python.google.common.collect
                             *
                         </Import-Package>
                     </instructions>
