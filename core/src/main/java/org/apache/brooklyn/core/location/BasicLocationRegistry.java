@@ -288,7 +288,7 @@ public class BasicLocationRegistry implements LocationRegistry {
                 definedLocations.putAll(oldDefined);
             }
             
-            for (RegisteredType item: mgmt.getTypeRegistry().getAll(RegisteredTypePredicates.IS_LOCATION)) {
+            for (RegisteredType item: mgmt.getTypeRegistry().getMatching(RegisteredTypePredicates.IS_LOCATION)) {
                 updateDefinedLocation(item);
                 count++;
             }

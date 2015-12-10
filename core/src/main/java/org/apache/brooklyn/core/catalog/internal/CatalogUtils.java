@@ -86,12 +86,12 @@ public class CatalogUtils {
         ManagementContext mgmt = ((EntityInternal)entity).getManagementContext();
         String catId = entity.getCatalogItemId();
         if (Strings.isBlank(catId)) return JavaBrooklynClassLoadingContext.create(mgmt);
-        RegisteredType cat = RegisteredTypes.validate(mgmt.getTypeRegistry().get(catId), RegisteredTypeLoadingContexts.spec(Entity.class)).get();
-        if (cat==null) {
+        Maybe<RegisteredType> cat = RegisteredTypes.tryValidate(mgmt.getTypeRegistry().get(catId), RegisteredTypeLoadingContexts.spec(Entity.class));
+        if (cat.get()==null) {
             log.warn("Cannot load "+catId+" to get classloader for "+entity+"; will try with standard loader, but might fail subsequently");
             return JavaBrooklynClassLoadingContext.create(mgmt);
         }
-        return newClassLoadingContext(mgmt, cat);
+        return newClassLoadingContext(mgmt, cat.get());
     }
 
     public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> libraries) {
@@ -268,7 +268,7 @@ public class CatalogUtils {
     }
 
     public static boolean isBestVersion(ManagementContext mgmt, CatalogItem<?,?> item) {
-        RegisteredType best = RegisteredTypes.getBestVersion(mgmt.getTypeRegistry().getAll(
+        RegisteredType best = RegisteredTypes.getBestVersion(mgmt.getTypeRegistry().getMatching(
             RegisteredTypePredicates.symbolicName(item.getSymbolicName())));
         if (best==null) return false;
         return (best.getVersion().equals(item.getVersion()));

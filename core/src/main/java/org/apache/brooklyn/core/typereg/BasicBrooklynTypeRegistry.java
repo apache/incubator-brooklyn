@@ -62,7 +62,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
     }
     
     public Iterable<RegisteredType> getAll() {
-        return getAll(Predicates.alwaysTrue());
+        return getMatching(Predicates.alwaysTrue());
     }
     
     private Iterable<RegisteredType> getAllWithoutCatalog(Predicate<? super RegisteredType> filter) {
@@ -74,12 +74,12 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
     private RegisteredType getExactWithoutLegacyCatalog(String symbolicName, String version, RegisteredTypeLoadingContext constraint) {
         // TODO look in any nested/private registries
         RegisteredType item = localRegisteredTypes.get(symbolicName+":"+version);
-        return RegisteredTypes.validate(item, constraint).orNull();
+        return RegisteredTypes.tryValidate(item, constraint).orNull();
     }
 
     @SuppressWarnings("deprecation")
     @Override
-    public Iterable<RegisteredType> getAll(Predicate<? super RegisteredType> filter) {
+    public Iterable<RegisteredType> getMatching(Predicate<? super RegisteredType> filter) {
         return Iterables.filter(Iterables.concat(
                 getAllWithoutCatalog(filter),
                 Iterables.transform(mgmt.getCatalog().getCatalogItems(), RegisteredTypes.CI_TO_RT)), 
@@ -95,16 +95,20 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
 
         RegisteredType type;
         if (!BrooklynCatalog.DEFAULT_VERSION.equals(version)) {
+            // normal code path when version is supplied
+            
             type = getExactWithoutLegacyCatalog(symbolicNameOrAliasIfNoVersion, version, context);
             if (type!=null) return Maybe.of(type);
         }
-        
+
         if (BrooklynCatalog.DEFAULT_VERSION.equals(version)) {
-            Iterable<RegisteredType> types = getAll(Predicates.and(RegisteredTypePredicates.symbolicName(symbolicNameOrAliasIfNoVersion), 
+            // alternate code path, if version blank or default
+            
+            Iterable<RegisteredType> types = getMatching(Predicates.and(RegisteredTypePredicates.symbolicName(symbolicNameOrAliasIfNoVersion), 
                 RegisteredTypePredicates.satisfies(context)));
             if (Iterables.isEmpty(types)) {
                 // look for alias if no exact symbolic name match AND no version is specified
-                types = getAll(Predicates.and(RegisteredTypePredicates.alias(symbolicNameOrAliasIfNoVersion), 
+                types = getMatching(Predicates.and(RegisteredTypePredicates.alias(symbolicNameOrAliasIfNoVersion), 
                     RegisteredTypePredicates.satisfies(context) ) );
                 // if there are multiple symbolic names then throw?
                 Set<String> uniqueSymbolicNames = MutableSet.of();
@@ -112,8 +116,10 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
                     uniqueSymbolicNames.add(t.getSymbolicName());
                 }
                 if (uniqueSymbolicNames.size()>1) {
-                    log.warn("Multiple matches found for alias '"+symbolicNameOrAliasIfNoVersion+"': "+uniqueSymbolicNames+"; "
-                        + "picking highest version across different symbolic names. Use symbolic_name:version syntax to prevent this lookup.");
+                    String message = "Multiple matches found for alias '"+symbolicNameOrAliasIfNoVersion+"': "+uniqueSymbolicNames+"; "
+                        + "refusing to select any.";
+                    log.warn(message);
+                    return Maybe.absent(message);
                 }
             }
             if (!Iterables.isEmpty(types)) {
@@ -122,7 +128,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
             }
         }
         
-        // fallback to catalog
+        // missing case is to look for exact version in legacy catalog
         CatalogItem<?, ?> item = mgmt.getCatalog().getCatalogItem(symbolicNameOrAliasIfNoVersion, version);
         if (item!=null) 
             return Maybe.of( RegisteredTypes.CI_TO_RT.apply( item ) );
@@ -275,7 +281,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         if (!type.getId().equals(type.getSymbolicName()+":"+type.getVersion()))
             Asserts.fail("Registered type "+type+" has ID / symname mismatch");
         
-        RegisteredType oldType = localRegisteredTypes.get(type.getId());
+        RegisteredType oldType = mgmt.getTypeRegistry().get(type.getId());
         if (oldType==null || canForce) {
             log.debug("Inserting "+type+" into "+this);
             localRegisteredTypes.put(type.getId(), type);

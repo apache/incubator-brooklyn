@@ -117,13 +117,13 @@ public class RegisteredTypePredicates {
         return version(Predicates.equalTo(name));
     }
     public static Predicate<RegisteredType> version(final Predicate<? super String> filter) {
-        return new versionMatches(filter);
+        return new VersionMatches(filter);
     }
     
-    private static class versionMatches implements Predicate<RegisteredType> {
+    private static class VersionMatches implements Predicate<RegisteredType> {
         private final Predicate<? super String> filter;
         
-        public versionMatches(Predicate<? super String> filter) {
+        public VersionMatches(Predicate<? super String> filter) {
             this.filter = filter;
         }
         @Override
@@ -135,14 +135,14 @@ public class RegisteredTypePredicates {
     public static Predicate<RegisteredType> alias(final String alias) {
         return aliases(CollectionFunctionals.any(Predicates.equalTo(alias)));
     }
-    public static Predicate<RegisteredType> aliases(final Predicate<Iterable<String>> filter) {
+    public static Predicate<RegisteredType> aliases(final Predicate<? super Iterable<String>> filter) {
         return new AliasesMatch(filter);
     }
     
     private static class AliasesMatch implements Predicate<RegisteredType> {
-        private final Predicate<Iterable<String>> filter;
+        private final Predicate<? super Iterable<String>> filter;
         
-        public AliasesMatch(Predicate<Iterable<String>> filter) {
+        public AliasesMatch(Predicate<? super Iterable<String>> filter) {
             this.filter = filter;
         }
         @Override
@@ -154,14 +154,14 @@ public class RegisteredTypePredicates {
     public static Predicate<RegisteredType> tag(final Object tag) {
         return tags(CollectionFunctionals.any(Predicates.equalTo(tag)));
     }
-    public static Predicate<RegisteredType> tags(final Predicate<Iterable<Object>> filter) {
+    public static Predicate<RegisteredType> tags(final Predicate<? super Iterable<Object>> filter) {
         return new TagsMatch(filter);
     }
     
     private static class TagsMatch implements Predicate<RegisteredType> {
-        private final Predicate<Iterable<Object>> filter;
+        private final Predicate<? super Iterable<Object>> filter;
         
-        public TagsMatch(Predicate<Iterable<Object>> filter) {
+        public TagsMatch(Predicate<? super Iterable<Object>> filter) {
             this.filter = filter;
         }
         @Override
@@ -232,7 +232,7 @@ public class RegisteredTypePredicates {
     }
     public static boolean isBestVersion(ManagementContext mgmt, RegisteredType item) {
         if (item==null) return false;
-        Iterable<RegisteredType> matches = mgmt.getTypeRegistry().getAll(
+        Iterable<RegisteredType> matches = mgmt.getTypeRegistry().getMatching(
             RegisteredTypePredicates.symbolicName(item.getSymbolicName()) );
         if (!matches.iterator().hasNext()) return false;
         RegisteredType best = RegisteredTypes.getBestVersion(matches);
@@ -250,7 +250,7 @@ public class RegisteredTypePredicates {
         }
         @Override
         public boolean apply(@Nullable RegisteredType item) {
-            return RegisteredTypes.validate(item, context).isPresent();
+            return RegisteredTypes.tryValidate(item, context).isPresent();
         }
     }
 

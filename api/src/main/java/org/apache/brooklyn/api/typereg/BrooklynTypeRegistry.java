@@ -42,7 +42,7 @@ public interface BrooklynTypeRegistry {
     }
     
     Iterable<RegisteredType> getAll();
-    Iterable<RegisteredType> getAll(Predicate<? super RegisteredType> filter);
+    Iterable<RegisteredType> getMatching(Predicate<? super RegisteredType> filter);
 
     /** @return The item matching the given given 
      * {@link RegisteredType#getSymbolicName() symbolicName} 

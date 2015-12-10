@@ -56,7 +56,7 @@ public class BasicBrooklynTypeRegistryTest extends BrooklynMgmtUnitTestSupport {
         Assert.assertEquals( registry().get(SAMPLE_TYPE.getSymbolicName(), SAMPLE_TYPE.getVersion()), SAMPLE_TYPE );
         Assert.assertEquals( registry().get(SAMPLE_TYPE.getId()), SAMPLE_TYPE );
         
-        Assert.assertTrue( Iterables.contains(registry().getAll(
+        Assert.assertTrue( Iterables.contains(registry().getMatching(
             RegisteredTypePredicates.symbolicName(SAMPLE_TYPE.getSymbolicName())), SAMPLE_TYPE) );
     }
 
@@ -78,7 +78,7 @@ public class BasicBrooklynTypeRegistryTest extends BrooklynMgmtUnitTestSupport {
         }
         
         // only one entry
-        Assert.assertEquals( Iterables.size(registry().getAll(
+        Assert.assertEquals( Iterables.size(registry().getMatching(
             RegisteredTypePredicates.symbolicName(SAMPLE_TYPE.getSymbolicName()))), 1);
         // unversioned request returns sample
         Assert.assertEquals( registry().get(SAMPLE_TYPE.getSymbolicName()), SAMPLE_TYPE );
@@ -95,7 +95,7 @@ public class BasicBrooklynTypeRegistryTest extends BrooklynMgmtUnitTestSupport {
         Assert.assertEquals( registry().get(SAMPLE_TYPE2.getId()), SAMPLE_TYPE2 );
         Assert.assertNotEquals( registry().get(SAMPLE_TYPE2.getId()), SAMPLE_TYPE );
         
-        Assert.assertEquals( Iterables.size(registry().getAll(
+        Assert.assertEquals( Iterables.size(registry().getMatching(
             RegisteredTypePredicates.symbolicName(SAMPLE_TYPE.getSymbolicName()))), 2);
         
         // unversioned request returns latest
@@ -106,11 +106,11 @@ public class BasicBrooklynTypeRegistryTest extends BrooklynMgmtUnitTestSupport {
     public void testGetWithFilter() {
         add(SAMPLE_TYPE);
         
-        Assert.assertEquals( Iterables.size(registry().getAll(Predicates.and(
+        Assert.assertEquals( Iterables.size(registry().getMatching(Predicates.and(
             RegisteredTypePredicates.symbolicName(SAMPLE_TYPE.getSymbolicName()),
             RegisteredTypePredicates.subtypeOf(String.class)
             ))), 1 );
-        Assert.assertTrue( Iterables.isEmpty(registry().getAll(Predicates.and(
+        Assert.assertTrue( Iterables.isEmpty(registry().getMatching(Predicates.and(
                 RegisteredTypePredicates.symbolicName(SAMPLE_TYPE.getSymbolicName()),
                 RegisteredTypePredicates.subtypeOf(Integer.class)
             ))) );
@@ -136,7 +136,7 @@ public class BasicBrooklynTypeRegistryTest extends BrooklynMgmtUnitTestSupport {
         add(sampleType15WithAliases);
         Assert.assertEquals(sampleType15WithAliases.getAliases(), MutableSet.of("my_a", "the_a"));
         
-        Assert.assertEquals( Iterables.size(registry().getAll(
+        Assert.assertEquals( Iterables.size(registry().getMatching(
             RegisteredTypePredicates.symbolicName(SAMPLE_TYPE.getSymbolicName()))), 3);
         
         Assert.assertEquals( registry().get("my_a"), sampleType15WithAliases );
@@ -147,7 +147,7 @@ public class BasicBrooklynTypeRegistryTest extends BrooklynMgmtUnitTestSupport {
         Assert.assertEquals( registry().get(sampleType15WithAliases.getSymbolicName()), SAMPLE_TYPE2 );
         
         // and filters work
-        Assert.assertEquals( registry().getAll(RegisteredTypePredicates.alias("the_a")),
+        Assert.assertEquals( registry().getMatching(RegisteredTypePredicates.alias("the_a")),
             MutableList.of(sampleType15WithAliases) );
         Assert.assertEquals( registry().get("my_a",  
             RegisteredTypeLoadingContexts.bean(String.class)), sampleType15WithAliases );
@@ -166,13 +166,13 @@ public class BasicBrooklynTypeRegistryTest extends BrooklynMgmtUnitTestSupport {
         add(sampleType15WithTags);
         Assert.assertEquals(sampleType15WithTags.getTags(), MutableSet.of("my_a", "the_a"));
         
-        Assert.assertEquals( Iterables.size(registry().getAll(
+        Assert.assertEquals( Iterables.size(registry().getMatching(
             RegisteredTypePredicates.symbolicName(SAMPLE_TYPE.getSymbolicName()))), 3);
         
         Assert.assertEquals( registry().get(sampleType15WithTags.getId()), sampleType15WithTags );
         
         // and filters work
-        Assert.assertEquals( registry().getAll(RegisteredTypePredicates.tag("the_a")),
+        Assert.assertEquals( registry().getMatching(RegisteredTypePredicates.tag("the_a")),
             MutableList.of(sampleType15WithTags) );
         
         // but can't lookup by tag as a get

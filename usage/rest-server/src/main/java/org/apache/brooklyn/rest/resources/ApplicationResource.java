@@ -402,7 +402,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     private void checkSpecTypeIsValid(String type, Class<? extends BrooklynObject> subType) {
-        if (RegisteredTypes.validate(mgmt().getTypeRegistry().get(type), RegisteredTypeLoadingContexts.spec(subType)) == null) {
+        if (RegisteredTypes.tryValidate(mgmt().getTypeRegistry().get(type), RegisteredTypeLoadingContexts.spec(subType)) == null) {
             try {
                 brooklyn().getCatalogClassLoader().loadClass(type);
             } catch (ClassNotFoundException e) {

@@ -37,6 +37,7 @@ import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.guava.Maybe;
 
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableList;
@@ -115,10 +116,10 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
             String policyType = decoLoader.getTypeName().get();
             ManagementContext mgmt = instantiator.loader.getManagementContext();
             
-            RegisteredType item = RegisteredTypes.validate(mgmt.getTypeRegistry().get(policyType), RegisteredTypeLoadingContexts.spec(Policy.class)).get();
+            Maybe<RegisteredType> item = RegisteredTypes.tryValidate(mgmt.getTypeRegistry().get(policyType), RegisteredTypeLoadingContexts.spec(Policy.class));
             PolicySpec<?> spec;
-            if (item!=null) {
-                spec = mgmt.getTypeRegistry().createSpec(item, null, PolicySpec.class);
+            if (item.get()!=null) {
+                spec = mgmt.getTypeRegistry().createSpec(item.get(), null, PolicySpec.class);
             } else {
                 Class<? extends Policy> type = decoLoader.getType(Policy.class);
                 spec = PolicySpec.create(type)
