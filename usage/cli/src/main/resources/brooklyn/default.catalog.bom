@@ -60,7 +60,7 @@ brooklyn.catalog:
         name:           My VM
       
       # location can be e.g. `softlayer` or `jclouds:openstack-nova:https://9.9.9.9:9999/v2.0/`,
-      # or `localhost` or `byon: { nodes: [ 10.0.0.1, 10.0.0.2, 10.0.1.{1,2} ] }` 
+      # or `localhost` or `byon:(hosts="10.9.1.1,10.9.1.2,produser2@10.9.2.{10,11,20-29}")` 
       location:
         jclouds:aws-ec2:
           # edit these to use your credential (or delete if credentials specified in brooklyn.properties)      
