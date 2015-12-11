@@ -42,31 +42,31 @@ public class AccessResourceTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addAllBrooklynResources(sf);
+        addDefaultRestApi(sf);
     }
 
     @Test
     public void testGetAndSetAccessControl() throws Exception {
         // Default is everything allowed
-        AccessSummary summary = client().path("/v1/access").get(AccessSummary.class);
+        AccessSummary summary = client().path("/access").get(AccessSummary.class);
         assertTrue(summary.isLocationProvisioningAllowed());
 
         // Forbid location provisioning
-        Response response = client().path("/v1/access/locationProvisioningAllowed")
+        Response response = client().path("/access/locationProvisioningAllowed")
                 .query("allowed", "false")
                 .post(null);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-        AccessSummary summary2 = client().path("/v1/access").get(AccessSummary.class);
+        AccessSummary summary2 = client().path("/access").get(AccessSummary.class);
         assertFalse(summary2.isLocationProvisioningAllowed());
 
         // Allow location provisioning
-        Response response2 = client().path("/v1/access/locationProvisioningAllowed")
+        Response response2 = client().path("/access/locationProvisioningAllowed")
                 .query("allowed", "true")
                 .post(null);
         assertEquals(response2.getStatus(), Response.Status.OK.getStatusCode());
 
-        AccessSummary summary3 = client().path("/v1/access").get(AccessSummary.class);
+        AccessSummary summary3 = client().path("/access").get(AccessSummary.class);
         assertTrue(summary3.isLocationProvisioningAllowed());
     }
 

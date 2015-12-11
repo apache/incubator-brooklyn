@@ -38,6 +38,7 @@ import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 
 import com.google.common.collect.ImmutableMap;
+import javax.ws.rs.core.UriBuilder;
 
 public class WebResourceUtils {
 
@@ -157,4 +158,26 @@ public class WebResourceUtils {
         target.setCharacterEncoding("UTF-8");
         target.getWriter().write(BrooklynJacksonJsonProvider.findAnyObjectMapper(servletContext, null).writeValueAsString(source.getEntity()));
     }
+
+    /**
+     * Provides a builder with the REST URI of a resource.
+     * @param baseUriBuilder An {@link UriBuilder} pointing at the base of the REST API.
+     * @param resourceClass The target resource class.
+     * @return A new {@link UriBuilder} that targets the specified REST resource.
+     */
+    public static UriBuilder resourceUriBuilder(UriBuilder baseUriBuilder, Class<?> resourceClass) {
+        return baseUriBuilder.clone().path(resourceClass);
+    }
+
+    /**
+     * Provides a builder with the REST URI of a service provided by a resource.
+     * @param baseUriBuilder An {@link UriBuilder} pointing at the base of the REST API.
+     * @param resourceClass The target resource class.
+     * @param method The target service (e.g. class method).
+     * @return A new {@link UriBuilder} that targets the specified service of the REST resource.
+     */
+    public static UriBuilder serviceUriBuilder(UriBuilder baseUriBuilder, Class<?> resourceClass, String method) {
+        return baseUriBuilder.clone().path(resourceClass).path(resourceClass, method);
+    }
+
 }

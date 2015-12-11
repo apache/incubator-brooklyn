@@ -52,7 +52,7 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addAllBrooklynResources(sf);
+        addDefaultRestApi(sf);
     }
 
     @AfterClass(alwaysRun=true)
@@ -92,7 +92,7 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
 
     private void reset(String bundleLocation, boolean ignoreErrors) throws Exception {
         String xml = ResourceUtils.create(this).getResourceAsString("classpath://reset-catalog.xml");
-        client().path("/v1/catalog/reset")
+        client().path("/catalog/reset")
             .query("ignoreErrors", Boolean.toString(ignoreErrors))
             .header("Content-type", MediaType.APPLICATION_XML)
             .post(xml.replace("${bundle-location}", bundleLocation));

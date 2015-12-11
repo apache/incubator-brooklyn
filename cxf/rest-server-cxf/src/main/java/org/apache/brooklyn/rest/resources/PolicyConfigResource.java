@@ -38,19 +38,20 @@ import org.apache.brooklyn.util.core.flags.TypeCoercions;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import javax.ws.rs.core.UriInfo;
 
 @HaHotStateRequired
 public class PolicyConfigResource extends AbstractBrooklynRestResource implements PolicyConfigApi {
 
     @Override
     public List<PolicyConfigSummary> list(
-            final String application, final String entityToken, final String policyToken) {
+            final String application, final String entityToken, final String policyToken, UriInfo ui) {
         Entity entity = brooklyn().getEntity(application, entityToken);
         Policy policy = brooklyn().getPolicy(entity, policyToken);
 
         List<PolicyConfigSummary> result = Lists.newArrayList();
         for (ConfigKey<?> key : policy.getPolicyType().getConfigKeys()) {
-            result.add(PolicyTransformer.policyConfigSummary(brooklyn(), entity, policy, key));
+            result.add(PolicyTransformer.policyConfigSummary(brooklyn(), entity, policy, key, ui.getBaseUriBuilder()));
         }
         return result;
     }

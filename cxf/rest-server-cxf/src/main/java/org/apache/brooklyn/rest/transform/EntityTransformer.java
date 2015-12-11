@@ -33,36 +33,47 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.rest.domain.EntityConfigSummary;
 import org.apache.brooklyn.rest.domain.EntitySummary;
-import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.net.URLParamEncoder;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
+import org.apache.brooklyn.rest.api.ApplicationApi;
+import org.apache.brooklyn.rest.api.CatalogApi;
+import org.apache.brooklyn.rest.api.EntityApi;
+import org.apache.brooklyn.rest.api.EntityConfigApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 /**
  * @author Adam Lowe
  */
 public class EntityTransformer {
 
-    public static final Function<? super Entity, EntitySummary> FROM_ENTITY = new Function<Entity, EntitySummary>() {
-        @Override
-        public EntitySummary apply(Entity entity) {
-            return EntityTransformer.entitySummary(entity);
-        }
+    public static final Function<? super Entity, EntitySummary> fromEntity(final UriBuilder ub) {
+        return new Function<Entity, EntitySummary>() {
+            @Override
+            public EntitySummary apply(Entity entity) {
+                return EntityTransformer.entitySummary(entity, ub);
+            }
+        };
     };
 
-    public static EntitySummary entitySummary(Entity entity) {
-        String applicationUri = "/v1/applications/" + entity.getApplicationId();
-        String entityUri = applicationUri + "/entities/" + entity.getId();
+    public static EntitySummary entitySummary(Entity entity, UriBuilder ub) {
+        URI applicationUri = serviceUriBuilder(ub, ApplicationApi.class, "get").build(entity.getApplicationId());
+        URI entityUri = serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getId());
         ImmutableMap.Builder<String, URI> lb = ImmutableMap.<String, URI>builder()
-                .put("self", URI.create(entityUri));
-        if (entity.getParent()!=null)
-            lb.put("parent", URI.create(applicationUri+"/entities/"+entity.getParent().getId()));
-        String type = entity.getEntityType().getName();
-        lb.put("application", URI.create(applicationUri))
+                .put("self", entityUri);
+        if (entity.getParent()!=null) {
+            URI parentUri = serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getParent().getId());
+            lb.put("parent", parentUri);
+        }
+
+//        UriBuilder urib = serviceUriBuilder(ub, EntityApi.class, "getChildren").build(entity.getApplicationId(), entity.getId());
+        // TODO: change all these as well :S
+        lb.put("application", applicationUri)
                 .put("children", URI.create(entityUri + "/children"))
                 .put("config", URI.create(entityUri + "/config"))
                 .put("sensors", URI.create(entityUri + "/sensors"))
@@ -76,23 +87,33 @@ public class EntityTransformer {
                 .put("spec", URI.create(entityUri + "/spec"))
             ;
 
-        if (entity.getCatalogItemId() != null) {
-            lb.put("catalog", URI.create("/v1/catalog/entities/" + WebResourceUtils.getPathFromVersionedId(entity.getCatalogItemId())));
-        }
-
         if (entity.getIconUrl()!=null)
             lb.put("iconUrl", URI.create(entityUri + "/icon"));
 
+        if (entity.getCatalogItemId() != null) {
+            String versionedId = entity.getCatalogItemId();
+            URI catalogUri;
+            if (CatalogUtils.looksLikeVersionedId(versionedId)) {
+                String symbolicName = CatalogUtils.getSymbolicNameFromVersionedId(versionedId);
+                String version = CatalogUtils.getVersionFromVersionedId(versionedId);
+                catalogUri = serviceUriBuilder(ub, CatalogApi.class, "getEntity").build(symbolicName, version);
+            } else {
+                catalogUri = serviceUriBuilder(ub, CatalogApi.class, "getEntity").build(versionedId);
+            }
+            lb.put("catalog", catalogUri);
+        }
+
+        String type = entity.getEntityType().getName();
         return new EntitySummary(entity.getId(), entity.getDisplayName(), type, entity.getCatalogItemId(), lb.build());
     }
 
-    public static List<EntitySummary> entitySummaries(Iterable<? extends Entity> entities) {
+    public static List<EntitySummary> entitySummaries(Iterable<? extends Entity> entities, final UriBuilder ub) {
         return Lists.newArrayList(transform(
             entities,
             new Function<Entity, EntitySummary>() {
                 @Override
                 public EntitySummary apply(Entity entity) {
-                    return EntityTransformer.entitySummary(entity);
+                    return EntityTransformer.entitySummary(entity, ub);
                 }
             }));
     }
@@ -104,7 +125,7 @@ public class EntityTransformer {
     /** generates a representation for a given config key, 
      * with label inferred from annoation in the entity class,
      * and links pointing to the entity and the applicaiton */
-    public static EntityConfigSummary entityConfigSummary(Entity entity, ConfigKey<?> config) {
+    public static EntityConfigSummary entityConfigSummary(Entity entity, ConfigKey<?> config, UriBuilder ub) {
       /*
        * following code nearly there to get the @CatalogConfig annotation
        * in the class and use that to populate a label
@@ -120,15 +141,15 @@ public class EntityTransformer {
         String label = null;
         Double priority = null;
 
-        String applicationUri = "/v1/applications/" + entity.getApplicationId();
-        String entityUri = applicationUri + "/entities/" + entity.getId();
-        String selfUri = entityUri + "/config/" + URLParamEncoder.encode(config.getName());
+        URI applicationUri = serviceUriBuilder(ub, ApplicationApi.class, "get").build(entity.getApplicationId());
+        URI entityUri = serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getId());
+        URI selfUri = serviceUriBuilder(ub, EntityConfigApi.class, "get").build(entity.getApplicationId(), entity.getId(), config.getName());
         
         MutableMap.Builder<String, URI> lb = MutableMap.<String, URI>builder()
-            .put("self", URI.create(selfUri))
-            .put("application", URI.create(applicationUri))
-            .put("entity", URI.create(entityUri))
-            .put("action:json", URI.create(selfUri));
+            .put("self", selfUri)
+            .put("application", applicationUri)
+            .put("entity", entityUri)
+            .put("action:json", selfUri);
 
         Iterable<RendererHints.NamedAction> hints = Iterables.filter(RendererHints.getHintsFor(config), RendererHints.NamedAction.class);
         for (RendererHints.NamedAction na : hints) {
@@ -138,12 +159,12 @@ public class EntityTransformer {
         return entityConfigSummary(config, label, priority, lb.build());
     }
 
-    public static String applicationUri(Application entity) {
-        return "/v1/applications/" + entity.getApplicationId();
+    public static URI applicationUri(Application entity, UriBuilder ub) {
+        return serviceUriBuilder(ub, ApplicationApi.class, "get").build(entity.getApplicationId());
     }
     
-    public static String entityUri(Entity entity) {
-        return applicationUri(entity.getApplication()) + "/entities/" + entity.getId();
+    public static URI entityUri(Entity entity, UriBuilder ub) {
+        return serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getId());
     }
     
     public static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, Field configKeyField) {

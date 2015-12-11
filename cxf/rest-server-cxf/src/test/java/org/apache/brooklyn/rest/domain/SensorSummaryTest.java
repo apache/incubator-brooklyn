@@ -41,12 +41,13 @@ import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.rest.transform.SensorTransformer;
 
 import com.google.common.collect.ImmutableMap;
+import javax.ws.rs.core.UriBuilder;
 
 public class SensorSummaryTest {
 
     private SensorSummary sensorSummary = new SensorSummary("redis.uptime", "Integer",
             "Description", ImmutableMap.of(
-            "self", URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
+            "self", URI.create("/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
 
     private TestApplication app;
     private TestEntity entity;
@@ -77,10 +78,10 @@ public class SensorSummaryTest {
     @Test
     public void testEscapesUriForSensorName() throws IOException {
         Sensor<String> sensor = Sensors.newStringSensor("name with space");
-        SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor);
+        SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor, UriBuilder.fromPath("/"));
         URI selfUri = summary.getLinks().get("self");
 
-        String expectedUri = "/v1/applications/" + entity.getApplicationId() + "/entities/" + entity.getId() + "/sensors/" + "name%20with%20space";
+        String expectedUri = "/applications/" + entity.getApplicationId() + "/entities/" + entity.getId() + "/sensors/" + "name%20with%20space";
 
         assertEquals(selfUri, URI.create(expectedUri));
     }
@@ -94,7 +95,7 @@ public class SensorSummaryTest {
         RendererHints.register(sensor, RendererHints.namedActionWithUrl());
         RendererHints.register(sensor, RendererHints.namedActionWithUrl());
 
-        SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor);
+        SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor, UriBuilder.fromPath("/"));
 
         assertEquals(summary.getLinks().get("action:open"), URI.create("http://myval"));
     }

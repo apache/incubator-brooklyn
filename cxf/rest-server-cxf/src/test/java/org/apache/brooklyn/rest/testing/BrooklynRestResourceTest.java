@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.testing;
 
+import com.google.common.collect.Lists;
 import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
@@ -57,14 +58,14 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
 
 
     @BeforeClass(alwaysRun = true)
-    public void startServer() throws Exception {
-        JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
-
-        configureCXF(sf);
-
-        sf.setAddress(ENDPOINT_ADDRESS);
-
-        server = sf.create();
+    public synchronized void startServer() throws Exception {
+        if (server == null) {
+            JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
+            configureCXF(sf);
+            sf.setAddress(ENDPOINT_ADDRESS);
+            sf.setEndpointName(null);
+            server = sf.create();
+        }
     }
 
     /**
@@ -85,17 +86,21 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
      */
     protected abstract void configureCXF(JAXRSServerFactoryBean sf);
 
-    protected void addAllBrooklynResources(JAXRSServerFactoryBean sf) {
-        for (Object resource : BrooklynRestApi.getAllResources()) {
+    protected void addDefaultRestApi(JAXRSServerFactoryBean sf) {
+        for (Object resource : BrooklynRestApi.getResources()) {
             sf.setResourceProvider(new SingletonResourceProvider(resource));
         }
+        sf.setProviders(BrooklynRestApi.getProviders());
     }
 
 
     @AfterClass(alwaysRun = true)
-    public void stopServer() throws Exception {
-        server.stop();
-        server.destroy();
+    public synchronized void stopServer() throws Exception {
+        if (server != null) {
+            server.stop();
+            server.destroy();
+            server = null;
+        }
     }
 
 
@@ -103,7 +108,7 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         try {
             // dropwizard TestClient won't skip deserialization of trivial things like string and byte[] and inputstream
             // if we pass in an object it serializes, so we have to serialize things ourselves
-            return client().path("/v1/applications")
+            return client().path("/applications")
                 .post(Entity.entity(new ObjectMapper().writer().writeValueAsBytes(spec), MediaType.APPLICATION_OCTET_STREAM));
         } catch (Exception e) {
             throw Exceptions.propagate(e);

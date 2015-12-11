@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Maps;
+import javax.ws.rs.core.UriInfo;
 
 @HaHotStateRequired
 public class PolicyResource extends AbstractBrooklynRestResource implements PolicyApi {
@@ -49,13 +50,13 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
     private static final Logger log = LoggerFactory.getLogger(PolicyResource.class);
 
     @Override
-    public List<PolicySummary> list( final String application, final String entityToken) {
+    public List<PolicySummary> list( final String application, final String entityToken, final UriInfo ui) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
         return FluentIterable.from(entity.policies())
             .transform(new Function<Policy, PolicySummary>() {
                 @Override
                 public PolicySummary apply(Policy policy) {
-                    return PolicyTransformer.policySummary(entity, policy);
+                    return PolicyTransformer.policySummary(entity, policy, ui.getBaseUriBuilder());
                 }
             })
             .toSortedList(SummaryComparators.nameComparator());
@@ -78,7 +79,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
     @SuppressWarnings("unchecked")
     @Override
     public PolicySummary addPolicy( String application,String entityToken, String policyTypeName,
-            Map<String, String> config) {
+            Map<String, String> config, UriInfo ui) {
         Entity entity = brooklyn().getEntity(application, entityToken);
         Class<? extends Policy> policyType;
         try {
@@ -94,7 +95,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
         Policy policy = entity.policies().add(PolicySpec.create(policyType).configure(config));
         log.debug("REST API added policy " + policy + " to " + entity);
 
-        return PolicyTransformer.policySummary(entity, policy);
+        return PolicyTransformer.policySummary(entity, policy, ui.getBaseUriBuilder());
     }
 
     @Override

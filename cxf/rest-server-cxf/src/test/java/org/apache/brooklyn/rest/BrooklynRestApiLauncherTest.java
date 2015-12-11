@@ -69,7 +69,7 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
 //        int code = Asserts.succeedsEventually(new Callable<Integer>() {
 //            @Override
 //            public Integer call() throws Exception {
-//                int code = HttpTool.getHttpStatusCode(rootUrl+"/v1/catalog/applications");
+//                int code = HttpTool.getHttpStatusCode(rootUrl+"/catalog/applications");
 //                if (code == HttpStatus.SC_FORBIDDEN) {
 //                    throw new RuntimeException("Retry request");
 //                } else {
@@ -78,7 +78,7 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
 //            }
 //        });
 //        HttpAsserts.assertHealthyStatusCode(code);
-//        HttpAsserts.assertContentContainsText(rootUrl+"/v1/catalog/applications", SampleNoOpApplication.class.getSimpleName());
+//        HttpAsserts.assertContentContainsText(rootUrl+"/catalog/applications", SampleNoOpApplication.class.getSimpleName());
 //    }
 //
 }

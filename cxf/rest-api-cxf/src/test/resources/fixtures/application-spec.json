@@ -11,6 +11,6 @@
         }
     ],
     "locations":[
-        "/v1/locations/1"
+        "/locations/1"
     ]
 }

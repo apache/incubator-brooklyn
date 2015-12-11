@@ -32,47 +32,61 @@ import org.apache.brooklyn.rest.resources.PolicyConfigResource;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 
 import com.google.common.collect.ImmutableMap;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.rest.api.ApplicationApi;
+import org.apache.brooklyn.rest.api.EntityApi;
+import org.apache.brooklyn.rest.api.PolicyApi;
+import org.apache.brooklyn.rest.api.PolicyConfigApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.resourceUriBuilder;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 /**
  * Converts from Brooklyn entities to restful API summary objects
  */
 public class PolicyTransformer {
 
-    public static PolicySummary policySummary(Entity entity, Policy policy) {
-        String applicationUri = "/v1/applications/" + entity.getApplicationId();
-        String entityUri = applicationUri + "/entities/" + entity.getId();
+    public static PolicySummary policySummary(Entity entity, Policy policy, UriBuilder ub) {
+        URI applicationUri = serviceUriBuilder(ub, ApplicationApi.class, "get").build(entity.getApplicationId());
+        URI entityUri = serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getId());
+        URI configUri = resourceUriBuilder(ub, PolicyConfigApi.class).build(entity.getApplicationId(), entity.getId(), policy.getId());
+
+        URI selfUri = serviceUriBuilder(ub, PolicyApi.class, "getStatus").build(entity.getApplicationId(), entity.getId(), policy.getId());
+        URI startUri = serviceUriBuilder(ub, PolicyApi.class, "start").build(entity.getApplicationId(), entity.getId(), policy.getId());
+        URI stopUri = serviceUriBuilder(ub, PolicyApi.class, "stop").build(entity.getApplicationId(), entity.getId(), policy.getId());
+        URI destroyUri = serviceUriBuilder(ub, PolicyApi.class, "destroy").build(entity.getApplicationId(), entity.getId(), policy.getId());
 
         Map<String, URI> links = ImmutableMap.<String, URI>builder()
-                .put("self", URI.create(entityUri + "/policies/" + policy.getId()))
-                .put("config", URI.create(entityUri + "/policies/" + policy.getId() + "/config"))
-                .put("start", URI.create(entityUri + "/policies/" + policy.getId() + "/start"))
-                .put("stop", URI.create(entityUri + "/policies/" + policy.getId() + "/stop"))
-                .put("destroy", URI.create(entityUri + "/policies/" + policy.getId() + "/destroy"))
-                .put("application", URI.create(applicationUri))
-                .put("entity", URI.create(entityUri))
+                .put("self", selfUri)
+                .put("config", configUri)
+                .put("start", startUri)
+                .put("stop", stopUri)
+                .put("destroy", destroyUri)
+                .put("application", applicationUri)
+                .put("entity", entityUri)
                 .build();
 
         return new PolicySummary(policy.getId(), policy.getDisplayName(), policy.getCatalogItemId(), ApplicationTransformer.statusFromLifecycle(Policies.getPolicyStatus(policy)), links);
     }
 
-    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, ApplicationSummary application, Entity entity, Policy policy, ConfigKey<?> config) {
-        PolicyConfigSummary summary = policyConfigSummary(utils, entity, policy, config);
+    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, ApplicationSummary application, Entity entity, Policy policy, ConfigKey<?> config, UriBuilder ub) {
+        PolicyConfigSummary summary = policyConfigSummary(utils, entity, policy, config, ub);
 //        TODO
 //        if (!entity.getApplicationId().equals(application.getInstance().getId()))
 //            throw new IllegalStateException("Application "+application+" does not match app "+entity.getApplication()+" of "+entity);
         return summary;
     }
 
-    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, Entity entity, Policy policy, ConfigKey<?> config) {
-        String applicationUri = "/v1/applications/" + entity.getApplicationId();
-        String entityUri = applicationUri + "/entities/" + entity.getId();
-        String policyUri = entityUri + "/policies/" + policy.getId();
+    public static PolicyConfigSummary policyConfigSummary(BrooklynRestResourceUtils utils, Entity entity, Policy policy, ConfigKey<?> config, UriBuilder ub) {
+        URI applicationUri = serviceUriBuilder(ub, ApplicationApi.class, "get").build(entity.getApplicationId());
+        URI entityUri = serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getId());
+        URI policyUri = serviceUriBuilder(ub, PolicyApi.class, "getStatus").build(entity.getApplicationId(), entity.getId(), policy.getId());
+        URI configUri = serviceUriBuilder(ub, PolicyConfigApi.class, "get").build(entity.getApplicationId(), entity.getId(), policy.getId(), config.getName());
 
         Map<String, URI> links = ImmutableMap.<String, URI>builder()
-                .put("self", URI.create(policyUri + "/config/" + config.getName()))
-                .put("application", URI.create(applicationUri))
-                .put("entity", URI.create(entityUri))
-                .put("policy", URI.create(policyUri))
+                .put("self", configUri)
+                .put("application", applicationUri)
+                .put("entity", entityUri)
+                .put("policy", policyUri)
                 .build();
 
         return new PolicyConfigSummary(config.getName(), config.getTypeName(), config.getDescription(), 

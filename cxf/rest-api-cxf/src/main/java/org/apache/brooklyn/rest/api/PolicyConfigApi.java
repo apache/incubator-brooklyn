@@ -30,6 +30,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 @Path("/applications/{application}/entities/{entity}/policies/{policy}/config")
 @Api("Entity Policy Config")
@@ -50,7 +52,8 @@ public interface PolicyConfigApi {
             @ApiParam(value = "Entity ID or name", required = true)
             @PathParam("entity") final String entityToken,
             @ApiParam(value = "Policy ID or name", required = true)
-            @PathParam("policy") final String policyToken);
+            @PathParam("policy") final String policyToken,
+            @Context UriInfo ui);
 
     // TODO support parameters  ?show=value,summary&name=xxx &format={string,json,xml}
     // (and in sensors class)

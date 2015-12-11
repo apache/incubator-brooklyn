@@ -3,6 +3,6 @@
     "type":"Integer",
     "description":"Description",
     "links":{
-        "self":"/v1/applications/redis-app/entities/redis-ent/sensors/redis.uptime"
+        "self":"/applications/redis-app/entities/redis-ent/sensors/redis.uptime"
     }
 }

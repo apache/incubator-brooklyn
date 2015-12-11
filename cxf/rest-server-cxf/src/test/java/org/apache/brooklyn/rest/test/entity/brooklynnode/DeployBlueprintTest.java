@@ -75,11 +75,11 @@ public class DeployBlueprintTest extends BrooklynRestApiLauncherTestFixture {
 //
 //        log.info("got: "+id);
 //
-//        String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications");
+//        String apps = HttpTestUtils.getContent(webConsoleUri.toString()+"/applications");
 //        List<String> appType = parseJsonList(apps, ImmutableList.of("spec", "type"), String.class);
 //        assertEquals(appType, ImmutableList.of(BasicApplication.class.getName()));
 //
-//        String status = HttpTestUtils.getContent(webConsoleUri.toString()+"/v1/applications/"+id+"/entities/"+id+"/sensors/service.status");
+//        String status = HttpTestUtils.getContent(webConsoleUri.toString()+"/applications/"+id+"/entities/"+id+"/sensors/service.status");
 //        log.info("STATUS: "+status);
 //    }
 //

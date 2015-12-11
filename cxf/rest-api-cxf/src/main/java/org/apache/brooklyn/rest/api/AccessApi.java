@@ -33,6 +33,8 @@ import com.google.common.annotations.Beta;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 @Beta
 @Path("/access")
@@ -51,7 +53,7 @@ public interface AccessApi {
             value = "Fetch access control summary",
             response = org.apache.brooklyn.rest.domain.AccessSummary.class
             )
-    public AccessSummary get();
+    public AccessSummary get(@Context UriInfo ui);
 
     @POST
     @Path("/locationProvisioningAllowed")

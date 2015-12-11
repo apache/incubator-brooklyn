@@ -51,6 +51,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import javax.ws.rs.core.UriInfo;
 
 @SuppressWarnings("deprecation")
 @HaHotStateRequired
@@ -61,12 +62,12 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
     private final Set<String> specsWarnedOnException = Sets.newConcurrentHashSet();
 
     @Override
-    public List<LocationSummary> list() {
+    public List<LocationSummary> list(final UriInfo ui) {
         Function<LocationDefinition, LocationSummary> transformer = new Function<LocationDefinition, LocationSummary>() {
             @Override
             public LocationSummary apply(LocationDefinition l) {
                 try {
-                    return LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
+                    return LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET, ui.getBaseUriBuilder());
                 } catch (Exception e) {
                     Exceptions.propagateIfFatal(e);
                     String spec = l.getSpec();
@@ -122,29 +123,29 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
     }
 
     /** @deprecated since 0.7.0; REST call now handled by below (optional query parameter added) */
-    public LocationSummary get(String locationId) {
-        return get(locationId, false);
+    public LocationSummary get(String locationId, UriInfo ui) {
+        return get(locationId, false, ui);
     }
 
     @Override
-    public LocationSummary get(String locationId, String fullConfig) {
-        return get(locationId, Boolean.valueOf(fullConfig));
+    public LocationSummary get(String locationId, String fullConfig, UriInfo ui) {
+        return get(locationId, Boolean.valueOf(fullConfig), ui);
     }
 
-    public LocationSummary get(String locationId, boolean fullConfig) {
+    public LocationSummary get(String locationId, boolean fullConfig, UriInfo ui) {
         LocationDetailLevel configLevel = fullConfig ? LocationDetailLevel.FULL_EXCLUDING_SECRET : LocationDetailLevel.LOCAL_EXCLUDING_SECRET;
         Location l1 = mgmt().getLocationManager().getLocation(locationId);
         if (l1!=null) {
-            return LocationTransformer.newInstance(mgmt(), l1, configLevel);
+            return LocationTransformer.newInstance(mgmt(), l1, configLevel, ui.getBaseUriBuilder());
         }
 
         LocationDefinition l2 = brooklyn().getLocationRegistry().getDefinedLocationById(locationId);
         if (l2==null) throw WebResourceUtils.notFound("No location matching %s", locationId);
-        return LocationTransformer.newInstance(mgmt(), l2, configLevel);
+        return LocationTransformer.newInstance(mgmt(), l2, configLevel, ui.getBaseUriBuilder());
     }
 
     @Override
-    public Response create(LocationSpec locationSpec) {
+    public Response create(LocationSpec locationSpec, UriInfo ui) {
         String name = locationSpec.getName();
         ImmutableList.Builder<String> yaml = ImmutableList.<String>builder().add(
                 "brooklyn.catalog:",
@@ -163,7 +164,7 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
         brooklyn().getCatalog().addItems(locationBlueprint);
         LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocationByName(name);
         return Response.created(URI.create(name))
-                .entity(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET))
+                .entity(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET, ui.getBaseUriBuilder()))
                 .build();
     }
 

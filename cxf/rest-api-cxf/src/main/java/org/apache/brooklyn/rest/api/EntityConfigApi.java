@@ -38,6 +38,8 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 @Path("/applications/{application}/entities/{entity}/config")
 @Api("Entity Config")
@@ -56,7 +58,8 @@ public interface EntityConfigApi {
             @ApiParam(value = "Application ID or name", required = true)
             @PathParam("application") final String application,
             @ApiParam(value = "Entity ID or name", required = true)
-            @PathParam("entity") final String entityToken);
+            @PathParam("entity") final String entityToken,
+            @Context UriInfo ui);
 
     // TODO support parameters  ?show=value,summary&name=xxx &format={string,json,xml}
     // (and in sensors class)

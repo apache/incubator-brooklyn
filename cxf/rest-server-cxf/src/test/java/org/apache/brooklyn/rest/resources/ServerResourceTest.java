@@ -44,6 +44,7 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ImmutableSet;
 import javax.ws.rs.WebApplicationException;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
+import org.apache.cxf.jaxrs.client.WebClient;
 
 @Test(singleThreaded = true)
 public class ServerResourceTest extends BrooklynRestResourceTest {
@@ -52,18 +53,18 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
     
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addAllBrooklynResources(sf);
+        addDefaultRestApi(sf);
     }
 
     @Test
     public void testGetVersion() throws Exception {
-        VersionSummary version = client().path("/v1/server/version").get(VersionSummary.class);
+        VersionSummary version = client().path("/server/version").get(VersionSummary.class);
         assertEquals(version.getVersion(), BrooklynVersion.get());
     }
 
     @Test
     public void testGetStatus() throws Exception {
-        String status = client().path("/v1/server/status").get(String.class);
+        String status = client().path("/server/status").get(String.class);
         assertEquals(status, "MASTER");
     }
 
@@ -71,7 +72,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
     public void testGetHighAvailability() throws Exception {
         // Note by default management context from super is started without HA enabled.
         // Therefore can only assert a minimal amount of stuff.
-        HighAvailabilitySummary summary = client().path("/v1/server/highAvailability").get(HighAvailabilitySummary.class);
+        HighAvailabilitySummary summary = client().path("/server/highAvailability").get(HighAvailabilitySummary.class);
         log.info("HA summary is: "+summary);
         
         String ownNodeId = getManagementContext().getManagementNodeId();
@@ -94,7 +95,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
             @Override public void reloaded() {
                 reloadCount.incrementAndGet();
             }});
-        client().path("/v1/server/properties/reload").post(null);
+        client().path("/server/properties/reload").post(null);
         assertEquals(reloadCount.get(), 1);
     }
 
@@ -102,7 +103,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
     void testGetConfig() throws Exception {
         ((ManagementContextInternal)getManagementContext()).getBrooklynProperties().put("foo.bar.baz", "quux");
         try {
-            assertEquals(client().path("/v1/server/config/foo.bar.baz").get(String.class), "quux");
+            assertEquals(client().path("/server/config/foo.bar.baz").get(String.class), "quux");
         } finally {
             ((ManagementContextInternal)getManagementContext()).getBrooklynProperties().remove("foo.bar.baz");
         }
@@ -120,8 +121,9 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
             keyAlreadyPresent = true;
         }
         try {
-            response = client().path("/v1/server/config/" + key).get(String.class);
-            Asserts.fail("Expected call to /v1/server/config/" + key + " to fail with status 404, instead server returned " + response);
+            final WebClient webClient = client().path("/server/config/" + key);
+            response = webClient.get(String.class);
+            Asserts.fail("Expected call to " + webClient.getCurrentURI() + " to fail with status 404, instead server returned " + response);
         } catch (WebApplicationException e) {
             assertEquals(e.getResponse().getStatus(), 204);
         } finally {

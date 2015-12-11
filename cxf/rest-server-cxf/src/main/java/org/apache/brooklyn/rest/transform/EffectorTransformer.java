@@ -38,12 +38,18 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.rest.api.ApplicationApi;
+import org.apache.brooklyn.rest.api.EffectorApi;
+import org.apache.brooklyn.rest.api.EntityApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 public class EffectorTransformer {
 
-    public static EffectorSummary effectorSummary(final Entity entity, Effector<?> effector) {
-        String applicationUri = "/v1/applications/" + entity.getApplicationId();
-        String entityUri = applicationUri + "/entities/" + entity.getId();
+    public static EffectorSummary effectorSummary(final Entity entity, Effector<?> effector, UriBuilder ub) {
+        URI applicationUri = serviceUriBuilder(ub, ApplicationApi.class, "get").build(entity.getApplicationId());
+        URI entityUri = serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getId());
+        URI selfUri = serviceUriBuilder(ub, EffectorApi.class, "invoke").build(entity.getApplicationId(), entity.getId(), effector.getName());
         return new EffectorSummary(effector.getName(), effector.getReturnTypeName(),
                  ImmutableSet.copyOf(Iterables.transform(effector.getParameters(),
                 new Function<ParameterType<?>, EffectorSummary.ParameterSummary<?>>() {
@@ -52,9 +58,9 @@ public class EffectorTransformer {
                         return parameterSummary(entity, parameterType);
                     }
                 })), effector.getDescription(), ImmutableMap.of(
-                "self", URI.create(entityUri + "/effectors/" + effector.getName()),
-                "entity", URI.create(entityUri),
-                "application", URI.create(applicationUri)
+                "self", selfUri,
+                "entity", entityUri,
+                "application", applicationUri
         ));
     }
 

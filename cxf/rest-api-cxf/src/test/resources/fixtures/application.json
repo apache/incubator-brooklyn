@@ -12,11 +12,11 @@
                 }
             }
         ],
-        "locations":["/v1/locations/1"]
+        "locations":["/locations/1"]
     },
     "status":"STARTING",
     "links":{
-        "self":"/v1/applications/myapp",
+        "self":"/applications/myapp",
         "entities":"fixtures/entity-summary-list.json"
     }
 }

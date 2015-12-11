@@ -38,6 +38,9 @@ import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.ImmutableMap;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.rest.api.LocationApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 public class LocationTransformer {
 
@@ -48,11 +51,11 @@ public class LocationTransformer {
     
     /** @deprecated since 0.7.0 use method taking management context and detail specifier */
     @Deprecated
-    public static LocationSummary newInstance(String id, org.apache.brooklyn.rest.domain.LocationSpec locationSpec) {
-        return newInstance(null, id, locationSpec, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
+    public static LocationSummary newInstance(String id, org.apache.brooklyn.rest.domain.LocationSpec locationSpec, UriBuilder ub) {
+        return newInstance(null, id, locationSpec, LocationDetailLevel.LOCAL_EXCLUDING_SECRET, ub);
     }
     @SuppressWarnings("deprecation")
-    public static LocationSummary newInstance(ManagementContext mgmt, String id, org.apache.brooklyn.rest.domain.LocationSpec locationSpec, LocationDetailLevel level) {
+    public static LocationSummary newInstance(ManagementContext mgmt, String id, org.apache.brooklyn.rest.domain.LocationSpec locationSpec, LocationDetailLevel level, UriBuilder ub) {
         // TODO: Remove null checks on mgmt when newInstance(String, LocationSpec) is deleted
         Map<String, ?> config = locationSpec.getConfig();
         if (mgmt != null && (level==LocationDetailLevel.FULL_EXCLUDING_SECRET || level==LocationDetailLevel.FULL_INCLUDING_SECRET)) {
@@ -74,22 +77,24 @@ public class LocationTransformer {
                 }
             }
         }
+
+        URI selfUri = serviceUriBuilder(ub, LocationApi.class, "get").build(id);
         return new LocationSummary(
                 id,
                 locationSpec.getName(),
                 locationSpec.getSpec(),
                 null,
                 copyConfig(config, level),
-                ImmutableMap.of("self", URI.create("/v1/locations/" + id)));
+                ImmutableMap.of("self", selfUri));
     }
 
     /** @deprecated since 0.7.0 use method taking management context and detail specifier */
     @Deprecated
-    public static LocationSummary newInstance(LocationDefinition l) {
-        return newInstance(null, l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET);
+    public static LocationSummary newInstance(LocationDefinition l, UriBuilder ub) {
+        return newInstance(null, l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET, ub);
     }
 
-    public static LocationSummary newInstance(ManagementContext mgmt, LocationDefinition l, LocationDetailLevel level) {
+    public static LocationSummary newInstance(ManagementContext mgmt, LocationDefinition l, LocationDetailLevel level, UriBuilder ub) {
         // TODO: Can remove null checks on mgmt when newInstance(LocationDefinition) is deleted
         Map<String, Object> config = l.getConfig();
         if (mgmt != null && (level==LocationDetailLevel.FULL_EXCLUDING_SECRET || level==LocationDetailLevel.FULL_INCLUDING_SECRET)) {
@@ -110,13 +115,14 @@ public class LocationTransformer {
             }
         }
 
+        URI selfUri = serviceUriBuilder(ub, LocationApi.class, "get").build(l.getId());
         return new LocationSummary(
                 l.getId(),
                 l.getName(),
                 l.getSpec(),
                 null,
                 copyConfig(config, level),
-                ImmutableMap.of("self", URI.create("/v1/locations/" + l.getId())));
+                ImmutableMap.of("self", selfUri));
     }
 
     private static Map<String, ?> copyConfig(Map<String,?> entries, LocationDetailLevel level) {
@@ -131,7 +137,7 @@ public class LocationTransformer {
         return builder.build();
     }
 
-    public static LocationSummary newInstance(ManagementContext mgmt, Location l, LocationDetailLevel level) {
+    public static LocationSummary newInstance(ManagementContext mgmt, Location l, LocationDetailLevel level, UriBuilder ub) {
         String spec = null;
         String specId = null;
         Location lp = l;
@@ -179,15 +185,18 @@ public class LocationTransformer {
         }
         Map<String, ?> config = level==LocationDetailLevel.NONE ? null : copyConfig(configOrig, level);
         
+        URI selfUri = serviceUriBuilder(ub, LocationApi.class, "get").build(l.getId());
+        URI parentUri = serviceUriBuilder(ub, LocationApi.class, "get").build(l.getParent().getId());
+        URI specUri = serviceUriBuilder(ub, LocationApi.class, "get").build(specId);
         return new LocationSummary(
             l.getId(),
             l.getDisplayName(),
             spec,
             l.getClass().getName(),
             config,
-            MutableMap.of("self", URI.create("/v1/locations/" + l.getId()))
-                .addIfNotNull("parent", l.getParent()!=null ? URI.create("/v1/locations/"+l.getParent().getId()) : null)
-                .addIfNotNull("spec", specId!=null ? URI.create("/v1/locations/"+specId) : null)
+            MutableMap.of("self", selfUri)
+                .addIfNotNull("parent", l.getParent()!=null ? parentUri : null)
+                .addIfNotNull("spec", specId!=null ? specUri : null)
                 .asUnmodifiable() );
     }
 }

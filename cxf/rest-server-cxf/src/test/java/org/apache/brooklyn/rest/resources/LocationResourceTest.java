@@ -63,7 +63,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addAllBrooklynResources(sf);
+        addDefaultRestApi(sf);
     }
 
     @Test
@@ -72,7 +72,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         Map<String, String> expectedConfig = ImmutableMap.of(
                 "identity", "bob",
                 "credential", "CR3dential");
-        Response response = client().path("/v1/locations")
+        Response response = client().path("/locations")
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(new org.apache.brooklyn.rest.domain.LocationSpec(legacyLocationName, "aws-ec2:us-east-1", expectedConfig));
 
@@ -81,7 +81,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         LocationSummary location = client().path(response.getLocation()).get(LocationSummary.class);
         log.info(" contents: " + location);
         assertEquals(location.getSpec(), "brooklyn.catalog:"+legacyLocationName+":"+legacyLocationVersion);
-        assertTrue(addedLegacyLocationUri.toString().startsWith("/v1/locations/"));
+        assertTrue(addedLegacyLocationUri.toString().startsWith("/locations/"));
 
         JcloudsLocation l = (JcloudsLocation) getManagementContext().getLocationRegistry().resolve(legacyLocationName);
         Assert.assertEquals(l.getProvider(), "aws-ec2");
@@ -105,7 +105,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
                 "    credential: CR3dential"));
 
         
-        Response response = client().path("/v1/catalog")
+        Response response = client().path("/catalog")
                 .post(yaml);
 
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
@@ -115,10 +115,10 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         log.info("added, at: " + addedCatalogItemUri);
         
         // Ensure location definition exists
-        CatalogLocationSummary locationItem = client().path("/v1/catalog/locations/"+locationName + "/" + locationVersion)
+        CatalogLocationSummary locationItem = client().path("/catalog/locations/"+locationName + "/" + locationVersion)
                 .get(CatalogLocationSummary.class);
         log.info(" item: " + locationItem);
-        LocationSummary locationSummary = client().path(URI.create("/v1/locations/"+locationName+"/")).get(LocationSummary.class);
+        LocationSummary locationSummary = client().path(URI.create("/locations/"+locationName+"/")).get(LocationSummary.class);
         log.info(" summary: " + locationSummary);
         Assert.assertEquals(locationSummary.getSpec(), "brooklyn.catalog:"+locationName+":"+locationVersion);
 
@@ -133,7 +133,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
     @SuppressWarnings("deprecation")
     @Test(dependsOnMethods = { "testAddNewLocationDefinition" })
     public void testListAllLocationDefinitions() {
-        Set<LocationSummary> locations = client().path("/v1/locations")
+        Set<LocationSummary> locations = client().path("/locations")
                 .get(new GenericType<Set<LocationSummary>>() {});
         Iterable<LocationSummary> matching = Iterables.filter(locations, new Predicate<LocationSummary>() {
             @Override
@@ -143,7 +143,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         });
         LocationSummary location = Iterables.getOnlyElement(matching);
         
-        URI expectedLocationUri = URI.create("/v1/locations/"+locationName);
+        URI expectedLocationUri = URI.create("/locations/"+locationName);
         Assert.assertEquals(location.getSpec(), "brooklyn.catalog:"+locationName+":"+locationVersion);
         Assert.assertEquals(location.getLinks().get("self"), expectedLocationUri);
     }
@@ -151,7 +151,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
     @SuppressWarnings("deprecation")
     @Test(dependsOnMethods = { "testListAllLocationDefinitions" })
     public void testGetSpecificLocation() {
-        URI expectedLocationUri = URI.create("/v1/locations/"+locationName);
+        URI expectedLocationUri = URI.create("/locations/"+locationName);
         LocationSummary location = client().path(expectedLocationUri).get(LocationSummary.class);
         assertEquals(location.getSpec(), "brooklyn.catalog:"+locationName+":"+locationVersion);
     }
@@ -167,12 +167,12 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
                 .configure("password", "mypassword"));
     
         // "full" means including-inherited, filtered to exclude secrets
-        URI uriFull = URI.create("/v1/locations/"+loc.getId()+"?full=true");
+        URI uriFull = URI.create("/locations/"+loc.getId()+"?full=true");
         LocationSummary summaryFull = client().path(uriFull).get(LocationSummary.class);
         assertEquals(summaryFull.getConfig(), ImmutableMap.of("mykey", "myval", "myParentKey", "myParentVal"), "conf="+summaryFull.getConfig());
         
         // Default is local-only, filtered to exclude secrets
-        URI uriDefault = URI.create("/v1/locations/"+loc.getId());
+        URI uriDefault = URI.create("/locations/"+loc.getId());
         LocationSummary summaryDefault = client().path(uriDefault).get(LocationSummary.class);
         assertEquals(summaryDefault.getConfig(), ImmutableMap.of("mykey", "myval"), "conf="+summaryDefault.getConfig());
     }
@@ -181,7 +181,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
     @Deprecated
     public void testDeleteLocation() {
         final int size = getLocationRegistry().getDefinedLocations().size();
-        URI expectedLocationUri = URI.create("/v1/locations/"+legacyLocationName);
+        URI expectedLocationUri = URI.create("/locations/"+legacyLocationName);
 
         Response response = client().path(expectedLocationUri).delete();
         assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());

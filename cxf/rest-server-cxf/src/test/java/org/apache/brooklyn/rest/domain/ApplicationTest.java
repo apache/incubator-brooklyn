@@ -47,7 +47,7 @@ public class ApplicationTest {
 
     final ApplicationSpec applicationSpec = ApplicationSpec.builder().name("myapp")
             .entities(ImmutableSet.of(entitySpec))
-            .locations(ImmutableSet.of("/v1/locations/1"))
+            .locations(ImmutableSet.of("/locations/1"))
             .build();
 
     final ApplicationSummary application = new ApplicationSummary(null, applicationSpec, Status.STARTING, null);
@@ -59,7 +59,7 @@ public class ApplicationTest {
             @Override
             public Map<String, URI> getLinks() {
                 return ImmutableMap.of(
-                        "self", URI.create("/v1/applications/" + applicationSpec.getName()),
+                        "self", URI.create("/applications/" + applicationSpec.getName()),
                         "entities", URI.create("fixtures/entity-summary-list.json"));
             }
         };

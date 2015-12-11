@@ -17,9 +17,9 @@
             }
         ],
         "links":{
-            "self":"/v1/applications/tesr/entities/ZgoDhGQA/effectors/start",
-            "entity":"/v1/applications/tesr/entities/ZgoDhGQA",
-            "application":"/v1/applications/tesr"
+            "self":"/applications/tesr/entities/ZgoDhGQA/effectors/start",
+            "entity":"/applications/tesr/entities/ZgoDhGQA",
+            "application":"/applications/tesr"
         }
     },
     {
@@ -28,9 +28,9 @@
         "returnType":"void",
         "parameters":[ ],
         "links":{
-            "self":"/v1/applications/tesr/entities/ZgoDhGQA/effectors/restart",
-            "entity":"/v1/applications/tesr/entities/ZgoDhGQA",
-            "application":"/v1/applications/tesr"
+            "self":"/applications/tesr/entities/ZgoDhGQA/effectors/restart",
+            "entity":"/applications/tesr/entities/ZgoDhGQA",
+            "application":"/applications/tesr"
         }
     },
     {
@@ -39,9 +39,9 @@
         "returnType":"void",
         "parameters":[ ],
         "links":{
-            "self":"/v1/applications/tesr/entities/ZgoDhGQA/effectors/stop",
-            "entity":"/v1/applications/tesr/entities/ZgoDhGQA",
-            "application":"/v1/applications/tesr"
+            "self":"/applications/tesr/entities/ZgoDhGQA/effectors/stop",
+            "entity":"/applications/tesr/entities/ZgoDhGQA",
+            "application":"/applications/tesr"
         }
     }
 ]

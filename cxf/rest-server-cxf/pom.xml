@@ -147,7 +147,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-rest-api</artifactId>
+            <artifactId>brooklyn-rest-api-cxf</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>

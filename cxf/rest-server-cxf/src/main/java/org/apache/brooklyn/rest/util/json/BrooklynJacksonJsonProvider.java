@@ -51,6 +51,7 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
 
     private ManagementContext mgmt;
 
+    @Override
     public ObjectMapper locateMapper(Class<?> type, MediaType mediaType) {
         if (ourMapper != null)
             return ourMapper;

@@ -56,12 +56,15 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.rest.api.CatalogApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 public class CatalogTransformer {
 
     private static final org.slf4j.Logger log = LoggerFactory.getLogger(CatalogTransformer.class);
     
-    public static <T extends Entity> CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<T,EntitySpec<? extends T>> item) {
+    public static <T extends Entity> CatalogEntitySummary catalogEntitySummary(BrooklynRestResourceUtils b, CatalogItem<T,EntitySpec<? extends T>> item, UriBuilder ub) {
         Set<EntityConfigSummary> config = Sets.newLinkedHashSet();
         Set<SensorSummary> sensors = Sets.newTreeSet(SummaryComparators.nameComparator());
         Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
@@ -94,22 +97,22 @@ public class CatalogTransformer {
         
         return new CatalogEntitySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
-            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()),
+            item.getDescription(), tidyIconLink(b, item, item.getIconUrl(), ub),
             makeTags(spec, item), config, sensors, effectors,
-            item.isDeprecated(), makeLinks(item));
+            item.isDeprecated(), makeLinks(item, ub));
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem item) {
+    public static CatalogItemSummary catalogItemSummary(BrooklynRestResourceUtils b, CatalogItem item, UriBuilder ub) {
         try {
             switch (item.getCatalogItemType()) {
             case TEMPLATE:
             case ENTITY:
-                return catalogEntitySummary(b, item);
+                return catalogEntitySummary(b, item, ub);
             case POLICY:
-                return catalogPolicySummary(b, item);
+                return catalogPolicySummary(b, item, ub);
             case LOCATION:
-                return catalogLocationSummary(b, item);
+                return catalogLocationSummary(b, item, ub);
             default:
                 log.warn("Unexpected catalog item type when getting self link (supplying generic item): "+item.getCatalogItemType()+" "+item);
             }
@@ -119,48 +122,49 @@ public class CatalogTransformer {
         }
         return new CatalogItemSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
             item.getJavaType(), item.getPlanYaml(),
-            item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), item.tags().getTags(), item.isDeprecated(), makeLinks(item));
+            item.getDescription(), tidyIconLink(b, item, item.getIconUrl(), ub), item.tags().getTags(), item.isDeprecated(), makeLinks(item, ub));
     }
 
-    public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item) {
+    public static CatalogPolicySummary catalogPolicySummary(BrooklynRestResourceUtils b, CatalogItem<? extends Policy,PolicySpec<?>> item, UriBuilder ub) {
         Set<PolicyConfigSummary> config = ImmutableSet.of();
         return new CatalogPolicySummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
-                item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                item.tags().getTags(), item.isDeprecated(), makeLinks(item));
+                item.getDescription(), tidyIconLink(b, item, item.getIconUrl(), ub), config,
+                item.tags().getTags(), item.isDeprecated(), makeLinks(item, ub));
     }
 
-    public static CatalogLocationSummary catalogLocationSummary(BrooklynRestResourceUtils b, CatalogItem<? extends Location,LocationSpec<?>> item) {
+    public static CatalogLocationSummary catalogLocationSummary(BrooklynRestResourceUtils b, CatalogItem<? extends Location,LocationSpec<?>> item, UriBuilder ub) {
         Set<LocationConfigSummary> config = ImmutableSet.of();
         return new CatalogLocationSummary(item.getSymbolicName(), item.getVersion(), item.getDisplayName(),
                 item.getJavaType(), item.getPlanYaml(),
-                item.getDescription(), tidyIconLink(b, item, item.getIconUrl()), config,
-                item.tags().getTags(), item.isDeprecated(), makeLinks(item));
+                item.getDescription(), tidyIconLink(b, item, item.getIconUrl(), ub), config,
+                item.tags().getTags(), item.isDeprecated(), makeLinks(item, ub));
     }
 
-    protected static Map<String, URI> makeLinks(CatalogItem<?,?> item) {
-        return MutableMap.<String, URI>of().addIfNotNull("self", URI.create(getSelfLink(item)));
+    protected static Map<String, URI> makeLinks(CatalogItem<?,?> item, UriBuilder ub) {
+        return MutableMap.<String, URI>of().addIfNotNull("self", getSelfLink(item, ub));
     }
 
-    protected static String getSelfLink(CatalogItem<?,?> item) {
+    protected static URI getSelfLink(CatalogItem<?,?> item, UriBuilder ub) {
         String itemId = item.getId();
         switch (item.getCatalogItemType()) {
         case TEMPLATE:
-            return "/v1/applications/" + itemId + "/" + item.getVersion();
+            return serviceUriBuilder(ub, CatalogApi.class, "getApplication").build(itemId, item.getVersion());
         case ENTITY:
-            return "/v1/entities/" + itemId + "/" + item.getVersion();
+            return serviceUriBuilder(ub, CatalogApi.class, "getEntity").build(itemId, item.getVersion());
         case POLICY:
-            return "/v1/policies/" + itemId + "/" + item.getVersion();
+            return serviceUriBuilder(ub, CatalogApi.class, "getPolicy").build(itemId, item.getVersion());
         case LOCATION:
-            return "/v1/locations/" + itemId + "/" + item.getVersion();
+            return serviceUriBuilder(ub, CatalogApi.class, "getLocation").build(itemId, item.getVersion());
         default:
             log.warn("Unexpected catalog item type when getting self link (not supplying self link): "+item.getCatalogItemType()+" "+item);
             return null;
         }
     }
-    private static String tidyIconLink(BrooklynRestResourceUtils b, CatalogItem<?,?> item, String iconUrl) {
-        if (b.isUrlServerSideAndSafe(iconUrl))
-            return "/v1/catalog/icon/"+item.getSymbolicName() + "/" + item.getVersion();
+    private static String tidyIconLink(BrooklynRestResourceUtils b, CatalogItem<?,?> item, String iconUrl, UriBuilder ub) {
+        if (b.isUrlServerSideAndSafe(iconUrl)) {
+            return serviceUriBuilder(ub, CatalogApi.class, "getIcon").build(item.getSymbolicName(), item.getVersion()).toString();
+        }
         return iconUrl;
     }
 

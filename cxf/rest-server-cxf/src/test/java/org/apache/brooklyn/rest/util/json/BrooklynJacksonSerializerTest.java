@@ -291,7 +291,7 @@ public class BrooklynJacksonSerializerTest {
 //            TestApplication app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
 //
 //            String serverAddress = "http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort();
-//            String appUrl = serverAddress + "/v1/applications/" + app.getId();
+//            String appUrl = serverAddress + "/applications/" + app.getId();
 //            String entityUrl = appUrl + "/entities/" + app.getId();
 //            URI configUri = new URIBuilder(entityUrl + "/config/" + TestEntity.CONF_OBJECT.getName())
 //                    .addParameter("raw", "true")
@@ -326,7 +326,7 @@ public class BrooklynJacksonSerializerTest {
 //            TestApplication app = TestApplication.Factory.newManagedInstanceForTests(mgmt);
 //
 //            String serverAddress = "http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort();
-//            String appUrl = serverAddress + "/v1/applications/" + app.getId();
+//            String appUrl = serverAddress + "/applications/" + app.getId();
 //            String entityUrl = appUrl + "/entities/" + app.getId();
 //            URI configUri = new URIBuilder(entityUrl + "/config/" + TestEntity.CONF_OBJECT.getName())
 //                    .addParameter("raw", "true")

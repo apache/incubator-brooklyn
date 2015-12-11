@@ -77,7 +77,7 @@ public class ServerResourceIntegrationTest extends BrooklynRestApiLauncherTestFi
 //            String baseUri = getBaseUri(server);
 //
 //            HttpToolResponse response;
-//            final URI uri = URI.create(getBaseUri() + "/v1/server/properties/reload");
+//            final URI uri = URI.create(getBaseUri() + "/server/properties/reload");
 //            final Map<String, String> args = Collections.emptyMap();
 //
 //            // Unauthorised when no credentials, and when default credentials.
@@ -122,7 +122,7 @@ public class ServerResourceIntegrationTest extends BrooklynRestApiLauncherTestFi
 //                .credentials(TestSecurityProvider.CREDENTIAL)
 //                .build();
 //
-//        HttpToolResponse response = HttpTool.httpGet(client, URI.create(getBaseUri(server) + "/v1/server/user"),
+//        HttpToolResponse response = HttpTool.httpGet(client, URI.create(getBaseUri(server) + "/server/user"),
 //                ImmutableMap.<String, String>of());
 //        HttpTestUtils.assertHealthyStatusCode(response.getResponseCode());
 //        return response.getContentAsString();

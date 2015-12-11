@@ -33,26 +33,27 @@ import org.apache.brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
+import javax.ws.rs.core.UriInfo;
 
 public class ActivityResource extends AbstractBrooklynRestResource implements ActivityApi {
 
     @Override
-    public TaskSummary get(String taskId) {
+    public TaskSummary get(String taskId, UriInfo ui) {
         Task<?> t = mgmt().getExecutionManager().getTask(taskId);
         if (t == null)
             throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
-        return TaskTransformer.FROM_TASK.apply(t);
+        return TaskTransformer.fromTask(ui.getBaseUriBuilder()).apply(t);
     }
 
     @Override
-    public List<TaskSummary> children(String taskId) {
+    public List<TaskSummary> children(String taskId, UriInfo ui) {
         Task<?> t = mgmt().getExecutionManager().getTask(taskId);
         if (t == null)
             throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
         if (!(t instanceof HasTaskChildren))
             return Collections.emptyList();
         return new LinkedList<TaskSummary>(Collections2.transform(Lists.newArrayList(((HasTaskChildren) t).getChildren()),
-                TaskTransformer.FROM_TASK));
+                TaskTransformer.fromTask(ui.getBaseUriBuilder())));
     }
 
     public String stream(String taskId, String streamId) {

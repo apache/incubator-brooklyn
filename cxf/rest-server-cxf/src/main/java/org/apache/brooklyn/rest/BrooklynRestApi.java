@@ -41,12 +41,11 @@ import org.apache.brooklyn.rest.util.DefaultExceptionMapper;
 import org.apache.brooklyn.rest.util.FormMapProvider;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 
-import com.google.common.collect.Iterables;
 
 @SuppressWarnings("deprecation")
 public class BrooklynRestApi {
 
-    public static Iterable<AbstractBrooklynRestResource> getBrooklynRestResources() {
+    public static List<AbstractBrooklynRestResource> getResources() {
         List<AbstractBrooklynRestResource> resources = new ArrayList<>();
         resources.add(new LocationResource());
         resources.add(new CatalogResource());
@@ -66,7 +65,7 @@ public class BrooklynRestApi {
         return resources;
     }
 
-    public static Iterable<Object> getMiscResources() {
+    public static List<Object> getProviders() {
         List<Object> resources = new ArrayList<>();
         resources.add(new DefaultExceptionMapper());
         resources.add(new BrooklynJacksonJsonProvider());
@@ -74,7 +73,4 @@ public class BrooklynRestApi {
         return resources;
     }
 
-    public static Iterable<Object> getAllResources() {
-        return Iterables.concat(getBrooklynRestResources(), getMiscResources());
-    }
 }

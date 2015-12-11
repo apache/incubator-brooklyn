@@ -57,7 +57,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addAllBrooklynResources(sf);
+        addDefaultRestApi(sf);
     }
 
     @BeforeMethod(alwaysRun = true)
@@ -79,7 +79,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
         MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("requestTimeout", "0");
         formData.add("delayForHttpReturn", "0");
-        client().path("/v1/server/shutdown").post(formData);
+        client().path("/server/shutdown").post(formData);
 
         Asserts.succeedsEventually(new Runnable() {
             @Override
@@ -129,7 +129,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
                         formData.add("shutdownTimeout", "0");
                         formData.add("requestTimeout", "0");
                         formData.add("delayForHttpReturn", "0");
-                        client().path("/v1/server/shutdown").post(formData);
+                        client().path("/server/shutdown").post(formData);
                     } catch (Exception e) {
                         log.error("Shutdown request error", e);
                         shutdownError.set(e);

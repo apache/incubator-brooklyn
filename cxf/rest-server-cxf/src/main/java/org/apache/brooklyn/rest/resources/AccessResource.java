@@ -27,14 +27,15 @@ import org.apache.brooklyn.rest.domain.AccessSummary;
 import org.apache.brooklyn.rest.transform.AccessTransformer;
 
 import com.google.common.annotations.Beta;
+import javax.ws.rs.core.UriInfo;
 
 @Beta
 public class AccessResource extends AbstractBrooklynRestResource implements AccessApi {
 
     @Override
-    public AccessSummary get() {
+    public AccessSummary get(UriInfo ui) {
         AccessManager accessManager = ((ManagementContextInternal) mgmt()).getAccessManager();
-        return AccessTransformer.accessSummary(accessManager);
+        return AccessTransformer.accessSummary(accessManager, ui.getBaseUriBuilder());
     }
 
     @Override

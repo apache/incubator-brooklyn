@@ -32,12 +32,12 @@ public class VersionResourceTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addAllBrooklynResources(sf);
+        addDefaultRestApi(sf);
     }
 
     @Test
     public void testGetVersion() {
-        Response response = client().path("/v1/version")
+        Response response = client().path("/version")
                 .get();
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());

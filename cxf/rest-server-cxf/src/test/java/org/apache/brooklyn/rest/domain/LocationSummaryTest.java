@@ -26,16 +26,22 @@ import static org.testng.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-
-import org.codehaus.jackson.type.TypeReference;
-import org.testng.annotations.Test;
+import javax.ws.rs.core.UriBuilder;
 
 import org.apache.brooklyn.rest.transform.LocationTransformer;
+import org.codehaus.jackson.type.TypeReference;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 public class LocationSummaryTest {
 
     @SuppressWarnings("deprecation")
-    final LocationSummary summary = LocationTransformer.newInstance("123", LocationSpec.localhost());
+    LocationSummary summary;
+
+    @BeforeClass
+    public void setUp() {
+        summary = LocationTransformer.newInstance("123", LocationSpec.localhost(), UriBuilder.fromPath("/"));
+    }
 
     @Test
     public void testSerializeToJSON() throws IOException {

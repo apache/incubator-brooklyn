@@ -46,14 +46,20 @@ import org.apache.brooklyn.rest.domain.Status;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableMap;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.rest.api.ApplicationApi;
+import org.apache.brooklyn.rest.api.EntityApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 public class ApplicationTransformer {
 
-    public static final Function<? super Application, ApplicationSummary> FROM_APPLICATION = new Function<Application, ApplicationSummary>() {
-        @Override
-        public ApplicationSummary apply(Application input) {
-            return summaryFromApplication(input);
-        }
+    public static Function<? super Application, ApplicationSummary> fromApplication(final UriBuilder ub) {
+        return new Function<Application, ApplicationSummary>() {
+            @Override
+            public ApplicationSummary apply(Application application) {
+                return summaryFromApplication(application, ub);
+            }
+        };
     };
 
     public static Status statusFromApplication(Application application) {
@@ -101,14 +107,16 @@ public class ApplicationTransformer {
                 null, locations, null);
     }
 
-    public static ApplicationSummary summaryFromApplication(Application application) {
+    public static ApplicationSummary summaryFromApplication(Application application, UriBuilder ub) {
         Map<String, URI> links;
         if (application.getId() == null) {
             links = Collections.emptyMap();
         } else {
+            URI selfUri = serviceUriBuilder(ub, ApplicationApi.class, "get").build(application.getId());
+            URI entitiesUri = serviceUriBuilder(ub, EntityApi.class, "list").build(application.getId());
             links = ImmutableMap.of(
-                    "self", URI.create("/v1/applications/" + application.getId()),
-                    "entities", URI.create("/v1/applications/" + application.getId() + "/entities"));
+                    "self", selfUri,
+                    "entities", entitiesUri);
         }
 
         return new ApplicationSummary(application.getId(), specFromApplication(application), statusFromApplication(application), links);

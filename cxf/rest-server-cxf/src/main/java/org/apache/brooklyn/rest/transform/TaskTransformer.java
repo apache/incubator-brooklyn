@@ -44,20 +44,26 @@ import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.rest.api.ActivityApi;
+import org.apache.brooklyn.rest.api.EntityApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 public class TaskTransformer {
 
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(TaskTransformer.class);
 
-    public static final Function<Task<?>, TaskSummary> FROM_TASK = new Function<Task<?>, TaskSummary>() {
-        @Override
-        public TaskSummary apply(@Nullable Task<?> input) {
-            return taskSummary(input);
-        }
+    public static final Function<Task<?>, TaskSummary> fromTask(final UriBuilder ub) {
+        return new Function<Task<?>, TaskSummary>() {
+            @Override
+            public TaskSummary apply(@Nullable Task<?> input) {
+                return taskSummary(input, ub);
+            }
+        };
     };
 
-    public static TaskSummary taskSummary(Task<?> task) {
+    public static TaskSummary taskSummary(Task<?> task, UriBuilder ub) {
       try {
         Preconditions.checkNotNull(task);
         Entity entity = BrooklynTaskTags.getContextEntity(task);
@@ -65,12 +71,12 @@ public class TaskTransformer {
         String entityDisplayName;
         URI entityLink;
         
-        String selfLink = asLink(task).getLink();
+        String selfLink = asLink(task, ub).getLink();
 
         if (entity != null) {
             entityId = entity.getId();
             entityDisplayName = entity.getDisplayName();
-            entityLink = new URI("/v1/applications/"+entity.getApplicationId()+"/"+"entities"+"/"+entity.getId());
+            entityLink = serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getId());
         } else {
             entityId = null;
             entityDisplayName = null;
@@ -81,7 +87,7 @@ public class TaskTransformer {
         if (task instanceof HasTaskChildren) {
             children = new ArrayList<LinkWithMetadata>();
             for (Task<?> t: ((HasTaskChildren)task).getChildren()) {
-                children.add(asLink(t));
+                children.add(asLink(t, ub));
             }
         }
         
@@ -114,8 +120,8 @@ public class TaskTransformer {
         return new TaskSummary(task.getId(), task.getDisplayName(), task.getDescription(), entityId, entityDisplayName, 
                 task.getTags(), ifPositive(task.getSubmitTimeUtc()), ifPositive(task.getStartTimeUtc()), ifPositive(task.getEndTimeUtc()),
                 task.getStatusSummary(), result, task.isError(), task.isCancelled(),
-                children, asLink(task.getSubmittedByTask()), 
-                task.isDone() ? null : task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask()) : null, 
+                children, asLink(task.getSubmittedByTask(), ub),
+                task.isDone() ? null : task instanceof TaskInternal ? asLink(((TaskInternal<?>)task).getBlockingTask(), ub) : null,
                 task.isDone() ? null : task instanceof TaskInternal ? ((TaskInternal<?>)task).getBlockingDetails() : null, 
                 task.getStatusDetail(true),
                 streams,
@@ -131,7 +137,7 @@ public class TaskTransformer {
         return time;
     }
 
-    public static LinkWithMetadata asLink(Task<?> t) {
+    public static LinkWithMetadata asLink(Task<?> t, UriBuilder ub) {
         if (t==null) return null;
         MutableMap<String,Object> data = new MutableMap<String,Object>();
         data.put("id", t.getId());
@@ -141,6 +147,7 @@ public class TaskTransformer {
             data.put("entityId", entity.getId());
             if (entity.getDisplayName()!=null) data.put("entityDisplayName", entity.getDisplayName());
         }
-        return new LinkWithMetadata("/v1/activities/"+t.getId(), data);
+        URI taskUri = serviceUriBuilder(ub, ActivityApi.class, "get").build(t.getId());
+        return new LinkWithMetadata(taskUri.toString(), data);
     }
 }

@@ -66,6 +66,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 @HaHotStateRequired
 public class EntityResource extends AbstractBrooklynRestResource implements EntityApi {
@@ -76,41 +77,41 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
     private UriInfo uriInfo;
     
     @Override
-    public List<EntitySummary> list(final String application) {
+    public List<EntitySummary> list(final String application, UriInfo ui) {
         return FluentIterable
                 .from(brooklyn().getApplication(application).getChildren())
                 .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
-                .transform(EntityTransformer.FROM_ENTITY)
+                .transform(EntityTransformer.fromEntity(ui.getBaseUriBuilder()))
                 .toList();
     }
 
     @Override
-    public EntitySummary get(String application, String entityName) {
+    public EntitySummary get(String application, String entityName, UriInfo ui) {
         Entity entity = brooklyn().getEntity(application, entityName);
         if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
-            return EntityTransformer.entitySummary(entity);
+            return EntityTransformer.entitySummary(entity, ui.getBaseUriBuilder());
         }
         throw WebResourceUtils.unauthorized("User '%s' is not authorized to get entity '%s'",
                 Entitlements.getEntitlementContext().user(), entity);
     }
 
     @Override
-    public List<EntitySummary> getChildren(final String application, final String entity) {
+    public List<EntitySummary> getChildren(final String application, final String entity, UriInfo ui) {
         return FluentIterable
                 .from(brooklyn().getEntity(application, entity).getChildren())
                 .filter(EntitlementPredicates.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY))
-                .transform(EntityTransformer.FROM_ENTITY)
+                .transform(EntityTransformer.fromEntity(ui.getBaseUriBuilder()))
                 .toList();
     }
 
     @Override
-    public List<EntitySummary> getChildrenOld(String application, String entity) {
+    public List<EntitySummary> getChildrenOld(String application, String entity, UriInfo ui) {
         log.warn("Using deprecated call to /entities when /children should be used");
-        return getChildren(application, entity);
+        return getChildren(application, entity, ui);
     }
 
     @Override
-    public Response addChildren(String applicationToken, String entityToken, Boolean start, String timeoutS, String yaml) {
+    public Response addChildren(String applicationToken, String entityToken, Boolean start, String timeoutS, String yaml, UriInfo ui) {
         final Entity parent = brooklyn().getEntity(applicationToken, entityToken);
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_ENTITY, parent)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify entity '%s'",
@@ -122,31 +123,30 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
         
         if (added.get().size()==1) {
             Entity child = Iterables.getOnlyElement(added.get());
-            URI ref = uriInfo.getBaseUriBuilder()
-                    .path(EntityApi.class)
-                    .path(EntityApi.class, "get")
+            URI ref = serviceUriBuilder(uriInfo.getBaseUriBuilder(), EntityApi.class, "get")
                     .build(child.getApplicationId(), child.getId());
             response = created(ref);
         } else {
             response = Response.status(Status.CREATED);
         }
-        return response.entity(TaskTransformer.taskSummary(added.task())).build();
+        return response.entity(TaskTransformer.taskSummary(added.task(), ui.getBaseUriBuilder())).build();
     }
 
     @Override
-    public List<TaskSummary> listTasks(String applicationId, String entityId) {
+    public List<TaskSummary> listTasks(String applicationId, String entityId, UriInfo ui) {
         Entity entity = brooklyn().getEntity(applicationId, entityId);
         Set<Task<?>> tasks = BrooklynTaskTags.getTasksInEntityContext(mgmt().getExecutionManager(), entity);
-        return new LinkedList<TaskSummary>(Collections2.transform(tasks, TaskTransformer.FROM_TASK));
+        return new LinkedList<TaskSummary>(Collections2.transform(tasks, 
+                TaskTransformer.fromTask(ui.getBaseUriBuilder())));
     }
 
     @Override
-    public TaskSummary getTask(final String application, final String entityToken, String taskId) {
+    public TaskSummary getTask(final String application, final String entityToken, String taskId, UriInfo ui) {
         // TODO deprecate in favour of ActivityApi.get ?
         Task<?> t = mgmt().getExecutionManager().getTask(taskId);
         if (t == null)
             throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
-        return TaskTransformer.FROM_TASK.apply(t);
+        return TaskTransformer.fromTask(ui.getBaseUriBuilder()).apply(t);
     }
 
     @SuppressWarnings("unchecked")
@@ -184,16 +184,16 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
     }
 
     @Override
-    public Response expunge(String application, String entity, boolean release) {
+    public Response expunge(String application, String entity, boolean release, UriInfo ui) {
         Entity entityLocal = brooklyn().getEntity(application, entity);
         Task<?> task = brooklyn().expunge(entityLocal, release);
-        TaskSummary summary = TaskTransformer.FROM_TASK.apply(task);
+        TaskSummary summary = TaskTransformer.fromTask(ui.getBaseUriBuilder()).apply(task);
         return status(ACCEPTED).entity(summary).build();
     }
 
     @Override
-    public List<EntitySummary> getDescendants(String application, String entity, String typeRegex) {
-        return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, entity, typeRegex));
+    public List<EntitySummary> getDescendants(String application, String entity, String typeRegex, UriInfo ui) {
+        return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, entity, typeRegex), ui.getBaseUriBuilder());
     }
 
     @Override
@@ -203,11 +203,11 @@ public class EntityResource extends AbstractBrooklynRestResource implements Enti
     }
 
     @Override
-    public List<LocationSummary> getLocations(String application, String entity) {
+    public List<LocationSummary> getLocations(String application, String entity, UriInfo ui) {
         List<LocationSummary> result = Lists.newArrayList();
         Entity e = brooklyn().getEntity(application, entity);
         for (Location l : e.getLocations()) {
-            result.add(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.NONE));
+            result.add(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.NONE, ui.getBaseUriBuilder()));
         }
         return result;
     }

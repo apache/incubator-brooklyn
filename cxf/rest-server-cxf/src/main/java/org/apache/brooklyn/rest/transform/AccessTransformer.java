@@ -24,15 +24,18 @@ import org.apache.brooklyn.core.mgmt.internal.AccessManager;
 import org.apache.brooklyn.rest.domain.AccessSummary;
 
 import com.google.common.collect.ImmutableMap;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.rest.api.AccessApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.resourceUriBuilder;
 
 /**
  * @author Adam Lowe
  */
 public class AccessTransformer {
 
-    public static AccessSummary accessSummary(AccessManager manager) {
-        String selfUri = "/v1/access/";
-        ImmutableMap<String, URI> links = ImmutableMap.of("self", URI.create(selfUri));
+    public static AccessSummary accessSummary(AccessManager manager, UriBuilder ub) {
+        URI selfUri = resourceUriBuilder(ub, AccessApi.class).build();
+        ImmutableMap<String, URI> links = ImmutableMap.of("self", selfUri);
 
         return new AccessSummary(manager.isLocationProvisioningAllowed(), links);
     }

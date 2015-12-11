@@ -45,6 +45,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import javax.ws.rs.core.UriInfo;
 
 @HaHotStateRequired
 public class EntityConfigResource extends AbstractBrooklynRestResource implements EntityConfigApi {
@@ -52,7 +53,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     private static final Logger LOG = LoggerFactory.getLogger(EntityConfigResource.class);
 
     @Override
-    public List<EntityConfigSummary> list(final String application, final String entityToken) {
+    public List<EntityConfigSummary> list(final String application, final String entityToken, final UriInfo ui) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
         // TODO merge with keys which have values
         return Lists.newArrayList(transform(
@@ -60,7 +61,7 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
                 new Function<ConfigKey<?>, EntityConfigSummary>() {
                     @Override
                     public EntityConfigSummary apply(ConfigKey<?> config) {
-                        return EntityTransformer.entityConfigSummary(entity, config);
+                        return EntityTransformer.entityConfigSummary(entity, config, ui.getBaseUriBuilder());
                     }
                 }));
     }

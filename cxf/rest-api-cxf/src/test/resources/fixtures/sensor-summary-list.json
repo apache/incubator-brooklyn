@@ -5,8 +5,8 @@
         "description":"Service lifecycle state",
         "links":{
             "self":"fixtures/service-state.json",
-            "application":"/v1/applications/tesr",
-            "entity":"/v1/applications/tesr/entities/zQsqdXzi"
+            "application":"/applications/tesr",
+            "entity":"/applications/tesr/entities/zQsqdXzi"
         }
     },
     {
@@ -15,8 +15,8 @@
         "description":"JMX context path",
         "links":{
             "self":"fixtures/service-state.json",
-            "application":"/v1/applications/tesr",
-            "entity":"/v1/applications/tesr/entities/zQsqdXzi"
+            "application":"/applications/tesr",
+            "entity":"/applications/tesr/entities/zQsqdXzi"
         }
     },
     {
@@ -25,8 +25,8 @@
         "description":"Suggested shutdown port",
         "links":{
             "self":"fixtures/service-state.json",
-            "application":"/v1/applications/tesr",
-            "entity":"/v1/applications/tesr/entities/zQsqdXzi"
+            "application":"/applications/tesr",
+            "entity":"/applications/tesr/entities/zQsqdXzi"
         }
     },
     {
@@ -35,8 +35,8 @@
         "description":"Service has been started successfully and is running",
         "links":{
             "self":"fixtures/service-state.json",
-            "application":"/v1/applications/tesr",
-            "entity":"/v1/applications/tesr/entities/zQsqdXzi"
+            "application":"/applications/tesr",
+            "entity":"/applications/tesr/entities/zQsqdXzi"
         }
     }
 ]

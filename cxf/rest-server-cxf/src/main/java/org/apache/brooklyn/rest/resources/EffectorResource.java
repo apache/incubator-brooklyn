@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
+import javax.ws.rs.core.UriInfo;
 
 @HaHotStateRequired
 public class EffectorResource extends AbstractBrooklynRestResource implements EffectorApi {
@@ -55,7 +56,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
     private static final Logger log = LoggerFactory.getLogger(EffectorResource.class);
 
     @Override
-    public List<EffectorSummary> list(final String application, final String entityToken) {
+    public List<EffectorSummary> list(final String application, final String entityToken, final UriInfo ui) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
         return FluentIterable
                 .from(entity.getEntityType().getEffectors())
@@ -69,7 +70,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
                 .transform(new Function<Effector<?>, EffectorSummary>() {
                     @Override
                     public EffectorSummary apply(Effector<?> effector) {
-                        return EffectorTransformer.effectorSummary(entity, effector);
+                        return EffectorTransformer.effectorSummary(entity, effector, ui.getBaseUriBuilder());
                     }
                 })
                 .toSortedList(SummaryComparators.nameComparator());
@@ -77,7 +78,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
 
     @Override
     public Response invoke(String application, String entityToken, String effectorName,
-            String timeout, Map<String, Object> parameters) {
+            String timeout, Map<String, Object> parameters, UriInfo ui) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
 
         // TODO check effectors?
@@ -102,7 +103,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
                     if (timeoutMillis == 0) throw new TimeoutException();
                     result = t.get(timeoutMillis, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException e) {
-                    result = TaskTransformer.taskSummary(t);
+                    result = TaskTransformer.taskSummary(t, ui.getBaseUriBuilder());
                 }
             }
             return Response.status(Response.Status.ACCEPTED).entity(result).build();

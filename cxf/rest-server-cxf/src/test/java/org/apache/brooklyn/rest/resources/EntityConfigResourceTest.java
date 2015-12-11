@@ -62,7 +62,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addAllBrooklynResources(sf);
+        addDefaultRestApi(sf);
     }
 
     @BeforeClass(alwaysRun = true)
@@ -87,7 +87,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testList() throws Exception {
         List<EntityConfigSummary> entityConfigSummaries = client().path(
-                URI.create("/v1/applications/simple-app/entities/simple-ent/config"))
+                URI.create("/applications/simple-app/entities/simple-ent/config"))
                 .get(new GenericType<List<EntityConfigSummary>>() {
                 });
         
@@ -112,7 +112,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testBatchConfigRead() throws Exception {
         Map<String, Object> currentState = client().path(
-                URI.create("/v1/applications/simple-app/entities/simple-ent/config/current-state"))
+                URI.create("/applications/simple-app/entities/simple-ent/config/current-state"))
                 .get(new GenericType<Map<String, Object>>() {
                 });
         assertTrue(currentState.containsKey("install.version"));
@@ -122,7 +122,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testGetJson() throws Exception {
         String configValue = client().path(
-                URI.create("/v1/applications/simple-app/entities/simple-ent/config/install.version"))
+                URI.create("/applications/simple-app/entities/simple-ent/config/install.version"))
                 .accept(MediaType.APPLICATION_JSON_TYPE)
                 .get(String.class);
         assertEquals(configValue, "\"1.0.0\"");
@@ -131,7 +131,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testGetPlain() throws Exception {
         String configValue = client().path(
-                URI.create("/v1/applications/simple-app/entities/simple-ent/config/install.version"))
+                URI.create("/applications/simple-app/entities/simple-ent/config/install.version"))
                 .accept(MediaType.TEXT_PLAIN_TYPE)
                 .get(String.class);
         assertEquals(configValue, "1.0.0");
@@ -140,7 +140,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testSet() throws Exception {
         try {
-            String uri = "/v1/applications/simple-app/entities/simple-ent/config/"+
+            String uri = "/applications/simple-app/entities/simple-ent/config/"+
                 RestMockSimpleEntity.SAMPLE_CONFIG.getName();
             Response response = client().path(uri)
                 .type(MediaType.APPLICATION_JSON_TYPE)
@@ -158,7 +158,7 @@ public class EntityConfigResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testSetFromMap() throws Exception {
         try {
-            String uri = "/v1/applications/simple-app/entities/simple-ent/config";
+            String uri = "/applications/simple-app/entities/simple-ent/config";
             Response response = client().path(uri)
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(MutableMap.of(

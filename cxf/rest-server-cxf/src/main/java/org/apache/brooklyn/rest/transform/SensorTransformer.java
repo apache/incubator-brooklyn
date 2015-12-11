@@ -29,10 +29,14 @@ import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.rest.domain.SensorSummary;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.net.URLParamEncoder;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.collect.Iterables;
+import javax.ws.rs.core.UriBuilder;
+import org.apache.brooklyn.rest.api.ApplicationApi;
+import org.apache.brooklyn.rest.api.EntityApi;
+import org.apache.brooklyn.rest.api.SensorApi;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 public class SensorTransformer {
 
@@ -43,16 +47,16 @@ public class SensorTransformer {
                 sensor.getDescription(), null);
     }
 
-    public static SensorSummary sensorSummary(Entity entity, Sensor<?> sensor) {
-        String applicationUri = "/v1/applications/" + entity.getApplicationId();
-        String entityUri = applicationUri + "/entities/" + entity.getId();
-        String selfUri = entityUri + "/sensors/" + URLParamEncoder.encode(sensor.getName());
+    public static SensorSummary sensorSummary(Entity entity, Sensor<?> sensor, UriBuilder ub) {
+        URI applicationUri = serviceUriBuilder(ub, ApplicationApi.class, "get").build(entity.getApplicationId());
+        URI entityUri = serviceUriBuilder(ub, EntityApi.class, "get").build(entity.getApplicationId(), entity.getId());
+        URI selfUri = serviceUriBuilder(ub, SensorApi.class, "get").build(entity.getApplicationId(), entity.getId(), sensor.getName());
 
         MutableMap.Builder<String, URI> lb = MutableMap.<String, URI>builder()
-                .put("self", URI.create(selfUri))
-                .put("application", URI.create(applicationUri))
-                .put("entity", URI.create(entityUri))
-                .put("action:json", URI.create(selfUri));
+                .put("self", selfUri)
+                .put("application", applicationUri)
+                .put("entity", entityUri)
+                .put("action:json", selfUri);
 
         if (sensor instanceof AttributeSensor) {
             Iterable<RendererHints.NamedAction> hints = Iterables.filter(RendererHints.getHintsFor((AttributeSensor<?>)sensor), RendererHints.NamedAction.class);

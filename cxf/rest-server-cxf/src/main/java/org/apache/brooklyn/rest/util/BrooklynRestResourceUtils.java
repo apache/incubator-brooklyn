@@ -531,9 +531,10 @@ public class BrooklynRestResourceUtils {
 
     @Deprecated
     public static String fixLocation(String locationId) {
-        if (locationId.startsWith("/v1/locations/")) {
+        if (locationId.startsWith("/locations/") || locationId.startsWith("/v1/locations/")) {
             log.warn("REST API using legacy URI syntax for location: "+locationId);
             locationId = Strings.removeFromStart(locationId, "/v1/locations/");
+            locationId = Strings.removeFromStart(locationId, "/locations/");
         }
         return locationId;
     }

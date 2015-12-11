@@ -31,6 +31,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 @Path("/applications/{application}/entities/{entity}/policies")
 @Api("Entity Policies")
@@ -49,7 +51,8 @@ public interface PolicyApi {
             @ApiParam(value = "Application ID or name", required = true)
             @PathParam("application") final String application,
             @ApiParam(value = "Entity ID or name", required = true)
-            @PathParam("entity") final String entityToken);
+            @PathParam("entity") final String entityToken,
+            @Context UriInfo ui);
 
     // TODO support parameters  ?show=value,summary&name=xxx
     // (and in sensors class)
@@ -82,7 +85,9 @@ public interface PolicyApi {
 
             // TODO would like to make this optional but jersey complains if we do
             @ApiParam(name = "config", value = "Configuration for the policy (as key value pairs)", required = true)
-            Map<String, String> config);
+            Map<String, String> config,
+
+            @Context UriInfo ui);
 
     @GET
     @Path("/{policy}")

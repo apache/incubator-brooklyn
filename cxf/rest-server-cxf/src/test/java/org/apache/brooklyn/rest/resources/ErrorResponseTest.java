@@ -51,7 +51,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addAllBrooklynResources(sf);
+        addDefaultRestApi(sf);
     }
 
     @BeforeClass(alwaysRun = true)
@@ -60,7 +60,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
         Response aResponse = clientDeploy(simpleSpec);
         waitForApplicationToBeRunning(aResponse.getLocation());
 
-        String policiesEndpoint = "/v1/applications/simple-app/entities/simple-ent/policies";
+        String policiesEndpoint = "/applications/simple-app/entities/simple-ent/policies";
 
         Response pResponse = client().path(policiesEndpoint)
                 .query("type", RestMockSimplePolicy.class.getCanonicalName())
@@ -73,7 +73,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
 
     @Test
     public void testResponseToBadRequest() {
-        String resource = "/v1/applications/simple-app/entities/simple-ent/policies/"+policyId+"/config/"
+        String resource = "/applications/simple-app/entities/simple-ent/policies/"+policyId+"/config/"
                 + RestMockSimplePolicy.INTEGER_CONFIG.getName() + "/set";
 
         Response response = client().path(resource)
@@ -89,7 +89,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
 
     @Test
     public void testResponseToWrongMethod() {
-        String resource = "/v1/applications/simple-app/entities/simple-ent/policies/"+policyId+"/config/"
+        String resource = "/applications/simple-app/entities/simple-ent/policies/"+policyId+"/config/"
                 + RestMockSimplePolicy.INTEGER_CONFIG.getName() + "/set";
 
         // Should be POST, not GET

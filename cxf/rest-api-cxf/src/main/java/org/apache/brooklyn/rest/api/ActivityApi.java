@@ -29,7 +29,9 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
 @Path("/activities")
 @Api("Activities")
@@ -45,8 +47,8 @@ public interface ActivityApi {
     })
 //  @Produces("text/json")
     public TaskSummary get(
-            @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId
-            );
+            @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId,
+            @Context UriInfo ui);
 
     @GET
     @Path("/{task}/children")
@@ -55,7 +57,8 @@ public interface ActivityApi {
             @ApiResponse(code = 404, message = "Could not find task")
     })
     public List<TaskSummary> children(
-            @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId);
+            @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId,
+            @Context UriInfo ui);
 
     @GET
     @Path("/{task}/stream/{streamId}")

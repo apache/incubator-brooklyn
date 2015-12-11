@@ -31,6 +31,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 @Path("/applications/{application}/entities/{entity}/effectors")
 @Api("Entity Effectors")
@@ -49,7 +51,8 @@ public interface EffectorApi {
             @ApiParam(name = "application", value = "Application name", required = true)
             @PathParam("application") final String application,
             @ApiParam(name = "entity", value = "Entity name", required = true)
-            @PathParam("entity") final String entityToken);
+            @PathParam("entity") final String entityToken,
+            @Context UriInfo ui);
 
     @POST
     @Path("/{effector}")
@@ -81,5 +84,6 @@ public interface EffectorApi {
             @ApiParam(/* FIXME: giving a `name` in swagger @ApiParam seems wrong as this object is the body, not a named argument */ name = "parameters",
                     value = "Effector parameters (as key value pairs)", required = false)
             @Valid 
-            Map<String, Object> parameters);
+            Map<String, Object> parameters,
+            @Context UriInfo ui);
 }

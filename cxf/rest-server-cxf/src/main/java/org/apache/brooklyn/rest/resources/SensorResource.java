@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import javax.ws.rs.core.UriInfo;
 
 @HaHotStateRequired
 public class SensorResource extends AbstractBrooklynRestResource implements SensorApi {
@@ -52,14 +53,14 @@ public class SensorResource extends AbstractBrooklynRestResource implements Sens
 
     @SuppressWarnings("rawtypes")
     @Override
-    public List<SensorSummary> list(final String application, final String entityToken) {
+    public List<SensorSummary> list(final String application, final String entityToken, final UriInfo ui) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
 
         return Lists.newArrayList(transform(filter(entity.getEntityType().getSensors(), AttributeSensor.class),
                 new Function<AttributeSensor, SensorSummary>() {
                     @Override
                     public SensorSummary apply(AttributeSensor sensor) {
-                        return SensorTransformer.sensorSummary(entity, sensor);
+                        return SensorTransformer.sensorSummary(entity, sensor, ui.getBaseUriBuilder());
                     }
                 }));
     }
