@@ -83,7 +83,7 @@ limitations under the License.
         <property name="managementContext" ref="localManagementContext" />
     </bean>
 
-    <jaxrs:server id="brooklynRestApiV1" address="/v1">
+    <jaxrs:server id="brooklynRestApiV1" address="/">
         <jaxrs:serviceBeans>
             <ref component-id="accessResourceBean" />
             <ref component-id="activityResourceBean" />
@@ -102,5 +102,11 @@ limitations under the License.
             <ref component-id="usageResourceBean" />
             <ref component-id="versionResourceBean" />
         </jaxrs:serviceBeans>
+
+        <jaxrs:providers>
+            <bean class="org.apache.brooklyn.rest.util.DefaultExceptionMapper"/>
+            <bean class="org.codehaus.jackson.jaxrs.JacksonJsonProvider"/>
+            <bean class="org.apache.brooklyn.rest.util.FormMapProvider"/>
+        </jaxrs:providers>
     </jaxrs:server>
 </blueprint>
