@@ -22,14 +22,15 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Application;
@@ -556,7 +557,7 @@ public class BrooklynLauncher {
     /**
      * @param memento The state to copy
      * @param destinationDir Directory for state to be copied to
-     * @param destinationLocation Optional location if target for copied state is a blob store.
+     * @param destinationLocationSpec Optional location if target for copied state is a blob store.
      * @deprecated since 0.7.0 use {@link #copyPersistedState} instead
      */
     // Make private after deprecation
@@ -662,28 +663,35 @@ public class BrooklynLauncher {
         if (managementContext == null) {
             if (brooklynProperties == null) {
                 BrooklynProperties.Factory.Builder builder = BrooklynProperties.Factory.builderDefault();
+
                 if (globalBrooklynPropertiesFile != null) {
-                    if (fileExists(globalBrooklynPropertiesFile)) {
-                        LOG.debug("Using global properties file "+globalBrooklynPropertiesFile);
-                        // brooklyn.properties stores passwords (web-console and cloud credentials), 
+                    File globalProperties = new File(Os.tidyPath(globalBrooklynPropertiesFile));
+                    if (globalProperties.exists()) {
+                        globalProperties = resolveSymbolicLink(globalProperties);
+                        checkFileReadable(globalProperties);
+                        // brooklyn.properties stores passwords (web-console and cloud credentials),
                         // so ensure it has sensible permissions
-                        checkFileReadable(globalBrooklynPropertiesFile);
-                        checkFilePermissionsX00(globalBrooklynPropertiesFile);
+                        checkFilePermissionsX00(globalProperties);
+                        LOG.debug("Using global properties file " + globalProperties);
                     } else {
-                        LOG.debug("Global properties file "+globalBrooklynPropertiesFile+" does not exist, will ignore");
+                        LOG.debug("Global properties file " + globalProperties + " does not exist, will ignore");
                     }
-                    builder.globalPropertiesFile(globalBrooklynPropertiesFile);
+                    builder.globalPropertiesFile(globalProperties.getAbsolutePath());
                 } else {
                     LOG.debug("Global properties file disabled");
                     builder.globalPropertiesFile(null);
                 }
                 
                 if (localBrooklynPropertiesFile != null) {
-                    checkFileReadable(localBrooklynPropertiesFile);
-                    checkFilePermissionsX00(localBrooklynPropertiesFile);
-                    builder.localPropertiesFile(localBrooklynPropertiesFile);
+                    File localProperties = new File(Os.tidyPath(localBrooklynPropertiesFile));
+                    localProperties = resolveSymbolicLink(localProperties);
+                    checkFileReadable(localProperties);
+                    checkFilePermissionsX00(localProperties);
+                    builder.localPropertiesFile(localProperties.getAbsolutePath());
                 }
+
                 managementContext = new LocalManagementContext(builder, brooklynAdditionalProperties);
+
             } else {
                 if (globalBrooklynPropertiesFile != null)
                     LOG.warn("Ignoring globalBrooklynPropertiesFile "+globalBrooklynPropertiesFile+" because explicit brooklynProperties supplied");
@@ -691,6 +699,7 @@ public class BrooklynLauncher {
                     LOG.warn("Ignoring localBrooklynPropertiesFile "+localBrooklynPropertiesFile+" because explicit brooklynProperties supplied");
                 managementContext = new LocalManagementContext(brooklynProperties, brooklynAdditionalProperties);
             }
+
             brooklynProperties = ((ManagementContextInternal)managementContext).getBrooklynProperties();
             
             // We created the management context, so we are responsible for terminating it
@@ -710,32 +719,42 @@ public class BrooklynLauncher {
         }
     }
 
-    private boolean fileExists(String file) {
-        return new File(Os.tidyPath(file)).exists();
+    /**
+     * @return The canonical path of the argument.
+     */
+    private File resolveSymbolicLink(File f) {
+        File f2 = f;
+        try {
+            f2 = f.getCanonicalFile();
+            if (Files.isSymbolicLink(f.toPath())) {
+                LOG.debug("Resolved symbolic link: {} -> {}", f, f2);
+            }
+        } catch (IOException e) {
+            LOG.warn("Could not determine canonical name of global properties file", e);
+        }
+        return f2;
     }
 
-    private void checkFileReadable(String file) {
-        File f = new File(Os.tidyPath(file));
+    private void checkFileReadable(File f) {
         if (!f.exists()) {
-            throw new FatalRuntimeException("File "+file+" does not exist");
+            throw new FatalRuntimeException("File " + f + " does not exist");
         }
         if (!f.isFile()) {
-            throw new FatalRuntimeException(file+" is not a file");
+            throw new FatalRuntimeException(f + " is not a file");
         }
         if (!f.canRead()) {
-            throw new FatalRuntimeException(file+" is not readable");
+            throw new FatalRuntimeException(f + " is not readable");
         }
     }
     
-    private void checkFilePermissionsX00(String file) {
-        File f = new File(Os.tidyPath(file));
-        
+    private void checkFilePermissionsX00(File f) {
+
         Maybe<String> permission = FileUtil.getFilePermissions(f);
         if (permission.isAbsent()) {
             LOG.debug("Could not determine permissions of file; assuming ok: "+f);
         } else {
             if (!permission.get().subSequence(4, 10).equals("------")) {
-                throw new FatalRuntimeException("Invalid permissions for file "+file+"; expected ?00 but was "+permission.get());
+                throw new FatalRuntimeException("Invalid permissions for file " + f + "; expected ?00 but was " + permission.get());
             }
         }
     }

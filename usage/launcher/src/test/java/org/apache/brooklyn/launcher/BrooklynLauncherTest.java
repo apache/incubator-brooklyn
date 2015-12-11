@@ -33,7 +33,6 @@ import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestApplicationImpl;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.launcher.BrooklynLauncher;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -47,6 +46,8 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 import org.apache.brooklyn.test.HttpTestUtils;
@@ -73,12 +74,10 @@ import com.google.common.io.Files;
 public class BrooklynLauncherTest {
     
     private BrooklynLauncher launcher;
-    private File persistenceDir;
-    
+
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
         if (launcher != null) launcher.terminate();
-        if (persistenceDir != null) RebindTestUtils.deleteMementoDir(persistenceDir);
         launcher = null;
     }
     
@@ -290,6 +289,31 @@ public class BrooklynLauncherTest {
             if (!e.toString().contains("Invalid permissions for file")) throw e;
         } finally {
             propsFile.delete();
+        }
+    }
+
+    @Test(groups="Integration")
+    public void testStartsWithSymlinkedBrooklynPropertiesPermissionsX00() throws Exception {
+        File dir = Files.createTempDir();
+        Path globalPropsFile = java.nio.file.Files.createFile(Paths.get(dir.toString(), "globalProps.properties"));
+        Path globalSymlink = java.nio.file.Files.createSymbolicLink(Paths.get(dir.toString(), "globalLink"), globalPropsFile);
+        Path localPropsFile = java.nio.file.Files.createFile(Paths.get(dir.toString(), "localPropsFile.properties"));
+        Path localSymlink = java.nio.file.Files.createSymbolicLink(Paths.get(dir.toString(), "localLink"), localPropsFile);
+
+        Files.write(getMinimalLauncherPropertiesString() + "key_in_global=1", globalPropsFile.toFile(), Charset.defaultCharset());
+        Files.write("key_in_local=2", localPropsFile.toFile(), Charset.defaultCharset());
+        FileUtil.setFilePermissionsTo600(globalPropsFile.toFile());
+        FileUtil.setFilePermissionsTo600(localPropsFile.toFile());
+        try {
+            launcher = newLauncherForTests(false)
+                    .webconsole(false)
+                    .localBrooklynPropertiesFile(localSymlink.toAbsolutePath().toString())
+                    .globalBrooklynPropertiesFile(globalSymlink.toAbsolutePath().toString())
+                    .start();
+            assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("key_in_global"), "1");
+            assertEquals(launcher.getServerDetails().getManagementContext().getConfig().getFirst("key_in_local"), "2");
+        } finally {
+            Os.deleteRecursively(dir);
         }
     }
 
