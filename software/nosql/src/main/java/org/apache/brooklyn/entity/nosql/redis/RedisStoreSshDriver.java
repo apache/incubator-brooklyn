@@ -21,9 +21,8 @@ package org.apache.brooklyn.entity.nosql.redis;
 import static java.lang.String.format;
 
 import java.util.List;
+import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.AbstractSoftwareProcessSshDriver;
@@ -31,8 +30,11 @@ import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.ssh.BashCommands;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Start a {@link RedisStore} in a {@link Location} accessible over ssh.
@@ -66,6 +68,9 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
                 "yum", "make",
                 "apt", "make",
                 "port", null);
+        //Headers still might be missing on some systems (especially if gcc & make are pre-installed)
+        Map<String, String> installBuildEssentialPackageFlags = ImmutableMap.of(
+                "apt", "build-essential");
 
         List<String> commands = ImmutableList.<String>builder()
                 .addAll(BashCommands.commandsToDownloadUrlsAs(urls, saveAs))
@@ -73,6 +78,7 @@ public class RedisStoreSshDriver extends AbstractSoftwareProcessSshDriver implem
                 .add(BashCommands.INSTALL_CURL)
                 .add(BashCommands.installPackage(installGccPackageFlags, "redis-prerequisites-gcc"))
                 .add(BashCommands.installPackage(installMakePackageFlags, "redis-prerequisites-make"))
+                .add(BashCommands.installPackage(installBuildEssentialPackageFlags, null))
                 .add("tar xzfv " + saveAs)
                 .add(format("cd redis-%s", getVersion()))
                 .add("pushd deps")

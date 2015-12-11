@@ -21,17 +21,23 @@ package org.apache.brooklyn.test.framework;
 import com.google.common.collect.Lists;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.AbstractEntity;
+import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
 /**
  * {@inheritDoc}
  */
-public class TestCaseImpl extends AbstractTest implements TestCase {
+public class TestCaseImpl extends AbstractEntity implements TestCase {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TestCaseImpl.class);
 
     /**
      * {@inheritDoc}
@@ -40,12 +46,15 @@ public class TestCaseImpl extends AbstractTest implements TestCase {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         try {
             for (final Entity childEntity : getChildren()) {
-                if (childEntity instanceof Startable) ((Startable) childEntity).start(locations);
+                Boolean serviceUp = childEntity.sensors().get(SERVICE_UP);
+                if (childEntity instanceof Startable && !Boolean.TRUE.equals(serviceUp)){
+                    ((Startable) childEntity).start(locations);
+                }
             }
-            sensors().set(SERVICE_UP, true);
+            sensors().set(Attributes.SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {
-            sensors().set(SERVICE_UP, false);
+            sensors().set(Attributes.SERVICE_UP, false);
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(t);
         }
@@ -56,7 +65,7 @@ public class TestCaseImpl extends AbstractTest implements TestCase {
      */
     public void stop() {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
-        sensors().set(SERVICE_UP, false);
+        sensors().set(Attributes.SERVICE_UP, false);
         try {
             for (Entity child : getChildren()) {
                 if (child instanceof Startable) ((Startable) child).stop();

@@ -18,6 +18,7 @@ Validation test entities include:
 - `TestSensor` - perform assertion on a specified sensor.
 - `TestEffector` - invoke effector on specified target entity.
 - `TestHttpCall` - perform assertion on response to specified HTTP GET Request.
+- `SimpleShellCommandTest` - test assertions on the result of a shell command on the same node as the target entity.
 
 The following sections provide details on each test entity along with examples of their use.
 
