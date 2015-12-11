@@ -111,14 +111,20 @@ public class MySqlSshDriver extends AbstractSoftwareProcessSshDriver implements 
         return "mymysql.cnf";
     }
 
-    public String getInstallFilename() {
-        return String.format("mysql-%s-%s.tar.gz", getVersion(), getOsTag());
+    // Only invoked to determine the default download URL form the specified version.
+    public String getMajorVersion() {
+        return getEntity().config().get(MySqlNode.SUGGESTED_VERSION).replaceAll("(\\d+\\.\\d+)\\.\\d+", "$1");
+    }
+
+    public String getDefaultUnpackedDirectoryName() {
+        return Strings.removeAllFromEnd(resolver.getFilename(), ".tar.gz");
     }
 
     @Override
     public void preInstall() {
-        resolver = Entities.newDownloader(this, ImmutableMap.of("filename", getInstallFilename()));
-        setExpandedInstallDir(Os.mergePaths(getInstallDir(), resolver.getUnpackedDirectoryName(format("mysql-%s-%s", getVersion(), getOsTag()))));
+        resolver = Entities.newDownloader(this);
+        String unpackedDirectoryName = resolver.getUnpackedDirectoryName(getDefaultUnpackedDirectoryName());
+        setExpandedInstallDir(Os.mergePaths(getInstallDir(), unpackedDirectoryName));
     }
 
     @Override
