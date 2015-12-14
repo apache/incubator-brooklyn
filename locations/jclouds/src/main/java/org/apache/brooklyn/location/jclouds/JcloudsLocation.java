@@ -57,6 +57,7 @@ import org.apache.brooklyn.api.location.MachineManagementMixins;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.mgmt.AccessController;
+import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.config.ConfigUtils;
@@ -96,6 +97,9 @@ import org.apache.brooklyn.util.core.internal.ssh.ShellTool;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.core.internal.winrm.WinRmTool;
 import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
+import org.apache.brooklyn.util.core.task.DynamicTasks;
+import org.apache.brooklyn.util.core.task.TaskBuilder;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.core.text.TemplateProcessor;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -179,6 +183,9 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
+
+import io.cloudsoft.winrm4j.pywinrm.Session;
+import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -2437,22 +2444,30 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    protected void releasePortForwarding(SshMachineLocation machine) {
+    protected void releasePortForwarding(final SshMachineLocation machine) {
         // TODO Implementation needs revisisted. It relies on deprecated PortForwardManager methods.
 
         boolean usePortForwarding = Boolean.TRUE.equals(machine.getConfig(USE_PORT_FORWARDING));
-        JcloudsPortForwarderExtension portForwarder = machine.getConfig(PORT_FORWARDER);
+        final JcloudsPortForwarderExtension portForwarder = machine.getConfig(PORT_FORWARDER);
         PortForwardManager portForwardManager = machine.getConfig(PORT_FORWARDING_MANAGER);
-        NodeMetadata node = (machine instanceof JcloudsSshMachineLocation) ? ((JcloudsSshMachineLocation) machine).getNode() : null;
+        final NodeMetadata node = (machine instanceof JcloudsSshMachineLocation) ? ((JcloudsSshMachineLocation) machine).getNode() : null;
+        final Map<String, Runnable> subtasks = Maps.newLinkedHashMap();
 
         if (portForwarder == null) {
             LOG.debug("No port-forwarding to close (because portForwarder null) on release of " + machine);
         } else {
-            // Release the port-forwarding for the login-port, which was explicilty created by JcloudsLocation
+            // Release the port-forwarding for the login-port, which was explicitly created by JcloudsLocation
             if (usePortForwarding && node != null) {
-                HostAndPort sshHostAndPortOverride = machine.getSshHostAndPort();
-                LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, sshHostAndPortOverride, node.getLoginPort()});
-                portForwarder.closePortForwarding(node, node.getLoginPort(), sshHostAndPortOverride, Protocol.TCP);
+                final HostAndPort sshHostAndPortOverride = machine.getSshHostAndPort();
+                final int loginPort = node.getLoginPort();
+                subtasks.put(
+                        "Close port-forward "+sshHostAndPortOverride+"->"+node.getLoginPort(),
+                        new Runnable() {
+                            public void run() {
+                                LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, sshHostAndPortOverride, node.getLoginPort()});
+                                portForwarder.closePortForwarding(node, loginPort, sshHostAndPortOverride, Protocol.TCP);
+                            }
+                        });
             }
 
             // Get all the other port-forwarding mappings for this VM, and release all of those
@@ -2467,13 +2482,44 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 mappings = ImmutableSet.of();
             }
 
-            for (PortMapping mapping : mappings) {
-                HostAndPort publicEndpoint = mapping.getPublicEndpoint();
-                int targetPort = mapping.getPrivatePort();
-                Protocol protocol = Protocol.TCP;
+            for (final PortMapping mapping : mappings) {
+                final HostAndPort publicEndpoint = mapping.getPublicEndpoint();
+                final int targetPort = mapping.getPrivatePort();
+                final Protocol protocol = Protocol.TCP;
                 if (publicEndpoint != null) {
-                    LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, publicEndpoint, targetPort});
-                    portForwarder.closePortForwarding(node, targetPort, publicEndpoint, protocol);
+                    subtasks.put(
+                            "Close port-forward "+publicEndpoint+"->"+targetPort,
+                            new Runnable() {
+                                public void run() {
+                                    LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, publicEndpoint, targetPort});
+                                    portForwarder.closePortForwarding(node, targetPort, publicEndpoint, protocol);
+                                }
+                            });
+                }
+            }
+
+            if (subtasks.size() > 0) {
+                final TaskBuilder<Void> builder = TaskBuilder.<Void>builder()
+                        .parallel(true)
+                        .displayName("close port-forwarding at "+machine);
+                for (Map.Entry<String, Runnable> entry : subtasks.entrySet()) {
+                    builder.add(TaskBuilder.builder().displayName(entry.getKey()).body(entry.getValue()).build());
+                }
+                final Task<Void> task = builder.build();
+                final DynamicTasks.TaskQueueingResult<Void> queueResult = DynamicTasks.queueIfPossible(task);
+                if(queueResult.isQueuedOrSubmitted()){
+                    final String origDetails = Tasks.setBlockingDetails("waiting for closing port-forwarding of "+machine);
+                    try {
+                        task.blockUntilEnded();
+                    } finally {
+                        Tasks.setBlockingDetails(origDetails);
+                    }
+                } else {
+                    LOG.warn("Releasing port-forwarding of "+machine+" not executing in execution-context "
+                            + "(e.g. not invoked inside effector); falling back to executing sequentially");
+                    for (Runnable subtask : subtasks.values()) {
+                        subtask.run();
+                    }
                 }
             }
         }
@@ -2530,11 +2576,11 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
     protected String getFirstReachableAddress(NodeMetadata node, ConfigBag setup) {
         String pollForFirstReachable = setup.get(POLL_FOR_FIRST_REACHABLE_ADDRESS);
-        
+
         boolean enabled = !"false".equalsIgnoreCase(pollForFirstReachable);
         String result;
         if (enabled) {
-            Duration timeout = "true".equals(pollForFirstReachable) ? Duration.FIVE_MINUTES : Duration.of(pollForFirstReachable); 
+            Duration timeout = "true".equals(pollForFirstReachable) ? Duration.FIVE_MINUTES : Duration.of(pollForFirstReachable);
             result = JcloudsUtil.getFirstReachableAddress(node, timeout);
             LOG.debug("Using first-reachable address "+result+" for node "+node+" in "+this);
         } else {
@@ -2579,7 +2625,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         final HostAndPort hostAndPort = hostAndPortOverride.isPresent() ? hostAndPortOverride.get() : HostAndPort.fromParts(vmIp, vmPort);
         final AtomicReference<LoginCredentials> credsSuccessful = new AtomicReference<LoginCredentials>();
 
-        // Don't use config that relates to the final user credentials (those have nothing to do 
+        // Don't use config that relates to the final user credentials (those have nothing to do
         // with the initial credentials of the VM returned by the cloud provider).
         // The createTemporaryWinRmMachineLocation deals with removing that.
         ConfigBag winrmProps = ConfigBag.newInstanceCopying(setup);
@@ -2594,7 +2640,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     for (Map.Entry<WinRmMachineLocation, LoginCredentials> entry : machinesToTry.entrySet()) {
                         WinRmMachineLocation machine = entry.getKey();
                         WinRmToolResponse response = machine.executeScript(
-                                ImmutableMap.of(WinRmTool.PROP_EXEC_TRIES.getName(), 1), 
+                                ImmutableMap.of(WinRmTool.PROP_EXEC_TRIES.getName(), 1),
                                 ImmutableList.of("echo testing"));
                         boolean success = (response.getStatusCode() == 0);
                         if (success) {
@@ -2604,7 +2650,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     }
                     return false;
                 }};
-    
+
             waitForReachable(checker, connectionDetails, credentialsToTry, setup, timeout);
         } finally {
             for (WinRmMachineLocation machine : machinesToTry.keySet()) {
