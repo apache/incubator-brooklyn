@@ -156,6 +156,22 @@ public class EntityFunctions {
         }
     };
 
+    public static <T> Function<Object, T> attribute(Entity entity, AttributeSensor<T> attribute) {
+        return new GetFixedEntityAttributeFunction<>(entity, attribute);
+    }
+
+    protected static class GetFixedEntityAttributeFunction<T> implements Function<Object, T> {
+        private final Entity entity;
+        private final AttributeSensor<T> attribute;
+        protected GetFixedEntityAttributeFunction(Entity entity, AttributeSensor<T> attribute) {
+            this.entity = entity;
+            this.attribute = attribute;
+        }
+        @Override public T apply(Object input) {
+            return entity.getAttribute(attribute);
+        }
+    }
+
     public static <T> Function<Entity, T> config(ConfigKey<T> key) {
         return new GetEntityConfigFunction<T>(checkNotNull(key, "key"));
     }

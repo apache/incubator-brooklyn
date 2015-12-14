@@ -20,6 +20,7 @@ package org.apache.brooklyn.entity.webapp.jetty;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.java.JavaAppUtils;
@@ -60,7 +61,8 @@ public class Jetty6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                             .setOnFailureOrException(false))
                     .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
                             .objectName(statsMbeanName)
-                            .attributeName("requests"))
+                            .attributeName("requests")
+                            .onFailureOrException(EntityFunctions.attribute(this, REQUEST_COUNT)))
                     .pollAttribute(new JmxAttributePollConfig<Integer>(RESPONSES_4XX_COUNT)
                             .objectName(statsMbeanName)
                             .attributeName("responses4xx"))

@@ -22,6 +22,10 @@ import static java.lang.String.format;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.annotation.Nullable;
+
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.entity.java.JavaAppUtils;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
@@ -29,6 +33,7 @@ import org.apache.brooklyn.feed.jmx.JmxFeed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Predicates;
 
@@ -79,7 +84,8 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
                     .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
                             .objectName(requestProcessorMbeanName)
                             .attributeName("requestCount")
-                            .enabled(retrieveUsageMetrics))
+                            .enabled(retrieveUsageMetrics)
+                            .onFailureOrException(EntityFunctions.attribute(this, REQUEST_COUNT)))
                     .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
                             .objectName(requestProcessorMbeanName)
                             .attributeName("processingTime")

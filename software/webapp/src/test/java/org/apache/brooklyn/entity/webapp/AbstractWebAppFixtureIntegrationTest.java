@@ -37,37 +37,26 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
-import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
-import org.apache.brooklyn.api.entity.drivers.DriverDependentEntity;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.api.mgmt.SubscriptionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.entity.EntityInternal;
+import org.apache.brooklyn.core.entity.EntityAsserts;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
-import org.apache.brooklyn.entity.software.base.SoftwareProcessDriver;
-import org.apache.brooklyn.entity.webapp.JavaWebAppService;
-import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcess;
-import org.apache.brooklyn.entity.webapp.WebAppService;
-import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
+import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.test.HttpTestUtils;
@@ -78,7 +67,15 @@ import org.apache.brooklyn.util.core.crypto.SecureKeys;
 import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -206,11 +203,8 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         log.info("test=canStartAndStop; entity="+entity+"; app="+entity.getApplication());
         
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
-        Asserts.succeedsEventually(MutableMap.of("timeout", 120*1000), new Runnable() {
-            public void run() {
-                assertTrue(entity.getAttribute(Startable.SERVICE_UP));
-            }});
-        
+        EntityAsserts.assertAttributeEqualsEventually(
+                MutableMap.of("timeout", 120*1000), entity, Startable.SERVICE_UP, Boolean.TRUE);
         entity.stop();
         assertFalse(entity.getAttribute(Startable.SERVICE_UP));
     }
@@ -224,13 +218,13 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         log.info("test=testReportsServiceDownWithKilled; entity="+entity+"; app="+entity.getApplication());
         
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
-        EntityTestUtils.assertAttributeEqualsEventually(MutableMap.of("timeout", 120*1000), entity, Startable.SERVICE_UP, true);
+        EntityAsserts.assertAttributeEqualsEventually(MutableMap.of("timeout", 120*1000), entity, Startable.SERVICE_UP, true);
 
         // Stop the underlying entity, but without our entity instance being told!
         killEntityBehindBack(entity);
         log.info("Killed {} behind mgmt's back, waiting for service up false in mgmt context", entity);
         
-        EntityTestUtils.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, false);
+        EntityAsserts.assertAttributeEqualsEventually(entity, Startable.SERVICE_UP, false);
         
         log.info("success getting service up false in primary mgmt universe");
     }
@@ -239,11 +233,10 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
      * Stop the given underlying entity, but without our entity instance being told!
      */
     protected void killEntityBehindBack(Entity tokill) throws Exception {
-        ((SoftwareProcessDriver)((DriverDependentEntity<?>) Entities.deproxy(entity)).getDriver()).stop();
+        ((SoftwareProcessImpl) Entities.deproxy(tokill)).getDriver().stop();
         // old method of doing this did some dodgy legacy rebind and failed due to too many dangling refs; above is better in any case
         // but TODO we should have some rebind tests for these!
     }
-    
     /**
      * Checks that an entity correctly sets request and error count metrics by
      * connecting to a non-existent URL several times.
@@ -254,14 +247,11 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         log.info("test=publishesRequestAndErrorCountMetrics; entity="+entity+"; app="+entity.getApplication());
         
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
-        
-        Asserts.succeedsEventually(MutableMap.of("timeout", 10*1000), new Runnable() {
-            public void run() {
-                assertTrue(entity.getAttribute(SoftwareProcess.SERVICE_UP));
-            }});
-        
+        EntityAsserts.assertAttributeEqualsEventually(
+                MutableMap.of("timeout", 120 * 1000), entity, Startable.SERVICE_UP, Boolean.TRUE);
+
         String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist";
-        
+
         final int n = 10;
         for (int i = 0; i < n; i++) {
             URLConnection connection = HttpTestUtils.connectToUrl(url);
@@ -363,40 +353,88 @@ public abstract class AbstractWebAppFixtureIntegrationTest {
         this.entity = entity;
         log.info("test=publishesZeroRequestsPerSecondMetricRepeatedly; entity="+entity+"; app="+entity.getApplication());
         
-        final int MAX_INTERVAL_BETWEEN_EVENTS = 4000; // TomcatServerImpl publishes events every 3000ms so this should be enough overhead
-        final int NUM_CONSECUTIVE_EVENTS = 3;
+        final int maxIntervalBetweenEvents = 4000; // TomcatServerImpl publishes events every 3000ms so this should be enough overhead
+        final int consecutiveEvents = 3;
 
         Entities.start(entity.getApplication(), ImmutableList.of(loc));
-        
         SubscriptionHandle subscriptionHandle = null;
-
+        final CopyOnWriteArrayList<SensorEvent<Double>> events = new CopyOnWriteArrayList<>();
         try {
-            final List<SensorEvent> events = new CopyOnWriteArrayList<SensorEvent>();
-            subscriptionHandle = entity.subscriptions().subscribe(entity, WebAppService.REQUESTS_PER_SECOND_IN_WINDOW, new SensorEventListener<Double>() {
-                public void onEvent(SensorEvent<Double> event) {
-                    log.info("publishesRequestsPerSecondMetricRepeatedly.onEvent: {}", event);
-                    events.add(event);
-                }});
-            
-            
-            Asserts.succeedsEventually(new Runnable() {
-                public void run() {
-                    assertTrue(events.size() > NUM_CONSECUTIVE_EVENTS, "events "+events.size()+" > "+NUM_CONSECUTIVE_EVENTS);
-                    long eventTime = 0;
-                    
-                    for (SensorEvent event : events.subList(events.size()-NUM_CONSECUTIVE_EVENTS, events.size())) {
-                        assertEquals(event.getSource(), entity);
-                        assertEquals(event.getSensor(), WebAppService.REQUESTS_PER_SECOND_IN_WINDOW);
-                        assertEquals(event.getValue(), 0.0d);
-                        if (eventTime > 0) assertTrue(event.getTimestamp()-eventTime < MAX_INTERVAL_BETWEEN_EVENTS,
-                            "events at "+eventTime+" and "+event.getTimestamp()+" exceeded maximum allowable interval "+MAX_INTERVAL_BETWEEN_EVENTS);
-                        eventTime = event.getTimestamp();
-                    }
-                }});
+            subscriptionHandle = recordEvents(entity, WebAppService.REQUESTS_PER_SECOND_IN_WINDOW, events);
+            Asserts.succeedsEventually(assertConsecutiveSensorEventsEqual(
+                    events, WebAppService.REQUESTS_PER_SECOND_IN_WINDOW, 0.0d, consecutiveEvents, maxIntervalBetweenEvents));
         } finally {
             if (subscriptionHandle != null) entity.subscriptions().unsubscribe(subscriptionHandle);
             entity.stop();
         }
+    }
+
+    /**
+     * Tests that requests/sec last and windowed decay when the entity can't be contacted for
+     * up to date values.
+     */
+    @Test(groups = "Integration", dataProvider = "basicEntities")
+    public void testRequestCountContinuallyPublishedWhenEntityKilled(final SoftwareProcess entity) throws Exception {
+        this.entity = entity;
+        log.info("test=testRequestCountContinuallyPublishedWhenEntityKilled; entity="+entity+"; app="+entity.getApplication());
+
+        Entities.start(entity.getApplication(), ImmutableList.of(loc));
+        EntityAsserts.assertAttributeEqualsEventually(entity, SoftwareProcess.SERVICE_UP, Boolean.TRUE);
+        String url = entity.getAttribute(WebAppService.ROOT_URL) + "does_not_exist";
+
+        // Apply load to entity. Assert enriched sensor values.
+        HttpTestUtils.connectToUrl(url);
+        EntityAsserts.assertAttributeEventually(entity, WebAppServiceMetrics.REQUEST_COUNT, new Predicate<Integer>() {
+                @Override public boolean apply(Integer input) {
+                    return input > 0;
+                }});
+        killEntityBehindBack(entity);
+
+        final int requestCountAfterKilled = entity.sensors().get(WebAppServiceMetrics.REQUEST_COUNT);
+        final int maxIntervalBetweenEvents = 4000; // TomcatServerImpl publishes events every 3000ms so this should be enough overhead
+        final int consecutiveEvents = 3;
+
+        // The entity should be configured to keep publishing request count, so
+        SubscriptionHandle subscriptionHandle = null;
+        final CopyOnWriteArrayList<SensorEvent<Integer>> events = new CopyOnWriteArrayList<>();
+        try {
+            subscriptionHandle = recordEvents(entity, WebAppServiceMetrics.REQUEST_COUNT, events);
+            Asserts.succeedsEventually(assertConsecutiveSensorEventsEqual(
+                    events, WebAppServiceMetrics.REQUEST_COUNT, requestCountAfterKilled, consecutiveEvents, maxIntervalBetweenEvents));
+        } finally {
+            if (subscriptionHandle != null) entity.subscriptions().unsubscribe(subscriptionHandle);
+            entity.stop();
+        }
+    }
+
+    protected <T> SubscriptionHandle recordEvents(Entity entity, AttributeSensor<T> sensor, final List<SensorEvent<T>> events) {
+        SensorEventListener<T> listener = new SensorEventListener<T>() {
+            @Override public void onEvent(SensorEvent<T> event) {
+                log.info("onEvent: {}", event);
+                events.add(event);
+            }
+        };
+        return entity.subscriptions().subscribe(entity, sensor, listener);
+    }
+
+    protected <T> Runnable assertConsecutiveSensorEventsEqual(final List<SensorEvent<T>> events,
+                final Sensor<T> sensor, final T expectedValue,
+                final int numConsecutiveEvents, final int maxIntervalBetweenEvents) {
+        return new Runnable() {
+            @Override public void run() {
+                assertTrue(events.size() > numConsecutiveEvents, "events " + events.size() + " > " + numConsecutiveEvents);
+                long eventTime = 0;
+
+                for (SensorEvent event : events.subList(events.size() - numConsecutiveEvents, events.size())) {
+                    assertEquals(event.getSource(), entity);
+                    assertEquals(event.getSensor(), sensor);
+                    assertEquals(event.getValue(), expectedValue);
+                    if (eventTime > 0) assertTrue(event.getTimestamp() - eventTime < maxIntervalBetweenEvents,
+                            "events at " + eventTime + " and " + event.getTimestamp() + " exceeded maximum allowable interval " + maxIntervalBetweenEvents);
+                    eventTime = event.getTimestamp();
+                }
+            }
+        };
     }
 
     /**
