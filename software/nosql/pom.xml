@@ -173,6 +173,14 @@
             </exclusions>
         </dependency>
 
+        <!-- for hazelcast testing -->
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-client</artifactId>
+            <version>${hazelcast.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- for solr testing -->
         <dependency>
             <groupId>org.apache.solr</groupId>

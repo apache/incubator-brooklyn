@@ -18,30 +18,32 @@
  */
 package org.apache.brooklyn.entity.nosql.hazelcast;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
-
-import org.apache.brooklyn.entity.AbstractEc2LiveTest;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.test.entity.TestApplication;
 
-public class HazelcastClusterEc2LiveTest extends AbstractEc2LiveTest {
-    @SuppressWarnings("unused")
-    private static final Logger LOG = LoggerFactory.getLogger(HazelcastClusterEc2LiveTest.class);
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
-    @Override
-    protected void doTest(Location loc) throws Exception {
-        HazelcastTestHelper.testHazelcastCluster(app, loc);
+public class HazelcastClusterNodeIntegrationTest {
+    private TestApplication app;
+    private Location location;
+
+    @BeforeMethod(alwaysRun = true)
+    public void setup() throws Exception {
+        app = TestApplication.Factory.newManagedInstanceForTests();;
+        location = new LocalhostMachineProvisioningLocation();
     }
 
-    @Test(enabled = false)
-    public void testDummy() {
-    } // Convince TestNG IDE integration that this really does have test methods
+    @AfterMethod(alwaysRun = true)
+    public void shutdown() {
+        Entities.destroyAll(app.getManagementContext());
+    }
 
-    
-    @Test(groups = {"Live", "Live-sanity"})
-    @Override
-    public void test_CentOS_6_3() throws Exception {
-        super.test_CentOS_6_3();
+    @Test(groups = {"Integration"})
+    public void testHazelcastCluster() {
+        HazelcastTestHelper.testHazelcastCluster(app, location);
     }
 }

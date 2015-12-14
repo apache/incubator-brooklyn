@@ -56,5 +56,4 @@ public interface HazelcastCluster extends DynamicCluster {
     String getClusterName();
     
     String getClusterPassword();
-    
 }
