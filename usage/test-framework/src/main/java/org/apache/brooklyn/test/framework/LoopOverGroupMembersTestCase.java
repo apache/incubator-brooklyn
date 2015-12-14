@@ -18,13 +18,28 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import com.google.common.reflect.TypeToken;
+
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.util.core.flags.SetFromFlag;
 
 /**
- * This implementation will start all child entities in parallel.
- *
- * @author Chris Burke
+ * Created by graememiller on 11/12/2015.
  */
-@ImplementedBy(value = ParallelTestCaseImpl.class)
-public interface ParallelTestCase extends TargetableTestComponent {
+@ImplementedBy(value = LoopOverGroupMembersTestCaseImpl.class)
+public interface LoopOverGroupMembersTestCase extends TargetableTestComponent {
+
+    /**
+     * The test spec that will be run against each member of the group
+     */
+    @SetFromFlag("testSpec")
+    ConfigKey<EntitySpec<? extends TargetableTestComponent>> TEST_SPEC = ConfigKeys.newConfigKey(
+            new TypeToken<EntitySpec<? extends TargetableTestComponent>>(){},
+            "test.spec",
+            "Test spec. The test case will create one of these per child");
+
 }

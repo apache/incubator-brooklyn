@@ -18,7 +18,19 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
@@ -30,16 +42,11 @@ import org.apache.brooklyn.core.mgmt.internal.EffectorUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.Map;
 
 /**
  *
  */
-public class TestEffectorImpl extends AbstractTest implements TestEffector {
+public class TestEffectorImpl extends TargetableTestComponentImpl implements TestEffector {
     private static final Logger LOG = LoggerFactory.getLogger(TestEffectorImpl.class);
 
 
@@ -60,14 +67,27 @@ public class TestEffectorImpl extends AbstractTest implements TestEffector {
             if (effector.isAbsentOrNull()) {
                 throw new AssertionError(String.format("No effector with name [%s]", effectorName));
             }
-            final Task<?> effectorResult;
+            final Task<?> effectorTask;
             if (effectorParams == null || effectorParams.isEmpty()) {
-                effectorResult = Entities.invokeEffector(this, targetEntity, effector.get());
+                effectorTask = Entities.invokeEffector(this, targetEntity, effector.get());
             } else {
-                effectorResult = Entities.invokeEffector(this, targetEntity, effector.get(), effectorParams);
+                effectorTask = Entities.invokeEffector(this, targetEntity, effector.get(), effectorParams);
             }
+
+            final Object effectorResult = effectorTask.get(timeout);
+
+            final List<Map<String, Object>> assertions = getAssertions(this, ASSERTIONS);
+            if(assertions != null && !assertions.isEmpty()){
+                TestFrameworkAssertions.checkAssertions(ImmutableMap.of("timeout", timeout), assertions, effectorName, new Supplier<String>() {
+                    @Override
+                    public String get() {
+                        return (String)effectorResult;
+                    }
+                });
+            }
+
             //Add result of effector to sensor
-            sensors().set(EFFECTOR_RESULT, effectorResult.get(timeout));
+            sensors().set(EFFECTOR_RESULT, effectorResult);
             sensors().set(SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
         } catch (Throwable t) {

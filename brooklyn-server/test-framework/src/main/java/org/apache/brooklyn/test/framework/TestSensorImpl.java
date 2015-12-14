@@ -18,11 +18,22 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.api.client.util.Objects;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
@@ -31,19 +42,11 @@ import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
-import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
 
 /**
  * {@inheritDoc}
  */
-public class TestSensorImpl extends AbstractTest implements TestSensor {
+public class TestSensorImpl extends TargetableTestComponentImpl implements TestSensor {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestSensorImpl.class);
 

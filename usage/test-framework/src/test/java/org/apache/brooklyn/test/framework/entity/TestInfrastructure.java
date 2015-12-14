@@ -16,15 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.test.framework;
+
+package org.apache.brooklyn.test.framework.entity;
 
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.entity.stock.BasicApplication;
 
 /**
- * This implementation will start all child entities in parallel.
- *
- * @author Chris Burke
+ * Created by graememiller on 17/12/2015.
  */
-@ImplementedBy(value = ParallelTestCaseImpl.class)
-public interface ParallelTestCase extends TargetableTestComponent {
+
+@ImplementedBy(TestInfrastructureImpl.class)
+public interface TestInfrastructure extends BasicApplication {
 }

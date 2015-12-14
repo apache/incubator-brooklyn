@@ -18,21 +18,41 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.ON_FIRE;
+import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.RUNNING;
+import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.STARTING;
+import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.STOPPED;
+import static org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.setExpectedState;
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.checkAssertions;
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
+import static org.apache.brooklyn.util.text.Strings.isBlank;
+import static org.apache.brooklyn.util.text.Strings.isNonBlank;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.TaskFactory;
-import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.effector.ssh.SshEffectorTasks;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.test.framework.TestFrameworkAssertions.AssertionSupport;
 import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.core.task.ssh.SshTasks;
 import org.apache.brooklyn.util.core.task.system.ProcessTaskWrapper;
@@ -40,22 +60,9 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-
-import static org.apache.brooklyn.core.entity.lifecycle.Lifecycle.*;
-import static org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.setExpectedState;
-import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.checkAssertions;
-import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
-import static org.apache.brooklyn.util.text.Strings.isBlank;
-import static org.apache.brooklyn.util.text.Strings.isNonBlank;
 
 // TODO assertions below should use TestFrameworkAssertions but that class needs to be improved to give better error messages
-public class SimpleShellCommandTestImpl extends AbstractTest implements SimpleShellCommandTest {
+public class SimpleShellCommandTestImpl extends TargetableTestComponentImpl implements SimpleShellCommandTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleShellCommandTestImpl.class);
     private static final int A_LINE = 80;
