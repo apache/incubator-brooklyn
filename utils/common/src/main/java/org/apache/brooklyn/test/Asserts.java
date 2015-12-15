@@ -669,8 +669,6 @@ public class Asserts {
         assertEquals(actual, expected, null);
     }
 
-
-
     /**
      * Asserts that a condition is true. If it isn't, an AssertionError is thrown.
      * @param condition the condition to evaluate

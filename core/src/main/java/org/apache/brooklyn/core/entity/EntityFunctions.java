@@ -51,7 +51,7 @@ public class EntityFunctions {
             @Override public T apply(Entity input) {
                 return (input == null) ? null : input.getAttribute(attribute);
             }
-        };
+        }
         return new GetEntityAttributeFunction();
     }
     
@@ -63,7 +63,7 @@ public class EntityFunctions {
             @Override public T apply(Entity input) {
                 return (input == null) ? null : input.getConfig(key);
             }
-        };
+        }
         return new GetEntityConfigFunction();
     }
     
@@ -75,7 +75,7 @@ public class EntityFunctions {
             @Override public String apply(Entity input) {
                 return (input == null) ? null : input.getDisplayName();
             }
-        };
+        }
         return new GetEntityDisplayName();
     }
     
@@ -87,7 +87,7 @@ public class EntityFunctions {
             @Override public String apply(Identifiable input) {
                 return (input == null) ? null : input.getId();
             }
-        };
+        }
         return new GetIdFunction();
     }
 
@@ -154,7 +154,7 @@ public class EntityFunctions {
         @Override public T apply(Entity input) {
             return (input == null) ? null : input.getAttribute(attribute);
         }
-    };
+    }
 
     public static <T> Function<Object, T> attribute(Entity entity, AttributeSensor<T> attribute) {
         return new GetFixedEntityAttributeFunction<>(entity, attribute);
@@ -186,7 +186,7 @@ public class EntityFunctions {
         @Override public T apply(Entity input) {
             return (input == null) ? null : input.getConfig(key);
         }
-    };
+    }
 
     public static Function<Entity, String> displayName() {
         return GetEntityDisplayName.INSTANCE;
@@ -197,7 +197,7 @@ public class EntityFunctions {
         @Override public String apply(Entity input) {
             return (input == null) ? null : input.getDisplayName();
         }
-    };
+    }
 
     public static Function<Identifiable, String> id() {
         return GetIdFunction.INSTANCE;
@@ -208,7 +208,7 @@ public class EntityFunctions {
         @Override public String apply(Identifiable input) {
             return (input == null) ? null : input.getId();
         }
-    };
+    }
 
 
     /** returns a function which sets the given sensors on the entity passed in,

@@ -122,6 +122,7 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
     public F checkSuccess(final Function<? super V,Boolean> val) {
         return checkSuccess(Functionals.predicate(val));
     }
+
     @SuppressWarnings("unused")
     /** @deprecated since 0.7.0, kept for rebind */ @Deprecated
     private F checkSuccessLegacy(final Function<? super V,Boolean> val) {
@@ -137,53 +138,63 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
         this.onsuccess = checkNotNull(val, "onSuccess");
         return self();
     }
-    
+
     public F setOnSuccess(T val) {
         return onSuccess(Functions.constant(val));
     }
-    
-    /** a failure is when the connection is fine (no exception) but the other end returns a result object V 
-     * which the feed can tell indicates a failure (e.g. HTTP code 404) */
+
+    /**
+     * A failure is when the connection is fine (no exception) but the other end returns a result object V
+     * which the feed can tell indicates a failure (e.g. HTTP code 404)
+     */
     public F onFailure(Function<? super V,T> val) {
         this.onfailure = checkNotNull(val, "onFailure");
         return self();
     }
 
+    /** @see #onFailure(Function) */
     public F setOnFailure(T val) {
         return onFailure(Functions.constant(val));
     }
 
-    /** registers a callback to be used {@link #onSuccess(Function)} and {@link #onFailure(Function)}, 
-     * i.e. whenever a result comes back, but not in case of exceptions being thrown (ie problems communicating) */
+    /**
+     * Registers a callback to be used by {@link #onSuccess(Function)} and {@link #onFailure(Function)},
+     * i.e. whenever a result comes back, but not in case of exceptions being thrown (ie problems communicating)
+     */
     public F onResult(Function<? super V, T> val) {
         onSuccess(val);
         return onFailure(val);
     }
 
+    /** @see #onResult(Function) */
     public F setOnResult(T val) {
         return onResult(Functions.constant(val));
     }
 
-    /** an exception is when there is an error in the communication */
+    /**
+     * An exception is when there is an error in the communication
+     */
     public F onException(Function<? super Exception,T> val) {
         this.onexception = checkNotNull(val, "onException");
         return self();
     }
-    
+
+    /** @see #onException(Function) */
     public F setOnException(T val) {
         return onException(Functions.constant(val));
     }
 
-    /** convenience for indicating a behaviour to occur for both
-     * {@link #onException(Function)}
-     * (error connecting) and 
-     * {@link #onFailure(Function)} 
-     * (successful communication but failure report from remote end) */
+    /**
+     * A convenience for indicating a behaviour to occur for both {@link #onException(Function)}
+     * (error connecting) and {@link #onFailure(Function)} (successful communication but failure
+     * report from remote end)
+     */
     public F onFailureOrException(Function<Object,T> val) {
         onFailure(val);
         return onException(val);
     }
-    
+
+    /** @see #onFailureOrException(Function) */
     public F setOnFailureOrException(T val) {
         return onFailureOrException(Functions.constant(val));
     }
@@ -192,7 +203,7 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
         suppressDuplicates = val;
         return self();
     }
-    
+
     /**
      * Whether this feed is enabled (defaulting to true).
      */
@@ -200,7 +211,7 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
         enabled = val;
         return self();
     }
-    
+
     public boolean hasSuccessHandler() {
         return this.onsuccess != null;
     }
@@ -216,7 +227,6 @@ public class FeedConfig<V, T, F extends FeedConfig<V, T, F>> {
     public boolean hasCheckSuccessHandler() {
         return this.checkSuccess != null;
     }
-
     
     @Override
     public String toString() {
