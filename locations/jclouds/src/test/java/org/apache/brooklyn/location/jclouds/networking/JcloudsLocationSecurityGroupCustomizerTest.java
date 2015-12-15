@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
@@ -53,6 +54,7 @@ import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import org.apache.brooklyn.location.jclouds.JcloudsLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -144,6 +146,59 @@ public class JcloudsLocationSecurityGroupCustomizerTest {
         verify(securityApi, never()).createSecurityGroup(anyString(), any(Location.class));
         verify(securityApi, times(1)).addIpPermission(ssh, group);
         verify(securityApi, times(1)).addIpPermission(jmx, group);
+    }
+
+    @Test
+    public void testRemovePermissionsFromNode() {
+        IpPermission ssh = newPermission(22);
+        IpPermission jmx = newPermission(31001);
+        String nodeId = "node";
+        SecurityGroup sharedGroup = newGroup(customizer.getNameForSharedSecurityGroup());
+        SecurityGroup group = newGroup("id");
+        when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(ImmutableSet.of(sharedGroup, group));
+        when(computeService.getContext().unwrap().getId()).thenReturn("aws-ec2");
+
+        customizer.addPermissionsToLocation(ImmutableList.of(ssh, jmx), nodeId, computeService);
+        customizer.removePermissionsFromLocation(ImmutableList.of(jmx), nodeId, computeService);
+
+        verify(securityApi, never()).removeIpPermission(ssh, group);
+        verify(securityApi, times(1)).removeIpPermission(jmx, group);
+    }
+
+    @Test
+    public void testRemoveMultiplePermissionsFromNode() {
+        IpPermission ssh = newPermission(22);
+        IpPermission jmx = newPermission(31001);
+        String nodeId = "node";
+        SecurityGroup sharedGroup = newGroup(customizer.getNameForSharedSecurityGroup());
+        SecurityGroup group = newGroup("id");
+        when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(ImmutableSet.of(sharedGroup, group));
+        when(computeService.getContext().unwrap().getId()).thenReturn("aws-ec2");
+
+        customizer.addPermissionsToLocation(ImmutableList.of(ssh, jmx), nodeId, computeService);
+        customizer.removePermissionsFromLocation(ImmutableList.of(ssh, jmx), nodeId, computeService);
+
+        verify(securityApi, times(1)).removeIpPermission(ssh, group);
+        verify(securityApi, times(1)).removeIpPermission(jmx, group);
+    }
+
+
+    @Test
+    public void testAddPermissionWhenNoExtension() {
+        IpPermission ssh = newPermission(22);
+        IpPermission jmx = newPermission(31001);
+        String nodeId = "node";
+
+        when(securityApi.listSecurityGroupsForNode(nodeId)).thenReturn(Collections.<SecurityGroup>emptySet());
+
+        RuntimeException exception = null;
+        try {
+            customizer.addPermissionsToLocation(ImmutableList.of(ssh, jmx), nodeId, computeService);
+        } catch(RuntimeException e){
+            exception = e;
+        }
+
+        assertNotNull(exception);
     }
 
     @Test
