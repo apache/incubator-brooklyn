@@ -108,6 +108,26 @@ public class AttributeMapTest {
     }
     
     @Test
+    public void testConcurrentUpdatesAllApplied() throws Exception {
+        List<Future<?>> futures = Lists.newArrayList();
+        
+        for (int i = 0; i < NUM_TASKS; i++) {
+            AttributeSensor<Integer> nextSensor = Sensors.newIntegerSensor("attributeMapTest.exampleSensor"+i);
+            Future<?> future = executor.submit(newUpdateMapRunnable(map, nextSensor, i));
+            futures.add(future);
+        }
+
+        for (Future<?> future : futures) {
+            future.get();
+        }
+        
+        for (int i = 0; i < NUM_TASKS; i++) {
+            AttributeSensor<Integer> nextSensor = Sensors.newIntegerSensor("attributeMapTest.exampleSensor"+i);
+            assertEquals(map.getValue(nextSensor), (Integer)i);
+        }
+    }
+
+    @Test
     public void testStoredSensorsCanBeRetrieved() throws Exception {
         AttributeSensor<String> sensor1 = Sensors.newStringSensor("a", "");
         AttributeSensor<String> sensor2 = Sensors.newStringSensor("b.c", "");

@@ -44,7 +44,6 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.rebind.RebindSupport;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.EntityMemento;
 import org.apache.brooklyn.api.objs.EntityAdjunct;
-import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -96,7 +95,6 @@ import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.DeferredSupplier;
 import org.apache.brooklyn.util.guava.Maybe;
-import org.apache.brooklyn.util.guava.TypeTokens;
 import org.apache.brooklyn.util.javalang.Equals;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -199,18 +197,20 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
     private Entity selfProxy;
     private volatile Application application;
     
-    // TODO Because some things still don't use EntitySpec (e.g. the EntityFactory stuff for cluster/fabric),
-    // then we need temp vals here. When setManagementContext is called, we'll switch these out for the read-deal;
-    // i.e. for the values backed by storage
+    // If FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, then these are just temporary values 
+    // (but may still be needed if something, such as an EntityFactory in a cluster/fabric, did not
+    // use EntitySpec.
+    // If that feature is disabled, then these are not "temporary" values - these are the production
+    // values. They must be thread-safe, and where necessary (e.g. group) they should preserve order
+    // if possible.
     private Reference<Entity> parent = new BasicReference<Entity>();
-    private Set<Group> groupsInternal = Sets.newLinkedHashSet();
-    private Set<Entity> children = Sets.newLinkedHashSet();
+    private Set<Group> groupsInternal = Collections.synchronizedSet(Sets.<Group>newLinkedHashSet());
+    private Set<Entity> children = Collections.synchronizedSet(Sets.<Entity>newLinkedHashSet());
     private Reference<List<Location>> locations = new BasicReference<List<Location>>(ImmutableList.<Location>of()); // dups removed in addLocations
     private Reference<Long> creationTimeUtc = new BasicReference<Long>(System.currentTimeMillis());
     private Reference<String> displayName = new BasicReference<String>();
     private Reference<String> iconUrl = new BasicReference<String>();
 
-    Map<String,Object> presentationAttributes = Maps.newLinkedHashMap();
     private Collection<AbstractPolicy> policiesInternal = Lists.newCopyOnWriteArrayList();
     private Collection<AbstractEnricher> enrichersInternal = Lists.newCopyOnWriteArrayList();
     Collection<Feed> feeds = Lists.newCopyOnWriteArrayList();
@@ -245,15 +245,15 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
      * The config values of this entity. Updating this map should be done
      * via getConfig/setConfig.
      */
-    // TODO Assigning temp value because not everything uses EntitySpec; see setManagementContext()
-    private EntityConfigMap configsInternal = new EntityConfigMap(this, Maps.<ConfigKey<?>, Object>newLinkedHashMap());
+    // If FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, this value will be only temporary.
+    private EntityConfigMap configsInternal = new EntityConfigMap(this);
 
     /**
      * The sensor-attribute values of this entity. Updating this map should be done
      * via getAttribute/setAttribute; it will automatically emit an attribute-change event.
      */
-    // TODO Assigning temp value because not everything uses EntitySpec; see setManagementContext()
-    private AttributeMap attributesInternal = new AttributeMap(this, Maps.<Collection<String>, Object>newLinkedHashMap());
+    // If FEATURE_USE_BROOKLYN_LIVE_OBJECTS_DATAGRID_STORAGE, this value will be only temporary.
+    private AttributeMap attributesInternal = new AttributeMap(this);
 
     /**
      * For temporary data, e.g. timestamps etc for calculating real attribute values, such as when
@@ -743,8 +743,10 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
             return asList().isEmpty();
         }
         
-        protected List<Group> asList() { 
-            return ImmutableList.copyOf(groupsInternal);
+        protected List<Group> asList() {
+            synchronized (groupsInternal) {
+                return ImmutableList.copyOf(groupsInternal);
+            }
         }
         
         @Override
@@ -802,7 +804,9 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     public Collection<Entity> getChildren() {
-        return ImmutableList.copyOf(children);
+        synchronized (children) {
+            return ImmutableList.copyOf(children);
+        }
     }
     
     /**

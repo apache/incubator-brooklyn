@@ -21,6 +21,7 @@ package org.apache.brooklyn.core.entity.internal;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -68,6 +69,12 @@ public class EntityConfigMap extends AbstractConfigMapImpl {
     private final ConfigBag localConfigBag;
     private final ConfigBag inheritedConfigBag;
 
+    public EntityConfigMap(AbstractEntity entity) {
+        // Not using ConcurrentMap, because want to (continue to) allow null values.
+        // Could use ConcurrentMapAcceptingNullVals (with the associated performance hit on entrySet() etc).
+        this(entity, Collections.synchronizedMap(Maps.<ConfigKey<?>, Object>newLinkedHashMap()));
+    }
+    
     public EntityConfigMap(AbstractEntity entity, Map<ConfigKey<?>, Object> storage) {
         this.entity = checkNotNull(entity, "entity must be specified");
         this.ownConfig = checkNotNull(storage, "storage map must be specified");
@@ -292,15 +299,21 @@ public class EntityConfigMap extends AbstractConfigMapImpl {
         for (Map.Entry<ConfigKey<?>,Object> entry: inheritedConfig.entrySet())
             if (filter.apply(entry.getKey()))
                 m.inheritedConfig.put(entry.getKey(), entry.getValue());
-        for (Map.Entry<ConfigKey<?>,Object> entry: ownConfig.entrySet())
-            if (filter.apply(entry.getKey()))
-                m.ownConfig.put(entry.getKey(), entry.getValue());
+        synchronized (ownConfig) {
+            for (Map.Entry<ConfigKey<?>,Object> entry: ownConfig.entrySet())
+                if (filter.apply(entry.getKey()))
+                    m.ownConfig.put(entry.getKey(), entry.getValue());
+        }
         return m;
     }
 
     @Override
     public String toString() {
-        return super.toString()+"[own="+Sanitizer.sanitize(ownConfig)+"; inherited="+Sanitizer.sanitize(inheritedConfig)+"]";
+        Map<ConfigKey<?>, Object> sanitizeConfig;
+        synchronized (ownConfig) {
+            sanitizeConfig = Sanitizer.sanitize(ownConfig);
+        }
+        return super.toString()+"[own="+sanitizeConfig+"; inherited="+Sanitizer.sanitize(inheritedConfig)+"]";
     }
     
 }

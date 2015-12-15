@@ -21,6 +21,7 @@ package org.apache.brooklyn.core.sensor;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
@@ -59,7 +60,20 @@ public final class AttributeMap {
      * Creates a new AttributeMap.
      *
      * @param entity the EntityLocal this AttributeMap belongs to.
-     * @throws IllegalArgumentException if entity is null
+     * @throws NullPointerException if entity is null
+     */
+    public AttributeMap(AbstractEntity entity) {
+        // Not using ConcurrentMap, because want to (continue to) allow null values.
+        // Could use ConcurrentMapAcceptingNullVals (with the associated performance hit on entrySet() etc).
+        this(entity, Collections.synchronizedMap(Maps.<Collection<String>, Object>newLinkedHashMap()));
+    }
+
+    /**
+     * Creates a new AttributeMap.
+     *
+     * @param entity  the EntityLocal this AttributeMap belongs to.
+     * @param storage the Map in which to store the values - should be concurrent or synchronized.
+     * @throws NullPointerException if entity is null
      */
     public AttributeMap(AbstractEntity entity, Map<Collection<String>, Object> storage) {
         this.entity = checkNotNull(entity, "entity must be specified");
@@ -67,15 +81,19 @@ public final class AttributeMap {
     }
 
     public Map<Collection<String>, Object> asRawMap() {
-        return ImmutableMap.copyOf(values);
+        synchronized (values) {
+            return ImmutableMap.copyOf(values);
+        }
     }
 
     public Map<String, Object> asMap() {
         Map<String, Object> result = Maps.newLinkedHashMap();
-        for (Map.Entry<Collection<String>, Object> entry : values.entrySet()) {
-            String sensorName = Joiner.on('.').join(entry.getKey());
-            Object val = (isNull(entry.getValue())) ? null : entry.getValue();
-            result.put(sensorName, val);
+        synchronized (values) {
+            for (Map.Entry<Collection<String>, Object> entry : values.entrySet()) {
+                String sensorName = Joiner.on('.').join(entry.getKey());
+                Object val = (isNull(entry.getValue())) ? null : entry.getValue();
+                result.put(sensorName, val);
+            }
         }
         return result;
     }
