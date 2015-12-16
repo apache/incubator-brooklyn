@@ -64,13 +64,13 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
+<!--         <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${brooklyn.version}</version>
             <scope>test</scope>
             <classifier>tests</classifier>
-        </dependency>
+        </dependency> -->
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
