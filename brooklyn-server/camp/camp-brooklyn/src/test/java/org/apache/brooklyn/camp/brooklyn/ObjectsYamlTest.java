@@ -31,7 +31,6 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
@@ -186,7 +185,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "          number: 7",
             "          object:",
             "            $brooklyn:object:",
-            "              type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
+            "              type: org.apache.brooklyn.camp.brooklyn.SimpleTestPojo",
             "          string: \"frog\"");
 
         Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
@@ -197,7 +196,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         Assert.assertEquals(((TestObject) testObject).getString(), "frog");
 
         Object testObjectObject = ((TestObject) testObject).getObject();
-        Assert.assertTrue(testObjectObject instanceof ProxySslConfig, "Expected a ProxySslConfig: "+testObjectObject);
+        Assert.assertTrue(testObjectObject instanceof SimpleTestPojo, "Expected a SimpleTestPojo: "+testObjectObject);
     }
 
     @Test
@@ -214,7 +213,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "          config.number: 7",
             "          object:",
             "            $brooklyn:object:",
-            "              type: org.apache.brooklyn.entity.proxy.ProxySslConfig");
+            "              type: org.apache.brooklyn.camp.brooklyn.SimpleTestPojo");
 
         Object testObject = testEntity.getConfig(TestEntity.CONF_OBJECT);
 
@@ -224,7 +223,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         Assert.assertEquals(((ConfigurableObject) testObject).getNumber(), Integer.valueOf(7));
 
         Object testObjectObject = ((ConfigurableObject) testObject).getObject();
-        Assert.assertTrue(testObjectObject instanceof ProxySslConfig, "Expected a ProxySslConfig: "+testObjectObject);
+        Assert.assertTrue(testObjectObject instanceof SimpleTestPojo, "Expected a SimpleTestPojo: "+testObjectObject);
 
         Assert.assertTrue(configKeys.contains(ConfigurableObject.INTEGER.getName()), "Expected INTEGER key: "+configKeys);
         Assert.assertTrue(configKeys.contains(ConfigurableObject.OBJECT.getName()), "Expected OBJECT key: "+configKeys);
@@ -236,17 +235,17 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "  brooklyn.config:",
             "    test.confListPlain:",
             "    - $brooklyn:object:",
-            "        objectType: org.apache.brooklyn.entity.proxy.ProxySslConfig",
+            "        objectType: org.apache.brooklyn.camp.brooklyn.SimpleTestPojo",
             "    - $brooklyn:object:",
-            "        object_type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
+            "        object_type: org.apache.brooklyn.camp.brooklyn.SimpleTestPojo",
             "    - $brooklyn:object:",
-            "        type: org.apache.brooklyn.entity.proxy.ProxySslConfig");
+            "        type: org.apache.brooklyn.camp.brooklyn.SimpleTestPojo");
 
         List<?> testList = testEntity.getConfig(TestEntity.CONF_LIST_PLAIN);
 
         Assert.assertEquals(testList.size(), 3);
         for (Object entry : testList) {
-            Assert.assertTrue(entry instanceof ProxySslConfig, "Expected a ProxySslConfig: "+entry);
+            Assert.assertTrue(entry instanceof SimpleTestPojo, "Expected a SimpleTestPojo: "+entry);
         }
     }
 
@@ -261,7 +260,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
             "          number: 7",
             "          object:",
             "            $brooklyn:object:",
-            "              type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
+            "              type: org.apache.brooklyn.camp.brooklyn.SimpleTestPojo",
             "          string:",
             "            $brooklyn:formatString(\"%s\", \"frog\")");
 
@@ -273,7 +272,7 @@ public class ObjectsYamlTest extends AbstractYamlTest {
         Assert.assertEquals(((TestObject) testObject).getString(), "frog");
 
         Object testObjectObject = ((TestObject) testObject).getObject();
-        Assert.assertTrue(testObjectObject instanceof ProxySslConfig, "Expected a ProxySslConfig: "+testObjectObject);
+        Assert.assertTrue(testObjectObject instanceof SimpleTestPojo, "Expected a SimpleTestPojo: "+testObjectObject);
     }
 
     @Override

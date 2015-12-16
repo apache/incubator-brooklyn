@@ -24,7 +24,6 @@ import java.util.concurrent.Callable;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.proxy.ProxySslConfig;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.slf4j.Logger;
@@ -69,7 +68,7 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
             "      frog: $brooklyn:formatString(\"%s\", \"frog\")",
             "      object:",
             "        $brooklyn:object:",
-            "          type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
+            "          type: org.apache.brooklyn.camp.brooklyn.SimpleTestPojo",
             "      one: $brooklyn:entity(\"one\")",
             "      two: $brooklyn:entity(\"two\")");
 
@@ -86,7 +85,7 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
 
         Assert.assertTrue(frog instanceof String, "Should have found a String: " + frog);
         Assert.assertEquals(frog, "frog", "Should have found a formatted String: " + frog);
-        Assert.assertTrue(object instanceof ProxySslConfig, "Should have found a ProxySslConfig: " + object);
+        Assert.assertTrue(object instanceof SimpleTestPojo, "Should have found a SimpleTestPojo: " + object);
         Assert.assertTrue(one instanceof BasicEntity, "Should have found a BasicEntity: " + one);
         Assert.assertTrue(two instanceof BasicEntity, "Should have found a BasicEntity: " + two);
     }
@@ -99,7 +98,7 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
             "      frog: $brooklyn:formatString(\"%s\", \"frog\")",
             "      object:",
             "        $brooklyn:object:",
-            "          type: org.apache.brooklyn.entity.proxy.ProxySslConfig",
+            "          type: org.apache.brooklyn.camp.brooklyn.SimpleTestPojo",
             "      one: $brooklyn:entity(\"one\")",
             "      two: $brooklyn:entity(\"two\")");
 
@@ -116,7 +115,7 @@ public class MapReferenceYamlTest extends AbstractYamlTest {
 
         Assert.assertTrue(frog instanceof String, "Should have found a String: " + frog);
         Assert.assertEquals(frog, "frog", "Should have found a formatted String: " + frog);
-        Assert.assertTrue(object instanceof ProxySslConfig, "Should have found a ProxySslConfig: " + object);
+        Assert.assertTrue(object instanceof SimpleTestPojo, "Should have found a SimpleTestPojo: " + object);
         Assert.assertTrue(one instanceof BasicEntity, "Should have found a BasicEntity: " + one);
         Assert.assertTrue(two instanceof BasicEntity, "Should have found a BasicEntity: " + two);
     }
