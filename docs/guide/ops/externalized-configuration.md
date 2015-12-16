@@ -111,6 +111,17 @@ brooklyn.config:
   example: $brooklyn:formatString("%s", external("supplier", "key"))
 {% endhighlight %}
 
+
+## Referring to External Configuration in brooklyn.properties
+
+The same blueprint language DSL can be used from `brooklyn.properties`. For example:
+
+{% highlight properties %}
+brooklyn.location.jclouds.aws-ec2.identity=$brooklyn:external("mysupplier", "aws-identity")
+brooklyn.location.jclouds.aws-ec2.credential=$brooklyn:external("mysupplier", "aws-credential")
+{% endhighlight %}
+
+
 ## Suppliers available with Brooklyn
 
 Brooklyn ships with a number of external configuration suppliers ready to use.

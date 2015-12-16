@@ -243,7 +243,7 @@ public class ByonLocationResolverTest {
     @Test
     public void testResolvesUserArg3() throws Exception {
         String spec = "byon(hosts=\"1.1.1.1\")";
-        managementContext.getLocationRegistry().getProperties().putAll(MutableMap.of(
+        ((BasicLocationRegistry)managementContext.getLocationRegistry()).putProperties(MutableMap.of(
                 "brooklyn.location.named.foo", spec,
                 "brooklyn.location.named.foo.user", "bob"));
         ((BasicLocationRegistry)managementContext.getLocationRegistry()).updateDefinedLocations();
@@ -267,7 +267,7 @@ public class ByonLocationResolverTest {
     /** private key should be inherited, so confirm that happens correctly */
     public void testResolvesPrivateKeyArgInheritance() throws Exception {
         String spec = "byon(hosts=\"1.1.1.1\")";
-        managementContext.getLocationRegistry().getProperties().putAll(MutableMap.of(
+        ((BasicLocationRegistry)managementContext.getLocationRegistry()).putProperties(MutableMap.of(
                 "brooklyn.location.named.foo", spec,
                 "brooklyn.location.named.foo.user", "bob",
                 "brooklyn.location.named.foo.privateKeyFile", "/tmp/x"));
