@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.apache.brooklyn</groupId>
-        <artifactId>brooklyn</artifactId>
+        <artifactId>brooklyn-server</artifactId>
         <version>0.9.SPLITWIP-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
     </parent>
 

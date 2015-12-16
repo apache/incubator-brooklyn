@@ -26,7 +26,7 @@
 
   <parent>
     <groupId>org.apache.brooklyn</groupId>
-    <artifactId>brooklyn</artifactId>
+    <artifactId>brooklyn-server</artifactId>
     <version>0.9.SPLITWIP-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
     <relativePath>../pom.xml</relativePath>
   </parent>

@@ -39,6 +39,7 @@
     <modules>
         <module>camp-base</module>
         <module>camp-server</module>
+        <module>camp-brooklyn</module>
     </modules>
 
 </project>
