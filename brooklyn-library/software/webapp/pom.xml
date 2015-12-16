@@ -154,6 +154,21 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- bring in camp test deps for moved tests -->
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-camp</artifactId>
+            <version>0.9.SPLITWIP-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-camp</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+
         <!-- bring in jclouds for testing -->
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
