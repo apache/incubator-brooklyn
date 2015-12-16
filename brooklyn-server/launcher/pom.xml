@@ -146,20 +146,20 @@
             <artifactId>testng</artifactId>
             <scope>test</scope>
         </dependency>
-<!--         <dependency>
+        <dependency>
             <groupId>org.apache.brooklyn.camp</groupId>
             <artifactId>camp-server</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
             <classifier>tests</classifier>
-        </dependency> -->
+        </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-test-support</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-<!--         <dependency>
+        <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
@@ -172,8 +172,8 @@
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
-        </dependency> -->
-<!--         <dependency>
+        </dependency>
+        <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-camp</artifactId>
             <version>${project.version}</version>
@@ -186,19 +186,19 @@
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
-        </dependency> -->
+        </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
             <version>${project.version}</version>
         </dependency>
-<!--         <dependency>
+        <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
-        </dependency> -->
+        </dependency>
 
     </dependencies>
 

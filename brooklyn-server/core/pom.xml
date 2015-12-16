@@ -209,7 +209,7 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-<!--        <dependency>
+       <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-rt-osgi</artifactId>
             <version>${project.version}</version>
@@ -222,7 +222,7 @@
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
-        </dependency> -->
+        </dependency>
     </dependencies>
 
     <build>

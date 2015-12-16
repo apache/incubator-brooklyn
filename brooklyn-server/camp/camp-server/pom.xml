@@ -49,13 +49,13 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-<!--         <dependency>
+        <dependency>
             <groupId>org.apache.brooklyn.camp</groupId>
             <artifactId>camp-base</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
-        </dependency> -->
+        </dependency>
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>

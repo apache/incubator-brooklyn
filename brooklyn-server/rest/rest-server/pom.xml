@@ -162,7 +162,7 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
-<!--         <dependency>
+        <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-core</artifactId>
             <version>${project.version}</version>
@@ -182,7 +182,7 @@
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
-        </dependency> -->
+        </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
@@ -213,13 +213,13 @@
             <groupId>com.sun.jersey.jersey-test-framework</groupId>
             <artifactId>jersey-test-framework-grizzly2</artifactId>
         </dependency>
-<!--         <dependency>
+        <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-rt-osgi</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
-        </dependency> -->
+        </dependency>
     </dependencies>
 
     <build>
