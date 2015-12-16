@@ -28,6 +28,7 @@ import org.apache.brooklyn.camp.brooklyn.spi.platform.BrooklynImmutableCampPlatf
 import org.apache.brooklyn.camp.spi.PlatformRootSummary;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 
 /** {@link CampPlatform} implementation which includes Brooklyn entities 
  * (via {@link BrooklynImmutableCampPlatform})
@@ -70,7 +71,8 @@ public class BrooklynCampPlatform extends AggregatingCampPlatform implements Has
     }
 
     public BrooklynCampPlatform setConfigKeyAtManagmentContext() {
-        ((BrooklynProperties)bmc.getConfig()).put(BrooklynCampConstants.CAMP_PLATFORM, this);
+        
+        ((ManagementContextInternal)bmc).getBrooklynProperties().put(BrooklynCampConstants.CAMP_PLATFORM, this);
         return this;
     }
 

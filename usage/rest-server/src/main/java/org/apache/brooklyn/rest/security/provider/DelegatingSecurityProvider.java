@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.util.text.Strings;
 
@@ -115,7 +116,7 @@ public class DelegatingSecurityProvider implements SecurityProvider {
             delegate = new BlackholeSecurityProvider();
         }
         
-        ((BrooklynProperties)mgmt.getConfig()).put(BrooklynWebConfig.SECURITY_PROVIDER_INSTANCE, delegate);
+        ((ManagementContextInternal)mgmt).getBrooklynProperties().put(BrooklynWebConfig.SECURITY_PROVIDER_INSTANCE, delegate);
         
         return delegate;
     }
