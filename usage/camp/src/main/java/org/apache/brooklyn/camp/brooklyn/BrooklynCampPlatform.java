@@ -18,6 +18,10 @@
  */
 package org.apache.brooklyn.camp.brooklyn;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import java.util.Map;
+
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.mgmt.ManagementContext.PropertiesReloadListener;
 import org.apache.brooklyn.camp.AggregatingCampPlatform;
@@ -26,9 +30,12 @@ import org.apache.brooklyn.camp.brooklyn.spi.creation.BrooklynEntityMatcher;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslInterpreter;
 import org.apache.brooklyn.camp.brooklyn.spi.platform.BrooklynImmutableCampPlatform;
 import org.apache.brooklyn.camp.spi.PlatformRootSummary;
-import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.HasBrooklynManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.core.mgmt.internal.CampYamlParser;
+
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 /** {@link CampPlatform} implementation which includes Brooklyn entities 
  * (via {@link BrooklynImmutableCampPlatform})
@@ -71,9 +78,26 @@ public class BrooklynCampPlatform extends AggregatingCampPlatform implements Has
     }
 
     public BrooklynCampPlatform setConfigKeyAtManagmentContext() {
-        
         ((ManagementContextInternal)bmc).getBrooklynProperties().put(BrooklynCampConstants.CAMP_PLATFORM, this);
+        ((ManagementContextInternal)bmc).getBrooklynProperties().put(CampYamlParser.YAML_PARSER_KEY, new YamlParserImpl(this));
         return this;
     }
-
+    
+    public static class YamlParserImpl implements CampYamlParser {
+        private final BrooklynCampPlatform platform;
+        
+        YamlParserImpl(BrooklynCampPlatform platform) {
+            this.platform = platform;
+        }
+        
+        public Map<String, Object> parse(Map<String, Object> map) {
+            return platform.pdp().applyInterpreters(map);
+        }
+        
+        public Object parse(String val) {
+            Map<String, Object> result = platform.pdp().applyInterpreters(ImmutableMap.of("dummyKey", val));
+            checkState(result.keySet().equals(ImmutableSet.of("dummyKey")), "expected single result, but got %s", result);
+            return result.get("dummyKey");
+        }
+    }
 }

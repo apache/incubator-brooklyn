@@ -177,7 +177,7 @@ public class PdpProcessor {
      * essentially a post-parse processing step before matching */
     @SuppressWarnings("unchecked")
     @VisibleForTesting
-    public Map<String, Object> applyInterpreters(Map<String, Object> originalDeploymentPlan) {
+    public Map<String, Object> applyInterpreters(Map<String, ?> originalDeploymentPlan) {
         PlanInterpretationNode interpretation = new PlanInterpretationNode(
                 new PlanInterpretationContext(originalDeploymentPlan, interpreters));
         return (Map<String, Object>) interpretation.getNewValue();
