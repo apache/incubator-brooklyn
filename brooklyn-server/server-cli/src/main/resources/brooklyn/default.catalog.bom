@@ -3,7 +3,7 @@
 # and templates to get started using Brooklyn
 
 brooklyn.catalog:
-  version: 0.9.0-SNAPSHOT  # BROOKLYN_VERSION
+  version: 0.9.SPLITWIP-SNAPSHOT  # BROOKLYN_VERSION
   items:
 
   # load everything in the classpath with a @Catalog annotation

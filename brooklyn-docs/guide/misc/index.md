@@ -1,6 +1,6 @@
 ---
 # BROOKLYN_VERSION_BELOW
-title: Other 0.9.0-SNAPSHOT Resources
+title: Other 0.9.SPLITWIP-SNAPSHOT Resources
 layout: website-normal
 children:
 - { title: Javadoc, path: javadoc/ }

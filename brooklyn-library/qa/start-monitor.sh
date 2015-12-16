@@ -25,7 +25,7 @@
 #set -x # debug
 
 CLASS=org.apache.brooklyn.qa.longevity.Monitor
-VERSION=0.9.0-SNAPSHOT # BROOKLYN_VERSION
+VERSION=0.9.SPLITWIP-SNAPSHOT # BROOKLYN_VERSION
 
 ROOT=$(cd $(dirname $0) && pwd)
 cd $ROOT

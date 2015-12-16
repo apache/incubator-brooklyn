@@ -41,7 +41,7 @@ public class MavenArtifactTest {
     // only *integration* tests require these to be *installed*;
     // note this may vary from machine to machine so version should be aligned with that in parent pom
     final static String MAVEN_JAR_PLUGIN_COORDINATE = "org.apache.maven.plugins:maven-jar-plugin:jar:2.6";
-    final static String THIS_PROJECT_COORDINATE = "org.apache.brooklyn:brooklyn-utils-common:jar:0.9.0-SNAPSHOT";  // BROOKLYN_VERSION
+    final static String THIS_PROJECT_COORDINATE = "org.apache.brooklyn:brooklyn-utils-common:jar:0.9.SPLITWIP-SNAPSHOT";  // BROOKLYN_VERSION
 
     // Don't need to be installed, only used as examples
     final static String RELEASED_SOURCES_COORDINATE = "io.brooklyn:brooklyn-core:jar:sources:0.6.0";
@@ -210,7 +210,7 @@ public class MavenArtifactTest {
     /*
         Exception java.lang.AssertionError
         
-        Message: Could not load /home/ubuntu/.m2/repository/org/apache/brooklyn/brooklyn-utils-common/0.9.0-SNAPSHOT/brooklyn-utils-common-0.9.0-SNAPSHOT.jar when testing MavenRetriever: do a maven build with no integration tests first to ensure this is installed, then rerun
+        Message: Could not load /home/ubuntu/.m2/repository/org/apache/brooklyn/brooklyn-utils-common/0.9.SPLITWIP-SNAPSHOT/brooklyn-utils-common-0.9.SPLITWIP-SNAPSHOT.jar when testing MavenRetriever: do a maven build with no integration tests first to ensure this is installed, then rerun
         Stacktrace:
         
         
@@ -248,7 +248,7 @@ public class MavenArtifactTest {
     @Test(groups={"Integration","Broken"})
     public void testRetrievalHostedSnapshotIntegration() throws Exception {
         MavenArtifact m = MavenArtifact.fromCoordinate(
-                "org.apache.brooklyn:brooklyn-utils-common:jar:0.9.0-SNAPSHOT");  // BROOKLYN_VERSION
+                "org.apache.brooklyn:brooklyn-utils-common:jar:0.9.SPLITWIP-SNAPSHOT");  // BROOKLYN_VERSION
         
         String localPath = new MavenRetriever().getLocalPath(m);
         File f = new File(localPath);

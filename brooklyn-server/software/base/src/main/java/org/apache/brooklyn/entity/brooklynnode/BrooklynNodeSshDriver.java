@@ -128,7 +128,7 @@ public class BrooklynNodeSshDriver extends JavaSoftwareProcessSshDriver implemen
         
         // Need to explicitly give file, because for snapshot URLs you don't get a clean filename from the URL.
         // This filename is used to generate the first URL to try: [BROOKLYN_VERSION_BELOW]
-        // file://$HOME/.brooklyn/repository/BrooklynNode/0.9.0-SNAPSHOT/brooklynnode-0.8.0-snapshot.tar.gz
+        // file://$HOME/.brooklyn/repository/BrooklynNode/0.9.SPLITWIP-SNAPSHOT/brooklynnode-0.8.0-snapshot.tar.gz
         // (DOWNLOAD_URL overrides this and has a default which comes from maven)
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();

@@ -47,7 +47,7 @@ sass:
 
 brooklyn-stable-version: 0.8.0-incubating
 
-brooklyn-version: 0.9.0-SNAPSHOT # BROOKLYN_VERSION
+brooklyn-version: 0.9.SPLITWIP-SNAPSHOT # BROOKLYN_VERSION
 brooklyn-snapshot-git-branch: master   # if line above is SNAPSHOT this should point to corresponding git branch (e.g. master, 0.4)
 
 # This is auto-detected, but you can override it if needed.

@@ -1,6 +1,6 @@
 path:
   # BROOKLYN_VERSION_BELOW
-  guide: /v/0.9.0-SNAPSHOT
+  guide: /v/0.9.SPLITWIP-SNAPSHOT
   # BROOKLYN_VERSION_BELOW
-  style: /v/0.9.0-SNAPSHOT/style
+  style: /v/0.9.SPLITWIP-SNAPSHOT/style
   website: ""

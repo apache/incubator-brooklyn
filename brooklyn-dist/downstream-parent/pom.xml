@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.brooklyn</groupId>
     <artifactId>brooklyn</artifactId>
-    <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <version>0.9.SPLITWIP-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -48,7 +48,7 @@
     <excludedTestGroups>Integration,Acceptance,Live,Live-sanity,WIP</excludedTestGroups>
 
     <!-- Dependencies -->
-    <brooklyn.version>0.9.0-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
+    <brooklyn.version>0.9.SPLITWIP-SNAPSHOT</brooklyn.version>  <!-- BROOKLYN_VERSION -->
     <jclouds.groupId>org.apache.jclouds</jclouds.groupId> <!-- JCLOUDS_GROUPID_VERSION -->
 
     <!-- versions should match those used by Brooklyn, to avoid conflicts -->
