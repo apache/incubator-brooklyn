@@ -50,9 +50,9 @@ import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.api.client.util.Preconditions;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Stopwatch;
 
 public class CatalogUtils {
@@ -287,7 +287,7 @@ public class CatalogUtils {
     /** @deprecated since it was introduced in 0.9.0; TBD where this should live */
     public static void setDeprecated(ManagementContext mgmt, String symbolicNameAndOptionalVersion, boolean newValue) {
         RegisteredType item = mgmt.getTypeRegistry().get(symbolicNameAndOptionalVersion);
-        Preconditions.checkNotNull(item, "No such item: "+symbolicNameAndOptionalVersion);
+        Preconditions.checkNotNull(item, "No such item: " + symbolicNameAndOptionalVersion);
         setDeprecated(mgmt, item.getSymbolicName(), item.getVersion(), newValue);
     }
     

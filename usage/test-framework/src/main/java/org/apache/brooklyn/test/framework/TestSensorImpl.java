@@ -18,7 +18,7 @@
  */
 package org.apache.brooklyn.test.framework;
 
-import com.google.api.client.util.Objects;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
