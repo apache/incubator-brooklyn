@@ -141,24 +141,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-software-webapp</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-software-database</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-software-nosql</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-locations-jclouds</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
