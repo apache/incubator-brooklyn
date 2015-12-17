@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -504,6 +503,7 @@ public class DependentConfiguration {
         );
     }
 
+    @SuppressWarnings("unchecked")
     private static List<TaskAdaptable<Object>> getTaskAdaptable(Object... args){
         List<TaskAdaptable<Object>> taskArgs = Lists.newArrayList();
         for (Object arg: args) {
@@ -634,13 +634,13 @@ public class DependentConfiguration {
     @Beta
     public static class ProtoBuilder {
         /**
-         * Will wait for the attribute on the given entity.
-         * If that entity reports {@link Lifecycle#ON_FIRE} for its {@link Attributes#SERVICE_STATE} then it will abort.
-         * If that entity reports {@link Lifecycle#STOPPING}, {@link Lifecycle#STOPPED}, or {@link Lifecycle#DESTROYED}
+         * Will wait for the attribute on the given entity, with default behaviour:
+         * If that entity reports {@link Lifecycle#ON_FIRE} for its {@link Attributes#SERVICE_STATE} then it will abort;
+         * If that entity is stopping or destroyed (see {@link Builder#timeoutIfStoppingOrDestroyed(Duration)}),
          * then it will timeout after 1 minute.
          */
         public <T2> Builder<T2,T2> attributeWhenReady(Entity source, AttributeSensor<T2> sensor) {
-            return new Builder<T2,T2>(source, sensor).abortIfOnFireOrTimeoutIfNecessary();
+            return new Builder<T2,T2>(source, sensor).abortIfOnFire().timeoutIfStoppingOrDestroyed(Duration.ONE_MINUTE);
         }
 
         /**
@@ -720,15 +720,18 @@ public class DependentConfiguration {
             abortSensorConditions.add(new AttributeAndSensorCondition<T2>(source, sensor, predicate));
             return this;
         }
+        /** Causes the depender to abort immediately if {@link Attributes#SERVICE_STATE_ACTUAL}
+         * is {@link Lifecycle#ON_FIRE}. */
         public Builder<T,V> abortIfOnFire() {
             abortIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.ON_FIRE));
             return this;
         }
-        public Builder<T,V> abortIfOnFireOrTimeoutIfNecessary() {
-            abortIfOnFire();
-            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.STOPPING), Duration.ONE_MINUTE);
-            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.STOPPED), Duration.ONE_MINUTE);
-            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.DESTROYED), Duration.ONE_MINUTE);
+        /** Causes the depender to timeout after the given time if {@link Attributes#SERVICE_STATE_ACTUAL}
+         * is one of {@link Lifecycle#STOPPING}, {@link Lifecycle#STOPPED}, or {@link Lifecycle#DESTROYED}. */
+        public Builder<T,V> timeoutIfStoppingOrDestroyed(Duration time) {
+            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.STOPPING), time);
+            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.STOPPED), time);
+            timeoutIf(source, Attributes.SERVICE_STATE_ACTUAL, Predicates.equalTo(Lifecycle.DESTROYED), time);
             return this;
         }
         public Builder<T,V> blockingDetails(String val) {
