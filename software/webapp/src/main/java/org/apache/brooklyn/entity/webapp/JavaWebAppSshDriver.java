@@ -169,7 +169,7 @@ public abstract class JavaWebAppSshDriver extends JavaSoftwareProcessSshDriver i
                 public void run() {
                     int result = copyResource(url, tmpDest);
                     if (result != 0) {
-                        throw new IllegalStateException("Invalud result " + result + " while " + copyTaskMsg);
+                        throw new IllegalStateException("Invalid result " + result + " while " + copyTaskMsg);
                     }
                 }
             });
