@@ -151,7 +151,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
 
     private final AtomicLong totalEffectorInvocationCount = new AtomicLong();
 
-    protected BrooklynProperties configMap;
+    protected DeferredBrooklynProperties configMap;
     protected BasicLocationRegistry locationRegistry;
     protected final BasicBrooklynCatalog catalog;
     protected final BrooklynTypeRegistry typeRegistry;
@@ -184,7 +184,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     }
 
     public AbstractManagementContext(BrooklynProperties brooklynProperties, DataGridFactory datagridFactory) {
-        this.configMap = brooklynProperties;
+        this.configMap = new DeferredBrooklynProperties(brooklynProperties, this);
         this.entityDriverManager = new BasicEntityDriverManager();
         this.downloadsManager = BasicDownloadsManager.newDefault(configMap);
         if (datagridFactory == null) {

@@ -52,6 +52,28 @@ brooklyn.webconsole.security.https.required=true
 More information, including setting up a certificate, is described [further below](#https-configuration).
 
 
+## Camp YAML Expressions
+
+Values in `brooklyn.properties` can use the Camp YAML syntax. Any value starting `$brooklyn:` is 
+parsed as a Camp YAML expression.
+
+This allows [externalized configuration](externalized-configuration.html) to be used from 
+brooklyn.properties. For example:
+
+{% highlight properties %}
+brooklyn.location.jclouds.aws-ec2.identity=$brooklyn:external("vault", "aws-identity")
+brooklyn.location.jclouds.aws-ec2.credential=$brooklyn:external("vault", "aws-credential")
+{% endhighlight %}
+
+If for some reason one requires a literal value that really does start with `$brooklyn:` (i.e.
+for the value to not be parsed), then this can be achieved by using the syntax below. This 
+example returns the property value `$brooklyn:myexample`:
+
+{% highlight properties %}
+example.property=$brooklyn:literal("$brooklyn:myexample")
+{% endhighlight %}
+
+
 ## Locations
 
 Information on defining locations in the `brooklyn.properties` file is available [here](locations/).
@@ -83,6 +105,7 @@ brooklyn.webconsole.security.user.admin.sha256=91e16f94509fa8e3dd21c43d69cadfd7d
 The `users` line should contain a comma-separated list. The special value `*` is accepted to permit all users.
 
 To generate this, the brooklyn CLI can be used:
+
 {% highlight bash %}
 brooklyn generate-password --user admin
 

@@ -380,7 +380,7 @@ public class LocalManagementContext extends AbstractManagementContext {
             log.warn("When reloading, mgmt context "+this+" properties are fixed, so reload will be of limited utility");
         
         BrooklynProperties properties = builder.build();
-        configMap = properties;
+        configMap = new DeferredBrooklynProperties(properties, this);
         if (brooklynAdditionalProperties != null) {
             log.info("Reloading additional brooklyn properties from " + brooklynAdditionalProperties);
             configMap.addFromMap(brooklynAdditionalProperties);

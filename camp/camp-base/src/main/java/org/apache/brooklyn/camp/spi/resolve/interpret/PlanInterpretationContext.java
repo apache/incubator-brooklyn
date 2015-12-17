@@ -32,7 +32,7 @@ public class PlanInterpretationContext {
     private final List<PlanInterpreter> interpreters;
     private final PlanInterpreter allInterpreter;
 
-    public PlanInterpretationContext(Map<String,Object> originalDeploymentPlan, List<PlanInterpreter> interpreters) {
+    public PlanInterpretationContext(Map<String,?> originalDeploymentPlan, List<PlanInterpreter> interpreters) {
         super();
         this.originalDeploymentPlan = ImmutableMap.copyOf(originalDeploymentPlan);
         this.interpreters = ImmutableList.copyOf(interpreters);

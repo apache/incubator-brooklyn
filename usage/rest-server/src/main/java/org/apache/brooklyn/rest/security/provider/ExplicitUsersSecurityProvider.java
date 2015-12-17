@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.StringConfigMap;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.security.PasswordHasher;
 
@@ -91,7 +92,7 @@ public class ExplicitUsersSecurityProvider extends AbstractSecurityProvider impl
      * expect password (or SHA-256 + SALT thereof) defined as brooklyn properties.
      */
     public static boolean checkExplicitUserPassword(ManagementContext mgmt, String user, String password) {
-        BrooklynProperties properties = (BrooklynProperties) mgmt.getConfig();
+        BrooklynProperties properties = ((ManagementContextInternal)mgmt).getBrooklynProperties();
         String expectedPassword = properties.getConfig(BrooklynWebConfig.PASSWORD_FOR_USER(user));
         String salt = properties.getConfig(BrooklynWebConfig.SALT_FOR_USER(user));
         String expectedSha256 = properties.getConfig(BrooklynWebConfig.SHA256_FOR_USER(user));

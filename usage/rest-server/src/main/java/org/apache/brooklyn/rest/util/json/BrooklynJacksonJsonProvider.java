@@ -27,6 +27,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.util.OsgiCompat;
 import org.codehaus.jackson.Version;
@@ -106,7 +107,7 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
 
                 mapper = newPrivateObjectMapper(mgmt);
                 log.debug("Storing new ObjectMapper against "+mgmt+" because no ServletContext available: "+mapper);
-                ((BrooklynProperties)mgmt.getConfig()).put(key, mapper);
+                ((ManagementContextInternal)mgmt).getBrooklynProperties().put(key, mapper);
                 return mapper;
             }
         }

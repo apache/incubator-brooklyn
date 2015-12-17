@@ -45,6 +45,7 @@ import org.apache.brooklyn.core.config.ConfigPredicates;
 import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.location.internal.LocationInternal;
 import org.apache.brooklyn.core.mgmt.internal.LocalLocationManager;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -494,6 +495,11 @@ public class BasicLocationRegistry implements LocationRegistry {
     }
 
     @VisibleForTesting
+    public void putProperties(Map<String, ?> vals) {
+        ((ManagementContextInternal)mgmt).getBrooklynProperties().putAll(vals);
+    }
+
+    @VisibleForTesting
     public static void setupLocationRegistryForTesting(ManagementContext mgmt) {
         // ensure localhost is added (even on windows)
         LocationDefinition l = mgmt.getLocationRegistry().getDefinedLocationByName("localhost");
@@ -502,5 +508,4 @@ public class BasicLocationRegistry implements LocationRegistry {
         
         ((BasicLocationRegistry)mgmt.getLocationRegistry()).disablePersistence();
     }
-
 }

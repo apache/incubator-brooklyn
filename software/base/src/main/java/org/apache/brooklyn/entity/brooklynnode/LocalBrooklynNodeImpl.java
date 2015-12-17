@@ -19,6 +19,7 @@
 package org.apache.brooklyn.entity.brooklynnode;
 
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.util.text.Strings;
 
 public class LocalBrooklynNodeImpl extends BrooklynNodeImpl implements LocalBrooklynNode {
@@ -29,7 +30,8 @@ public class LocalBrooklynNodeImpl extends BrooklynNodeImpl implements LocalBroo
     @Override
     protected void connectSensors() {
         // Override management username and password from brooklyn.properties
-        BrooklynProperties properties = (BrooklynProperties) getManagementContext().getConfig();
+        // TODO Why use BrooklynProperties, rather than StringConfigMap returned by mgmt.getConfig()?
+        BrooklynProperties properties = ((ManagementContextInternal)getManagementContext()).getBrooklynProperties();
         String user = (String) properties.get(String.format(LOCAL_BROOKLYN_NODE_KEY, "user"));
         String password = (String) properties.get(String.format(LOCAL_BROOKLYN_NODE_KEY, "password"));
         if (Strings.isBlank(password)) {

@@ -26,17 +26,22 @@ import java.util.Map;
 
 import com.google.common.collect.Iterables;
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.external.AbstractExternalConfigSupplier;
 import org.apache.brooklyn.core.config.external.ExternalConfigSupplier;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
+import org.apache.brooklyn.core.mgmt.internal.CampYamlParser;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
+import org.apache.brooklyn.util.core.task.DeferredSupplier;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +63,17 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
         return LocalManagementContextForTests.builder(true)
                 .useProperties(props)
                 .build();
+    }
+
+    @Test
+    public void testCampYamlParserHandlesExternalisedConfig() throws Exception {
+        CampYamlParser parser = mgmt().getConfig().getConfig(CampYamlParser.YAML_PARSER_KEY);
+        
+        DeferredSupplier<?> supplier = (DeferredSupplier<?>) parser.parse("$brooklyn:external(\"myprovider\", \"mykey\")");
+        
+        ExecutionContext exec = mgmt().getServerExecutionContext();
+        String result = Tasks.resolveValue(supplier, String.class, exec);
+        assertEquals(result, "myval");
     }
 
     @Test
