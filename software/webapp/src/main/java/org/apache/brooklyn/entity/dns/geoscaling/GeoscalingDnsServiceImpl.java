@@ -61,9 +61,11 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
         super.init();
         
         // defaulting to randomized subdomains makes deploying multiple applications easier
-        if (getConfig(RANDOMIZE_SUBDOMAIN_NAME)==null) config().set(RANDOMIZE_SUBDOMAIN_NAME, true); 
-        
-        Boolean trustAll = getConfig(SSL_TRUST_ALL);
+        if (config().get(RANDOMIZE_SUBDOMAIN_NAME) == null) {
+            config().set(RANDOMIZE_SUBDOMAIN_NAME, true);
+        }
+
+        Boolean trustAll = config().get(SSL_TRUST_ALL);
         if (Boolean.TRUE.equals(trustAll)) {
             webClient = new GeoscalingWebClient(HttpTool.httpClientBuilder().trustAll().build());
         } else {
@@ -88,11 +90,11 @@ public class GeoscalingDnsServiceImpl extends AbstractGeoDnsServiceImpl implemen
     boolean isConfigured = false;
     
     public synchronized void applyConfig() {        
-        randomizeSmartSubdomainName = getConfig(RANDOMIZE_SUBDOMAIN_NAME);
-        username = getConfig(GEOSCALING_USERNAME);
-        password = getConfig(GEOSCALING_PASSWORD);
-        primaryDomainName = getConfig(GEOSCALING_PRIMARY_DOMAIN_NAME);
-        smartSubdomainName = getConfig(GEOSCALING_SMART_SUBDOMAIN_NAME);
+        randomizeSmartSubdomainName = config().get(RANDOMIZE_SUBDOMAIN_NAME);
+        username = config().get(GEOSCALING_USERNAME);
+        password = config().get(GEOSCALING_PASSWORD);
+        primaryDomainName = config().get(GEOSCALING_PRIMARY_DOMAIN_NAME);
+        smartSubdomainName = config().get(GEOSCALING_SMART_SUBDOMAIN_NAME);
 
         // Ensure all mandatory configuration is provided.
         checkNotNull(username, "The GeoScaling username is not specified");

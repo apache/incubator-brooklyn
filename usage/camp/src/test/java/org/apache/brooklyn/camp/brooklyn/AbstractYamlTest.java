@@ -110,13 +110,13 @@ public abstract class AbstractYamlTest {
         return createAndStartApplication(joinLines(multiLineYaml));
     }
     
-    protected Entity createAndStartApplication(String input) throws Exception {
-        return createAndStartApplication(new StringReader(input));
+    protected Entity createAndStartApplication(Reader input) throws Exception {
+        return createAndStartApplication(Streams.readFully(input));
     }
 
-    protected Entity createAndStartApplication(Reader input) throws Exception {
+    protected Entity createAndStartApplication(String input) throws Exception {
         EntitySpec<?> spec = 
-            mgmt().getTypeRegistry().createSpecFromPlan(CampTypePlanTransformer.FORMAT, Streams.readFully(input), RegisteredTypeLoadingContexts.spec(Application.class), EntitySpec.class);
+            mgmt().getTypeRegistry().createSpecFromPlan(CampTypePlanTransformer.FORMAT, input, RegisteredTypeLoadingContexts.spec(Application.class), EntitySpec.class);
         final Entity app = brooklynMgmt.getEntityManager().createEntity(spec);
         // start the app (happens automatically if we use camp to instantiate, but not if we use crate spec approach)
         app.invoke(Startable.START, MutableMap.<String,String>of()).get();
@@ -126,9 +126,7 @@ public abstract class AbstractYamlTest {
     protected Entity createStartWaitAndLogApplication(Reader input) throws Exception {
         Entity app = createAndStartApplication(input);
         waitForApplicationTasks(app);
-
         getLogger().info("App started: "+app);
-        
         return app;
     }
 

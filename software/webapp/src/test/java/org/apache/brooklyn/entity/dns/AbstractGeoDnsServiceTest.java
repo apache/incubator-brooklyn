@@ -18,6 +18,9 @@
  */
 package org.apache.brooklyn.entity.dns;
 
+import static org.apache.brooklyn.core.entity.EntityAsserts.assertAttributeEqualsContinually;
+import static org.apache.brooklyn.core.entity.EntityAsserts.assertAttributeEventually;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.util.Collection;
@@ -36,30 +39,24 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.entity.EntityInternal;
-import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.entity.EntityAsserts;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
 import org.apache.brooklyn.core.location.LocationConfigKeys;
 import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.core.location.Machines;
 import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.location.geo.HostGeoInfo;
-import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
-import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
-import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceImpl;
-import org.apache.brooklyn.entity.dns.AbstractGeoDnsServiceTest;
 import org.apache.brooklyn.entity.group.DynamicFabric;
 import org.apache.brooklyn.entity.group.DynamicGroup;
 import org.apache.brooklyn.entity.group.DynamicRegionsFabric;
-import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
@@ -69,7 +66,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
-public class AbstractGeoDnsServiceTest {
+public class AbstractGeoDnsServiceTest extends BrooklynAppUnitTestSupport {
+
     public static final Logger log = LoggerFactory.getLogger(AbstractGeoDnsServiceTest.class);
 
     private static final String WEST_IP = "100.0.0.1";
@@ -79,8 +77,6 @@ public class AbstractGeoDnsServiceTest {
     
     private static final String NORTH_IP = "10.0.0.1";
     private static final double NORTH_LATITUDE = 60, NORTH_LONGITUDE = 0;
-    
-    private ManagementContext managementContext;
     
     private Location westParent;
     private Location westChild;
@@ -92,16 +88,15 @@ public class AbstractGeoDnsServiceTest {
     private Location northParent;
     private Location northChildWithLocation; 
 
-    private TestApplication app;
     private DynamicRegionsFabric fabric;
     private DynamicGroup testEntities;
     private GeoDnsTestService geoDns;
     
-
+    @Override
     @BeforeMethod(alwaysRun=true)
-    public void setup() {
-        managementContext = new LocalManagementContext();
-        
+    public void setUp() throws Exception {
+        super.setUp();
+
         westParent = newSimulatedLocation("West parent", WEST_LATITUDE, WEST_LONGITUDE);
         
         // west uses public IP for name, so is always picked up
@@ -116,7 +111,7 @@ public class AbstractGeoDnsServiceTest {
         // north has a private IP and private hostname so should not be picked up when we turn off ADD_ANYTHING
         northParent = newSimulatedLocation("North parent", NORTH_LATITUDE, NORTH_LONGITUDE);
         northChildWithLocation = newSshMachineLocation("North child", "localhost", NORTH_IP, northParent, NORTH_LATITUDE, NORTH_LONGITUDE);
-        ((BasicLocationRegistry)managementContext.getLocationRegistry()).registerResolver(new LocationResolver() {
+        ((BasicLocationRegistry) mgmt.getLocationRegistry()).registerResolver(new LocationResolver() {
             @Override
             public Location newLocationFromString(Map locationFlags, String spec, LocationRegistry registry) {
                 if (!spec.equals("test:north")) throw new IllegalStateException("unsupported");
@@ -135,41 +130,36 @@ public class AbstractGeoDnsServiceTest {
             }
         });
 
-        Locations.manage(westParent, managementContext);
-        Locations.manage(eastParent, managementContext);
-        Locations.manage(northParent, managementContext);
+        Locations.manage(westParent, mgmt);
+        Locations.manage(eastParent, mgmt);
+        Locations.manage(northParent, mgmt);
         
-        app = ApplicationBuilder.newManagedApp(TestApplication.class, managementContext);
         fabric = app.createAndManageChild(EntitySpec.create(DynamicRegionsFabric.class)
             .configure(DynamicFabric.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
-        
+
         testEntities = app.createAndManageChild(EntitySpec.create(DynamicGroup.class)
             .configure(DynamicGroup.ENTITY_FILTER, Predicates.instanceOf(TestEntity.class)));
-        geoDns = app.createAndManageChild(EntitySpec.create(GeoDnsTestService.class));
-        geoDns.setTargetEntityProvider(testEntities);
-    }
 
-    @AfterMethod(alwaysRun=true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
+        geoDns = app.createAndManageChild(EntitySpec.create(GeoDnsTestService.class)
+            .configure(AbstractGeoDnsService.ENTITY_PROVIDER, testEntities));
     }
 
     private SimulatedLocation newSimulatedLocation(String name, double lat, double lon) {
-        return managementContext.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class)
+        return mgmt.getLocationManager().createLocation(LocationSpec.create(SimulatedLocation.class)
                 .displayName(name)
                 .configure("latitude", lat)
                 .configure("longitude", lon));
     }
     
     private Location newSshMachineLocation(String name, String address, Location parent) {
-        return managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+        return mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .parent(parent)
                 .displayName(name)
                 .configure("address", address));
     }
     
     private Location newSshMachineLocation(String name, String hostname, String address, Location parent, double lat, double lon) {
-        return managementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+        return mgmt.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
                 .parent(parent)
                 .displayName(name)
                 .configure("hostname", hostname)
@@ -183,85 +173,118 @@ public class AbstractGeoDnsServiceTest {
         app.start( ImmutableList.of(westChildWithLocation, eastChildWithLocationAndWithPrivateHostname) );
         publishSensors(2, true, true, true);
         
-        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
-        assertTrue(geoDns.getTargetHostsByName().containsKey("West child with location"), "targets="+geoDns.getTargetHostsByName());
-        assertTrue(geoDns.getTargetHostsByName().containsKey("East child with location"), "targets="+geoDns.getTargetHostsByName());
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+        assertIsTarget("West child with location");
+        assertIsTarget("East child with location");
     }
-    
+
     @Test
     public void testGeoInfoOnParentLocation() {
         app.start( ImmutableList.of(westChild, eastChild) );
         publishSensors(2, true, false, false);
-        
-        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
-        assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());
-        assertTrue(geoDns.getTargetHostsByName().containsKey("East child"), "targets="+geoDns.getTargetHostsByName());
+
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+        assertIsTarget("West child");
+        assertIsTarget("East child");
     }
 
     @Test
     public void testSubscribesToHostname() {
-        ((EntityInternal)geoDns).config().set(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
+        geoDns.config().set(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname) );
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 0);
         publishSensors(2, true, true, true);
-        
-        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 2);
-        assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());
-        assertTrue(geoDns.getTargetHostsByName().containsKey("East child with location"), "targets="+geoDns.getTargetHostsByName());
+        assertIsTarget("West child");
+        assertIsTarget("East child with location");
     }
 
     protected void publishSensors(int expectedSize, boolean includeServiceUp, boolean includeHostname, boolean includeAddress) {
         // First wait for the right size of group; the dynamic group gets notified asynchronously
         // of nodes added/removed, so if we don't wait then might not set value for all members.
-        EntityTestUtils.assertGroupSizeEqualsEventually(testEntities, expectedSize);
-        
+        EntityAsserts.assertGroupSizeEqualsEventually(testEntities, expectedSize);
+
         for (Entity e: testEntities.getMembers()) {
             if (includeServiceUp)
-                ((EntityInternal)e).sensors().set(Attributes.SERVICE_UP, true);
-            
+                e.sensors().set(Attributes.SERVICE_UP, true);
+
             SshMachineLocation l = Machines.findUniqueMachineLocation(e.getLocations(), SshMachineLocation.class).get();
             if (includeAddress)
-                ((EntityInternal)e).sensors().set(Attributes.ADDRESS, l.getAddress().getHostAddress());
+                e.sensors().set(Attributes.ADDRESS, l.getAddress().getHostAddress());
             String h = (String) l.config().getBag().getStringKey("hostname");
             if (h==null) h = l.getAddress().getHostName();
             if (includeHostname)
-                ((EntityInternal)e).sensors().set(Attributes.HOSTNAME, h);
+                e.sensors().set(Attributes.HOSTNAME, h);
         }
     }
-    
+
     @Test
     public void testChildAddedLate() {
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname) );
         publishSensors(2, true, false, false);
-        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
-        
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+
         String id3 = fabric.addRegion("test:north");
         publishSensors(3, true, false, false);
         try {
-            EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(3));
+            assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(3));
         } catch (Throwable e) {
             log.warn("Did not pick up third entity, targets are "+geoDns.getAttribute(AbstractGeoDnsService.TARGETS)+" (rethrowing): "+e);
             Exceptions.propagate(e);
         }
-        assertTrue(geoDns.getTargetHostsByName().containsKey("North child"), "targets="+geoDns.getTargetHostsByName());
-        
-        log.info("targets: "+geoDns.getTargetHostsByName());
-    }    
+        assertIsTarget("North child");
 
+        log.info("targets: "+geoDns.getTargetHostsByName());
+    }
 
     @Test
     public void testFiltersEntirelyPrivate() {
-        ((EntityInternal)geoDns).config().set(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
+        geoDns.config().set(GeoDnsTestServiceImpl.ADD_ANYTHING, false);
         app.start( ImmutableList.of(westChild, eastChildWithLocationAndWithPrivateHostname, northChildWithLocation) );
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 0);
         publishSensors(3, true, true, true);
-        
-        EntityTestUtils.assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
         Assert.assertEquals(geoDns.getTargetHostsByName().size(), 2);
-        assertTrue(geoDns.getTargetHostsByName().containsKey("West child"), "targets="+geoDns.getTargetHostsByName());
-        assertTrue(geoDns.getTargetHostsByName().containsKey("East child with location"), "targets="+geoDns.getTargetHostsByName());
-        assertTrue(!geoDns.getTargetHostsByName().containsKey("North child"), "targets="+geoDns.getTargetHostsByName());
+        assertIsTarget("West child");
+        assertIsTarget("East child with location");
+        assertIsNotTarget("North child");
+    }
+
+    @Test
+    public void testFiltersForRunningEntities() {
+        app.start(ImmutableList.of(westChildWithLocation, eastChildWithLocationAndWithPrivateHostname));
+        publishSensors(2, true, true, true);
+
+        TestEntity problemChild = Entities.descendants(app, TestEntity.class).iterator().next();
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+        problemChild.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(1));
+        problemChild.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING);
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+    }
+
+    @Test
+    public void testCanDisableFilterForRunningEntities() throws Exception {
+        geoDns.config().set(AbstractGeoDnsService.FILTER_FOR_RUNNING, false);
+        app.start(ImmutableList.of(westChildWithLocation, eastChildWithLocationAndWithPrivateHostname));
+        publishSensors(2, true, true, true);
+
+        assertAttributeEventually(geoDns, AbstractGeoDnsService.TARGETS, CollectionFunctionals.<String>mapSizeEquals(2));
+        final Map<String, String> targets = ImmutableMap.copyOf(geoDns.sensors().get(AbstractGeoDnsService.TARGETS));
+        TestEntity problemChild = Entities.descendants(app, TestEntity.class).iterator().next();
+        problemChild.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
+        assertAttributeEqualsContinually(geoDns, AbstractGeoDnsService.TARGETS, targets);
+    }
+
+    private void assertIsTarget(String target) {
+        assertTrue(geoDns.getTargetHostsByName().containsKey(target), "targets=" + geoDns.getTargetHostsByName());
+    }
+
+    private void assertIsNotTarget(String target) {
+        assertFalse(geoDns.getTargetHostsByName().containsKey(target), "targets=" + geoDns.getTargetHostsByName());
     }
 
     @ImplementedBy(GeoDnsTestServiceImpl.class)
