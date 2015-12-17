@@ -102,6 +102,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -1003,6 +1004,15 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
         return getMachineDetails().getOsDetails();
     }
 
+    /**
+     * Returns the machine details only if they are already loaded, or available directly as 
+     * config.
+     */
+    protected Optional<MachineDetails> getOptionalMachineDetails() {
+        MachineDetails result = machineDetails != null ? machineDetails : config().get(MACHINE_DETAILS);
+        return Optional.fromNullable(result);
+    }
+    
     @Override
     public MachineDetails getMachineDetails() {
         synchronized (machineDetailsLock) {

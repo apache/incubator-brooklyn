@@ -62,6 +62,7 @@ import com.google.common.collect.ContiguousSet;
 import com.google.common.collect.DiscreteDomain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.primitives.Ints;
@@ -100,7 +101,7 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
-        managementContext = LocalManagementContextForTests.newInstance(BrooklynProperties.Factory.builderEmpty().build());
+        managementContext = LocalManagementContextForTests.newInstance(BrooklynProperties.Factory.newDefault());
     }
     
     @AfterMethod(alwaysRun=true)
@@ -472,7 +473,12 @@ public class JcloudsLocationTest implements JcloudsLocationConfig {
                 .configure("address", "127.0.0.1") 
                 .configure("port", 22) 
                 .configure("user", "bob")
-                .configure("jcloudsParent", this));
+                .configure("jcloudsParent", this)
+                .configure("nodeId", "myNodeId")
+                .configure("imageId", "myImageId")
+                .configure("privateAddresses", ImmutableSet.of("10.0.0.1"))
+                .configure("publicAddresses", ImmutableSet.of("56.0.0.1"))
+                );
             registerJcloudsMachineLocation("bogus", result);
             
             // explicitly invoke this customizer, to comply with tests

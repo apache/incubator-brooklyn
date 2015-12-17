@@ -20,6 +20,7 @@ package org.apache.brooklyn.location.jclouds;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 
 import java.net.URI;
 import java.util.List;
@@ -54,6 +55,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
@@ -142,7 +144,7 @@ public class JcloudsRebindStubTest extends RebindTestFixtureWithApp {
         NodeMetadata node = new NodeMetadataImpl(
                 "softlayer", 
                 "myname", 
-                "myid", 
+                "123", // ids in SoftLayer are numeric
                 locImpl,
                 URI.create("http://myuri.com"), 
                 ImmutableMap.<String, String>of(), // userMetadata 
@@ -192,15 +194,19 @@ public class JcloudsRebindStubTest extends RebindTestFixtureWithApp {
 
         rebind();
         
-        // Check the machine is as before
+        // Check the machine is as before.
+        // Call to getOptionalNode() will cause it to try to resolve this node in Softlayer; but it won't find it.
         JcloudsSshMachineLocation newMachine = (JcloudsSshMachineLocation) newManagementContext.getLocationManager().getLocation(origMachine.getId());
         JcloudsLocation newJcloudsLoc = newMachine.getParent();
         String newHostname = newMachine.getHostname();
-        NodeMetadata newNode = newMachine.getNode();
-        Template newTemplate = newMachine.getTemplate();
+        String newNodeId = newMachine.getJcloudsId();
+        Optional<NodeMetadata> newNode = newMachine.getOptionalNode();
+        Optional<Template> newTemplate = newMachine.getOptionalTemplate();
         
         assertEquals(newHostname, origHostname);
-        assertEquals(origNode.getId(), newNode.getId());
+        assertEquals(origNode.getId(), newNodeId);
+        assertFalse(newNode.isPresent(), "newNode="+newNode);
+        assertFalse(newTemplate.isPresent(), "newTemplate="+newTemplate);
         
         assertEquals(newJcloudsLoc.getProvider(), origJcloudsLoc.getProvider());
     }

@@ -20,7 +20,6 @@ package org.apache.brooklyn.location.jclouds;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.elvis;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 import static org.apache.brooklyn.util.ssh.BashCommands.sbinPath;
@@ -183,9 +182,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.common.io.Files;
 import com.google.common.net.HostAndPort;
-
-import io.cloudsoft.winrm4j.pywinrm.Session;
-import io.cloudsoft.winrm4j.pywinrm.WinRMFactory;
 
 /**
  * For provisioning and managing VMs in a particular provider/region, using jclouds.
@@ -816,10 +812,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (windows) {
                 machineLocation = registerWinRmMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
             } else {
-                machineLocation = registerJcloudsSshMachineLocation(computeService, node, userCredentials, sshHostAndPortOverride, setup);
-                if (template!=null && machineLocation.getTemplate()==null) {
-                    ((JcloudsSshMachineLocation)machineLocation).template = template;
-                }
+                machineLocation = registerJcloudsSshMachineLocation(computeService, node, Optional.fromNullable(template), userCredentials, sshHostAndPortOverride, setup);
             }
 
             if (usePortForwarding && sshHostAndPortOverride.isPresent()) {
@@ -2026,7 +2019,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             return registerWinRmMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
         } else {
             try {
-                return registerJcloudsSshMachineLocation(computeService, node, null, Optional.<HostAndPort>absent(), setup);
+                return registerJcloudsSshMachineLocation(computeService, node, Optional.<Template>absent(), null, Optional.<HostAndPort>absent(), setup);
             } catch (IOException e) {
                 throw Exceptions.propagate(e);
             }
@@ -2157,16 +2150,25 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
     @Deprecated
     protected final JcloudsSshMachineLocation registerJcloudsSshMachineLocation(NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
         LOG.warn("Using deprecated registerJcloudsSshMachineLocation: now wants computeService passed", new Throwable("source of deprecated registerJcloudsSshMachineLocation invocation"));
-        return registerJcloudsSshMachineLocation(null, node, null, sshHostAndPort, setup);
+        return registerJcloudsSshMachineLocation(null, node, Optional.<Template>absent(), null, sshHostAndPort, setup);
     }
 
-    protected JcloudsSshMachineLocation registerJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, LoginCredentials userCredentials, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
+    /**
+     * @deprecated since 0.9.0; see {@link #registerJcloudsSshMachineLocation(ComputeService, NodeMetadata, Optional, LoginCredentials, Optional, ConfigBag)}.
+     *             Marked as final to warn those trying to sub-class. 
+     */
+    @Deprecated
+    protected final JcloudsSshMachineLocation registerJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, LoginCredentials userCredentials, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
+        return registerJcloudsSshMachineLocation(computeService, node, Optional.<Template>absent(), userCredentials, sshHostAndPort, setup);
+    }
+    
+    protected JcloudsSshMachineLocation registerJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, Optional<Template> template, LoginCredentials userCredentials, Optional<HostAndPort> sshHostAndPort, ConfigBag setup) throws IOException {
         if (userCredentials == null)
             userCredentials = node.getCredentials();
 
         String vmHostname = getPublicHostname(node, sshHostAndPort, setup);
 
-        JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(computeService, node, vmHostname, sshHostAndPort, userCredentials, setup);
+        JcloudsSshMachineLocation machine = createJcloudsSshMachineLocation(computeService, node, template, vmHostname, sshHostAndPort, userCredentials, setup);
         registerJcloudsMachineLocation(node.getId(), machine);
         return machine;
     }
@@ -2176,8 +2178,17 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         machine.setParent(this);
         vmInstanceIds.put(machine, nodeId);
     }
+
+    /**
+     * @deprecated since 0.9.0; see {@link #createJcloudsSshMachineLocation(ComputeService, NodeMetadata, Optional, String, Optional, LoginCredentials, ConfigBag)}.
+     *             Marked as final to warn those trying to sub-class. 
+     */
+    @Deprecated
+    protected final JcloudsSshMachineLocation createJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, LoginCredentials userCredentials, ConfigBag setup) throws IOException {
+        return createJcloudsSshMachineLocation(computeService, node, Optional.<Template>absent(), vmHostname, sshHostAndPort, userCredentials, setup);
+    }
     
-    protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, String vmHostname, Optional<HostAndPort> sshHostAndPort, LoginCredentials userCredentials, ConfigBag setup) throws IOException {
+    protected JcloudsSshMachineLocation createJcloudsSshMachineLocation(ComputeService computeService, NodeMetadata node, Optional<Template> template, String vmHostname, Optional<HostAndPort> sshHostAndPort, LoginCredentials userCredentials, ConfigBag setup) throws IOException {
         Map<?,?> sshConfig = extractSshConfig(setup, node);
         String nodeAvailabilityZone = extractAvailabilityZone(setup, node);
         String nodeRegion = extractRegion(setup, node);
@@ -2226,6 +2237,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                     .configure(SshMachineLocation.PRIVATE_KEY_DATA, userCredentials.getOptionalPrivateKey().orNull())
                     .configure("jcloudsParent", this)
                     .configure("node", node)
+                    .configure("template", template.orNull())
                     .configureIfNotNull(CLOUD_AVAILABILITY_ZONE_ID, nodeAvailabilityZone)
                     .configureIfNotNull(CLOUD_REGION_ID, nodeRegion)
                     .configure(CALLER_CONTEXT, setup.get(CALLER_CONTEXT))
@@ -2367,8 +2379,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
 
         try {
             // FIXME: Needs to release port forwarding for WinRmMachineLocations
-            if (machine instanceof SshMachineLocation) {
-                releasePortForwarding((SshMachineLocation)machine);
+            if (machine instanceof JcloudsMachineLocation) {
+                releasePortForwarding((JcloudsMachineLocation)machine);
             }
         } catch (Exception e) {
             LOG.error("Problem releasing port-forwarding for machine "+machine+" in "+this+", instance id "+instanceId+
@@ -2444,30 +2456,43 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         }
     }
 
-    protected void releasePortForwarding(final SshMachineLocation machine) {
+    protected void releasePortForwarding(final JcloudsMachineLocation machine) {
         // TODO Implementation needs revisisted. It relies on deprecated PortForwardManager methods.
 
         boolean usePortForwarding = Boolean.TRUE.equals(machine.getConfig(USE_PORT_FORWARDING));
         final JcloudsPortForwarderExtension portForwarder = machine.getConfig(PORT_FORWARDER);
         PortForwardManager portForwardManager = machine.getConfig(PORT_FORWARDING_MANAGER);
-        final NodeMetadata node = (machine instanceof JcloudsSshMachineLocation) ? ((JcloudsSshMachineLocation) machine).getNode() : null;
+        final String nodeId = machine.getJcloudsId();
         final Map<String, Runnable> subtasks = Maps.newLinkedHashMap();
 
         if (portForwarder == null) {
             LOG.debug("No port-forwarding to close (because portForwarder null) on release of " + machine);
         } else {
+            final Optional<NodeMetadata> node = machine.getOptionalNode();
             // Release the port-forwarding for the login-port, which was explicitly created by JcloudsLocation
-            if (usePortForwarding && node != null) {
-                final HostAndPort sshHostAndPortOverride = machine.getSshHostAndPort();
-                final int loginPort = node.getLoginPort();
-                subtasks.put(
-                        "Close port-forward "+sshHostAndPortOverride+"->"+node.getLoginPort(),
-                        new Runnable() {
-                            public void run() {
-                                LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, sshHostAndPortOverride, node.getLoginPort()});
-                                portForwarder.closePortForwarding(node, loginPort, sshHostAndPortOverride, Protocol.TCP);
-                            }
-                        });
+            if (usePortForwarding && node.isPresent()) {
+                final HostAndPort hostAndPortOverride;
+                if (machine instanceof SshMachineLocation) {
+                    hostAndPortOverride = ((SshMachineLocation)machine).getSshHostAndPort();
+                } else if (machine instanceof WinRmMachineLocation) {
+                    String host = ((WinRmMachineLocation)machine).getAddress().getHostAddress();
+                    int port = ((WinRmMachineLocation)machine).config().get(WinRmMachineLocation.WINRM_PORT);
+                    hostAndPortOverride = HostAndPort.fromParts(host, port);
+                } else {
+                    LOG.warn("Unexpected machine {} of type {}; expected SSH or WinRM", machine, (machine != null ? machine.getClass() : null));
+                    hostAndPortOverride = null;
+                }
+                if (hostAndPortOverride != null) {
+                    final int loginPort = node.get().getLoginPort();
+                    subtasks.put(
+                            "Close port-forward "+hostAndPortOverride+"->"+loginPort,
+                            new Runnable() {
+                                public void run() {
+                                    LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, hostAndPortOverride, loginPort});
+                                    portForwarder.closePortForwarding(node.get(), loginPort, hostAndPortOverride, Protocol.TCP);
+                                }
+                            });
+                }
             }
 
             // Get all the other port-forwarding mappings for this VM, and release all of those
@@ -2475,8 +2500,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
             if (portForwardManager != null) {
                 mappings = Sets.newLinkedHashSet();
                 mappings.addAll(portForwardManager.getLocationPublicIpIds(machine));
-                if (node != null) {
-                    mappings.addAll(portForwardManager.getPortMappingWithPublicIpId(node.getId()));
+                if (nodeId != null) {
+                    mappings.addAll(portForwardManager.getPortMappingWithPublicIpId(nodeId));
                 }
             } else {
                 mappings = ImmutableSet.of();
@@ -2486,13 +2511,13 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 final HostAndPort publicEndpoint = mapping.getPublicEndpoint();
                 final int targetPort = mapping.getPrivatePort();
                 final Protocol protocol = Protocol.TCP;
-                if (publicEndpoint != null) {
+                if (publicEndpoint != null && node.isPresent()) {
                     subtasks.put(
                             "Close port-forward "+publicEndpoint+"->"+targetPort,
                             new Runnable() {
                                 public void run() {
                                     LOG.debug("Closing port-forwarding at {} for machine {}: {}->{}", new Object[] {this, machine, publicEndpoint, targetPort});
-                                    portForwarder.closePortForwarding(node, targetPort, publicEndpoint, protocol);
+                                    portForwarder.closePortForwarding(node.get(), targetPort, publicEndpoint, protocol);
                                 }
                             });
                 }
@@ -2527,8 +2552,8 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         // Forget all port mappings associated with this VM
         if (portForwardManager != null) {
             portForwardManager.forgetPortMappings(machine);
-            if (node != null) {
-                portForwardManager.forgetPortMappings(node.getId());
+            if (nodeId != null) {
+                portForwardManager.forgetPortMappings(nodeId);
             }
         }
     }

@@ -23,13 +23,30 @@ import org.apache.brooklyn.core.location.HasSubnetHostname;
 import org.jclouds.compute.domain.NodeMetadata;
 import org.jclouds.compute.domain.Template;
 
+import com.google.common.base.Optional;
+
 public interface JcloudsMachineLocation extends MachineLocation, HasSubnetHostname {
     
     @Override
     public JcloudsLocation getParent();
     
+    public Optional<NodeMetadata> getOptionalNode();
+
+    /**
+     * @deprecated since 0.9.0; instead use {@link #getOptionalNode()}. After rebind, the node will 
+     *             not be available if the VM is no longer running.
+     * 
+     * @throws IllegalStateException If the node is not available (i.e. not cached, and cannot be  
+     *         found from cloud provider).
+     */
+    @Deprecated
     public NodeMetadata getNode();
     
+    /**
+     * @deprecated since 0.9.0; instead use {@link #getOptionalNode()}. After rebind, the node will not
+     * be available if the VM is no longer running.
+     */
+    @Deprecated
     public Template getTemplate();
 
     public String getJcloudsId();

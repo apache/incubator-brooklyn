@@ -20,15 +20,21 @@ package org.apache.brooklyn.location.jclouds;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.fail;
 
 import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.api.location.LocationSpec;
+import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestFixtureWithApp;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.location.winrm.WinRmMachineLocation;
+import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
 import org.apache.brooklyn.util.exceptions.CompoundRuntimeException;
 import org.apache.brooklyn.util.stream.Streams;
 import org.jclouds.compute.domain.NodeMetadata;
@@ -64,7 +70,7 @@ public class JcloudsRebindLiveTest extends RebindTestFixtureWithApp {
 
     public static final String SOFTLAYER_LOCATION_SPEC = "jclouds:" + AbstractJcloudsLiveTest.SOFTLAYER_PROVIDER;
     
-    protected List<JcloudsSshMachineLocation> machines;
+    protected List<JcloudsMachineLocation> machines;
     
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -99,12 +105,24 @@ public class JcloudsRebindLiveTest extends RebindTestFixtureWithApp {
     public void testEc2Rebind() throws Exception {
         ImmutableMap<String, Object> obtainFlags = ImmutableMap.<String,Object>builder()
                 .put("imageId", AWS_EC2_CENTOS_IMAGE_ID)
-                .put("hardwareId", AbstractJcloudsLiveTest.AWS_EC2_SMALL_HARDWARE_ID)
+                .put("hardwareId", AbstractJcloudsLiveTest.AWS_EC2_MEDIUM_HARDWARE_ID)
                 .put("inboundPorts", ImmutableList.of(22))
                 .build();
         runTest(AWS_EC2_LOCATION_SPEC, obtainFlags);
     }
     
+    @Test(groups = {"Live"})
+    public void testEc2WinrmRebind() throws Exception {
+        ImmutableMap<String, Object> obtainFlags = ImmutableMap.<String,Object>builder()
+                .put("imageNameRegex", "Windows_Server-2012-R2_RTM-English-64Bit-Base-.*")
+                .put("imageOwner", "801119661308")
+                .put("hardwareId", AbstractJcloudsLiveTest.AWS_EC2_MEDIUM_HARDWARE_ID)
+                .put("useJcloudsSshInit", false)
+                .put("inboundPorts", ImmutableList.of(5985, 3389))
+                .build();
+        runTest(AWS_EC2_LOCATION_SPEC, obtainFlags);
+    }
+
     @Test(groups = {"Live"})
     public void testSoftlayerRebind() throws Exception {
         runTest(SOFTLAYER_LOCATION_SPEC, ImmutableMap.of("inboundPorts", ImmutableList.of(22)));
@@ -113,21 +131,31 @@ public class JcloudsRebindLiveTest extends RebindTestFixtureWithApp {
     protected void runTest(String locSpec, Map<String, ?> obtainFlags) throws Exception {
         JcloudsLocation location = (JcloudsLocation) mgmt().getLocationRegistry().resolve(locSpec);
         
-        JcloudsSshMachineLocation origMachine = obtainMachine(location, obtainFlags);
+        JcloudsMachineLocation origMachine = obtainMachine(location, obtainFlags);
         String origHostname = origMachine.getHostname();
         NodeMetadata origNode = origMachine.getNode();
-        Template origTemplate = origMachine.getTemplate();
-        assertSshable(origMachine);
+        if (origMachine instanceof JcloudsSshMachineLocation) {
+            Template origTemplate = origMachine.getTemplate(); // WinRM machines don't bother with template!
+        }
+        assertConnectable(origMachine);
 
         rebind();
         
-        // Check the machine is as before
-        JcloudsSshMachineLocation newMachine = (JcloudsSshMachineLocation) newManagementContext.getLocationManager().getLocation(origMachine.getId());
+        // Check the machine is as before; but won't have persisted node+template.
+        // We'll be able to re-create the node object by querying the cloud-provider again though.
+        JcloudsMachineLocation newMachine = (JcloudsMachineLocation) newManagementContext.getLocationManager().getLocation(origMachine.getId());
         JcloudsLocation newLocation = newMachine.getParent();
         String newHostname = newMachine.getHostname();
-        NodeMetadata newNode = newMachine.getNode();
-        Template newTemplate = newMachine.getTemplate();
-        assertSshable(newMachine);
+        if (newMachine instanceof JcloudsSshMachineLocation) {
+            assertFalse(((JcloudsSshMachineLocation)newMachine).getOptionalTemplate().isPresent());
+            assertNull(((JcloudsSshMachineLocation)newMachine).peekNode());
+        } else if (newMachine instanceof JcloudsWinRmMachineLocation) {
+            assertNull(((JcloudsWinRmMachineLocation)newMachine).peekNode());
+        } else {
+            fail("Unexpected new machine type: machine="+newMachine+"; type="+(newMachine == null ? null : newMachine.getClass()));
+        }
+        NodeMetadata newNode = newMachine.getOptionalNode().get();
+        assertConnectable(newMachine);
         
         assertEquals(newHostname, origHostname);
         assertEquals(origNode.getId(), newNode.getId());
@@ -153,29 +181,44 @@ public class JcloudsRebindLiveTest extends RebindTestFixtureWithApp {
         }
     }
 
+    protected void assertConnectable(MachineLocation machine) {
+        if (machine instanceof SshMachineLocation) {
+            assertSshable((SshMachineLocation)machine);
+        } else if (machine instanceof WinRmMachineLocation) {
+            assertWinrmable((WinRmMachineLocation)machine);
+        } else {
+            throw new UnsupportedOperationException("Unsupported machine type: machine="+machine+"; type="+(machine == null ? null : machine.getClass()));
+        }
+    }
+    
     protected void assertSshable(SshMachineLocation machine) {
         int result = machine.execScript("simplecommand", ImmutableList.of("true"));
         assertEquals(result, 0);
     }
 
+    protected void assertWinrmable(WinRmMachineLocation machine) {
+        WinRmToolResponse result = machine.executePsScript("echo mycmd");
+        assertEquals(result.getStatusCode(), 0, "status="+result.getStatusCode()+"; stdout="+result.getStdOut()+"; stderr="+result.getStdErr());
+    }
+
     // Use this utility method to ensure machines are released on tearDown
-    protected JcloudsSshMachineLocation obtainMachine(MachineProvisioningLocation<?> location, Map<?, ?> conf) throws Exception {
-        JcloudsSshMachineLocation result = (JcloudsSshMachineLocation)location.obtain(conf);
+    protected JcloudsMachineLocation obtainMachine(MachineProvisioningLocation<?> location, Map<?, ?> conf) throws Exception {
+        JcloudsMachineLocation result = (JcloudsMachineLocation)location.obtain(conf);
         machines.add(checkNotNull(result, "result"));
         return result;
     }
 
-    protected void releaseMachine(JcloudsSshMachineLocation machine) {
+    protected void releaseMachine(JcloudsMachineLocation machine) {
         if (!Locations.isManaged(machine)) return;
         machines.remove(machine);
         machine.getParent().release(machine);
     }
     
-    protected List<Exception> releaseMachineSafely(Iterable<? extends JcloudsSshMachineLocation> machines) {
+    protected List<Exception> releaseMachineSafely(Iterable<? extends JcloudsMachineLocation> machines) {
         List<Exception> exceptions = Lists.newArrayList();
-        List<JcloudsSshMachineLocation> machinesCopy = ImmutableList.copyOf(machines);
+        List<JcloudsMachineLocation> machinesCopy = ImmutableList.copyOf(machines);
         
-        for (JcloudsSshMachineLocation machine : machinesCopy) {
+        for (JcloudsMachineLocation machine : machinesCopy) {
             try {
                 releaseMachine(machine);
             } catch (Exception e) {

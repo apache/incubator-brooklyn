@@ -1,0 +1,329 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+     http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<location>
+  <brooklynVersion>0.9.0-20151120.1523</brooklynVersion>
+  <type>org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation</type>
+  <id>aKEcbxKN</id>
+  <displayName>ec2-54-254-23-53.ap-southeast-1.compute.amazonaws.com</displayName>
+  <parent>lCYB3mTb</parent>
+  <locationConfig>
+    <displayName>ec2-54-254-23-53.ap-southeast-1.compute.amazonaws.com</displayName>
+    <address>
+      <java.net.Inet4Address>ec2-54-254-23-53.ap-southeast-1.compute.amazonaws.com/54.254.23.53</java.net.Inet4Address>
+    </address>
+    <user>amp</user>
+    <privateKeyData>-----BEGIN RSA PRIVATE KEY-----
+myPrivateKey
+-----END RSA PRIVATE KEY-----
+</privateKeyData>
+    <config>
+      <java.util.Collections_-UnmodifiableMap>
+        <m class="MutableMap">
+          <privateKeyData>-----BEGIN RSA PRIVATE KEY-----
+myPrivateKey
+-----END RSA PRIVATE KEY-----
+</privateKeyData>
+        </m>
+      </java.util.Collections_-UnmodifiableMap>
+    </config>
+    <jcloudsParent>
+      <locationProxy>lCYB3mTb</locationProxy>
+    </jcloudsParent>
+    <node>
+      <org.jclouds.compute.domain.internal.NodeMetadataImpl>
+        <providerId>i-56fd53f2</providerId>
+        <name>brooklyn-nv6pd3-amp-auto-qa-post-un67-postgresql-ryhi-b87c</name>
+        <location class="org.jclouds.domain.internal.LocationImpl">
+          <scope>ZONE</scope>
+          <id>ap-southeast-1a</id>
+          <description>ap-southeast-1a</description>
+          <parent class="org.jclouds.domain.internal.LocationImpl">
+            <scope>REGION</scope>
+            <id>ap-southeast-1</id>
+            <description>ap-southeast-1</description>
+            <parent class="org.jclouds.domain.internal.LocationImpl">
+              <scope>PROVIDER</scope>
+              <id>aws-ec2</id>
+              <description>https://ec2.us-east-1.amazonaws.com</description>
+              <iso3166Codes class="com.google.common.collect.RegularImmutableSet">
+                <string>US-VA</string>
+                <string>US-CA</string>
+                <string>US-OR</string>
+                <string>BR-SP</string>
+                <string>IE</string>
+                <string>DE-HE</string>
+                <string>SG</string>
+                <string>AU-NSW</string>
+                <string>JP-13</string>
+              </iso3166Codes>
+              <metadata class="com.google.common.collect.EmptyImmutableBiMap"/>
+            </parent>
+            <iso3166Codes class="com.google.common.collect.SingletonImmutableSet">
+              <string>SG</string>
+            </iso3166Codes>
+            <metadata class="com.google.common.collect.EmptyImmutableBiMap" reference="../parent/metadata"/>
+          </parent>
+          <iso3166Codes class="com.google.common.collect.SingletonImmutableSet" reference="../parent/iso3166Codes"/>
+          <metadata class="com.google.common.collect.EmptyImmutableBiMap" reference="../parent/parent/metadata"/>
+        </location>
+        <userMetadata>
+          <Name>brooklyn-nv6pd3-amp-auto-qa-post-un67-postgresql-ryhi-b87c</Name>
+          <entry key="brooklyn-user">amp</entry>
+          <entry key="brooklyn-app-id">Un679FS8</entry>
+          <entry key="brooklyn-app-name">(auto-qa) postgres @ AWS Singapore</entry>
+          <entry key="brooklyn-entity-id">RyHiwukc</entry>
+          <entry key="brooklyn-entity-name">PostgreSQL Server</entry>
+          <entry key="brooklyn-server-creation-date">2015-09-24-1456</entry>
+        </userMetadata>
+        <id>ap-southeast-1/i-56fd53f2</id>
+        <type>NODE</type>
+        <tags class="com.google.common.collect.EmptyImmutableSet"/>
+        <status>RUNNING</status>
+        <backendStatus>running</backendStatus>
+        <loginPort>22</loginPort>
+        <publicAddresses class="com.google.common.collect.SingletonImmutableSet">
+          <string>54.254.23.53</string>
+        </publicAddresses>
+        <privateAddresses class="com.google.common.collect.SingletonImmutableSet">
+          <string>10.144.66.5</string>
+        </privateAddresses>
+        <credentials>
+          <identity>amp</identity>
+          <credential>-----BEGIN RSA PRIVATE KEY-----
+myPrivateKey
+-----END RSA PRIVATE KEY-----
+</credential>
+          <authenticateSudo>false</authenticateSudo>
+          <password class="com.google.common.base.Absent"/>
+          <privateKey class="com.google.common.base.Present">
+            <reference class="string">-----BEGIN RSA PRIVATE KEY-----
+myPrivateKey
+-----END RSA PRIVATE KEY-----
+</reference>
+          </privateKey>
+        </credentials>
+        <group>brooklyn-nv6pd3-amp-auto-qa-post-un67-postgresql-ryhi</group>
+        <imageId>ap-southeast-1/ami-42bfe910</imageId>
+        <hardware class="org.jclouds.compute.domain.internal.HardwareImpl">
+          <providerId>m1.medium</providerId>
+          <userMetadata/>
+          <id>m1.medium</id>
+          <type>HARDWARE</type>
+          <tags class="com.google.common.collect.EmptyImmutableSet" reference="../../tags"/>
+          <processors class="ImmutableList">
+            <org.jclouds.compute.domain.Processor>
+              <cores>1.0</cores>
+              <speed>2.0</speed>
+            </org.jclouds.compute.domain.Processor>
+          </processors>
+          <ram>3750</ram>
+          <volumes class="ImmutableList">
+            <org.jclouds.compute.domain.internal.VolumeImpl>
+              <type>LOCAL</type>
+              <size>420.0</size>
+              <device>/dev/sdb</device>
+              <bootDevice>false</bootDevice>
+              <durable>false</durable>
+            </org.jclouds.compute.domain.internal.VolumeImpl>
+            <org.jclouds.compute.domain.internal.VolumeImpl>
+              <type>LOCAL</type>
+              <size>420.0</size>
+              <device>/dev/sdc</device>
+              <bootDevice>false</bootDevice>
+              <durable>false</durable>
+            </org.jclouds.compute.domain.internal.VolumeImpl>
+            <org.jclouds.compute.domain.internal.VolumeImpl>
+              <id>vol-7e244896</id>
+              <type>SAN</type>
+              <device>/dev/sda1</device>
+              <bootDevice>true</bootDevice>
+              <durable>true</durable>
+            </org.jclouds.compute.domain.internal.VolumeImpl>
+          </volumes>
+          <supportsImage class="com.google.common.base.Predicates$AndPredicate">
+            <components>
+              <com.google.common.base.Predicates_-ObjectPredicate>ALWAYS_TRUE</com.google.common.base.Predicates_-ObjectPredicate>
+              <org.jclouds.ec2.compute.domain.EC2HardwareBuilder_-RequiresVirtualizationType>
+                <type>PARAVIRTUAL</type>
+              </org.jclouds.ec2.compute.domain.EC2HardwareBuilder_-RequiresVirtualizationType>
+              <com.google.common.base.Predicates_-ObjectPredicate>ALWAYS_TRUE</com.google.common.base.Predicates_-ObjectPredicate>
+              <com.google.common.base.Predicates_-ObjectPredicate>ALWAYS_TRUE</com.google.common.base.Predicates_-ObjectPredicate>
+            </components>
+          </supportsImage>
+          <hypervisor>xen</hypervisor>
+          <deprecated>false</deprecated>
+        </hardware>
+        <os>
+          <family>CENTOS</family>
+          <arch>paravirtual</arch>
+          <version>6.5</version>
+          <description>411009282317/RightImage_CentOS_6.5_x64_v13.5.2.2_EBS</description>
+          <is64Bit>true</is64Bit>
+        </os>
+        <hostname>ip-10-144-66-5</hostname>
+      </org.jclouds.compute.domain.internal.NodeMetadataImpl>
+    </node>
+    <brooklyn.ssh.config.port type="int">22</brooklyn.ssh.config.port>
+    <availabilityZone>ap-southeast-1a</availabilityZone>
+    <region>ap-southeast-1</region>
+    <callerContext>
+      <null/>
+    </callerContext>
+    <detectMachineDetails type="boolean">true</detectMachineDetails>
+    <portforwarding.enabled type="boolean">false</portforwarding.enabled>
+    <template>
+      <org.jclouds.compute.domain.internal.TemplateImpl>
+        <image class="org.jclouds.compute.domain.internal.ImageImpl">
+          <providerId>ami-42bfe910</providerId>
+          <name>RightImage_CentOS_6.5_x64_v13.5.2.2_EBS</name>
+          <location class="org.jclouds.domain.internal.LocationImpl" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/location/parent"/>
+          <userMetadata>
+            <owner>411009282317</owner>
+            <rootDeviceType>ebs</rootDeviceType>
+            <virtualizationType>paravirtual</virtualizationType>
+            <hypervisor>xen</hypervisor>
+          </userMetadata>
+          <id>ap-southeast-1/ami-42bfe910</id>
+          <type>IMAGE</type>
+          <tags class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <operatingSystem reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/os"/>
+          <status>AVAILABLE</status>
+          <backendStatus>available</backendStatus>
+          <version>13.5.2.2_EBS</version>
+          <description>RightImage_CentOS_6.5_x64_v13.5.2.2_EBS</description>
+          <defaultCredentials>
+            <identity>root</identity>
+            <authenticateSudo>false</authenticateSudo>
+            <password class="com.google.common.base.Absent" reference="../../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+            <privateKey class="com.google.common.base.Absent" reference="../../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+          </defaultCredentials>
+        </image>
+        <hardware class="org.jclouds.compute.domain.internal.HardwareImpl">
+          <providerId>m1.medium</providerId>
+          <userMetadata/>
+          <id>m1.medium</id>
+          <type>HARDWARE</type>
+          <tags class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <processors class="ImmutableList" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/hardware/processors"/>
+          <ram>3750</ram>
+          <volumes class="ImmutableList">
+            <org.jclouds.compute.domain.internal.VolumeImpl>
+              <type>LOCAL</type>
+              <size>10.0</size>
+              <device>/dev/sda1</device>
+              <bootDevice>true</bootDevice>
+              <durable>false</durable>
+            </org.jclouds.compute.domain.internal.VolumeImpl>
+            <org.jclouds.compute.domain.internal.VolumeImpl reference="../../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/hardware/volumes/org.jclouds.compute.domain.internal.VolumeImpl"/>
+            <org.jclouds.compute.domain.internal.VolumeImpl reference="../../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/hardware/volumes/org.jclouds.compute.domain.internal.VolumeImpl[2]"/>
+          </volumes>
+          <supportsImage class="com.google.common.base.Predicates$AndPredicate" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/hardware/supportsImage"/>
+          <deprecated>true</deprecated>
+        </hardware>
+        <location class="org.jclouds.domain.internal.LocationImpl" reference="../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/location/parent"/>
+        <options class="org.jclouds.aws.ec2.compute.AWSEC2TemplateOptions">
+          <port>-1</port>
+          <seconds>-1</seconds>
+          <runAsRoot>true</runAsRoot>
+          <blockOnComplete>true</blockOnComplete>
+          <wrapInInitScript>true</wrapInInitScript>
+          <inboundPorts class="com.google.common.collect.RegularImmutableSet">
+            <int>22</int>
+            <int>5432</int>
+          </inboundPorts>
+          <tags class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <securityGroups class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <blockUntilRunning>true</blockUntilRunning>
+          <userMetadata>
+            <Name>brooklyn-nv6pd3-amp-auto-qa-post-un67-postgresql-ryhi-b87c</Name>
+            <entry key="brooklyn-user">amp</entry>
+            <entry key="brooklyn-app-id">Un679FS8</entry>
+            <entry key="brooklyn-app-name">(auto-qa) postgres @ AWS Singapore</entry>
+            <entry key="brooklyn-entity-id">RyHiwukc</entry>
+            <entry key="brooklyn-entity-name">PostgreSQL Server</entry>
+            <entry key="brooklyn-server-creation-date">2015-09-24-1456</entry>
+          </userMetadata>
+          <nodeNames class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <networks class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <groupNames class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <noKeyPair>false</noKeyPair>
+          <userData class="com.google.common.primitives.Bytes$ByteArrayAsList">
+            <array>I2Nsb3VkLWNvbmZpZwpyZXBvX3VwZ3JhZGU6IG5vbmUK</array>
+            <start>0</start>
+            <end>33</end>
+          </userData>
+          <blockDeviceMappings>
+            <contents>
+              <null/>
+              <null/>
+              <null/>
+              <null/>
+            </contents>
+            <size>0</size>
+          </blockDeviceMappings>
+          <monitoringEnabled>false</monitoringEnabled>
+          <noPlacementGroup>false</noPlacementGroup>
+          <spotOptions>
+            <formParameters class="com.google.common.collect.LinkedHashMultimap" serialization="custom">
+              <unserializable-parents/>
+              <com.google.common.collect.LinkedHashMultimap>
+                <default/>
+                <int>2</int>
+                <int>0</int>
+                <int>0</int>
+              </com.google.common.collect.LinkedHashMultimap>
+            </formParameters>
+            <queryParameters class="com.google.common.collect.LinkedHashMultimap" serialization="custom">
+              <unserializable-parents/>
+              <com.google.common.collect.LinkedHashMultimap>
+                <default/>
+                <int>2</int>
+                <int>0</int>
+                <int>0</int>
+              </com.google.common.collect.LinkedHashMultimap>
+            </queryParameters>
+            <headers class="com.google.common.collect.LinkedHashMultimap" serialization="custom">
+              <unserializable-parents/>
+              <com.google.common.collect.LinkedHashMultimap>
+                <default/>
+                <int>2</int>
+                <int>0</int>
+                <int>0</int>
+              </com.google.common.collect.LinkedHashMultimap>
+            </headers>
+          </spotOptions>
+          <groupIds class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+        </options>
+      </org.jclouds.compute.domain.internal.TemplateImpl>
+    </template>
+    <usedPorts>
+      <set/>
+    </usedPorts>
+    <tags>
+      <set/>
+    </tags>
+  </locationConfig>
+  <locationConfigUnused>
+    <string>displayName</string>
+    <string>config</string>
+    <string>availabilityZone</string>
+    <string>region</string>
+    <string>portforwarding.enabled</string>
+  </locationConfigUnused>
+</location>
