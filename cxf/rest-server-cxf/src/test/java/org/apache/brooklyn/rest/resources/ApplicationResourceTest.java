@@ -122,6 +122,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
+        setEndpointAddress(ENDPOINT_ADDRESS_HTTP);
         addDefaultRestApi(sf);
     }
 

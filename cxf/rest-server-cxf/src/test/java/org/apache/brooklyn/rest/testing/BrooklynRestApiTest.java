@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.testing;
 
+import java.util.List;
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
@@ -25,6 +26,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.rest.resources.AbstractBrooklynRestResource;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
@@ -42,7 +44,13 @@ public abstract class BrooklynRestApiTest {
     protected boolean useLocalScannedCatalog = false;
     protected TestShutdownHandler shutdownListener = createShutdownHandler();
 
-    protected final static String ENDPOINT_ADDRESS = "local://v1";
+    protected final static String ENDPOINT_ADDRESS_LOCAL = "local://";
+    protected final static String ENDPOINT_ADDRESS_HTTP = "http://localhost:9998/";
+
+    private String endpointAddress = ENDPOINT_ADDRESS_LOCAL;
+
+    protected List<AbstractBrooklynRestResource> resources = null;
+    protected List<Object> providers = null;
 
     @BeforeMethod(alwaysRun = true)
     public void resetShutdownListener() {
@@ -53,6 +61,8 @@ public abstract class BrooklynRestApiTest {
     public void destroyManagementContext() {
         if (manager!=null) {
             Entities.destroyAll(manager);
+            providers = null;
+            resources = null;
             manager = null;
         }
     }
@@ -86,6 +96,14 @@ public abstract class BrooklynRestApiTest {
         return manager;
     }
     
+    protected void setEndpointAddress(String endpointAddress) {
+        this.endpointAddress = endpointAddress;
+    }
+
+    protected String getEndpointAddress() {
+        return this.endpointAddress;
+    }
+
     protected ObjectMapper mapper() {
         return BrooklynJacksonJsonProvider.findSharedObjectMapper(null, getManagementContext());
     }
@@ -95,14 +113,14 @@ public abstract class BrooklynRestApiTest {
     }
 
     public WebClient client() {
-        return WebClient.create(ENDPOINT_ADDRESS);
+        return WebClient.create(getEndpointAddress(), providers);
     }
 
     public <T> T resource(Class<T> clazz) {
-        return JAXRSClientFactory.create(ENDPOINT_ADDRESS, clazz);
+        return JAXRSClientFactory.create(getEndpointAddress(), clazz);
     }
 
     public <T> T resource(String uri, Class<T> clazz) {
-        return JAXRSClientFactory.create(ENDPOINT_ADDRESS + uri, clazz);
+        return JAXRSClientFactory.create(getEndpointAddress() + uri, clazz);
     }
 }

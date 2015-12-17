@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.testing;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import static org.testng.Assert.assertTrue;
 
@@ -62,8 +63,8 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         if (server == null) {
             JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
             configureCXF(sf);
-            sf.setAddress(ENDPOINT_ADDRESS);
-            sf.setEndpointName(null);
+            sf.setAddress(getEndpointAddress());
+            sf.setFeatures(ImmutableList.of(new org.apache.cxf.feature.LoggingFeature()));
             server = sf.create();
         }
     }
@@ -87,10 +88,15 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
     protected abstract void configureCXF(JAXRSServerFactoryBean sf);
 
     protected void addDefaultRestApi(JAXRSServerFactoryBean sf) {
-        for (Object resource : BrooklynRestApi.getResources()) {
+        if (resources == null)
+            resources = BrooklynRestApi.getResources(getManagementContext());
+        for (Object resource : resources) {
             sf.setResourceProvider(new SingletonResourceProvider(resource));
         }
-        sf.setProviders(BrooklynRestApi.getProviders());
+
+        if (providers == null)
+            providers = BrooklynRestApi.getProviders(getManagementContext());
+        sf.setProviders(providers);
     }
 
 

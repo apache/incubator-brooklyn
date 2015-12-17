@@ -21,6 +21,8 @@ package org.apache.brooklyn.rest.util.json;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.ext.MessageBodyReader;
+import javax.ws.rs.ext.MessageBodyWriter;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.config.ConfigKey;
@@ -38,7 +40,9 @@ import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements ManagementContextInjectable {
+// CXF only looks at the interfaces of this class to determine if the Provider is a MessageBodyWriter/Reader
+public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements ManagementContextInjectable,
+        MessageBodyWriter<Object>, MessageBodyReader<Object> {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynJacksonJsonProvider.class);
 
@@ -94,7 +98,7 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
                 ObjectMapper mapper = (ObjectMapper) servletContext.getAttribute(BROOKLYN_REST_OBJECT_MAPPER);
                 if (mapper != null) return mapper;
 
-                mapper = newPrivateObjectMapper(getManagementContext(servletContext));
+                mapper = newPrivateObjectMapper(mgmt != null ? mgmt : getManagementContext(servletContext));
                 servletContext.setAttribute(BROOKLYN_REST_OBJECT_MAPPER, mapper);
                 return mapper;
             }

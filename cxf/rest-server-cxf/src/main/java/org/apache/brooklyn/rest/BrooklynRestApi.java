@@ -20,6 +20,8 @@ package org.apache.brooklyn.rest;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 
 import org.apache.brooklyn.rest.resources.AbstractBrooklynRestResource;
 import org.apache.brooklyn.rest.resources.AccessResource;
@@ -45,7 +47,7 @@ import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 @SuppressWarnings("deprecation")
 public class BrooklynRestApi {
 
-    public static List<AbstractBrooklynRestResource> getResources() {
+    public static List<AbstractBrooklynRestResource> getResources(ManagementContext mgmt) {
         List<AbstractBrooklynRestResource> resources = new ArrayList<>();
         resources.add(new LocationResource());
         resources.add(new CatalogResource());
@@ -62,15 +64,29 @@ public class BrooklynRestApi {
         resources.add(new ServerResource());
         resources.add(new UsageResource());
         resources.add(new VersionResource());
+
+        for (Object resource : resources ) {
+            if (resource instanceof ManagementContextInjectable) {
+                ((ManagementContextInjectable)resource).setManagementContext(mgmt);
+            }
+        }
+
         return resources;
     }
 
-    public static List<Object> getProviders() {
-        List<Object> resources = new ArrayList<>();
-        resources.add(new DefaultExceptionMapper());
-        resources.add(new BrooklynJacksonJsonProvider());
-        resources.add(new FormMapProvider());
-        return resources;
+    public static List<Object> getProviders(ManagementContext mgmt) {
+        List<Object> providers = new ArrayList<>();
+        providers.add(new DefaultExceptionMapper());
+        providers.add(new BrooklynJacksonJsonProvider());
+        providers.add(new FormMapProvider());
+
+        for (Object provider : providers ) {
+            if (provider instanceof ManagementContextInjectable) {
+                ((ManagementContextInjectable)provider).setManagementContext(mgmt);
+            }
+        }
+
+        return providers;
     }
 
 }

@@ -41,7 +41,7 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
     // (seems there is no way to make this optional so note it _must_ be injected;
     // most of the time that happens for free, but with test framework it doesn't,
     // so we have set up a NullServletContextProvider in our tests) 
-    @Context ServletContext servletContext;
+    private @Context ServletContext servletContext;
     
     private ManagementContext managementContext;
     private BrooklynRestResourceUtils brooklynRestResourceUtils;
