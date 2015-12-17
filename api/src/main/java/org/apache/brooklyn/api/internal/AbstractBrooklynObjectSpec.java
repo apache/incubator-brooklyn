@@ -136,7 +136,12 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
 
     /** A list of configuration options that the entity supports. */
     public final List<SpecParameter<?>> getParameters() {
-        return ImmutableList.copyOf(parameters);
+        //Could be null after rebind
+        if (parameters != null) {
+            return ImmutableList.copyOf(parameters);
+        } else {
+            return ImmutableList.of();
+        }
     }
 
     // TODO Duplicates method in BasicEntityTypeRegistry and InternalEntityFactory.isNewStyleEntity

@@ -217,7 +217,12 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
     /** @see ConfigKey#getConstraint() */
     @Override @Nonnull
     public Predicate<? super T> getConstraint() {
-        return constraint;
+        // Could be null after rebinding
+        if (constraint != null) {
+            return constraint;
+        } else {
+            return Predicates.alwaysTrue();
+        }
     }
 
     /** @see ConfigKey#isValueValid(T) */
