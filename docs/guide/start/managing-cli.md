@@ -108,6 +108,12 @@ onbox.base.dir.resolved   true
 install.unique_label      TomcatServer_7.0.65   
 {% endhighlight %}
 
+If an entity name is annoyingly long to type, the entity can be renamed:
+
+{% highlight bash %}
+$ br app Tomcat entity TomcatServer:Wx7r rename server
+{% endhighlight %}
+
 ## Sensors
 
 "Sensors" on entities provide a real-time picture of the status and operation of an entity of the application.

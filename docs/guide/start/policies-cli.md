@@ -24,11 +24,14 @@ You will need at least five machines for this example, one for the DB, and four 
 (but you can reduce this by changing the "maxPoolSize" below.
 
 {% highlight yaml %}
-name: java-cluster-db-policy-example
+name: cluster
+
+location:
+  tbd
+
 services:
 - serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
-  name: My Web with Policy
-  location: localhost
+  name: webcluster
   brooklyn.config:
     wars.root: http://search.maven.org/remotecontent?filepath=io/brooklyn/example/brooklyn-example-hello-world-sql-webapp/0.6.0-M2/brooklyn-example-hello-world-sql-webapp-0.6.0-M2.war
     http.port: 9280+
@@ -47,14 +50,13 @@ services:
       
 - serviceType: brooklyn.entity.database.mysql.MySqlNode
   id: db
-  name: My DB
+  name: mysql
   location: localhost
   brooklyn.config:
-    # this also uses the flag rather than the config key
     creationScriptUrl: https://bit.ly/brooklyn-visitors-creation-script
 {% endhighlight %}
 
-Explore this app using the 'bk list application' and other commands from the previous section.
+Explore this app using the 'application' and other commands from the previous section.
 
 ## Configuring Dependencies
 The App above illustrates how one component in a blueprint can be configured with information relating to one of the other 
@@ -73,8 +75,46 @@ allows expressions referring to Brooklyn's management information to be embedded
 
 The app server cluster has an `AutoScalerPolicy`and the loadbalancer has a `Controller targets tracker` policy.
 
-Use the Applications tab in the web console to drill down into the Policies section of the ControlledDynamicWebAppCluster. 
-You will see that the `AutoScalerPolicy` is running.
+For example
+{% highlight yaml %}
+$ br app cluster ent webcluster policy
+Id         Name                                                      State   
+mMZngBnb   org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy   RUNNING   
+{% endhighlight %}
+
+You can investigate the status of the `AutoScalerPolicy` with 
+
+{% highlight yaml %}
+$ br app cluster ent webcluster policy org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
+"RUNNING"
+{% endhighlight %}
+
+A more detailed description of the parameters of the policy can be obtained with
+{% highlight yaml %}
+$ br app cluster ent webcluster policy org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
+Name                                      Value                                                                Description   
+autoscaler.currentSizeOperator            org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy$4@9393100       
+autoscaler.entityWithMetric                                                                                    The Entity with the metric that will be monitored   
+autoscaler.maxPoolSize                    4                                                                       
+autoscaler.maxReachedNotificationDelay    0ms                                                                  Time that we consistently wanted to go above the maxPoolSize for, after which the maxSizeReachedSensor (if any) will be emitted   
+autoscaler.maxSizeReachedSensor                                                                                Sensor for which a notification will be emitted (on the associated entity) when we consistently wanted to resize the pool above the max allowed size, for maxReachedNotificationDelay milliseconds   
+autoscaler.metric                         Sensor: webapp.reqs.perSec.windowed.perNode (java.lang.Double)          
+autoscaler.metricLowerBound               10                                                                   The lower bound of the monitored metric. Below this the policy will resize down   
+autoscaler.metricUpperBound               100                                                                  The upper bound of the monitored metric. Above this the policy will resize up   
+autoscaler.minPeriodBetweenExecs          100ms                                                                   
+autoscaler.minPoolSize                    1                                                                       
+autoscaler.poolColdSensor                 Sensor: resizablepool.cold (java.util.Map)                              
+autoscaler.poolHotSensor                  Sensor: resizablepool.hot (java.util.Map)                               
+autoscaler.poolOkSensor                   Sensor: resizablepool.cold (java.util.Map)                              
+autoscaler.resizeDownIterationIncrement   1                                                                    Batch size for resizing down; the size will be decreased by a multiple of this value   
+autoscaler.resizeDownIterationMax         2147483647                                                           Maximum change to the size on a single iteration when scaling down   
+autoscaler.resizeDownStabilizationDelay   0ms                                                                     
+autoscaler.resizeOperator                 org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy$3@387a7e10      
+autoscaler.resizeUpIterationIncrement     1                                                                    Batch size for resizing up; the size will be increased by a multiple of this value   
+autoscaler.resizeUpIterationMax           2147483647                                                           Maximum change to the size on a single iteration when scaling up   
+autoscaler.resizeUpStabilizationDelay     0ms                                               
+{% endhighlight %}
+
 
 The loadbalancer's `Controller targets tracker` policy ensures that the loadbalancer is updated as the cluster size changes.
 
@@ -88,22 +128,6 @@ plan [here](https://github.com/apache/incubator-brooklyn/blob/master/examples/si
 As load is added, Apache Brooklyn requests a new cloud machine, creates a new app server, and adds it to the cluster. 
 As load is removed, servers are removed from the cluster, and the infrastructure is handed back to the cloud.
 
-{% highlight bash %}
-$ br list application
-Id         Name                             Status    Location   
-AQT22sAj   java-cluster-db-policy-example   RUNNING   koWi1cvr   
-$ br list entities AQT22sAj
-Id         Name                 Type   
-JT5eTIc5   My Web with Policy   org.apache.brooklyn.entity.webapp.ControlledDynamicWebAppCluster   
-cyXBexRx   My DB                org.apache.brooklyn.entity.database.mysql.MySqlNode   
-$ br show entity AQT22sAj JT5eTIc5
-Id         Name                                                                                                                          Type   
-dAaReeKJ   Cluster of TomcatServer (FixedListMachineProvisioningLocation{id=koWi1cvr, name=FixedListMachineProvisioningLocation:koWi})   org.apache.brooklyn.entity.webapp.DynamicWebAppCluster   
-z6oxo0pC   NginxController:z6ox                                                                                                          org.apache.brooklyn.entity.proxy.nginx.NginxController   
-$ br list policies AQT22sAj z6oxo0pC
-Name                         State   
-Controller targets tracker   RUNNING   
-{% endhighlight %}
 
 ## Under the Covers
 
@@ -111,24 +135,31 @@ The `AutoScalerPolicy` here is configured to respond to the sensor
 reporting requests per second per node, invoking the default `resize` effector.
 By updating on the policy, you can configure it to respond to a much lower threshhold
 or set long stabilization delays (the period before it scales out or back).
-{% highlight bash %}
-TODO: example of command to update a policy
-{% endhighlight %}
 
-An even simpler test is to manually suspend the policy, by invoking "Suspend" on it.
+At present the CLI does not support a command to update a policy.
+
+However it is possible to manually suspend the policy, by 
 
 {% highlight bash %}
-TODO design this command
+$ br app cluster ent webcluster stop-policy org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
+
 {% endhighlight %}
 
 You can then invoke a `resize` using the appropriate effector:
 {% highlight bash %}
-TODO
+$ br app cluster ent webcluster effector resize invoke -P desiredSize=3
 {% endhighlight %}
 
 On resize, new nodes are created and configured, 
 and in this case a policy on the nginx node reconfigures nginx whenever the set of active
 targets changes.
+
+The policy can then be re-enabled with start-policy:
+
+{% highlight bash %}
+$ br app cluster ent webcluster start-policy org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
+
+{% endhighlight %}
 
 
 ## Next
