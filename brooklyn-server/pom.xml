@@ -127,7 +127,7 @@
         <mockwebserver.version>20121111</mockwebserver.version>
         <freemarker.version>2.3.22</freemarker.version>
         <commons-io.version>2.4</commons-io.version>
-        <hazelcast.version>3.0</hazelcast.version>
+        <hazelcast.version>3.5.4</hazelcast.version>
         <jsonPath.version>2.0.0</jsonPath.version>
         <commons-compress.version>1.4</commons-compress.version>
         <qpid.version>0.20</qpid.version>
