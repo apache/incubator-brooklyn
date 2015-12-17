@@ -79,7 +79,7 @@ import org.eclipse.jetty.server.NetworkConnector;
  * BrooklynLauncher has a more full-featured CLI way to start, 
  * but if you want more control you can:
  * <li> take the WAR this project builds (REST API) -- NB probably want the unshaded one (containing all deps)
- * <li> take the WAR from the jsgui project _and_ this WAR and combine them 
+ * <li> take the WAR from the brooklyn-jsgui project (brooklyn-ui repo) _and_ this WAR and combine them
  *      (this one should run as a filter on the others, _not_ as a ResourceCollection where they fight over who's got root)
  * <li> programmatically install things, following the examples herein; 
  *      in particular {@link #installAsServletFilter(ServletContextHandler)} is quite handy! 
@@ -225,9 +225,9 @@ public class BrooklynRestApiLauncher {
         // here we run with the JS GUI, for convenience, if we can find it, else set up an empty dir
         // TODO pretty sure there is an option to monitor this dir and load changes to static content
         // NOTE: When running Brooklyn from an IDE (i.e. by launching BrooklynJavascriptGuiLauncher.main())
-        // you will need to ensure that the working directory is set to the jsgui folder. For IntelliJ,
-        // set the 'Working directory' of the Run/Debug Configuration to $MODULE_DIR/../jsgui.
-        // For Eclipse, use the default option of ${workspace_loc:brooklyn-jsgui}.
+        // you will need to ensure that the working directory is set to the brooklyn-ui repo folder. For IntelliJ,
+        // set the 'Working directory' of the Run/Debug Configuration to $MODULE_DIR$/brooklyn-server/launcher.
+        // For Eclipse, use the default option of ${workspace_loc:brooklyn-launcher}.
         // If the working directory is not set correctly, Brooklyn will be unable to find the jsgui .war
         // file and the 'gui not available' message will be shown.
         context.setWar(this.deployJsgui && findJsguiWebapp() != null
@@ -384,8 +384,8 @@ public class BrooklynRestApiLauncher {
     private static String findJsguiWebapp() {
         // could also look in maven repo ?
         return Optional
-                .fromNullable(findMatchingFile("../jsgui/src/main/webapp"))
-                .or(findMatchingFile("../jsgui/target/*.war"))
+                .fromNullable(findMatchingFile("../../brooklyn-ui/src/main/webapp"))
+                .or(findMatchingFile("../../brooklyn-ui/target/*.war"))
                 .orNull();
     }
 

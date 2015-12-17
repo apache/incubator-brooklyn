@@ -49,8 +49,8 @@ public class BrooklynJavascriptGuiLauncher {
     public static void main(String[] args) throws Exception {
         // NOTE: When running Brooklyn from an IDE (i.e. by launching BrooklynJavascriptGuiLauncher.main())
         // you will need to ensure that the working directory is set to the jsgui folder. For IntelliJ,
-        // set the 'Working directory' of the Run/Debug Configuration to $MODULE_DIR$/../jsgui.
-        // For Eclipse, use the default option of ${workspace_loc:brooklyn-jsgui}.
+        // set the 'Working directory' of the Run/Debug Configuration to $MODULE_DIR$/brooklyn-server/launcher.
+        // For Eclipse, use the default option of ${workspace_loc:brooklyn-launcher}.
         // If the working directory is not set correctly, Brooklyn will be unable to find the jsgui .war
         // file and the 'gui not available' message will be shown.
         startJavascriptAndRest();
@@ -66,9 +66,10 @@ public class BrooklynJavascriptGuiLauncher {
     }
 
     /** not much fun without a REST client. but TODO we should make it so the REST endpoint can be configured. */
+    /** relative path to webapp assumes brooklyn-server has been checked out at the same level as brooklyn-ui  */
     public static Server startJavascriptWithoutRest() throws Exception {
-        WebAppContext context = new WebAppContext("./src/main/webapp", "/");
-        
+        WebAppContext context = new WebAppContext("../../brooklyn-ui/src/main/webapp", "/");
+
         Server server = new Server(new InetSocketAddress(Networking.LOOPBACK, Networking.nextAvailablePort(FAVOURITE_PORT)));
         server.setHandler(context);
         server.start();

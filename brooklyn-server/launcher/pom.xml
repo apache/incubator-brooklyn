@@ -77,6 +77,14 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+             <groupId>org.apache.brooklyn</groupId>     
+             <artifactId>brooklyn-jsgui</artifactId>      
+             <type>war</type>       
+             <!-- Needed during build time only -->     
+             <scope>provided</scope>        
+             <version>${project.version}</version>      
+        </dependency>
+        <dependency>
             <groupId>org.apache.felix</groupId>
             <artifactId>org.apache.felix.framework</artifactId>
         </dependency>
@@ -204,6 +212,35 @@
 
     <build>
         <plugins>
+
+             <plugin>
+                 <artifactId>maven-dependency-plugin</artifactId>
+                 <!-- copy the WAR so it is available on the classpath for programmatic deployment -->
+                 <executions>
+                     <execution>
+                         <id>copy</id>
+                         <phase>process-classes</phase>
+                         <goals>
+                             <goal>copy</goal>
+                         </goals>
+                         <configuration>
+                             <artifactItems>
+                                 <artifactItem>
+                                     <!-- this can fail in eclipse trying to copy _from_ target/classes.
+                                          see http://jira.codehaus.org/browse/MDEP-259 -->
+                                     <groupId>${project.groupId}</groupId>
+                                     <artifactId>brooklyn-jsgui</artifactId>
+                                     <version>${project.version}</version>
+                                     <type>war</type>
+                                     <overWrite>true</overWrite>
+                                     <outputDirectory>target/classes</outputDirectory>
+                                     <destFileName>brooklyn.war</destFileName>
+                                 </artifactItem>
+                             </artifactItems>
+                         </configuration>
+                     </execution>
+                 </executions>
+             </plugin>
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
@@ -220,6 +257,26 @@
                 <configuration>
                     <generateReports>false</generateReports>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>exclude-jsgui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>no-jsgui</classifier>
+                            <excludes>
+                                <exclude>brooklyn.war</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
