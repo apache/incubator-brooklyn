@@ -117,7 +117,7 @@ public class MethodCoercions {
                 if (parameterTypes.length != numOptionParams) return false;
 
                 for (int paramCount = 0; paramCount < numOptionParams; paramCount++) {
-                    if (!TypeCoercions.tryCoerce(((List) arguments).get(paramCount),
+                    if (!TypeCoercions.tryCoerce(((List<?>) arguments).get(paramCount),
                             TypeToken.of(parameterTypes[paramCount])).isPresentAndNonNull()) return false;
                 }
                 return true;
@@ -141,7 +141,7 @@ public class MethodCoercions {
         if (matchingMethod.isPresent()) {
             Method method = matchingMethod.get();
             try {
-                int numOptionParams = ((List)arguments).size();
+                int numOptionParams = ((List<?>)arguments).size();
                 Object[] coercedArguments = new Object[numOptionParams];
                 for (int paramCount = 0; paramCount < numOptionParams; paramCount++) {
                     Object argument = arguments.get(paramCount);
