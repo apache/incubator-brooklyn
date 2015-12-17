@@ -730,7 +730,7 @@ public class BrooklynLauncher {
                 LOG.debug("Resolved symbolic link: {} -> {}", f, f2);
             }
         } catch (IOException e) {
-            LOG.warn("Could not determine canonical name of global properties file", e);
+            LOG.warn("Could not determine canonical name of file "+f+"; returning original file", e);
         }
         return f2;
     }
