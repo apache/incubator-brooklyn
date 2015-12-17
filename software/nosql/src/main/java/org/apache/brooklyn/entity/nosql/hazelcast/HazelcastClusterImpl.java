@@ -44,9 +44,10 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
     
     @Override
     protected EntitySpec<?> getMemberSpec() {
-        EntitySpec<?> spec = EntitySpec.create(getConfig(MEMBER_SPEC, EntitySpec.create(HazelcastNode.class)));
+        EntitySpec<?> spec = EntitySpec.create(config().get(HazelcastCluster.MEMBER_SPEC));
         
-        spec.configure(HazelcastNode.GROUP_NAME, getConfig(HazelcastClusterImpl.CLUSTER_NAME));
+        spec.configure(HazelcastNode.NODE_CLUSTER_NAME, config().get(HazelcastCluster.CLUSTER_NAME));
+        spec.configure(HazelcastNode.GROUP_NAME, config().get(HazelcastCluster.CLUSTER_NAME));
         
         if (LOG.isInfoEnabled()) {
             LOG.info("Cluster name : {} : used as a group name", getConfig(HazelcastNode.GROUP_NAME));
@@ -114,7 +115,6 @@ public class HazelcastClusterImpl extends DynamicClusterImpl implements Hazelcas
     @Override
     public void start(Collection<? extends Location> locations) {
         super.start(locations);
-        
         
         List<String> clusterNodes = Lists.newArrayList();
         for (Entity member : getMembers()) {

@@ -18,21 +18,12 @@
  */
 package org.apache.brooklyn.entity.nosql.hazelcast;
 
-import org.apache.brooklyn.entity.nosql.hazelcast.HazelcastCluster;
-import org.apache.brooklyn.entity.nosql.hazelcast.HazelcastNode;
-import org.apache.brooklyn.test.EntityTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import org.apache.brooklyn.entity.AbstractEc2LiveTest;
-
-import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.entity.Attributes;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class HazelcastClusterEc2LiveTest extends AbstractEc2LiveTest {
     @SuppressWarnings("unused")
@@ -40,25 +31,7 @@ public class HazelcastClusterEc2LiveTest extends AbstractEc2LiveTest {
 
     @Override
     protected void doTest(Location loc) throws Exception {
-        HazelcastCluster cluster = app.createAndManageChild(EntitySpec.create(HazelcastCluster.class)
-                .configure(HazelcastCluster.INITIAL_SIZE, 3)
-                .configure(HazelcastCluster.MEMBER_SPEC, EntitySpec.create(HazelcastNode.class)));
-        app.start(ImmutableList.of(loc));
-
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, HazelcastNode.SERVICE_UP, true);
-
-        HazelcastNode first = (HazelcastNode) Iterables.get(cluster.getMembers(), 0);
-        HazelcastNode second = (HazelcastNode) Iterables.get(cluster.getMembers(), 1);
-
-        assertNodesUpAndInCluster(first, second);
-        
-        EntityTestUtils.assertAttributeEqualsEventually(cluster, Attributes.SERVICE_UP, true);
-    }
-    
-    private void assertNodesUpAndInCluster(final HazelcastNode... nodes) {
-        for (final HazelcastNode node : nodes) {
-            EntityTestUtils.assertAttributeEqualsEventually(node, HazelcastNode.SERVICE_UP, true);
-        }
+        HazelcastTestHelper.testHazelcastCluster(app, loc);
     }
 
     @Test(enabled = false)

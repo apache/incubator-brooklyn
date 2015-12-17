@@ -40,7 +40,7 @@ import org.apache.brooklyn.util.javalang.JavaClassNames;
 @ImplementedBy(HazelcastNodeImpl.class)
 public interface HazelcastNode extends SoftwareProcess, UsesJava, UsesJmx {
     @SetFromFlag("version")
-    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "3.4.2");
+    ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "3.5.4");
     
     @SetFromFlag("downloadUrl")
     BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
@@ -53,7 +53,7 @@ public interface HazelcastNode extends SoftwareProcess, UsesJava, UsesJmx {
     
     @SetFromFlag("configFileName")
     ConfigKey<String> CONFIG_FILE_NAME = ConfigKeys.newStringConfigKey(
-            "hazelcast.node.config.fileName", "Name of the Hazelcast config file", "hazelcast.xml");    
+            "hazelcast.node.config.fileName", "Name of the Hazelcast config file", "hazelcast.xml");
     
     @SetFromFlag("nodeName")
     StringAttributeSensorAndConfigKey NODE_NAME = new StringAttributeSensorAndConfigKey("hazelcast.node.name", 
@@ -65,6 +65,10 @@ public interface HazelcastNode extends SoftwareProcess, UsesJava, UsesJmx {
     
     @SetFromFlag("nodePort")
     PortAttributeSensorAndConfigKey NODE_PORT = new PortAttributeSensorAndConfigKey("hazelcast.node.port", "Hazelcast communication port", PortRanges.fromString("5701+"));
+
+    @SetFromFlag("nodeClusterName")
+    BasicAttributeSensorAndConfigKey<String> NODE_CLUSTER_NAME = new BasicAttributeSensorAndConfigKey<String>(String.class, 
+            "hazelcast.node.cluster.name", "Name of the Hazelcast cluster which node is part of", "");
 
     /**
      * Specifies the group name in the configuration file. Each Hazelcast cluster has a separate group.

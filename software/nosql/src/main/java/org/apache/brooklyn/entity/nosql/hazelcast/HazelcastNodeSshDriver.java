@@ -21,13 +21,11 @@ package org.apache.brooklyn.entity.nosql.hazelcast;
 import static java.lang.String.format;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.core.entity.Entities;
 
 import org.apache.brooklyn.entity.java.JavaSoftwareProcessSshDriver;
@@ -35,7 +33,9 @@ import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.ssh.BashCommands;
+import org.apache.brooklyn.util.text.Strings;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
@@ -43,7 +43,7 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     
     private static final Logger LOG = LoggerFactory.getLogger(HazelcastNodeSshDriver.class);
 
-    public HazelcastNodeSshDriver(EntityLocal entity, SshMachineLocation machine) {
+    public HazelcastNodeSshDriver(HazelcastNodeImpl entity, SshMachineLocation machine) {
         super(entity, machine);
     }
 
@@ -98,15 +98,16 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         // Setting initial heap size (Xms) size to match max heap size (Xms) at first
         String initialHeapMemorySize = maxHeapMemorySize;
         
-        StringBuilder commandBuilder = new StringBuilder()
-            .append(format("nohup java -cp ./lib/%s", resolver.getFilename()))
-            .append(format(" -Xmx%s -Xms%s", maxHeapMemorySize, initialHeapMemorySize))
-            .append(format(" -Dhazelcast.config=./conf/%s", getConfigFileName()))
-            .append(format(" com.hazelcast.core.server.StartServer >> %s 2>&1 </dev/null &", getLogFileLocation()));
+        ImmutableList<String> commands = ImmutableList.<String>builder()
+            .add(format("nohup java -cp ./lib/%s", resolver.getFilename()))
+            .add(format("-Xmx%s -Xms%s", maxHeapMemorySize, initialHeapMemorySize))
+            .add(format("-Dhazelcast.config=./conf/%s", getConfigFileName()))
+            .add(format("com.hazelcast.core.server.StartServer >> %s 2>&1 </dev/null &", getLogFileLocation()))
+            .build();
         
         newScript(MutableMap.of(USE_PID_FILE, true), LAUNCHING)
             .updateTaskAndFailOnNonZeroResultCode()
-            .body.append(commandBuilder.toString())
+            .body.append(Joiner.on(" ").join(commands))
             .execute();
     }
        
@@ -119,7 +120,7 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     }
     
     @Override
-    public boolean isRunning() {       
+    public boolean isRunning() {
         return newScript(MutableMap.of(USE_PID_FILE, true), CHECK_RUNNING).execute() == 0;
     }
     
@@ -133,22 +134,26 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
         newScript(MutableMap.of(USE_PID_FILE, true), KILLING).execute();
     }
 
-    public List<String> getHazelcastNodesList() throws ExecutionException, InterruptedException {
-        HazelcastCluster cluster = (HazelcastCluster) entity.getParent();
+    public List<String> getHazelcastNodesList() {
         List<String> result = Lists.newArrayList();
 
-        for (Entity member : cluster.getMembers()) {
-            String address = Entities.attributeSupplierWhenReady(member, HazelcastNode.SUBNET_ADDRESS).get();
-            Integer port = Entities.attributeSupplierWhenReady(member, HazelcastNode.NODE_PORT).get();
-            
-            String addressAndPort = String.format("%s:%d", address, port);
-            
-            if (LOG.isInfoEnabled()) {
-                LOG.info("Adding {} to the members' list of {}", addressAndPort, entity.getAttribute(HazelcastNode.NODE_NAME));
+        if (Strings.isBlank(entity.getAttribute(HazelcastNode.NODE_CLUSTER_NAME))) {
+            result.add(String.format("%s:%d", entity.getAttribute(HazelcastNode.SUBNET_ADDRESS),
+                                              entity.getAttribute(HazelcastNode.NODE_PORT)));
+        } else {
+            HazelcastCluster cluster = (HazelcastCluster) entity.getParent();
+
+            for (Entity member : cluster.getMembers()) {
+                String address = Entities.attributeSupplierWhenReady(member, HazelcastNode.SUBNET_ADDRESS).get();
+                Integer port = Entities.attributeSupplierWhenReady(member, HazelcastNode.NODE_PORT).get();
+                String addressAndPort = String.format("%s:%d", address, port);
+
+                if (LOG.isInfoEnabled()) {
+                    LOG.info("Adding {} to the members' list of {}", addressAndPort, entity.getAttribute(HazelcastNode.NODE_NAME));
+                }
+                result.add(addressAndPort);
             }
-            result.add(addressAndPort);
         }
-        
         return result;
     }
 
@@ -156,5 +161,4 @@ public class HazelcastNodeSshDriver extends JavaSoftwareProcessSshDriver impleme
     protected String getLogFileLocation() {
         return Os.mergePathsUnix(getRunDir(),"/log/out.log");
     }
-    
 }

@@ -134,7 +134,6 @@ public class HazelcastNodeImpl extends SoftwareProcessImpl implements HazelcastN
             LOG.info("Node {} is listening on {}", this, listenAddress);
         }
 
-         
         return listenAddress;
     }
 

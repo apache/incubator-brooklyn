@@ -173,6 +173,14 @@
             </exclusions>
         </dependency>
 
+        <!-- for hazelcast testing -->
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-client</artifactId>
+            <version>${hazelcast.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- for solr testing -->
         <dependency>
             <groupId>org.apache.solr</groupId>
@@ -251,6 +259,7 @@
                 <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/cassandra/cassandra-rackdc.properties</exclude>
                 <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/couchdb/couch.ini</exclude>
                 <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/couchdb/couch.uri</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/hazelcast/hazelcast-brooklyn.xml</exclude>
                 <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/mongodb/default.conf</exclude>
                 <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/mongodb/default-mongod.conf</exclude>
                 <exclude>src/test/resources/test-mongodb.conf</exclude>
