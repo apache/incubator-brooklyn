@@ -87,7 +87,7 @@ public class CatalogUtils {
         String catId = entity.getCatalogItemId();
         if (Strings.isBlank(catId)) return JavaBrooklynClassLoadingContext.create(mgmt);
         Maybe<RegisteredType> cat = RegisteredTypes.tryValidate(mgmt.getTypeRegistry().get(catId), RegisteredTypeLoadingContexts.spec(Entity.class));
-        if (cat.get()==null) {
+        if (cat.isNull()) {
             log.warn("Cannot load "+catId+" to get classloader for "+entity+"; will try with standard loader, but might fail subsequently");
             return JavaBrooklynClassLoadingContext.create(mgmt);
         }

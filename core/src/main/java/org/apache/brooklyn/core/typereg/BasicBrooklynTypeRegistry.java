@@ -71,10 +71,10 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         return Iterables.filter(localRegisteredTypes.values(), filter);
     }
 
-    private RegisteredType getExactWithoutLegacyCatalog(String symbolicName, String version, RegisteredTypeLoadingContext constraint) {
+    private Maybe<RegisteredType> getExactWithoutLegacyCatalog(String symbolicName, String version, RegisteredTypeLoadingContext constraint) {
         // TODO look in any nested/private registries
         RegisteredType item = localRegisteredTypes.get(symbolicName+":"+version);
-        return RegisteredTypes.tryValidate(item, constraint).orNull();
+        return RegisteredTypes.tryValidate(item, constraint);
     }
 
     @SuppressWarnings("deprecation")
@@ -93,12 +93,11 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
         String version = versionFinal;
         if (version==null) version = BrooklynCatalog.DEFAULT_VERSION;
 
-        RegisteredType type;
         if (!BrooklynCatalog.DEFAULT_VERSION.equals(version)) {
             // normal code path when version is supplied
             
-            type = getExactWithoutLegacyCatalog(symbolicNameOrAliasIfNoVersion, version, context);
-            if (type!=null) return Maybe.of(type);
+            Maybe<RegisteredType> type = getExactWithoutLegacyCatalog(symbolicNameOrAliasIfNoVersion, version, context);
+            if (type.isPresent()) return type;
         }
 
         if (BrooklynCatalog.DEFAULT_VERSION.equals(version)) {
@@ -123,7 +122,7 @@ public class BasicBrooklynTypeRegistry implements BrooklynTypeRegistry {
                 }
             }
             if (!Iterables.isEmpty(types)) {
-                type = RegisteredTypes.getBestVersion(types);
+                RegisteredType type = RegisteredTypes.getBestVersion(types);
                 if (type!=null) return Maybe.of(type);
             }
         }

@@ -118,7 +118,8 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
             
             Maybe<RegisteredType> item = RegisteredTypes.tryValidate(mgmt.getTypeRegistry().get(policyType), RegisteredTypeLoadingContexts.spec(Policy.class));
             PolicySpec<?> spec;
-            if (item.get()!=null) {
+            if (!item.isNull()) {
+                // throw error if absent for any reason other than null
                 spec = mgmt.getTypeRegistry().createSpec(item.get(), null, PolicySpec.class);
             } else {
                 Class<? extends Policy> type = decoLoader.getType(Policy.class);

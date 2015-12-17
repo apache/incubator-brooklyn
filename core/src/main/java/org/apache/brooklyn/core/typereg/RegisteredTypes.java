@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -42,6 +41,7 @@ import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.core.typereg.JavaClassNameTypePlanTransformer.JavaClassNameTypeImplementationPlan;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.guava.Maybe.Absent;
 import org.apache.brooklyn.util.text.NaturalOrderComparator;
 import org.apache.brooklyn.util.text.VersionComparator;
 import org.apache.brooklyn.util.yaml.Yamls;
@@ -284,13 +284,15 @@ public class RegisteredTypes {
     }
 
     /** Validates that the given type matches the context (if supplied);
-     * returns a Maybe(null) if the type is null. */
+     * if not satisfied. returns an {@link Absent} if failed with details of the error,
+     * with {@link Absent#isNull()} true if the object is null. */
     public static Maybe<RegisteredType> tryValidate(RegisteredType item, final RegisteredTypeLoadingContext constraint) {
         // kept as a Maybe in case someone wants a wrapper around item validity;
         // unclear what the contract should be, as this can return Maybe.Present(null)
         // which is suprising, but it is more natural to callers otherwise they'll likely do a separate null check on the item
         // (often handling null different to errors) so the Maybe.get() is redundant as they have an object for the input anyway.
-        if (item==null || constraint==null) return Maybe.of(item);
+        
+        if (item==null || constraint==null) return Maybe.ofDisallowingNull(item);
         if (constraint.getExpectedKind()!=null && !constraint.getExpectedKind().equals(item.getKind()))
             return Maybe.absent(item+" is not the expected kind "+constraint.getExpectedKind());
         if (constraint.getExpectedJavaSuperType()!=null) {
@@ -336,9 +338,10 @@ public class RegisteredTypes {
 
     /** validates that the given object (required) satisfies the constraints implied by the given
      * type and context object, using {@link Maybe} as the result set absent containing the error(s)
-     * if not satisfied */
-    public static <T> Maybe<T> tryValidate(@Nonnull final T object, @Nullable final RegisteredType type, @Nullable final RegisteredTypeLoadingContext context) {
-        if (object==null) return Maybe.absent("object is null");
+     * if not satisfied. returns an {@link Absent} if failed with details of the error,
+     * with {@link Absent#isNull()} true if the object is null. */
+    public static <T> Maybe<T> tryValidate(final T object, @Nullable final RegisteredType type, @Nullable final RegisteredTypeLoadingContext context) {
+        if (object==null) return Maybe.absentNull("object is null");
         
         RegisteredTypeKind kind = type!=null ? type.getKind() : context!=null ? context.getExpectedKind() : null;
         if (kind==null) {
@@ -348,18 +351,18 @@ public class RegisteredTypes {
         return new RegisteredTypeKindVisitor<Maybe<T>>() {
             @Override
             protected Maybe<T> visitSpec() {
-                return validateSpec(object, type, context);
+                return tryValidateSpec(object, type, context);
             }
 
             @Override
             protected Maybe<T> visitBean() {
-                return validateBean(object, type, context);
+                return tryValidateBean(object, type, context);
             }
         }.visit(kind);
     }
 
-    private static <T> Maybe<T> validateBean(T object, RegisteredType type, final RegisteredTypeLoadingContext context) {
-        if (object==null) return Maybe.absent("object is null");
+    private static <T> Maybe<T> tryValidateBean(T object, RegisteredType type, final RegisteredTypeLoadingContext context) {
+        if (object==null) return Maybe.absentNull("object is null");
         
         if (type!=null) {
             if (type.getKind()!=RegisteredTypeKind.BEAN)
@@ -378,8 +381,8 @@ public class RegisteredTypes {
         return Maybe.of(object);
     }
 
-    private static <T> Maybe<T> validateSpec(T object, RegisteredType rType, final RegisteredTypeLoadingContext constraint) {
-        if (object==null) return Maybe.absent("object is null");
+    private static <T> Maybe<T> tryValidateSpec(T object, RegisteredType rType, final RegisteredTypeLoadingContext constraint) {
+        if (object==null) return Maybe.absentNull("object is null");
         
         if (!(object instanceof AbstractBrooklynObjectSpec)) {
             Maybe.absent("Found "+object+" when expecting a spec");
