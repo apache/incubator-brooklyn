@@ -9,4 +9,4 @@ location:
 services:
 - type: org.apache.brooklyn.entity.webapp.jboss.JBoss7Server
   location:
-    byon: { hosts: [ 127.0.0.1 ] }
+    byon:(hosts="127.0.0.1")
