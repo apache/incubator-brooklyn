@@ -1,0 +1,5 @@
+A successful build of this project (`mvn clean verify`) means that projects that
+use brooklyn-downstream-parent can be loaded into Brooklyn's catalogue by default.
+
+If the build fails there is almost certainly something wrong with the parent and
+the wider consumers of Brooklyn will probably face similar problems.
