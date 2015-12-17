@@ -55,13 +55,5 @@ public class JettyWebAppFixtureIntegrationTest extends AbstractWebAppFixtureInte
             String urlSubPathToPageToQuery) {
         super.testWarDeployAndUndeploy(entity, war, urlSubPathToWebApp, urlSubPathToPageToQuery);
     }
-    
-    public static void main(String ...args) throws Exception {
-        JettyWebAppFixtureIntegrationTest t = new JettyWebAppFixtureIntegrationTest();
-        t.setUp();
-        t.canStartAndStop((SoftwareProcess) t.basicEntities()[0][0]);
-        t.shutdownApp();
-        t.shutdownMgmt();
-    }
 
 }

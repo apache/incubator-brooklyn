@@ -51,7 +51,7 @@ public class EntityFunctions {
             @Override public T apply(Entity input) {
                 return (input == null) ? null : input.getAttribute(attribute);
             }
-        };
+        }
         return new GetEntityAttributeFunction();
     }
     
@@ -63,7 +63,7 @@ public class EntityFunctions {
             @Override public T apply(Entity input) {
                 return (input == null) ? null : input.getConfig(key);
             }
-        };
+        }
         return new GetEntityConfigFunction();
     }
     
@@ -75,7 +75,7 @@ public class EntityFunctions {
             @Override public String apply(Entity input) {
                 return (input == null) ? null : input.getDisplayName();
             }
-        };
+        }
         return new GetEntityDisplayName();
     }
     
@@ -87,7 +87,7 @@ public class EntityFunctions {
             @Override public String apply(Identifiable input) {
                 return (input == null) ? null : input.getId();
             }
-        };
+        }
         return new GetIdFunction();
     }
 
@@ -154,7 +154,23 @@ public class EntityFunctions {
         @Override public T apply(Entity input) {
             return (input == null) ? null : input.getAttribute(attribute);
         }
-    };
+    }
+
+    public static <T> Function<Object, T> attribute(Entity entity, AttributeSensor<T> attribute) {
+        return new GetFixedEntityAttributeFunction<>(entity, attribute);
+    }
+
+    protected static class GetFixedEntityAttributeFunction<T> implements Function<Object, T> {
+        private final Entity entity;
+        private final AttributeSensor<T> attribute;
+        protected GetFixedEntityAttributeFunction(Entity entity, AttributeSensor<T> attribute) {
+            this.entity = entity;
+            this.attribute = attribute;
+        }
+        @Override public T apply(Object input) {
+            return entity.getAttribute(attribute);
+        }
+    }
 
     public static <T> Function<Entity, T> config(ConfigKey<T> key) {
         return new GetEntityConfigFunction<T>(checkNotNull(key, "key"));
@@ -170,7 +186,7 @@ public class EntityFunctions {
         @Override public T apply(Entity input) {
             return (input == null) ? null : input.getConfig(key);
         }
-    };
+    }
 
     public static Function<Entity, String> displayName() {
         return GetEntityDisplayName.INSTANCE;
@@ -181,7 +197,7 @@ public class EntityFunctions {
         @Override public String apply(Entity input) {
             return (input == null) ? null : input.getDisplayName();
         }
-    };
+    }
 
     public static Function<Identifiable, String> id() {
         return GetIdFunction.INSTANCE;
@@ -192,7 +208,7 @@ public class EntityFunctions {
         @Override public String apply(Identifiable input) {
             return (input == null) ? null : input.getId();
         }
-    };
+    }
 
 
     /** returns a function which sets the given sensors on the entity passed in,

@@ -51,6 +51,12 @@ public class EntityFunctionsTest extends BrooklynAppUnitTestSupport {
         assertEquals(EntityFunctions.attribute(TestEntity.NAME).apply(entity), "myname");
         assertNull(EntityFunctions.attribute(TestEntity.SEQUENCE).apply(entity));
     }
+
+    @Test
+    public void testEntityAttributeTest() {
+        entity.sensors().set(TestEntity.NAME, "myname");
+        assertEquals(EntityFunctions.attribute(entity, TestEntity.NAME).apply(new Object()), "myname");
+    }
     
     @Test
     public void testConfig() throws Exception {

@@ -84,13 +84,13 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
     public void canStartAndStop(final SoftwareProcess entity) {
         super.canStartAndStop(entity);
     }
+
     @Test(groups = "Integration", dataProvider = "basicEntities")
     public void testReportsServiceDownWhenKilled(final SoftwareProcess entity) throws Exception {
         super.testReportsServiceDownWhenKilled(entity);
     }
 
     @Override
-    // as parent, but with spring travel
     @DataProvider(name = "entitiesWithWarAndURL")
     public Object[][] entitiesWithWar() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), "/hello-world.war");
@@ -104,19 +104,6 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
                     "" // no sub-page path
                     });
         }
-
-        // TODO would be nice to test against spring web framework stock booking example
-        // but we'd need an external URL for that (we removed the binary from here for apache compliance reasons)
-//        TestApplication tomcatApp = newTestApplication();
-//        TomcatServer tomcat = tomcatApp.createAndManageChild(EntitySpec.create(TomcatServer.class)
-//                .configure(TomcatServer.HTTP_PORT, PortRanges.fromString(DEFAULT_HTTP_PORT)));
-//        result.add(new Object[] {
-//                tomcat,
-//                "swf-booking-mvc.war",
-//                "swf-booking-mvc/",
-//                "spring/intro",
-//               });
-        
         return result.toArray(new Object[][] {});
     }
 
@@ -147,14 +134,7 @@ public class TomcatServerWebAppFixtureIntegrationTest extends AbstractWebAppFixt
                     .limitIterationsTo(25)
                     .run();
             
-            if (socketClosed == false) {
-//                log.error("WebApp did not shut down - this is a failure of the last test run");
-//                log.warn("I'm sending a message to the shutdown port {}", shutdownPort);
-//                OutputStreamWriter writer = new OutputStreamWriter(shutdownSocket.getOutputStream());
-//                writer.write("SHUTDOWN\r\n");
-//                writer.flush();
-//                writer.close();
-//                shutdownSocket.close();
+            if (!socketClosed) {
                 throw new Exception("Last test run did not shut down WebApp entity "+entity+" (port "+shutdownPort+")");
             }
         } else {

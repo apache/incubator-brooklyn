@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.feed.jmx.JmxAttributePollConfig;
@@ -81,6 +82,7 @@ public class JBoss6ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                     .pollAttribute(new JmxAttributePollConfig<Integer>(REQUEST_COUNT)
                             .objectName(requestProcessorMbeanName)
                             .attributeName("requestCount")
+                            .onFailureOrException(EntityFunctions.attribute(this, REQUEST_COUNT))
                             .enabled(retrieveUsageMetrics))
                     .pollAttribute(new JmxAttributePollConfig<Integer>(TOTAL_PROCESSING_TIME)
                             .objectName(requestProcessorMbeanName)

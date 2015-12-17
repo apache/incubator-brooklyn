@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessImpl;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
 import org.apache.brooklyn.entity.webapp.WebAppServiceMethods;
@@ -71,7 +72,7 @@ public class CouchDBNodeImpl extends SoftwareProcessImpl implements CouchDBNode 
                 .baseUri(String.format("http://%s:%d/_stats", getAttribute(HOSTNAME), getHttpPort()))
                 .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] { "httpd", "requests", "count" }, Integer.class))
-                        .onFailureOrException(Functions.constant(-1))
+                        .onFailureOrException(EntityFunctions.attribute(this, REQUEST_COUNT))
                         .enabled(retrieveUsageMetrics))
                 .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
                         .onSuccess(HttpValueFunctions.jsonContents(new String[] { "httpd_status_codes", "404", "count" }, Integer.class))

@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.EntityFunctions;
 import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.webapp.JavaWebAppSoftwareProcessImpl;
@@ -100,6 +101,7 @@ public class JBoss7ServerImpl extends JavaWebAppSoftwareProcessImpl implements J
                     .poll(new HttpPollConfig<Integer>(REQUEST_COUNT)
                             .vars(includeRuntimeUriVars)
                             .onSuccess(HttpValueFunctions.jsonContents("requestCount", Integer.class))
+                            .onFailureOrException(EntityFunctions.attribute(this, REQUEST_COUNT))
                             .enabled(retrieveUsageMetrics))
                     .poll(new HttpPollConfig<Integer>(ERROR_COUNT)
                             .vars(includeRuntimeUriVars)

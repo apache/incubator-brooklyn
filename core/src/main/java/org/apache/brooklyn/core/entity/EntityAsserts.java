@@ -191,8 +191,6 @@ public class EntityAsserts {
         });
     }
 
-
-
     /**
      * Assert that the given attribute of an entity does not take any of the disallowed values during a given period.
      *
