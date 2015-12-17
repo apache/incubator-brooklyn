@@ -2,6 +2,7 @@
 title: Getting Started - Policies
 title_in_menu: Policies
 layout: website-normal
+menu-parent: index-cli.md
 ---
 
 
