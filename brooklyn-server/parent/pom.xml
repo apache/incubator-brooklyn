@@ -725,6 +725,7 @@
                             <exclude>sandbox/**</exclude>
                             <!-- Exclude release because not part of distribution: not in tgz, and not uploaded to maven-central -->
                             <exclude>release/**</exclude>
+                            <exclude>README.md</exclude>
                             <!-- Exclude netbeans config files (not part of the project, but often on users' drives -->
                             <exclude>**/nbactions.xml</exclude>
                             <exclude>**/nb-configuration.xml</exclude>
