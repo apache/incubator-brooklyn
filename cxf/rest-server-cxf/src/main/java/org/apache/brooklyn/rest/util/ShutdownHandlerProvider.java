@@ -18,20 +18,24 @@
  */
 package org.apache.brooklyn.rest.util;
 
-public class TestShutdownHandler implements ShutdownHandler {
-    private volatile boolean isRequested;
+import javax.annotation.Nullable;
+import javax.ws.rs.ext.Provider;
+import org.apache.cxf.jaxrs.ext.ContextProvider;
+import org.apache.cxf.message.Message;
 
-    @Override
-    public void onShutdownRequest() {
-        isRequested = true;
+
+@Provider
+public class ShutdownHandlerProvider implements ContextProvider<ShutdownHandler> {
+
+    private ShutdownHandler shutdownHandler;
+
+    public ShutdownHandlerProvider(@Nullable ShutdownHandler instance) {
+        this.shutdownHandler = instance;
     }
 
-    public boolean isRequested() {
-        return isRequested;
-    }
-
-    public void reset() {
-        isRequested = false;
+    public ShutdownHandler createContext(Message message) {
+        return shutdownHandler;
     }
 
 }
+

@@ -57,7 +57,8 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
 
     @AfterClass(alwaysRun=true)
     public void tearDown() throws Exception {
-        server.stop();
+        if (server != null)
+            server.stop();
     }
 
     @Test(expectedExceptions=WebApplicationException.class, expectedExceptionsMessageRegExp="Client response status: 500")

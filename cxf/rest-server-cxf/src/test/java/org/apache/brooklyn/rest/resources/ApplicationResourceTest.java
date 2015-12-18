@@ -122,7 +122,6 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Override
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        setEndpointAddress(ENDPOINT_ADDRESS_HTTP);
         addDefaultRestApi(sf);
     }
 
@@ -376,7 +375,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         Assert.assertNotNull(groupSummary);
 
         String itemIds = app.get("id") + "," + entitySummary.get("id") + "," + groupSummary.get("id");
-        Collection entities = client().path("/applications/fetch?items="+itemIds)
+        Collection entities = client().path("/applications/fetch").query("items", itemIds)
                 .get(Collection.class);
         log.info("Applications+Entities fetched are: " + entities);
 
@@ -523,7 +522,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         Response response = client().path(policiesEndpoint)
                 .query("type", CapitalizePolicy.class.getCanonicalName())
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post( Maps.newHashMap());
+                .post(Maps.newHashMap());
         assertEquals(response.getStatus(), 200);
         PolicySummary policy = response.readEntity(PolicySummary.class);
         assertNotNull(policy.getId());

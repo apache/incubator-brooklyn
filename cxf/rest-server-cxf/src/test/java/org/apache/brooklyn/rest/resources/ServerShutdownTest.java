@@ -49,6 +49,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedHashMap;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
@@ -79,7 +80,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
         MultivaluedMap<String, String> formData = new MultivaluedHashMap();
         formData.add("requestTimeout", "0");
         formData.add("delayForHttpReturn", "0");
-        client().path("/server/shutdown").post(formData);
+        client().path("/server/shutdown").type(MediaType.APPLICATION_FORM_URLENCODED).post(formData);
 
         Asserts.succeedsEventually(new Runnable() {
             @Override
@@ -129,7 +130,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
                         formData.add("shutdownTimeout", "0");
                         formData.add("requestTimeout", "0");
                         formData.add("delayForHttpReturn", "0");
-                        client().path("/server/shutdown").post(formData);
+                        client().path("/server/shutdown").type(MediaType.APPLICATION_FORM_URLENCODED).post(formData);
                     } catch (Exception e) {
                         log.error("Shutdown request error", e);
                         shutdownError.set(e);

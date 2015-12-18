@@ -107,7 +107,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
 
         // check app ignored if endCalendar before app started
-        response = client().path("/usage/applications?start="+0+"&end="+(preStart.getTime().getTime()-1)).get();
+        response = client().path("/usage/applications").query("start", 0).query("end", preStart.getTime().getTime()-1).get();
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.readEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
@@ -123,7 +123,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         // The comparison does use the milliseconds passed in the REST call though.
         // The rounding down result should be the same as roundDown(afterPostStart), because that is the time-window
         // we asked for.
-        response = client().path("/usage/applications?start="+afterPostStart.getTime().getTime()+"&end="+afterPostStart.getTime().getTime()).get();
+        response = client().path("/usage/applications").query("start", afterPostStart.getTime().getTime()).query("end", afterPostStart.getTime().getTime()).get();
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.readEntity(new GenericType<List<UsageStatistics>>() {});
         usage = Iterables.getOnlyElement(usages);
@@ -146,7 +146,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         long afterPostDelete = postDelete.getTime().getTime()+1;
         waitForFuture(afterPostDelete);
         
-        response = client().path("/usage/applications?start=" + afterPostDelete).get();
+        response = client().path("/usage/applications").query("start", afterPostDelete).get();
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.readEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
@@ -172,30 +172,30 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
 
         // Time-constrained requests
-        response = client().path("/usage/applications/" + appId + "?start=1970-01-01T00:00:00-0100").get();
+        response = client().path("/usage/applications/" + appId).query("start", "1970-01-01T00:00:00-0100").get();
         usage = response.readEntity(new GenericType<UsageStatistics>() {});
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
         
-        response = client().path("/usage/applications/" + appId + "?start=9999-01-01T00:00:00+0100").get();
+        response = client().path("/usage/applications/" + appId).query("start", "9999-01-01T00:00:00+0100").get();
         assertTrue(response.getStatus() >= 400, "end defaults to NOW, so future start should fail, instead got code "+response.getStatus());
         
-        response = client().path("/usage/applications/" + appId + "?start=9999-01-01T00:00:00%2B0100&end=9999-01-02T00:00:00%2B0100").get();
+        response = client().path("/usage/applications/" + appId).query("start", "9999-01-01T00:00:00%2B0100").query("end", "9999-01-02T00:00:00%2B0100").get();
         usage = response.readEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty());
 
-        response = client().path("/usage/applications/" + appId + "?end=9999-01-01T00:00:00+0100").get();
+        response = client().path("/usage/applications/" + appId).query("end", "9999-01-01T00:00:00+0100").get();
         usage = response.readEntity(new GenericType<UsageStatistics>() {});
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
 
-        response = client().path("/usage/applications/" + appId + "?start=9999-01-01T00:00:00+0100&end=9999-02-01T00:00:00+0100").get();
+        response = client().path("/usage/applications/" + appId).query("start", "9999-01-01T00:00:00+0100").query("end", "9999-02-01T00:00:00+0100").get();
         usage = response.readEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty());
 
-        response = client().path("/usage/applications/" + appId + "?start=1970-01-01T00:00:00-0100&end=9999-01-01T00:00:00+0100").get();
+        response = client().path("/usage/applications/" + appId).query("start", "1970-01-01T00:00:00-0100").query("end", "9999-01-01T00:00:00+0100").get();
         usage = response.readEntity(new GenericType<UsageStatistics>() {});
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
         
-        response = client().path("/usage/applications/" + appId + "?end=1970-01-01T00:00:00-0100").get();
+        response = client().path("/usage/applications/" + appId).query("end", "1970-01-01T00:00:00-0100").get();
         usage = response.readEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty());
         
@@ -214,7 +214,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         // Deleted app not returned if terminated before time range begins
         long afterPostDelete = postDelete.getTime().getTime()+1;
         waitForFuture(afterPostDelete);
-        response = client().path("/usage/applications/" + appId +"?start=" + afterPostDelete).get();
+        response = client().path("/usage/applications/" + appId).query("start", afterPostDelete).get();
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usage = response.readEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty(), "usages="+usage);
@@ -278,7 +278,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Location machine = Iterables.getOnlyElement(entity.getLocations());
 
         // For running machine
-        Response response = client().path("/usage/machines?application="+appId).get();
+        Response response = client().path("/usage/machines").query("application", appId).get();
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         Iterable<UsageStatistics> usages = response.readEntity(new GenericType<List<UsageStatistics>>() {});
         UsageStatistics usage = Iterables.getOnlyElement(usages);
@@ -290,7 +290,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Calendar postStop = new GregorianCalendar();
         
         // Deleted machine still returned, if in time range
-        response = client().path("/usage/machines?application=" + appId).get();
+        response = client().path("/usage/machines").query("application", appId).get();
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.readEntity(new GenericType<List<UsageStatistics>>() {});
         usage = Iterables.getOnlyElement(usages);
@@ -300,7 +300,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         // Terminated machines ignored if terminated since start-time
         long futureTime = postStop.getTime().getTime()+1;
         waitForFuture(futureTime);
-        response = client().path("/usage/applications?start=" + futureTime).get();
+        response = client().path("/usage/applications").query("start", futureTime).get();
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.readEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);

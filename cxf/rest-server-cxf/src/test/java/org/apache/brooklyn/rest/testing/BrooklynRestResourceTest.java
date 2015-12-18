@@ -26,6 +26,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import javax.ws.rs.WebApplicationException;
 
 import javax.ws.rs.core.MediaType;
 
@@ -47,6 +48,7 @@ import org.apache.brooklyn.util.time.Duration;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 import org.apache.brooklyn.rest.BrooklynRestApi;
+import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
@@ -94,8 +96,10 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
             sf.setResourceProvider(new SingletonResourceProvider(resource));
         }
 
-        if (providers == null)
+        if (providers == null) {
             providers = BrooklynRestApi.getProviders(getManagementContext());
+            providers.add(new ShutdownHandlerProvider(shutdownListener));
+        }
         sf.setProviders(providers);
     }
 
@@ -161,16 +165,12 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
                 .until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-//                        try {
-//                            client().path(resource).get(clazz);
-//                            return true;
-//                        } catch (WebApplicationException e) {
-//                            return false;
-//                        }
-
-                        // TODO: check that this is the same as above jersey code
-                        Response rsp = client().path(resource).get();
-                        return rsp.hasEntity() && rsp.getEntity().getClass().equals(clazz);
+                        try {
+                            client().path(resource).get(clazz);
+                            return true;
+                        } catch (WebApplicationException e) {
+                            return false;
+                        }
                     }
                 })
                 .every(1, TimeUnit.SECONDS)
@@ -184,17 +184,12 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
                 .until(new Callable<Boolean>() {
                     @Override
                     public Boolean call() throws Exception {
-//                        try {
-//                            client().path(resource).get(clazz);
-//                            return false;
-//                        } catch (WebApplicationException e) {
-//                            return e.getResponse().getStatus() == 404;
-//                        }
-
-                        // TODO: check that this is the same as above jersey code
-                        Response rsp = client().path(resource).get();
-                        return !rsp.hasEntity() || rsp.getStatus() == 404;
-
+                        try {
+                            client().path(resource).get(clazz);
+                            return false;
+                        } catch (WebApplicationException e) {
+                            return e.getResponse().getStatus() == 404;
+                        }
                     }
                 })
                 .every(1, TimeUnit.SECONDS)

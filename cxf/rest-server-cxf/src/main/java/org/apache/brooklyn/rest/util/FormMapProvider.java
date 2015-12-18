@@ -35,7 +35,9 @@ import javax.ws.rs.ext.Provider;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.cxf.jaxrs.provider.MultipartProvider;
+import javax.ws.rs.core.Context;
+import org.apache.cxf.jaxrs.ext.MessageContext;
+import org.apache.cxf.jaxrs.provider.FormEncodingProvider;
 
 /**
  * A MessageBodyReader producing a <code>Map&lt;String, Object&gt;</code>, where Object
@@ -44,6 +46,9 @@ import org.apache.cxf.jaxrs.provider.MultipartProvider;
 @Provider
 @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 public class FormMapProvider implements MessageBodyReader<Map<String, Object>> {
+
+    @Context
+    private MessageContext mc;
 
     @Override
     public boolean isReadable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -60,10 +65,8 @@ public class FormMapProvider implements MessageBodyReader<Map<String, Object>> {
     public Map<String, Object> readFrom(Class<Map<String, Object>> type, Type genericType, Annotation[] annotations,
             MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
             throws IOException, WebApplicationException {
-        MultipartProvider delegate = new MultipartProvider();
-        Class<? extends Object> sameType = type;
-        MultivaluedMap<String, String> multi = 
-                (MultivaluedMap<String, String>) delegate.readFrom((Class<Object>) sameType, genericType, annotations,
+        FormEncodingProvider delegate = new FormEncodingProvider();
+        MultivaluedMap<String, String> multi = (MultivaluedMap<String, String>) delegate.readFrom(MultivaluedMap.class, null, null,
                         mediaType, httpHeaders, entityStream);
 
         Map<String, Object> map = Maps.newHashMapWithExpectedSize(multi.keySet().size());

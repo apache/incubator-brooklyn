@@ -49,6 +49,8 @@ import com.google.common.collect.ImmutableMap;
 import javax.ws.rs.core.UriBuilder;
 import org.apache.brooklyn.rest.api.ApplicationApi;
 import org.apache.brooklyn.rest.api.EntityApi;
+import org.apache.brooklyn.rest.util.WebResourceUtils;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.resourceUriBuilder;
 import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 public class ApplicationTransformer {
@@ -113,7 +115,7 @@ public class ApplicationTransformer {
             links = Collections.emptyMap();
         } else {
             URI selfUri = serviceUriBuilder(ub, ApplicationApi.class, "get").build(application.getId());
-            URI entitiesUri = serviceUriBuilder(ub, EntityApi.class, "list").build(application.getId());
+            URI entitiesUri = resourceUriBuilder(ub, EntityApi.class).build(application.getId());
             links = ImmutableMap.of(
                     "self", selfUri,
                     "entities", entitiesUri);

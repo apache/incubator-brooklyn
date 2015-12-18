@@ -128,7 +128,7 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
         try {
             // to test in GUI: 
             // services: [ { type: org.apache.brooklyn.entity.stock.BasicEntity }]
-            Response response = client().path(entityEndpoint + "/children?timeout=10s")
+            Response response = client().path(entityEndpoint + "/children").query("timeout", "10s")
                 .post(javax.ws.rs.client.Entity.entity("services: [ { type: "+TestEntity.class.getName()+" }]", "application/yaml"));
 
             HttpAsserts.assertHealthyStatusCode(response.getStatus());
