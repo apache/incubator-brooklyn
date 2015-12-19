@@ -23,7 +23,6 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import javax.ws.rs.core.Response;
-import org.apache.brooklyn.rest.BrooklynRestApi;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,6 @@ import org.testng.annotations.Test;
 import org.apache.brooklyn.rest.domain.AccessSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
 
 @Test(singleThreaded = true)
 public class AccessResourceTest extends BrooklynRestResourceTest {

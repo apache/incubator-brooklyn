@@ -143,7 +143,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     protected Response doSensorTest(Boolean raw, MediaType acceptsType, Object expectedValue) {
         return doSensorTestUntyped(
             raw==null ? null : (""+raw).toLowerCase(), 
-            acceptsType==null ? null : new String[] { acceptsType.getType() }, 
+            acceptsType==null ? null : new String[] { acceptsType.toString() },
             expectedValue);
     }
     protected Response doSensorTestUntyped(String raw, String[] acceptsTypes, Object expectedValue) {

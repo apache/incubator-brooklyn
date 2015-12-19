@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.rest.resources;
 
+import com.google.common.collect.ImmutableMap;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -37,10 +38,8 @@ import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimplePolicy;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
 
 public class ErrorResponseTest extends BrooklynRestResourceTest {
 
@@ -65,7 +64,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
         Response pResponse = client().path(policiesEndpoint)
                 .query("type", RestMockSimplePolicy.class.getCanonicalName())
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(Maps.newHashMap());
+                .post(toJsonEntity(ImmutableMap.of()));
         PolicySummary response = pResponse.readEntity(PolicySummary.class);
         assertNotNull(response.getId());
         policyId = response.getId();

@@ -52,6 +52,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import javax.ws.rs.core.UriInfo;
+import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 @SuppressWarnings("deprecation")
 @HaHotStateRequired
@@ -163,7 +164,8 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
         String locationBlueprint = Joiner.on("\n").join(yaml.build());
         brooklyn().getCatalog().addItems(locationBlueprint);
         LocationDefinition l = brooklyn().getLocationRegistry().getDefinedLocationByName(name);
-        return Response.created(URI.create(name))
+        URI ref = serviceUriBuilder(ui.getBaseUriBuilder(), LocationApi.class, "get").build(name);
+        return Response.created(ref)
                 .entity(LocationTransformer.newInstance(mgmt(), l, LocationDetailLevel.LOCAL_EXCLUDING_SECRET, ui.getBaseUriBuilder()))
                 .build();
     }

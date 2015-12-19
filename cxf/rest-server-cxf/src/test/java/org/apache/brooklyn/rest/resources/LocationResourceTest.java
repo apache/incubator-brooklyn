@@ -49,9 +49,11 @@ import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
 
-@Test(singleThreaded = true)
+
+@Test(singleThreaded = true, 
+        // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "RestCxfLocationTests")
 public class LocationResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(LocationResourceTest.class);
@@ -81,7 +83,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         LocationSummary location = client().path(response.getLocation()).get(LocationSummary.class);
         log.info(" contents: " + location);
         assertEquals(location.getSpec(), "brooklyn.catalog:"+legacyLocationName+":"+legacyLocationVersion);
-        assertTrue(addedLegacyLocationUri.toString().startsWith("/locations/"));
+        assertTrue(addedLegacyLocationUri.getPath().startsWith("/locations/"));
 
         JcloudsLocation l = (JcloudsLocation) getManagementContext().getLocationRegistry().resolve(legacyLocationName);
         Assert.assertEquals(l.getProvider(), "aws-ec2");
@@ -143,7 +145,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
         });
         LocationSummary location = Iterables.getOnlyElement(matching);
         
-        URI expectedLocationUri = URI.create("/locations/"+locationName);
+        URI expectedLocationUri = URI.create(getEndpointAddress() + "/locations/"+locationName).normalize();
         Assert.assertEquals(location.getSpec(), "brooklyn.catalog:"+locationName+":"+locationVersion);
         Assert.assertEquals(location.getLinks().get("self"), expectedLocationUri);
     }
@@ -167,8 +169,7 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
                 .configure("password", "mypassword"));
     
         // "full" means including-inherited, filtered to exclude secrets
-        URI uriFull = URI.create("/locations/"+loc.getId()+"?full=true");
-        LocationSummary summaryFull = client().path(uriFull).get(LocationSummary.class);
+        LocationSummary summaryFull = client().path("/locations/"+loc.getId()).query("full","true").get(LocationSummary.class);
         assertEquals(summaryFull.getConfig(), ImmutableMap.of("mykey", "myval", "myParentKey", "myParentVal"), "conf="+summaryFull.getConfig());
         
         // Default is local-only, filtered to exclude secrets

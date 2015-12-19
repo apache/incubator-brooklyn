@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import javax.ws.rs.WebApplicationException;
 import static org.testng.Assert.assertNotNull;
 
 import javax.ws.rs.core.MediaType;
@@ -33,7 +32,9 @@ import org.apache.brooklyn.test.http.TestHttpRequestHandler;
 import org.apache.brooklyn.test.http.TestHttpServer;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.util.core.ResourceUtils;
+import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
+import static org.testng.Assert.assertEquals;
 
 public class CatalogResetTest extends BrooklynRestResourceTest {
 
@@ -42,12 +43,16 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
 
     @BeforeClass(alwaysRun=true)
     public void setUp() throws Exception {
-        useLocalScannedCatalog();
         server = new TestHttpServer()
             .handler("/404", new TestHttpRequestHandler().code(Response.Status.NOT_FOUND.getStatusCode()).response("Not Found"))
             .handler("/200", new TestHttpRequestHandler().response("OK"))
             .start();
         serverUrl = server.getUrl();
+    }
+
+    @Override
+    protected boolean useLocalScannedCatalog() {
+        return true;
     }
 
     @Override
@@ -61,9 +66,10 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
             server.stop();
     }
 
-    @Test(expectedExceptions=WebApplicationException.class, expectedExceptionsMessageRegExp="Client response status: 500")
+    @Test
     public void testConnectionError() throws Exception {
-        reset("http://0.0.0.0/can-not-connect", false);
+        Response response = reset("http://0.0.0.0/can-not-connect", false);
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -71,9 +77,10 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
         reset("http://0.0.0.0/can-not-connect", true);
     }
 
-    @Test(expectedExceptions=WebApplicationException.class, expectedExceptionsMessageRegExp="Client response status: 500")
+    @Test
     public void testResourceMissingError() throws Exception {
-        reset(serverUrl + "/404", false);
+        Response response = reset(serverUrl + "/404", false);
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -81,9 +88,10 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
         reset(serverUrl + "/404", true);
     }
 
-    @Test(expectedExceptions=WebApplicationException.class, expectedExceptionsMessageRegExp="Client response status: 500")
+    @Test
     public void testResourceInvalidError() throws Exception {
-        reset(serverUrl + "/200", false);
+        Response response = reset(serverUrl + "/200", false);
+        assertEquals(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), response.getStatus());
     }
 
     @Test
@@ -91,14 +99,18 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
         reset(serverUrl + "/200", true);
     }
 
-    private void reset(String bundleLocation, boolean ignoreErrors) throws Exception {
+    private Response reset(String bundleLocation, boolean ignoreErrors) throws Exception {
         String xml = ResourceUtils.create(this).getResourceAsString("classpath://reset-catalog.xml");
-        client().path("/catalog/reset")
+        Response response = client().path("/catalog/reset")
             .query("ignoreErrors", Boolean.toString(ignoreErrors))
             .header("Content-type", MediaType.APPLICATION_XML)
             .post(xml.replace("${bundle-location}", bundleLocation));
+
         //if above succeeds assert catalog contents
-        assertItems();
+        if (HttpTool.isStatusCodeHealthy(response.getStatus()))
+            assertItems();
+        
+        return response;
     }
     
     private void assertItems() {

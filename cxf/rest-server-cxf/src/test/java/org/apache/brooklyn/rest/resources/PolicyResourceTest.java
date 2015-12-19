@@ -43,7 +43,6 @@ import org.apache.brooklyn.rest.testing.mocks.RestMockSimplePolicy;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import javax.ws.rs.core.GenericType;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
@@ -76,7 +75,7 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
         Response pResponse = client().path(ENDPOINT)
                 .query("type", RestMockSimplePolicy.class.getCanonicalName())
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(Maps.newHashMap());
+                .post(toJsonEntity(ImmutableMap.of()));
 
         PolicySummary response = pResponse.readEntity(PolicySummary.class);
         assertNotNull(response.getId());

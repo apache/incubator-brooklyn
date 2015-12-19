@@ -19,7 +19,7 @@
 package org.apache.brooklyn.rest.testing;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import java.io.IOException;
 import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
@@ -58,7 +58,6 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
     private static final Logger log = LoggerFactory.getLogger(BrooklynRestResourceTest.class);
 
     private static Server server;
-
 
     @BeforeClass(alwaysRun = true)
     public synchronized void startServer() throws Exception {
@@ -198,4 +197,9 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         assertTrue(success);
     }
 
+    protected static Entity<byte[]> toJsonEntity(Object obj) throws IOException {
+        // TODO: figure out how to have CXF actually send empty maps instead of replacing them with nulls without this workaround
+        // see cxf's AbstractClient.checkIfBodyEmpty
+        return Entity.entity(new ObjectMapper().writer().writeValueAsBytes(obj), MediaType.APPLICATION_JSON);
+    }
 }

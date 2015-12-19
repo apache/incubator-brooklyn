@@ -186,8 +186,8 @@ public class LocationTransformer {
         Map<String, ?> config = level==LocationDetailLevel.NONE ? null : copyConfig(configOrig, level);
         
         URI selfUri = serviceUriBuilder(ub, LocationApi.class, "get").build(l.getId());
-        URI parentUri = serviceUriBuilder(ub, LocationApi.class, "get").build(l.getParent().getId());
-        URI specUri = serviceUriBuilder(ub, LocationApi.class, "get").build(specId);
+        URI parentUri = l.getParent() == null ? null : serviceUriBuilder(ub, LocationApi.class, "get").build(l.getParent().getId());
+        URI specUri = specId == null ? null : serviceUriBuilder(ub, LocationApi.class, "get").build(specId);
         return new LocationSummary(
             l.getId(),
             l.getDisplayName(),
@@ -195,8 +195,8 @@ public class LocationTransformer {
             l.getClass().getName(),
             config,
             MutableMap.of("self", selfUri)
-                .addIfNotNull("parent", l.getParent()!=null ? parentUri : null)
-                .addIfNotNull("spec", specId!=null ? specUri : null)
+                .addIfNotNull("parent", parentUri)
+                .addIfNotNull("spec", specUri)
                 .asUnmodifiable() );
     }
 }

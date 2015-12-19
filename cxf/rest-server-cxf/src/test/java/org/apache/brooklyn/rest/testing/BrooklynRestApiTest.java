@@ -26,6 +26,7 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.resources.AbstractBrooklynRestResource;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
@@ -41,7 +42,6 @@ public abstract class BrooklynRestApiTest {
 
     protected ManagementContext manager;
     
-    protected boolean useLocalScannedCatalog = false;
     protected TestShutdownHandler shutdownListener = createShutdownHandler();
 
     protected final static String ENDPOINT_ADDRESS_LOCAL = "local://";
@@ -67,10 +67,8 @@ public abstract class BrooklynRestApiTest {
         }
     }
 
-    protected synchronized void useLocalScannedCatalog() {
-        if (manager!=null && !useLocalScannedCatalog)
-            throw new IllegalStateException("useLocalScannedCatalog must be specified before manager is accessed/created");
-        useLocalScannedCatalog = true;
+    protected boolean useLocalScannedCatalog() {
+        return false;
     }
     
     private TestShutdownHandler createShutdownHandler() {
@@ -79,10 +77,9 @@ public abstract class BrooklynRestApiTest {
 
     protected synchronized ManagementContext getManagementContext() {
         if (manager==null) {
-            if (useLocalScannedCatalog) {
+            if (useLocalScannedCatalog()) {
                 manager = new LocalManagementContext();
-//                BrooklynRestApiLauncherTest.forceUseOfDefaultCatalogWithJavaClassPath(manager);
-                throw new UnsupportedOperationException("FIXME: this test should be part of integration tests, not unit tests");
+                BrooklynRestApiLauncherTest.forceUseOfDefaultCatalogWithJavaClassPath(manager);
             } else {
                 manager = new LocalManagementContextForTests();
             }

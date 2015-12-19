@@ -32,6 +32,8 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 
 public abstract class BrooklynRestApiLauncherTestFixture {
 
+    public static final String SCANNING_CATALOG_BOM_URL = "classpath://brooklyn/scanning.catalog.bom";
+
 //    Server server = null;
 //
 //    @AfterMethod(alwaysRun=true)
@@ -76,19 +78,19 @@ public abstract class BrooklynRestApiLauncherTestFixture {
 //        ManagementContext mgmt = getManagementContextFromJettyServerAttributes(server);
 //        forceUseOfDefaultCatalogWithJavaClassPath(mgmt);
 //    }
-//
-//    public static void forceUseOfDefaultCatalogWithJavaClassPath(ManagementContext manager) {
-//        // TODO duplication with BrooklynRestApiLauncher ?
-//
-//        // don't use any catalog.xml which is set
-//        ((BrooklynProperties)manager.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, BrooklynRestApiLauncher.SCANNING_CATALOG_BOM_URL);
-//        // sets URLs for a surefire
-//        ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
-//        // this also works
-////        ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forPackage("brooklyn"));
-//        // but this (near-default behaviour) does not
-////        ((LocalManagementContext)manager).setBaseClassLoader(getClass().getClassLoader());
-//    }
+
+    public static void forceUseOfDefaultCatalogWithJavaClassPath(ManagementContext manager) {
+        // TODO duplication with BrooklynRestApiLauncher ?
+
+        // don't use any catalog.xml which is set
+        ((BrooklynProperties)manager.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, SCANNING_CATALOG_BOM_URL);
+        // sets URLs for a surefire
+        ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+        // this also works
+//        ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forPackage("brooklyn"));
+        // but this (near-default behaviour) does not
+//        ((LocalManagementContext)manager).setBaseClassLoader(getClass().getClassLoader());
+    }
 //
 //    public static void enableAnyoneLogin(Server server) {
 //        ManagementContext mgmt = getManagementContextFromJettyServerAttributes(server);
@@ -103,5 +105,5 @@ public abstract class BrooklynRestApiLauncherTestFixture {
 //    public static ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
 //        return OsgiCompat.getManagementContext((ContextHandler) server.getHandler());
 //    }
-//
+
 }

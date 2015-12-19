@@ -514,7 +514,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     }
 
     @Test(dependsOnMethods = "testTriggerSampleEffector")
-    public void testPolicyWhichCapitalizes() {
+    public void testPolicyWhichCapitalizes() throws Exception {
         String policiesEndpoint = "/applications/simple-app/entities/simple-ent/policies";
         Set<PolicySummary> policies = client().path(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
         assertEquals(policies.size(), 0);
@@ -522,7 +522,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         Response response = client().path(policiesEndpoint)
                 .query("type", CapitalizePolicy.class.getCanonicalName())
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(Maps.newHashMap());
+                .post(toJsonEntity(ImmutableMap.of()));
         assertEquals(response.getStatus(), 200);
         PolicySummary policy = response.readEntity(PolicySummary.class);
         assertNotNull(policy.getId());

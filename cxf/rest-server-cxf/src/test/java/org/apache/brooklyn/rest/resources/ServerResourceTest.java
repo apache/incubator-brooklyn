@@ -35,14 +35,13 @@ import org.apache.brooklyn.entity.software.base.EmptySoftwareProcessImpl;
 import org.apache.brooklyn.rest.domain.HighAvailabilitySummary;
 import org.apache.brooklyn.rest.domain.VersionSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
-import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableSet;
-import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.cxf.jaxrs.client.WebClient;
 
@@ -115,17 +114,14 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
         BrooklynProperties properties = ((ManagementContextInternal)getManagementContext()).getBrooklynProperties();
         Object existingValue = null;
         boolean keyAlreadyPresent = false;
-        String response = null;
         if (properties.containsKey(key)) {
             existingValue = properties.remove(key);
             keyAlreadyPresent = true;
         }
         try {
             final WebClient webClient = client().path("/server/config/" + key);
-            response = webClient.get(String.class);
-            Asserts.fail("Expected call to " + webClient.getCurrentURI() + " to fail with status 404, instead server returned " + response);
-        } catch (WebApplicationException e) {
-            assertEquals(e.getResponse().getStatus(), 204);
+            Response response = webClient.get();
+            assertEquals(response.getStatus(), 204);
         } finally {
             if (keyAlreadyPresent) {
                 properties.put(key, existingValue);

@@ -31,6 +31,7 @@ import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.apache.cxf.jaxrs.impl.tl.ThreadLocalServletContext;
 import org.codehaus.jackson.Version;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -93,6 +94,11 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
      * returns null if a shared instance cannot be created.
      */
     public static ObjectMapper findSharedObjectMapper(ServletContext servletContext, ManagementContext mgmt) {
+        // CXF always injects a ThreadLocalServletContext that may return null later on
+        // so we need to test against the contained value instead of the injected one
+        // this allows this provider to be used outside the REST server, such as the CXF client during tests
+        if (servletContext instanceof ThreadLocalServletContext)
+            servletContext = ((ThreadLocalServletContext)servletContext).get();
         if (servletContext != null) {
             synchronized (servletContext) {
                 ObjectMapper mapper = (ObjectMapper) servletContext.getAttribute(BROOKLYN_REST_OBJECT_MAPPER);

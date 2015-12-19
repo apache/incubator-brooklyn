@@ -51,7 +51,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import javax.ws.rs.core.GenericType;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
 
 @Test(singleThreaded = true)
 public class EntityConfigResourceTest extends BrooklynRestResourceTest {

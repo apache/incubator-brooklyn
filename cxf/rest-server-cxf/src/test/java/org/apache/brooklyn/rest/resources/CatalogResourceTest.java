@@ -50,7 +50,6 @@ import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.testng.reporters.Files;
 
@@ -66,9 +65,9 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     
     private static String TEST_VERSION = "0.1.2";
 
-    @BeforeClass(alwaysRun=true)
-    public void setUp() throws Exception {
-        useLocalScannedCatalog();
+    @Override
+    protected boolean useLocalScannedCatalog() {
+        return true;
     }
     
     @Override
@@ -119,9 +118,10 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         assertEquals(Iterables.getOnlyElement(libs).getUrl(), bundleUrl);
 
         // now let's check other things on the item
+        URI expectedIconUrl = URI.create(getEndpointAddress() + "/catalog/icon/" + symbolicName + "/" + entityItem.getVersion()).normalize();
         assertEquals(entityItem.getName(), "My Catalog App");
         assertEquals(entityItem.getDescription(), "My description");
-        assertEquals(entityItem.getIconUrl(), "/catalog/icon/" + symbolicName + "/" + entityItem.getVersion());
+        assertEquals(entityItem.getIconUrl(), expectedIconUrl.toString());
         assertEquals(item.getIconUrl(), "classpath:/org/apache/brooklyn/test/osgi/entities/icon.gif");
 
         // an InterfacesTag should be created for every catalog item
@@ -228,8 +228,8 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 .path(URI.create("/catalog/entities/org.apache.brooklyn.entity.nosql.redis.RedisStore:0.0.0.SNAPSHOT"))
                 .get(CatalogEntitySummary.class);
         assertTrue(details.toString().contains("redis.port"), "expected more config, only got: "+details);
-        String expectedIconUrl = "/catalog/icon/" + details.getSymbolicName() + "/" + details.getVersion();
-        assertEquals(details.getIconUrl(), expectedIconUrl, "expected brooklyn URL for icon image ("+expectedIconUrl+"), but got: "+details.getIconUrl());
+        URI expectedIconUrl = URI.create(getEndpointAddress() + "/catalog/icon/" + details.getSymbolicName() + "/" + details.getVersion()).normalize();
+        assertEquals(details.getIconUrl(), expectedIconUrl.toString(), "expected brooklyn URL for icon image ("+expectedIconUrl+"), but got: "+details.getIconUrl());
     }
 
     @Test

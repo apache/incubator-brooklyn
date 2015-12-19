@@ -36,7 +36,6 @@ import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.text.StringEscapes;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.slf4j.Logger;
@@ -48,7 +47,6 @@ import com.google.common.collect.Iterables;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
 
 @Test(singleThreaded = true)
 public class DescendantsTest extends BrooklynRestResourceTest {

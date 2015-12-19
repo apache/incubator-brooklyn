@@ -28,6 +28,7 @@ import org.testng.annotations.Test;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
+@Test(singleThreaded = true)
 public class VersionResourceTest extends BrooklynRestResourceTest {
 
     @Override

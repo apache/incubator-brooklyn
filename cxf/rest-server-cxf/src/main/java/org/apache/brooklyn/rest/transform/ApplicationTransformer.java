@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableMap;
 import javax.ws.rs.core.UriBuilder;
 import org.apache.brooklyn.rest.api.ApplicationApi;
 import org.apache.brooklyn.rest.api.EntityApi;
-import org.apache.brooklyn.rest.util.WebResourceUtils;
 import static org.apache.brooklyn.rest.util.WebResourceUtils.resourceUriBuilder;
 import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 

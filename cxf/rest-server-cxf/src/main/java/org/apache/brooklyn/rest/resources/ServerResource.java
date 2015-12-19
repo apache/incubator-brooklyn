@@ -80,6 +80,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import org.apache.cxf.jaxrs.impl.tl.ThreadLocalProxy;
 
 public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 
@@ -131,6 +132,11 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         boolean isSingleTimeout = shutdownTimeout.equals(requestTimeout);
         final AtomicBoolean completed = new AtomicBoolean();
         final AtomicBoolean hasAppErrorsOrTimeout = new AtomicBoolean();
+
+        // CXF passes a ThreadLocalInvokableProxy towards the actual shutdownHandler,
+        // which won't behave well in the new Thread() created below
+        // FIXME: don't inject via @Context
+        shutdownHandler = (ShutdownHandler) ((ThreadLocalProxy)shutdownHandler).get();
 
         new Thread("shutdown") {
             @Override
