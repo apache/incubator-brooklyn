@@ -24,6 +24,7 @@ import static org.apache.brooklyn.rest.BrooklynRestApiLauncher.StartMode.WEB_XML
 
 import java.util.concurrent.Callable;
 
+import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtilsTest.SampleNoOpApplication;
 import org.apache.brooklyn.test.Asserts;
@@ -38,17 +39,17 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
 
     @Test
     public void testFilterStart() throws Exception {
-        checkRestCatalogApplications(useServerForTest(baseLauncher().mode(FILTER).start()));
+        checkRestCatalogEntities(useServerForTest(baseLauncher().mode(FILTER).start()));
     }
 
     @Test
     public void testServletStart() throws Exception {
-        checkRestCatalogApplications(useServerForTest(baseLauncher().mode(SERVLET).start()));
+        checkRestCatalogEntities(useServerForTest(baseLauncher().mode(SERVLET).start()));
     }
 
     @Test
     public void testWebAppStart() throws Exception {
-        checkRestCatalogApplications(useServerForTest(baseLauncher().mode(WEB_XML).start()));
+        checkRestCatalogEntities(useServerForTest(baseLauncher().mode(WEB_XML).start()));
     }
 
     private BrooklynRestApiLauncher baseLauncher() {
@@ -57,12 +58,12 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
                 .forceUseOfDefaultCatalogWithJavaClassPath(true);
     }
     
-    private static void checkRestCatalogApplications(Server server) throws Exception {
+    private static void checkRestCatalogEntities(Server server) throws Exception {
         final String rootUrl = "http://localhost:"+((NetworkConnector)server.getConnectors()[0]).getLocalPort();
         int code = Asserts.succeedsEventually(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                int code = HttpTool.getHttpStatusCode(rootUrl+"/v1/catalog/applications");
+                int code = HttpTool.getHttpStatusCode(rootUrl+"/v1/catalog/entities");
                 if (code == HttpStatus.SC_FORBIDDEN) {
                     throw new RuntimeException("Retry request");
                 } else {
@@ -71,7 +72,7 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
             }
         });
         HttpAsserts.assertHealthyStatusCode(code);
-        HttpAsserts.assertContentContainsText(rootUrl+"/v1/catalog/applications", SampleNoOpApplication.class.getSimpleName());
+        HttpAsserts.assertContentContainsText(rootUrl+"/v1/catalog/entities", BrooklynNode.class.getSimpleName());
     }
     
 }
