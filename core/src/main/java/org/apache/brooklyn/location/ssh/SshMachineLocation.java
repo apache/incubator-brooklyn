@@ -64,6 +64,8 @@ import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.location.BasicHardwareDetails;
 import org.apache.brooklyn.core.location.BasicMachineDetails;
 import org.apache.brooklyn.core.location.BasicOsDetails;
+import org.apache.brooklyn.core.location.LocationConfigUtils;
+import org.apache.brooklyn.core.location.LocationConfigUtils.OsCredential;
 import org.apache.brooklyn.core.location.PortRanges;
 import org.apache.brooklyn.core.location.access.PortForwardManager;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
@@ -87,7 +89,6 @@ import org.apache.brooklyn.util.core.task.system.internal.ExecWithLoggingHelpers
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 import org.apache.brooklyn.util.guava.KeyTransformingLoadingCache.KeyTransformingSameTypeLoadingCache;
-import org.apache.brooklyn.util.net.Urls;
 import org.apache.brooklyn.util.pool.BasicPool;
 import org.apache.brooklyn.util.pool.Pool;
 import org.apache.brooklyn.util.ssh.BashCommands;
@@ -1073,21 +1074,13 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     /** returns the un-passphrased key-pair info if a key is being used, or else null */
     public KeyPair findKeyPair() {
-        String fn = getConfig(SshTool.PROP_PRIVATE_KEY_FILE);
-        ResourceUtils r = ResourceUtils.create(this);
-        if (fn!=null) return SecureKeys.readPem(r.getResourceFromUrl(fn), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
-        String data = getConfig(SshTool.PROP_PRIVATE_KEY_DATA);
-        if (data!=null) return SecureKeys.readPem(new ReaderInputStream(new StringReader(data)), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
-        if (findPassword()!=null)
-            // if above not specified, and password is, use password
+        OsCredential creds = LocationConfigUtils.getOsCredential(config().getBag());
+        if (creds.hasKey()) {
+            String data = creds.getPrivateKeyData();
+            return SecureKeys.readPem(new ReaderInputStream(new StringReader(data)), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
+        } else {
             return null;
-        // fall back to id_rsa and id_dsa
-        if (new File( Urls.mergePaths(System.getProperty("user.home"), ".ssh/id_rsa") ).exists() )
-            return SecureKeys.readPem(r.getResourceFromUrl("~/.ssh/id_rsa"), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
-        if (new File( Urls.mergePaths(System.getProperty("user.home"), ".ssh/id_dsa") ).exists() )
-            return SecureKeys.readPem(r.getResourceFromUrl("~/.ssh/id_dsa"), getConfig(SshTool.PROP_PRIVATE_KEY_PASSPHRASE));
-        LOG.warn("Unable to extract any key or passphrase data in request to findKeyPair for "+this);
-        return null;
+        }
     }
 
     /** returns the password being used to log in, if a password is being used, or else null */

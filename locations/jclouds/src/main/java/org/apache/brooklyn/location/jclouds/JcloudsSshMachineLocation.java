@@ -20,7 +20,6 @@ package org.apache.brooklyn.location.jclouds;
 
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
 
-import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +35,8 @@ import org.apache.brooklyn.api.location.OsDetails;
 import org.apache.brooklyn.core.location.BasicHardwareDetails;
 import org.apache.brooklyn.core.location.BasicMachineDetails;
 import org.apache.brooklyn.core.location.BasicOsDetails;
+import org.apache.brooklyn.core.location.LocationConfigUtils;
+import org.apache.brooklyn.core.location.LocationConfigUtils.OsCredential;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -64,6 +65,7 @@ import com.google.common.base.Optional;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.net.HostAndPort;
 import com.google.common.util.concurrent.ListenableFuture;
 
 public class JcloudsSshMachineLocation extends SshMachineLocation implements JcloudsMachineLocation {
@@ -102,6 +104,10 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
     @SetFromFlag
     String hostname;
 
+    // Populated lazily, on first call to getSubnetHostname()
+    @SetFromFlag
+    String privateHostname;
+
     /**
      * Historically, "node" and "template" were persisted. However that is a very bad idea!
      * It means we pull in lots of jclouds classes into the persisted state. We are at an  
@@ -118,8 +124,6 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
 
     private transient Optional<Image> _image;
 
-    private transient String _privateHostname;
-    
     private RunScriptOnNode.Factory runScriptFactory;
     
     public JcloudsSshMachineLocation() {
@@ -273,11 +277,34 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
     
     @Override
     public String getHostname() {
-        if (hostname != null) {
-            return hostname;
+        // Changed behaviour in Brooklyn 0.9.0. Previously it just did node.getHostname(), which
+        // was wrong on some clouds (e.g. vcloud-director, where VMs are often given a random 
+        // hostname that does not resolve on the VM and is not in any DNS).
+        // Now delegates to jcloudsParent.getPublicHostname(node).
+        if (privateHostname == null) {
+            Optional<NodeMetadata> node = getOptionalNode();
+            if (node.isPresent()) {
+                HostAndPort sshHostAndPort = getSshHostAndPort();
+                LoginCredentials creds = getLoginCredentials();
+                hostname = jcloudsParent.getPublicHostname(node.get(), Optional.of(sshHostAndPort), creds, config().getBag());
+                requestPersist();
+
+            } else {
+                // Fallback: impl taken (mostly) from jcloudsParent.getPublicHostnameGeneric(NodeMetadata, ConfigBag).
+                // But we won't have a node object (e.g. after rebind, and VM has been terminated).
+                // We also resort to address.getHostAddress as final fallback.
+                if (groovyTruth(getPublicAddresses())) {
+                    hostname = getPublicAddresses().iterator().next();
+                } else if (groovyTruth(getPrivateAddresses())) {
+                    hostname = getPrivateAddresses().iterator().next();
+                } else {
+                    hostname = getAddress().getHostAddress();
+                }
+            }
+            LOG.debug("Resolved hostname {} for {}", hostname, this);
+            requestPersist();
         }
-        InetAddress address = getAddress();
-        return (address != null) ? address.getHostAddress() : null;
+        return hostname;
     }
     
     /** In clouds like AWS, the public hostname is the only way to ensure VMs in different zones can access each other. */
@@ -293,29 +320,39 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
 
     @Override
     public String getSubnetHostname() {
-        // Changed behaviour in Brooklyn 0.9.0. Previously it delegated to jcloudsParent.getPrivateHostname(node),
-        // which would treat AWS as a special case to try to get the AWS hostname. Now it just does the generic
-        // lookup, based on the private/public addresses retrieved from node during at construction time.
-        if (_privateHostname == null) {
-            // Impl taken from jcloudsParent.getPrivateHostnameGeneric(NodeMetadata, ConfigBag).
-            // But we won't always have a node object (e.g. after rebind).
-            //
-            //prefer the private address to the hostname because hostname is sometimes wrong/abbreviated
-            //(see that javadoc; also e.g. on rackspace/cloudstack, the hostname is not registered with any DNS).
-            //Don't return local-only address (e.g. never 127.0.0.1)
-            for (String p : getPrivateAddresses()) {
-                if (Networking.isLocalOnly(p)) continue;
-                _privateHostname = p;
-            }
-            if (groovyTruth(getPublicAddresses())) {
-                _privateHostname = getPublicAddresses().iterator().next();
-            } else if (groovyTruth(getHostname())) {
-                _privateHostname = getHostname();
+        if (privateHostname == null) {
+            Optional<NodeMetadata> node = getOptionalNode();
+            if (node.isPresent()) {
+                // Prefer jcloudsLocation.getPrivateHostname(): it handles AWS hostname in a special way, 
+                // by querying AWS for the hostname that resolves both inside and outside of the region.
+                // If we can't get the node (i.e. the cloud provider doesn't know that id, because it has
+                // been terminated), then we don't care as much about getting the right id!
+                HostAndPort sshHostAndPort = getSshHostAndPort();
+                LoginCredentials creds = getLoginCredentials();
+                privateHostname = jcloudsParent.getPrivateHostname(node.get(), Optional.of(sshHostAndPort), creds, config().getBag());
+
             } else {
-                return null;
+                // Fallback: impl taken from jcloudsParent.getPrivateHostnameGeneric(NodeMetadata, ConfigBag).
+                // But we won't have a node object (e.g. after rebind, and VM has been terminated).
+                //prefer the private address to the hostname because hostname is sometimes wrong/abbreviated
+                //(see that javadoc; also e.g. on rackspace/cloudstack, the hostname is not registered with any DNS).
+                //Don't return local-only address (e.g. never 127.0.0.1)
+                for (String p : getPrivateAddresses()) {
+                    if (Networking.isLocalOnly(p)) continue;
+                    privateHostname = p;
+                    break;
+                }
+                if (groovyTruth(getPublicAddresses())) {
+                    privateHostname = getPublicAddresses().iterator().next();
+                } else {
+                    privateHostname = getHostname();
+                }
             }
+            requestPersist();
+            LOG.debug("Resolved subnet hostname {} for {}", privateHostname, this);
         }
-        return _privateHostname;
+        
+        return privateHostname;
     }
 
     @Override
@@ -430,6 +467,16 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
         } else {
             throw new IllegalStateException("Node "+nodeId+" not present in "+getParent());
         }
+    }
+
+    private LoginCredentials getLoginCredentials() {
+        OsCredential creds = LocationConfigUtils.getOsCredential(config().getBag());
+        
+        return LoginCredentials.builder()
+                .user(getUser())
+                .privateKey(creds.hasKey() ? creds.getPrivateKeyData() : null)
+                .password(creds.hasPassword() ? creds.getPassword() : null)
+                .build();
     }
 
     /**
