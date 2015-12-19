@@ -43,45 +43,36 @@ import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 
-public class SensorResourceIntegrationTest extends BrooklynRestApiLauncherTestFixture {
+public class SensorResourceIntegrationTest extends BrooklynRestResourceTest {
 
-    @Test
-    public void notImplemented() {
-        Assert.fail("TODO: convert to pax-exam");
+    private ManagementContext mgmt;
+    private BasicApplication app;
+
+    @BeforeClass(alwaysRun = true)
+    protected void setUp() {
+        mgmt = getManagementContext();
+        app = mgmt.getEntityManager().createEntity(EntitySpec.create(BasicApplication.class).displayName("simple-app")
+            .child(EntitySpec.create(Entity.class, RestMockSimpleEntity.class).displayName("simple-ent")));
+        mgmt.getEntityManager().manage(app);
+        app.start(MutableList.of(mgmt.getLocationRegistry().resolve("localhost")));
     }
 
-//    private Server server;
-//    private ManagementContext mgmt;
-//    private BasicApplication app;
-//
-//    @BeforeClass(alwaysRun = true)
-//    protected void setUp() {
-//        mgmt = LocalManagementContextForTests.newInstance();
-//        server = useServerForTest(BrooklynRestApiLauncher.launcher()
-//            .managementContext(mgmt)
-//            .withoutJsgui()
-//            .start());
-//        app = mgmt.getEntityManager().createEntity(EntitySpec.create(BasicApplication.class).displayName("simple-app")
-//            .child(EntitySpec.create(Entity.class, RestMockSimpleEntity.class).displayName("simple-ent")));
-//        mgmt.getEntityManager().manage(app);
-//        app.start(MutableList.of(mgmt.getLocationRegistry().resolve("localhost")));
-//    }
-//
-//    // marked integration because of time
-//    @Test(groups = "Integration")
-//    public void testSensorBytes() throws Exception {
-//        EntityInternal entity = (EntityInternal) Iterables.find(mgmt.getEntityManager().getEntities(), EntityPredicates.displayNameEqualTo("simple-ent"));
-//        SensorResourceTest.addAmphibianSensor(entity);
-//
-//        String baseUri = getBaseUri(server);
-//        URI url = URI.create(Urls.mergePaths(baseUri, SensorResourceTest.SENSORS_ENDPOINT, SensorResourceTest.SENSOR_NAME));
-//
-//        // Uses explicit "application/json" because failed on jenkins as though "text/plain" was the default on Ubuntu jenkins!
-//        HttpClient client = HttpTool.httpClientBuilder().uri(baseUri).build();
-//        HttpToolResponse response = HttpTool.httpGet(client, url, ImmutableMap.<String, String>of("Accept", "application/json"));
-//        HttpTestUtils.assertHealthyStatusCode(response.getResponseCode());
-//        Assert.assertEquals(response.getContentAsString(), "\"12345 frogs\"");
-//    }
-//
+    // marked integration because of time
+    @Test(groups = "Integration")
+    public void testSensorBytes() throws Exception {
+        EntityInternal entity = (EntityInternal) Iterables.find(mgmt.getEntityManager().getEntities(), EntityPredicates.displayNameEqualTo("simple-ent"));
+        SensorResourceTest.addAmphibianSensor(entity);
+
+        String baseUri = getEndpointAddress();
+        URI url = URI.create(Urls.mergePaths(baseUri, SensorResourceTest.SENSORS_ENDPOINT, SensorResourceTest.SENSOR_NAME));
+
+        // Uses explicit "application/json" because failed on jenkins as though "text/plain" was the default on Ubuntu jenkins!
+        HttpClient client = HttpTool.httpClientBuilder().uri(baseUri).build();
+        HttpToolResponse response = HttpTool.httpGet(client, url, ImmutableMap.<String, String>of("Accept", "application/json"));
+        HttpTestUtils.assertHealthyStatusCode(response.getResponseCode());
+        Assert.assertEquals(response.getContentAsString(), "\"12345 frogs\"");
+    }
+
 }

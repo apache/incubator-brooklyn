@@ -101,7 +101,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     public void testTriggerRedisStopEffector() throws Exception {
         Response response = client().path("/applications/redis-app/entities/redis-ent/effectors/stop")
                 .type(MediaType.APPLICATION_JSON_TYPE)
-                .post(ImmutableMap.of());
+                .post(toJsonEntity(ImmutableMap.of()));
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
         final URI stateSensor = URI.create("/applications/redis-app/entities/redis-ent/sensors/service.state");
