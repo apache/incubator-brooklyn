@@ -59,8 +59,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import javax.ws.rs.core.GenericType;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
+@Test( // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "UsageResourceTest")
 public class UsageResourceTest extends BrooklynRestResourceTest {
 
     @SuppressWarnings("unused")
@@ -74,11 +75,6 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
             entities(ImmutableSet.of(new org.apache.brooklyn.rest.domain.EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).
             locations(ImmutableSet.of("localhost")).
             build();
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {

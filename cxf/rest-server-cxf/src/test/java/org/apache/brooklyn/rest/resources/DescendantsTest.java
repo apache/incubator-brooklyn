@@ -46,9 +46,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
-@Test(singleThreaded = true)
+@Test(singleThreaded = true,
+        // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "DescendantsTest")
 public class DescendantsTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(DescendantsTest.class);
@@ -59,11 +60,6 @@ public class DescendantsTest extends BrooklynRestResourceTest {
             new EntitySpec("simple-ent-2", RestMockSimpleEntity.class.getName()))).
         locations(ImmutableSet.of("localhost")).
         build();
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     @Test
     public void testDescendantsInSimpleDeployedApplication() throws InterruptedException, TimeoutException, JsonGenerationException, JsonMappingException, IOException {

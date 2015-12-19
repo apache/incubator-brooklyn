@@ -31,6 +31,8 @@ import org.apache.brooklyn.rest.testing.mocks.RestMockApp;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+@Test( // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "ScriptResourceTest")
 public class ScriptResourceTest {
 
     @Test

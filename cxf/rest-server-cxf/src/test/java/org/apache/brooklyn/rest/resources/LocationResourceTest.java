@@ -48,12 +48,11 @@ import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.domain.LocationSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.test.Asserts;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
 
 @Test(singleThreaded = true, 
         // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
-        suiteName = "RestCxfLocationTests")
+        suiteName = "LocationResourceTest")
 public class LocationResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(LocationResourceTest.class);
@@ -62,11 +61,6 @@ public class LocationResourceTest extends BrooklynRestResourceTest {
     
     private String locationName = "my-jungle";
     private String locationVersion = "0.1.2";
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     @Test
     @Deprecated

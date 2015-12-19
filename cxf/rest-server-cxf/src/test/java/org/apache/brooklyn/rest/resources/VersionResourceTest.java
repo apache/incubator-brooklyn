@@ -26,15 +26,11 @@ import javax.ws.rs.core.Response;
 import org.testng.annotations.Test;
 
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
-@Test(singleThreaded = true)
+@Test(singleThreaded = true,
+        // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "VersionResourceTest")
 public class VersionResourceTest extends BrooklynRestResourceTest {
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     @Test
     public void testGetVersion() {

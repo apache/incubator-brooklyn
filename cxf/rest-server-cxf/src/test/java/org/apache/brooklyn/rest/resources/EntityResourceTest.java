@@ -50,9 +50,10 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import javax.ws.rs.core.Response;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
-@Test(singleThreaded = true)
+@Test(singleThreaded = true,
+        // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "EntityResourceTest")
 public class EntityResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(EntityResourceTest.class);
@@ -67,11 +68,6 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
 
     private static final String entityEndpoint = "/applications/simple-app/entities/simple-ent";
 
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
-    
     @BeforeClass(alwaysRun = true)
     public void setUp() throws Exception {
         // Deploy application

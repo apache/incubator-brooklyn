@@ -57,8 +57,9 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import java.io.InputStream;
 import javax.ws.rs.core.GenericType;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
+@Test( // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "CatalogResourceTest")
 public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogResourceTest.class);
@@ -70,11 +71,6 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         return true;
     }
     
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
-
     @Test
     /** based on CampYamlLiteTest */
     public void testRegisterCustomEntityTopLevelSyntaxWithBundleWhereEntityIsFromCoreAndIconFromBundle() {

@@ -88,10 +88,11 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedHashMap;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.cxf.jaxrs.client.WebClient;
 
-@Test(singleThreaded = true)
+@Test(singleThreaded = true,
+        // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "ApplicationResourceTest")
 public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     /*
@@ -119,11 +120,6 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
           ))
           .locations(ImmutableSet.of("localhost"))
           .build();
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     // Convenience for finding an EntitySummary within a collection, based on its name
     private static Predicate<EntitySummary> withName(final String name) {

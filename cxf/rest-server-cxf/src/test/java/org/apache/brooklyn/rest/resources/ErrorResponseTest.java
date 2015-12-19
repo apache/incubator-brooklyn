@@ -39,19 +39,15 @@ import org.apache.brooklyn.rest.testing.mocks.RestMockSimplePolicy;
 
 import com.google.common.collect.ImmutableSet;
 import javax.ws.rs.core.Response;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
+@Test( // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "ErrorResponseTest")
 public class ErrorResponseTest extends BrooklynRestResourceTest {
 
     private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").entities(
             ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).locations(
             ImmutableSet.of("localhost")).build();
     private String policyId;
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     @BeforeClass(alwaysRun = true)
     public void setUp() throws Exception {

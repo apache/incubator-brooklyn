@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import javax.ws.rs.core.GenericType;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
 @Test(singleThreaded = true)
 public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest {
@@ -57,11 +56,6 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
             .entities(ImmutableSet.of(new EntitySpec("redis-ent", "org.apache.brooklyn.entity.nosql.redis.RedisStore")))
             .locations(ImmutableSet.of("localhost"))
             .build();
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     @Test(groups="Integration")
     public void testDeployRedisApplication() throws Exception {

@@ -30,18 +30,14 @@ import org.testng.annotations.Test;
 
 import org.apache.brooklyn.rest.domain.AccessSummary;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
-@Test(singleThreaded = true)
+@Test(singleThreaded = true,
+        // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "AccessResourceTest")
 public class AccessResourceTest extends BrooklynRestResourceTest {
 
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(AccessResourceTest.class);
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     @Test
     public void testGetAndSetAccessControl() throws Exception {

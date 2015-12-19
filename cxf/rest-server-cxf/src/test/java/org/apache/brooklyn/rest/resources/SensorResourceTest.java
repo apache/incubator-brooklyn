@@ -49,7 +49,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.InputStream;
 import javax.ws.rs.core.GenericType;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.apache.cxf.jaxrs.client.WebClient;
 
 /**
@@ -58,7 +57,9 @@ import org.apache.cxf.jaxrs.client.WebClient;
  * Check that {@link SensorResource} correctly renders {@link AttributeSensor}
  * values, including {@link RendererHints.DisplayValue} hints.
  */
-@Test(singleThreaded = true)
+@Test(singleThreaded = true,
+        // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "SensorResourceTest")
 public class SensorResourceTest extends BrooklynRestResourceTest {
 
     final static ApplicationSpec SIMPLE_SPEC = ApplicationSpec.builder()
@@ -72,11 +73,6 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
     static final AttributeSensor<Integer> SENSOR = Sensors.newIntegerSensor(SENSOR_NAME);
 
     EntityInternal entity;
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
 
     /**
      * Sets up the application and entity.

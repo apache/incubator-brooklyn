@@ -45,9 +45,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import javax.ws.rs.core.GenericType;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 
-@Test(singleThreaded = true)
+@Test(singleThreaded = true,
+        // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+        suiteName = "PolicyResourceTest")
 public class PolicyResourceTest extends BrooklynRestResourceTest {
 
     @SuppressWarnings("unused")
@@ -61,11 +62,6 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
 
     private String policyId;
     
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
-    }
-
     @BeforeClass(alwaysRun = true)
     public void setUp() throws Exception {
         startServer();

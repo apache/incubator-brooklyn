@@ -33,9 +33,10 @@ import org.apache.brooklyn.test.http.TestHttpServer;
 import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.http.HttpTool;
-import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import static org.testng.Assert.assertEquals;
 
+@Test( // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
+    suiteName = "CatalogResetTest")
 public class CatalogResetTest extends BrooklynRestResourceTest {
 
     private TestHttpServer server;
@@ -53,11 +54,6 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
     @Override
     protected boolean useLocalScannedCatalog() {
         return true;
-    }
-
-    @Override
-    protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
     }
 
     @AfterClass(alwaysRun=true)

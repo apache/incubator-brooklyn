@@ -70,23 +70,10 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         }
     }
 
-    /**
-     * Allows subclasses to customize the CXF server bean.
-     * 
-     * For example:
-     *
-     * <code>
-     * sf.setResourceClasses(MyJaxrsResource.class);
-     *
-     * List<Object> providers = new ArrayList<Object>();
-     * // add custom providers if any
-     * sf.setProviders(providers);
-     *
-     * sf.setResourceProvider(MyJaxrsResource.class.class,
-     *                        new SingletonResourceProvider(new MyJaxrsResource(), true));
-     * </code>
-     */
-    protected abstract void configureCXF(JAXRSServerFactoryBean sf);
+    /** Allows subclasses to customize the CXF server bean. */
+    protected void configureCXF(JAXRSServerFactoryBean sf) {
+        addDefaultRestApi(sf);
+    }
 
     protected void addDefaultRestApi(JAXRSServerFactoryBean sf) {
         if (resources == null)
