@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.test.camp;
+package org.apache.brooklyn.qa.camp;
 
 import java.io.IOException;
 import java.io.Reader;
