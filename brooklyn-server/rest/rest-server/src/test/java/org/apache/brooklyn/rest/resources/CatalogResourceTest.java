@@ -188,13 +188,13 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testFilterListOfEntitiesByName() {
         List<CatalogEntitySummary> entities = client().resource("/v1/catalog/entities")
-                .queryParam("fragment", "reDISclusTER").get(new GenericType<List<CatalogEntitySummary>>() {});
+                .queryParam("fragment", "brOOkLynENTITYmiRrOr").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities.size(), 1);
 
         log.info("RedisCluster-like entities are: " + entities);
 
         List<CatalogEntitySummary> entities2 = client().resource("/v1/catalog/entities")
-                .queryParam("regex", "[Rr]ed.[sulC]+ter").get(new GenericType<List<CatalogEntitySummary>>() {});
+                .queryParam("regex", "[Bb]ro+klynEntityMi[ro]+").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities2.size(), 1);
 
         assertEquals(entities, entities2);

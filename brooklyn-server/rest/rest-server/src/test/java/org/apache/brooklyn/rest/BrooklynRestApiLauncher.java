@@ -384,8 +384,8 @@ public class BrooklynRestApiLauncher {
     private static String findJsguiWebapp() {
         // could also look in maven repo ?
         return Optional
-                .fromNullable(findMatchingFile("../../brooklyn-ui/src/main/webapp"))
-                .or(findMatchingFile("../../brooklyn-ui/target/*.war"))
+                .fromNullable(findMatchingFile("./brooklyn-ui/src/main/webapp"))
+                .or(findMatchingFile("./brooklyn-ui/target/*.war"))
                 .orNull();
     }
 

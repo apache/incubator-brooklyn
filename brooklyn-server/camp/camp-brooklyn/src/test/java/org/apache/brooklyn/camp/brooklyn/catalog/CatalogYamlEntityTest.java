@@ -796,8 +796,7 @@ public class CatalogYamlEntityTest extends AbstractYamlTest {
         createAppEntitySpec(
                 "services:",
                 "- type: cluster",
-                "- type: vanilla",
-                "- type: web-app-cluster");
+                "- type: vanilla");
     }
 
     private void registerAndLaunchAndAssertSimpleEntity(String symbolicName, String serviceType) throws Exception {
