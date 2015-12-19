@@ -47,8 +47,10 @@
         <maven-dependency-plugin.version>2.8</maven-dependency-plugin.version>
         <nodejs-maven-plugin.version>1.0.3</nodejs-maven-plugin.version>
         <maven-war-plugin.version>2.4</maven-war-plugin.version>
+        <nodejs-maven-binaries.version>0.10.25</nodejs-maven-binaries.version>
         <requirejs-maven-plugin.version>2.0.0</requirejs-maven-plugin.version>
         <maven-replacer-plugin.version>1.5.2</maven-replacer-plugin.version>
+        <maven-resources-plugin.version>2.7</maven-resources-plugin.version>
     </properties>
 
     <build>
@@ -73,6 +75,28 @@
                  run js tests with: $ mvn clean process-test-resources jasmine:test
                  run tests in the browser with: $ mvn jasmine:bdd
             -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>copy-fixtures</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/jasmine/fixtures</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <!-- copy rest-api fixtures from brooklyn-server submodule repo -->
+                                    <directory>${project.basedir}/../brooklyn-server/rest/rest-api/src/test/resources/fixtures</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>com.github.searls</groupId>
                 <artifactId>jasmine-maven-plugin</artifactId>
