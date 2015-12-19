@@ -74,9 +74,9 @@
 
     <modules>
         <module>downstream-parent</module>
-        <module>archetypes/quickstart</module>
         <module>all</module>
         <module>dist</module>
+        <module>archetypes/quickstart</module>
     </modules>
 
 </project>
