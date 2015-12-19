@@ -47,8 +47,6 @@ public abstract class BrooklynRestApiTest {
     protected final static String ENDPOINT_ADDRESS_LOCAL = "local://";
     protected final static String ENDPOINT_ADDRESS_HTTP = "http://localhost:9998/";
 
-    private String endpointAddress = ENDPOINT_ADDRESS_HTTP;
-
     protected List<AbstractBrooklynRestResource> resources = null;
     protected List<Object> providers = null;
 
@@ -93,12 +91,8 @@ public abstract class BrooklynRestApiTest {
         return manager;
     }
     
-    protected void setEndpointAddress(String endpointAddress) {
-        this.endpointAddress = endpointAddress;
-    }
-
     protected String getEndpointAddress() {
-        return this.endpointAddress;
+        return ENDPOINT_ADDRESS_HTTP;
     }
 
     protected ObjectMapper mapper() {
