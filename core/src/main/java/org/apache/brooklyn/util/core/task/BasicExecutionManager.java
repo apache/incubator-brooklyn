@@ -50,6 +50,7 @@ import org.apache.brooklyn.api.mgmt.HasTaskChildren;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
 import org.apache.brooklyn.core.BrooklynFeatureEnablement;
+import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Identifiers;
@@ -571,7 +572,7 @@ public class BasicExecutionManager implements ExecutionManager {
     @SuppressWarnings("unchecked")
     protected <T> Task<T> submitNewTask(final Map<?,?> flags, final Task<T> task) {
         if (log.isTraceEnabled()) log.trace("Submitting task {} ({}), with flags {}, and tags {}, job {}", 
-                new Object[] {task.getId(), task, flags, task.getTags(), 
+                new Object[] {task.getId(), task, Sanitizer.sanitize(flags), task.getTags(), 
                 (task instanceof TaskInternal ? ((TaskInternal<T>)task).getJob() : "<unavailable>")});
         
         if (task instanceof ScheduledTask)
