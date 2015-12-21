@@ -2097,9 +2097,9 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
         final String rawRegion;
 
         public RebindToMachinePredicate(ConfigBag config) {
-            rawId = (String) config.getStringKey("id");
-            rawHostname = (String) config.getStringKey("hostname");
-            rawRegion = (String) config.getStringKey("region");
+            rawId = config.get("id", String.class);
+            rawHostname = config.get("hostname", String.class);
+            rawRegion = config.get("region", String.class);
         }
 
         @Override

@@ -29,6 +29,8 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.exceptions.PropagatedRuntimeException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -164,21 +166,24 @@ public class LocationExtensionsTest {
         try {
             Location loc = createConcrete(MyExtension.class, "not an extension");
             fail("loc="+loc);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
+            assertTrue(Exceptions.getFirstInteresting(e) instanceof IllegalArgumentException);
             // success
         }
         
         try {
             Location loc = createConcrete(MyExtension.class, null);
             fail("loc="+loc);
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
+            assertTrue(Exceptions.getFirstInteresting(e) instanceof NullPointerException);
             // success
         }
         
         try {
             Location loc = createConcrete(null, extension);
             fail("loc="+loc);
-        } catch (NullPointerException e) {
+        } catch (Exception e) {
+            assertTrue(Exceptions.getFirstInteresting(e) instanceof NullPointerException);
             // success
         }
     }

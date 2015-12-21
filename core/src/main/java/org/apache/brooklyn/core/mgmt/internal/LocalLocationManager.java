@@ -23,6 +23,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.Closeable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.brooklyn.api.location.Location;
@@ -37,20 +38,25 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.internal.storage.BrooklynStorage;
 import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.location.internal.LocationInternal;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.objs.proxy.InternalLocationFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
+import org.apache.brooklyn.util.core.task.BasicExecutionContext;
+import org.apache.brooklyn.util.core.task.BasicExecutionManager;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 import org.apache.brooklyn.util.stream.Streams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 
 public class LocalLocationManager implements LocationManagerInternal {
@@ -63,6 +69,7 @@ public class LocalLocationManager implements LocationManagerInternal {
 
     private final LocalManagementContext managementContext;
     private final InternalLocationFactory locationFactory;
+    private final BasicExecutionContext executionContext;
     
     protected final Map<String,Location> locationsById = Maps.newLinkedHashMap();
     private final Map<String, Location> preRegisteredLocationsById = Maps.newLinkedHashMap();
@@ -78,9 +85,13 @@ public class LocalLocationManager implements LocationManagerInternal {
     public LocalLocationManager(LocalManagementContext managementContext) {
         this.managementContext = checkNotNull(managementContext, "managementContext");
         this.locationFactory = new InternalLocationFactory(managementContext);
-        
+
         this.storage = managementContext.getStorage();
-        locationTypes = storage.getMap("locations");
+        this.locationTypes = storage.getMap("locations");
+
+        BasicExecutionManager executionManager = new BasicExecutionManager(managementContext.getManagementNodeId());
+        ImmutableSet<?> tags = ImmutableSet.of(managementContext, BrooklynTaskTags.TRANSIENT_TASK_TAG);
+        this.executionContext = new BasicExecutionContext(MutableMap.of("tags", tags), executionManager);
     }
 
     public InternalLocationFactory getLocationFactory() {
@@ -90,27 +101,42 @@ public class LocalLocationManager implements LocationManagerInternal {
     }
 
     @Override
-    public <T extends Location> T createLocation(LocationSpec<T> spec) {
+    public <T extends Location> T createLocation(final LocationSpec<T> spec) {
+        // Ensure that the creation happens in the context of a task, so that any DeferredSupplier values
+        // can get hold of any necessary context objects via task tags.
+        Callable<T> performCreation = new Callable<T>() {
+            @Override public T call() {
+                boolean createUnmanaged = ConfigBag.coerceFirstNonNullKeyValue(
+                    CREATE_UNMANAGED, 
+                    spec.getConfig().get(CREATE_UNMANAGED),
+                    spec.getFlags().get(CREATE_UNMANAGED.getName())
+                );
+                if (createUnmanaged) {
+                    spec.removeConfig(CREATE_UNMANAGED);
+                }
+                T loc = locationFactory.createLocation(spec);
+                if (!createUnmanaged) {
+                    manage(loc);
+                } else {
+                    // remove references
+                    Location parent = loc.getParent();
+                    if (parent != null) {
+                        ((AbstractLocation) parent).removeChild(loc);
+                    }
+                    preRegisteredLocationsById.remove(loc.getId());
+                }
+                return loc;
+            }
+        };
+
         try {
-            boolean createUnmanaged = ConfigBag.coerceFirstNonNullKeyValue(CREATE_UNMANAGED, 
-                spec.getConfig().get(CREATE_UNMANAGED), spec.getFlags().get(CREATE_UNMANAGED.getName()));
-            if (createUnmanaged) {
-                spec.removeConfig(CREATE_UNMANAGED);
+            // Only create a new task if we're not in the context of one already.
+            if (Tasks.current() == null) {
+                return executionContext.submit(performCreation).get();
+            } else {
+                return performCreation.call();
             }
 
-            T loc = locationFactory.createLocation(spec);
-            if (!createUnmanaged) {
-                manage(loc);
-            } else {
-                // remove references
-                Location parent = loc.getParent();
-                if (parent!=null) {
-                    ((AbstractLocation)parent).removeChild(loc);
-                }
-                preRegisteredLocationsById.remove(loc.getId());
-            }
-            
-            return loc;
         } catch (Throwable e) {
             log.warn("Failed to create location using spec "+spec+" (rethrowing)", e);
             throw Exceptions.propagate(e);
