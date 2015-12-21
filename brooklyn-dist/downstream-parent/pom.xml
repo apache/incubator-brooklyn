@@ -22,9 +22,14 @@
 
   <parent>
     <groupId>org.apache.brooklyn</groupId>
-    <artifactId>brooklyn-dist-root</artifactId>
+    <artifactId>brooklyn-server</artifactId>
     <version>0.9.SPLITWIP-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
-    <relativePath>../pom.xml</relativePath>
+    <relativePath>../../brooklyn-server/pom.xml</relativePath>
+    <!-- TODO this uses server root pom as a way to get version info without rat check;
+         it means it inherits apache pom, which might not be desired.
+         probably cleaner NOT to have a downstream-parent, instead for project to redeclare their tasks.
+         (yes it violates DRY, but until Maven 4 supporting Mixins that is probably better than
+         hacks in a parent hierarchy to which people won't have visibility. -->
   </parent>
 
   <artifactId>brooklyn-downstream-parent</artifactId>
