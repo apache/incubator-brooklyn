@@ -41,11 +41,11 @@ This code has not been voted on and are not endorsed by The Apache Software Foun
 Documentation for these versions are uploaded from time to time,
 and are provided here for reference:
 
-* **[0.9.SPLITWIP-SNAPSHOT](/v/0.9.SPLITWIP-SNAPSHOT/)**: latest unreleased version
+* **[0.9.0-SNAPSHOT](/v/0.9.0-SNAPSHOT/)**: latest unreleased version
 (although docs may not be up-to-date with the latest code)
 
 * **[0.8.0-SNAPSHOT](/v/0.8.0-SNAPSHOT/)**: any changes since 0.8.0-incubating which would go into 0.8.1
-(mainly things from 0.9.SPLITWIP-SNAPSHOT which warranted being backported)
+(mainly things from 0.9.0-SNAPSHOT which warranted being backported)
 
 * **[0.7.0-SNAPSHOT](/v/0.7.0-SNAPSHOT/)**: any changes since 0.7.0-incubating which would go into 0.7.1
 (mainly things from 0.8.0-SNAPSHOT which warranted being backported)

@@ -164,7 +164,7 @@
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-camp</artifactId>
-            <version>0.9.SPLITWIP-SNAPSHOT</version>
+            <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
             <scope>test</scope>
         </dependency>
         <dependency>

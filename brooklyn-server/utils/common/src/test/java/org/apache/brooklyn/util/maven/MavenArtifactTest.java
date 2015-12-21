@@ -210,7 +210,7 @@ public class MavenArtifactTest {
     /*
         Exception java.lang.AssertionError
         
-        Message: Could not load /home/ubuntu/.m2/repository/org/apache/brooklyn/brooklyn-utils-common/0.9.SPLITWIP-SNAPSHOT/brooklyn-utils-common-0.9.SPLITWIP-SNAPSHOT.jar when testing MavenRetriever: do a maven build with no integration tests first to ensure this is installed, then rerun
+        Message: Could not load /home/ubuntu/.m2/repository/org/apache/brooklyn/brooklyn-utils-common/(version)/brooklyn-utils-common-(version)-SNAPSHOT.jar when testing MavenRetriever: do a maven build with no integration tests first to ensure this is installed, then rerun
         Stacktrace:
         
         
