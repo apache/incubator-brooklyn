@@ -62,9 +62,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 
-import com.google.api.client.util.Preconditions;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -363,7 +363,7 @@ public class BrooklynLauncherTest {
     }
 
     private BrooklynLauncher newLauncherForTests(boolean minimal) {
-        Preconditions.checkArgument(launcher==null, "can only be used if no launcher yet");
+        Preconditions.checkArgument(launcher == null, "can only be used if no launcher yet");
         BrooklynLauncher launcher = BrooklynLauncher.newInstance();
         if (minimal)
             launcher.brooklynProperties(LocalManagementContextForTests.builder(true).buildProperties());

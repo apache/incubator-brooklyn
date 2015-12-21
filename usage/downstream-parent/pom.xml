@@ -447,17 +447,30 @@
                 <supportedProjectType>jar</supportedProjectType>
               </supportedProjectTypes>
               <instructions>
-                <!-- OSGi specific instruction -->
                 <!--
-                    By default packages containing impl and internal
-                    are not included in the export list. Setting an
-                    explicit wildcard will include all packages
-                    regardless of name.
-                    In time we should minimize our export lists to
-                    what is really needed.
+                  Exclude packages used by Brooklyn that are not OSGi bundles. Including any
+                  of the below may cause bundles to fail to load into the catalogue with
+                  messages like "Unable to resolve 150.0: missing requirement [150.0]
+                  osgi.wiring.package; (osgi.wiring.package=com.maxmind.geoip2)".
                 -->
-                <Export-Package>brooklyn.*,org.apache.brooklyn.*</Export-Package>
-                <!-- Brooklyn-Feature prefix triggers inclusion of the project's metadata in the server's features list. -->
+                <Import-Package>
+                  !com.maxmind.geoip2.*,
+                  !io.airlift.command.*,
+                  !io.cloudsoft.winrm4j.*,
+                  !javax.inject.*,
+                  !org.apache.felix.framework.*,
+                  !org.apache.http.*,
+                  !org.jclouds.googlecomputeengine.*,
+                  !org.osgi.jmx,
+                  !org.python.*,
+                  !org.reflections.*,
+                  !org.w3c.tidy.*,
+                  *
+                </Import-Package>
+                <!--
+                  Brooklyn-Feature prefix triggers inclusion of the project's metadata in the
+                  server's features list.
+                -->
                 <Brooklyn-Feature-Name>${project.name}</Brooklyn-Feature-Name>
               </instructions>
             </configuration>

@@ -24,9 +24,9 @@ import java.util.Set;
 
 import org.apache.brooklyn.util.core.config.ConfigBag;
 
-import com.google.api.client.util.Lists;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
