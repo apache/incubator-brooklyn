@@ -342,9 +342,9 @@ public class JcloudsSshMachineLocation extends SshMachineLocation implements Jcl
                     privateHostname = p;
                     break;
                 }
-                if (groovyTruth(getPublicAddresses())) {
+                if (Strings.isBlank(privateHostname) && groovyTruth(getPublicAddresses())) {
                     privateHostname = getPublicAddresses().iterator().next();
-                } else {
+                } else if (Strings.isBlank(privateHostname)) {
                     privateHostname = getHostname();
                 }
             }
