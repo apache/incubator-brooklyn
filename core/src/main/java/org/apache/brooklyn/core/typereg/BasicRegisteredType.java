@@ -36,17 +36,20 @@ import com.google.common.collect.ImmutableSet;
 /** Instances are usually created by methods in {@link RegisteredTypes}. */
 public class BasicRegisteredType implements RegisteredType {
 
+    final RegisteredTypeKind kind;
     final String symbolicName;
     final String version;
-    final RegisteredTypeKind kind;
     
-    Set<Object> superTypes = MutableSet.of();
-    List<OsgiBundleWithUrl> bundles = MutableList.of();
+    final List<OsgiBundleWithUrl> bundles = MutableList.of();
     String displayName;
     String description;
     String iconUrl;
+    
+    final Set<Object> superTypes = MutableSet.of();
     boolean deprecated;
     boolean disabled;
+    final Set<String> aliases = MutableSet.of();
+    final Set<Object> tags = MutableSet.of();
     
     TypeImplementationPlan implementationPlan;
 
@@ -63,6 +66,11 @@ public class BasicRegisteredType implements RegisteredType {
     public String getId() {
         return symbolicName + (version!=null ? ":"+version : "");
     }
+    
+    @Override
+    public RegisteredTypeKind getKind() {
+        return kind;
+    }
 
     @Override
     public String getSymbolicName() {
@@ -72,11 +80,6 @@ public class BasicRegisteredType implements RegisteredType {
     @Override
     public String getVersion() {
         return version;
-    }
-
-    @Override
-    public RegisteredTypeKind getKind() {
-        return kind;
     }
     
     @Override
@@ -100,6 +103,11 @@ public class BasicRegisteredType implements RegisteredType {
     }
     
     @Override
+    public Set<Object> getSuperTypes() {
+        return ImmutableSet.copyOf(superTypes);
+    }
+
+    @Override
     public boolean isDisabled() {
         return disabled;
     }
@@ -110,10 +118,16 @@ public class BasicRegisteredType implements RegisteredType {
     }
     
     @Override
-    public Set<Object> getSuperTypes() {
-        return ImmutableSet.copyOf(superTypes);
+    public Set<String> getAliases() {
+        return ImmutableSet.copyOf(aliases);
     }
 
+    @Override
+    public Set<Object> getTags() {
+        return ImmutableSet.copyOf(tags);
+    }
+
+    
     @Beta  // TODO depending how useful this is, it might be better to replace by a static WeakHashMap in RegisteredTypes
     public ConfigBag getCache() {
         return cache;

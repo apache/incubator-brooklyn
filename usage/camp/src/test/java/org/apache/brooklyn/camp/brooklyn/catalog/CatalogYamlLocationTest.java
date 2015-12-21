@@ -53,7 +53,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
 
     @AfterMethod
     public void tearDown() {
-        for (RegisteredType ci : mgmt().getTypeRegistry().getAll(RegisteredTypePredicates.IS_LOCATION)) {
+        for (RegisteredType ci : mgmt().getTypeRegistry().getMatching(RegisteredTypePredicates.IS_LOCATION)) {
             mgmt().getCatalog().deleteCatalogItem(ci.getSymbolicName(), ci.getVersion());
         }
     }
@@ -246,7 +246,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
     }
 
     private int countCatalogLocations() {
-        return Iterables.size(mgmt().getTypeRegistry().getAll(RegisteredTypePredicates.IS_LOCATION));
+        return Iterables.size(mgmt().getTypeRegistry().getMatching(RegisteredTypePredicates.IS_LOCATION));
     }
 
 }

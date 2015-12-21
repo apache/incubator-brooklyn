@@ -65,6 +65,7 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
@@ -149,13 +150,20 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
                 Entitlements.getEntitlementContext().user());
         }
         try {
-            RegisteredType item = RegisteredTypes.validate(mgmt().getTypeRegistry().get(entityId), RegisteredTypeLoadingContexts.spec(Entity.class));
-            if (item==null) {
+            Maybe<RegisteredType> item = RegisteredTypes.tryValidate(mgmt().getTypeRegistry().get(entityId), RegisteredTypeLoadingContexts.spec(Entity.class));
+            if (item.isNull()) {
                 throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
             }
-            brooklyn().getCatalog().deleteCatalogItem(item.getSymbolicName(), item.getVersion());
+            if (item.isAbsent()) {
+                throw WebResourceUtils.notFound("Item with id '%s' is not an entity", entityId);
+            }
+            
+            brooklyn().getCatalog().deleteCatalogItem(item.get().getSymbolicName(), item.get().getVersion());
+            
         } catch (NoSuchElementException e) {
-            throw WebResourceUtils.notFound("Entity with id '%s' not found", entityId);
+            // shouldn't come here
+            throw WebResourceUtils.notFound("Entity with id '%s' could not be deleted", entityId);
+            
         }
     }
 

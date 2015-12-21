@@ -43,6 +43,7 @@ import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.mgmt.rebind.RebindManagerImpl.RebindTracker;
 import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.core.typereg.RegisteredTypeLoadingContexts;
+import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.Strings;
@@ -85,12 +86,12 @@ public class CatalogUtils {
         ManagementContext mgmt = ((EntityInternal)entity).getManagementContext();
         String catId = entity.getCatalogItemId();
         if (Strings.isBlank(catId)) return JavaBrooklynClassLoadingContext.create(mgmt);
-        RegisteredType cat = RegisteredTypes.validate(mgmt.getTypeRegistry().get(catId), RegisteredTypeLoadingContexts.spec(Entity.class));
-        if (cat==null) {
+        Maybe<RegisteredType> cat = RegisteredTypes.tryValidate(mgmt.getTypeRegistry().get(catId), RegisteredTypeLoadingContexts.spec(Entity.class));
+        if (cat.isNull()) {
             log.warn("Cannot load "+catId+" to get classloader for "+entity+"; will try with standard loader, but might fail subsequently");
             return JavaBrooklynClassLoadingContext.create(mgmt);
         }
-        return newClassLoadingContext(mgmt, cat);
+        return newClassLoadingContext(mgmt, cat.get());
     }
 
     public static BrooklynClassLoadingContext newClassLoadingContext(@Nullable ManagementContext mgmt, String catalogItemId, Collection<? extends OsgiBundleWithUrl> libraries) {
@@ -267,9 +268,10 @@ public class CatalogUtils {
     }
 
     public static boolean isBestVersion(ManagementContext mgmt, CatalogItem<?,?> item) {
-        RegisteredType bestVersion = mgmt.getTypeRegistry().get(item.getSymbolicName(), BrooklynCatalog.DEFAULT_VERSION);
-        if (bestVersion==null) return false;
-        return (bestVersion.getVersion().equals(item.getVersion()));
+        RegisteredType best = RegisteredTypes.getBestVersion(mgmt.getTypeRegistry().getMatching(
+            RegisteredTypePredicates.symbolicName(item.getSymbolicName())));
+        if (best==null) return false;
+        return (best.getVersion().equals(item.getVersion()));
     }
 
     /** @deprecated since 0.9.0 use {@link BrooklynTypeRegistry#get(String, org.apache.brooklyn.api.typereg.BrooklynTypeRegistry.RegisteredTypeKind, Class)} */

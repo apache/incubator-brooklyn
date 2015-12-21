@@ -23,6 +23,7 @@ import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.api.typereg.RegisteredTypeLoadingContext;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,7 +99,7 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
     @Override
     public Object create(final RegisteredType type, final RegisteredTypeLoadingContext context) {
         try {
-            return validate(new RegisteredTypeKindVisitor<Object>() {
+            return tryValidate(new RegisteredTypeKindVisitor<Object>() {
                 @Override protected Object visitSpec() {
                     try { 
                         AbstractBrooklynObjectSpec<?, ?> result = createSpec(type, context);
@@ -112,7 +113,7 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
                     } catch (Exception e) { throw Exceptions.propagate(e); }
                 }
                 
-            }.visit(type.getKind()), type, context);
+            }.visit(type.getKind()), type, context).get();
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             if (!(e instanceof UnsupportedTypePlanException)) {
@@ -125,14 +126,8 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
     /** Validates the object. Subclasses may do further validation based on the context. 
      * @throw UnsupportedTypePlanException if we want to quietly abandon this, any other exception to report the problem, when validation fails
      * @return the created object for fluent usage */
-    protected <T> T validate(T createdObject, RegisteredType type, RegisteredTypeLoadingContext constraint) {
-        if (createdObject==null) return null;
-        try {
-            return RegisteredTypes.validate(createdObject, type, constraint);
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            throw new IllegalStateException("Created incompatible object: "+Exceptions.collapseText(e), e);
-        }
+    protected <T> Maybe<T> tryValidate(T createdObject, RegisteredType type, RegisteredTypeLoadingContext constraint) {
+        return RegisteredTypes.tryValidate(createdObject, type, constraint);
     }
 
     protected abstract AbstractBrooklynObjectSpec<?,?> createSpec(RegisteredType type, RegisteredTypeLoadingContext context) throws Exception;

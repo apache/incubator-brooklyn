@@ -230,11 +230,13 @@ public class CampYamlLiteTest {
     }
 
     private void assertMgmtHasSampleMyCatalogApp(String symbolicName, String bundleUrl) {
-        RegisteredType item = RegisteredTypes.validate(mgmt.getTypeRegistry().get(symbolicName), RegisteredTypeLoadingContexts.spec(Entity.class));
+        RegisteredType item = mgmt.getTypeRegistry().get(symbolicName);
         assertNotNull(item, "failed to load item with id=" + symbolicName + " from catalog. Entries were: " +
                 Joiner.on(",").join(mgmt.getTypeRegistry().getAll()));
         assertEquals(item.getSymbolicName(), symbolicName);
 
+        RegisteredTypes.tryValidate(item, RegisteredTypeLoadingContexts.spec(Entity.class)).get();
+        
         // stored as yaml, not java
         String planYaml = RegisteredTypes.getImplementationDataStringForSpec(item);
         assertNotNull(planYaml);

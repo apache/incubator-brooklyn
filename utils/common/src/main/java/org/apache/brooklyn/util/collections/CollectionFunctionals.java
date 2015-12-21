@@ -205,14 +205,35 @@ public class CollectionFunctionals {
 
     // ---------
     
+    /** 
+     * Returns a predicate for a collection which is true if 
+     * all elements in the collection given to the predicate
+     * which satisfies the predicate given here.
+     * <p>
+     * This will return true for the empty set.
+     * To require additionally that there is at least one
+     * use {@link #quorum(QuorumCheck, Predicate)} with
+     * {@link QuorumChecks#allAndAtLeastOne()}. */
     public static <T,TT extends Iterable<T>> Predicate<TT> all(Predicate<T> attributeSatisfies) {
         return quorum(QuorumChecks.all(), attributeSatisfies);
     }
 
+    /** Returns a predicate for a collection which is true if 
+     * there is at least one element in the collection given to the predicate
+     * which satisfies the predicate given here. 
+     */
+    public static <T,TT extends Iterable<T>> Predicate<TT> any(Predicate<T> attributeSatisfies) {
+        // implementation could be more efficient -- ie succeed fast
+        return quorum(QuorumChecks.atLeastOne(), attributeSatisfies);
+    }
+
+    /** Returns a predicate for a collection which is true if 
+     * the number of elements in the collection satisfying the predicate given here
+     * passes the {@link QuorumCheck} given here.
+     */
     public static <T,TT extends Iterable<T>> Predicate<TT> quorum(QuorumCheck quorumCheck, Predicate<T> attributeSatisfies) {
         return new QuorumSatisfies<T, TT>(quorumCheck, attributeSatisfies);
     }
-
 
     private static final class QuorumSatisfies<I,T extends Iterable<I>> implements Predicate<T> {
         private final Predicate<I> itemCheck;

@@ -121,11 +121,11 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
         addCatalogEntity(symbolicName, version);
         
         Iterable<RegisteredType> matches;
-        matches = types.getAll(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
+        matches = types.getMatching(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
         assertTrue(matches.iterator().hasNext());
         
         mgmt().getCatalog().deleteCatalogItem(symbolicName, version);
-        matches = types.getAll(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
+        matches = types.getMatching(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
         assertFalse(matches.iterator().hasNext());
     }
     
@@ -135,11 +135,11 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
         addCatalogEntity(symbolicName, null);
 
         Iterable<RegisteredType> matches;
-        matches = types.getAll(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
+        matches = types.getMatching(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
         assertTrue(matches.iterator().hasNext());
         
         mgmt().getCatalog().deleteCatalogItem(symbolicName, BasicBrooklynCatalog.NO_VERSION);
-        matches = types.getAll(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
+        matches = types.getMatching(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
         assertFalse(matches.iterator().hasNext());
     }
     
@@ -150,7 +150,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
         String v2 = "0.2.0-SNAPSHOT";
         addCatalogEntity(symbolicName, v1);
         addCatalogEntity(symbolicName, v2);
-        Iterable<RegisteredType> items = types.getAll(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
+        Iterable<RegisteredType> items = types.getMatching(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
         assertEquals(Iterables.size(items), 2);
     }
     
@@ -212,7 +212,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
                 "      type: referrent\n" +
                 "      version: 1.1"));
         
-        Iterable<RegisteredType> items = types.getAll(RegisteredTypePredicates.symbolicName(Predicates.equalTo("referrer")));
+        Iterable<RegisteredType> items = types.getMatching(RegisteredTypePredicates.symbolicName(Predicates.equalTo("referrer")));
         Assert.assertEquals(Iterables.size(items), 1, "Wrong number of: "+items);
         RegisteredType item = Iterables.getOnlyElement(items);
         Assert.assertEquals(item.getVersion(), "1.0");
@@ -239,7 +239,7 @@ public class CatalogYamlVersioningTest extends AbstractYamlTest {
     }
     
     private void assertSingleCatalogItem(String symbolicName, String version) {
-        Iterable<RegisteredType> items = types.getAll(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
+        Iterable<RegisteredType> items = types.getMatching(RegisteredTypePredicates.symbolicName(Predicates.equalTo(symbolicName)));
         RegisteredType item = Iterables.getOnlyElement(items);
         assertEquals(item.getSymbolicName(), symbolicName);
         assertEquals(item.getVersion(), version);

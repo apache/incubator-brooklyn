@@ -19,7 +19,8 @@
 package org.apache.brooklyn.util.text;
 
 
-/** takes a version string, and compares to other versions, using {@link NaturalOrderComparator} */
+/** takes a version string, and compares to other versions, 
+ * using {@link VersionComparator} */
 public class ComparableVersion implements Comparable<String> {
 
     public final String version;
@@ -29,7 +30,7 @@ public class ComparableVersion implements Comparable<String> {
     }
 
     public int compareTo(String target) {
-        return new NaturalOrderComparator().compare(version, target);
+        return VersionComparator.INSTANCE.compare(version, target);
     }
     
     public boolean isGreaterThanOrEqualTo(String target) {

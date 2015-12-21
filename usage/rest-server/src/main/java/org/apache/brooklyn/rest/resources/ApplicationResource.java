@@ -45,6 +45,7 @@ import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.core.config.ConstraintViolationException;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.EntityPredicates;
@@ -75,6 +76,7 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.UserFacingException;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.text.Strings;
 import org.codehaus.jackson.JsonNode;
@@ -402,15 +404,21 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     private void checkSpecTypeIsValid(String type, Class<? extends BrooklynObject> subType) {
-        if (RegisteredTypes.validate(mgmt().getTypeRegistry().get(type), RegisteredTypeLoadingContexts.spec(subType)) == null) {
-            try {
-                brooklyn().getCatalogClassLoader().loadClass(type);
-            } catch (ClassNotFoundException e) {
-                log.debug("Class not found for type '" + type + "'; reporting 404", e);
-                throw WebResourceUtils.notFound("Undefined type '%s'", type);
-            }
-            log.info(JavaClassNames.simpleClassName(subType)+" type '{}' not defined in catalog but is on classpath; continuing", type);
+        Maybe<RegisteredType> typeV = RegisteredTypes.tryValidate(mgmt().getTypeRegistry().get(type), RegisteredTypeLoadingContexts.spec(subType));
+        if (!typeV.isNull()) {
+            // found, throw if any problem
+            typeV.get();
+            return;
         }
+        
+        // not found, try classloading
+        try {
+            brooklyn().getCatalogClassLoader().loadClass(type);
+        } catch (ClassNotFoundException e) {
+            log.debug("Class not found for type '" + type + "'; reporting 404", e);
+            throw WebResourceUtils.notFound("Undefined type '%s'", type);
+        }
+        log.info(JavaClassNames.simpleClassName(subType)+" type '{}' not defined in catalog but is on classpath; continuing", type);
     }
     
     private void checkEntityTypeIsValid(String type) {

@@ -71,25 +71,63 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
     public static <T> Maybe<T> absent(final Supplier<? extends RuntimeException> exceptionSupplier) {
         return new Absent<T>(Preconditions.checkNotNull(exceptionSupplier));
     }
+
+    /** as {@link #absentNull(String)} but with a generic message */
+    public static <T> Maybe<T> absentNull() {
+        return absentNull("value is null");
+    }
     
-    public static <T> Maybe<T> of(@Nullable T value) {
+    /** like {@link #absent(String)} but {@link #isNull()} will return true on the result. */
+    public static <T> Maybe<T> absentNull(String message) {
+        return new AbsentNull<T>(message);
+    }
+    
+    /** Creates a new Maybe object which is present. 
+     * The argument may be null and the object still present, 
+     * which may be confusing in some contexts
+     * (traditional {@link Optional} usages) but
+     * may be natural in others (where null is a valid value, distinguished from no value set). 
+     * See also {@link #ofDisallowingNull(Object)}. */
+    public static <T> Maybe<T> ofAllowingNull(@Nullable T value) {
         return new Present<T>(value);
     }
 
-    /** creates an instance wrapping a {@link SoftReference}, so it might go absent later on */
-    public static <T> Maybe<T> soft(T value) {
+    /** Creates a new Maybe object which is present if and only if the argument is not null.
+     * If the argument is null, then an {@link #absentNull()} is returned,
+     * on which {@link #isNull()} will be true. */
+    public static <T> Maybe<T> ofDisallowingNull(@Nullable T value) {
+        if (value==null) return absentNull();
+        return new Present<T>(value);
+    }
+
+    /** Creates a new Maybe object.
+     * Currently this uses {@link #ofAllowingNull(Object)} semantics,
+     * but it is recommended to use that method for clarity 
+     * if the argument might be null. */
+    // note: Optional throws if null is supplied; we might want to do the same here
+    public static <T> Maybe<T> of(@Nullable T value) {
+        return ofAllowingNull(value);
+    }
+
+    /** Creates a new Maybe object using {@link #ofDisallowingNull(Object)} semantics. 
+     * It is recommended to use that method for clarity. 
+     * This method is provided for consistency with {@link Optional#fromNullable(Object)}. */
+    public static <T> Maybe<T> fromNullable(@Nullable T value) {
+        return ofDisallowingNull(value);
+    }
+    
+    /** creates an instance wrapping a {@link SoftReference}, so it might go absent later on.
+     * if null is supplied the result is a present null. */
+    public static <T> Maybe<T> soft(@Nonnull T value) {
         return softThen(value, null);
     }
-    /** creates an instance wrapping a {@link SoftReference}, using the second item given if lost */
+    /** creates an instance wrapping a {@link SoftReference}, using the second item given 
+     * if the first argument is dereferenced.
+     * however if the first argument is null, this is a permanent present null,
+     * as {@link #of(Object)} with null. */
     public static <T> Maybe<T> softThen(T value, Maybe<T> ifEmpty) {
         if (value==null) return of((T)null);
         return new SoftlyPresent<T>(value).usingAfterExpiry(ifEmpty);
-    }
-
-    /** like {@link Optional#fromNullable(Object)}, returns absent if the argument is null */
-    public static <T> Maybe<T> fromNullable(@Nullable T value) {
-        if (value==null) return absent();
-        return new Present<T>(value);
     }
 
     public static <T> Maybe<T> of(final Optional<T> value) {
@@ -98,6 +136,11 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
             @Override
             public T get() {
                 return value.get();
+            }
+            @Override
+            public boolean isNull() {
+                // should always be false as per Optional contract
+                return get()==null;
             }
         };
         return absent();
@@ -109,6 +152,10 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
             @Override
             public T get() {
                 return value.get();
+            }
+            @Override
+            public boolean isNull() {
+                return get()==null;
             }
         };
     }
@@ -125,11 +172,16 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         return !isPresent(); 
     }
     public boolean isAbsentOrNull() {
-        return !isPresentAndNonNull();
+        return isAbsent() || isNull();
     }
     public boolean isPresentAndNonNull() {
-        return isPresent() && get()!=null;
+        return isPresent() && !isNull();
     }
+    /** Whether the value is null, if present, or
+     * if it was specified as absent because it was null,
+     * e.g. using {@link #fromNullable(Object)}.
+     */
+    public abstract boolean isNull();
     
     public T or(T nextValue) {
         if (isPresent()) return get();
@@ -161,6 +213,10 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
             private static final long serialVersionUID = 325089324325L;
             public V get() {
                 return f.apply(Maybe.this.get());
+            }
+            @Override
+            public boolean isNull() {
+                return get()==null;
             }
         };
         return absent();
@@ -209,6 +265,10 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
             return false;
         }
         @Override
+        public boolean isNull() {
+            return false;
+        }
+        @Override
         public T get() {
             throw getException();
         }
@@ -217,6 +277,17 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         }
     }
 
+    public static class AbsentNull<T> extends Absent<T> {
+        private static final long serialVersionUID = 2422627709567857268L;
+        public AbsentNull(String message) {
+            super(new IllegalStateExceptionSupplier(message));
+        }
+        @Override
+        public boolean isNull() {
+            return true;
+        }
+    }
+    
     public static abstract class AbstractPresent<T> extends Maybe<T> {
         private static final long serialVersionUID = -2266743425340870492L;
         protected AbstractPresent() {
@@ -236,6 +307,10 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         @Override
         public T get() {
             return value;
+        }
+        @Override
+        public boolean isNull() {
+            return value==null;
         }
     }
 
@@ -263,6 +338,11 @@ public abstract class Maybe<T> implements Serializable, Supplier<T> {
         @Override
         public boolean isPresent() {
             return value.get()!=null || (defaultValue!=null && defaultValue.isPresent()); 
+        }
+        @Override
+        public boolean isNull() {
+            // null not allowed here
+            return false;
         }
         public Maybe<T> solidify() {
             return Maybe.fromNullable(value.get());

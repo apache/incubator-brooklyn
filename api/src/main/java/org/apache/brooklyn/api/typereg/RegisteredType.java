@@ -21,8 +21,6 @@ package org.apache.brooklyn.api.typereg;
 import java.util.Collection;
 import java.util.Set;
 
-import javax.annotation.Nullable;
-
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.objs.BrooklynObject;
@@ -75,6 +73,12 @@ public interface RegisteredType extends Identifiable {
      */
     boolean isDisabled();
 
+    /** Alias words defined for this type */
+    Set<String> getAliases();
+
+    /** Tags attached to this item */
+    Set<Object> getTags();
+    
     /** @return implementation details, so that the framework can find a suitable {@link BrooklynTypePlanTransformer} 
      * which can then use this object to instantiate this type */
     TypeImplementationPlan getPlan();

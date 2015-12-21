@@ -23,6 +23,8 @@ package org.apache.brooklyn.util.core.flags;
  * class to another.
  */
 public class ClassCoercionException extends ClassCastException {
+    private static final long serialVersionUID = -4616045237993172497L;
+
     public ClassCoercionException() {
         super();
     }

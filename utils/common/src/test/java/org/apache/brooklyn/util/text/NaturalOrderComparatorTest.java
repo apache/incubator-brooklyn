@@ -31,38 +31,47 @@ public class NaturalOrderComparatorTest {
     ComparableVersion v_rc2 = new ComparableVersion("10.5.8-rc2");
     
     @Test
+    public void testNoc() {
+        Assert.assertEquals(noc.compare("0a", "1"), -1);
+        
+        Assert.assertEquals(noc.compare("0", "1"), -1);
+        Assert.assertEquals(noc.compare("1", "10"), -1);
+        Assert.assertEquals(noc.compare("9", "10"), -1);
+        Assert.assertEquals(noc.compare("a", "b"), -1);
+        Assert.assertEquals(noc.compare("a9", "a10"), -1);
+        
+        Assert.assertEquals(noc.compare("0.9", "0.91"), -1);
+        Assert.assertEquals(noc.compare("0.90", "0.91"), -1);
+        Assert.assertEquals(noc.compare("1.2.x", "1.09.x"), -1);
+        
+        Assert.assertEquals(noc.compare("0", "1a"), -1);
+        Assert.assertEquals(noc.compare("0a", "1"), -1);
+    }
+    
+    @Test
     public void testBasicOnes() {
-        Assert.assertTrue(v.isGreaterThanAndNotEqualTo("10.5"));
-        Assert.assertTrue(v.isGreaterThanOrEqualTo("10.5.8"));
-        Assert.assertFalse(v.isGreaterThanAndNotEqualTo("10.5.8"));
-
-        Assert.assertTrue(v.isLessThanAndNotEqualTo("10.6"));
-        Assert.assertTrue(v.isLessThanOrEqualTo("10.5.8"));
-        Assert.assertFalse(v.isLessThanAndNotEqualTo("10.5.8"));
+        Assert.assertEquals(0, noc.compare("a", "a"));
+        Assert.assertTrue(noc.compare("a", "b") < 0);
+        Assert.assertTrue(noc.compare("b", "a") > 0);
         
-        Assert.assertTrue(v.isLessThanAndNotEqualTo("10.5.8.1"));
+        Assert.assertTrue(noc.compare("9", "10") < 0);
+        Assert.assertTrue(noc.compare("10", "9") > 0);
         
-        Assert.assertTrue(v_rc2.isLessThanAndNotEqualTo("10.5.8-rc3")) ;
-        Assert.assertTrue(v_rc2.isGreaterThanAndNotEqualTo("10.5.8-rc1"));
+        Assert.assertTrue(noc.compare("b10", "a9") > 0);
+        Assert.assertTrue(noc.compare("b9", "a10") > 0);
         
-        Assert.assertTrue(v_rc2.isGreaterThanAndNotEqualTo("10.5.8-beta1")==v_rc2.isGreaterThanAndNotEqualTo("10.5.8-beta3"));
-        
-        Assert.assertTrue(v.isInRange("[10.5,10.6)"));
-        Assert.assertFalse(v.isInRange("[10.5,10.5.8)"));
-        Assert.assertTrue(v.isInRange("[10.5,)"));
-        Assert.assertTrue(v.isInRange("[9,)"));
-        Assert.assertFalse(v.isInRange("(10.5.8,)"));
-        Assert.assertFalse(v.isInRange("[10.6,)"));
-        Assert.assertTrue(v.isInRange("[,11)"));
-        Assert.assertTrue(v.isInRange("[,]"));
+        Assert.assertTrue(noc.compare(" 9", "10") < 0);
+        Assert.assertTrue(noc.compare("10", " 9") > 0);
     }
 
-    @Test(expectedExceptions={IllegalArgumentException.class})
-    public void testError1() { v.isInRange("10.5"); }
-    @Test(expectedExceptions={IllegalArgumentException.class})
-    public void testError2() { v.isInRange("[10.5"); }
-    @Test(expectedExceptions={IllegalArgumentException.class})
-    public void testError3() { v.isInRange("[10.5]"); }
+    @Test
+    public void testVersionNumbers() {
+        Assert.assertEquals(0, noc.compare("10.5.8", "10.5.8"));
+        Assert.assertTrue(noc.compare("10.5", "9.9") > 0);
+        Assert.assertTrue(noc.compare("10.5.1", "10.5") > 0);
+        Assert.assertTrue(noc.compare("10.5.1", "10.6") < 0);
+        Assert.assertTrue(noc.compare("10.5.1-1", "10.5.1-0") > 0);
+    }
 
     @Test(groups="WIP", enabled=false)
     public void testUnderscoreDoesNotChangeMeaningOfNumberInNoc() {
