@@ -17,15 +17,15 @@
  * under the License.
  */
 
-package org.apache.brooklyn.camp.brooklyn;
+package org.apache.brooklyn.entity.dns.geoscaling;
 
 import static org.testng.Assert.assertEquals;
 
 import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.entity.dns.AbstractGeoDnsService;
-import org.apache.brooklyn.entity.dns.geoscaling.GeoscalingDnsService;
 import org.apache.brooklyn.entity.group.DynamicFabric;
 import org.apache.brooklyn.util.stream.Streams;
 import org.testng.annotations.Test;
