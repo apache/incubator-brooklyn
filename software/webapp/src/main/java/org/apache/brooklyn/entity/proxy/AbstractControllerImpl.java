@@ -287,7 +287,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
+    public Collection<Integer> getRequiredOpenPorts() {
         Collection<Integer> result = super.getRequiredOpenPorts();
         if (groovyTruth(getAttribute(PROXY_HTTP_PORT))) result.add(getAttribute(PROXY_HTTP_PORT));
         if (groovyTruth(getAttribute(PROXY_HTTPS_PORT))) result.add(getAttribute(PROXY_HTTPS_PORT));

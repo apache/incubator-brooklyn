@@ -55,6 +55,12 @@
 
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-locations-cloudfoundry</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-software-webapp</artifactId>
             <version>${project.version}</version>
         </dependency>

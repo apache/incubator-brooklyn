@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.api.sensor.SensorEventListener;
@@ -107,14 +107,15 @@ public class CouchbaseNodeImpl extends SoftwareProcessImpl implements CouchbaseN
         });
     }
 
-    protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
-        ConfigBag result = ConfigBag.newInstance(super.obtainProvisioningFlags(location));
+    @Override
+    protected Map<String, Object> obtainFlagsForLocation(@SuppressWarnings("rawtypes") Location location) {
+        ConfigBag result = ConfigBag.newInstance(super.obtainFlagsForLocation(location));
         result.configure(CloudLocationConfig.OS_64_BIT, true);
         return result.getAllConfig();
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
+    public Collection<Integer> getRequiredOpenPorts() {
         // TODO this creates a huge list of inbound ports; much better to define on a security group using range syntax!
         int erlangRangeStart = getConfig(NODE_DATA_EXCHANGE_PORT_RANGE_START).iterator().next();
         int erlangRangeEnd = getConfig(NODE_DATA_EXCHANGE_PORT_RANGE_END).iterator().next();

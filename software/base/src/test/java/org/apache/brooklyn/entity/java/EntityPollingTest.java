@@ -18,17 +18,11 @@
  */
 package org.apache.brooklyn.entity.java;
 
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-
 import org.apache.brooklyn.api.entity.EntitySpec;
-import org.apache.brooklyn.api.location.MachineLocation;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.sensor.BasicAttributeSensor;
 import org.apache.brooklyn.core.test.entity.TestApplication;
-import org.apache.brooklyn.entity.java.UsesJmx;
-import org.apache.brooklyn.entity.java.VanillaJavaAppImpl;
-import org.apache.brooklyn.entity.java.VanillaJavaAppSshDriver;
 import org.apache.brooklyn.entity.java.UsesJmx.JmxAgentModes;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.test.jmx.JmxService;
@@ -37,15 +31,17 @@ import org.apache.brooklyn.feed.jmx.JmxFeed;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 public class EntityPollingTest {
 
@@ -98,7 +94,7 @@ public class EntityPollingTest {
         }
 
         @Override
-        public VanillaJavaAppSshDriver newDriver(MachineLocation loc) {
+        public VanillaJavaAppSshDriver newDriver(Location loc) {
             return new VanillaJavaAppSshDriver(this, (SshMachineLocation)loc) {
                 @Override public void install() {
                     // no-op

@@ -121,5 +121,10 @@ public class TomcatServerImpl extends JavaWebAppSoftwareProcessImpl implements T
     public String getShortName() {
         return "Tomcat";
     }
+
+    public String getBuildpack() {
+        return getConfig(TomcatServer.BUILDPACK);
+    }
+
 }
 

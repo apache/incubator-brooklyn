@@ -29,6 +29,8 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.entity.java.VanillaJavaApp;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.SoftwareProcessDriverLifecycleEffectorTasks;
+import org.apache.brooklyn.entity.software.base.lifecycle.LifecycleEffectorTasks;
+import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
 import org.apache.brooklyn.entity.webapp.WebAppService;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.slf4j.Logger;
@@ -43,9 +45,9 @@ public interface TestJavaWebAppEntity extends VanillaJavaApp, WebAppService, Ent
     /**
      * Injects the test entity's customised lifecycle tasks.
      */
-    ConfigKey<SoftwareProcessDriverLifecycleEffectorTasks> LIFECYCLE_EFFECTOR_TASKS = ConfigKeys.newConfigKeyWithDefault(
-            SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS,
-            new TestJavaWebAppEntityLifecycleTasks());
+    ConfigKey<MachineLifecycleEffectorTasks> LIFECYCLE_EFFECTOR_TASKS =
+            ConfigKeys.newConfigKeyWithDefault( SoftwareProcess.LIFECYCLE_EFFECTOR_TASKS,
+                    new TestJavaWebAppEntityLifecycleTasks());
 
     void spoofRequest();
     int getA();

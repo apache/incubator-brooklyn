@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
-import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.location.access.BrooklynAccessUtils;
@@ -91,14 +91,14 @@ public class RiakNodeImpl extends SoftwareProcessImpl implements RiakNode {
     }
 
     @Override
-    protected Map<String, Object> obtainProvisioningFlags(@SuppressWarnings("rawtypes") MachineProvisioningLocation location) {
-        ConfigBag result = ConfigBag.newInstance(super.obtainProvisioningFlags(location));
+    protected Map<String, Object> obtainFlagsForLocation(@SuppressWarnings("rawtypes") Location location) {
+        ConfigBag result = ConfigBag.newInstance(super.obtainFlagsForLocation(location));
         result.configure(CloudLocationConfig.OS_64_BIT, true);
         return result.getAllConfig();
     }
 
     @Override
-    protected Collection<Integer> getRequiredOpenPorts() {
+    public Collection<Integer> getRequiredOpenPorts() {
         // TODO this creates a huge list of inbound ports; much better to define on a security group using range syntax!
         int erlangRangeStart = getConfig(ERLANG_PORT_RANGE_START).iterator().next();
         int erlangRangeEnd = getConfig(ERLANG_PORT_RANGE_END).iterator().next();
