@@ -156,8 +156,12 @@ public class MachineEntityImpl extends EmptySoftwareProcessImpl implements Machi
 
     @Override
     public String execCommandTimeout(String command, Duration timeout) {
+        AbstractSoftwareProcessSshDriver driver = (AbstractSoftwareProcessSshDriver) getDriver();
+        if (driver == null) {
+            throw new NullPointerException("No driver for "+this);
+        }
         ProcessTaskWrapper<String> task = SshEffectorTasks.ssh(command)
-                .environmentVariables(((AbstractSoftwareProcessSshDriver) getDriver()).getShellEnvironment())
+                .environmentVariables(driver.getShellEnvironment())
                 .requiringZeroAndReturningStdout()
                 .machine(getMachine())
                 .summary(command)

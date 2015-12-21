@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.location.NoMachinesAvailableException;
+import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,10 +54,12 @@ public class SingleMachineProvisioningLocation<T extends MachineLocation> extend
         this.location = location;
     }
 
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public synchronized T obtain(Map flags) throws NoMachinesAvailableException {
-        log.info("Flags {} passed to newLocationFromString will be ignored, using {}", flags, locationFlags);
+        if (flags != null && !flags.isEmpty()) {
+            log.info("Flags {} passed to SingleMachineProvisioningLocation.obtain will be ignored, using {}", Sanitizer.sanitize(flags), Sanitizer.sanitize(locationFlags));
+        }
         return obtain();
     }
 

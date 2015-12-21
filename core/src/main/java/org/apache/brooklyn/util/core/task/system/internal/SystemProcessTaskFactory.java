@@ -22,6 +22,7 @@ import java.io.File;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -104,7 +105,7 @@ public class SystemProcessTaskFactory<T extends SystemProcessTaskFactory<T,RET>,
             protected <U> U execWithTool(MutableMap<String, Object> props, Function<ShellTool, U> task) {
                 // properties typically passed to both
                 if (log.isDebugEnabled() && props!=null && !props.isEmpty())
-                    log.debug("Ignoring flags "+props+" when running "+this);
+                    log.debug("Ignoring flags "+Sanitizer.sanitize(props)+" when running "+this);
                 return task.apply(new ProcessTool());
             }
             @Override
