@@ -87,7 +87,7 @@ public class OsgiStandaloneTest extends OsgiTestBase {
 
     @Test
     public void testDuplicateBundle() throws Exception {
-        MavenArtifact artifact = new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.9.SPLITWIP-SNAPSHOT"); // BROOKLYN_VERSION
+        MavenArtifact artifact = new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.9.0-SNAPSHOT"); // BROOKLYN_VERSION
         String localUrl = MavenRetriever.localUrl(artifact);
         if ("file".equals(Urls.getProtocol(localUrl))) {
             helperDuplicateBundle(localUrl);
@@ -98,7 +98,7 @@ public class OsgiStandaloneTest extends OsgiTestBase {
 
     @Test(groups="Integration")
     public void testRemoteDuplicateBundle() throws Exception {
-        helperDuplicateBundle(MavenRetriever.hostedUrl(new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.9.SPLITWIP-SNAPSHOT"))); // BROOKLYN_VERSION
+        helperDuplicateBundle(MavenRetriever.hostedUrl(new MavenArtifact("org.apache.brooklyn", "brooklyn-api", "jar", "0.9.0-SNAPSHOT"))); // BROOKLYN_VERSION
     }
 
     public void helperDuplicateBundle(String url) throws Exception {
