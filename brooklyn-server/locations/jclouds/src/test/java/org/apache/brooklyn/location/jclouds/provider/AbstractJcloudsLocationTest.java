@@ -27,6 +27,12 @@ import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
+import org.apache.brooklyn.location.jclouds.JcloudsLocation;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.util.collections.MutableList;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -34,11 +40,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
-import org.apache.brooklyn.location.jclouds.JcloudsLocation;
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.util.collections.MutableList;
-import org.apache.brooklyn.util.collections.MutableMap;
-import org.apache.brooklyn.util.exceptions.Exceptions;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,13 +52,42 @@ public abstract class AbstractJcloudsLocationTest {
 
     protected JcloudsLocation loc;
     protected List<SshMachineLocation> machines = MutableList.of();
-    protected ManagementContext ctx;
+    
+    // NB made private in 090-SNAPSHOT so that non-live tests aren't forced to get a live context
+    // (adding 10+ seconds to the build)
+    //
+    // use mgmt() instead to access, it is populated on demand
+    private ManagementContext ctx;
 
     protected AbstractJcloudsLocationTest(String provider) {
         this.provider = provider;
     }
 
-    /**
+    protected synchronized ManagementContext mgmt() {
+    	if (ctx==null) {
+    		useMgmt(newLiveManagementContext());
+    	}
+    	return ctx;
+    }
+    
+    protected synchronized void useMgmt(ManagementContext mgmt) {
+    	if (ctx!=null) {
+    		throw new IllegalStateException("Must shutdown old management first");
+    	}
+    	ctx = mgmt;
+    }
+    
+    protected ManagementContext newLiveManagementContext() {
+        BrooklynProperties props = BrooklynProperties.Factory.newDefault().addFromMap(ImmutableMap.of("provider", provider));
+        return Entities.newManagementContext(props.asMapWithStringKeys());
+	}
+
+    protected ManagementContext newMockManagementContext() {
+        BrooklynProperties props = BrooklynProperties.Factory.newDefault().addFromMap(ImmutableMap.of("provider", provider));
+        return LocalManagementContextForTests.newInstance(props);
+	}
+
+	/**
      * The location and image id tuplets to test.
      */
     @DataProvider(name = "fromImageId")
@@ -86,8 +116,6 @@ public abstract class AbstractJcloudsLocationTest {
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() {
-        BrooklynProperties props = BrooklynProperties.Factory.newDefault().addFromMap(ImmutableMap.of("provider", provider));
-        ctx = Entities.newManagementContext(props.asMapWithStringKeys());
     }
 
     @AfterMethod(alwaysRun=true)
@@ -106,13 +134,18 @@ public abstract class AbstractJcloudsLocationTest {
         }
         machines.clear();
         
-        if (ctx != null) Entities.destroyAllCatching(ctx);
+        if (ctx != null) {
+        	Entities.destroyAllCatching(ctx);
+        	ctx = null;
+        }
     }
 
     @Test(dataProvider="fromImageId")
     public void testTagMapping(String regionName, String imageId, String imageOwner) {
+    	useMgmt(newMockManagementContext());
+    	
         Map<String, Object> dummy = ImmutableMap.<String, Object>of("identity", "DUMMY", "credential", "DUMMY");
-        loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName), dummy);
+        loc = (JcloudsLocation) mgmt().getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName), dummy);
         ImmutableMap.Builder<String, Object> builder = ImmutableMap.<String, Object>builder().put("imageId", imageId);
         if (imageOwner != null) builder.put("imageOwner", imageOwner);
         Map<String, Object> tagMapping = builder.build();
@@ -124,7 +157,7 @@ public abstract class AbstractJcloudsLocationTest {
 
     @Test(groups = "Live", dataProvider="fromImageId")
     public void testProvisionVmUsingImageId(String regionName, String imageId, String imageOwner) {
-        loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
+        loc = (JcloudsLocation) mgmt().getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
         SshMachineLocation machine = obtainMachine(MutableMap.of("imageId", imageId, "imageOwner", imageOwner, JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 2));
 
         LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
@@ -133,7 +166,7 @@ public abstract class AbstractJcloudsLocationTest {
     
     @Test(groups = "Live", dataProvider="fromImageNamePattern")
     public void testProvisionVmUsingImageNamePattern(String regionName, String imageNamePattern, String imageOwner) {
-        loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
+        loc = (JcloudsLocation) mgmt().getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
         SshMachineLocation machine = obtainMachine(MutableMap.of("imageNameRegex", imageNamePattern, "imageOwner", imageOwner, JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 2));
         
         LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
@@ -142,7 +175,7 @@ public abstract class AbstractJcloudsLocationTest {
     
     @Test(groups = "Live", dataProvider="fromImageDescriptionPattern")
     public void testProvisionVmUsingImageDescriptionPattern(String regionName, String imageDescriptionPattern, String imageOwner) {
-        loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
+        loc = (JcloudsLocation) mgmt().getLocationRegistry().resolve(provider + (regionName == null ? "" : ":" + regionName));
         SshMachineLocation machine = obtainMachine(MutableMap.of("imageDescriptionRegex", imageDescriptionPattern, "imageOwner", imageOwner, JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 2));
         
         LOG.info("Provisioned {} vm {}; checking if ssh'able", provider, machine);
@@ -150,7 +183,7 @@ public abstract class AbstractJcloudsLocationTest {
     }
 
     // Use this utility method to ensure machines are released on tearDown
-    protected SshMachineLocation obtainMachine(Map flags) {
+    protected SshMachineLocation obtainMachine(Map<?,?> flags) {
         try {
             SshMachineLocation result = (SshMachineLocation)loc.obtain(flags);
             machines.add(result);

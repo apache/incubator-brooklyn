@@ -70,7 +70,7 @@ public class RackspaceLocationLiveTest extends AbstractJcloudsLocationTest {
 
     @Test(groups = "Live")
     public void testVmMetadata() {
-        loc = (JcloudsLocation) ctx.getLocationRegistry().resolve(PROVIDER + (REGION_NAME == null ? "" : ":" + REGION_NAME));
+        loc = (JcloudsLocation) mgmt().getLocationRegistry().resolve(PROVIDER + (REGION_NAME == null ? "" : ":" + REGION_NAME));
         SshMachineLocation machine = obtainMachine(MutableMap.of("imageId", IMAGE_ID, "userMetadata", MutableMap.of("mykey", "myval"), JcloudsLocation.MACHINE_CREATE_ATTEMPTS, 2));
 
         LOG.info("Provisioned {} vm {}; checking metadata and if ssh'able", PROVIDER, machine);
