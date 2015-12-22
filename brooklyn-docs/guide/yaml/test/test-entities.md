@@ -33,6 +33,32 @@ This can be used to run a subset of entities in parallel as a single step when n
 
 Timeouts on child entities should be set relative to the start of the `ParallelTestCase`.
 
+### LoopOverGroupMembersTestCase
+The `LoopOverGroupMembersTestCase` entity is configured with a target group and a test specification. For each member of the targeted group, the test case will create a TargetableTestComponent entity from the supplied test specification and set the components target to be the group member.
+
+{% highlight yaml %}
+{% readj example_yaml/entities/loopovergroupmembers-entity.yaml %}
+{% endhighlight %}
+
+#### Parameters
+- `target` - group who's members are to be tested, specified via DSL. For example, `$brooklyn:component("tomcat")`. See also the `targetId` parameter.
+- `targetId` - alternative to the `target` parameter which wraps the DSL component lookup requiring only the `id` be supplied. For example, `tomcat`. Please note, this must point to a group.
+- `test.spec` - The TargetableTestComponent to create for each child.
+
+
+### InfrastructureDeploymentTestCase
+The `InfrastructureDeploymentTestCase` will first create and deploy an infrastructure from the `infrastructure.deployment.spec` config. It will then retrieve a deployment location by getting the value of the infrastructures `infrastructure.deployment.location.sensor` sensor. It will then create and deploy all entities from the `infrastructure.deployment.spec` config to the deployment location.
+
+{% highlight yaml %}
+{% readj example_yaml/entities/infrastructuredeploymenttestcase-entity.yaml %}
+{% endhighlight %}
+
+#### Parameters
+
+- `infrastructure.deployment.spec` - the infrastructure to be deployed.
+- `infrastructure.deployment.entity.specs` - the entities to be deployed to the infrastructure
+- `infrastructure.deployment.location.sensor` - the name of the sensor on the infrastructure to retrieve the deployment location
+
 ## Validation Test Entities
 
 ### TestSensor
@@ -50,7 +76,7 @@ The `TestSensor` entity performs an assertion on a specified sensors value.
 - `assert` - assertion to perform on the specified sensor value. See section on assertions below.
 
 ### TestEffector
-The `TestEffector` entity invokes the specified effector on a target entity.
+The `TestEffector` entity invokes the specified effector on a target entity. If the result of the effector is a String, it will then perform assertions on the result.
 {% highlight yaml %}
 {% readj example_yaml/entities/testeffector-entity.yaml %}
 {% endhighlight %}
@@ -61,6 +87,7 @@ The `TestEffector` entity invokes the specified effector on a target entity.
 - `timeout` - duration to wait on the effector task to complete. For example `10s`, `10m`, etc
 - `effector` - effector to invoke, for example `deploy`.
 - `params` - parameters to pass to the effector, these will depend on the entity and effector being tested. The example above shows the `url` and `targetName` parameters being passed to Tomcats `deploy` effector.
+- `assert` - assertion to perform on the returned result. See section on assertions below.
 
 ### TestHttpCall
 The `TestHttpCall` entity performs a HTTP GET on the specified URL and performs an assertion on the response.
@@ -77,7 +104,7 @@ The `TestHttpCall` entity performs a HTTP GET on the specified URL and performs 
 ### SimpleShellCommandTest
 
 The SimpleShellCommandTest runs a command on the host of the target entity.
-The script is expected not to run indefinitely, but to return a result (process exit code), along with its 
+The script is expected not to run indefinitely, but to return a result (process exit code), along with its
 standard out and error streams, which can then be tested using assertions.
 If no assertions are explicitly configured, the default is to assert a non-zero exit code.
 
@@ -119,7 +146,7 @@ Assertions may be provided as a simple map:
        matches: .*[\d]* days.*
 ```
 
-If there is the need to make multiple assertions with the same key, the assertions can be specified 
+If there is the need to make multiple assertions with the same key, the assertions can be specified
 as a list of such maps:
 
 ```yaml
