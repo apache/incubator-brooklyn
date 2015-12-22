@@ -27,7 +27,10 @@ You will need at least five machines for this example, one for the DB, and four 
 name: cluster
 
 location:
-  tbd
+  jclouds:aws-ec2:
+    identity: ABCDEFGHIJKLMNOPQRST
+    credential: s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
+
 
 services:
 - serviceType: brooklyn.entity.webapp.ControlledDynamicWebAppCluster
@@ -51,7 +54,6 @@ services:
 - serviceType: brooklyn.entity.database.mysql.MySqlNode
   id: db
   name: mysql
-  location: localhost
   brooklyn.config:
     creationScriptUrl: https://bit.ly/brooklyn-visitors-creation-script
 {% endhighlight %}

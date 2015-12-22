@@ -77,4 +77,8 @@ you can monitor the progress of the application deployment and verify its succes
 
 
 ## Launching from the Catalog
-TODO
+Instead of pasting the YAML blueprint each time, it can be added to Brooklyns Catalog where it will be accessible 
+for use in any blueprint that you want to deploy.
+
+See __[Catalog](../ops/catalog/)__ in the Operations section of the User Guide for instructions on creating a new 
+Catalog entry from your Blueprint YAML.

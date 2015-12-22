@@ -16,16 +16,39 @@ children:
 So far we have touched on Brooklyn's ability to *deploy* an application blueprint to a cloud provider, but this just 
 the beginning. The sections below outline how to manage the application that has been deployed.
 
+
+## Scopes in CLI commands
+Many commands require a "scope" expression to indicate the target on which they operate. The scope expressions are
+as follows (values in brackets are aliases for the scope):
+   - application APP-ID   (app, a)  
+     Selects an application, e.g. "br app myapp"
+   - entity      ENT-ID   (ent, e)  
+     Selects an entity within an application scope, e.g. "br app myapp ent myserver"
+   - effector    EFF-ID   (eff, f)  
+     Selects an effector of an entity or application, e.g. "br a myapp e myserver eff xyz"
+   - config      CONF-KEY (conf, con, c)  
+     Selects a configuration key of an entity e.g. "br a myapp e myserver config jmx.agent.mode"
+   - activity    ACT-ID   (act, v)  
+     Selects an activity of an entity e.g. "br a myapp e myserver act iHG7sq1"
+
+
 ## Applications
 
 Having created the application we can query its status.  We can find a summary of all deployed apps:
+{% highlight bash %}
+$ br application
+ Id         Name     Status    Location   
+ hTPAF19s   Tomcat   RUNNING   ajVVAhER  
+{% endhighlight %}
+
+"application" can be shortened to one of the aliases "app" or just "a", for example:
 {% highlight bash %}
 $ br app
  Id         Name     Status    Location   
  hTPAF19s   Tomcat   RUNNING   ajVVAhER  
 {% endhighlight %}
 
-or the details of a given app.  The ID, hTPAF19s, can also be used instead of the name "Tomcat".
+You can find the details of a given application, using its name or ID.
 {% highlight bash %}
 $ br app Tomcat
   Id:              hTPAF19s   
@@ -46,7 +69,8 @@ to create an alias for the commonly used application scope:
 alias tom="br app Tomcat"
 {% endhighlight %}
 
-However, for simplicity the examples below show the full command in all cases.
+To illustrate this we will assume the above alias for the rest of this section, but to avoid confusion 
+the examples in other sections will show the full command in all cases.
 
 We can explore the management hierarchy of all applications, which will show us the entities they are composed of.
 {% highlight bash %}
@@ -57,17 +81,15 @@ $ br tree
   +- org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 {% endhighlight %}
 
-
-
 You can view the blueprint for the application again:
 {% highlight bash %}
-$ br app Tomcat spec
+$ tom spec
 "name: Tomcat\nlocation:\n  mylocation\nservices:\n- serviceType: brooklyn.entity.webapp.tomcat.TomcatServer\n"
 {% endhighlight %}
 
 You can view the config of the application:
 {% highlight bash %}
-$ br app Tomcat config
+$ tom config
 Key                    Value   
 camp.template.id       l67i25CM   
 brooklyn.wrapper_app   true   
@@ -83,10 +105,12 @@ Id         Name                Type
 Wx7r1C4e   TomcatServer:Wx7r   org.apache.brooklyn.entity.webapp.tomcat.TomcatServer      
 {% endhighlight %}
 
+"entity" has aliases "ent" or "e".
+
 You can get summary information for an entity by providing its name (or ID).
 
 {% highlight bash %}
-$ br app Tomcat entity TomcatServer:Wx7r
+$ br app Tomcat ent TomcatServer:Wx7r
 Id:              Wx7r1C4e   
 Name:            TomcatServer:Wx7r   
 Status:          RUNNING   
@@ -98,7 +122,7 @@ CatalogItemId:   null
 Also you can see the config of the entity with the "config" command.
 
 {% highlight bash %}
-$ br app Tomcat entity TomcatServer:Wx7r config
+$ br app Tomcat ent TomcatServer:Wx7r config
 Key                       Value   
 jmx.agent.mode            JMXMP_AND_RMI   
 brooklyn.wrapper_app      true   
@@ -111,7 +135,7 @@ install.unique_label      TomcatServer_7.0.65
 If an entity name is annoyingly long to type, the entity can be renamed:
 
 {% highlight bash %}
-$ br app Tomcat entity TomcatServer:Wx7r rename server
+$ br app Tomcat ent TomcatServer:Wx7r rename server
 {% endhighlight %}
 
 ## Sensors
@@ -307,3 +331,17 @@ BASE_DIR_RESULT:/home/vagrant/brooklyn-managed-processes:BASE_DIR_RESULT
 
 {% endhighlight %}
 
+
+To monitor progress on an application as it deploys, for example, one could use a shell loop:
+
+{% highlight bash %}
+$ while br app Tomcat ent TomcatServer:Wx7r activity | grep 'In progress' ; do 
+  sleep 1; echo ; date; 
+done
+{% endhighlight %}
+This loop will exit when the application has deployed successfully or has failed.  If it fails then the 'stderr' 
+command may provide information about what happened in any activities that have associated streams:
+
+{% highlight bash %}
+$ br app Tomcat ent TomcatServer:Wx7r act KLTxDkoa stderr
+{% endhighlight %}
