@@ -284,6 +284,12 @@ public class NonDeploymentManagementContext implements ManagementContextInternal
     }
 
     @Override
+    public StringConfigMap getConfigWithExternalConfigResolved() {
+        checkInitialManagementContextReal();
+        return initialManagementContext.getConfigWithExternalConfigResolved();
+    }
+
+    @Override
     public BrooklynProperties getBrooklynProperties() {
         checkInitialManagementContextReal();
         return initialManagementContext.getBrooklynProperties();

@@ -29,9 +29,12 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Maps;
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
@@ -89,6 +92,8 @@ import com.google.common.collect.ImmutableSet;
 
 public abstract class AbstractManagementContext implements ManagementContextInternal {
     private static final Logger log = LoggerFactory.getLogger(AbstractManagementContext.class);
+
+    private static final Pattern EXTERNAL_CONFIG_PATTERN = Pattern.compile("^\\$brooklyn:external:([^:]+):([^:]+)$");
 
     private static DataGridFactory loadDataGridFactory(BrooklynProperties properties) {
         String clazzName = properties.getFirst(DataGridFactory.class.getName());
@@ -370,6 +375,27 @@ public abstract class AbstractManagementContext implements ManagementContextInte
     @Override
     public BrooklynProperties getBrooklynProperties() {
         return configMap;
+    }
+
+    public StringConfigMap getConfigWithExternalConfigResolved() {
+        final ExternalConfigSupplierRegistry externalConfigProviderRegistry = getExternalConfigProviderRegistry();
+        if (externalConfigProviderRegistry == null)
+            return configMap; // no external config available yet, so return config without resolving
+
+        Map extConfigResolved = Maps.transformValues(configMap, new Function() {
+            @Nullable
+            @Override
+            public Object apply(Object input) {
+                if (input == null) return null;
+                if (!(input instanceof String)) return input;
+                Matcher m = EXTERNAL_CONFIG_PATTERN.matcher((String) input);
+                if (!(m.matches())) return input;
+                String providerName = m.group(1);
+                String key = m.group(2);
+                return externalConfigProviderRegistry.getConfig(providerName, key);
+            }
+        });
+        return BrooklynProperties.Factory.newEmpty().addFromMap(extConfigResolved);
     }
 
     @Override
