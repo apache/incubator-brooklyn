@@ -21,10 +21,14 @@ package org.apache.brooklyn.camp.brooklyn;
 import java.io.File;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
+import org.apache.brooklyn.api.mgmt.ha.MementoCopyMode;
+import org.apache.brooklyn.api.mgmt.rebind.mementos.BrooklynMementoRawData;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
@@ -34,6 +38,7 @@ import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.mgmt.persist.BrooklynPersistenceUtils;
 import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestEntity;
@@ -68,7 +73,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         mgmtContexts.add(mgmt);
         return mgmt;
     }
-    
+
     @AfterMethod(alwaysRun = true)
     @Override
     public void tearDown() {
@@ -101,11 +106,11 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
 
         log.info("App started:");
         Entities.dumpInfo(app);
-        
+
         Assert.assertTrue(app.getChildren().iterator().hasNext(), "Expected app to have child entity");
         Entity entity = app.getChildren().iterator().next();
         Assert.assertTrue(entity instanceof TestEntity, "Expected TestEntity, found " + entity.getClass());
-        
+
         return entity;
     }
 
@@ -117,7 +122,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
             }
         }).build()).getUnchecked();
     }
-    
+
     @Test
     public void testDslAttributeWhenReady() throws Exception {
         Entity testEntity = entityWithAttributeWhenReady();
@@ -136,6 +141,48 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         Assert.assertTrue(BrooklynDslDeferredSupplier.class.isInstance(maybe.get()));
         BrooklynDslDeferredSupplier deferredSupplier = (BrooklynDslDeferredSupplier) maybe.get();
         Assert.assertEquals(deferredSupplier.toString(), "$brooklyn:entity(\"x\").attributeWhenReady(\"foo\")");
+
+        // assert the persisted state itself is as expected, and not too big
+        BrooklynMementoRawData raw = BrooklynPersistenceUtils.newStateMemento(app2.getManagementContext(), MementoCopyMode.LOCAL);
+        String persistedStateForE2 = raw.getEntities().get(e2.getId());
+        Matcher matcher = Pattern.compile(".*\\<test.confName\\>(.*)\\<\\/test.confName\\>.*", Pattern.DOTALL)
+                .matcher(persistedStateForE2);
+        Assert.assertTrue(matcher.find());
+        String testConfNamePersistedState = matcher.group(1);
+
+        Assert.assertNotNull(testConfNamePersistedState);
+        // should be about 200 chars long, something like:
+        //
+        //      <test.confName>
+        //        <org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent_-AttributeWhenReady>
+        //          <component>
+        //            <componentId>x</componentId>
+        //            <scope>GLOBAL</scope>
+        //          </component>
+        //          <sensorName>foo</sensorName>
+        //        </org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent_-AttributeWhenReady>
+        //      </test.confName>
+
+        Assert.assertTrue(testConfNamePersistedState.length() < 400, "persisted state too long: "+testConfNamePersistedState);
+    }
+
+    @Test public void testDslAttributeWhenReadyPersistedInEntitySpec() throws Exception {
+        String yaml =   "location: localhost\n"+
+                        "name: Test Cluster\n"+
+                        "services:\n"+
+                        "- type: org.apache.brooklyn.entity.group.DynamicCluster\n"+
+                        "  id: test-cluster\n"+
+                        "  initialSize: 1\n"+
+                        "  memberSpec:\n"+
+                        "    $brooklyn:entitySpec:\n"+
+                        "      type: org.apache.brooklyn.core.test.entity.TestEntity\n"+
+                        "      brooklyn.config:\n"+
+                        "        test.confName: $brooklyn:component(\"test-cluster\").attributeWhenReady(\"sensor\")";
+
+        Entity testEntity = createAndStartApplication(yaml);
+
+        // FIXME java.io.NotSerializableException: org.apache.brooklyn.entity.group.DynamicClusterImpl$NextClusterMemberIdSupplier
+        Application app2 = rebind(testEntity.getApplication());
     }
 
     @Test
@@ -144,12 +191,12 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         ((EntityInternal)testEntity).sensors().set(Sensors.newStringSensor("foo"), "bar");
         Application app2 = rebind(testEntity.getApplication());
         Entity e2 = Iterables.getOnlyElement( app2.getChildren() );
-        
+
         Assert.assertEquals(getConfigInTask(e2, TestEntity.CONF_NAME), "bar");
     }
 
     private Entity entityWithAttributeWhenReady() throws Exception {
-        return setupAndCheckTestEntityInBasicYamlWith( 
+        return setupAndCheckTestEntityInBasicYamlWith(
             "  id: x",
             "  brooklyn.config:",
             "    test.confName: $brooklyn:component(\"x\").attributeWhenReady(\"foo\")");
@@ -169,7 +216,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         s = inTask ? getConfigInTask(te2, configKey) : te2.getConfig(configKey);
         Assert.assertEquals(s, expectedSensor);
     }
-    
+
     @Test
     public void testDslSensorFromClass() throws Exception {
         doTestOnEntityWithSensor(entityWithSensorFromClass(), Attributes.SERVICE_UP);
@@ -179,7 +226,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     @Test
     public void testDslSensorLocal() throws Exception {
         doTestOnEntityWithSensor(entityWithSensorLocal(), TestEntity.SEQUENCE);
-        // here without context it makes one up, so type info (and description etc) not present; 
+        // here without context it makes one up, so type info (and description etc) not present;
         // but context is needed to submit the DslDeferredSupplier object, so this would fail
 //        doTestOnEntityWithSensor(entityWithSensorAdHoc(), Sensors.newSensor(Object.class, TestEntity.SEQUENCE.getName()), false);
     }
@@ -189,7 +236,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         // here context has no impact, but it is needed to submit the DslDeferredSupplier object so this would fail
 //        doTestOnEntityWithSensor(entityWithSensorAdHoc(), Sensors.newSensor(Object.class, "sensor.foo"), false);
     }
-    
+
     private Entity entityWithSensorFromClass() throws Exception {
         return setupAndCheckTestEntityInBasicYamlWith( 
             "  id: x",
