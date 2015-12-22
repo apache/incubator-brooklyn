@@ -13,5 +13,5 @@ For server CLI info, use:
 
     ./bin/brooklyn help
 
-And to learn more, including the full user's guide, visit [http://github.com/apache/brooklyn/].
+And to learn more, including the full user's guide, visit [brooklyn.apache.org](http://brooklyn.apache.org/).
 
