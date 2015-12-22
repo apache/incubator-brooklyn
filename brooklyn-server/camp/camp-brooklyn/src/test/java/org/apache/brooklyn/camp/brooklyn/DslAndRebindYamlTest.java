@@ -27,6 +27,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.api.sensor.Sensor;
+import org.apache.brooklyn.camp.brooklyn.spi.dsl.BrooklynDslDeferredSupplier;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Attributes;
@@ -39,6 +40,7 @@ import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -121,6 +123,19 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         Entity testEntity = entityWithAttributeWhenReady();
         ((EntityInternal)testEntity).sensors().set(Sensors.newStringSensor("foo"), "bar");
         Assert.assertEquals(getConfigInTask(testEntity, TestEntity.CONF_NAME), "bar");
+    }
+
+    @Test
+    public void testDslAttributeWhenReadyPersisted() throws Exception {
+        Entity testEntity = entityWithAttributeWhenReady();
+        Application app2 = rebind(testEntity.getApplication());
+        Entity e2 = Iterables.getOnlyElement( app2.getChildren() );
+
+        Maybe<Object> maybe = ((EntityInternal)e2).config().getLocalRaw(TestEntity.CONF_NAME);
+        Assert.assertTrue(maybe.isPresentAndNonNull());
+        Assert.assertTrue(BrooklynDslDeferredSupplier.class.isInstance(maybe.get()));
+        BrooklynDslDeferredSupplier deferredSupplier = (BrooklynDslDeferredSupplier) maybe.get();
+        Assert.assertEquals(deferredSupplier.toString(), "$brooklyn:entity(\"x\").attributeWhenReady(\"foo\")");
     }
 
     @Test
