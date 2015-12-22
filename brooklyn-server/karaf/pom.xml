@@ -26,6 +26,7 @@
 
   <parent>
     <groupId>org.apache.brooklyn</groupId>
+    <!-- if this depends on brooklyn-server/parent, the usual parent point, then karaf-itest has failures -->
     <artifactId>brooklyn-server</artifactId>
     <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
     <relativePath>../pom.xml</relativePath>

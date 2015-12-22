@@ -98,6 +98,7 @@
                     <excludes combine.children="append">
                         <!-- Exclude sample config files because they are illustrative, intended for changing -->
                         <exclude>src/main/dist/conf/**</exclude>
+                        <exclude>src/main/dist/README.md</exclude>
                         <exclude>licensing/licenses/**</exclude>
                         <exclude>licensing/README.md</exclude>
                         <exclude>licensing/*LICENSE*</exclude>

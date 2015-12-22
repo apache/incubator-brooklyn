@@ -33,6 +33,10 @@
         <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
+    <properties>
+        <hazelcast.version>3.5.4</hazelcast.version>
+    </properties>
+	
     <dependencies>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
