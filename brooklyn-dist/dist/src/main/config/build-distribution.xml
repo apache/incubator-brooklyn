@@ -29,7 +29,6 @@
             <fileMode>0644</fileMode>
             <directoryMode>0755</directoryMode>
             <includes>
-                <include>README*</include>
                 <include>DISCLAIMER*</include>
             </includes>
         </fileSet>
