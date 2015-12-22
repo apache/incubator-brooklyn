@@ -26,7 +26,6 @@ import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.entity.brooklynnode.BrooklynNode;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
-import org.apache.brooklyn.rest.util.BrooklynRestResourceUtilsTest.SampleNoOpApplication;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.http.HttpAsserts;
 import org.apache.brooklyn.util.http.HttpTool;

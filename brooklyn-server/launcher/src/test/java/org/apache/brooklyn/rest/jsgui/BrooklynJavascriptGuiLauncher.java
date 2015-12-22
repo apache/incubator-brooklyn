@@ -60,15 +60,22 @@ public class BrooklynJavascriptGuiLauncher {
     
     final static int FAVOURITE_PORT = 8080;
     
-    /** due to the ../jsgui trick in {@link BrooklynRestApiLauncher} we can just call that method */ 
+    /** due to the relative path search in {@link BrooklynRestApiLauncher} we can just call that method */ 
     public static Server startJavascriptAndRest() throws Exception {
         return BrooklynRestApiLauncher.startRestResourcesViaFilter();
     }
 
-    /** not much fun without a REST client. but TODO we should make it so the REST endpoint can be configured. */
-    /** relative path to webapp assumes brooklyn-server has been checked out at the same level as brooklyn-ui  */
+    /** not much fun without a REST server. 
+     * but TODO we should make it so a different REST endpoint could be configured. 
+     * or better, use node js launchers in that project (likely to come with a new ui.) 
+     * <p>
+     * relative path to webapp assumes brooklyn-server has been checked out at the same level as brooklyn-ui;
+     * see {@link BrooklynRestApiLauncher#findJsguiWebappInSource()} */
     public static Server startJavascriptWithoutRest() throws Exception {
-        WebAppContext context = new WebAppContext("../../brooklyn-ui/src/main/webapp", "/");
+        WebAppContext context = new WebAppContext(
+        		BrooklynRestApiLauncher.findJsguiWebappInSource()
+        			.or("../../brooklyn-ui/src/main/webapp"), 
+    			"/");
 
         Server server = new Server(new InetSocketAddress(Networking.LOOPBACK, Networking.nextAvailablePort(FAVOURITE_PORT)));
         server.setHandler(context);

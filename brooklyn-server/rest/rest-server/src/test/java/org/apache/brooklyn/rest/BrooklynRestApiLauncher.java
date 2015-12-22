@@ -43,14 +43,18 @@ import org.apache.brooklyn.rest.filter.HaMasterCheckFilter;
 import org.apache.brooklyn.rest.filter.LoggingFilter;
 import org.apache.brooklyn.rest.filter.NoCacheFilter;
 import org.apache.brooklyn.rest.filter.RequestTaggingFilter;
+import org.apache.brooklyn.rest.filter.SwaggerFilter;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.rest.security.provider.SecurityProvider;
 import org.apache.brooklyn.rest.util.ManagementContextProvider;
+import org.apache.brooklyn.rest.util.OsgiCompat;
 import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
 import org.apache.brooklyn.rest.util.TestShutdownHandler;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.text.WildcardGlobs;
+import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -63,16 +67,12 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.servlet.ServletContainer;
-import org.apache.brooklyn.rest.filter.SwaggerFilter;
-import org.apache.brooklyn.rest.util.OsgiCompat;
-import org.eclipse.jetty.server.NetworkConnector;
 
 /** Convenience and demo for launching programmatically. Also used for automated tests.
  * <p>
@@ -230,8 +230,8 @@ public class BrooklynRestApiLauncher {
         // For Eclipse, use the default option of ${workspace_loc:brooklyn-launcher}.
         // If the working directory is not set correctly, Brooklyn will be unable to find the jsgui .war
         // file and the 'gui not available' message will be shown.
-        context.setWar(this.deployJsgui && findJsguiWebapp() != null
-                       ? findJsguiWebapp()
+        context.setWar(this.deployJsgui && findJsguiWebappInSource().isPresent()
+                       ? findJsguiWebappInSource().get()
                        : createTempWebDirWithIndexHtml("Brooklyn REST API <p> (gui not available)"));
         installAsServletFilter(context, this.filters);
         return context;
@@ -380,30 +380,52 @@ public class BrooklynRestApiLauncher {
                 new InetSocketAddress(Networking.ANY_NIC, Networking.nextAvailablePort(FAVOURITE_PORT)));
     }
 
-    /** look for the JS GUI webapp in common places, returning path to it if found, or null */
-    private static String findJsguiWebapp() {
-        // could also look in maven repo ?
-        return Optional
-                .fromNullable(findMatchingFile("./brooklyn-ui/src/main/webapp"))
-                .or(findMatchingFile("./brooklyn-ui/target/*.war"))
-                .orNull();
+    /** look for the JS GUI webapp in common source places, returning path to it if found, or null.
+     * assumes `brooklyn-ui` is checked out as a sibling to `brooklyn-server`, and both are 2, 3, 1, or 0
+     * levels above the CWD. */
+    @Beta
+    public static Maybe<String> findJsguiWebappInSource() {
+    	// normally up 2 levels to where brooklyn-* folders are, then into ui
+    	// (but in rest projects it might be 3 up, and in some IDEs we might run from parent dirs.)
+        // TODO could also look in maven repo ?
+    	return findFirstMatchingFile(
+    			"../../brooklyn-ui/src/main/webapp",
+    			"../../../brooklyn-ui/src/main/webapp",
+    			"../brooklyn-ui/src/main/webapp",
+    			"./brooklyn-ui/src/main/webapp",
+    			"../../brooklyn-ui/target/*.war",
+    			"../../..brooklyn-ui/target/*.war",
+    			"../brooklyn-ui/target/*.war",
+    			"./brooklyn-ui/target/*.war");
     }
 
     /** look for the REST WAR file in common places, returning path to it if found, or null */
     private static String findRestApiWar() {
         // don't look at src/main/webapp here -- because classes won't be there!
         // could also look in maven repo ?
+    	// TODO looks like this stopped working at runtime a long time ago;
+    	// only needed for WEB_XML mode, and not used, but should remove or check?
+    	// (probably will be superseded by CXF/OSGi work however)
         return findMatchingFile("../rest/target/*.war").orNull();
     }
 
+    /** as {@link #findMatchingFile(String)} but finding the first */
+    public static Maybe<String> findFirstMatchingFile(String ...filenames) {
+    	for (String f: filenames) {
+    		Maybe<String> result = findMatchingFile(f);
+    		if (result.isPresent()) return result;
+    	}
+    	return Maybe.absent();
+    }
+    
     /** returns the supplied filename if it exists (absolute or relative to the current directory);
      * supports globs in the filename portion only, in which case it returns the _newest_ matching file.
      * <p>
      * otherwise returns null */
     @Beta // public because used in dependent test projects
-    public static Optional<String> findMatchingFile(String filename) {
+    public static Maybe<String> findMatchingFile(String filename) {
         final File f = new File(filename);
-        if (f.exists()) return Optional.of(filename);
+        if (f.exists()) return Maybe.of(filename);
         File dir = f.getParentFile();
         File result = null;
         if (dir.exists()) {
@@ -417,8 +439,8 @@ public class BrooklynRestApiLauncher {
                 if (result==null || mf.lastModified() > result.lastModified()) result = mf;
             }
         }
-        if (result==null) return Optional.absent();
-        return Optional.of(result.getAbsolutePath());
+        if (result==null) return Maybe.absent();
+        return Maybe.of(result.getAbsolutePath());
     }
 
     /** create a directory with a simple index.html so we have some content being served up */

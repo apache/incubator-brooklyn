@@ -18,16 +18,16 @@
  */
 package org.apache.brooklyn.rest.jsgui;
 
-import org.apache.brooklyn.test.HttpTestUtils;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.apache.brooklyn.util.http.HttpAsserts;
 import org.eclipse.jetty.server.NetworkConnector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
 
 /** Convenience and demo for launching programmatically. */
 public class BrooklynJavascriptGuiLauncherTest {
@@ -63,11 +63,11 @@ public class BrooklynJavascriptGuiLauncherTest {
     protected void checkUrlContains(final String path, final String text) {
         //Server may return 403 until it loads completely, wait a bit
         //until it stabilizes.
-        HttpTestUtils.assertContentEventuallyContainsText(rootUrl()+path, text);
+        HttpAsserts.assertContentEventuallyContainsText(rootUrl()+path, text);
     }
 
     protected void checkEventuallyHealthy() {
-        HttpTestUtils.assertHttpStatusCodeEventuallyEquals(rootUrl(), 200);
+    	HttpAsserts.assertHttpStatusCodeEventuallyEquals(rootUrl(), 200);
     }
 
     protected String rootUrl() {
