@@ -23,7 +23,7 @@ We'll start by deploying an application via YAML blueprint consisting of the fol
 
 Copy the blueprint below into a text file, "mycluster.yaml", in your workspace, but *before* you create an application 
 with it, again modify the YAML to specify the location where the application will be deployed.  
-You will need at least five machines for this example, one for the DB, and four for the tomcats 
+You will need at least five machines for this example, one for the DB, one for the Nginx controller, and three for the tomcats 
 (but you can reduce this by changing the "maxPoolSize" below.
 
 {% highlight yaml %}
@@ -52,7 +52,7 @@ services:
       metricLowerBound: 10
       metricUpperBound: 100
       minPoolSize: 1
-      maxPoolSize: 4
+      maxPoolSize: 3
       
 - serviceType: brooklyn.entity.database.mysql.MySqlNode
   id: db
