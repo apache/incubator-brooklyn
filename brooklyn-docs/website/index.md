@@ -5,8 +5,7 @@ landing: true
 children:
 - learnmore/
 - { path: download/, menu: null }
-- { path: /guide/start/index.md, title_in_menu: Get Started, href_path: /guide/start/running.md}
-- { path: /guide/start/index-cli.md, title_in_menu: CLI Get Started, href_path: /guide/start/index-cli.md}
+- { path: /guide/start/index.md, title_in_menu: Get Started, href_path: /guide/start/index.md}
 - path: documentation/
   menu:
   - { path: /guide/index.md, title_in_menu: "User Guide", 

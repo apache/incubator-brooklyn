@@ -7,31 +7,34 @@ children:
 - { section: Launching from the Catalog, title: Catalog } 
 ---
 
-{% include fields.md %}
-
+<div style="width: 100%; display: block; background-color: #CC9966; margin-bottom: 2px;  padding: 50px 30px 50px 80px;" >
+  <h3>NOTE</h3>
+  <div>
+  The structure of Brooklyn's repositories is changing at present (Jan 2016). Until this is complete 
+  please obtain the "br" command line tool from <a href="https://github.com/brooklyncentral/brooklyn-cli">Brooklyn Central</a>
+  </div>
+</div>
 
 ## Launching from a Blueprint
 
-We'll start by deploying an application via YAML blueprint consisting of the following layers.
+We'll start by deploying an application with a simple YAML blueprint containing a Tomcat server.
 
-- Nginx load balancer
-- Tomcat app server cluster
-- MySQL DB
-
-When you first access the web console on [127.0.0.1:8081](http://127.0.0.1:8081) you will be requested to create your first application.
-
-
-[![Brooklyn web console, showing the YAML tab of the Add Application dialog.](images/add-application-modal-yaml.png)](images/add-application-modal-yaml-large.png)
-
-Switch to the YAML tab and copy the blueprint below into the large text box. 
-
-But *before* you submit it, modify the YAML to specify the location where the application will be deployed.
+Copy the blueprint below into a text file, "myapp.yaml", in your workspace, but *before* you create an application with 
+it, modify the YAML to specify the location where the application will be deployed.  (Note, to copy the file you can
+hover your mouse over the right side of the text box below to get a Javascript "copy" button.)
 
 {% highlight yaml %}
-{% readj _my-web-cluster.yaml %}
+name: Tomcat
+location:
+  jclouds:aws-ec2:
+    identity: ABCDEFGHIJKLMNOPQRST
+    credential: s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
+services:
+- serviceType: brooklyn.entity.webapp.tomcat.TomcatServer
 {% endhighlight %}
 
-Replace the `location:` element with values for your chosen target environment, for example to use SoftLayer rather than AWS (updating with your own credentials): 
+Replace the `location:` element with values for your chosen target environment, for example to use SoftLayer rather 
+than AWS (updating with your own credentials): 
 
 {% highlight yaml %}
 location:
@@ -40,26 +43,54 @@ location:
     credential: s3cr3tsq1rr3ls3cr3tsq1rr3ls3cr3tsq1rr3l
 {% endhighlight %}
 
-**Note**: See __[Locations](../ops/locations)__ in the Operations section of the User Guide for instructions on setting up alternate cloud providers, bring-your-own-nodes, or localhost targets, and storing credentials/locations in a file on disk rather than in the blueprint.
+Or, if you already have machines provisioned, you can use the "bring your own nodes" (byon) approach. 
+Of course, replace the identity and address values below with your own values.
+{% highlight yaml %}
+location:
+  byon:
+    user: myuser
+    password: mypassword
+    # or...
+    #privateKeyFile: ~/.ssh/my.pem
+    hosts:
+    - 192.168.0.18
+    - 192.168.0.19
+{% endhighlight %}
 
-With the modified YAML in the dialog, click "Finish". The dialog will close and Brooklyn will begin deploying your
-application. Your application will be shown as "Starting" on the web console's front page.
+**Note**: See __[Locations](../ops/locations)__ in the Operations section of the User Guide for instructions on setting
+up alternate cloud providers, bring-your-own-nodes, or localhost targets, and storing credentials/locations in a file 
+on disk rather than in the blueprint.
+(For the application above, if you are using a "Bring your own Nodes" location, you will need at least three nodes.)
 
-Depending on your choice of location it may take some time for the application nodes to start, the next page describes how you can monitor the progress of the application deployment and verify its successful deployment.
+First you will have to log in to brooklyn:
+{% highlight bash %}
+$ br login http://localhost:8081/
+{% endhighlight %}
 
-### Launching from the Catalog
+To secure the server you can add a username and password in Brooklyn's properties file, as described in the User Guide. 
+Then the login command will require the additional parameters of the userid and password.
 
-Instead of pasting the YAML blueprint each time, it can be added to Brooklyns Catalog where it will be accessible from the Catalog tab of the Create Application dialog.
+Now you can create the application with the command below:
 
-[![Viewing Catalog entries in Add Application dialog.](images/add-application-catalog-web-cluster-with-db.png)](images/add-application-catalog-web-cluster-with-db-large.png)
+{% highlight bash %}
+$ br deploy myapp.yaml
+Id:       hTPAF19s   
+Name:     Tomcat   
+Status:   In progress   
+{% endhighlight %}
 
-<!-- TODO: more detail for adding to catalog? but wait for persistence to be the default, 
-     rather than extensively document default.catalog.bom.
-     also need to include instructions on stopping (currently in help, including stopping apps) -->
-
-See __[Catalog](../ops/catalog/)__ in the Operations section of the User Guide for instructions on creating a new Catalog entry from your Blueprint YAML.
+Depending on your choice of location it may take some time for the application to start, the next page describes how 
+you can monitor the progress of the application deployment and verify its successful deployment.
 
 
-## Next 
+## Launching from the Catalog
+Instead of pasting the YAML blueprint each time, it can be added to Brooklyns Catalog where it will be accessible 
+for use in any blueprint that you want to deploy.
 
-So far we have touched on Brooklyn's ability to *deploy* an application blueprint to a cloud provider, but this just the beginning, proceed to  **[Monitoring and Managing Applications](managing.html)**.
+See __[Catalog](../ops/catalog/)__ in the Operations section of the User Guide for instructions on creating a new 
+Catalog entry from your Blueprint YAML.
+
+
+## Next
+
+Having deployed an application, the next step is **[monitoring and managing](managing.html)** it.
