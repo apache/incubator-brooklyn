@@ -61,7 +61,7 @@ services:
     creationScriptUrl: https://bit.ly/brooklyn-visitors-creation-script
 {% endhighlight %}
 
-Explore this app using the 'application' and other commands from the previous section.
+Explore this app using the ```application``` and other commands from the previous section.
 
 ## Configuring Dependencies
 The App above illustrates how one component in a blueprint can be configured with information relating to one of the other 
@@ -137,7 +137,7 @@ As load is removed, servers are removed from the cluster, and the infrastructure
 ### Under the Covers
 
 The `AutoScalerPolicy` here is configured to respond to the sensor
-reporting requests per second per node, invoking the default `resize` effector.
+reporting requests per second per node, invoking the default ```resize``` effector.
 By updating on the policy, you can configure it to respond to a much lower threshhold
 or set long stabilization delays (the period before it scales out or back).
 
@@ -150,7 +150,7 @@ $ br app cluster ent webcluster stop-policy org.apache.brooklyn.policy.autoscali
 
 {% endhighlight %}
 
-You can then invoke a `resize` using the appropriate effector:
+You can then invoke a ```resize``` using the appropriate effector:
 {% highlight bash %}
 $ br app cluster ent webcluster effector resize invoke -P desiredSize=3
 {% endhighlight %}

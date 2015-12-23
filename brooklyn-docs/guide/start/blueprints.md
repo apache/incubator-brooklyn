@@ -32,7 +32,7 @@ services:
 - serviceType: brooklyn.entity.webapp.tomcat.TomcatServer
 {% endhighlight %}
 
-Replace the `location:` element with values for your chosen target environment, for example to use SoftLayer rather 
+Replace the ```location:``` element with values for your chosen target environment, for example to use SoftLayer rather 
 than AWS (updating with your own credentials): 
 
 {% highlight yaml %}

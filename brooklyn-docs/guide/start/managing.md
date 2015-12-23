@@ -21,22 +21,22 @@ the beginning. The sections below outline how to manage the application that has
 Many commands require a "scope" expression to indicate the target on which they operate. The scope expressions are
 as follows (values in brackets are aliases for the scope):
 
-- application APP-ID   (app, a)  
+- ```application``` APP-ID   (app, a)  
  Selects an application, e.g. "br app myapp"  
-- entity      ENT-ID   (ent, e)  
- Selects an entity within an application scope, e.g. "br app myapp ent myserver"  
-- effector    EFF-ID   (eff, f)  
- Selects an effector of an entity or application, e.g. "br a myapp e myserver eff xyz"  
-- config      CONF-KEY (conf, con, c)  
- Selects a configuration key of an entity e.g. "br a myapp e myserver config jmx.agent.mode"  
-- activity    ACT-ID   (act, v)  
- Selects an activity of an entity e.g. "br a myapp e myserver act iHG7sq1"  
+- ```entity```      ENT-ID   (ent, e)  
+ Selects an entity within an application scope, e.g. ```br app myapp ent myserver```  
+- ```effector```    EFF-ID   (eff, f)  
+ Selects an effector of an entity or application, e.g. ```br a myapp e myserver eff xyz```  
+- ```config```      CONF-KEY (conf, con, c)  
+ Selects a configuration key of an entity e.g. ```br a myapp e myserver config jmx.agent.mode```  
+- ```activity```    ACT-ID   (act, v)  
+ Selects an activity of an entity e.g. ```br a myapp e myserver act iHG7sq1```  
 
 For example
 {% highlight bash %}
 $ br app Tomcat ent TomcatServer:Wx7r config
 {% endhighlight %}
-runs the "config" command with application scope of "Tomcat" and entity scope of "TomcatServer:Wx7r".
+runs the ```config``` command with application scope of ```Tomcat``` and entity scope of ```TomcatServer:Wx7r```.
 
 ## Applications
 
@@ -47,7 +47,7 @@ $ br application
  hTPAF19s   Tomcat   RUNNING   ajVVAhER  
 {% endhighlight %}
 
-"application" can be shortened to one of the aliases "app" or just "a", for example:
+```application``` can be shortened to one of the aliases ```app``` or just ```a```, for example:
 {% highlight bash %}
 $ br app
  Id         Name     Status    Location   
@@ -102,7 +102,7 @@ brooklyn.wrapper_app   true
 {% endhighlight %}
 
 ## Entities
-To explore the entities of the application you can use the "entity" command. This will show the 
+To explore the entities of the application you can use the ```entity``` command. This will show the 
 immediate child entities of a given application or one of its child entities.
 
 {% highlight bash %}
@@ -111,7 +111,7 @@ Id         Name                Type
 Wx7r1C4e   TomcatServer:Wx7r   org.apache.brooklyn.entity.webapp.tomcat.TomcatServer      
 {% endhighlight %}
 
-"entity" has aliases "ent" or "e".
+```entity``` has aliases ```ent``` or ```e```.
 
 You can get summary information for an entity by providing its name (or ID).
 
@@ -125,7 +125,7 @@ Type:            org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 CatalogItemId:   null   
 {% endhighlight %}
 
-Also you can see the config of the entity with the "config" command.
+Also you can see the config of the entity with the ```config``` command.
 
 {% highlight bash %}
 $ br app Tomcat ent TomcatServer:Wx7r config
@@ -220,18 +220,18 @@ Name            Description                                                     
 deploy          Deploys the given artifact, from a source URL, to a given deployment filename/context                                                                                                  url,targetName   
 {% endhighlight %}
 
-These effectors can be invoked using the command "invoke", supplying the application and entity id of the entity to 
+These effectors can be invoked using the command ```invoke```, supplying the application and entity id of the entity to 
 invoke the effector on.   
 
-For example, to stop an application, use the "stop" effector. This will cleanly shutdown all components in the 
+For example, to stop an application, use the ```stop``` effector. This will cleanly shutdown all components in the 
 application and return any cloud machines that were being used. Do the invocation by supplying the effector name in 
-the scope, and using the command 'invoke'. 
+the scope, and using the command ```invoke```. 
 
 {% highlight bash %}
 $ br app Tomcat ent TomcatServer:Wx7r eff stop invoke
 {% endhighlight %}
 
-Note that the three "lifecycle" related effectors, start, stop, and restart, are common to all software process 
+Note that the three "lifecycle" related effectors, ```start```, ```stop```, and ```restart```, are common to all software process 
 entities in Brooklyn. They are so commonly used that they have their own aliases. The above could also have been done
 by:
 
@@ -239,7 +239,7 @@ by:
 $ br app Tomcat ent TomcatServer:Wx7r stop
 {% endhighlight %}
 
-Some effectors require parameters for their invocation, as in the example of "deploy" above.  
+Some effectors require parameters for their invocation, as in the example of ```deploy``` above.  
 
 {% highlight bash %}
 br app Tomcat ent TomcatServer:Wx7r effector deploy
@@ -250,7 +250,7 @@ deploy   Deploys the given artifact, from a source URL, to a given deployment fi
 Now the effector can be invoked by supplying the parameters using ```--param parm=value``` or just ```-P parm=value```.
 
 In the example below, a sample Tomcat war file is deployed, a variable is created for the root URL using the appropriate
-sensor, and the index page is fetched. Note that at present a "tr" command is required in the second line below to strip
+sensor, and the index page is fetched. Note that at present a ```tr``` command is required in the second line below to strip
 quotation characters from the returned sensor value. 
 
 {% highlight bash %}
@@ -267,7 +267,7 @@ $ curl $webapp/sample/
 
 ## Activities
 
-The 'activity' command allows us to investigate the activities of an entity. 
+The ```activity``` command allows us to investigate the activities of an entity. 
 
 To view a list of all activities associated with an entity simply use
 
@@ -306,7 +306,7 @@ No return value (null)"
 
 If an activity has failed, the "DetailedStatus" value will show information about the failure, as an aid to diagnosis.
 
-Adding the "--children" or "-c" parameter will show the activity's child activities, to allow the hierarchical structure 
+Adding the ```--children``` or ```-c``` parameter will show the activity's child activities, to allow the hierarchical structure 
 of the activities to be investigated:
 
 {% highlight bash %}
@@ -328,7 +328,7 @@ n8eK5USE   post-launch                  Thu Dec 17 15:08:59 GMT 2015   Completed
 {% endhighlight %}
 
 If an activity has associated input and output streams, these may be viewed by providing the activity scope and
-using the commands, "env", "stdin", "stdout", and "stderr".  For example, for the "initializing on-box base dir"
+using the commands, ```env```, ```stdin```, ```stdout```, and ```stderr```.  For example, for the "initializing on-box base dir"
 activity from the result of the earlier example,
 
 {% highlight bash %}
