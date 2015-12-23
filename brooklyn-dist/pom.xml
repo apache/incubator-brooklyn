@@ -22,21 +22,21 @@
 
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.apache</groupId>
-        <artifactId>apache</artifactId>
-        <version>17</version>
-        <relativePath></relativePath> <!-- prevent loading of ../pom.xml as the "parent" -->
+        <groupId>org.apache.brooklyn</groupId>
+        <artifactId>brooklyn-parent</artifactId>
+        <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <relativePath>../brooklyn-server/parent/pom.xml</relativePath>
     </parent>
 
     <groupId>org.apache.brooklyn</groupId>
-    <artifactId>brooklyn</artifactId>
+    <artifactId>brooklyn-dist-root</artifactId>
     <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
     <packaging>pom</packaging>
 
-    <name>Brooklyn Root</name>
+    <name>Brooklyn Dist Root</name>
     <description>
-        Brooklyn project root, serving as the ancestor POM for all projects 
-        container in the brooklyn-* repositories.
+        Brooklyn Dist project root, serving as the ancestor POM for dist projects --
+        declaring modules to build
     </description>
     <url>https://brooklyn.apache.org/</url>
     <inceptionYear>2012</inceptionYear>
@@ -73,10 +73,10 @@
     </mailingLists>
 
     <modules>
-        <module>brooklyn-ui</module>
-        <module>brooklyn-server</module>
-        <module>brooklyn-library</module>
-        <module>brooklyn-dist</module>
+        <module>downstream-parent</module>
+        <module>all</module>
+        <module>dist</module>
+        <module>archetypes/quickstart</module>
     </modules>
 
 </project>

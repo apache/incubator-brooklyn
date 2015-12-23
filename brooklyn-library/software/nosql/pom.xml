@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+     http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>brooklyn-software-nosql</artifactId>
+    <packaging>jar</packaging>
+    <name>Brooklyn NoSQL Data Store Software Entities</name>
+    <description>
+        Brooklyn entities for NoSQL data store software entities
+    </description>
+
+    <parent>
+        <groupId>org.apache.brooklyn</groupId>
+        <artifactId>brooklyn-library</artifactId>
+        <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-software-base</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <!-- Dependency versions mismatch between transitive dependencies, declare explicitly -->
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-software-webapp</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <!-- just to access DatastoreMixins -->
+            <artifactId>brooklyn-software-database</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-policy</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-utils-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- for mongodb sensors -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>${mongodb.version}</version>
+        </dependency>
+
+        <!-- for redis testing -->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>${redis.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- for cassandra testing -->
+        <dependency>
+            <groupId>com.netflix.astyanax</groupId>
+            <artifactId>astyanax</artifactId>
+            <version>${astyanax.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <!-- Dependency versions mismatch between transitive dependencies, declare explicitly -->
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>log4j</artifactId>
+                    <groupId>log4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>${jclouds.groupId}.provider</groupId>
+            <artifactId>rackspace-cloudservers-uk</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- for couchdb testing -->
+        <dependency>
+            <groupId>com.google.code.jcouchdb</groupId>
+            <artifactId>jcouchdb</artifactId>
+            <version>${jcouchdb.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <!-- Dependency versions mismatch between transitive dependencies, declare explicitly -->
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-codec</groupId>
+                    <artifactId>commons-codec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>slf4j-log4j12</artifactId>
+                    <groupId>org.slf4j</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>log4j</artifactId>
+                    <groupId>log4j</groupId>
+                </exclusion>
+                <exclusion>
+                	<artifactId>httpcore</artifactId>
+                	<groupId>org.apache.httpcomponents</groupId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- for hazelcast testing -->
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-client</artifactId>
+            <version>${hazelcast.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- for solr testing -->
+        <dependency>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-solrj</artifactId>
+            <version>${solr.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>${jclouds.groupId}.provider</groupId>
+            <artifactId>aws-ec2</artifactId>
+            <version>${jclouds.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-test-support</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-core</artifactId>
+            <version>${project.version}</version><!--$NO-MVN-MAN-VER$-->
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-software-base</artifactId>
+            <version>${project.version}</version>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <!-- bring in jclouds for testing -->
+        <dependency>
+            <groupId>org.apache.brooklyn</groupId>
+            <artifactId>brooklyn-locations-jclouds</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Transitive dependencies, declared explicitly due to version mismatch -->
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>${commons-logging.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>${commons-codec.version}</version>
+        </dependency>
+    </dependencies>
+    <build>
+      <pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <configuration>
+              <excludes combine.children="append">
+                <!--
+                    Configuration artifacts (for installations) are based on templated defaults for 
+                    the given components. These are files "without any degree of creativity" from the
+                    perspective of the Brooklyn/Apache contribution.
+                -->
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/cassandra/cassandra-1.2.yaml</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/cassandra/cassandra-2.0.yaml</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/cassandra/cassandra-rackdc.properties</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/couchdb/couch.ini</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/couchdb/couch.uri</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/hazelcast/hazelcast-brooklyn.xml</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/mongodb/default.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/mongodb/default-mongod.conf</exclude>
+                <exclude>src/test/resources/test-mongodb.conf</exclude>
+                <exclude>src/test/resources/test-mongodb-configserver.conf</exclude>
+                <exclude>src/test/resources/test-mongodb-router.conf</exclude>
+                <exclude>src/test/resources/mongodb-keyfile</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/redis/redis.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/redis/slave.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/app.config</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/vm.args</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/riak.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/riak/riak-mac.conf</exclude>
+                <exclude>src/main/resources/org/apache/brooklyn/entity/nosql/solr/solr.xml</exclude>
+
+                <!--
+                    The source code for cassandra-multicloud-snitch.jar is in sandbox/cassandra-multicloud-snitch.
+                    This snitch handles Cassandra datacenters in different cloud providers.
+                    The source will be contributed to the Cassandra project; when it is available in the 
+                    Cassandra distro (and when we don't want to give backwards compatibility support for
+                    older Cassandra versions), then we can delete it from Brooklyn.
+                -->
+                <exclude>**/src/main/resources/brooklyn/entity/nosql/cassandra/cassandra-multicloud-snitch.jar</exclude>
+
+                <!--
+                    This is a trivial Solr example, used for testing that a simple definition is deployed
+                    correctly. It is "without any degree of creativity". It is stored as a binary tgz, rather
+                    than us generating the tgz as part of the build, to keep the build process and testing 
+                    simpler.
+                -->
+                <exclude>**/src/test/resources/solr/example.tgz</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </pluginManagement>
+    </build>
+
+</project>
