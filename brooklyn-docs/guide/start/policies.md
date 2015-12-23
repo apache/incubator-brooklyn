@@ -87,10 +87,10 @@ Id         Name                                                      State
 mMZngBnb   org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy   RUNNING   
 {% endhighlight %}
 
-You can investigate the status of the `AutoScalerPolicy` with 
+You can investigate the status of the `AutoScalerPolicy` with its name or, more succinctly, its ID:
 
 {% highlight yaml %}
-$ br app cluster ent webcluster policy org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy
+$ br app cluster ent webcluster policy mMZngBnb
 "RUNNING"
 {% endhighlight %}
 
