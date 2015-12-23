@@ -3,6 +3,7 @@ title: Operations
 layout: website-normal
 children:
 - server-cli-reference.md
+- cli/
 - gui/
 - brooklyn_properties.md
 - locations/
