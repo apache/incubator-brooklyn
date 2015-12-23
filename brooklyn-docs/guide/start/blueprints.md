@@ -4,7 +4,6 @@ layout: website-normal
 menu_parent: index.md
 children:
 - { section: Launching from a Blueprint, title: Blueprint } 
-- { section: Launching from the Catalog, title: Catalog } 
 ---
 
 <div style="width: 100%; display: block; background-color: #CC9966; margin-bottom: 2px;  padding: 50px 30px 50px 80px;" >
@@ -81,15 +80,6 @@ Status:   In progress
 
 Depending on your choice of location it may take some time for the application to start, the next page describes how 
 you can monitor the progress of the application deployment and verify its successful deployment.
-
-
-## Launching from the Catalog
-Instead of pasting the YAML blueprint each time, it can be added to Brooklyns Catalog where it will be accessible 
-for use in any blueprint that you want to deploy.
-
-See __[Catalog](../ops/catalog/)__ in the Operations section of the User Guide for instructions on creating a new 
-Catalog entry from your Blueprint YAML.
-
 
 ## Next
 
