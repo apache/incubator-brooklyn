@@ -27,7 +27,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -39,6 +38,7 @@ import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.os.Os;
+import org.apache.brooklyn.util.text.Strings;
 
 /**
  * TODO javadoc
@@ -81,40 +81,32 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     public void install() {
         List<String> urls = resolver.getTargets();
         String saveAs = resolver.getFilename();
-        // Version and architecture are only required for download of epel package on RHEL/Centos systems so pick sensible
-        // defaults if unavailable
-        String osMajorVersion = getMachine().getOsDetails().getVersion();
-        if (Strings.isNullOrEmpty(osMajorVersion)) {
-            osMajorVersion = "7";
-        } else {
-            osMajorVersion = osMajorVersion.indexOf(".") > 0 ? osMajorVersion.substring(0, osMajorVersion.indexOf('.')) : osMajorVersion;
-            if (!CENTOS_VERSION_TO_EPEL_VERSION.keySet().contains(osMajorVersion)) {
-                osMajorVersion = "7";
-            }
-        }
-        String epelVersion = CENTOS_VERSION_TO_EPEL_VERSION.get(osMajorVersion);
-        String osArchitecture = getMachine().getOsDetails().getArch();
-        if (Strings.isNullOrEmpty(osArchitecture)) {
-            osArchitecture = "x86_64";
-        }
+
 
         List<String> commands = ImmutableList.<String>builder()
-                // EPEL repository for erlang install required on some Centos distributions
-                .add(chainGroup("which yum", sudo("yum -y update ca-certificates"), sudo("rpm -Uvh --replacepkgs " +
-                        format("http://download.fedoraproject.org/pub/epel/%s/%s/epel-release-%s.noarch.rpm", osMajorVersion, osArchitecture, epelVersion))))
-                .add(ifExecutableElse0("zypper", chainGroup(
-                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11")),
-                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11")),
-                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12")),
-                        ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_13.1 erlang_suse_13")))))
+                // RabbitMQ recommends Erlang 18. Release notes state:
+                // ====
+                // Minimum required Erlang version is R16B03 for plain ("just TCP") connections for all protocols 
+                // and 17.5 for TLS ones (18.x is recommended for both).
+                // ====
+                //
+                // The recommended provider for up to date Erlang versions is Erlang Solutions now.
+                // Supported platforms by Erlang Solutions are: CentOS, RHEL, Ubuntu and Debian.
+                // 
+                // New Erlang versions for SUSE are provided via the openSUSE repositories
+                // 
+                // EPEL 6 provides only packages for Erlang 14, but EPEL 7 - Erlang 16
+                // 
+                .add(ifExecutableElse0("apt-get", getAptRepository()))
+                .add(ifExecutableElse0("yum", getYumRepository()))
+                .add(ifExecutableElse0("zypper", getZypperRepository()))
                 .add(installPackage( // NOTE only 'port' states the version of Erlang used, maybe remove this constraint?
                         ImmutableMap.of(
-                                "apt", "erlang-nox erlang-dev",
                                 "port", "erlang@"+getErlangVersion()+"+ssl"),
-                        "erlang"))
+                                "erlang"))
                 .addAll(commandsToDownloadUrlsAs(urls, saveAs))
                 .add(installExecutable("tar"))
-                .add(format("tar xvzf %s",saveAs))
+                .add(format("tar xvf %s",saveAs))
                 .build();
 
         newScript(INSTALLING).
@@ -147,9 +139,9 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
         newScript(MutableMap.of("usePidFile", false), LAUNCHING)
             .body.append(
                 "nohup ./sbin/rabbitmq-server > console-out.log 2> console-err.log &",
-                "for i in {1..30}\n" +
+                "for i in {1..60}\n" +
                     "do\n" +
-                     "    grep 'broker running' console-out.log && exit\n" +
+                     "    grep 'Starting broker... completed' console-out.log && exit\n" +
                      "    sleep 1\n" +
                      "done",
                 "echo \"Couldn't determine if rabbitmq-server is running\"",
@@ -166,7 +158,6 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
             ).execute();
     }
 
-
     public String getPidFile() { return "rabbitmq.pid"; }
 
     @Override
@@ -182,7 +173,6 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
                 .body.append("./sbin/rabbitmqctl stop")
                 .execute();
     }
-
 
     @Override
     public void kill() {
@@ -205,4 +195,69 @@ public class RabbitSshDriver extends AbstractSoftwareProcessSshDriver implements
     private String getConfigPath() {
         return getRunDir() + "/rabbitmq";
     }
+
+    private String getYumRepository() {
+        String yumRepoFileName = "erlang_solutions.repo";
+        
+        // Version and architecture are only required for download of epel package on RHEL/Centos systems so pick sensible
+        // defaults if unavailable
+        //
+        // EPEL is still required as it is a prerequisite for the packages provided by Erlang Solutions
+        
+        String osMajorVersion = getMachine().getOsDetails().getVersion();
+        if (Strings.isBlank(osMajorVersion)) {
+            osMajorVersion = "7";
+        } else {
+            osMajorVersion = osMajorVersion.indexOf(".") > 0 ? osMajorVersion.substring(0, osMajorVersion.indexOf('.')) : osMajorVersion;
+            if (!CENTOS_VERSION_TO_EPEL_VERSION.keySet().contains(osMajorVersion)) {
+                osMajorVersion = "7";
+            }
+        }
+        String epelVersion = CENTOS_VERSION_TO_EPEL_VERSION.get(osMajorVersion);
+        String osArchitecture = getMachine().getOsDetails().getArch();
+        if (Strings.isBlank(osArchitecture)) {
+            osArchitecture = "x86_64";
+        }
+
+        // Erlang Solutions provide separate packages for RHEL and CentOS, but they are hosted in a single repo.
+        // E.g. - http://packages.erlang-solutions.com/rpm/centos/6/x86_64/
+        // 
+        // Erlang Solutions created a repo configuration RPM which can NOT be used on RedHat, because it has explicit checks for CentOS.
+        // 
+        // Bellow we are creating a repo file that works for CentOS and RedHat
+        return chainGroup(
+                sudo("yum -y update ca-certificates"),
+                sudo("rpm -Uvh --replacepkgs " + format("http://download.fedoraproject.org/pub/epel/%s/%s/epel-release-%s.noarch.rpm", osMajorVersion, osArchitecture, epelVersion)),
+                "( cat << 'EOF_BROOKLYN'\n"
+                   + "[erlang-solutions]\n"
+                   + "name=Centos / RHEL " + osMajorVersion + " - $basearch - Erlang Solutions\n"
+                   + "baseurl=http://packages.erlang-solutions.com/rpm/centos/" + osMajorVersion + "/$basearch\n"
+                   + "gpgcheck=0\n"
+                   + "gpgkey=http://packages.erlang-solutions.com/debian/erlang_solutions.asc\n"
+                   + "enabled=1\n"
+                   + "EOF_BROOKLYN\n"
+                   + ") > " + yumRepoFileName,
+                  sudo(format("mv %s /etc/yum.repos.d/", yumRepoFileName)),
+                  sudo(format("chown root:root /etc/yum.repos.d/%s", yumRepoFileName))
+            );
+    }
+
+    private String getAptRepository() {
+        String debFileName = "erlang-repo.deb";
+
+        return chainGroup(
+                INSTALL_WGET,
+                format("wget --quiet -O %s %s", debFileName, entity.getConfig(RabbitBroker.ERLANG_DEB_REPO_URL)),
+                sudo(format("dpkg -i %s", debFileName))
+            );
+    }
+
+    private String getZypperRepository() {
+        return chainGroup(
+                ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/SLE_11_SP3 erlang_sles_11")),
+                ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_11.4 erlang_suse_11")),
+                ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_12.3 erlang_suse_12")),
+                ok(sudo("zypper --non-interactive addrepo http://download.opensuse.org/repositories/devel:/languages:/erlang/openSUSE_13.1 erlang_suse_13")));
+    }
 }
+
