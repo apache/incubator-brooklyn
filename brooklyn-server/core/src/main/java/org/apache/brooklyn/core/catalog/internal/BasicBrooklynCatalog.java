@@ -41,12 +41,14 @@ import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
+import org.apache.brooklyn.core.mgmt.internal.CampYamlParser;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.AggregateClassLoader;
@@ -360,8 +362,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     private List<CatalogItemDtoAbstract<?,?>> collectCatalogItems(String yaml) {
-        Map<?,?> itemDef = Yamls.getAs(Yamls.parseAll(yaml), Map.class);
-        Map<?,?> catalogMetadata = getFirstAsMap(itemDef, "brooklyn.catalog").orNull();
+        Map<String,?> itemDef = Yamls.getAs(Yamls.parseAll(yaml), Map.class);
+        Map<String,Object> catalogMetadata = (Map<String, Object>) getFirstAsMap(itemDef, "brooklyn.catalog").orNull();
         if (catalogMetadata==null)
             log.warn("No `brooklyn.catalog` supplied in catalog request; using legacy mode for "+itemDef);
         catalogMetadata = MutableMap.copyOf(catalogMetadata);
@@ -376,7 +378,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         catalogMetadata.remove("items");
         if (!itemDef.isEmpty()) {
             log.debug("Reading brooklyn.catalog peer keys as item ('top-level syntax')");
-            Map<String,?> rootItem = MutableMap.of("item", itemDef);
+            Map<String,Object> rootItem = MutableMap.of("item", (Object) itemDef);
             String rootItemYaml = yaml;
             YamlExtract yamlExtract = Yamls.getTextOfYamlAtPath(rootItemYaml, "brooklyn.catalog");
             String match = yamlExtract.withOriginalIndentation(true).withKeyIncluded(true).getMatchedYamlTextOrWarn();
@@ -391,18 +393,26 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
     }
 
     @SuppressWarnings("unchecked")
-    private void collectCatalogItems(String sourceYaml, Map<?,?> itemMetadata, List<CatalogItemDtoAbstract<?, ?>> result, Map<?,?> parentMetadata) {
+    private void collectCatalogItems(String sourceYaml, Map<?,?> itemMetadata, List<CatalogItemDtoAbstract<?, ?>> result, Map<String,?> parentMetadata) {
 
         if (sourceYaml==null) sourceYaml = new Yaml().dump(itemMetadata);
 
-        Map<Object,Object> catalogMetadata = MutableMap.builder().putAll(parentMetadata).putAll(itemMetadata).build();
-        
+        itemMetadata = mgmt.getConfig().getConfig(CampYamlParser.YAML_PARSER_KEY).parse((Map<String, Object>) itemMetadata);
+
+        try {
+            itemMetadata = (Map<String, Object>) Tasks.resolveDeepValue(itemMetadata, Object.class, mgmt.getServerExecutionContext());
+        } catch (Exception e) {
+            throw Exceptions.propagate(e);
+        }
+
+        Map<String,Object> catalogMetadata = MutableMap.<String, Object>builder().putAll(parentMetadata).putAll((Map<? extends String, ?>) itemMetadata).build();
+
         // brooklyn.libraries we treat specially, to append the list, with the child's list preferred in classloading order
         // `libraries` is supported in some places as a legacy syntax; it should always be `brooklyn.libraries` for new apps
         // TODO in 0.8.0 require brooklyn.libraries, don't allow "libraries" on its own
         List<?> librariesNew = MutableList.copyOf(getFirstAs(itemMetadata, List.class, "brooklyn.libraries", "libraries").orNull());
         Collection<CatalogBundle> libraryBundlesNew = CatalogItemDtoAbstract.parseLibraries(librariesNew);
-        
+
         List<?> librariesCombined = MutableList.copyOf(librariesNew)
             .appendAll(getFirstAs(parentMetadata, List.class, "brooklyn.libraries", "libraries").orNull());
         if (!librariesCombined.isEmpty())
@@ -432,8 +442,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         if (items!=null) {
             int count = 0;
-            for (Map<?,?> i: ((List<Map<?,?>>)items)) {
-                collectCatalogItems(Yamls.getTextOfYamlAtPath(sourceYaml, "items", count).getMatchedYamlTextOrWarn(), 
+            for (Map<?,?> i: ((List<Map<String,Object>>)items)) {
+                collectCatalogItems(Yamls.getTextOfYamlAtPath(sourceYaml, "items", count).getMatchedYamlTextOrWarn(),
                     i, result, catalogMetadata);
                 count++;
             }
@@ -582,12 +592,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return oldValue;
     }
 
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromLocal(ManagementContext mgmt, Map<Object, Object> catalogMetadata) {
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromLocal(ManagementContext mgmt, Map<String, Object> catalogMetadata) {
         CatalogDto dto = CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-local-classpath");
         return scanAnnotationsInternal(mgmt, new CatalogDo(dto), catalogMetadata);
     }
     
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromBundles(ManagementContext mgmt, Collection<CatalogBundle> libraries, Map<Object, Object> catalogMetadata) {
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromBundles(ManagementContext mgmt, Collection<CatalogBundle> libraries, Map<String, Object> catalogMetadata) {
         CatalogDto dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in bundles", "scanning-bundles-classpath-"+libraries.hashCode());
         List<String> urls = MutableList.of();
         for (CatalogBundle b: libraries) {
@@ -608,7 +618,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return scanAnnotationsInternal(mgmt, subCatalog, catalogMetadata);
     }
     
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsInternal(ManagementContext mgmt, CatalogDo subCatalog, Map<Object, Object> catalogMetadata) {
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsInternal(ManagementContext mgmt, CatalogDo subCatalog, Map<String, Object> catalogMetadata) {
         // TODO this does java-scanning only;
         // the call when scanning bundles should use the CatalogItem instead and use OSGi when loading for scanning
         // (or another scanning mechanism).  see comments on CatalogClasspathDo.load
@@ -989,7 +999,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         };
     }
     
-    private static <T,SpecT> Function<CatalogItemDo<T, SpecT>, CatalogItem<T,SpecT>> itemDoToDtoAddingSelectedMetadataDuringScan(final Map<Object, Object> catalogMetadata) {
+    private static <T,SpecT> Function<CatalogItemDo<T, SpecT>, CatalogItem<T,SpecT>> itemDoToDtoAddingSelectedMetadataDuringScan(final Map<String, Object> catalogMetadata) {
         return new Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>>() {
             @Override
             public CatalogItem<T,SpecT> apply(@Nullable CatalogItemDo<T,SpecT> item) {

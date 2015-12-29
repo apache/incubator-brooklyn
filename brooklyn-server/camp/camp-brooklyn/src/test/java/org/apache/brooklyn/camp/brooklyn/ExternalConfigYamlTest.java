@@ -25,6 +25,7 @@ import java.io.StringReader;
 import java.util.Map;
 
 import com.google.common.collect.Iterables;
+import org.apache.brooklyn.api.catalog.CatalogItem;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -33,7 +34,6 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.config.external.AbstractExternalConfigSupplier;
 import org.apache.brooklyn.core.config.external.ExternalConfigSupplier;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
-import org.apache.brooklyn.core.location.AbstractLocation;
 import org.apache.brooklyn.core.location.cloud.CloudLocationConfig;
 import org.apache.brooklyn.core.mgmt.internal.CampYamlParser;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
@@ -53,15 +53,19 @@ import com.google.common.base.Joiner;
 public class ExternalConfigYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(ExternalConfigYamlTest.class);
 
+    private static final String OSGI_URL = "https://repository.apache.org/content/groups/snapshots/org/apache/brooklyn/brooklyn-core/0.9.0-SNAPSHOT/brooklyn-core-0.9.0-20160108.142251-126.jar";
+
     @Override
     protected LocalManagementContext newTestManagementContext() {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put("brooklyn.external.myprovider", MyExternalConfigSupplier.class.getName());
         props.put("brooklyn.external.myprovider.mykey", "myval");
+        props.put("brooklyn.external.myprovider.osgikey", OSGI_URL);
         props.put("brooklyn.external.myproviderWithoutMapArg", MyExternalConfigSupplierWithoutMapArg.class.getName());
 
         return LocalManagementContextForTests.builder(true)
                 .useProperties(props)
+                .disableOsgi(false)
                 .build();
     }
 
@@ -106,6 +110,60 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
         TestApplication app = (TestApplication) createAndStartApplication(new StringReader(yaml));
         waitForApplicationTasks(app);
         assertEquals(Iterables.getOnlyElement( app.getLocations() ).config().get(MY_CONFIG_KEY), "myval");
+    }
+
+    @Test
+    public void testExternalisedCatalogConfigReferencedFromYaml() throws Exception {
+
+        String yaml = Joiner.on("\n").join(
+                "brooklyn.catalog:",
+                "    id: osgi.test",
+                "    itemType: template",
+                "    version: 1.3",
+                "    description: CentOS 6.6 With GUI - 1.3",
+                "    displayName: CentOS 6.6",
+                "    iconUrl: classpath:///centos.png",
+                "    brooklyn.libraries:",
+                "    - $brooklyn:external(\"myprovider\", \"osgikey\")",
+                "",
+                "    item:",
+                "      services:",
+                "      - type: brooklyn.entity.database.mysql.MySqlNode");
+
+        catalog.addItems(yaml);
+
+        for (CatalogItem<Object, Object> item: catalog.getCatalogItems()) {
+            for (CatalogItem.CatalogBundle library: item.getLibraries()) {
+                assertEquals(library.getUrl(), OSGI_URL);
+            }
+        }
+    }
+
+    @Test
+    public void testNonExternalisedCatalogConfigReferencedFromYaml() throws Exception {
+
+        String yaml = Joiner.on("\n").join(
+                "brooklyn.catalog:",
+                "  id: osgi.test",
+                "  itemType: template",
+                "  version: 1.3",
+                "  description: CentOS 6.6 With GUI - 1.3",
+                "  displayName: CentOS 6.6",
+                "  iconUrl: classpath:///centos.png",
+                "  brooklyn.libraries:",
+                "  - " + OSGI_URL,
+                "",
+                "  item:",
+                "    services:",
+                "    - type: brooklyn.entity.database.mysql.MySqlNode");
+
+        catalog.addItems(yaml);
+
+        for (CatalogItem<Object, Object> item: catalog.getCatalogItems()) {
+            for (CatalogItem.CatalogBundle library: item.getLibraries()) {
+                assertEquals(library.getUrl(), OSGI_URL);
+            }
+        }
     }
 
     @Test(groups="Integration")
