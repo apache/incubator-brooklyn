@@ -38,7 +38,7 @@ public class VaultAppIdExternalConfigSupplier extends VaultExternalConfigSupplie
 
     private static final Logger LOG = LoggerFactory.getLogger(VaultAppIdExternalConfigSupplier.class);
 
-    protected VaultAppIdExternalConfigSupplier(ManagementContext managementContext, String name, Map<String, String> config) {
+    public VaultAppIdExternalConfigSupplier(ManagementContext managementContext, String name, Map<String, String> config) {
         super(managementContext, name, config);
     }
 
