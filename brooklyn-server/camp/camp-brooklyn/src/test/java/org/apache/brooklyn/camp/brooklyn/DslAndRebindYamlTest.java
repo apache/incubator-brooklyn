@@ -19,6 +19,7 @@
 package org.apache.brooklyn.camp.brooklyn;
 
 import java.io.File;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -40,6 +41,7 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityAsserts;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.mgmt.persist.BrooklynPersistenceUtils;
@@ -47,7 +49,6 @@ import org.apache.brooklyn.core.mgmt.rebind.RebindTestUtils;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.entity.group.DynamicCluster;
-import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.guava.Maybe;
@@ -55,9 +56,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 
 @Test
@@ -68,6 +71,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     protected ClassLoader classLoader = getClass().getClassLoader();
     protected File mementoDir;
     protected Set<ManagementContext> mgmtContexts = MutableSet.of();
+    protected ExecutorService executor;
 
     @Override
     protected LocalManagementContext newTestManagementContext() {
@@ -79,9 +83,17 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         return mgmt;
     }
 
+    @BeforeMethod(alwaysRun = true)
+    @Override
+    public void setUp() {
+    	super.setUp();
+        executor = Executors.newSingleThreadExecutor();
+    }
+    
     @AfterMethod(alwaysRun = true)
     @Override
     public void tearDown() {
+    	if (executor != null) executor.shutdownNow();
         for (ManagementContext mgmt : mgmtContexts) Entities.destroyAll(mgmt);
         super.tearDown();
         mementoDir = null;
@@ -127,6 +139,19 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         }).build()).getUnchecked();
     }
 
+    protected <T> Future<T> getConfigInTaskAsync(final Entity entity, final ConfigKey<T> key) {
+	    // Wait for the attribute to be ready in a new Task
+	    Callable<T> configGetter = new Callable<T>() {
+	        @Override
+	        public T call() throws Exception {
+	            T s = getConfigInTask(entity, key);
+	            getLogger().info("getConfig {}={}", key, s);
+	            return s;
+	        }
+	    };
+	    return executor.submit(configGetter);
+    }
+
     @Test
     public void testDslAttributeWhenReady() throws Exception {
         Entity testEntity = entityWithAttributeWhenReady();
@@ -135,9 +160,53 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     }
 
     @Test
-    public void testDslAttributeWhenReadyPersisted() throws Exception {
+    public void testDslAttributeWhenReadyRebindWhenResolved() throws Exception {
         Entity testEntity = entityWithAttributeWhenReady();
+        ((EntityInternal) testEntity).sensors().set(Sensors.newStringSensor("foo"), "bar");
+        
+        Application app2 = rebind(testEntity.getApplication());
+        Entity e2 = Iterables.getOnlyElement(app2.getChildren());
 
+        Assert.assertEquals(getConfigInTask(e2, TestEntity.CONF_NAME), "bar");
+    }
+
+    @Test
+    public void testDslAttributeWhenReadyWhenNotYetResolved() throws Exception {
+        Entity testEntity = entityWithAttributeWhenReady();
+        
+        Application app2 = rebind(testEntity.getApplication());
+        Entity e2 = Iterables.getOnlyElement(app2.getChildren());
+
+        // Wait for the attribute to be ready in a new Task
+        Future<String> stringFuture = getConfigInTaskAsync(e2, TestEntity.CONF_NAME);
+
+        // Check that the Task is still waiting for attribute to be ready
+        Assert.assertFalse(stringFuture.isDone());
+
+        // Set the sensor; expect that to complete
+        e2.sensors().set(Sensors.newStringSensor("foo"), "bar");
+        String s = stringFuture.get(10, TimeUnit.SECONDS); // Timeout just for sanity
+        Assert.assertEquals(s, "bar");
+    }
+
+    @Test
+    public void testDslAttributeWhenReadyPersistedAsDeferredSupplier() throws Exception {
+    	doDslAttributeWhenReadyPersistedAsDeferredSupplier(false);
+    }
+    
+    @Test
+    public void testDslAttributeWhenReadyPersistedWithoutLeakingResolvedValue() throws Exception {
+    	doDslAttributeWhenReadyPersistedAsDeferredSupplier(true);
+    }
+    
+    protected void doDslAttributeWhenReadyPersistedAsDeferredSupplier(boolean resolvedBeforeRebind) throws Exception {
+        Entity testEntity = entityWithAttributeWhenReady();
+        
+        if (resolvedBeforeRebind) {
+        	testEntity.sensors().set(Sensors.newStringSensor("foo"), "bar");
+        	Assert.assertEquals(getConfigInTask(testEntity, TestEntity.CONF_NAME), "bar");
+        }
+        
         // Persist and rebind
         Application app2 = rebind(testEntity.getApplication());
         Entity e2 = Iterables.getOnlyElement(app2.getChildren());
@@ -145,7 +214,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         Maybe<Object> maybe = ((EntityInternal) e2).config().getLocalRaw(TestEntity.CONF_NAME);
         Assert.assertTrue(maybe.isPresentAndNonNull());
         Assert.assertTrue(BrooklynDslDeferredSupplier.class.isInstance(maybe.get()));
-        BrooklynDslDeferredSupplier deferredSupplier = (BrooklynDslDeferredSupplier) maybe.get();
+        BrooklynDslDeferredSupplier<?> deferredSupplier = (BrooklynDslDeferredSupplier<?>) maybe.get();
         Assert.assertEquals(deferredSupplier.toString(), "$brooklyn:entity(\"x\").attributeWhenReady(\"foo\")");
 
         // Assert the persisted state itself is as expected, and not too big
@@ -170,16 +239,27 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         //      </test.confName>
 
         Assert.assertTrue(testConfNamePersistedState.length() < 400, "persisted state too long: " + testConfNamePersistedState);
+        
+        Assert.assertFalse(testConfNamePersistedState.contains("bar"), "value 'bar' leaked in persisted state");
     }
 
     @Test
-    public void testDslAttributeWhenReadyPersistedInEntitySpecWhileTaskIsWaiting() throws Exception {
+    public void testDslAttributeWhenReadyInEntitySpecWhenNotYetResolved() throws Exception {
+    	doDslAttributeWhenReadyInEntitySpec(false);
+    }
+    
+    @Test
+    public void testDslAttributeWhenReadyInEntitySpecWhenAlreadyResolved() throws Exception {
+    	doDslAttributeWhenReadyInEntitySpec(true);
+    }
+    
+    protected void doDslAttributeWhenReadyInEntitySpec(boolean resolvedBeforeRebind) throws Exception {
         String yaml = "location: localhost\n" +
                 "name: Test Cluster\n" +
                 "services:\n" +
                 "- type: org.apache.brooklyn.entity.group.DynamicCluster\n" +
                 "  id: test-cluster\n" +
-                "  initialSize: 1\n" +
+                "  initialSize: 0\n" +
                 "  memberSpec:\n" +
                 "    $brooklyn:entitySpec:\n" +
                 "      type: org.apache.brooklyn.core.test.entity.TestEntity\n" +
@@ -187,133 +267,68 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
                 "        test.confName: $brooklyn:component(\"test-cluster\").attributeWhenReady(\"sensor\")";
 
         final Entity testEntity = createAndStartApplication(yaml);
+        DynamicCluster cluster = (DynamicCluster) Iterables.getOnlyElement(testEntity.getApplication().getChildren());
+        cluster.resize(1);
+        Assert.assertEquals(cluster.getMembers().size(), 1);
 
-        DynamicCluster clusterEntity1 = (DynamicCluster) Iterables.getOnlyElement(testEntity.getApplication().getChildren());
-
-        TestEntity testEntity1 = null;
-        for (Entity entity : clusterEntity1.getChildren()) {
-            if (entity instanceof TestEntity) {
-                testEntity1 = (TestEntity) entity;
-                break;
-            }
+        if (resolvedBeforeRebind) {
+            cluster.sensors().set(Sensors.newStringSensor("sensor"), "bar");
         }
-        Assert.assertNotNull(testEntity1, "TestEntity not found in DynamicCluster");
-
-        final TestEntity childTestEntity = testEntity1;
-
-        // Wait for the attribute to be ready in a new Task
-        Callable<String> configGetter = new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                String s = getConfigInTask(childTestEntity, TestEntity.CONF_NAME);
-                getLogger().info("getConfig {}={}", TestEntity.CONF_NAME, s);
-                return s;
-            }
-        };
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        Future<String> stringFuture = executorService.submit(configGetter);
 
         // Persist and rebind
-        Application app2 = rebind(testEntity.getApplication());
+        Application app2 = rebind(cluster.getApplication());
+        DynamicCluster cluster2 = (DynamicCluster) Iterables.getOnlyElement(app2.getApplication().getChildren());
 
-        DynamicCluster clusterEntity2 = (DynamicCluster) Iterables.getOnlyElement(app2.getApplication().getChildren());
-
-        TestEntity testEntity2 = null;
-        for (Entity entity : clusterEntity2.getChildren()) {
-            if (entity instanceof TestEntity) {
-                testEntity2 = (TestEntity) entity;
-                break;
-            }
-        }
-        Assert.assertNotNull(testEntity2, "TestEntity not found in DynamicCluster");
-
-        Maybe<Object> maybe = testEntity2.config().getLocalRaw(TestEntity.CONF_NAME);
-
-        Assert.assertTrue(maybe.isPresentAndNonNull());
-        Assert.assertTrue(BrooklynDslDeferredSupplier.class.isInstance(maybe.get()));
-        BrooklynDslDeferredSupplier deferredSupplier = (BrooklynDslDeferredSupplier) maybe.get();
-        Assert.assertEquals(deferredSupplier.toString(), "$brooklyn:entity(\"test-cluster\").attributeWhenReady(\"sensor\")");
-
-        // Check that the Task is still waiting for attribute to be ready
-        Assert.assertFalse(stringFuture.isDone());
-
-        // Now set sensor value
-        ((EntityInternal) clusterEntity1).sensors().set(Sensors.newStringSensor("sensor"), "bar");
-
-        String s = stringFuture.get(10, TimeUnit.SECONDS); // Timeout just for sanity
-
-        Assert.assertEquals(s, "bar");
-    }
-
-    @Test
-    public void testDslAttributeWhenReadyPersistedWithoutLeaks() throws Exception {
-        String yaml = "location: localhost\n" +
-                "name: Test Cluster\n" +
-                "services:\n" +
-                "- type: org.apache.brooklyn.entity.group.DynamicCluster\n" +
-                "  id: test-cluster\n" +
-                "  initialSize: 1\n" +
-                "  memberSpec:\n" +
-                "    $brooklyn:entitySpec:\n" +
-                "      type: org.apache.brooklyn.core.test.entity.TestEntity\n" +
-                "      brooklyn.config:\n" +
-                "        test.confName: $brooklyn:component(\"test-cluster\").attributeWhenReady(\"sensor\")";
-
-        final Entity testEntity = createAndStartApplication(yaml);
-
-        DynamicCluster clusterEntity1 = (DynamicCluster) Iterables.getOnlyElement(testEntity.getApplication().getChildren());
-
-        TestEntity testEntity1 = null;
-        for (Entity entity : clusterEntity1.getChildren()) {
-            if (entity instanceof TestEntity) {
-                testEntity1 = (TestEntity) entity;
-                break;
-            }
-        }
-        Assert.assertNotNull(testEntity1, "TestEntity not found in DynamicCluster");
-
-        final TestEntity childTestEntity = testEntity1;
-
-        // Now set sensor value
-        ((EntityInternal) clusterEntity1).sensors().set(Sensors.newStringSensor("sensor"), "bar");
-
-        String s1 = getConfigInTask(childTestEntity, TestEntity.CONF_NAME);
-        Assert.assertEquals(s1, "bar");
-
-        // Persist and rebind
-        Application app2 = rebind(testEntity.getApplication());
-
-        DynamicCluster clusterEntity2 = (DynamicCluster) Iterables.getOnlyElement(app2.getApplication().getChildren());
-
-        TestEntity testEntity2 = null;
-        for (Entity entity : clusterEntity2.getChildren()) {
-            if (entity instanceof TestEntity) {
-                testEntity2 = (TestEntity) entity;
-                break;
-            }
-        }
-        Assert.assertNotNull(testEntity2, "TestEntity not found in DynamicCluster");
-
-        // Assert the persisted state itself is as expected, and does not contain the value "bar"
+        // Assert the persisted state itself is as expected, and not too big
         BrooklynMementoRawData raw = BrooklynPersistenceUtils.newStateMemento(app2.getManagementContext(), MementoCopyMode.LOCAL);
-        String persistedState = raw.getEntities().get(testEntity2.getId());
-        Matcher matcher = Pattern.compile(".*\\<test.confName\\>(.*)\\<\\/test.confName\\>.*", Pattern.DOTALL)
-                .matcher(persistedState);
-        Assert.assertTrue(matcher.find());
+        String persistedStateForE2 = raw.getEntities().get(cluster2.getId());
+        String expectedTag = "org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent_-AttributeWhenReady";
+        Matcher matcher = Pattern.compile(".*\\<"+expectedTag+"\\>(.*)\\<\\/"+expectedTag+"\\>.*", Pattern.DOTALL)
+                .matcher(persistedStateForE2);
+        Assert.assertTrue(matcher.find(), persistedStateForE2);
         String testConfNamePersistedState = matcher.group(1);
-
         Assert.assertNotNull(testConfNamePersistedState);
-        Assert.assertFalse(testConfNamePersistedState.contains("bar"), "value leaked in persisted state");
-    }
 
-    @Test
-    public void testDslAttributeWhenReadyRebind() throws Exception {
-        Entity testEntity = entityWithAttributeWhenReady();
-        ((EntityInternal) testEntity).sensors().set(Sensors.newStringSensor("foo"), "bar");
-        Application app2 = rebind(testEntity.getApplication());
-        Entity e2 = Iterables.getOnlyElement(app2.getChildren());
-
-        Assert.assertEquals(getConfigInTask(e2, TestEntity.CONF_NAME), "bar");
+        // Can re-size to create a new member entity
+        cluster2.resize(2);
+        Assert.assertEquals(cluster2.getMembers().size(), 2);
+        
+        // Both the existing and the new member should have the DeferredSupplier config
+        for (Entity member : Iterables.filter(cluster2.getChildren(), TestEntity.class)) {
+	        Maybe<Object> maybe = ((EntityInternal)member).config().getLocalRaw(TestEntity.CONF_NAME);
+	        Assert.assertTrue(maybe.isPresentAndNonNull());
+	        BrooklynDslDeferredSupplier<?> deferredSupplier = (BrooklynDslDeferredSupplier<?>) maybe.get();
+	        Assert.assertEquals(deferredSupplier.toString(), "$brooklyn:entity(\"test-cluster\").attributeWhenReady(\"sensor\")");
+        }
+        
+        if (resolvedBeforeRebind) {
+            // All members should resolve their config
+            for (Entity member : Iterables.filter(cluster2.getChildren(), TestEntity.class)) {
+		        String val = getConfigInTask(member, TestEntity.CONF_NAME);
+		        Assert.assertEquals(val, "bar");
+            }
+        } else {
+        	List<Future<String>> futures = Lists.newArrayList();
+        	
+            // All members should have unresolved values
+            for (Entity member : Iterables.filter(cluster2.getChildren(), TestEntity.class)) {
+		        // Wait for the attribute to be ready in a new Task
+		        Future<String> stringFuture = getConfigInTaskAsync(member, TestEntity.CONF_NAME);
+		        futures.add(stringFuture);
+		        
+		        // Check that the Task is still waiting for attribute to be ready
+		        Thread.sleep(100);
+		        Assert.assertFalse(stringFuture.isDone());
+            }
+            
+            // After setting the sensor, all those values should now resolve
+	        cluster2.sensors().set(Sensors.newStringSensor("sensor"), "bar");
+	        
+	        for (Future<String> future : futures) {
+		        String s = future.get(10, TimeUnit.SECONDS); // Timeout just for sanity
+		        Assert.assertEquals(s, "bar");
+            }
+        }
     }
 
     private Entity entityWithAttributeWhenReady() throws Exception {
@@ -478,7 +493,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         );
         testEntity.sensors().set(TestEntity.NAME, "somefooname");
         AttributeSensor<String> transformedSensor = Sensors.newStringSensor("test.name.transformed");
-        EntityTestUtils.assertAttributeEqualsEventually(testEntity, transformedSensor, "somebarname");
+        EntityAsserts.assertAttributeEqualsEventually(testEntity, transformedSensor, "somebarname");
     }
 
     @Test
@@ -495,7 +510,7 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
         testEntity.sensors().set(Sensors.newStringSensor("test.replacement"), "bar");
         testEntity.sensors().set(TestEntity.NAME, "somefooname");
         AttributeSensor<String> transformedSensor = Sensors.newStringSensor("test.name.transformed");
-        EntityTestUtils.assertAttributeEqualsEventually(testEntity, transformedSensor, "somebarname");
+        EntityAsserts.assertAttributeEqualsEventually(testEntity, transformedSensor, "somebarname");
     }
 
 }
