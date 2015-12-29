@@ -95,7 +95,6 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
 
     public Application rebind(Application app) throws Exception {
         RebindTestUtils.waitForPersisted(app);
-        // Removed because of issues in some tests: // RebindTestUtils.checkCurrentMementoSerializable(app);
         Application result = RebindTestUtils.rebind(mementoDir, getClass().getClassLoader());
         mgmtContexts.add(result.getManagementContext());
         return result;
