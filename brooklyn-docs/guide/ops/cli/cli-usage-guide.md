@@ -261,6 +261,12 @@ Parameters can also be passed to the effector:
 $ br app WebCluster entity NginxController:CZ8Q effector restart invoke restartChildren=true
 {% endhighlight %}
 
+If a parameter value is complex or spans multiple lines, it may be provided in a file and used like this:
+
+{% highlight text %}
+$ br app WebCluster effector start invoke locations=@data.txt
+{% endhighlight %}
+
 Shortcut commands are available for the 3 standard effectors of `start`, `restart` and `stop`.
 These commands can be used directly with an app-scope or entity-scope:
 

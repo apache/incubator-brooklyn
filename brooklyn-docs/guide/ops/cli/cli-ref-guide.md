@@ -228,7 +228,10 @@ policy       pol
   Invoke the effector without any parameters.
 
 - `br <entity-scope> effector <EffectorID> invoke [<param>=<value> ...]`  
-  Invoke the effector with one of more parameters.
+  Invoke the effector with one of more parameters.  
+  If the parameter value is
+  complex or multi-lined it may be provided in a file and referenced as:  
+  `<param>=@<FILE>`
 
 **NOTE** Shortcut commands have been provided for the standard start, restart and stop effectors.  For example:  
 
