@@ -246,6 +246,67 @@ public class DslAndRebindYamlTest extends AbstractYamlTest {
     }
 
     @Test
+    public void testDslAttributeWhenReadyPersistedWithoutLeaks() throws Exception {
+        String yaml = "location: localhost\n" +
+                "name: Test Cluster\n" +
+                "services:\n" +
+                "- type: org.apache.brooklyn.entity.group.DynamicCluster\n" +
+                "  id: test-cluster\n" +
+                "  initialSize: 1\n" +
+                "  memberSpec:\n" +
+                "    $brooklyn:entitySpec:\n" +
+                "      type: org.apache.brooklyn.core.test.entity.TestEntity\n" +
+                "      brooklyn.config:\n" +
+                "        test.confName: $brooklyn:component(\"test-cluster\").attributeWhenReady(\"sensor\")";
+
+        final Entity testEntity = createAndStartApplication(yaml);
+
+        DynamicCluster clusterEntity1 = (DynamicCluster) Iterables.getOnlyElement(testEntity.getApplication().getChildren());
+
+        TestEntity testEntity1 = null;
+        for (Entity entity : clusterEntity1.getChildren()) {
+            if (entity instanceof TestEntity) {
+                testEntity1 = (TestEntity) entity;
+                break;
+            }
+        }
+        Assert.assertNotNull(testEntity1, "TestEntity not found in DynamicCluster");
+
+        final TestEntity childTestEntity = testEntity1;
+
+        // Now set sensor value
+        ((EntityInternal) clusterEntity1).sensors().set(Sensors.newStringSensor("sensor"), "bar");
+
+        String s1 = getConfigInTask(childTestEntity, TestEntity.CONF_NAME);
+        Assert.assertEquals(s1, "bar");
+
+        // Persist and rebind
+        Application app2 = rebind(testEntity.getApplication());
+
+        DynamicCluster clusterEntity2 = (DynamicCluster) Iterables.getOnlyElement(app2.getApplication().getChildren());
+
+        TestEntity testEntity2 = null;
+        for (Entity entity : clusterEntity2.getChildren()) {
+            if (entity instanceof TestEntity) {
+                testEntity2 = (TestEntity) entity;
+                break;
+            }
+        }
+        Assert.assertNotNull(testEntity2, "TestEntity not found in DynamicCluster");
+
+        // Assert the persisted state itself is as expected, and does not contain the value "bar"
+        BrooklynMementoRawData raw = BrooklynPersistenceUtils.newStateMemento(app2.getManagementContext(), MementoCopyMode.LOCAL);
+        String persistedState = raw.getEntities().get(testEntity2.getId());
+        Matcher matcher = Pattern.compile(".*\\<test.confName\\>(.*)\\<\\/test.confName\\>.*", Pattern.DOTALL)
+                .matcher(persistedState);
+        Assert.assertTrue(matcher.find());
+        String testConfNamePersistedState = matcher.group(1);
+
+        Assert.assertNotNull(testConfNamePersistedState);
+        Assert.assertFalse(testConfNamePersistedState.contains("bar"), "value leaked in persisted state");
+    }
+
+    @Test
     public void testDslAttributeWhenReadyRebind() throws Exception {
         Entity testEntity = entityWithAttributeWhenReady();
         ((EntityInternal) testEntity).sensors().set(Sensors.newStringSensor("foo"), "bar");
