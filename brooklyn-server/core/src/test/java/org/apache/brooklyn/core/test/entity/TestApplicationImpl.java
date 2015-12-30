@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
+import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.LocationSpec;
 import org.apache.brooklyn.api.mgmt.SubscriptionHandle;
 import org.apache.brooklyn.api.sensor.Sensor;
@@ -92,5 +93,9 @@ public class TestApplicationImpl extends AbstractApplication implements TestAppl
         // for tests, log this at debug so we see test info more
         LOG.debug(message+" application "+this);
     }
-    
+
+    @Override
+    protected boolean unmanageProvisionerIfNotUsed(/*MachineProvisioningLocation<MachineLocation>*/Location machineProvisioningLocation) {
+        return false;
+    }
 }
