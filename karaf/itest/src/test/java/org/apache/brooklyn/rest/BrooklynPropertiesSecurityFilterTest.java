@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.rest;
 
-import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -34,19 +33,19 @@ import org.apache.http.message.BasicNameValuePair;
 //import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.Test;
-import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
+//import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.brooklyn.util.time.Time;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+//import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import org.testng.Assert;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class BrooklynPropertiesSecurityFilterTest extends BrooklynRestApiLauncherTestFixture {
 

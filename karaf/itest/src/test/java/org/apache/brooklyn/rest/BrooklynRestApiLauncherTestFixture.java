@@ -19,16 +19,10 @@
 package org.apache.brooklyn.rest;
 
 import org.reflections.util.ClasspathHelper;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
-import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
-import org.apache.brooklyn.rest.util.OsgiCompat;
-import org.apache.brooklyn.util.exceptions.Exceptions;
 
 public abstract class BrooklynRestApiLauncherTestFixture {
 

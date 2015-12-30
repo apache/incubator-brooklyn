@@ -23,10 +23,11 @@ import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
 import org.apache.brooklyn.rest.resources.AbstractBrooklynRestResource;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
@@ -37,8 +38,11 @@ import org.apache.brooklyn.rest.util.TestShutdownHandler;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
 import org.apache.cxf.jaxrs.client.WebClient;
+import org.reflections.util.ClasspathHelper;
 
 public abstract class BrooklynRestApiTest {
+
+    public static final String SCANNING_CATALOG_BOM_URL = "classpath://brooklyn/scanning.catalog.bom";
 
     protected ManagementContext manager;
     
@@ -77,7 +81,7 @@ public abstract class BrooklynRestApiTest {
         if (manager==null) {
             if (useLocalScannedCatalog()) {
                 manager = new LocalManagementContext();
-                BrooklynRestApiLauncherTest.forceUseOfDefaultCatalogWithJavaClassPath(manager);
+                forceUseOfDefaultCatalogWithJavaClassPath();
             } else {
                 manager = new LocalManagementContextForTests();
             }
@@ -114,4 +118,16 @@ public abstract class BrooklynRestApiTest {
     public <T> T resource(String uri, Class<T> clazz) {
         return JAXRSClientFactory.create(getEndpointAddress() + uri, clazz);
     }
+
+    private void forceUseOfDefaultCatalogWithJavaClassPath() {
+        // don't use any catalog.xml which is set
+        ((BrooklynProperties)manager.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, SCANNING_CATALOG_BOM_URL);
+        // sets URLs for a surefire
+        ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forJavaClassPath());
+        // this also works
+//        ((LocalManagementContext)manager).setBaseClassPathForScanning(ClasspathHelper.forPackage("brooklyn"));
+        // but this (near-default behaviour) does not
+//        ((LocalManagementContext)manager).setBaseClassLoader(getClass().getClassLoader());
+    }
+
 }

@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.rest.resources;
+package org.apache.brooklyn.rest;
 
 import static org.apache.brooklyn.util.http.HttpTool.httpClientBuilder;
-import static org.testng.Assert.assertEquals;
 
 import java.net.URI;
 import java.util.Collections;
@@ -32,17 +31,17 @@ import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 //import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
-import org.apache.brooklyn.test.HttpTestUtils;
+//import org.apache.brooklyn.test.HttpTestUtils;
 import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.HttpClient;
 //import org.eclipse.jetty.server.Server;
-import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
-import org.testng.Assert;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ServerResourceIntegrationTest extends BrooklynRestApiLauncherTestFixture {
 
