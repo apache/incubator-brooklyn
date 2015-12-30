@@ -43,7 +43,6 @@ import org.ops4j.pax.exam.karaf.options.LogLevelOption;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
 
-
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
 public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixture {
@@ -54,9 +53,9 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
     public static Option[] configuration() throws Exception {
         return new Option[]{
             karafDistributionConfiguration()
-                .frameworkUrl(AssemblyTest.brooklynKarafDist())
-                .unpackDirectory(new File("target/paxexam/unpack/"))
-                .useDeployFolder(false),
+            .frameworkUrl(AssemblyTest.brooklynKarafDist())
+            .unpackDirectory(new File("target/paxexam/unpack/"))
+            .useDeployFolder(false),
             editConfigurationFilePut("etc/org.ops4j.pax.web.cfg", "org.osgi.service.http.port", HTTP_PORT),
             configureConsole().ignoreLocalConsole(),
             logLevel(LogLevelOption.LogLevel.INFO),
@@ -69,13 +68,13 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
     @Test
     public void testStart() throws Exception {
         final String rootUrl = "http://localhost:" + HTTP_PORT;
-        final String appsUrl = rootUrl+"/v1/catalog/applications";
-        // TODO: wait for service up
+        final String appsUrl = rootUrl + "/v1/catalog/applications";
         int code = Asserts.succeedsEventually(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
                 int code = HttpTool.getHttpStatusCode(appsUrl);
-                if (code == HttpStatus.SC_FORBIDDEN) {
+                if (code == HttpStatus.SC_FORBIDDEN
+                        || code == HttpStatus.SC_NOT_FOUND) { // wait for service up
                     throw new RuntimeException("Retry request");
                 } else {
                     return code;
@@ -91,5 +90,4 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
 //                .securityProvider(AnyoneSecurityProvider.class)
 //                .forceUseOfDefaultCatalogWithJavaClassPath(true);
 //    }
-
 }
