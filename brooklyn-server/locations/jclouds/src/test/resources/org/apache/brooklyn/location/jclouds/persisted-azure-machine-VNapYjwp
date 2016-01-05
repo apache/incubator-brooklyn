@@ -1,0 +1,271 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+     http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<location>
+  <brooklynVersion>0.9.0-20151120.1523</brooklynVersion>
+  <type>org.apache.brooklyn.location.jclouds.JcloudsSshMachineLocation</type>
+  <id>VNapYjwp</id>
+  <displayName>40.118.22.49</displayName>
+  <parent>briByOel</parent>
+  <locationConfig>
+    <displayName>40.118.22.49</displayName>
+    <address>
+      <java.net.Inet4Address>40.118.22.49/40.118.22.49</java.net.Inet4Address>
+    </address>
+    <user>amp</user>
+    <privateKeyData>myPrivateKey-----BEGIN RSA PRIVATE KEY-----
+myPrivateKey
+-----END RSA PRIVATE KEY-----
+</privateKeyData>
+    <config>
+      <java.util.Collections_-UnmodifiableMap>
+        <m class="MutableMap">
+          <privateKeyData>-----BEGIN RSA PRIVATE KEY-----
+myPrivateKey
+-----END RSA PRIVATE KEY-----
+</privateKeyData>
+        </m>
+      </java.util.Collections_-UnmodifiableMap>
+    </config>
+    <jcloudsParent>
+      <locationProxy>briByOel</locationProxy>
+    </jcloudsParent>
+    <node>
+      <org.jclouds.compute.domain.internal.NodeMetadataImpl>
+        <providerId>brookly-nwkmys-amp-tomca-q9kd-tomca-tg0g-ddd</providerId>
+        <name>brookly-nwkmys-amp-tomca-q9kd-tomca-tg0g-ddd</name>
+        <location class="org.jclouds.domain.internal.LocationImpl">
+          <scope>REGION</scope>
+          <id>West Europe</id>
+          <description>West Europe</description>
+          <parent class="org.jclouds.domain.internal.LocationImpl">
+            <scope>PROVIDER</scope>
+            <id>azurecompute</id>
+            <description>https://management.core.windows.net/341751b0-f348-45ce-9498-41cc68b4b45f</description>
+            <iso3166Codes class="com.google.common.collect.RegularImmutableSet">
+              <string>US-IA</string>
+              <string>US-VA</string>
+              <string>US-IL</string>
+              <string>US-TX</string>
+              <string>US-CA</string>
+              <string>IE</string>
+              <string>NL</string>
+              <string>HK</string>
+              <string>SG</string>
+              <string>JP-11</string>
+              <string>JP-27</string>
+              <string>BR</string>
+              <string>AU-NSW</string>
+              <string>AU-VIC</string>
+            </iso3166Codes>
+            <metadata class="com.google.common.collect.EmptyImmutableBiMap"/>
+          </parent>
+          <iso3166Codes class="com.google.common.collect.SingletonImmutableSet">
+            <string>NL</string>
+          </iso3166Codes>
+          <metadata class="com.google.common.collect.EmptyImmutableBiMap" reference="../parent/metadata"/>
+        </location>
+        <userMetadata/>
+        <id>brookly-nwkmys-amp-tomca-q9kd-tomca-tg0g-ddd</id>
+        <type>NODE</type>
+        <tags class="com.google.common.collect.EmptyImmutableSet"/>
+        <status>RUNNING</status>
+        <loginPort>22</loginPort>
+        <publicAddresses class="com.google.common.collect.SingletonImmutableSet">
+          <string>40.118.22.49</string>
+        </publicAddresses>
+        <privateAddresses class="com.google.common.collect.SingletonImmutableSet">
+          <string>10.0.0.4</string>
+        </privateAddresses>
+        <credentials>
+          <identity>amp</identity>
+          <credential>-----BEGIN RSA PRIVATE KEY-----
+myPrivateKey
+-----END RSA PRIVATE KEY-----
+</credential>
+          <authenticateSudo>false</authenticateSudo>
+          <password class="com.google.common.base.Absent"/>
+          <privateKey class="com.google.common.base.Present">
+            <reference class="string">-----BEGIN RSA PRIVATE KEY-----
+myPrivateKey
+-----END RSA PRIVATE KEY-----
+</reference>
+          </privateKey>
+        </credentials>
+        <group>brookly-nwkmys-amp-tomca-q9kd-tomca-tg0g</group>
+        <hostname>brookly-nwkmys-amp-tomca-q9kd-tomca-tg0g-ddd</hostname>
+      </org.jclouds.compute.domain.internal.NodeMetadataImpl>
+    </node>
+    <brooklyn.ssh.config.port type="int">22</brooklyn.ssh.config.port>
+    <region>West Europe</region>
+    <callerContext>
+      <null/>
+    </callerContext>
+    <detectMachineDetails type="boolean">true</detectMachineDetails>
+    <portforwarding.enabled type="boolean">false</portforwarding.enabled>
+    <port type="int">22</port>
+    <template>
+      <org.jclouds.compute.domain.internal.TemplateImpl>
+        <image class="org.jclouds.compute.domain.internal.ImageImpl">
+          <providerId>b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_1-LTS-amd64-server-20150123-en-us-30GB</providerId>
+          <name>Ubuntu Server 14.04.1 LTS</name>
+          <userMetadata/>
+          <id>b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_1-LTS-amd64-server-20150123-en-us-30GB</id>
+          <type>IMAGE</type>
+          <tags class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <operatingSystem>
+            <family>UBUNTU</family>
+            <version>14.04.1 LTS</version>
+            <description>Ubuntu Server 14.04.1 LTS (amd64 20150123) for Microsoft Azure. Ubuntu Server is the world&apos;s most popular Linux for cloud environments. Updates and patches for Ubuntu 14.04.1 LTS will be available until 2019-04-17.  Ubuntu Server is the perfect platform for all workloads from web applications to NoSQL databases and Hadoop. For more information see [Ubuntu Cloud|http://www.ubuntu.com/cloud|_blank] and [using Juju to deploy your workloads|http://juju.ubuntu.com|_blank].</description>
+            <is64Bit>true</is64Bit>
+          </operatingSystem>
+          <status>AVAILABLE</status>
+          <description>Ubuntu Server 14.04.1 LTS (amd64 20150123) for Microsoft Azure. Ubuntu Server is the world&apos;s most popular Linux for cloud environments. Updates and patches for Ubuntu 14.04.1 LTS will be available until 2019-04-17.  Ubuntu Server is the perfect platform for all workloads from web applications to NoSQL databases and Hadoop. For more information see [Ubuntu Cloud|http://www.ubuntu.com/cloud|_blank] and [using Juju to deploy your workloads|http://juju.ubuntu.com|_blank].</description>
+          <defaultCredentials>
+            <identity>root</identity>
+            <authenticateSudo>false</authenticateSudo>
+            <password class="com.google.common.base.Absent" reference="../../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+            <privateKey class="com.google.common.base.Absent" reference="../../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+          </defaultCredentials>
+        </image>
+        <hardware class="org.jclouds.compute.domain.internal.HardwareImpl">
+          <providerId>BASIC_A2</providerId>
+          <name>BASIC_A2</name>
+          <userMetadata/>
+          <id>BASIC_A2</id>
+          <type>HARDWARE</type>
+          <tags class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <processors class="ImmutableList">
+            <org.jclouds.compute.domain.Processor>
+              <cores>2.0</cores>
+              <speed>2.0</speed>
+            </org.jclouds.compute.domain.Processor>
+          </processors>
+          <ram>3584</ram>
+          <volumes class="ImmutableList"/>
+          <supportsImage class="com.google.common.base.Predicates$ObjectPredicate">ALWAYS_TRUE</supportsImage>
+          <hypervisor>Hyper-V</hypervisor>
+          <deprecated>false</deprecated>
+        </hardware>
+        <location class="org.jclouds.domain.internal.LocationImpl">
+          <scope>REGION</scope>
+          <id>West Europe</id>
+          <description>West Europe</description>
+          <parent class="org.jclouds.domain.internal.LocationImpl">
+            <scope>PROVIDER</scope>
+            <id>azurecompute</id>
+            <description>https://management.core.windows.net/341751b0-f348-45ce-9498-41cc68b4b45f</description>
+            <iso3166Codes class="com.google.common.collect.RegularImmutableSet" reference="../../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/location/parent/iso3166Codes"/>
+            <metadata class="com.google.common.collect.EmptyImmutableBiMap" reference="../../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/location/parent/metadata"/>
+          </parent>
+          <iso3166Codes class="com.google.common.collect.SingletonImmutableSet">
+            <string>NL</string>
+          </iso3166Codes>
+          <metadata class="com.google.common.collect.EmptyImmutableBiMap" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/location/parent/metadata"/>
+        </location>
+        <options class="org.jclouds.azurecompute.options.AzureComputeTemplateOptions">
+          <port>-1</port>
+          <seconds>-1</seconds>
+          <taskName>bootstrap</taskName>
+          <runAsRoot>true</runAsRoot>
+          <blockOnComplete>true</blockOnComplete>
+          <wrapInInitScript>true</wrapInInitScript>
+          <inboundPorts class="com.google.common.collect.RegularImmutableSet">
+            <int>22</int>
+            <int>31880</int>
+            <int>31001</int>
+            <int>8080</int>
+            <int>1099</int>
+            <int>8443</int>
+          </inboundPorts>
+          <script class="org.jclouds.scriptbuilder.domain.StatementList">
+            <statements class="ImmutableList">
+              <org.jclouds.scriptbuilder.statements.login.AdminAccess>
+                <config>
+                  <adminUsername>amp</adminUsername>
+                  <adminFullName>amp</adminFullName>
+                  <adminPublicKey>ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAyRJ8h3uGrGOPo4fe2Fxd47bKE4I7aTwDvs3zkMNDGQZFzVPrldpDLcXG6E9jjAOomhchP7+PKc/FLa3pkv9eA5gX0m8GwYiVzmwYP6k2dvX+hyVD9m68xGMPYdjnu4ytTnnJLaDDqdd7ta/sJLWFbPkup1L6iHgHzJ9Zy1238yAtd7ypmlpvFLUltlqq614dpZq4C3ZuHhylL9gnNKPDYiX1a6XxX8WDkl5QLDMpU+pVp/XtyWvsBJ2j+aIghGSUtYB4kZYKRg9Vw/SskUg2a9NNnGxhox6D5MEw48eYpWoFk1A5qQrfPv5iwhEvbKWq3N600GvcfDwVgqJIK9VksQ== amp@AMP
+</adminPublicKey>
+                  <adminPrivateKey>pa55w0rd</adminPrivateKey>
+                  <adminPassword>pa55w0rd</adminPassword>
+                  <loginPassword>pa55w0rd</loginPassword>
+                  <grantSudoToAdminUser>true</grantSudoToAdminUser>
+                  <installAdminPrivateKey>false</installAdminPrivateKey>
+                  <resetLoginPassword>true</resetLoginPassword>
+                  <cryptFunction class="org.jclouds.compute.functions.Sha512Crypt$Function">INSTANCE</cryptFunction>
+                  <adminCredentials>
+                    <identity>amp</identity>
+                    <credential>c6KeIH4QNmOs-ignored</credential>
+                  </adminCredentials>
+                  <authorizeAdminPublicKey>true</authorizeAdminPublicKey>
+                  <lockSsh>true</lockSsh>
+                </config>
+              </org.jclouds.scriptbuilder.statements.login.AdminAccess>
+            </statements>
+          </script>
+          <tags class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <securityGroups class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <blockUntilRunning>true</blockUntilRunning>
+          <userMetadata>
+            <Name>brookly-nwkmys-amp-tomca-q9kd-tomca-tg0g-pnds</Name>
+            <entry key="brooklyn-user">amp</entry>
+            <entry key="brooklyn-app-id">Q9kDQQ1s</entry>
+            <entry key="brooklyn-app-name">Tomcat Azure EU West</entry>
+            <entry key="brooklyn-entity-id">tg0gDGp0</entry>
+            <entry key="brooklyn-entity-name">Tomcat Server</entry>
+            <entry key="brooklyn-server-creation-date">2015-10-21-1404</entry>
+          </userMetadata>
+          <nodeNames class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <networks class="com.google.common.collect.EmptyImmutableSet" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/tags"/>
+          <virtualNetworkName class="com.google.common.base.Present">
+            <reference class="string">jclouds-virtual-network</reference>
+          </virtualNetworkName>
+          <addressSpaceAddressPrefix class="com.google.common.base.Absent" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+          <subnetName class="com.google.common.base.Present">
+            <reference class="string">jclouds-1</reference>
+          </subnetName>
+          <subnetAddressPrefix class="com.google.common.base.Absent" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+          <storageAccountName class="com.google.common.base.Present">
+            <reference class="string">jcloudsbchsfqegxc</reference>
+          </storageAccountName>
+          <storageAccountType class="com.google.common.base.Absent" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+          <networkSecurityGroupName class="com.google.common.base.Absent" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+          <reservedIPName class="com.google.common.base.Absent" reference="../../../../node/org.jclouds.compute.domain.internal.NodeMetadataImpl/credentials/password"/>
+        </options>
+      </org.jclouds.compute.domain.internal.TemplateImpl>
+    </template>
+    <usedPorts>
+      <set>
+        <int>31880</int>
+        <int>8443</int>
+        <int>8080</int>
+        <int>31001</int>
+        <int>1099</int>
+      </set>
+    </usedPorts>
+    <tags>
+      <set/>
+    </tags>
+  </locationConfig>
+  <locationConfigUnused>
+    <string>displayName</string>
+    <string>config</string>
+    <string>region</string>
+    <string>portforwarding.enabled</string>
+  </locationConfigUnused>
+</location>

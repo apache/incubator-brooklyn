@@ -1,0 +1,65 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+     http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<location>
+  <brooklynVersion>0.9.0-20151120.1523</brooklynVersion>
+  <type>org.apache.brooklyn.location.jclouds.JcloudsLocation</type>
+  <id>briByOel</id>
+  <displayName>Microsoft Azure West Europe</displayName>
+  <children>
+    <string>VNapYjwp</string>
+  </children>
+  <locationConfig>
+    <provider>azurecompute</provider>
+    <endpoint>https://management.core.windows.net/341751b0-f348-45ce-9498-41cc68b4b45f</endpoint>
+    <identity>/home/amp/.amp/azure.p12</identity>
+    <jclouds.azurecompute.operation.timeout>120000</jclouds.azurecompute.operation.timeout>
+    <credential>pa55w0rd</credential>
+    <vmNameMaxLength>45</vmNameMaxLength>
+    <displayName>Microsoft Azure West Europe</displayName>
+    <imageId>b39f27a8b8c64d52b05eac6a62ebad85__Ubuntu-14_04_1-LTS-amd64-server-20150123-en-us-30GB</imageId>
+    <hardwareId>BASIC_A2</hardwareId>
+    <spec.named.name>azure-euwest</spec.named.name>
+    <spec.original>azure-euwest</spec.original>
+    <region>West Europe</region>
+    <spec.final>jclouds:azurecompute:West Europe</spec.final>
+    <machineCreationSemaphore>
+      <java.util.concurrent.Semaphore>
+        <sync class="java.util.concurrent.Semaphore$FairSync">
+          <state>2147483647</state>
+        </sync>
+      </java.util.concurrent.Semaphore>
+    </machineCreationSemaphore>
+    <vmInstanceIds>
+      <map>
+        <entry>
+          <locationProxy>VNapYjwp</locationProxy>
+          <string>brookly-nwkmys-amp-tomca-q9kd-tomca-tg0g-ddd</string>
+        </entry>
+      </map>
+    </vmInstanceIds>
+    <tags>
+      <set/>
+    </tags>
+  </locationConfig>
+  <locationConfigUnused>
+    <string>jclouds.azurecompute.operation.timeout</string>
+    <string>displayName</string>
+  </locationConfigUnused>
+  <locationConfigDescription>azurecompute:West Europe:https://management.core.windows.net/341751b0-f348-45ce-9498-41cc68b4b45f</locationConfigDescription>
+</location>

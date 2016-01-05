@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>17</version>
+        <relativePath></relativePath> <!-- prevent loading of ../pom.xml as the "parent" -->
+    </parent>
+
+    <groupId>org.apache.brooklyn</groupId>
+    <artifactId>brooklyn-jsgui</artifactId>
+    <version>0.9.0-SNAPSHOT</version>  <!-- BROOKLYN_VERSION -->
+    <packaging>war</packaging>
+
+    <name>Brooklyn REST JavaScript Web GUI</name>
+
+    <description>
+        JavaScript+HTML GUI for interacting with Brooklyn, using the REST API
+    </description>
+
+    <properties>
+        <project.build.webapp>
+            ${project.build.directory}/${project.build.finalName}
+        </project.build.webapp>
+        <nodejs.path>${project.basedir}/target/nodejs/node</nodejs.path>
+        <jasmine-maven-plugin.version>1.3.1.5</jasmine-maven-plugin.version>
+        <maven-dependency-plugin.version>2.8</maven-dependency-plugin.version>
+        <nodejs-maven-plugin.version>1.0.3</nodejs-maven-plugin.version>
+        <maven-war-plugin.version>2.4</maven-war-plugin.version>
+        <nodejs-maven-binaries.version>0.10.25</nodejs-maven-binaries.version>
+        <requirejs-maven-plugin.version>2.0.0</requirejs-maven-plugin.version>
+        <maven-replacer-plugin.version>1.5.2</maven-replacer-plugin.version>
+        <maven-resources-plugin.version>2.7</maven-resources-plugin.version>
+    </properties>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/test/resources/fixtures</directory>
+                <targetPath>${project.build.directory}/jasmine/fixtures</targetPath>
+            </resource>
+        </resources>
+        <!-- Insert special LICENSE/NOTICE into the <test-jar>/META-INF folder -->
+        <testResources>
+            <testResource>
+                <directory>${project.basedir}/src/test/resources</directory>
+            </testResource>
+            <testResource>
+                <targetPath>META-INF</targetPath>
+                <directory>${basedir}/src/test/license/files</directory>
+            </testResource>
+        </testResources>
+        <plugins>
+            <!--
+                 run js tests with: $ mvn clean process-test-resources jasmine:test
+                 run tests in the browser with: $ mvn jasmine:bdd
+            -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>copy-fixtures</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/jasmine/fixtures</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <!-- copy rest-api fixtures from brooklyn-server submodule repo -->
+                                    <directory>${project.basedir}/../brooklyn-server/rest/rest-api/src/test/resources/fixtures</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.github.searls</groupId>
+                <artifactId>jasmine-maven-plugin</artifactId>
+                <version>${jasmine-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!--Uses the require.js test spec-->
+                    <specRunnerTemplate>REQUIRE_JS</specRunnerTemplate>
+                    <preloadSources>
+                        <source>js/libs/require.js</source>
+                    </preloadSources>
+
+                    <!--Sources-->
+                    <jsSrcDir>${project.basedir}/src/main/webapp/assets</jsSrcDir>
+                    <jsTestSrcDir>${project.basedir}/src/test/javascript/specs</jsTestSrcDir>
+                    <customRunnerConfiguration>
+                        ${project.basedir}/src/test/javascript/config.txt
+                    </customRunnerConfiguration>
+                    <!-- Makes output terser -->
+                    <format>progress</format>
+                    <additionalContexts>
+                        <!-- If context roots start with a / the resource will be available on the server at //root. -->
+                        <!-- It is an error for context roots to end with a /. -->
+                        <context>
+                            <contextRoot>fixtures</contextRoot>
+                            <directory>${project.build.directory}/jasmine/fixtures</directory>
+                        </context>
+                    </additionalContexts>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>${maven-war-plugin.version}</version>
+                <configuration>
+                    <useCache>true</useCache> <!-- to prevent replaced files being overwritten -->
+                    <!-- Insert special LICENSE/NOTICE into the <war>/META-INF folder -->
+                    <webResources>
+                        <webResource>
+                            <targetPath>META-INF</targetPath>
+                            <directory>${basedir}/src/main/license/files</directory>
+                        </webResource>
+                    </webResources>
+                    <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                    </archive>
+                </configuration>
+            </plugin>
+            <!-- Disable the automatic LICENSE/NOTICE placement from the upstream pom, because we need to include
+                 bundled dependencies. See "webResources" section above for where we include the new LICENSE/NOTICE -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.5.4</version>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <supportedProjectTypes>
+                        <supportedProjectType>war</supportedProjectType>
+                    </supportedProjectTypes>
+                    <instructions>
+                        <Web-ContextPath>/</Web-ContextPath>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <configuration>
+                        <excludes combine.children="append">
+                            <!--
+                                JavaScript code that is not copyright of Apache Foundation. It is included in NOTICE.
+                            -->
+                            <exclude>**/src/main/webapp/assets/js/libs/*</exclude>
+                            <exclude>**/src/build/requirejs-maven-plugin/r.js</exclude>
+
+                            <!--
+                                Copy of swagger-ui from https://github.com/swagger-api/swagger-ui tag::v2.1.3
+                            -->
+                            <exclude>**/src/main/webapp/assets/swagger-ui/**</exclude>
+
+                            <!--
+                                Trivial Json controlling the build,  "without any degree of creativity".
+                                Json does not support comments, therefore far easier to just omit the license header!
+                            -->
+                            <exclude>**//src/build/optimize-css.json</exclude>
+                            <exclude>**//src/build/optimize-js.json</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <plugin>
+                	<groupId>org.eclipse.m2e</groupId>
+                	<artifactId>lifecycle-mapping</artifactId>
+                	<version>1.0.0</version>
+                	<configuration>
+                		<lifecycleMappingMetadata>
+                			<pluginExecutions>
+                				<pluginExecution>
+                					<pluginExecutionFilter>
+                						<groupId>
+                							com.github.skwakman.nodejs-maven-plugin
+                						</groupId>
+                						<artifactId>
+                							nodejs-maven-plugin
+                						</artifactId>
+                						<versionRange>
+                							[1.0.3,)
+                						</versionRange>
+                						<goals>
+                							<goal>extract</goal>
+                						</goals>
+                					</pluginExecutionFilter>
+                					<action>
+                						<ignore></ignore>
+                					</action>
+                				</pluginExecution>
+                			</pluginExecutions>
+                		</lifecycleMappingMetadata>
+                	</configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>nodejs-path-override</id>
+            <activation>
+                <os><family>linux</family></os>
+            </activation>
+            <properties>
+                <nodejs.path>${project.basedir}/src/build/nodejs</nodejs.path>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.github.skwakman.nodejs-maven-binaries</groupId>
+                    <artifactId>nodejs-maven-binaries</artifactId>
+                    <version>${nodejs-maven-binaries.version}</version>
+                    <classifier>linux-x64</classifier>
+                    <type>zip</type>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>${maven-dependency-plugin.version}</version>
+                        <executions>
+                          <execution>
+                            <id>unpack-nodejs64</id>
+                            <phase>prepare-package</phase>
+                            <goals>
+                              <goal>unpack-dependencies</goal>
+                            </goals>
+                            <configuration>
+                              <includeGroupIds>com.github.skwakman.nodejs-maven-binaries</includeGroupIds>
+                              <includeArtifactIds>nodejs-maven-binaries</includeArtifactIds>
+                              <outputDirectory>
+                                 ${project.basedir}/target/nodejs64/
+                              </outputDirectory>
+                            </configuration>
+                          </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>Optimize resources</id>
+            <activation>
+                <property>
+                    <name>!skipOptimization</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <!-- Installs node.js in target/. Means we get the benefits of node's speed
+                         (compared to Rhino) without having to install it manually. -->
+                    <plugin>
+                        <groupId>com.github.skwakman.nodejs-maven-plugin</groupId>
+                        <artifactId>nodejs-maven-plugin</artifactId>
+                        <version>${nodejs-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>extract</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <!-- target directory for node binaries -->
+                            <targetDirectory>${project.basedir}/target/nodejs/</targetDirectory>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Including the exploded goal means sources are in place ready for the replacer plugin. -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>${maven-war-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-war</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>exploded</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Runs the require.js optimizer with node to produce a single artifact. -->
+                    <plugin>
+                        <groupId>com.github.mcheely</groupId>
+                        <artifactId>requirejs-maven-plugin</artifactId>
+                        <version>${requirejs-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>optimize-js</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <configFile>${project.basedir}/src/build/optimize-js.json</configFile>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>optimize-css</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>optimize</goal>
+                                </goals>
+                                <configuration>
+                                    <configFile>${project.basedir}/src/build/optimize-css.json</configFile>
+                                </configuration>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <nodeExecutable>${nodejs.path}</nodeExecutable>
+                            <optimizerFile>${project.basedir}/src/build/requirejs-maven-plugin/r.js</optimizerFile>
+                            <!-- Replaces Maven tokens in the build file with their values -->
+                            <filterConfig>true</filterConfig>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Modify index.html to point to the optimized resources generated above. -->
+                    <plugin>
+                        <groupId>com.google.code.maven-replacer-plugin</groupId>
+                        <artifactId>replacer</artifactId>
+                        <version>${maven-replacer-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>modify-for-optimized</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>replace</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <file>${project.build.webapp}/index.html</file>
+                            <replacements>
+                                <replacement>
+                                    <token>assets/js/config.js</token>
+                                    <value>assets/js/gui.all.min.js</value>
+                                </replacement>
+                                <replacement>
+                                    <token>assets/css/styles.css</token>
+                                    <value>assets/css/styles.min.css</value>
+                                </replacement>
+                                <replacement>
+                                    <token>GIT_SHA_1</token>
+                                    <value>${buildNumber}</value>
+                                </replacement>
+                            </replacements>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Compress the minified files. Jetty will serve the gzipped content instead. -->
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>Compress resources</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <gzip src="${project.build.webapp}/assets/css/styles.min.css" destfile="${project.build.webapp}/assets/css/styles.min.css.gz" />
+                                        <gzip src="${project.build.webapp}/assets/css/brooklyn.css" destfile="${project.build.webapp}/assets/css/brooklyn.css.gz" />
+                                        <gzip src="${project.build.webapp}/assets/js/gui.all.min.js" destfile="${project.build.webapp}/assets/js/gui.all.min.js.gz" />
+                                        <gzip src="${project.build.webapp}/assets/js/libs/require.js" destfile="${project.build.webapp}/assets/js/libs/require.js.gz" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>
+

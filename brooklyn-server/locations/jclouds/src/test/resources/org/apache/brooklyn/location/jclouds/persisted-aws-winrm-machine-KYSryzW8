@@ -1,0 +1,184 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+     http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<location>
+  <brooklynVersion>0.9.0-P20151204.1943</brooklynVersion>
+  <type>org.apache.brooklyn.location.jclouds.JcloudsWinRmMachineLocation</type>
+  <id>KYSryzW8</id>
+  <displayName>52.28.153.46</displayName>
+  <parent>fKc0Ofyn</parent>
+  <locationConfig>
+    <jcloudsParent>
+      <locationProxy>fKc0Ofyn</locationProxy>
+    </jcloudsParent>
+    <displayName>52.28.153.46</displayName>
+    <address>52.28.153.46</address>
+    <user>Administrator</user>
+    <node>
+      <org.jclouds.compute.domain.internal.NodeMetadataImpl>
+        <providerId>i-372eda8a</providerId>
+        <name>brooklyn-nxlv9n-amp-myentity-i9fh-myentity-ms-sql-tccu-wgax</name>
+        <location class="org.jclouds.domain.internal.LocationImpl">
+          <scope>ZONE</scope>
+          <id>eu-central-1a</id>
+          <description>eu-central-1a</description>
+          <parent class="org.jclouds.domain.internal.LocationImpl">
+            <scope>REGION</scope>
+            <id>eu-central-1</id>
+            <description>eu-central-1</description>
+            <parent class="org.jclouds.domain.internal.LocationImpl">
+              <scope>PROVIDER</scope>
+              <id>aws-ec2</id>
+              <description>https://ec2.us-east-1.amazonaws.com</description>
+              <iso3166Codes class="com.google.common.collect.RegularImmutableSet">
+                <string>US-VA</string>
+                <string>US-CA</string>
+                <string>US-OR</string>
+                <string>BR-SP</string>
+                <string>IE</string>
+                <string>DE-HE</string>
+                <string>SG</string>
+                <string>AU-NSW</string>
+                <string>JP-13</string>
+              </iso3166Codes>
+              <metadata class="com.google.common.collect.EmptyImmutableBiMap"/>
+            </parent>
+            <iso3166Codes class="com.google.common.collect.SingletonImmutableSet">
+              <string>DE-HE</string>
+            </iso3166Codes>
+            <metadata class="com.google.common.collect.EmptyImmutableBiMap" reference="../parent/metadata"/>
+          </parent>
+          <iso3166Codes class="com.google.common.collect.SingletonImmutableSet" reference="../parent/iso3166Codes"/>
+          <metadata class="com.google.common.collect.EmptyImmutableBiMap" reference="../parent/parent/metadata"/>
+        </location>
+        <userMetadata>
+          <Name>brooklyn-nxlv9n-amp-myentity-i9fh-myentity-ms-sql-tccu-wgax</Name>
+          <entry key="brooklyn-user">amp</entry>
+          <entry key="brooklyn-app-id">I9fhRJIh</entry>
+          <entry key="brooklyn-app-name">MyApp</entry>
+          <entry key="brooklyn-entity-id">tCcU6QL0</entry>
+          <entry key="brooklyn-entity-name">My Entity</entry>
+          <entry key="brooklyn-server-creation-date">2015-11-10-1539</entry>
+        </userMetadata>
+        <id>eu-central-1/i-372eda8a</id>
+        <type>NODE</type>
+        <tags class="com.google.common.collect.EmptyImmutableSet"/>
+        <status>RUNNING</status>
+        <backendStatus>running</backendStatus>
+        <loginPort>5985</loginPort>
+        <publicAddresses class="com.google.common.collect.SingletonImmutableSet">
+          <string>52.28.153.46</string>
+        </publicAddresses>
+        <privateAddresses class="com.google.common.collect.SingletonImmutableSet">
+          <string>172.31.18.175</string>
+        </privateAddresses>
+        <credentials>
+          <identity>Administrator</identity>
+          <credential>mypassword</credential>
+          <authenticateSudo>false</authenticateSudo>
+          <password class="com.google.common.base.Present">
+            <reference class="string">mypassword</reference>
+          </password>
+          <privateKey class="com.google.common.base.Absent"/>
+        </credentials>
+        <group>brooklyn-nxlv9n-amp-myentity-i9fh-myentity-ms-sql-tccu</group>
+        <imageId>eu-central-1/ami-f2f5f9ef</imageId>
+        <hardware class="org.jclouds.compute.domain.internal.HardwareImpl">
+          <providerId>m3.large</providerId>
+          <userMetadata/>
+          <id>m3.large</id>
+          <type>HARDWARE</type>
+          <tags class="com.google.common.collect.EmptyImmutableSet" reference="../../tags"/>
+          <processors class="ImmutableList">
+            <org.jclouds.compute.domain.Processor>
+              <cores>2.0</cores>
+              <speed>3.25</speed>
+            </org.jclouds.compute.domain.Processor>
+          </processors>
+          <ram>7680</ram>
+          <volumes class="ImmutableList">
+            <org.jclouds.compute.domain.internal.VolumeImpl>
+              <type>LOCAL</type>
+              <size>32.0</size>
+              <device>/dev/sdb</device>
+              <bootDevice>false</bootDevice>
+              <durable>false</durable>
+            </org.jclouds.compute.domain.internal.VolumeImpl>
+            <org.jclouds.compute.domain.internal.VolumeImpl>
+              <id>vol-1f1b72c6</id>
+              <type>SAN</type>
+              <device>/dev/sda1</device>
+              <bootDevice>true</bootDevice>
+              <durable>true</durable>
+            </org.jclouds.compute.domain.internal.VolumeImpl>
+          </volumes>
+          <supportsImage class="com.google.common.base.Predicates$AndPredicate">
+            <components>
+              <com.google.common.base.Predicates_-ObjectPredicate>ALWAYS_TRUE</com.google.common.base.Predicates_-ObjectPredicate>
+              <com.google.common.base.Predicates_-OrPredicate>
+                <components>
+                  <org.jclouds.ec2.compute.domain.EC2HardwareBuilder_-RequiresVirtualizationType>
+                    <type>HVM</type>
+                  </org.jclouds.ec2.compute.domain.EC2HardwareBuilder_-RequiresVirtualizationType>
+                  <org.jclouds.ec2.compute.domain.EC2HardwareBuilder_-RequiresVirtualizationType>
+                    <type>PARAVIRTUAL</type>
+                  </org.jclouds.ec2.compute.domain.EC2HardwareBuilder_-RequiresVirtualizationType>
+                </components>
+              </com.google.common.base.Predicates_-OrPredicate>
+              <com.google.common.base.Predicates_-ObjectPredicate>ALWAYS_TRUE</com.google.common.base.Predicates_-ObjectPredicate>
+              <com.google.common.base.Predicates_-ObjectPredicate>ALWAYS_TRUE</com.google.common.base.Predicates_-ObjectPredicate>
+            </components>
+          </supportsImage>
+          <hypervisor>xen</hypervisor>
+          <deprecated>false</deprecated>
+        </hardware>
+        <os>
+          <family>WINDOWS</family>
+          <arch>hvm</arch>
+          <version></version>
+          <description>amazon/Windows_Server-2012-R2_RTM-English-64Bit-Base-2015.10.26</description>
+          <is64Bit>true</is64Bit>
+        </os>
+        <hostname>ip-172-31-18-175</hostname>
+      </org.jclouds.compute.domain.internal.NodeMetadataImpl>
+    </node>
+    <port type="int">5985</port>
+    <password>mypassword</password>
+    <availabilityZone>eu-central-1a</availabilityZone>
+    <region>eu-central-1</region>
+    <callerContext>
+      <null/>
+    </callerContext>
+    <detectMachineDetails type="boolean">true</detectMachineDetails>
+    <portforwarding.enabled type="boolean">false</portforwarding.enabled>
+    <template>
+      <null/>
+    </template>
+    <tags>
+      <set/>
+    </tags>
+  </locationConfig>
+  <locationConfigUnused>
+    <string>displayName</string>
+    <string>availabilityZone</string>
+    <string>region</string>
+    <string>callerContext</string>
+    <string>detectMachineDetails</string>
+    <string>portforwarding.enabled</string>
+  </locationConfigUnused>
+</location>
