@@ -72,9 +72,6 @@
         </mailingList>
     </mailingLists>
 
- <!--       <module>cxf/rest-api-cxf</module>
-        <module>cxf/rest-server-cxf</module> -->
-
     <modules>
         <module>brooklyn-ui</module>
         <module>brooklyn-server</module>
