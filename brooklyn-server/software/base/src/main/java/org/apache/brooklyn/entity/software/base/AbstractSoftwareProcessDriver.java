@@ -41,7 +41,6 @@ import org.apache.brooklyn.util.core.text.TemplateProcessor;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.os.Os;
 import org.apache.brooklyn.util.stream.ReaderInputStream;
-import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -122,6 +121,9 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
 
             Optional<Boolean> locationInstalled = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
             Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+
+            boolean skipCustomized = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_CUSTOMIZATION)).or(false);
+
             boolean skipInstall = locationInstalled.or(entityInstalled).or(false);
             if (!skipInstall) {
                 DynamicTasks.queue("setup", new Runnable() { public void run() {
@@ -144,10 +146,12 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 runPostInstallCommand();
             }});
 
-            DynamicTasks.queue("customize", new Runnable() { public void run() {
-                waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
-                customize();
-            }});
+            if (!skipCustomized) {
+                DynamicTasks.queue("customize", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.CUSTOMIZE_LATCH);
+                    customize();
+                }});
+            }
 
             DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
                 waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
