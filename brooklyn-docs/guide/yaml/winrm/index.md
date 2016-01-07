@@ -250,6 +250,16 @@ other entities using the standard `attributeWhenReady` mechanism. For example:
 
     install.command: $brooklyn:formatString("c:\\myscript.bat %s", component("db").attributeWhenReady("datastore.url"))
 
+### Powershell - Using Start-Process
+
+When you are invoking a command from a powershell script with `Start-Process` cmdlet,
+please use the `-Wait` and the `-PassThru` arguments.
+Example `Start-Process C:\mycommand -Wait -PassThru`
+
+Using `-Wait` guarantees that the script process and its children and thus the winrm session won't be terminated until it is finished.
+`-PassThru` Returns a process object for each process that the cmdlet started. By default, this cmdlet does not generate any output.
+See https://technet.microsoft.com/en-us/library/hh849848.aspx
+
 ### Rebooting
 
 Where a reboot is required as part of the entity setup, this can be configured using
