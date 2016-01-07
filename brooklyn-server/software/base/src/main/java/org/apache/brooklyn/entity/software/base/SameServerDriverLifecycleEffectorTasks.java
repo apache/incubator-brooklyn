@@ -73,23 +73,17 @@ public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffe
            firewall will open the initial port instead. Mostly a problem for SameServerEntity, localhost location.
         */
         // TODO: Remove duplication between this and SoftwareProcessImpl.getRequiredOpenPorts
-        for (ConfigKey<?> k: entity.getEntityType().getConfigKeys()) {
-            Object value;
+        final Set<ConfigKey<?>> configKeys = entity.getEntityType().getConfigKeys();
+        for (ConfigKey<?> k: configKeys) {
             if (PortRange.class.isAssignableFrom(k.getType()) || k.getName().matches(".*\\.port")) {
-                value = entity.config().get(k);
-            } else {
-                // config().get() will cause this to block until all config has been resolved
-                // using config().getRaw(k) means that we won't be able to use e.g. 'http.port: $brooklyn:component("x").attributeWhenReady("foo")'
-                // but that's unlikely to be used
-                Maybe<Object> maybeValue = ((AbstractEntity.BasicConfigurationSupport)entity.config()).getRaw(k);
-                value = maybeValue.isPresent() ? maybeValue.get() : null;
-            }
-
-            Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, TypeToken.of(PortRange.class));
-
-            if (maybePortRange.isPresentAndNonNull()) {
-                PortRange p = maybePortRange.get();
-                if (p != null && !p.isEmpty()) ports.add(p.iterator().next());
+                Object value = entity.config().get(k);
+                Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, new TypeToken<PortRange>() {});
+                if (maybePortRange.isPresentAndNonNull()) {
+                    PortRange p = maybePortRange.get();
+                    if (p != null && !p.isEmpty()) {
+                        ports.add(p.iterator().next());
+                    }
+                }
             }
         }
         LOG.debug("getRequiredOpenPorts detected default {} for {}", ports, entity);
