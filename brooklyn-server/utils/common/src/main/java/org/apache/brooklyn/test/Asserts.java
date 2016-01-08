@@ -1115,22 +1115,29 @@ public class Asserts {
         if (e instanceof ShouldHaveFailedPreviouslyAssertionError) throw (Error)e;
     }
     
-    /** Tests that an exception is not {@link ShouldHaveFailedPreviouslyAssertionError}
-     * and is one of the given types. 
+    /**
+     * Tests that an exception is not {@link ShouldHaveFailedPreviouslyAssertionError}
+     * and is either one of the given types, or has a caused-by of one of the given types.
+     * 
+     * If you want *just* the instanceof (without checking the caused-by), then just catch
+     * those exception types, treat that as success, and let any other exception be propagated.
      * 
      * @return If the test is satisfied, this method returns normally. 
      * The caller can decide whether anything more should be done with the exception.
      * If the test fails, then either it is propagated, 
      * if the {@link Throwable} is a fatal ({@link Exceptions#propagateIfFatal(Throwable)}) other than an {@link AssertionError}, 
      * or more usually the test failure of this method is thrown, 
-     * with detail of the original {@link Throwable} logged. */
+     * with detail of the original {@link Throwable} logged and included in the caused-by.
+     */
     public static void expectedFailureOfType(Throwable e, Class<?> ...permittedSupertypes) {
         if (e instanceof ShouldHaveFailedPreviouslyAssertionError) throw (Error)e;
-        for (Class<?> t: permittedSupertypes) {
-            if (t.isInstance(e)) return;
+        for (Class<?> clazz: permittedSupertypes) {
+            @SuppressWarnings("unchecked")
+            Throwable match = Exceptions.getFirstThrowableOfType(e, (Class<? extends Throwable>)clazz);
+            if (match != null) return;
         }
         rethrowPreferredException(e, 
-            new AssertionError("Error "+JavaClassNames.simpleClassName(e)+" is not any of the expected types: " + Arrays.asList(permittedSupertypes)));
+            new AssertionError("Error "+JavaClassNames.simpleClassName(e)+" is not any of the expected types: " + Arrays.asList(permittedSupertypes), e));
     }
     
     /** Tests {@link #expectedFailure(Throwable)} and that the <code>toString</code>
