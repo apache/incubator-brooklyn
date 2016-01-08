@@ -88,9 +88,11 @@ brooklyn.catalog:
       
       # this example builds on the previous one, 
       # adding some scripts to initialize the VM
+      # and a basic enricher to populate a sensor with
       
       services:
       - type:           vanilla-bash-server
+        id:             bash-web-server
         name:           My Bash Web Server VM
         brooklyn.config:
           install.command: |
@@ -138,7 +140,16 @@ brooklyn.catalog:
           # custom 
           my.app.port:  8020
           my.message:   "good to meet you"
-        
+
+        brooklyn.initializers:
+        # make a simple request-count sensor, by counting the number of 200 responses in output.txt
+        - type: org.apache.brooklyn.core.sensor.ssh.SshCommandSensor
+          brooklyn.config:
+            name: reqs.count
+            targetType: int
+            period: 5s
+            command: "cat output.txt | grep HTTP | grep 200 | wc | awk '{print $1}'"
+
         brooklyn.enrichers:
         # publish the URL as a sensor; the GUI will pick this up (main.uri)
         - type: org.apache.brooklyn.enricher.stock.Transformer
@@ -250,24 +261,18 @@ brooklyn.catalog:
                 my.message:   "part of the cluster"
               
               brooklyn.initializers:
-              # make a simple request-count sensor, by counting the number of 200 responses in output.txt
-              - type: org.apache.brooklyn.core.sensor.ssh.SshCommandSensor
-                brooklyn.config:
-                  name: reqs.count
-                  targetType: int
-                  period: 5s
-                  command: "cat output.txt | grep HTTP | grep 200 | wc | awk '{print $1}'"
-              # and publish the port as a sensor so the load-balancer can pick it up
+              # publish the port as a sensor so the load-balancer can pick it up
               - type:           org.apache.brooklyn.core.sensor.StaticSensor
                 brooklyn.config:
                   name:         app.port
                   targetType:   int
-                  static.value: $brooklyn:config("my.app.port")
+                  static.value: $brooklyn:component("bash-web-server").config("my.app.port")
               
               brooklyn.enrichers:
               # derive reqs.per_sec from reqs.count
               - type: org.apache.brooklyn.enricher.stock.YamlTimeWeightedDeltaEnricher
                 brooklyn.config:
+                  enricher.producer: $brooklyn:entity("bash-web-server")
                   enricher.sourceSensor: reqs.count
                   enricher.targetSensor: reqs.per_sec
                   enricher.delta.period: 1s
@@ -277,6 +282,13 @@ brooklyn.catalog:
                   enricher.sourceSensor: reqs.per_sec
                   enricher.targetSensor: reqs.per_sec.windowed_30s
                   enricher.window.duration: 30s
+              # propagate the host.subnet.hostname from the bash-web-server up to the BasicApplication level
+              - type: org.apache.brooklyn.enricher.stock.Propagator
+                brooklyn.config:
+                  uniqueTag:    host.subnet.hostname
+                  producer:     $brooklyn:entity("bash-web-server")
+                  propagating:
+                  - host.subnet.hostname
               
               # emit failure sensor if a failure connecting to the service is sustained for 30s
               - type: org.apache.brooklyn.policy.ha.ServiceFailureDetector
@@ -327,8 +339,9 @@ brooklyn.catalog:
             resizeUpStabilizationDelay: 2s
             # only scale down when sustained for 1m
             resizeDownStabilizationDelay: 1m
-      
-            maxPoolSize: 10
+
+            # do not scale beyond 3 nodes
+            maxPoolSize: 3
             
       # and add a load-balancer pointing at the cluster
       - type:           load-balancer
@@ -337,6 +350,9 @@ brooklyn.catalog:
           # point this load balancer at the cluster, specifying port to forward to
           loadbalancer.serverpool:  $brooklyn:entity("my-web-cluster")
           member.sensor.portNumber: app.port
+          # disable sticky sessions, round-robin balancing can be observed by
+          # refreshing the balancer url in a browser
+          nginx.sticky: false
       
       brooklyn.enrichers:
       # publish a few useful info sensors and KPI's to the root of the app
