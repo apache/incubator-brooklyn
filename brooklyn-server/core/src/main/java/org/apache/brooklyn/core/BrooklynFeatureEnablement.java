@@ -186,7 +186,7 @@ public class BrooklynFeatureEnablement {
         }
     }
     
-    static void setDefault(String property, boolean val) {
+    public static void setDefault(String property, boolean val) {
         synchronized (MUTEX) {
             if (!FEATURE_ENABLEMENTS.containsKey(property)) {
                 String rawVal = System.getProperty(property);
