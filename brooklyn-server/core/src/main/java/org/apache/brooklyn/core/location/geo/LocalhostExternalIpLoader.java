@@ -44,8 +44,21 @@ public class LocalhostExternalIpLoader {
 
     public static final Logger LOG = LoggerFactory.getLogger(LocalhostExternalIpLoader.class);
 
-    private static final AtomicBoolean retrievingLocalExternalIp = new AtomicBoolean(false);
-    private static final CountDownLatch triedLocalExternalIp = new CountDownLatch(1);
+    /**
+     * Mutex to guard access to retrievingLocalExternalIp.
+     */
+    private static final Object mutex = new Object();
+    /**
+     * When null there is no ongoing attempt to load the external IP address. Either no attempt has been made or the
+     * last attempt has been completed.
+     * When set there is an ongoing attempt to load the external IP address. New attempts to lookup the external IP
+     * address should wait on this latch instead of making another attempt to load the IP address.
+     */
+    private static CountDownLatch retrievingLocalExternalIp;
+    /**
+     * Cached external IP address of localhost. Null if either no attempt has been made to resolve the address or the
+     * last attempt failed.
+     */
     private static volatile String localExternalIp;
 
     private static class IpLoader implements Callable<String> {
@@ -120,40 +133,60 @@ public class LocalhostExternalIpLoader {
     }
 
     /**
-     * Requests URLs returned by {@link #getIpAddressWebsites()} until one returns an IP address.
+     * Requests URLs returned by {@link #getIpAddressWebsites()} until one returns an IP address or all URLs have been tried.
      * The address is assumed to be the external IP address of localhost.
      * @param blockFor The maximum duration to wait for the IP address to be resolved.
      *                 An indefinite way if null.
      * @return A string in IPv4 format, or null if no such address could be ascertained.
      */
     private static String doLoad(Duration blockFor) {
-        if (localExternalIp != null) {
-            return localExternalIp;
+        // Check for a cached external IP address
+        final String resolvedIp = localExternalIp;
+        if (resolvedIp != null) {
+            return resolvedIp;
         }
 
-        final List<String> candidateUrls = getIpAddressWebsites();
-        if (candidateUrls.isEmpty()) {
-            LOG.debug("No candidate URLs to use to determine external IP of localhost");
-            return null;
+        // Check for an ongoing attempt to load an external IP address
+        final boolean startAttemptToLoadIp;
+        final CountDownLatch attemptToRetrieveLocalExternalIp;
+        synchronized (mutex) {
+            if (retrievingLocalExternalIp == null) {
+                retrievingLocalExternalIp = new CountDownLatch(1);
+                startAttemptToLoadIp = true;
+            }
+            else {
+                startAttemptToLoadIp = false;
+            }
+            attemptToRetrieveLocalExternalIp = retrievingLocalExternalIp;
         }
 
-        // do in private thread, otherwise blocks for 30s+ on dodgy network!
+        // Attempt to load the external IP address in private thread, otherwise blocks for 30s+ on dodgy network!
         // (we can skip it if someone else is doing it, we have synch lock so we'll get notified)
-        if (retrievingLocalExternalIp.compareAndSet(false, true)) {
+        if (startAttemptToLoadIp) {
+            final List<String> candidateUrls = getIpAddressWebsites();
+            if (candidateUrls.isEmpty()) {
+                LOG.debug("No candidate URLs to use to determine external IP of localhost");
+                return null;
+            }
+
             new Thread() {
                 public void run() {
                     for (String url : candidateUrls) {
                         try {
                             LOG.debug("Looking up external IP of this host from {} in private thread {}", url, Thread.currentThread());
-                            localExternalIp = new IpLoader(url).call();
-                            LOG.debug("Finished looking up external IP of this host from {} in private thread, result {}", url, localExternalIp);
+                            final String loadedIp = new IpLoader(url).call();
+                            localExternalIp = loadedIp;
+                            LOG.debug("Finished looking up external IP of this host from {} in private thread, result {}", url, loadedIp);
                             break;
                         } catch (Throwable t) {
                             LOG.debug("Unable to look up external IP of this host from {}, probably offline {})", url, t);
-                        } finally {
-                            retrievingLocalExternalIp.set(false);
-                            triedLocalExternalIp.countDown();
                         }
+                    }
+
+                    attemptToRetrieveLocalExternalIp.countDown();
+
+                    synchronized (mutex) {
+                        retrievingLocalExternalIp = null;
                     }
                 }
             }.start();
@@ -161,16 +194,14 @@ public class LocalhostExternalIpLoader {
 
         try {
             if (blockFor!=null) {
-                Durations.await(triedLocalExternalIp, blockFor);
+                Durations.await(attemptToRetrieveLocalExternalIp, blockFor);
             } else {
-                triedLocalExternalIp.await();
+                attemptToRetrieveLocalExternalIp.await();
             }
         } catch (InterruptedException e) {
             throw Exceptions.propagate(e);
         }
-        if (localExternalIp == null) {
-            return null;
-        }
+
         return localExternalIp;
     }
 
