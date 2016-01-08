@@ -31,6 +31,20 @@ import org.apache.brooklyn.core.effector.MethodEffector;
  */
 public interface Resizable {
 
+    /**
+     * Indicates that resizing up (at all) is not possible, because there is insufficient capacity.
+     */
+    public static class InsufficientCapacityException extends RuntimeException {
+        private static final long serialVersionUID = 953230498564942446L;
+        
+        public InsufficientCapacityException(String msg) {
+            super(msg);
+        }
+        public InsufficientCapacityException(String msg, Throwable cause) {
+            super(msg, cause);
+        }
+    }
+    
     MethodEffector<Integer> RESIZE = new MethodEffector<Integer>(Resizable.class, "resize");
 
     /**
@@ -38,6 +52,8 @@ public interface Resizable {
      *
      * @param desiredSize the new size of the entity group.
      * @return the new size of the group.
+     * 
+     * @throws InsufficientCapacityException If the request was to grow, but there is no capacity to grow at all
      */
     @Effector(description="Changes the size of the entity (e.g. the number of nodes in a cluster)")
     Integer resize(@EffectorParam(name="desiredSize", description="The new size of the cluster") Integer desiredSize);

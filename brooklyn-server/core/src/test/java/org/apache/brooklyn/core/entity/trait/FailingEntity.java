@@ -60,7 +60,7 @@ public interface FailingEntity extends TestEntity {
     ConfigKey<Predicate<? super FailingEntity>> FAIL_ON_RESTART_CONDITION = (ConfigKey) ConfigKeys.newConfigKey(Predicate.class, "failOnRestartCondition", "Whether to throw exception on call to restart", null);
     
     @SetFromFlag("exceptionClazz")
-    ConfigKey<Class<? extends RuntimeException>> EXCEPTION_CLAZZ = (ConfigKey) ConfigKeys.newConfigKey(Class.class, "exceptionClazz", "Type of exception to throw", IllegalStateException.class);
+    ConfigKey<Class<? extends Exception>> EXCEPTION_CLAZZ = (ConfigKey) ConfigKeys.newConfigKey(Class.class, "exceptionClazz", "Type of exception to throw", IllegalStateException.class);
     
     @SetFromFlag("execOnFailure")
     ConfigKey<Function<? super FailingEntity,?>> EXEC_ON_FAILURE = (ConfigKey) ConfigKeys.newConfigKey(Function.class, "execOnFailure", "Callback to execute before throwing an exception, on any failure", Functions.identity());

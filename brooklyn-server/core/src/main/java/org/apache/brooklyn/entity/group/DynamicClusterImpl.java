@@ -38,6 +38,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -50,6 +51,7 @@ import org.apache.brooklyn.core.entity.factory.EntityFactoryForLocation;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceProblemsLogic;
+import org.apache.brooklyn.core.entity.trait.Resizable;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.entity.trait.StartableMethods;
 import org.apache.brooklyn.core.location.Locations;
@@ -518,7 +520,20 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } else {
                 if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, originalSize, desiredSize});
             }
-            resizeByDelta(delta);
+            // If we managed to grow at all, then expect no exception.
+            // Otherwise, if failed because NoMachinesAvailable, then propagate as InsufficientCapacityException.
+            // This tells things like the AutoScalerPolicy to not keep retrying.
+            try {
+                resizeByDelta(delta);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                NoMachinesAvailableException nmae = Exceptions.getFirstThrowableOfType(e, NoMachinesAvailableException.class);
+                if (nmae != null) {
+                    throw new Resizable.InsufficientCapacityException("Failed to resize", e);
+                } else {
+                    throw Exceptions.propagate(e);
+                }
+            }
         }
         return getCurrentSize();
     }
@@ -669,7 +684,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
 
-    /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
+    /** <strong>Note</strong> for sub-classes; this method can be called while synchronized on {@link #mutex}. */
     protected Collection<Entity> grow(int delta) {
         Preconditions.checkArgument(delta > 0, "Must call grow with positive delta.");
 
@@ -697,7 +712,15 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
 
         // create and start the entities
-        return addInEachLocation(chosenLocations, ImmutableMap.of()).getWithError();
+        ReferenceWithError<Collection<Entity>> result = addInEachLocation(chosenLocations, ImmutableMap.of());
+        
+        // If any entities were created, return them (even if we didn't manage to create them all).
+        // Otherwise, propagate any error that happened.
+        if (result.get().size() > 0) {
+            return result.get();
+        } else {
+            return result.getWithError();
+        }
     }
 
     /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */

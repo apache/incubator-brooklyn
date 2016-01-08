@@ -79,7 +79,12 @@ public class FailingEntityImpl extends TestEntityImpl implements FailingEntity {
     
     private RuntimeException newException(String msg) {
         try {
-            return getConfig(EXCEPTION_CLAZZ).getConstructor(String.class).newInstance("Simulating entity stop failure for test");
+            Exception result = getConfig(EXCEPTION_CLAZZ).getConstructor(String.class).newInstance("Simulating entity stop failure for test");
+            if (!(result instanceof RuntimeException)) {
+                return new RuntimeException("wrapping", result);
+            } else {
+                return (RuntimeException)result;
+            }
         } catch (Exception e) {
             throw Exceptions.propagate(e);
         }

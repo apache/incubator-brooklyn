@@ -18,8 +18,12 @@
  */
 package org.apache.brooklyn.core.test.entity;
 
+import java.util.List;
+
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.ImplementedBy;
+import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.entity.group.DynamicCluster;
 
 /**
@@ -27,4 +31,10 @@ import org.apache.brooklyn.entity.group.DynamicCluster;
 */
 @ImplementedBy(TestClusterImpl.class)
 public interface TestCluster extends DynamicCluster, EntityLocal {
+    
+    ConfigKey<Integer> MAX_SIZE = ConfigKeys.newIntegerConfigKey("testCluster.maxSize", "Size after which it will throw InsufficientCapacityException", Integer.MAX_VALUE);
+    
+    List<Integer> getSizeHistory();
+    
+    List<Integer> getDesiredSizeHistory();
 }

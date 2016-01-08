@@ -40,13 +40,14 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 public class AutoScalerPolicyMetricTest {
     
     private static long TIMEOUT_MS = 10000;
-    private static long SHORT_WAIT_MS = 50;
+    private static long SHORT_WAIT_MS = 250;
     
     private static final AttributeSensor<Integer> MY_ATTRIBUTE = Sensors.newIntegerSensor("autoscaler.test.intAttrib");
     TestApplication app;
@@ -269,5 +270,52 @@ public class AutoScalerPolicyMetricTest {
         // Then confirm we listen to the correct "entityWithMetric"
         entityWithMetric.sensors().set(TestEntity.SEQUENCE, 101);
         Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+    }
+    
+    @Test(groups="Integration")
+    public void testOnFailedGrowWillSetHighwaterMarkAndNotResizeAboveThatAgain() {
+        tc = app.createAndManageChild(EntitySpec.create(TestCluster.class)
+                .configure("initialSize", 1)
+                .configure(TestCluster.MAX_SIZE, 2));
+
+        tc.resize(1);
+        
+        tc.policies().add(AutoScalerPolicy.builder()
+                .metric(MY_ATTRIBUTE)
+                .metricLowerBound(50)
+                .metricUpperBound(100)
+                .buildSpec());
+        
+        // workload 200 so requires doubling size to 2 to handle: (200*1)/100 = 2
+        tc.sensors().set(MY_ATTRIBUTE, 200);
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+        assertEquals(tc.getDesiredSizeHistory(), ImmutableList.of(1, 2), "desired="+tc.getDesiredSizeHistory());
+        assertEquals(tc.getSizeHistory(), ImmutableList.of(0, 1, 2), "sizes="+tc.getSizeHistory());
+        tc.sensors().set(MY_ATTRIBUTE, 100);
+        
+        // workload 110, requires 1 more entity: (2*110)/100 = 2.1
+        // But max size is 2, so resize will fail.
+        tc.sensors().set(MY_ATTRIBUTE, 110);
+        Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 2));
+        assertEquals(tc.getDesiredSizeHistory(), ImmutableList.of(1, 2, 3), "desired="+tc.getDesiredSizeHistory()); // TODO succeeds eventually?
+        assertEquals(tc.getSizeHistory(), ImmutableList.of(0, 1, 2), "sizes="+tc.getSizeHistory());
+        
+        // another attempt to resize will not cause it to ask
+        tc.sensors().set(MY_ATTRIBUTE, 110);
+        Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 2));
+        assertEquals(tc.getDesiredSizeHistory(), ImmutableList.of(1, 2, 3), "desired="+tc.getDesiredSizeHistory());
+        assertEquals(tc.getSizeHistory(), ImmutableList.of(0, 1, 2), "sizes="+tc.getSizeHistory());
+        
+        // but if we shrink down again, then we'll still be able to go up to the previous level.
+        // We'll only try to go as high as the previous high-water mark though.
+        tc.sensors().set(MY_ATTRIBUTE, 1);
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 1));
+        assertEquals(tc.getDesiredSizeHistory(), ImmutableList.of(1, 2, 3, 1), "desired="+tc.getDesiredSizeHistory());
+        assertEquals(tc.getSizeHistory(), ImmutableList.of(0, 1, 2, 1), "sizes="+tc.getSizeHistory());
+        
+        tc.sensors().set(MY_ATTRIBUTE, 10000);
+        Asserts.succeedsEventually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 2));
+        assertEquals(tc.getDesiredSizeHistory(), ImmutableList.of(1, 2, 3, 1, 2), "desired="+tc.getDesiredSizeHistory());
+        assertEquals(tc.getSizeHistory(), ImmutableList.of(0, 1, 2, 1, 2), "sizes="+tc.getSizeHistory());
     }
 }
