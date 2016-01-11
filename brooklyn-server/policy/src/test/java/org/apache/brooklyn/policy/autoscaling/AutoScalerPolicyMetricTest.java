@@ -46,7 +46,6 @@ import com.google.common.collect.Lists;
 
 public class AutoScalerPolicyMetricTest {
     
-    private static long TIMEOUT_MS = 10000;
     private static long SHORT_WAIT_MS = 250;
     
     private static final AttributeSensor<Integer> MY_ATTRIBUTE = Sensors.newIntegerSensor("autoscaler.test.intAttrib");
@@ -76,7 +75,7 @@ public class AutoScalerPolicyMetricTest {
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 1));
 
         tc.sensors().set(MY_ATTRIBUTE, 101);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 2));
     }
     
     @Test
@@ -90,7 +89,7 @@ public class AutoScalerPolicyMetricTest {
         Asserts.succeedsContinually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 2));
 
         tc.sensors().set(MY_ATTRIBUTE, 49);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 1));
     }
     
     @Test(groups="Integration")
@@ -102,11 +101,11 @@ public class AutoScalerPolicyMetricTest {
         
         // workload 200 so requires doubling size to 10 to handle: (200*5)/100 = 10
         tc.sensors().set(MY_ATTRIBUTE, 200);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 10));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 10));
         
         // workload 5, requires 1 entity: (10*110)/100 = 11
         tc.sensors().set(MY_ATTRIBUTE, 110);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 11));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 11));
     }
     
     @Test(groups="Integration")
@@ -118,14 +117,14 @@ public class AutoScalerPolicyMetricTest {
         
         // workload can be handled by 4 servers, within its valid range: (49*5)/50 = 4.9
         tc.sensors().set(MY_ATTRIBUTE, 49);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 4));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 4));
         
         // workload can be handled by 4 servers, within its valid range: (25*4)/50 = 2
         tc.sensors().set(MY_ATTRIBUTE, 25);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 2));
         
         tc.sensors().set(MY_ATTRIBUTE, 0);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 1));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 1));
     }
     
     @Test(groups="Integration")
@@ -140,11 +139,11 @@ public class AutoScalerPolicyMetricTest {
 
         // Decreases to min-size only
         tc.sensors().set(MY_ATTRIBUTE, 0);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 2));
         
         // Increases to max-size only
         tc.sensors().set(MY_ATTRIBUTE, 100000);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 6));
     }
     
     @Test(groups="Integration",invocationCount=20)
@@ -168,14 +167,14 @@ public class AutoScalerPolicyMetricTest {
 
         // workload can be handled by 6 servers, so no need to notify: 6 <= (100*6)/50
         tc.sensors().set(MY_ATTRIBUTE, 600);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 6));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 6));
         assertTrue(maxReachedEvents.isEmpty());
         
         // Increases to above max capacity: would require (100000*6)/100 = 6000
         tc.sensors().set(MY_ATTRIBUTE, 100000);
         
         // Assert our listener gets notified (once)
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), new Runnable() {
+        Asserts.succeedsEventually(new Runnable() {
             public void run() {
                 assertEquals(maxReachedEvents.size(), 1);
                 assertEquals(maxReachedEvents.get(0).getMaxAllowed(), 6);
@@ -246,7 +245,7 @@ public class AutoScalerPolicyMetricTest {
         policy.suspend();
         policy.resume();
         tc.sensors().set(MY_ATTRIBUTE, 101);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 2));
     }
     
     @Test
@@ -269,7 +268,7 @@ public class AutoScalerPolicyMetricTest {
 
         // Then confirm we listen to the correct "entityWithMetric"
         entityWithMetric.sensors().set(TestEntity.SEQUENCE, 101);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 2));
     }
     
     @Test(groups="Integration")
@@ -288,7 +287,7 @@ public class AutoScalerPolicyMetricTest {
         
         // workload 200 so requires doubling size to 2 to handle: (200*1)/100 = 2
         tc.sensors().set(MY_ATTRIBUTE, 200);
-        Asserts.succeedsEventually(ImmutableMap.of("timeout", TIMEOUT_MS), currentSizeAsserter(tc, 2));
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 2));
         assertEquals(tc.getDesiredSizeHistory(), ImmutableList.of(1, 2), "desired="+tc.getDesiredSizeHistory());
         assertEquals(tc.getSizeHistory(), ImmutableList.of(0, 1, 2), "sizes="+tc.getSizeHistory());
         tc.sensors().set(MY_ATTRIBUTE, 100);
