@@ -48,7 +48,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import org.apache.commons.lang3.StringUtils;
+
+import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -171,7 +172,7 @@ public class ApiListingResource {
             @Context HttpHeaders headers,
             @Context UriInfo uriInfo,
             @PathParam("type") String type) {
-        if (StringUtils.isNotBlank(type) && type.trim().equalsIgnoreCase("yaml")) {
+        if (Strings.isNonBlank(type) && type.trim().equalsIgnoreCase("yaml")) {
             return getListingYaml(app, sc, headers, uriInfo);
         } else {
             return getListingJson(app, sc, headers, uriInfo);
