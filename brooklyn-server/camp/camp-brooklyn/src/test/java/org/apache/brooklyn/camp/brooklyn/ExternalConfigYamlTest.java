@@ -24,8 +24,9 @@ import static org.testng.Assert.fail;
 import java.io.StringReader;
 import java.util.Map;
 
-import com.google.common.collect.Iterables;
 import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogBundle;
+import org.apache.brooklyn.api.catalog.CatalogItem.CatalogItemType;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -48,20 +49,34 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 
 @Test
 public class ExternalConfigYamlTest extends AbstractYamlTest {
     private static final Logger log = LoggerFactory.getLogger(ExternalConfigYamlTest.class);
-
-    private static final String OSGI_URL = "https://repository.apache.org/content/groups/snapshots/org/apache/brooklyn/brooklyn-core/0.9.0-SNAPSHOT/brooklyn-core-0.9.0-20160108.142251-126.jar";
+    
+    // Choose a small jar; it is downloaded in some tests.
+    // Pick an OSGi bundle that is not part of core brooklyn.
+    private static final String LIBRARY_URL = "https://repository.apache.org/content/groups/public/org/apache/logging/log4j/log4j-api/2.5/log4j-api-2.5.jar";
+    private static final String LIBRARY_SYMBOLIC_NAME = "org.apache.logging.log4j.api";
+    private static final String LIBRARY_VERSION = "2.5.0";
 
     @Override
     protected LocalManagementContext newTestManagementContext() {
         BrooklynProperties props = BrooklynProperties.Factory.newEmpty();
         props.put("brooklyn.external.myprovider", MyExternalConfigSupplier.class.getName());
         props.put("brooklyn.external.myprovider.mykey", "myval");
-        props.put("brooklyn.external.myprovider.osgikey", OSGI_URL);
         props.put("brooklyn.external.myproviderWithoutMapArg", MyExternalConfigSupplierWithoutMapArg.class.getName());
+
+        props.put("brooklyn.external.myprovider.myCatalogId", "myId");
+        props.put("brooklyn.external.myprovider.myCatalogItemType", "template");
+        props.put("brooklyn.external.myprovider.myCatalogVersion", "1.2");
+        props.put("brooklyn.external.myprovider.myCatalogDescription", "myDescription");
+        props.put("brooklyn.external.myprovider.myCatalogDisplayName", "myDisplayName");
+        props.put("brooklyn.external.myprovider.myCatalogIconUrl", "classpath:///myIconUrl.png");
+        props.put("brooklyn.external.myprovider.myCatalogLibraryUrl", LIBRARY_URL);
+        props.put("brooklyn.external.myprovider.myCatalogLibraryName", LIBRARY_SYMBOLIC_NAME);
+        props.put("brooklyn.external.myprovider.myCatalogLibraryVersion", LIBRARY_VERSION);
 
         return LocalManagementContextForTests.builder(true)
                 .useProperties(props)
@@ -112,19 +127,19 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
         assertEquals(Iterables.getOnlyElement( app.getLocations() ).config().get(MY_CONFIG_KEY), "myval");
     }
 
-    @Test
+    // Will download the given catalog library jar
+    @Test(groups="Integration")
     public void testExternalisedCatalogConfigReferencedFromYaml() throws Exception {
-
         String yaml = Joiner.on("\n").join(
                 "brooklyn.catalog:",
-                "    id: osgi.test",
-                "    itemType: template",
-                "    version: 1.3",
-                "    description: CentOS 6.6 With GUI - 1.3",
-                "    displayName: CentOS 6.6",
-                "    iconUrl: classpath:///centos.png",
+                "    id: $brooklyn:external(\"myprovider\", \"myCatalogId\")",
+                "    itemType: $brooklyn:external(\"myprovider\", \"myCatalogItemType\")",
+                "    version: $brooklyn:external(\"myprovider\", \"myCatalogVersion\")",
+                "    description: $brooklyn:external(\"myprovider\", \"myCatalogDescription\")",
+                "    displayName: $brooklyn:external(\"myprovider\", \"myCatalogDisplayName\")",
+                "    iconUrl: $brooklyn:external(\"myprovider\", \"myCatalogIconUrl\")",
                 "    brooklyn.libraries:",
-                "    - $brooklyn:external(\"myprovider\", \"osgikey\")",
+                "    - $brooklyn:external(\"myprovider\", \"myCatalogLibraryUrl\")",
                 "",
                 "    item:",
                 "      services:",
@@ -132,16 +147,50 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
 
         catalog.addItems(yaml);
 
-        for (CatalogItem<Object, Object> item: catalog.getCatalogItems()) {
-            for (CatalogItem.CatalogBundle library: item.getLibraries()) {
-                assertEquals(library.getUrl(), OSGI_URL);
-            }
-        }
+        CatalogItem<Object, Object> item = Iterables.getOnlyElement(catalog.getCatalogItems());
+        CatalogBundle bundle = Iterables.getOnlyElement(item.getLibraries());
+        assertEquals(item.getId(), "myId:1.2");
+        assertEquals(item.getCatalogItemType(), CatalogItemType.TEMPLATE);
+        assertEquals(item.getVersion(), "1.2");
+        assertEquals(item.getDescription(), "myDescription");
+        assertEquals(item.getDisplayName(), "myDisplayName");
+        assertEquals(item.getIconUrl(), "classpath:///myIconUrl.png");
+        assertEquals(bundle.getUrl(), LIBRARY_URL);
     }
 
-    @Test
-    public void testNonExternalisedCatalogConfigReferencedFromYaml() throws Exception {
+    // Will download the given catalog library jar
+    @Test(groups="Integration")
+    public void testExternalisedCatalogConfigReferencedFromYamlWithLibraryMap() throws Exception {
+        String yaml = Joiner.on("\n").join(
+                "brooklyn.catalog:",
+                "    id: myid",
+                "    itemType: template",
+                "    version: 1.2",
+                "    description: myDescription",
+                "    displayName: myDisplayName",
+                "    iconUrl: classpath:///myIconUrl.png",
+                "    brooklyn.libraries:",
+                "    - name: $brooklyn:external(\"myprovider\", \"myCatalogLibraryName\")",
+                "      version: $brooklyn:external(\"myprovider\", \"myCatalogLibraryVersion\")",
+                "      url: $brooklyn:external(\"myprovider\", \"myCatalogLibraryUrl\")",
+                "",
+                "    item:",
+                "      services:",
+                "      - type: brooklyn.entity.database.mysql.MySqlNode");
 
+        catalog.addItems(yaml);
+
+        CatalogItem<Object, Object> item = Iterables.getOnlyElement(catalog.getCatalogItems());
+        CatalogBundle bundle = Iterables.getOnlyElement(item.getLibraries());
+        assertEquals(bundle.getUrl(), LIBRARY_URL);
+        assertEquals(bundle.getSymbolicName(), LIBRARY_SYMBOLIC_NAME);
+        assertEquals(bundle.getVersion(), LIBRARY_VERSION);
+    }
+
+    // Will download the given catalog library jar
+    // Confirms "normal" behaviour, when all values in the catalog are hard-coded rather than using external config.
+    @Test(groups="Integration")
+    public void testNonExternalisedCatalogConfigReferencedFromYaml() throws Exception {
         String yaml = Joiner.on("\n").join(
                 "brooklyn.catalog:",
                 "  id: osgi.test",
@@ -151,7 +200,7 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
                 "  displayName: CentOS 6.6",
                 "  iconUrl: classpath:///centos.png",
                 "  brooklyn.libraries:",
-                "  - " + OSGI_URL,
+                "  - " + LIBRARY_URL,
                 "",
                 "  item:",
                 "    services:",
@@ -159,11 +208,14 @@ public class ExternalConfigYamlTest extends AbstractYamlTest {
 
         catalog.addItems(yaml);
 
-        for (CatalogItem<Object, Object> item: catalog.getCatalogItems()) {
-            for (CatalogItem.CatalogBundle library: item.getLibraries()) {
-                assertEquals(library.getUrl(), OSGI_URL);
-            }
-        }
+        CatalogItem<Object, Object> item = Iterables.getOnlyElement(catalog.getCatalogItems());
+        assertEquals(item.getId(), "osgi.test:1.3");
+        assertEquals(item.getCatalogItemType(), CatalogItemType.TEMPLATE);
+        assertEquals(item.getVersion(), "1.3");
+        assertEquals(item.getDescription(), "CentOS 6.6 With GUI - 1.3");
+        assertEquals(item.getDisplayName(), "CentOS 6.6");
+        assertEquals(item.getIconUrl(), "classpath:///centos.png");
+        assertEquals(Iterables.getOnlyElement(item.getLibraries()).getUrl(), LIBRARY_URL);
     }
 
     @Test(groups="Integration")
