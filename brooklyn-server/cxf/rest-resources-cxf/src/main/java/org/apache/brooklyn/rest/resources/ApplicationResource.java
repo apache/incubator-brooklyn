@@ -86,7 +86,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Iterables;
+import org.apache.brooklyn.api.typereg.RegisteredType;
 import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
+import org.apache.brooklyn.util.guava.Maybe;
 
 @HaHotStateRequired
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
@@ -402,15 +404,21 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     private void checkSpecTypeIsValid(String type, Class<? extends BrooklynObject> subType) {
-        if (RegisteredTypes.validate(mgmt().getTypeRegistry().get(type), RegisteredTypeLoadingContexts.spec(subType)) == null) {
-            try {
-                brooklyn().getCatalogClassLoader().loadClass(type);
-            } catch (ClassNotFoundException e) {
-                log.debug("Class not found for type '" + type + "'; reporting 404", e);
-                throw WebResourceUtils.notFound("Undefined type '%s'", type);
-            }
-            log.info(JavaClassNames.simpleClassName(subType)+" type '{}' not defined in catalog but is on classpath; continuing", type);
+        Maybe<RegisteredType> typeV = RegisteredTypes.tryValidate(mgmt().getTypeRegistry().get(type), RegisteredTypeLoadingContexts.spec(subType));
+        if (!typeV.isNull()) {
+            // found, throw if any problem
+            typeV.get();
+            return;
         }
+
+        // not found, try classloading
+        try {
+            brooklyn().getCatalogClassLoader().loadClass(type);
+        } catch (ClassNotFoundException e) {
+            log.debug("Class not found for type '" + type + "'; reporting 404", e);
+            throw WebResourceUtils.notFound("Undefined type '%s'", type);
+        }
+        log.info(JavaClassNames.simpleClassName(subType)+" type '{}' not defined in catalog but is on classpath; continuing", type);
     }
     
     private void checkEntityTypeIsValid(String type) {
