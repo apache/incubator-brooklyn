@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
+import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
@@ -49,6 +50,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
@@ -207,6 +209,16 @@ public class BrooklynComponentTemplateResolver {
                 // encounteredRegisteredTypeIds must contain the items currently being loaded (the dependency chain),
                 // but not parent items in this type already resolved.
                 EntitySpec<? extends Entity> childSpec = entityResolver.resolveSpec(encounteredRegisteredTypeIds);
+                
+                if (Application.class.isAssignableFrom(childSpec.getType())) {
+                    EntitySpec<? extends Application> appSpec = (EntitySpec<? extends Application>) childSpec;
+                    if (EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec)) {
+                        EntitySpec<?> appChildSpec = Iterables.getOnlyElement(appSpec.getChildren());
+                        EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, appChildSpec);
+                        childSpec = appChildSpec;
+                    }
+                }
+
                 spec.child(childSpec);
             }
         }
@@ -365,7 +377,18 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(encounteredRegisteredTypeIds);
+                EntitySpec<?> entitySpec = Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(encounteredRegisteredTypeIds);
+                
+                if (Application.class.isAssignableFrom(entitySpec.getType())) {
+                    EntitySpec<? extends Application> appSpec = (EntitySpec<? extends Application>) entitySpec;
+                    if (EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec)) {
+                        EntitySpec<?> childSpec = Iterables.getOnlyElement(appSpec.getChildren());
+                        EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, childSpec);
+                        entitySpec = childSpec;
+                    }
+                }
+                return entitySpec;
+                
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);
