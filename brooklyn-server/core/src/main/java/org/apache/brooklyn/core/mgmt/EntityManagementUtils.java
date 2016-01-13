@@ -50,7 +50,6 @@ import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.Beta;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -67,11 +66,12 @@ public class EntityManagementUtils {
     /**
      * A marker config value which indicates that an {@link Application} entity was created automatically,
      * needed because a plan might give multiple top-level entities or a non-Application top-level entity,
-     * but brooklyn requires an {@link Application} at the root.
+     * in a context where Brooklyn requires an {@link Application} at the root.
      * <p>
      * Typically when such a wrapper app wraps another {@link Application}
-     * (or when we are adding to an existing entity and it wraps multiple {@link Entity} instances)
-     * it will be unwrapped. See {@link #newWrapperApp()} and {@link #unwrapApplication(EntitySpec)}.
+     * (or where we are looking for a single {@link Entity}, or a list to add, and they are so wrapped)
+     * it will be unwrapped. 
+     * See {@link #newWrapperApp()} and {@link #unwrapApplication(EntitySpec)}.
      */
     public static final ConfigKey<Boolean> WRAPPER_APP_MARKER = ConfigKeys.newBooleanConfigKey("brooklyn.wrapper_app");
 
@@ -159,21 +159,16 @@ public class EntityManagementUtils {
 
         // see whether we can promote children
         List<EntitySpec<?>> specs = MutableList.of();
-        if (canPromoteChildrenInWrappedApplication(specA)) {
-            // we can promote
-            for (EntitySpec<?> specC: specA.getChildren()) {
-                mergeWrapperParentSpecToChildEntity(specA, specC);
-                specs.add(specC);
-            }
-        } else {
+        if (!canUnwrapEntity(specA)) {
             // if not promoting, set a nice name if needed
             if (Strings.isEmpty(specA.getDisplayName())) {
                 int size = specA.getChildren().size();
                 String childrenCountString = size+" "+(size!=1 ? "children" : "child");
                 specA.displayName("Dynamically added "+childrenCountString);
             }
-            specs.add(specA);
         }
+        
+        specs.add(unwrapEntity(specA));
 
         final List<Entity> children = MutableList.of();
         for (EntitySpec<?> spec: specs) {
@@ -219,27 +214,37 @@ public class EntityManagementUtils {
 
         return CreationResult.of(children, task);
     }
-
-    /** if an application should be unwrapped, it does so, returning the child; otherwise returns the argument passed in.
-     * use {@link #canPromoteWrappedApplication(EntitySpec)} to test whether it will unwrap. */
-    public static EntitySpec<? extends Application> unwrapApplication(EntitySpec<? extends Application> wrapperApplication) {
-        if (canPromoteWrappedApplication(wrapperApplication)) {
-            @SuppressWarnings("unchecked")
-            EntitySpec<? extends Application> wrappedApplication = (EntitySpec<? extends Application>) Iterables.getOnlyElement( wrapperApplication.getChildren() );
-
-            // if promoted, apply the transformations done to the app
-            // (transformations will be done by the resolveSpec call above, but we are collapsing oldApp so transfer to app=newApp)
-            EntityManagementUtils.mergeWrapperParentSpecToChildEntity(wrapperApplication, wrappedApplication);
-            return wrappedApplication;
+    
+    /** Unwraps a single {@link Entity} if appropriate. See {@link #WRAPPER_APP_MARKER}.
+     * Also see {@link #canUnwrapEntity(EntitySpec)} to test whether it will unwrap. */
+    public static EntitySpec<? extends Entity> unwrapEntity(EntitySpec<? extends Entity> wrapperApplication) {
+        if (!canUnwrapEntity(wrapperApplication)) {
+            return wrapperApplication;
         }
-        return wrapperApplication;
+        EntitySpec<?> wrappedEntity = Iterables.getOnlyElement(wrapperApplication.getChildren());
+        @SuppressWarnings("unchecked")
+        EntitySpec<? extends Application> wrapperApplicationTyped = (EntitySpec<? extends Application>) wrapperApplication;
+        EntityManagementUtils.mergeWrapperParentSpecToChildEntity(wrapperApplicationTyped, wrappedEntity);
+        return wrappedEntity;
+    }
+    
+    /** Unwraps a wrapped {@link Application} if appropriate.
+     * This is like {@link #canUnwrapEntity(EntitySpec)} with an additional check that the wrapped child is an {@link Application}. 
+     * See {@link #WRAPPER_APP_MARKER} for an overview. 
+     * Also see {@link #canUnwrapApplication(EntitySpec)} to test whether it will unwrap. */
+    public static EntitySpec<? extends Application> unwrapApplication(EntitySpec<? extends Application> wrapperApplication) {
+        if (!canUnwrapApplication(wrapperApplication)) {
+            return wrapperApplication;
+        }
+        @SuppressWarnings("unchecked")
+        EntitySpec<? extends Application> wrappedApplication = (EntitySpec<? extends Application>) unwrapEntity(wrapperApplication);
+        return wrappedApplication;
     }
     
     /** Modifies the child so it includes the inessential setup of its parent,
      * for use when unwrapping specific children, but a name or other item may have been set on the parent.
      * See {@link #WRAPPER_APP_MARKER}. */
-    @Beta //where should this live long-term?
-    public static void mergeWrapperParentSpecToChildEntity(EntitySpec<? extends Application> wrapperParent, EntitySpec<?> wrappedChild) {
+    private static void mergeWrapperParentSpecToChildEntity(EntitySpec<? extends Application> wrapperParent, EntitySpec<?> wrappedChild) {
         if (Strings.isNonEmpty(wrapperParent.getDisplayName()))
             wrappedChild.displayName(wrapperParent.getDisplayName());
         if (!wrapperParent.getLocations().isEmpty())
@@ -263,31 +268,42 @@ public class EntityManagementUtils {
         return EntitySpec.create(BasicApplication.class).configure(WRAPPER_APP_MARKER, true);
     }
     
-    /** returns true if the spec is for an empty-ish wrapper app contianing an application, 
-     * for use when adding from a plan specifying an application which was wrapped because it had to be.
+    /** As {@link #canUnwrapEntity(EntitySpec)}
+     * but additionally requiring that the wrapped item is an {@link Application},
+     * for use when the context requires an {@link Application} ie a root of a spec.
      * @see #WRAPPER_APP_MARKER */
+    public static boolean canUnwrapApplication(EntitySpec<? extends Application> wrapperApplication) {
+        if (!canUnwrapEntity(wrapperApplication)) return false;
+
+        EntitySpec<?> childSpec = Iterables.getOnlyElement(wrapperApplication.getChildren());
+        return (childSpec.getType()!=null && Application.class.isAssignableFrom(childSpec.getType()));
+    }
+    /** @deprecated since 0.9.0 use {@link #canUnwrapApplication(EntitySpec)} */ @Deprecated
     public static boolean canPromoteWrappedApplication(EntitySpec<? extends Application> app) {
-        if (!hasSingleChild(app))
-            return false;
-
-        EntitySpec<?> childSpec = Iterables.getOnlyElement(app.getChildren());
-        if (childSpec.getType()==null || !Application.class.isAssignableFrom(childSpec.getType()))
-            return false;
-
-        return canPromoteChildrenInWrappedApplication(app);
+        return canUnwrapApplication(app);
     }
     
-    /** returns true if the spec is for a wrapper app with no important settings, wrapping a single child. 
-     * for use when adding from a plan specifying multiple entities but nothing significant at the application level.
-     * @see #WRAPPER_APP_MARKER */
-    public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<? extends Application> spec) {
+    /** Returns true if the spec is for a wrapper app with no important settings, wrapping a single child entity. 
+     * for use when adding from a plan specifying multiple entities but there is nothing significant at the application level,
+     * and the context would like to flatten it to remove the wrapper yielding just a single entity.
+     * (but note the result is not necessarily an {@link Application}; 
+     * see {@link #canUnwrapApplication(EntitySpec)} if that is required).
+     * <p>
+     * Note callers will normally use one of {@link #unwrapEntity(EntitySpec)} or {@link #unwrapApplication(EntitySpec)}.
+     * 
+     * @see #WRAPPER_APP_MARKER for an overview */
+    public static boolean canUnwrapEntity(EntitySpec<? extends Entity> spec) {
         return isWrapperApp(spec) && hasSingleChild(spec) &&
-                //equivalent to no keys starting with "brooklyn."
-                spec.getEnrichers().isEmpty() &&
-                spec.getEnricherSpecs().isEmpty() &&
-                spec.getInitializers().isEmpty() &&
-                spec.getPolicies().isEmpty() &&
-                spec.getPolicySpecs().isEmpty();
+            //equivalent to no keys starting with "brooklyn."
+            spec.getEnrichers().isEmpty() &&
+            spec.getEnricherSpecs().isEmpty() &&
+            spec.getInitializers().isEmpty() &&
+            spec.getPolicies().isEmpty() &&
+            spec.getPolicySpecs().isEmpty();
+    }
+    /** @deprecated since 0.9.0 use {@link #canUnwrapEntity(EntitySpec)} */ @Deprecated
+    public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<? extends Application> spec) {
+        return canUnwrapEntity(spec);
     }
 
     public static boolean isWrapperApp(EntitySpec<?> spec) {

@@ -40,7 +40,6 @@ import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpecInstantiator {
@@ -90,30 +89,20 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         // first build the children into an empty shell app
         List<EntitySpec<?>> childSpecs = createServiceSpecs(template, platform, loader, encounteredTypeSymbolicNames);
         for (EntitySpec<?> childSpec : childSpecs) {
-            
-            if (Application.class.isAssignableFrom(childSpec.getType())) {
-                EntitySpec<? extends Application> appSpec = (EntitySpec<? extends Application>) childSpec;
-                if (EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec)) {
-                    EntitySpec<?> appChildSpec = Iterables.getOnlyElement(appSpec.getChildren());
-                    EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, appChildSpec);
-                    childSpec = appChildSpec;
-                }
-            }
-
-            app.child(childSpec);
+            // children get parsed and unwrapped irrespective of the NEVER_UNWRAP_APPS setting;
+            // we could support a NEVER_UNWRAP_NESTED_ENTITIES item but i don't know if there's a use case
+            app.child(EntityManagementUtils.unwrapEntity(childSpec));
         }
 
-        if (shouldUnwrap(template, app)) {
+        if (allowedToUnwrap(template, app)) {
             app = EntityManagementUtils.unwrapApplication(app);
         }
 
         return app;
     }
 
-    private boolean shouldUnwrap(AssemblyTemplate template, EntitySpec<? extends Application> app) {
-        if (Boolean.TRUE.equals(TypeCoercions.coerce(template.getCustomAttributes().get(NEVER_UNWRAP_APPS_PROPERTY), Boolean.class)))
-            return false;
-        return EntityManagementUtils.canPromoteWrappedApplication(app);
+    private boolean allowedToUnwrap(AssemblyTemplate template, EntitySpec<? extends Application> app) {
+        return !(Boolean.TRUE.equals(TypeCoercions.coerce(template.getCustomAttributes().get(NEVER_UNWRAP_APPS_PROPERTY), Boolean.class)));
     }
 
     private List<EntitySpec<?>> buildTemplateServicesAsSpecs(BrooklynClassLoadingContext loader, AssemblyTemplate template, CampPlatform platform, Set<String> encounteredRegisteredTypeIds) {

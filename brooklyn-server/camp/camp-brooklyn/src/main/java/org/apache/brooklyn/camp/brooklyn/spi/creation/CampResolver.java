@@ -131,12 +131,8 @@ class CampResolver {
         if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
             EntitySpec<? extends Application> appSpec = ((AssemblyTemplateSpecInstantiator)instantiator).createApplicationSpec(at, camp, loader, encounteredTypes);
 
-            if (!isApplication && EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec)) {
-                EntitySpec<?> childSpec = Iterables.getOnlyElement(appSpec.getChildren());
-                EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, childSpec);
-                return childSpec;
-            }
-            return appSpec;
+            if (isApplication) return EntityManagementUtils.unwrapApplication(appSpec);
+            return EntityManagementUtils.unwrapEntity(appSpec);
             
         } else {
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);

@@ -209,17 +209,7 @@ public class BrooklynComponentTemplateResolver {
                 // encounteredRegisteredTypeIds must contain the items currently being loaded (the dependency chain),
                 // but not parent items in this type already resolved.
                 EntitySpec<? extends Entity> childSpec = entityResolver.resolveSpec(encounteredRegisteredTypeIds);
-                
-                if (Application.class.isAssignableFrom(childSpec.getType())) {
-                    EntitySpec<? extends Application> appSpec = (EntitySpec<? extends Application>) childSpec;
-                    if (EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec)) {
-                        EntitySpec<?> appChildSpec = Iterables.getOnlyElement(appSpec.getChildren());
-                        EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, appChildSpec);
-                        childSpec = appChildSpec;
-                    }
-                }
-
-                spec.child(childSpec);
+                spec.child(EntityManagementUtils.unwrapEntity(childSpec));
             }
         }
 
@@ -379,16 +369,7 @@ public class BrooklynComponentTemplateResolver {
                 specConfig.setSpecConfiguration(resolvedConfig);
                 EntitySpec<?> entitySpec = Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(encounteredRegisteredTypeIds);
                 
-                if (Application.class.isAssignableFrom(entitySpec.getType())) {
-                    EntitySpec<? extends Application> appSpec = (EntitySpec<? extends Application>) entitySpec;
-                    if (EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec)) {
-                        EntitySpec<?> childSpec = Iterables.getOnlyElement(appSpec.getChildren());
-                        EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, childSpec);
-                        entitySpec = childSpec;
-                    }
-                }
-                return entitySpec;
-                
+                return EntityManagementUtils.unwrapEntity(entitySpec);
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);
