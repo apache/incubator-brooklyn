@@ -58,8 +58,12 @@ public interface AbstractGroup extends Entity, Group, Changeable {
     AttributeSensor<Entity> FIRST = Sensors.newSensor(Entity.class,
             "cluster.first.entity", "The first member of the cluster");
 
+    /**
+     * @deprecated since 0.9.0, the UI no longer relies on the use of delegates to represent group membership (see #929)
+     */
+    @Deprecated
     ConfigKey<Boolean> MEMBER_DELEGATE_CHILDREN = ConfigKeys.newBooleanConfigKey(
-            "group.members.delegate", "Add delegate child entities for members of the group", Boolean.FALSE);
+            "group.members.delegate", "Deprecated: Add delegate child entities for members of the group", Boolean.FALSE);
 
     ConfigKey<String> MEMBER_DELEGATE_NAME_FORMAT = ConfigKeys.newStringConfigKey(
             "group.members.delegate.nameFormat", "Delegate members name format string (Use %s for the original entity display name)", "%s");
