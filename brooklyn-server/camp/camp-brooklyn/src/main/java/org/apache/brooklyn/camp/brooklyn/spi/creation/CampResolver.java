@@ -20,7 +20,6 @@ package org.apache.brooklyn.camp.brooklyn.spi.creation;
 
 import java.util.Set;
 
-import com.google.common.collect.Iterables;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -131,8 +130,13 @@ class CampResolver {
         if (instantiator instanceof AssemblyTemplateSpecInstantiator) {
             EntitySpec<? extends Application> appSpec = ((AssemblyTemplateSpecInstantiator)instantiator).createApplicationSpec(at, camp, loader, encounteredTypes);
 
-            if (isApplication) return EntityManagementUtils.unwrapApplication(appSpec);
-            return EntityManagementUtils.unwrapEntity(appSpec);
+            // above will unwrap but only if it's an Application (and it's permitted); 
+            // but it doesn't know whether we need an App or if an Entity is okay  
+            if (!isApplication) return EntityManagementUtils.unwrapEntity(appSpec);
+            // if we need an App then definitely *don't* unwrap here because
+            // the instantiator will have done that, and it knows if the plan
+            // specified a wrapped app explicitly (whereas we don't easily know that here!)
+            return appSpec;
             
         } else {
             throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
