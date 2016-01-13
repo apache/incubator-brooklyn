@@ -1,0 +1,11 @@
+- type: org.apache.brooklyn.test.framework.InfrastructureDeploymentTestCase
+  brooklyn.config:
+    infrastructure.deployment.location.sensor: entity.dynamicLocation
+    infrastructure.deployment.spec:
+      $brooklyn:entitySpec:
+        - type: docker-cloud-calico
+          ...
+    infrastructure.deployment.entity.specs:
+      - $brooklyn:entitySpec:
+          type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
+          ...

@@ -18,7 +18,10 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import java.util.List;
+
 import com.google.common.reflect.TypeToken;
+
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
@@ -30,19 +33,19 @@ import org.apache.brooklyn.entity.software.base.SoftwareProcess;
  * Created by graememiller on 04/12/2015.
  */
 @ImplementedBy(value = InfrastructureDeploymentTestCaseImpl.class)
-public interface InfrastructureDeploymentTestCase extends TestCase {
+public interface InfrastructureDeploymentTestCase extends TargetableTestComponent {
 
     /**
-     * Entity spec to deploy. This will be deployed second, after the INFRASTRUCTURE_SPEC has been deployed. This will be deployed to the DEPLOYMENT_LOCATION.
+     * Entity specs to deploy. These will be deployed second, after the INFRASTRUCTURE_SPEC has been deployed. These specs will be deployed to the DEPLOYMENT_LOCATION.
      * All children will be deployed after this
      */
-    ConfigKey<EntitySpec<SoftwareProcess>> ENTITY_SPEC_TO_DEPLOY = ConfigKeys.newConfigKey(new TypeToken<EntitySpec<SoftwareProcess>>(){}, "infrastructure.deployment.entity.spec", "Entity spec to deploy to infrastructure");
+    ConfigKey<List<EntitySpec<? extends SoftwareProcess>>> ENTITY_SPEC_TO_DEPLOY = ConfigKeys.newConfigKey(new TypeToken<List<EntitySpec<? extends SoftwareProcess>>>(){}, "infrastructure.deployment.entity.specs", "Entity specs to deploy to infrastructure");
 
 
     /**
      * Infrastructure to deploy. This will be deployed first, then the ENTITY_SPEC_TO_DEPLOY will be deployed, then any children
      */
-    ConfigKey<EntitySpec<StartableApplication>> INFRASTRUCTURE_SPEC = ConfigKeys.newConfigKey(new TypeToken<EntitySpec<StartableApplication>>(){}, "infrastructure.deployment.spec", "Infrastructure to deploy");
+    ConfigKey<EntitySpec<? extends StartableApplication>> INFRASTRUCTURE_SPEC = ConfigKeys.newConfigKey(new TypeToken<EntitySpec<? extends StartableApplication>>(){}, "infrastructure.deployment.spec", "Infrastructure to deploy");
 
 
     /**

@@ -18,24 +18,25 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import java.util.Collection;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Lists;
+
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Collection;
 
 /**
  * {@inheritDoc}
  */
-public class TestCaseImpl extends AbstractEntity implements TestCase {
+public class TestCaseImpl extends TargetableTestComponentImpl implements TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestCaseImpl.class);
 
@@ -46,7 +47,7 @@ public class TestCaseImpl extends AbstractEntity implements TestCase {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
         try {
             for (final Entity childEntity : getChildren()) {
-                Boolean serviceUp = childEntity.sensors().get(SERVICE_UP);
+                Boolean serviceUp = childEntity.sensors().get(Attributes.SERVICE_UP);
                 if (childEntity instanceof Startable && !Boolean.TRUE.equals(serviceUp)){
                     ((Startable) childEntity).start(locations);
                 }

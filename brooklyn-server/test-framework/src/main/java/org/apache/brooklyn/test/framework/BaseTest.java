@@ -18,34 +18,20 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 import com.google.common.collect.ImmutableList;
-import com.google.common.reflect.TypeToken;
-import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.mgmt.ExecutionContext;
+
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.util.time.Duration;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
 /**
  * A base interface for all tests.
  */
-public interface BaseTest extends Entity, Startable {
-
-    /**
-     * The target entity to test (optional, use either this or targetId).
-     */
-    ConfigKey<Entity> TARGET_ENTITY = ConfigKeys.newConfigKey(Entity.class, "target", "Entity under test");
-
-    /**
-     * Id of the target entity to test (optional, use either this or target).
-     */
-    ConfigKey<String> TARGET_ID = ConfigKeys.newStringConfigKey("targetId", "Id of the entity under test");
+public interface BaseTest extends TargetableTestComponent, Startable {
 
     /**
      * The assertions to be made.
@@ -59,12 +45,5 @@ public interface BaseTest extends Entity, Startable {
     ConfigKey<Duration> TIMEOUT = ConfigKeys.newConfigKey(Duration.class, "timeout", "Time to wait on result",
         new Duration(1L, TimeUnit.SECONDS));
 
-    /**
-     * Get the target of the test.
-     *
-     * @return The target.
-     * @throws IllegalArgumentException if the target cannot be found.
-     */
-    Entity resolveTarget();
 
 }

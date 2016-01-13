@@ -18,28 +18,31 @@
  */
 package org.apache.brooklyn.test.framework;
 
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
-import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
-import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.http.HttpTool;
-import org.apache.brooklyn.util.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.brooklyn.test.framework.TestFrameworkAssertions.getAssertions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
+import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.core.entity.Attributes;
+import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
+import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
+import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.http.HttpTool;
+import org.apache.brooklyn.util.time.Duration;
 
 /**
  * {@inheritDoc}
  */
-public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
+public class TestHttpCallImpl extends TargetableTestComponentImpl implements TestHttpCall {
 
     private static final Logger LOG = LoggerFactory.getLogger(TestHttpCallImpl.class);
 
@@ -58,12 +61,12 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
 
         try {
             doRequestAndCheckAssertions(ImmutableMap.of("timeout", timeout), assertions, target, url);
-            sensors().set(SERVICE_UP, true);
+            sensors().set(Attributes.SERVICE_UP, true);
             ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
 
         } catch (Throwable t) {
             LOG.info("{} Url [{}] test failed", this, url);
-            sensors().set(SERVICE_UP, false);
+            sensors().set(Attributes.SERVICE_UP, false);
             ServiceStateLogic.setExpectedState(this, Lifecycle.ON_FIRE);
             throw Exceptions.propagate(t);
         }
@@ -105,7 +108,7 @@ public class TestHttpCallImpl extends AbstractTest implements TestHttpCall {
      */
     public void stop() {
         ServiceStateLogic.setExpectedState(this, Lifecycle.STOPPING);
-        sensors().set(SERVICE_UP, false);
+        sensors().set(Attributes.SERVICE_UP, false);
     }
 
     /**

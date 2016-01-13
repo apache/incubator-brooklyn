@@ -28,12 +28,18 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.framework.entity.TestEntity;
+import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import static org.apache.brooklyn.core.entity.trait.Startable.SERVICE_UP;
+import static org.apache.brooklyn.test.Asserts.fail;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author m4rkmckenna on 27/10/2015.
@@ -80,6 +86,65 @@ public class TestEffectorTest {
         assertThat(testEntity.sensors().get(TestEntity.SIMPLE_EFFECTOR_INVOKED)).isTrue();
 
         assertThat(testEffector.sensors().get(TestEffector.EFFECTOR_RESULT)).isNull();
+    }
+
+    @Test
+    public void testEffectorPositiveAssertions() {
+        final TestCase testCase = app.createAndManageChild(EntitySpec.create(TestCase.class));
+        final TestEntity testEntity = testCase.addChild(EntitySpec.create(TestEntity.class));
+
+        String stringToReturn = "Hello World!";
+
+        Map<String, String> effectorParams = ImmutableMap.of("stringToReturn", stringToReturn);
+
+        List<Map<String, Object>> assertions = ImmutableList.<Map<String, Object>>of(
+                ImmutableMap.<String, Object>of(TestFrameworkAssertions.EQUAL_TO, stringToReturn),
+                ImmutableMap.<String, Object>of(TestFrameworkAssertions.CONTAINS, "Hello")
+        );
+
+        final TestEffector testEffector = testCase.addChild(EntitySpec.create(TestEffector.class)
+                .configure(TestEffector.TARGET_ENTITY, testEntity)
+                .configure(TestEffector.EFFECTOR_NAME, "effectorReturnsString")
+                .configure(TestEffector.EFFECTOR_PARAMS, effectorParams)
+                .configure(TestEffector.ASSERTIONS, assertions));
+
+        app.start(ImmutableList.of(app.newSimulatedLocation()));
+
+        assertThat(testEffector.sensors().get(TestEffector.EFFECTOR_RESULT)).isEqualTo(stringToReturn);
+        assertThat(testEffector.sensors().get(SERVICE_UP)).isTrue().withFailMessage("Service should be up");
+    }
+
+    @Test
+    public void testEffectorNegativeAssertions() {
+        final TestCase testCase = app.createAndManageChild(EntitySpec.create(TestCase.class));
+        final TestEntity testEntity = testCase.addChild(EntitySpec.create(TestEntity.class));
+
+        String stringToReturn = "Goodbye World!";
+
+        Map<String, String> effectorParams = ImmutableMap.of("stringToReturn", stringToReturn);
+
+        List<Map<String, Object>> assertions = ImmutableList.<Map<String, Object>>of(
+                ImmutableMap.<String, Object>of(TestFrameworkAssertions.EQUAL_TO, "Not the string I expected"),
+                ImmutableMap.<String, Object>of(TestFrameworkAssertions.CONTAINS, "Hello")
+        );
+
+        final TestEffector testEffector = testCase.addChild(EntitySpec.create(TestEffector.class)
+                .configure(TestEffector.TARGET_ENTITY, testEntity)
+                .configure(TestEffector.EFFECTOR_NAME, "effectorReturnsString")
+                .configure(TestEffector.EFFECTOR_PARAMS, effectorParams)
+                .configure(TestEffector.ASSERTIONS, assertions));
+
+        try {
+            app.start(ImmutableList.of(app.newSimulatedLocation()));
+            fail("Should have thrown execption");
+        } catch (Throwable throwable) {
+            Throwable firstInteresting = Exceptions.getFirstInteresting(throwable);
+            assertThat(firstInteresting).isNotNull();
+            assertThat(throwable).isNotNull();
+            assertThat(firstInteresting).isInstanceOf(AssertionError.class);
+        }
+
+        assertThat(testEffector.sensors().get(SERVICE_UP)).isFalse().withFailMessage("Service should not be up");
     }
 
     @Test
