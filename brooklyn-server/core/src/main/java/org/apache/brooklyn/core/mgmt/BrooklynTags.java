@@ -21,6 +21,7 @@ package org.apache.brooklyn.core.mgmt;
 import java.io.Serializable;
 import java.util.List;
 
+import org.apache.brooklyn.util.collections.MutableList;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -73,7 +74,7 @@ public class BrooklynTags {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            ListTag that = (ListTag) o;
+            ListTag<?> that = (ListTag<?>) o;
             return list == null ? that.list == null : list.equals(that.list);
         }
 
@@ -117,5 +118,14 @@ public class BrooklynTags {
         }
         return null;
     }
-    
+
+    public static List<NamedStringTag> findAll(String kind, Iterable<Object> tags) {
+        List<NamedStringTag> result = MutableList.of();
+        for (Object object: tags) {
+            if (object instanceof NamedStringTag && kind.equals(((NamedStringTag)object).kind))
+                result.add( (NamedStringTag) object );
+        }
+        return result;
+    }
+
 }

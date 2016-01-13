@@ -18,13 +18,23 @@
  */
 package org.apache.brooklyn.camp.brooklyn.catalog;
 
+import java.util.List;
+
+import org.apache.brooklyn.api.entity.Application;
+import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
+import org.apache.brooklyn.core.mgmt.BrooklynTags;
+import org.apache.brooklyn.core.mgmt.BrooklynTags.NamedStringTag;
+import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
 import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
+import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.test.TestUtils;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.osgi.OsgiTestResources;
+import org.python.google.common.collect.Iterables;
 import org.testng.Assert;
 import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
@@ -63,6 +73,18 @@ public class CatalogYamlTemplateTest extends AbstractYamlTest {
         deleteCatalogEntity("t1");
     }
 
+    @Test
+    public void testSpecFromItem() throws Exception {
+        makeItem();
+        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpecForApplication(mgmt(), 
+            "services: [ { type: t1 } ]\n" +
+            "location: localhost");
+        List<NamedStringTag> yamls = BrooklynTags.findAll(BrooklynTags.YAML_SPEC_KIND, spec.getTags());
+        Assert.assertEquals(yamls.size(), 1, "Expected 1 yaml tag; instead had: "+yamls);
+        String yaml = Iterables.getOnlyElement(yamls).getContents();
+        Asserts.assertStringContains(yaml, "services:", "t1", "localhost");
+    }
+    
     private RegisteredType makeItem() {
         TestResourceUnavailableException.throwIfResourceUnavailable(getClass(), OsgiStandaloneTest.BROOKLYN_TEST_OSGI_ENTITIES_PATH);
         
