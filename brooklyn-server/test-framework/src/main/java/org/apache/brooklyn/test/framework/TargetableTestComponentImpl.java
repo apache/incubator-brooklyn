@@ -18,6 +18,11 @@
  */
 package org.apache.brooklyn.test.framework;
 
+import java.util.concurrent.ExecutionException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -25,17 +30,13 @@ import org.apache.brooklyn.camp.brooklyn.spi.dsl.methods.DslComponent;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ExecutionException;
 
 /**
- * Abstract base class for tests, providing common target lookup.
+ * Class that can resolve the target for a test component
  */
-public abstract class AbstractTest extends AbstractEntity implements BaseTest {
+public abstract class TargetableTestComponentImpl extends AbstractEntity implements TargetableTestComponent {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AbstractTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TargetableTestComponentImpl.class);
 
     /**
      * Find the target entity using "target" config key, if entity provided directly in config, or by doing an implicit
@@ -63,6 +64,11 @@ public abstract class AbstractTest extends AbstractEntity implements BaseTest {
 
     private static Entity getTargetById(ExecutionContext executionContext, Entity entity) {
         String targetId = entity.getConfig(TARGET_ID);
+
+        if(targetId == null){
+            return null;
+        }
+
         final Task<Entity> targetLookup = new DslComponent(targetId).newTask();
         Entity target = null;
         try {

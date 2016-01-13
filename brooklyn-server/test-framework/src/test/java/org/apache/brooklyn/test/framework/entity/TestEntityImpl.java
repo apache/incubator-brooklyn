@@ -56,4 +56,9 @@ public class TestEntityImpl extends AbstractEntity implements TestEntity {
         sensors().set(COMPLEX_EFFECTOR_LONG, longValue);
         return new TestPojo(stringValue, booleanValue, longValue);
     }
+
+    @Override
+    public String effectorReturnsString(@EffectorParam(name = "stringToReturn") String stringToReturn) {
+        return stringToReturn;
+    }
 }

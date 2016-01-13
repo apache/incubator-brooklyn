@@ -48,6 +48,9 @@ public interface TestEntity extends Entity, Startable {
                              @EffectorParam(name = "booleanValue") final Boolean booleanValue,
                              @EffectorParam(name = "longValue") final Long longValue);
 
+    @Effector
+    String effectorReturnsString(@EffectorParam(name = "stringToReturn") final String stringToReturn);
+
     class TestPojo {
         private final String stringValue;
         private final Boolean booleanValue;

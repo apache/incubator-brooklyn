@@ -20,23 +20,23 @@ package org.apache.brooklyn.test.framework;
 
 import java.util.Collection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.TaskAdaptable;
-import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.trait.StartableMethods;
 import org.apache.brooklyn.util.core.task.DynamicTasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This implementation will start all child entities in parallel.
  * 
  * @author Chris Burke
  */
-public class ParallelTestCaseImpl extends AbstractEntity implements ParallelTestCase {
+public class ParallelTestCaseImpl extends TargetableTestComponentImpl implements ParallelTestCase {
 
     private static final Logger logger = LoggerFactory.getLogger(ParallelTestCaseImpl.class);
 
@@ -136,7 +136,7 @@ public class ParallelTestCaseImpl extends AbstractEntity implements ParallelTest
      * @param serviceStateActual The actual state of the entity.
      */
     private void setServiceState(final boolean serviceUpState, final Lifecycle serviceStateActual) {
-        sensors().set(SERVICE_UP, serviceUpState);
+        sensors().set(Attributes.SERVICE_UP, serviceUpState);
         sensors().set(Attributes.SERVICE_STATE_ACTUAL, serviceStateActual);
     }
 }
