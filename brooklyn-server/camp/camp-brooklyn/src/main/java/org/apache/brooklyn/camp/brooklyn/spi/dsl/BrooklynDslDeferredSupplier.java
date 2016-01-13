@@ -18,7 +18,10 @@
  */
 package org.apache.brooklyn.camp.brooklyn.spi.dsl;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
@@ -55,6 +58,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * and should not accessed until after the components / entities are created 
  * and are being started.
  * (TODO the precise semantics of this are under development.)
+ * 
+ * The threading model is that only one thread can call {@link #get()} at a time. An interruptible
+ * lock is obtained using {@link #lock} for the duration of that method. It is important to not
+ * use {@code synchronized} because that is not interruptible - if someone tries to get the value
+ * and interrupts after a short wait, then we must release the lock immediately and return.
  * <p>
  **/
 public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier<T>, TaskFactory<Task<T>>, Serializable {
@@ -63,6 +71,15 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynDslDeferredSupplier.class);
 
+    /**
+     * Lock to be used, rather than {@code synchronized} blocks, for anything long-running.
+     * Use {@link #getLock()} rather than this field directly, to ensure it is reinitialised 
+     * after rebinding.
+     * 
+     * @see https://issues.apache.org/jira/browse/BROOKLYN-214
+     */
+    private transient ReentrantLock lock;
+    
     // TODO json of this object should *be* this, not wrapped this ($brooklyn:literal is a bit of a hack, though it might work!)
     @JsonInclude
     @JsonProperty(value="$brooklyn:literal")
@@ -72,8 +89,9 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
     public BrooklynDslDeferredSupplier() {
         PlanInterpretationNode sourceNode = BrooklynDslInterpreter.currentNode();
         dsl = sourceNode!=null ? sourceNode.getOriginalValue() : null;
+        lock = new ReentrantLock();
     }
-
+    
     /** returns the current entity; for use in implementations of {@link #get()} */
     protected final static EntityInternal entity() {
         return (EntityInternal) BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
@@ -88,7 +106,13 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
     }
 
     @Override
-    public final synchronized T get() {
+    public final T get() {
+        try {
+            getLock().lockInterruptibly();
+        } catch (InterruptedException e) {
+            throw Exceptions.propagate(e);
+        }
+        
         try {
             if (log.isDebugEnabled())
                 log.debug("Queuing task to resolve "+dsl);
@@ -110,7 +134,19 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
 
         } catch (Exception e) {
             throw Exceptions.propagate(e);
+        } finally {
+            getLock().unlock();
         }
+    }
+
+    // Use this method, rather than the direct field, to ensure it is initialised after rebinding.
+    protected ReentrantLock getLock() {
+        synchronized (this) {
+            if (lock == null) {
+                lock = new ReentrantLock();
+            }
+        }
+        return lock;
     }
 
     @Override
