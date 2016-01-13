@@ -245,12 +245,17 @@ public class EntityManagementUtils {
      * for use when unwrapping specific children, but a name or other item may have been set on the parent.
      * See {@link #WRAPPER_APP_MARKER}. */
     private static void mergeWrapperParentSpecToChildEntity(EntitySpec<? extends Application> wrapperParent, EntitySpec<?> wrappedChild) {
-        if (Strings.isNonEmpty(wrapperParent.getDisplayName()))
+        if (Strings.isNonEmpty(wrapperParent.getDisplayName())) {
             wrappedChild.displayName(wrapperParent.getDisplayName());
-        if (!wrapperParent.getLocations().isEmpty())
+        }
+        if (!wrapperParent.getLocations().isEmpty()) {
             wrappedChild.locations(wrapperParent.getLocations());
+        }
         if (!wrapperParent.getParameters().isEmpty()) {
             wrappedChild.parameters(wrapperParent.getParameters());
+        }
+        if (wrappedChild.getCatalogItemId()==null) {
+            wrappedChild.catalogItemId(wrapperParent.getCatalogItemId());
         }
 
         // NB: this clobbers child config; might prefer to deeply merge maps etc
@@ -259,8 +264,11 @@ public class EntityManagementUtils {
         wrappedChild.configure(configWithoutWrapperMarker);
         wrappedChild.configure(wrapperParent.getFlags());
         
-        // TODO copying tags to all entities is not ideal;
-        // in particular the BrooklynTags.YAML_SPEC tag will show all entities if the root has multiple
+        // copying tags to all entities may be something the caller wants to control,
+        // e.g. if we're creating a list of entities which will be added,
+        // ignoring the parent Application holder; 
+        // in that case each child's BrooklynTags.YAML_SPEC tag will show all entities;
+        // but in the normal case where we're unwrapping one, it's probably right.
         wrappedChild.tags(wrapperParent.getTags());
     }
 

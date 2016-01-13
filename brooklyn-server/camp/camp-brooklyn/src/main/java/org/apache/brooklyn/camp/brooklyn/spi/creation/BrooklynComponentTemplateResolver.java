@@ -212,8 +212,9 @@ public class BrooklynComponentTemplateResolver {
             }
         }
 
-        if (source!=null)
+        if (source!=null) {
             spec.tag(BrooklynTags.newYamlSpecTag(source));
+        }
 
         if (!Strings.isBlank(name))
             spec.displayName(name);
