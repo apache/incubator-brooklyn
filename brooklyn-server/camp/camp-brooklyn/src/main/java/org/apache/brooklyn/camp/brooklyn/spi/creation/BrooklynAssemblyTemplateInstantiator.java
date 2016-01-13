@@ -40,6 +40,7 @@ import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpecInstantiator {
@@ -89,6 +90,16 @@ public class BrooklynAssemblyTemplateInstantiator implements AssemblyTemplateSpe
         // first build the children into an empty shell app
         List<EntitySpec<?>> childSpecs = createServiceSpecs(template, platform, loader, encounteredTypeSymbolicNames);
         for (EntitySpec<?> childSpec : childSpecs) {
+            
+            if (Application.class.isAssignableFrom(childSpec.getType())) {
+                EntitySpec<? extends Application> appSpec = (EntitySpec<? extends Application>) childSpec;
+                if (EntityManagementUtils.canPromoteChildrenInWrappedApplication(appSpec)) {
+                    EntitySpec<?> appChildSpec = Iterables.getOnlyElement(appSpec.getChildren());
+                    EntityManagementUtils.mergeWrapperParentSpecToChildEntity(appSpec, appChildSpec);
+                    childSpec = appChildSpec;
+                }
+            }
+
             app.child(childSpec);
         }
 
