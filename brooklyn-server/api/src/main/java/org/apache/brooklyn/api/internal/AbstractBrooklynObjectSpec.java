@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
@@ -107,8 +108,14 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
         return self();
     }
     
+    /** adds the given parameters */
     public SpecT parameters(List<? extends SpecParameter<?>> parameters) {
-        this.parameters = ImmutableList.copyOf(checkNotNull(parameters, "parameters"));
+        // parameters follows immutable pattern, unlike the other fields
+        Builder<SpecParameter<?>> result = ImmutableList.<SpecParameter<?>>builder();
+        if (this.parameters!=null)
+            result.addAll(this.parameters);
+        result.addAll( checkNotNull(parameters, "parameters") );
+        this.parameters = result.build();
         return self();
     }
 
