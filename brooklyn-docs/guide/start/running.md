@@ -31,13 +31,13 @@ Firstly, download and install:
  * [Vagrant](http://www.vagrantup.com/downloads){:target="_blank"}
  * [Oracle VirtualBox](https://www.virtualbox.org/wiki/Downloads){:target="_blank"}
  
-Then download the default Apache Brooklyn vagrant configuration from [here](http://someurl){:target="_blank"}. This configuration contains everything you need to get started using Apache Brooklyn.
+Then download the default Apache Brooklyn vagrant configuration from [here](https://github.com/johnmccabe/vagrant-brooklyn-getting-started/archive/master.tar.gz){:target="_blank"}. This configuration contains everything you need to get started using Apache Brooklyn.
 
-Extract the `tar.gz` archive and navigate into the expanded `apache-brooklyn-vagrant-{{ site.brooklyn-version }}` folder
+Extract the `tar.gz` archive and navigate into the expanded `vagrant-brooklyn-getting-started-master` folder
 
 {% highlight bash %}
-$ tar xvf apache-brooklyn-vagrant-{{ site.brooklyn-version }}.tar.gz
-$ cd xvf apache-brooklyn-vagrant-{{ site.brooklyn-version }}
+$ tar xvf master.tar.gz
+$ cd vagrant-brooklyn-getting-started-master
 {% endhighlight %}
 
 
