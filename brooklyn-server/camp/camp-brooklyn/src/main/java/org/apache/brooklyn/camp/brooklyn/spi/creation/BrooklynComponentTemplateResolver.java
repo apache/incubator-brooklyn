@@ -169,6 +169,7 @@ public class BrooklynComponentTemplateResolver {
             }
             throw new IllegalStateException("Unable to create spec for type " + type + ". " + msgDetails);
         }
+        spec = EntityManagementUtils.unwrapEntity(spec);
 
         populateSpec(spec, encounteredRegisteredTypeSymbolicNames);
 
