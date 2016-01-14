@@ -38,6 +38,7 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -108,14 +109,35 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
         return self();
     }
     
-    /** adds the given parameters */
+    // TODO which semantics are correct? replace has been the behaviour;
+    // add breaks tests and adds unwanted parameters,
+    // but replacing will cause some desired parameters to be lost.
+    // i (AH) think ideally the caller should remove any parameters which
+    // have been defined as config keys, and then add the others;
+    // or actually we should always add, since this is really defining the config keys,
+    // and maybe extend the SpecParameter object to be able to advertise whether
+    // it is a CatalogConfig or merely a config key, maybe introducing displayable, or even priority 
+    // (but note part of the reason for CatalogConfig.priority is that java reflection doesn't preserve field order) .
+    // see also comments on the camp SpecParameterResolver.
+    @Beta
     public SpecT parameters(List<? extends SpecParameter<?>> parameters) {
+        return parametersReplace(parameters);
+    }
+    /** adds the given parameters */
+    @Beta
+    public SpecT parametersAdd(List<? extends SpecParameter<?>> parameters) {
         // parameters follows immutable pattern, unlike the other fields
         Builder<SpecParameter<?>> result = ImmutableList.<SpecParameter<?>>builder();
         if (this.parameters!=null)
             result.addAll(this.parameters);
         result.addAll( checkNotNull(parameters, "parameters") );
         this.parameters = result.build();
+        return self();
+    }
+    /** replaces parameters with the given */
+    @Beta
+    public SpecT parametersReplace(List<? extends SpecParameter<?>> parameters) {
+        this.parameters = ImmutableList.copyOf( checkNotNull(parameters, "parameters") );
         return self();
     }
 

@@ -251,7 +251,8 @@ public class EntityManagementUtils {
         
         wrappedChild.locations(wrapperParent.getLocations());
         
-        wrappedChild.parameters(wrapperParent.getParameters());
+        if (!wrapperParent.getParameters().isEmpty())
+            wrappedChild.parametersReplace(wrapperParent.getParameters());
         
         if (wrappedChild.getCatalogItemId()==null) {
             wrappedChild.catalogItemId(wrapperParent.getCatalogItemId());
@@ -302,12 +303,18 @@ public class EntityManagementUtils {
      * @see #WRAPPER_APP_MARKER for an overview */
     public static boolean canUnwrapEntity(EntitySpec<? extends Entity> spec) {
         return isWrapperApp(spec) && hasSingleChild(spec) &&
-            //equivalent to no keys starting with "brooklyn."
+            // these "brooklyn.*" items on the app rather than the child absolutely prevent unwrapping
+            // as their semantics could well be different whether they are on the parent or the child
             spec.getEnrichers().isEmpty() &&
             spec.getEnricherSpecs().isEmpty() &&
             spec.getInitializers().isEmpty() &&
             spec.getPolicies().isEmpty() &&
-            spec.getPolicySpecs().isEmpty();
+            spec.getPolicySpecs().isEmpty() &&
+            // these items prevent merge only if they are defined at both levels
+            (spec.getLocations().isEmpty() || Iterables.getOnlyElement(spec.getChildren()).getLocations().isEmpty())
+            // TODO what should we do with parameters? currently clobbers due to EntitySpec.parameters(...) behaviour.
+//            && (spec.getParameters().isEmpty() || Iterables.getOnlyElement(spec.getChildren()).getParameters().isEmpty())
+            ;
     }
     /** @deprecated since 0.9.0 use {@link #canUnwrapEntity(EntitySpec)} */ @Deprecated
     public static boolean canPromoteChildrenInWrappedApplication(EntitySpec<? extends Application> spec) {
