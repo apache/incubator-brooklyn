@@ -20,7 +20,6 @@ package org.apache.brooklyn.policy.autoscaling;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import groovy.lang.Closure;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -30,8 +29,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -55,12 +52,16 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import groovy.lang.Closure;
 
 
 /**
@@ -869,6 +870,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
         onNewUnboundedPoolSize(desiredSizeUnconstrained);
     }
 
+    private int applyMinMaxConstraints(long desiredSize) {
+        return applyMinMaxConstraints(desiredSize > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)desiredSize);
+    }
+    
     private int applyMinMaxConstraints(int desiredSize) {
         int minSize = getMinPoolSize();
         int maxSize = getMaxPoolSize();
@@ -1014,40 +1019,42 @@ public class AutoScalerPolicy extends AbstractPolicy {
     }
 
     private void resizeNow() {
-        final long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
+        final int currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
         CalculatedDesiredPoolSize calculatedDesiredPoolSize = calculateDesiredPoolSize(currentPoolSize);
-        final long desiredPoolSize = calculatedDesiredPoolSize.size;
+        long desiredPoolSize = calculatedDesiredPoolSize.size;
         boolean stable = calculatedDesiredPoolSize.stable;
+        
+        final int targetPoolSize = applyMinMaxConstraints(desiredPoolSize);
         
         if (!stable) {
             // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
             // even if no additional events have been received
             // (note we continue now with as "good" a resize as we can given the instability)
             if (LOG.isTraceEnabled()) LOG.trace("{} re-scheduling resize check for {}, as desired size not stable (current {}, desired {}); continuing with resize...", 
-                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
+                    new Object[] {this, poolEntity, currentPoolSize, targetPoolSize});
             scheduleResize();
         }
-        if (currentPoolSize == desiredPoolSize) {
+        if (currentPoolSize == targetPoolSize) {
             if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} to {}", 
-                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
+                    new Object[] {this, poolEntity, currentPoolSize, targetPoolSize});
             return;
         }
         
         if (LOG.isDebugEnabled()) LOG.debug("{} requesting resize to {}; current {}, min {}, max {}", 
-                new Object[] {this, desiredPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
+                new Object[] {this, targetPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
         
         Entities.submit(entity, Tasks.<Void>builder().displayName("Auto-scaler")
-            .description("Auto-scaler recommending resize from "+currentPoolSize+" to "+desiredPoolSize)
+            .description("Auto-scaler recommending resize from "+currentPoolSize+" to "+targetPoolSize)
             .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
             .body(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     // TODO Should we use int throughout, rather than casting here?
                     try {
-                        getResizeOperator().resize(poolEntity, (int) desiredPoolSize);
+                        getResizeOperator().resize(poolEntity, (int) targetPoolSize);
                     } catch (Resizable.InsufficientCapacityException e) {
                         // cannot resize beyond this; set the high-water mark
-                        int insufficientCapacityHighWaterMark = (currentPoolSize > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)currentPoolSize);
+                        int insufficientCapacityHighWaterMark = getCurrentSizeOperator().apply(poolEntity);
                         LOG.warn("{} failed to resize {} due to insufficient capacity; setting high-water mark to {}, "
                                 + "and will not attempt to resize above that level again", 
                                 new Object[] {AutoScalerPolicy.this, poolEntity, insufficientCapacityHighWaterMark});

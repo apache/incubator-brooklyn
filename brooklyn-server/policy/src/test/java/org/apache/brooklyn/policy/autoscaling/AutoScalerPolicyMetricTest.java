@@ -36,6 +36,7 @@ import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestCluster;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -274,7 +275,7 @@ public class AutoScalerPolicyMetricTest {
     @Test(groups="Integration")
     public void testOnFailedGrowWillSetHighwaterMarkAndNotResizeAboveThatAgain() {
         tc = app.createAndManageChild(EntitySpec.create(TestCluster.class)
-                .configure("initialSize", 1)
+                .configure("initialSize", 0)
                 .configure(TestCluster.MAX_SIZE, 2));
 
         tc.resize(1);
@@ -316,5 +317,36 @@ public class AutoScalerPolicyMetricTest {
         Asserts.succeedsEventually(ImmutableMap.of("timeout", SHORT_WAIT_MS), currentSizeAsserter(tc, 2));
         assertEquals(tc.getDesiredSizeHistory(), ImmutableList.of(1, 2, 3, 1, 2), "desired="+tc.getDesiredSizeHistory());
         assertEquals(tc.getSizeHistory(), ImmutableList.of(0, 1, 2, 1, 2), "sizes="+tc.getSizeHistory());
+    }
+    
+    // When there is a resizeUpStabilizationDelay, it remembers all the previously requested sizes (in the recent history)
+    // and then looks at those in the stabilization-delay to determine the sustained desired. This test checks that
+    // we apply the highwater-mark even when the desired size had been recorded prior to the highwater mark being
+    // discovered.
+    @Test(groups="Integration")
+    public void testOnFailedGrowWithStabilizationDelayWillSetHighwaterMarkAndNotResizeAboveThatAgain() throws Exception {
+        tc = app.createAndManageChild(EntitySpec.create(TestCluster.class)
+                .configure("initialSize", 0)
+                .configure(TestCluster.MAX_SIZE, 2));
+
+        tc.resize(1);
+        
+        tc.policies().add(AutoScalerPolicy.builder()
+                .metric(MY_ATTRIBUTE)
+                .metricLowerBound(50)
+                .metricUpperBound(100)
+                .resizeUpStabilizationDelay(Duration.ONE_SECOND)
+                .buildSpec());
+        
+        // workload 200 so requires doubling size to 2 to handle: (200*1)/100 = 2
+        for (int i = 0; i < 10; i++) {
+            tc.sensors().set(MY_ATTRIBUTE, 200 + (i*100));
+            Thread.sleep(100);
+        }
+        
+        Asserts.succeedsEventually(currentSizeAsserter(tc, 2));
+        Asserts.succeedsContinually(currentSizeAsserter(tc, 2));
+        assertEquals(tc.getDesiredSizeHistory(), ImmutableList.of(1, 2, 3), "desired="+tc.getDesiredSizeHistory());
+        assertEquals(tc.getSizeHistory(), ImmutableList.of(0, 1, 2), "sizes="+tc.getSizeHistory());
     }
 }
