@@ -99,7 +99,7 @@
         <fasterxml.jackson.version>2.4.5</fasterxml.jackson.version>  <!-- more recent jackson, but not compatible with old annotations! -->
         <jersey.version>1.19</jersey.version>
         <httpclient.version>4.4.1</httpclient.version>
-        <commons-lang3.version>3.1</commons-lang3.version>
+        <commons-lang3.version>3.3.2</commons-lang3.version>
         <groovy.version>2.3.7</groovy.version> <!-- Version supported by https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-2.9.1-Release-Notes -->
         <jsr305.version>2.0.1</jsr305.version>
         <snakeyaml.version>1.11</snakeyaml.version>
