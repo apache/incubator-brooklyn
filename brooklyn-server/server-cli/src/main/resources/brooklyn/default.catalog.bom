@@ -181,6 +181,8 @@ brooklyn.catalog:
         brooklyn.config:
           my.message:   $brooklyn:formatString("connected to Riak at %s",
                             $brooklyn:entity("riak-cluster").attributeWhenReady("main.uri"))
+        # and clear the location defined there so it is taken from this template
+        locations:      []
                             
       # use the off-the-shelf Riak cluster
       - type:           org.apache.brooklyn.entity.nosql.riak.RiakCluster
@@ -240,6 +242,8 @@ brooklyn.catalog:
               # and a lot of sensors defined
               type:           2-bash-web-server-template
               name:           My Bash Web Server VM with Sensors
+              # and clear the location defined there so it is taken from this template
+              locations:      []
               
               brooklyn.config:
                 my.message:   "part of the cluster"

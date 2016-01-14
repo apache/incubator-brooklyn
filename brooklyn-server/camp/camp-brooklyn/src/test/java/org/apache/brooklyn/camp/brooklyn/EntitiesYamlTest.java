@@ -60,6 +60,8 @@ import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +102,6 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         setupAndCheckTestEntityInBasicYamlWith();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynConfig() throws Exception {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
@@ -113,6 +114,17 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             "      - dogs",
             "      - cats",
             "      - badgers",
+            "    test.confSetPlain: !!set",
+            "      ? square",
+            "      ? circle",
+            "      ? triangle",
+            "    test.confMapThing:",
+            "      foo: bar",
+            "      baz: qux",
+            "    test.confListThing:",
+            "      - dogs",
+            "      - cats",
+            "      - badgers",
             "    test.confSetThing: !!set",
             "      ? square",
             "      ? circle",
@@ -120,14 +132,13 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             "    test.confObject: 5");
         
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Test Entity Name");
-        List<String> list = testEntity.getConfig(TestEntity.CONF_LIST_PLAIN);
-        Assert.assertEquals(list, ImmutableList.of("dogs", "cats", "badgers"));
-        Map<String, String> map = testEntity.getConfig(TestEntity.CONF_MAP_PLAIN);
-        Assert.assertEquals(map, ImmutableMap.of("foo", "bar", "baz", "qux"));
-        Set<String> set = (Set<String>)testEntity.getConfig(TestEntity.CONF_SET_THING);
-        Assert.assertEquals(set, ImmutableSet.of("square", "circle", "triangle"));
-        Object object = testEntity.getConfig(TestEntity.CONF_OBJECT);
-        Assert.assertEquals(object, 5);
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_OBJECT), 5);
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_LIST_PLAIN), ImmutableList.of("dogs", "cats", "badgers"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_MAP_PLAIN), ImmutableMap.of("foo", "bar", "baz", "qux"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_SET_PLAIN), ImmutableSet.of("square", "circle", "triangle"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("dogs", "cats", "badgers"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_MAP_THING), ImmutableMap.of("foo", "bar", "baz", "qux"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_SET_THING), ImmutableSet.of("square", "circle", "triangle"));
     }
 
     @Test
@@ -592,7 +603,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity);
-        Assert.assertEquals(entity.getLocations().size(), 1);
+        Assert.assertEquals(entity.getLocations().size(), 0);
     }
 
     @Test
@@ -631,7 +642,8 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity);
-        Assert.assertEquals(entity.getLocations().size(), 2);
+        // 2016-01 locations now not set on entity unless explicitly passed to "start" 
+        Assert.assertEquals(entity.getLocations().size(), 0);
     }
 
     @Test
@@ -661,6 +673,26 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml",  
             "  location: localhost:(name=localhost name)",
             "location: byon:(hosts=\"1.1.1.1\", name=byon name)"));
+        waitForApplicationTasks(app);
+        Assert.assertEquals(app.getLocations().size(), 1);
+        Assert.assertEquals(app.getChildren().size(), 1);
+        Entity entity = app.getChildren().iterator().next();
+        
+        Assert.assertEquals(entity.getLocations().size(), 1);
+        Iterator<Location> entityLocationIterator = entity.getLocations().iterator();
+        Assert.assertEquals(entityLocationIterator.next().getDisplayName(), "localhost name");
+        
+        Location appLocation = app.getLocations().iterator().next();
+        Assert.assertEquals(appLocation.getDisplayName(), "byon name");
+    }
+
+    @Test
+    public void testWithEntityLocationsAndStartInLocation() throws Exception {
+        Entity app = createAndStartApplication(Streams.readFully(loadYaml("test-entity-basic-template.yaml",  
+            "  location: localhost:(name=localhost name)")),
+            // must pass as JSON list because otherwise the comma confuses the list parser
+            MutableMap.of("locations", "[ "+JavaStringEscapes.wrapJavaString(
+                "byon:(hosts=\"1.1.1.1\", name=\"byon name\")")+" ]") );
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getLocations().size(), 1);
         Assert.assertEquals(app.getChildren().size(), 1);

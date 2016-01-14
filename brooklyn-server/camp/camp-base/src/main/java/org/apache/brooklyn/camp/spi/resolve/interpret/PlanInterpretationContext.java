@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.brooklyn.camp.spi.resolve.PlanInterpreter;
+import org.apache.brooklyn.util.collections.MutableMap;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class PlanInterpretationContext {
 
@@ -34,7 +34,7 @@ public class PlanInterpretationContext {
 
     public PlanInterpretationContext(Map<String,?> originalDeploymentPlan, List<PlanInterpreter> interpreters) {
         super();
-        this.originalDeploymentPlan = ImmutableMap.copyOf(originalDeploymentPlan);
+        this.originalDeploymentPlan = MutableMap.copyOf(originalDeploymentPlan).asUnmodifiable();
         this.interpreters = ImmutableList.copyOf(interpreters);
         this.allInterpreter = new PlanInterpreter() {
             @Override

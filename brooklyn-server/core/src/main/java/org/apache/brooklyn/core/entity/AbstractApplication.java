@@ -38,6 +38,8 @@ import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Users can extend this to define the entities in their application, and the relationships between
  * those entities. Users should override the {@link #init()} method, and in there should create 
@@ -143,7 +145,8 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
     @Override
     public void start(Collection<? extends Location> locations) {
         this.addLocations(locations);
-        Collection<? extends Location> locationsToUse = getLocations();
+        // 2016-01: only pass locations passed to us, as per ML discussion
+        Collection<? extends Location> locationsToUse = locations==null ? ImmutableSet.<Location>of() : locations;
         ServiceProblemsLogic.clearProblemsIndicator(this, START);
         ServiceStateLogic.ServiceNotUpLogic.updateNotUpIndicator(this, Attributes.SERVICE_STATE_ACTUAL, "Application starting");
         setExpectedStateAndRecordLifecycleEvent(Lifecycle.STARTING);

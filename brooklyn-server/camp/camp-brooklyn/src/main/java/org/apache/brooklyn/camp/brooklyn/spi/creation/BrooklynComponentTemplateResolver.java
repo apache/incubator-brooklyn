@@ -49,6 +49,7 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
+import org.apache.brooklyn.core.mgmt.EntityManagementUtils;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.classloading.JavaBrooklynClassLoadingContext;
 import org.apache.brooklyn.core.resolve.entity.EntitySpecResolver;
@@ -168,6 +169,7 @@ public class BrooklynComponentTemplateResolver {
             }
             throw new IllegalStateException("Unable to create spec for type " + type + ". " + msgDetails);
         }
+        spec = EntityManagementUtils.unwrapEntity(spec);
 
         populateSpec(spec, encounteredRegisteredTypeSymbolicNames);
 
@@ -207,12 +209,13 @@ public class BrooklynComponentTemplateResolver {
                 // encounteredRegisteredTypeIds must contain the items currently being loaded (the dependency chain),
                 // but not parent items in this type already resolved.
                 EntitySpec<? extends Entity> childSpec = entityResolver.resolveSpec(encounteredRegisteredTypeIds);
-                spec.child(childSpec);
+                spec.child(EntityManagementUtils.unwrapEntity(childSpec));
             }
         }
 
-        if (source!=null)
+        if (source!=null) {
             spec.tag(BrooklynTags.newYamlSpecTag(source));
+        }
 
         if (!Strings.isBlank(name))
             spec.displayName(name);
@@ -221,9 +224,13 @@ public class BrooklynComponentTemplateResolver {
         if (planId != null)
             spec.configure(BrooklynCampConstants.PLAN_ID, planId);
 
-        List<Location> childLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(attrs.getAllConfig(), true);
-        if (childLocations != null)
-            spec.locations(childLocations);
+        List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(attrs.getAllConfig(), true);
+        if (locations != null) {
+            // override locations defined in the type if locations are specified here
+            // empty list can be used by caller to clear, so they are inherited
+            spec.clearLocations();
+            spec.locations(locations);
+        }
 
         decorateSpec(spec, encounteredRegisteredTypeIds);
     }
@@ -326,7 +333,7 @@ public class BrooklynComponentTemplateResolver {
             if (input instanceof Map)
                 return transformSpecialFlags((Map<?, ?>)input);
             else if (input instanceof Set<?>)
-                return MutableSet.of(transformSpecialFlags((Iterable<?>)input));
+                return MutableSet.copyOf(transformSpecialFlags((Iterable<?>)input));
             else if (input instanceof List<?>)
                 return MutableList.copyOf(transformSpecialFlags((Iterable<?>)input));
             else if (input instanceof Iterable<?>)
@@ -365,7 +372,9 @@ public class BrooklynComponentTemplateResolver {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> resolvedConfig = (Map<String, Object>)transformSpecialFlags(specConfig.getSpecConfiguration());
                 specConfig.setSpecConfiguration(resolvedConfig);
-                return Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(encounteredRegisteredTypeIds);
+                EntitySpec<?> entitySpec = Factory.newInstance(getLoader(), specConfig.getSpecConfiguration()).resolveSpec(encounteredRegisteredTypeIds);
+                
+                return EntityManagementUtils.unwrapEntity(entitySpec);
             }
             if (flag instanceof ManagementContextInjectable) {
                 log.debug("Injecting Brooklyn management context info object: {}", flag);

@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.text.Strings;
 
 import com.google.common.base.Predicate;
@@ -324,7 +325,23 @@ public class Exceptions {
             return new CompoundRuntimeException(prefix, exceptions);
         }
         if (Strings.isBlank(prefix)) return new CompoundRuntimeException(exceptions.size()+" errors, including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
-        return new CompoundRuntimeException(prefix+", "+exceptions.size()+" errors including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
+        return new CompoundRuntimeException(prefix+"; "+exceptions.size()+" errors including: " + Exceptions.collapseText(exceptions.iterator().next()), exceptions);
+    }
+
+    /** Some throwables require a prefix for the message to make sense,
+     * for instance NoClassDefFoundError's message is often just the type.
+     */
+    public static boolean isPrefixImportant(Throwable t) {
+        if (t instanceof NoClassDefFoundError) return true;
+        return false;
+    }
+
+    /** For {@link Throwable} instances where know {@link #isPrefixImportant(Throwable)},
+     * this returns a nice message for use as a prefix; otherwise this returns the class name.
+     * Callers should typically suppress the prefix if {@link #isPrefixBoring(Throwable)} is true. */
+    public static String getPrefixText(Throwable t) {
+        if (t instanceof NoClassDefFoundError) return "Type not found";
+        return JavaClassNames.cleanSimpleClassName(t);
     }
 
 }

@@ -186,6 +186,9 @@ public abstract class BrooklynEntityDecorationResolver<DT> {
         @Override
         public void decorate(EntitySpec<?> entitySpec, ConfigBag attrs) {
             List<? extends SpecParameter<?>> explicitParams = buildListOfTheseDecorationsFromEntityAttributes(attrs);
+            // TODO see discussion at EntitySpec.parameters; 
+            // maybe we should instead inherit always, or 
+            // inherit except where it is set as config and then add the new explicit ones
             if (!explicitParams.isEmpty()) {
                 entitySpec.parameters(explicitParams);
             }

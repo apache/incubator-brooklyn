@@ -124,7 +124,12 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         Map<String,Object> result = MutableMap.of();
         
         for (CatalogItem<?,?> item: items) {
-            result.put(item.getId(), CatalogTransformer.catalogItemSummary(brooklyn(), item));
+            try {
+                result.put(item.getId(), CatalogTransformer.catalogItemSummary(brooklyn(), item));
+            } catch (Throwable t) {
+                log.warn("Error loading catalog item '"+item+"' (rethrowing): "+t);
+                throw Exceptions.propagate(t);
+            }
         }
         return Response.status(Status.CREATED).entity(result).build();
     }

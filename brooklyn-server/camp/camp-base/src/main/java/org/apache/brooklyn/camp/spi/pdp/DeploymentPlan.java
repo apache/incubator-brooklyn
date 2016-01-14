@@ -22,12 +22,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.commons.lang3.builder.ToStringBuilder;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 public class DeploymentPlan {
 
@@ -107,15 +105,15 @@ public class DeploymentPlan {
     }
     
     public List<Artifact> getArtifacts() {
-        return ImmutableList.copyOf(artifacts);
+        return MutableList.copyOf(artifacts).asUnmodifiable();
     }
 
     public List<Service> getServices() {
-        return ImmutableList.copyOf(services);
+        return MutableList.copyOf(services).asUnmodifiable();
     }
 
     public Map<String, Object> getCustomAttributes() {
-        return ImmutableMap.copyOf(customAttributes);
+        return MutableMap.copyOf(customAttributes).asUnmodifiable();
     }
 
     /**

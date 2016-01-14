@@ -463,8 +463,10 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         PlanInterpreterGuessingType planInterpreter = new PlanInterpreterGuessingType(null, item, sourceYaml, itemType, libraryBundles, result).reconstruct();
         if (!planInterpreter.isResolved()) {
             throw Exceptions.create("Could not resolve item"
-                + (Strings.isNonBlank(id) ? " "+id : Strings.isNonBlank(symbolicName) ? " "+symbolicName : Strings.isNonBlank(name) ? name : "")
-                // better not to show yaml, takes up lots of space, and with multiple plan transformers there might be multiple errors 
+                + (Strings.isNonBlank(id) ? " '"+id+"'" : Strings.isNonBlank(symbolicName) ? " '"+symbolicName+"'" : Strings.isNonBlank(name) ? " '"+name+"'" : "")
+                // better not to show yaml, takes up lots of space, and with multiple plan transformers there might be multiple errors; 
+                // some of the errors themselves may reproduce it
+                // (ideally in future we'll be able to return typed errors with caret position of error)
 //                + ":\n"+sourceYaml
                 , planInterpreter.getErrors());
         }

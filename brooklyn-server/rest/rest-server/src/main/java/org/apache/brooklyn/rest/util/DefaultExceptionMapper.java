@@ -93,9 +93,12 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
             }
         }
         
-        Builder rb = ApiError.builderFromThrowable(Exceptions.collapse(throwable2));
+        Throwable throwable3 = Exceptions.collapse(throwable2);
+        Builder rb = ApiError.builderFromThrowable(throwable3);
         if (Strings.isBlank(rb.getMessage()))
             rb.message("Internal error. Contact server administrator to consult logs for more details.");
+        if (Exceptions.isPrefixImportant(throwable3))
+            rb.message(Exceptions.getPrefixText(throwable3)+": "+rb.getMessage());
         return rb.build().asResponse(Status.INTERNAL_SERVER_ERROR, MediaType.APPLICATION_JSON_TYPE);
     }
 }

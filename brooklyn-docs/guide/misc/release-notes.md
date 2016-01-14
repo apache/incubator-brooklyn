@@ -36,6 +36,16 @@ have been moved to brooklyn-utils-common, in package org.apache.brooklyn.util.
 Classes such as HttpFeed that previously returned org.apache.brooklyn.util.core.http.HttpToolResponse in some methods now 
 return org.apache.brooklyn.util.HttpToolResponse.
 
+2. **Major:** Locations set in YAML or on a spec are no longer passed to `child.start(...)` by `AbstractApplication`;
+this has no effect in most cases as `SoftwareProcess.start` looks at local and inherited locations, but in ambiguous cases
+it means that locally defined locations are now preferred. Other classes of entities may need to do similar behaviour,
+and it means that calls to `Entity.getLocations()` in some cases will not show parent locations,
+unless discovered and set locally e.g. `start()`. The new method `Entities.getAllInheritedLocations(Entity)`
+can be used to traverse the hierarchy.  It also means that when a type in the registry (catalog) includes a location,
+and a caller references it, that location will now take priority over a location defined in a parent.
+Additionally, any locations specified in YAML extending the registered type will now *replace* locations on the referenced type;
+this means in many cases an explicit `locations: []` when extending a type will cause locations to be taken from the
+parent or application root in YAML.      
+
 For changes in prior versions, please refer to the release notes for 
 [0.8.0](/v/0.8.0-incubating/misc/release-notes.html).
-
