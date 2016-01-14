@@ -102,7 +102,6 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         setupAndCheckTestEntityInBasicYamlWith();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testBrooklynConfig() throws Exception {
         Entity testEntity = setupAndCheckTestEntityInBasicYamlWith( 
@@ -115,6 +114,17 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             "      - dogs",
             "      - cats",
             "      - badgers",
+            "    test.confSetPlain: !!set",
+            "      ? square",
+            "      ? circle",
+            "      ? triangle",
+            "    test.confMapThing:",
+            "      foo: bar",
+            "      baz: qux",
+            "    test.confListThing:",
+            "      - dogs",
+            "      - cats",
+            "      - badgers",
             "    test.confSetThing: !!set",
             "      ? square",
             "      ? circle",
@@ -122,14 +132,13 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             "    test.confObject: 5");
         
         Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_NAME), "Test Entity Name");
-        List<String> list = testEntity.getConfig(TestEntity.CONF_LIST_PLAIN);
-        Assert.assertEquals(list, ImmutableList.of("dogs", "cats", "badgers"));
-        Map<String, String> map = testEntity.getConfig(TestEntity.CONF_MAP_PLAIN);
-        Assert.assertEquals(map, ImmutableMap.of("foo", "bar", "baz", "qux"));
-        Set<String> set = (Set<String>)testEntity.getConfig(TestEntity.CONF_SET_THING);
-        Assert.assertEquals(set, ImmutableSet.of("square", "circle", "triangle"));
-        Object object = testEntity.getConfig(TestEntity.CONF_OBJECT);
-        Assert.assertEquals(object, 5);
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_OBJECT), 5);
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_LIST_PLAIN), ImmutableList.of("dogs", "cats", "badgers"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_MAP_PLAIN), ImmutableMap.of("foo", "bar", "baz", "qux"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_SET_PLAIN), ImmutableSet.of("square", "circle", "triangle"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_LIST_THING), ImmutableList.of("dogs", "cats", "badgers"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_MAP_THING), ImmutableMap.of("foo", "bar", "baz", "qux"));
+        Assert.assertEquals(testEntity.getConfig(TestEntity.CONF_SET_THING), ImmutableSet.of("square", "circle", "triangle"));
     }
 
     @Test

@@ -333,7 +333,7 @@ public class BrooklynComponentTemplateResolver {
             if (input instanceof Map)
                 return transformSpecialFlags((Map<?, ?>)input);
             else if (input instanceof Set<?>)
-                return MutableSet.of(transformSpecialFlags((Iterable<?>)input));
+                return MutableSet.copyOf(transformSpecialFlags((Iterable<?>)input));
             else if (input instanceof List<?>)
                 return MutableList.copyOf(transformSpecialFlags((Iterable<?>)input));
             else if (input instanceof Iterable<?>)

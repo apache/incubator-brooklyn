@@ -258,7 +258,7 @@ public class EntityManagementUtils {
             wrappedChild.catalogItemId(wrapperParent.getCatalogItemId());
         }
 
-        // NB: this clobber's child config; might prefer to deeply merge maps etc
+        // NB: this clobber's child config wherever they conflict; might prefer to deeply merge maps etc
         // (or maybe even prevent the merge in these cases; 
         // not sure there is a compelling reason to have config on a pure-wrapper parent)
         Map<ConfigKey<?>, Object> configWithoutWrapperMarker = Maps.filterKeys(wrapperParent.getConfig(), Predicates.not(Predicates.<ConfigKey<?>>equalTo(EntityManagementUtils.WRAPPER_APP_MARKER)));
