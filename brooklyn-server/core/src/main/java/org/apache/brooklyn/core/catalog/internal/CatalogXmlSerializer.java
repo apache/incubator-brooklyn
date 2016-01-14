@@ -36,7 +36,8 @@ public class CatalogXmlSerializer extends XmlSerializer<Object> {
         super(DeserializingClassRenamesProvider.loadDeserializingClassRenames());
         
         xstream.addDefaultImplementation(ArrayList.class, Collection.class);
-        
+       
+        //Doesn't work well for non-standard lists, like Lists.transform results
         xstream.aliasType("list", List.class);
         xstream.aliasType("map", Map.class);
 
