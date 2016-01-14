@@ -55,6 +55,7 @@ import org.apache.brooklyn.util.core.flags.FlagUtils;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.AggregateClassLoader;
+import org.apache.brooklyn.util.javalang.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,6 +100,7 @@ public class InternalEntityFactory extends InternalFactory {
             interfaces.add(spec.getType());
         } else {
             log.warn("EntitySpec declared in terms of concrete type "+spec.getType()+"; should be supplied in terms of interface");
+            interfaces.addAll(Reflections.getAllInterfaces(spec.getType()));
         }
         interfaces.addAll(spec.getAdditionalInterfaces());
         
