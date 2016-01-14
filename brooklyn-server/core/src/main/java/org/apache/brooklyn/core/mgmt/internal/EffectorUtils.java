@@ -149,6 +149,9 @@ public class EffectorUtils {
         }
         if (newArgsNeeded>0)
             throw new IllegalArgumentException("Invalid arguments (missing "+newArgsNeeded+") for effector "+eff+": "+m);
+        if (!m.isEmpty()) {
+            log.warn("Unsupported parameter to "+eff+" (ignoring): "+m);
+        }
         return newArgs.toArray(new Object[newArgs.size()]);
     }
 

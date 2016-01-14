@@ -27,8 +27,6 @@ import org.apache.brooklyn.util.text.StringPredicates;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 /** Helper class for {@link PlanInterpreter} instances, doing the recursive work */
@@ -228,7 +226,7 @@ public class PlanInterpretationNode {
 
     public void immutable() {
         if (!isChanged()) {
-            if (!testCollectionImmutable(getNewValue())) {
+            if (!checkCollectionImmutable(getNewValue())) {
                 // results of Yaml parse are not typically immutable,
                 // so force them to be changed so result of interpretation is immutable
                 changed = true;
@@ -242,19 +240,19 @@ public class PlanInterpretationNode {
     }
     
     private void checkImmutable(Object in) {
-        if (!testCollectionImmutable(in))
+        if (!checkCollectionImmutable(in))
             log.warn("Node original value "+in+" at "+this+" should be immutable");
     }
     
-    private static boolean testCollectionImmutable(Object in) {
-        if (in instanceof Map) return (in instanceof ImmutableMap);
-        if (in instanceof Iterable) return (in instanceof ImmutableList);
+    private static boolean checkCollectionImmutable(Object in) {
+        // not used -- input might now be UnmodifiableMap, as some args might be null, 
+        // and UnmodifiableMap is private :(  ... (and same for list)
         return true;
     }
 
     private static Object immutable(Object in) {
-        if (in instanceof Map) return ImmutableMap.copyOf((Map<?,?>)in);
-        if (in instanceof Iterable) return ImmutableList.copyOf((Iterable<?>)in);
+        if (in instanceof Map) return MutableMap.copyOf((Map<?,?>)in).asUnmodifiable();
+        if (in instanceof Iterable) return MutableList.copyOf((Iterable<?>)in).asUnmodifiable();
         return in;
     }
 

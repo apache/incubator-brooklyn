@@ -60,6 +60,8 @@ import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Functionals;
 import org.apache.brooklyn.util.guava.Maybe;
+import org.apache.brooklyn.util.stream.Streams;
+import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -592,7 +594,7 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity);
-        Assert.assertEquals(entity.getLocations().size(), 1);
+        Assert.assertEquals(entity.getLocations().size(), 0);
     }
 
     @Test
@@ -631,7 +633,8 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Assert.assertEquals(app.getChildren().size(), 1);
         Entity entity = app.getChildren().iterator().next();
         Assert.assertNotNull(entity);
-        Assert.assertEquals(entity.getLocations().size(), 2);
+        // 2016-01 locations now not set on entity unless explicitly passed to "start" 
+        Assert.assertEquals(entity.getLocations().size(), 0);
     }
 
     @Test
@@ -661,6 +664,26 @@ public class EntitiesYamlTest extends AbstractYamlTest {
         Entity app = createAndStartApplication(loadYaml("test-entity-basic-template.yaml",  
             "  location: localhost:(name=localhost name)",
             "location: byon:(hosts=\"1.1.1.1\", name=byon name)"));
+        waitForApplicationTasks(app);
+        Assert.assertEquals(app.getLocations().size(), 1);
+        Assert.assertEquals(app.getChildren().size(), 1);
+        Entity entity = app.getChildren().iterator().next();
+        
+        Assert.assertEquals(entity.getLocations().size(), 1);
+        Iterator<Location> entityLocationIterator = entity.getLocations().iterator();
+        Assert.assertEquals(entityLocationIterator.next().getDisplayName(), "localhost name");
+        
+        Location appLocation = app.getLocations().iterator().next();
+        Assert.assertEquals(appLocation.getDisplayName(), "byon name");
+    }
+
+    @Test
+    public void testWithEntityLocationsAndStartInLocation() throws Exception {
+        Entity app = createAndStartApplication(Streams.readFully(loadYaml("test-entity-basic-template.yaml",  
+            "  location: localhost:(name=localhost name)")),
+            // must pass as JSON list because otherwise the comma confuses the list parser
+            MutableMap.of("locations", "[ "+JavaStringEscapes.wrapJavaString(
+                "byon:(hosts=\"1.1.1.1\", name=\"byon name\")")+" ]") );
         waitForApplicationTasks(app);
         Assert.assertEquals(app.getLocations().size(), 1);
         Assert.assertEquals(app.getChildren().size(), 1);

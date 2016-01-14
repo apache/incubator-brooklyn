@@ -20,6 +20,7 @@ package org.apache.brooklyn.camp.brooklyn;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
@@ -115,11 +116,14 @@ public abstract class AbstractYamlTest {
     }
 
     protected Entity createAndStartApplication(String input) throws Exception {
+        return createAndStartApplication(input, MutableMap.<String,String>of());
+    }
+    protected Entity createAndStartApplication(String input, Map<String,String> startParameters) throws Exception {
         EntitySpec<?> spec = 
             mgmt().getTypeRegistry().createSpecFromPlan(CampTypePlanTransformer.FORMAT, input, RegisteredTypeLoadingContexts.spec(Application.class), EntitySpec.class);
         final Entity app = brooklynMgmt.getEntityManager().createEntity(spec);
         // start the app (happens automatically if we use camp to instantiate, but not if we use crate spec approach)
-        app.invoke(Startable.START, MutableMap.<String,String>of()).get();
+        app.invoke(Startable.START, startParameters).get();
         return app;
     }
 

@@ -30,7 +30,6 @@ import org.apache.brooklyn.util.time.Time;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 /** Superclass of CAMP resource implementation objects.
  * Typically used to hold common state of implementation objects
@@ -91,7 +90,7 @@ public class AbstractResource {
         return representationSkew;
     }
     public Map<String, Object> getCustomAttributes() {
-        return ImmutableMap.copyOf(customAttributes);
+        return MutableMap.copyOf(customAttributes).asUnmodifiable();
     }
     
     // setters

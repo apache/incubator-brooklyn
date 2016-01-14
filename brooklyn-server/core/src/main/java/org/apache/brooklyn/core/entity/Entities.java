@@ -80,6 +80,7 @@ import org.apache.brooklyn.core.objs.BrooklynObjectInternal;
 import org.apache.brooklyn.core.objs.proxy.EntityProxyImpl;
 import org.apache.brooklyn.core.sensor.DependentConfiguration;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.flags.FlagUtils;
@@ -1183,4 +1184,13 @@ public class Entities {
         return root;
     }
 
+    public static Set<Location> getAllInheritedLocations(Entity entity) {
+        Set<Location> result = MutableSet.of();
+        while (entity!=null) {
+            result.addAll(entity.getLocations());
+            entity = entity.getParent();
+        }
+        return result;
+    }
+    
 }

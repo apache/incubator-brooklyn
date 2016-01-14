@@ -32,6 +32,7 @@ import org.apache.brooklyn.api.typereg.OsgiBundleWithUrl;
 import org.apache.brooklyn.api.typereg.RegisteredType;
 import org.apache.brooklyn.camp.brooklyn.AbstractYamlTest;
 import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.mgmt.osgi.OsgiStandaloneTest;
 import org.apache.brooklyn.core.typereg.RegisteredTypePredicates;
 import org.apache.brooklyn.core.typereg.RegisteredTypes;
@@ -187,7 +188,7 @@ public class CatalogYamlLocationTest extends AbstractYamlTest {
             "  - type: org.apache.brooklyn.entity.stock.BasicStartable");
 
         Entity simpleEntity = Iterables.getOnlyElement(app.getChildren());
-        Location location = Iterables.getOnlyElement(simpleEntity.getLocations());
+        Location location = Iterables.getOnlyElement(Entities.getAllInheritedLocations(simpleEntity));
         assertEquals(location.getClass().getName(), locType);
         assertEquals(location.getConfig(new BasicConfigKey<String>(String.class, "config1")), "config1");
         assertEquals(location.getConfig(new BasicConfigKey<String>(String.class, "config2")), "config2 override");
