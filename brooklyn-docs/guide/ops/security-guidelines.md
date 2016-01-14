@@ -40,7 +40,7 @@ configuration" feature. This allows credentials to be retrieved from a store man
 rather than being stored within YAML blueprints or brooklyn.properties.
 
 A secure credential store is strongly recommended, such as use of 
-[HashiCorp's Vault](www.vaultproject.io) - see
+[HashiCorp's Vault](https://www.vaultproject.io) - see
 `org.apache.brooklyn.core.config.external.vault.VaultExternalConfigSupplier`.
 
 
