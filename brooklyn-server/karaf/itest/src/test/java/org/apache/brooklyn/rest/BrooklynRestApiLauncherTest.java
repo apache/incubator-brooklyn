@@ -27,6 +27,7 @@ import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.http.HttpAsserts;
 import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.http.HttpStatus;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
@@ -45,9 +46,10 @@ import org.ops4j.pax.exam.spi.reactors.PerClass;
 
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
+@Ignore // TODO: re-enable after brooklyn is properly initialized within the OSGI environment
 public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixture {
 
-    private static String HTTP_PORT = "9998";
+    private static final String HTTP_PORT = "9998";
 
     @Configuration
     public static Option[] configuration() throws Exception {
