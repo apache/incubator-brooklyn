@@ -336,6 +336,8 @@ brooklyn.catalog:
           # point this load balancer at the cluster, specifying port to forward to
           loadbalancer.serverpool:  $brooklyn:entity("my-web-cluster")
           member.sensor.portNumber: app.port
+          # disable sticky sessions to allow easy validation of balancing via browser refresh
+          nginx.sticky: false
       
       brooklyn.enrichers:
       # publish a few useful info sensors and KPI's to the root of the app
