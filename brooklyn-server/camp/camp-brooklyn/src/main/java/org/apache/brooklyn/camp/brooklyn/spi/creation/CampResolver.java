@@ -139,7 +139,7 @@ class CampResolver {
             return appSpec;
             
         } else {
-            throw new IllegalStateException("Unable to instantiate YAML; incompatible instantiator "+instantiator+" for "+at);
+            throw new IllegalStateException("Unable to instantiate YAML; invalid type or parameters in plan:\n"+plan);
         }
 
     }
