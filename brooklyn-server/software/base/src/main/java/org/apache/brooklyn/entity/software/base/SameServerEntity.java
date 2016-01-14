@@ -18,6 +18,7 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.brooklyn.api.entity.Entity;
@@ -58,6 +59,12 @@ public interface SameServerEntity extends Entity, Startable {
     
     ConfigKey<QuorumCheck> UP_QUORUM_CHECK = ComputeServiceIndicatorsFromChildrenAndMembers.UP_QUORUM_CHECK;
     ConfigKey<QuorumCheck> RUNNING_QUORUM_CHECK = ComputeServiceIndicatorsFromChildrenAndMembers.RUNNING_QUORUM_CHECK;
+
+    ConfigKey<Collection<Integer>> REQUIRED_OPEN_LOGIN_PORTS = SoftwareProcess.REQUIRED_OPEN_LOGIN_PORTS;
+
+    ConfigKey<String> INBOUND_PORTS_CONFIG_REGEX = SoftwareProcess.INBOUND_PORTS_CONFIG_REGEX;
+
+    ConfigKey<Boolean> INBOUND_PORTS_AUTO_INFER = SoftwareProcess.INBOUND_PORTS_AUTO_INFER;
 
     AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
 

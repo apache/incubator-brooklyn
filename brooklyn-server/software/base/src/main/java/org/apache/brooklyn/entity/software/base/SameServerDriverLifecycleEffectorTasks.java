@@ -57,6 +57,7 @@ public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffe
 
     /**
      * @return the ports that this entity wants to use, aggregated for all its child entities.
+     * @see InboundPortsUtils#getRequiredOpenPorts(Entity, Boolean, String)
      */
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> result = Sets.newLinkedHashSet();
@@ -67,31 +68,21 @@ public class SameServerDriverLifecycleEffectorTasks extends MachineLifecycleEffe
 
     /** @return the ports required for a specific child entity */
     protected Collection<Integer> getRequiredOpenPorts(Entity entity) {
-        Set<Integer> ports = MutableSet.of(22);
-        /* TODO: This won't work if there's a port collision, which will cause the corresponding port attribute
-           to be incremented until a free port is found. In that case the entity will use the free port, but the
-           firewall will open the initial port instead. Mostly a problem for SameServerEntity, localhost location.
-        */
-        // TODO: Remove duplication between this and SoftwareProcessImpl.getRequiredOpenPorts
-        final Set<ConfigKey<?>> configKeys = entity.getEntityType().getConfigKeys();
-        for (ConfigKey<?> k: configKeys) {
-            if (PortRange.class.isAssignableFrom(k.getType()) || k.getName().matches(".*\\.port")) {
-                Object value = entity.config().get(k);
-                Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, new TypeToken<PortRange>() {});
-                if (maybePortRange.isPresentAndNonNull()) {
-                    PortRange p = maybePortRange.get();
-                    if (p != null && !p.isEmpty()) {
-                        ports.add(p.iterator().next());
-                    }
-                }
-            }
-        }
+        Set<Integer> ports = MutableSet.of();
+        addRequiredOpenPortsRecursively(entity, ports);
+        return ports;
+    }
+
+    private void addRequiredOpenPortsRecursively(Entity entity, Set<Integer> ports) {
+        ports.addAll(entity.getConfig(SameServerEntity.REQUIRED_OPEN_LOGIN_PORTS));
+        Boolean portsAutoInfer = entity.getConfig(SameServerEntity.INBOUND_PORTS_AUTO_INFER);
+        String portsRegex = entity.getConfig(SameServerEntity.INBOUND_PORTS_CONFIG_REGEX);
+        ports.addAll(InboundPortsUtils.getRequiredOpenPorts(entity, portsAutoInfer, portsRegex));
         LOG.debug("getRequiredOpenPorts detected default {} for {}", ports, entity);
 
         for (Entity child : entity.getChildren()) {
-            ports.addAll(getRequiredOpenPorts(child));
+            addRequiredOpenPortsRecursively(child, ports);
         }
-        return ports;
     }
 
     @SuppressWarnings("unchecked")

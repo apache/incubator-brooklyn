@@ -27,6 +27,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -498,35 +499,19 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         return result.getAllConfigMutable();
     }
 
-    /** returns the ports that this entity wants to use;
-     * default implementation returns {@link SoftwareProcess#REQUIRED_OPEN_LOGIN_PORTS} plus first value 
-     * for each {@link org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey} config key {@link PortRange}
-     * plus any ports defined with a config keys ending in {@code .port}.
+    /**
+     * Returns the ports that this entity wants to be opened.
+     * @see InboundPortsUtils#getRequiredOpenPorts(Entity, Set, Boolean, String)
+     * @see #REQUIRED_OPEN_LOGIN_PORTS
+     * @see #INBOUND_PORTS_AUTO_INFER
+     * @see #INBOUND_PORTS_CONFIG_REGEX
      */
     @SuppressWarnings("serial")
     protected Collection<Integer> getRequiredOpenPorts() {
         Set<Integer> ports = MutableSet.copyOf(getConfig(REQUIRED_OPEN_LOGIN_PORTS));
-        Map<ConfigKey<?>, ?> allConfig = config().getBag().getAllConfigAsConfigKeyMap();
-        Set<ConfigKey<?>> configKeys = Sets.newHashSet(allConfig.keySet());
-        configKeys.addAll(getEntityType().getConfigKeys());
-
-        /* TODO: This won't work if there's a port collision, which will cause the corresponding port attribute
-           to be incremented until a free port is found. In that case the entity will use the free port, but the
-           firewall will open the initial port instead. Mostly a problem for SameServerEntity, localhost location.
-         */
-        for (ConfigKey<?> k: configKeys) {
-            if (PortRange.class.isAssignableFrom(k.getType()) || k.getName().matches(".*\\.port")) {
-                Object value = config().get(k);
-                Maybe<PortRange> maybePortRange = TypeCoercions.tryCoerce(value, new TypeToken<PortRange>() {});
-                if (maybePortRange.isPresentAndNonNull()) {
-                    PortRange p = maybePortRange.get();
-                    if (p != null && !p.isEmpty())
-                        ports.add(p.iterator().next());
-                }
-            }
-        }
-        
-        log.debug("getRequiredOpenPorts detected default {} for {}", ports, this);
+        Boolean portsAutoInfer = getConfig(INBOUND_PORTS_AUTO_INFER);
+        String portsRegex = getConfig(INBOUND_PORTS_CONFIG_REGEX);
+        ports.addAll(InboundPortsUtils.getRequiredOpenPorts(this, config().getBag().getAllConfigAsConfigKeyMap().keySet(), portsAutoInfer, portsRegex));
         return ports;
     }
 
