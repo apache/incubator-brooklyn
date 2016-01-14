@@ -19,6 +19,7 @@
 package org.apache.brooklyn.core.mgmt;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
@@ -85,11 +86,17 @@ public class BrooklynTags {
 
     public static class TraitsTag extends ListTag<String> {
         public TraitsTag(List<Class<?>> interfaces) {
-            super(Lists.transform(interfaces, new Function<Class<?>, String>() {
-                @Override public String apply(Class<?> input) {
-                    return input.getName();
-                }
-            }));
+            // The transformed list is a view, meaning that it references
+            // the instances list. This means that it will serialize 
+            // the list of classes along with the anonymous function which
+            // is not what we want. Force eager evaluation instead, using
+            // a simple list, supported by {@link CatalogXmlSerializer}.
+            super(new ArrayList<String>(
+                Lists.transform(interfaces, new Function<Class<?>, String>() {
+                    @Override public String apply(Class<?> input) {
+                        return input.getName();
+                    }
+                })));
         }
 
         @JsonProperty("traits")

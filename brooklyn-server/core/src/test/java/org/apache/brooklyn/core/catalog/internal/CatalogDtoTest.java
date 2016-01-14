@@ -39,12 +39,14 @@ import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
 import org.apache.brooklyn.core.catalog.internal.CatalogXmlSerializer;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.mgmt.BrooklynTags;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.util.core.BrooklynMavenArtifacts;
 import org.apache.brooklyn.util.maven.MavenRetriever;
+import org.apache.commons.lang3.ClassUtils;
 
 import com.google.common.collect.ImmutableList;
 
@@ -111,6 +113,9 @@ public class CatalogDtoTest {
         testEntitiesJavaCatalog.addEntry(CatalogItemBuilder.newTemplate(TestApplication.class.getCanonicalName(), BasicBrooklynCatalog.NO_VERSION)
                 .displayName("Test App from JAR")
                 .javaType(TestApplication.class.getCanonicalName())
+                .tag(BrooklynTags.newNotesTag("Some notes for catalog testing"))
+                .tag(BrooklynTags.newYamlSpecTag("This is the spec for a test catalog item"))
+                .tag(BrooklynTags.newTraitsTag(ClassUtils.getAllInterfaces(TestApplication.class)))
                 .build());
         testEntitiesJavaCatalog.addEntry(CatalogItemBuilder.newEntity(TestEntity.class.getCanonicalName(), BasicBrooklynCatalog.NO_VERSION)
                 .displayName("Test Entity from JAR")
