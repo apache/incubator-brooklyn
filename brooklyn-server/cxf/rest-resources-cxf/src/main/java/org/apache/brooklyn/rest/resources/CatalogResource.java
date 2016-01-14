@@ -98,14 +98,14 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response createFromMultipart(InputStream uploadedInputStream, UriInfo ui) {
-      return create(Streams.readFullyString(uploadedInputStream), ui);
+    public Response createFromMultipart(InputStream uploadedInputStream) {
+      return create(Streams.readFullyString(uploadedInputStream));
     }
 
     static Set<String> missingIcons = MutableSet.of();
     
     @Override
-    public Response create(String yaml, UriInfo ui) {
+    public Response create(String yaml) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.ADD_CATALOG_ITEM, yaml)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to add catalog item",
                 Entitlements.getEntitlementContext().user());
@@ -226,29 +226,29 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public List<CatalogEntitySummary> listEntities(String regex, String fragment, boolean allVersions, UriInfo ui) {
+    public List<CatalogEntitySummary> listEntities(String regex, String fragment, boolean allVersions) {
         Predicate<CatalogItem<Entity, EntitySpec<?>>> filter =
                 Predicates.and(
                         CatalogPredicates.IS_ENTITY,
                         CatalogPredicates.<Entity, EntitySpec<?>>disabled(false));
-        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions, ui);
+        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions);
         return castList(result, CatalogEntitySummary.class);
     }
 
     @Override
-    public List<CatalogItemSummary> listApplications(String regex, String fragment, boolean allVersions, UriInfo ui) {
+    public List<CatalogItemSummary> listApplications(String regex, String fragment, boolean allVersions) {
         @SuppressWarnings("unchecked")
         Predicate<CatalogItem<Application, EntitySpec<? extends Application>>> filter =
                 Predicates.and(
                         CatalogPredicates.IS_TEMPLATE,
                         CatalogPredicates.<Application,EntitySpec<? extends Application>>deprecated(false),
                         CatalogPredicates.<Application,EntitySpec<? extends Application>>disabled(false));
-        return getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions, ui);
+        return getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions);
     }
 
     @Override
     @Deprecated
-    public CatalogEntitySummary getEntity_0_7_0(String entityId, UriInfo ui) {
+    public CatalogEntitySummary getEntity_0_7_0(String entityId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, entityId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -265,7 +265,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
     
     @Override
-    public CatalogEntitySummary getEntity(String symbolicName, String version, UriInfo ui) {
+    public CatalogEntitySummary getEntity(String symbolicName, String version) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, symbolicName+(Strings.isBlank(version)?"":":"+version))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -286,28 +286,28 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogEntitySummary getApplication_0_7_0(String applicationId, UriInfo ui) throws Exception {
-        return getEntity_0_7_0(applicationId, ui);
+    public CatalogEntitySummary getApplication_0_7_0(String applicationId) throws Exception {
+        return getEntity_0_7_0(applicationId);
     }
 
     @Override
-    public CatalogEntitySummary getApplication(String symbolicName, String version, UriInfo ui) {
-        return getEntity(symbolicName, version, ui);
+    public CatalogEntitySummary getApplication(String symbolicName, String version) {
+        return getEntity(symbolicName, version);
     }
 
     @Override
-    public List<CatalogPolicySummary> listPolicies(String regex, String fragment, boolean allVersions, UriInfo ui) {
+    public List<CatalogPolicySummary> listPolicies(String regex, String fragment, boolean allVersions) {
         Predicate<CatalogItem<Policy, PolicySpec<?>>> filter =
                 Predicates.and(
                         CatalogPredicates.IS_POLICY,
                         CatalogPredicates.<Policy, PolicySpec<?>>disabled(false));
-        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions, ui);
+        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions);
         return castList(result, CatalogPolicySummary.class);
     }
 
     @Override
     @Deprecated
-    public CatalogPolicySummary getPolicy_0_7_0(String policyId, UriInfo ui) {
+    public CatalogPolicySummary getPolicy_0_7_0(String policyId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, policyId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -324,7 +324,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public CatalogPolicySummary getPolicy(String policyId, String version, UriInfo ui) throws Exception {
+    public CatalogPolicySummary getPolicy(String policyId, String version) throws Exception {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, policyId+(Strings.isBlank(version)?"":":"+version))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -342,18 +342,18 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public List<CatalogLocationSummary> listLocations(String regex, String fragment, boolean allVersions, UriInfo ui) {
+    public List<CatalogLocationSummary> listLocations(String regex, String fragment, boolean allVersions) {
         Predicate<CatalogItem<Location, LocationSpec<?>>> filter =
                 Predicates.and(
                         CatalogPredicates.IS_LOCATION,
                         CatalogPredicates.<Location, LocationSpec<?>>disabled(false));
-        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions, ui);
+        List<CatalogItemSummary> result = getCatalogItemSummariesMatchingRegexFragment(filter, regex, fragment, allVersions);
         return castList(result, CatalogLocationSummary.class);
     }
 
     @Override
     @Deprecated
-    public CatalogLocationSummary getLocation_0_7_0(String locationId, UriInfo ui) {
+    public CatalogLocationSummary getLocation_0_7_0(String locationId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, locationId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -370,7 +370,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @Override
-    public CatalogLocationSummary getLocation(String locationId, String version, UriInfo ui) throws Exception {
+    public CatalogLocationSummary getLocation(String locationId, String version) throws Exception {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, locationId+(Strings.isBlank(version)?"":":"+version))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -388,7 +388,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private <T,SpecT> List<CatalogItemSummary> getCatalogItemSummariesMatchingRegexFragment(Predicate<CatalogItem<T,SpecT>> type, String regex, String fragment, boolean allVersions, UriInfo ui) {
+    private <T,SpecT> List<CatalogItemSummary> getCatalogItemSummariesMatchingRegexFragment(Predicate<CatalogItem<T,SpecT>> type, String regex, String fragment, boolean allVersions) {
         List filters = new ArrayList();
         filters.add(type);
         if (Strings.isNonEmpty(regex))

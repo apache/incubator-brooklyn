@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Maps;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 @HaHotStateRequired
@@ -49,8 +50,10 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
 
     private static final Logger log = LoggerFactory.getLogger(PolicyResource.class);
 
+    private @Context UriInfo ui;
+
     @Override
-    public List<PolicySummary> list( final String application, final String entityToken, final UriInfo ui) {
+    public List<PolicySummary> list( final String application, final String entityToken ) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
         return FluentIterable.from(entity.policies())
             .transform(new Function<Policy, PolicySummary>() {
@@ -79,7 +82,7 @@ public class PolicyResource extends AbstractBrooklynRestResource implements Poli
     @SuppressWarnings("unchecked")
     @Override
     public PolicySummary addPolicy( String application,String entityToken, String policyTypeName,
-            Map<String, String> config, UriInfo ui) {
+            Map<String, String> config) {
         Entity entity = brooklyn().getEntity(application, entityToken);
         Class<? extends Policy> policyType;
         try {

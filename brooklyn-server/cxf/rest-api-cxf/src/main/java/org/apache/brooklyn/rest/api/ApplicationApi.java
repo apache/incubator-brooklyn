@@ -45,8 +45,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
 
 @Path("/applications")
 @Api("Applications")
@@ -61,7 +59,7 @@ public interface ApplicationApi {
     )
     /** @deprecated since 0.6.0 use {@link #fetch(String)} (with slightly different, but better semantics) */
     @Deprecated
-    public JsonNode applicationTree(@Context UriInfo ui);
+    public JsonNode applicationTree();
 
     @GET
     @Path("/fetch")
@@ -71,8 +69,7 @@ public interface ApplicationApi {
     public JsonNode fetch(
             @ApiParam(value="Selected additional entity ID's to include, comma-separated", required=false)
             @DefaultValue("")
-            @QueryParam("items") String items,
-            @Context UriInfo ui);
+            @QueryParam("items") String items);
 
     @GET
     @ApiOperation(
@@ -82,8 +79,7 @@ public interface ApplicationApi {
     public List<ApplicationSummary> list(
             @ApiParam(value = "Regular expression to filter by", required = false)
             @DefaultValue(".*")
-            @QueryParam("typeRegex") String typeRegex,
-            @Context UriInfo ui);
+            @QueryParam("typeRegex") String typeRegex);
 
     // would be nice to have this on the API so default type regex not needed, but
     // not yet implemented, as per: https://issues.jboss.org/browse/RESTEASY-798
@@ -104,8 +100,7 @@ public interface ApplicationApi {
             @ApiParam(
                     value = "ID or name of application whose details will be returned",
                     required = true)
-            @PathParam("application") String application,
-            @Context UriInfo ui);
+            @PathParam("application") String application);
 
     @POST
     @Consumes({"application/x-yaml",
@@ -124,8 +119,7 @@ public interface ApplicationApi {
                     name = "applicationSpec",
                     value = "App spec in CAMP YAML format",
                     required = true)
-            String yaml,
-            @Context UriInfo ui);
+            String yaml);
 
     // TODO archives
 //    @Consumes({"application/x-tar", "application/x-tgz", "application/x-zip"})
@@ -145,8 +139,7 @@ public interface ApplicationApi {
                     name = "applicationSpec",
                     value = "App spec in JSON, YAML, or other (auto-detected) format",
                     required = true)
-            byte[] autodetectedInput,
-            @Context UriInfo ui);
+            byte[] autodetectedInput);
 
     @POST
     @Consumes({MediaType.APPLICATION_FORM_URLENCODED})
@@ -163,8 +156,7 @@ public interface ApplicationApi {
                     name = "applicationSpec",
                     value = "App spec in form-encoded YAML, JSON, or other (auto-detected) format",
                     required = true)
-            @Valid String contents,
-            @Context UriInfo ui);
+            @Valid String contents);
 
     @DELETE
     @Path("/{application}")
@@ -180,8 +172,7 @@ public interface ApplicationApi {
                     name = "application",
                     value = "Application name",
                     required = true)
-            @PathParam("application") String application,
-            @Context UriInfo ui);
+            @PathParam("application") String application);
 
     /** @deprecated since 0.7.0 the {@link ApplicationSpec} is being retired in favour of CAMP YAML/ZIP
      * (however in 0.7.0 you can still pass this object as JSON and it will be autodetected) */
@@ -197,7 +188,7 @@ public interface ApplicationApi {
     })
     @Path("/createLegacy")
     @Deprecated
-    public Response create(ApplicationSpec applicationSpec, @Context UriInfo ui);
+    public Response create(ApplicationSpec applicationSpec);
 
     @GET
     @Path("/{application}/descendants")
@@ -211,8 +202,7 @@ public interface ApplicationApi {
             @PathParam("application") String application,
             @ApiParam(value="Regular expression for an entity type which must be matched", required=false)
             @DefaultValue(".*")
-            @QueryParam("typeRegex") String typeRegex,
-            @Context UriInfo ui);
+            @QueryParam("typeRegex") String typeRegex);
 
     @GET
     @Path("/{application}/descendants/sensor/{sensor}")

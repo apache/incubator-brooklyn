@@ -21,6 +21,7 @@ package org.apache.brooklyn.rest.resources;
 import javax.annotation.Nullable;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -42,6 +43,9 @@ public abstract class AbstractBrooklynRestResource implements ManagementContextI
     // most of the time that happens for free, but with test framework it doesn't,
     // so we have set up a NullServletContextProvider in our tests) 
     private @Context ServletContext servletContext;
+
+    protected @Context UriInfo ui;
+
     
     private ManagementContext managementContext;
     private BrooklynRestResourceUtils brooklynRestResourceUtils;

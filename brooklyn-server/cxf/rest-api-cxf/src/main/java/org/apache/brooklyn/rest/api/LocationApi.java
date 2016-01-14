@@ -40,8 +40,6 @@ import org.apache.brooklyn.rest.domain.LocationSummary;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
 
 @SuppressWarnings("deprecation")
 @Path("/locations")
@@ -58,7 +56,7 @@ public interface LocationApi {
             response = org.apache.brooklyn.rest.domain.LocationSummary.class,
             responseContainer = "List")
     @Deprecated
-    public List<LocationSummary> list(@Context UriInfo ui);
+    public List<LocationSummary> list();
 
     // this is here to support the web GUI's circles
     @GET
@@ -80,8 +78,7 @@ public interface LocationApi {
             @PathParam("locationId") String locationId,
             @ApiParam(value = "Whether full (inherited) config should be compiled", required = false)
             @DefaultValue("false")
-            @QueryParam("full") String fullConfig,
-            @Context UriInfo ui);
+            @QueryParam("full") String fullConfig);
 
     /** @deprecated since 0.7.0 use {@link CatalogApi#create(String)} with a location definition */
     @POST
@@ -89,8 +86,7 @@ public interface LocationApi {
     @Deprecated
     public Response create(
             @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
-            @Valid LocationSpec locationSpec,
-            @Context UriInfo ui);
+            @Valid LocationSpec locationSpec);
 
     /**
      * @deprecated since 0.7.0; use {@link CatalogApi#deleteLocation(String, String)}

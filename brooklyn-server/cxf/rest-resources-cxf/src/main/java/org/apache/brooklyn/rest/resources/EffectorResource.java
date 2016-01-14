@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
-import javax.ws.rs.core.UriInfo;
 
 @HaHotStateRequired
 public class EffectorResource extends AbstractBrooklynRestResource implements EffectorApi {
@@ -56,7 +55,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
     private static final Logger log = LoggerFactory.getLogger(EffectorResource.class);
 
     @Override
-    public List<EffectorSummary> list(final String application, final String entityToken, final UriInfo ui) {
+    public List<EffectorSummary> list(final String application, final String entityToken) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
         return FluentIterable
                 .from(entity.getEntityType().getEffectors())
@@ -78,7 +77,7 @@ public class EffectorResource extends AbstractBrooklynRestResource implements Ef
 
     @Override
     public Response invoke(String application, String entityToken, String effectorName,
-            String timeout, Map<String, Object> parameters, UriInfo ui) {
+            String timeout, Map<String, Object> parameters) {
         final Entity entity = brooklyn().getEntity(application, entityToken);
 
         // TODO check effectors?

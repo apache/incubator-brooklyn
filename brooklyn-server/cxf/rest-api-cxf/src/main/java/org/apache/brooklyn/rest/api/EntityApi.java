@@ -34,8 +34,6 @@ import javax.ws.rs.core.Response;
 
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
 
 @Path("/applications/{application}/entities")
 @Api("Entities")
@@ -52,8 +50,7 @@ public interface EntityApi {
     })
     public List<EntitySummary> list(
             @ApiParam(value = "Application ID or name", required = true)
-            @PathParam("application") final String application,
-            @Context UriInfo ui);
+            @PathParam("application") final String application);
 
     @GET
     @Path("/{entity}")
@@ -66,8 +63,7 @@ public interface EntityApi {
             @ApiParam(value = "Application ID or name", required = true)
             @PathParam("application") String application,
             @ApiParam(value = "Entity ID or name", required = true)
-            @PathParam("entity") String entity,
-            @Context UriInfo ui);
+            @PathParam("entity") String entity);
 
     // TODO rename as "/children" ?
     @GET
@@ -76,16 +72,14 @@ public interface EntityApi {
     @Path("/{entity}/children")
     public List<EntitySummary> getChildren(
             @PathParam("application") final String application,
-            @PathParam("entity") final String entity,
-            @Context UriInfo ui);
+            @PathParam("entity") final String entity);
 
     /** @deprecated since 0.7.0 use /children */
     @Deprecated
     @Path("/{entity}/entities")
     public List<EntitySummary> getChildrenOld(
             @PathParam("application") final String application,
-            @PathParam("entity") final String entity,
-            @Context UriInfo ui);
+            @PathParam("entity") final String entity);
 
     @POST
     @ApiOperation(value = "Add a child or children to this entity given a YAML spec",
@@ -114,9 +108,7 @@ public interface EntityApi {
                     name = "childrenSpec",
                     value = "Entity spec in CAMP YAML format (including 'services' root element)",
                     required = true)
-            String yaml,
-
-            @Context UriInfo ui);
+            String yaml);
 
     @GET
     @Path("/{entity}/activities")
@@ -126,8 +118,7 @@ public interface EntityApi {
     })
     public List<TaskSummary> listTasks(
             @ApiParam(value = "Application ID or name", required = true) @PathParam("application") String applicationId,
-            @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") String entityId,
-            @Context UriInfo ui);
+            @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") String entityId);
 
     @GET
     @Path("/{entity}/activities/{task}")
@@ -139,8 +130,7 @@ public interface EntityApi {
     public TaskSummary getTask(
             @ApiParam(value = "Application ID or name", required = true) @PathParam("application") final String application,
             @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") final String entityToken,
-            @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId,
-            @Context UriInfo ui);
+            @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId);
 
     @GET
     @ApiOperation(value = "Returns an icon for the entity, if defined")
@@ -184,8 +174,7 @@ public interface EntityApi {
     public Response expunge(
             @ApiParam(value = "Application ID or name", required = true) @PathParam("application") final String applicationId, 
             @ApiParam(value = "Entity ID or name", required = true) @PathParam("entity") final String entityId, 
-            @ApiParam(value = "Whether to gracefully release all resources", required = true) @QueryParam("release") final boolean release,
-            @Context UriInfo ui);
+            @ApiParam(value = "Whether to gracefully release all resources", required = true) @QueryParam("release") final boolean release);
 
     @GET
     @Path("/{entity}/descendants")
@@ -201,8 +190,7 @@ public interface EntityApi {
             @PathParam("entity") String entity,
             @ApiParam(value="Regular expression for an entity type which must be matched", required=false)
             @DefaultValue(".*")
-            @QueryParam("typeRegex") String typeRegex,
-            @Context UriInfo ui);
+            @QueryParam("typeRegex") String typeRegex);
 
     @GET
     @Path("/{entity}/descendants/sensor/{sensor}")
@@ -231,8 +219,7 @@ public interface EntityApi {
             @ApiParam(value = "Application ID or name", required = true)
             @PathParam("application") String application,
             @ApiParam(value = "Entity ID or name", required = true)
-            @PathParam("entity") String entity,
-            @Context UriInfo ui);
+            @PathParam("entity") String entity);
 
     @GET
     @Path("/{entity}/spec")

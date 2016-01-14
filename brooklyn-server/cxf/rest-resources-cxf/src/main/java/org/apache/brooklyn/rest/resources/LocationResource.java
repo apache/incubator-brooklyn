@@ -51,7 +51,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
-import javax.ws.rs.core.UriInfo;
 import static org.apache.brooklyn.rest.util.WebResourceUtils.serviceUriBuilder;
 
 @SuppressWarnings("deprecation")
@@ -63,7 +62,7 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
     private final Set<String> specsWarnedOnException = Sets.newConcurrentHashSet();
 
     @Override
-    public List<LocationSummary> list(final UriInfo ui) {
+    public List<LocationSummary> list() {
         Function<LocationDefinition, LocationSummary> transformer = new Function<LocationDefinition, LocationSummary>() {
             @Override
             public LocationSummary apply(LocationDefinition l) {
@@ -124,16 +123,16 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
     }
 
     /** @deprecated since 0.7.0; REST call now handled by below (optional query parameter added) */
-    public LocationSummary get(String locationId, UriInfo ui) {
-        return get(locationId, false, ui);
+    public LocationSummary get(String locationId) {
+        return get(locationId, false);
     }
 
     @Override
-    public LocationSummary get(String locationId, String fullConfig, UriInfo ui) {
-        return get(locationId, Boolean.valueOf(fullConfig), ui);
+    public LocationSummary get(String locationId, String fullConfig) {
+        return get(locationId, Boolean.valueOf(fullConfig));
     }
 
-    public LocationSummary get(String locationId, boolean fullConfig, UriInfo ui) {
+    public LocationSummary get(String locationId, boolean fullConfig) {
         LocationDetailLevel configLevel = fullConfig ? LocationDetailLevel.FULL_EXCLUDING_SECRET : LocationDetailLevel.LOCAL_EXCLUDING_SECRET;
         Location l1 = mgmt().getLocationManager().getLocation(locationId);
         if (l1!=null) {
@@ -146,7 +145,7 @@ public class LocationResource extends AbstractBrooklynRestResource implements Lo
     }
 
     @Override
-    public Response create(LocationSpec locationSpec, UriInfo ui) {
+    public Response create(LocationSpec locationSpec) {
         String name = locationSpec.getName();
         ImmutableList.Builder<String> yaml = ImmutableList.<String>builder().add(
                 "brooklyn.catalog:",

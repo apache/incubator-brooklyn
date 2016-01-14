@@ -44,8 +44,6 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.io.InputStream;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
 import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 
 @Path("/catalog")
@@ -60,8 +58,7 @@ public interface CatalogApi {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response createFromMultipart(
         @ApiParam(name = "yaml", value = "multipart/form-data file input field")
-        @Multipart(value = "yaml", type = "application/x-yaml") InputStream uploadedInputStream,
-        @Context UriInfo ui);
+        @Multipart(value = "yaml", type = "application/x-yaml") InputStream uploadedInputStream);
 
     @Consumes
     @POST
@@ -69,8 +66,7 @@ public interface CatalogApi {
         + "Return value is map of ID to CatalogItemSummary, with code 201 CREATED.", response = String.class)
     public Response create(
             @ApiParam(name = "yaml", value = "YAML descriptor of catalog item", required = true)
-            @Valid String yaml,
-            @Context UriInfo ui);
+            @Valid String yaml);
 
     @POST
     @Consumes(MediaType.APPLICATION_XML)
@@ -158,8 +154,7 @@ public interface CatalogApi {
         @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
         @QueryParam("fragment") @DefaultValue("") String fragment,
         @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
-        @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions,
-        @Context UriInfo ui);
+        @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
 
     @GET
     @Path("/applications")
@@ -172,8 +167,7 @@ public interface CatalogApi {
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
             @QueryParam("fragment") @DefaultValue("") String fragment,
             @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
-            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions,
-            @Context UriInfo ui);
+            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
 
     /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
     @Deprecated
@@ -187,8 +181,7 @@ public interface CatalogApi {
     })
     public CatalogEntitySummary getEntity_0_7_0(
         @ApiParam(name = "entityId", value = "The ID of the entity or template to retrieve", required = true)
-        @PathParam("entityId") String entityId,
-        @Context UriInfo ui) throws Exception;
+        @PathParam("entityId") String entityId) throws Exception;
 
     @GET
     @Path("/entities/{symbolicName}/{version}")
@@ -203,8 +196,7 @@ public interface CatalogApi {
         @PathParam("symbolicName") String symbolicName,
 
         @ApiParam(name = "version", value = "The version identifier of the entity or template to retrieve", required = true)
-        @PathParam("version") String version,
-        @Context UriInfo ui) throws Exception;
+        @PathParam("version") String version) throws Exception;
 
     /** @deprecated since 0.7.0 use {@link #getEntity(String, String)} */
     @Deprecated
@@ -218,8 +210,7 @@ public interface CatalogApi {
     })
     public CatalogEntitySummary getApplication_0_7_0(
         @ApiParam(name = "applicationId", value = "The ID of the application to retrieve", required = true)
-        @PathParam("applicationId") String applicationId,
-        @Context UriInfo ui) throws Exception;
+        @PathParam("applicationId") String applicationId) throws Exception;
 
     @GET
     @Path("/applications/{symbolicName}/{version}")
@@ -234,8 +225,7 @@ public interface CatalogApi {
         @PathParam("symbolicName") String symbolicName,
 
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
-        @PathParam("version") String version,
-        @Context UriInfo ui) throws Exception;
+        @PathParam("version") String version) throws Exception;
 
     @GET
     @Path("/policies")
@@ -248,8 +238,7 @@ public interface CatalogApi {
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
             @QueryParam("fragment") @DefaultValue("") String fragment,
             @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
-            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions,
-            @Context UriInfo ui);
+            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
 
     /** @deprecated since 0.7.0 use {@link #getPolicy(String, String)} */
     @Deprecated
@@ -263,8 +252,7 @@ public interface CatalogApi {
     })
     public CatalogItemSummary getPolicy_0_7_0(
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
-        @PathParam("policyId") String policyId,
-        @Context UriInfo ui) throws Exception;
+        @PathParam("policyId") String policyId) throws Exception;
 
     @GET
     @Path("/policies/{policyId}/{version}")
@@ -278,8 +266,7 @@ public interface CatalogApi {
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
         @PathParam("policyId") String policyId,
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
-        @PathParam("version") String version,
-        @Context UriInfo ui) throws Exception;
+        @PathParam("version") String version) throws Exception;
 
     @GET
     @Path("/locations")
@@ -292,8 +279,7 @@ public interface CatalogApi {
             @ApiParam(name = "fragment", value = "Substring case-insensitive to search for")
             @QueryParam("fragment") @DefaultValue("") String fragment,
             @ApiParam(name = "allVersions", value = "Include all versions (defaults false, only returning the best version)")
-            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions,
-            @Context UriInfo ui);
+            @QueryParam("allVersions") @DefaultValue("false") boolean includeAllVersions);
 
     /** @deprecated since 0.7.0 use {@link #getLocation(String, String)} */
     @Deprecated
@@ -307,8 +293,7 @@ public interface CatalogApi {
     })
     public CatalogItemSummary getLocation_0_7_0(
         @ApiParam(name = "locationId", value = "The ID of the location to retrieve", required = true)
-        @PathParam("locationId") String locationId,
-        @Context UriInfo ui) throws Exception;
+        @PathParam("locationId") String locationId) throws Exception;
 
     @GET
     @Path("/locations/{locationId}/{version}")
@@ -322,8 +307,7 @@ public interface CatalogApi {
         @ApiParam(name = "locationId", value = "The ID of the location to retrieve", required = true)
         @PathParam("locationId") String locationId,
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
-        @PathParam("version") String version,
-        @Context UriInfo ui) throws Exception;
+        @PathParam("version") String version) throws Exception;
 
     /** @deprecated since 0.7.0 use {@link #getIcon(String, String)} */
     @Deprecated

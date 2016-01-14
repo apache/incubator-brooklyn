@@ -101,14 +101,14 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     /** @deprecated since 0.6.0 use {@link #fetch(String)} (with slightly different, but better semantics) */
     @Deprecated
     @Override
-    public JsonNode applicationTree(UriInfo ui) {
+    public JsonNode applicationTree() {
         ArrayNode apps = mapper().createArrayNode();
         for (Application application : mgmt().getApplications())
-            apps.add(recursiveTreeFromEntity(application, ui));
+            apps.add(recursiveTreeFromEntity(application));
         return apps;
     }
 
-    private ObjectNode entityBase(Entity entity, UriInfo ui) {
+    private ObjectNode entityBase(Entity entity) {
         ObjectNode aRoot = mapper().createObjectNode();
         aRoot.put("name", entity.getDisplayName());
         aRoot.put("id", entity.getId());
@@ -131,18 +131,18 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         return aRoot;
     }
 
-    private JsonNode recursiveTreeFromEntity(Entity entity, UriInfo ui) {
-        ObjectNode aRoot = entityBase(entity, ui);
+    private JsonNode recursiveTreeFromEntity(Entity entity) {
+        ObjectNode aRoot = entityBase(entity);
 
         if (!entity.getChildren().isEmpty())
-            aRoot.put("children", childEntitiesRecursiveAsArray(entity, ui));
+            aRoot.put("children", childEntitiesRecursiveAsArray(entity));
 
         return aRoot;
     }
 
     // TODO when applicationTree can be removed, replace this with an extension to EntitySummary (without links)
-    private JsonNode fromEntity(Entity entity, UriInfo ui) {
-        ObjectNode aRoot = entityBase(entity, ui);
+    private JsonNode fromEntity(Entity entity) {
+        ObjectNode aRoot = entityBase(entity);
 
         aRoot.put("applicationId", entity.getApplicationId());
 
@@ -166,11 +166,11 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         return aRoot;
     }
 
-    private ArrayNode childEntitiesRecursiveAsArray(Entity entity, UriInfo ui) {
+    private ArrayNode childEntitiesRecursiveAsArray(Entity entity) {
         ArrayNode node = mapper().createArrayNode();
         for (Entity e : entity.getChildren()) {
             if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
-                node.add(recursiveTreeFromEntity(e, ui));
+                node.add(recursiveTreeFromEntity(e));
             }
         }
         return node;
@@ -200,16 +200,16 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     @Override
-    public JsonNode fetch(String entityIds, UriInfo ui) {
+    public JsonNode fetch(String entityIds) {
         Map<String, JsonNode> jsonEntitiesById = MutableMap.of();
         for (Application application : mgmt().getApplications())
-            jsonEntitiesById.put(application.getId(), fromEntity(application, ui));
+            jsonEntitiesById.put(application.getId(), fromEntity(application));
         if (entityIds != null) {
             for (String entityId: entityIds.split(",")) {
                 Entity entity = mgmt().getEntityManager().getEntity(entityId.trim());
                 while (entity != null && entity.getParent() != null) {
                     if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
-                        jsonEntitiesById.put(entity.getId(), fromEntity(entity, ui));
+                        jsonEntitiesById.put(entity.getId(), fromEntity(entity));
                     }
                     entity = entity.getParent();
                 }
@@ -222,7 +222,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     @Override
-    public List<ApplicationSummary> list(String typeRegex, UriInfo ui) {
+    public List<ApplicationSummary> list(String typeRegex) {
         if (Strings.isBlank(typeRegex)) {
             typeRegex = ".*";
         }
@@ -235,17 +235,17 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     @Override
-    public ApplicationSummary get(String application, UriInfo ui) {
+    public ApplicationSummary get(String application) {
         return ApplicationTransformer.summaryFromApplication(brooklyn().getApplication(application), ui.getBaseUriBuilder());
     }
 
     @Override
-    public Response create(ApplicationSpec applicationSpec, UriInfo ui) {
-        return createFromAppSpec(applicationSpec, ui);
+    public Response create(ApplicationSpec applicationSpec) {
+        return createFromAppSpec(applicationSpec);
     }
 
     /** @deprecated since 0.7.0 see #create */ @Deprecated
-    protected Response createFromAppSpec(ApplicationSpec applicationSpec, UriInfo ui) {
+    protected Response createFromAppSpec(ApplicationSpec applicationSpec) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, applicationSpec)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
                 Entitlements.getEntitlementContext().user(), applicationSpec);
@@ -264,7 +264,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     @Override
-    public Response createFromYaml(String yaml, UriInfo ui) {
+    public Response createFromYaml(String yaml) {
         // First of all, see if it's a URL
         URI uri;
         try {
@@ -286,10 +286,10 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
                 Entitlements.getEntitlementContext().user(), yaml);
         }
 
-        return launch(yaml, spec, ui);
+        return launch(yaml, spec);
     }
 
-    private Response launch(String yaml, EntitySpec<? extends Application> spec, UriInfo ui) {
+    private Response launch(String yaml, EntitySpec<? extends Application> spec) {
         try {
             Application app = EntityManagementUtils.createUnstarted(mgmt(), spec);
             CreationResult<Application,Void> result = EntityManagementUtils.start(app);
@@ -319,7 +319,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     @Override
-    public Response createPoly(byte[] inputToAutodetectType, UriInfo ui) {
+    public Response createPoly(byte[] inputToAutodetectType) {
         log.debug("Creating app from autodetecting input");
 
         boolean looksLikeLegacy = false;
@@ -330,7 +330,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             if (appSpec.getType() != null || appSpec.getEntities() != null) {
                 looksLikeLegacy = true;
             }
-            return createFromAppSpec(appSpec, ui);
+            return createFromAppSpec(appSpec);
         } catch (Exception e) {
             Exceptions.propagateIfFatal(e);
             legacyFormatException = e;
@@ -344,7 +344,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         // TODO not json - try ZIP, etc
 
         if (spec != null) {
-            return launch(potentialYaml, spec, ui);
+            return launch(potentialYaml, spec);
         } else if (looksLikeLegacy) {
             throw Throwables.propagate(legacyFormatException);
         } else {
@@ -353,13 +353,13 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     @Override
-    public Response createFromForm(String contents, UriInfo ui) {
+    public Response createFromForm(String contents) {
         log.debug("Creating app from form");
-        return createPoly(contents.getBytes(), ui);
+        return createPoly(contents.getBytes());
     }
 
     @Override
-    public Response delete(String application, UriInfo ui) {
+    public Response delete(String application) {
         Application app = brooklyn().getApplication(application);
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, 
             StringAndArgument.of(Entitlements.LifecycleEffectors.DELETE, null)))) {
@@ -436,7 +436,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     }
 
     @Override
-    public List<EntitySummary> getDescendants(String application, String typeRegex, UriInfo ui) {
+    public List<EntitySummary> getDescendants(String application, String typeRegex) {
         return EntityTransformer.entitySummaries(brooklyn().descendantsOfType(application, application, typeRegex), ui.getBaseUriBuilder());
     }
 

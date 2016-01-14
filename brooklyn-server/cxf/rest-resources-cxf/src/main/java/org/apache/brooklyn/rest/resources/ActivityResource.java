@@ -33,12 +33,11 @@ import org.apache.brooklyn.rest.util.WebResourceUtils;
 
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
-import javax.ws.rs.core.UriInfo;
 
 public class ActivityResource extends AbstractBrooklynRestResource implements ActivityApi {
 
     @Override
-    public TaskSummary get(String taskId, UriInfo ui) {
+    public TaskSummary get(String taskId) {
         Task<?> t = mgmt().getExecutionManager().getTask(taskId);
         if (t == null)
             throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
@@ -46,7 +45,7 @@ public class ActivityResource extends AbstractBrooklynRestResource implements Ac
     }
 
     @Override
-    public List<TaskSummary> children(String taskId, UriInfo ui) {
+    public List<TaskSummary> children(String taskId) {
         Task<?> t = mgmt().getExecutionManager().getTask(taskId);
         if (t == null)
             throw WebResourceUtils.notFound("Cannot find task '%s'", taskId);
