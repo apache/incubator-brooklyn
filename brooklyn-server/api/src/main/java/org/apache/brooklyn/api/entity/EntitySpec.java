@@ -374,6 +374,13 @@ public class EntitySpec<T extends Entity> extends AbstractBrooklynObjectSpec<T,E
         return this;
     }
     
+    /** clears locations defined in the spec */
+    public <V> EntitySpec<T> clearLocations() {
+        checkMutable();
+        locations.clear();
+        return this;        
+    }
+    
     /** adds the supplied locations to the spec */
     public <V> EntitySpec<T> locations(Iterable<? extends Location> val) {
         checkMutable();

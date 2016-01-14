@@ -223,9 +223,13 @@ public class BrooklynComponentTemplateResolver {
         if (planId != null)
             spec.configure(BrooklynCampConstants.PLAN_ID, planId);
 
-        List<Location> childLocations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(attrs.getAllConfig(), true);
-        if (childLocations != null)
-            spec.locations(childLocations);
+        List<Location> locations = new BrooklynYamlLocationResolver(mgmt).resolveLocations(attrs.getAllConfig(), true);
+        if (locations != null) {
+            // override locations defined in the type if locations are specified here
+            // empty list can be used by caller to clear, so they are inherited
+            spec.clearLocations();
+            spec.locations(locations);
+        }
 
         decorateSpec(spec, encounteredRegisteredTypeIds);
     }
