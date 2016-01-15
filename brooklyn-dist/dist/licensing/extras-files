@@ -1,1 +1,1 @@
-../jsgui/src/main/license/source-inclusions.yaml:../cli/src/main/license/source-inclusions.yaml
+../../brooklyn-ui/src/main/license/source-inclusions.yaml:../../brooklyn-server/server-cli/src/main/license/source-inclusions.yaml
