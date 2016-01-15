@@ -232,21 +232,33 @@ This project includes the software: ch.qos.logback
   Used under the following license: Eclipse Public License, version 1.0 (http://www.eclipse.org/legal/epl-v10.html)
 
 This project includes the software: com.fasterxml.jackson.core
-  Available at: http://wiki.fasterxml.com/JacksonHome
+  Available at: http://github.com/FasterXML/jackson https://github.com/FasterXML/jackson
   Developed by: FasterXML (http://fasterxml.com/)
-  Version used: 2.4.2; 2.4.0
+  Version used: 2.4.5
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: com.fasterxml.jackson.dataformat
+  Available at: https://github.com/FasterXML/jackson http://wiki.fasterxml.com/JacksonExtensionXmlDataBinding
+  Developed by: FasterXML (http://fasterxml.com/)
+  Version used: 2.4.5
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+This project includes the software: com.fasterxml.jackson.datatype
+  Available at: http://wiki.fasterxml.com/JacksonModuleJoda
+  Developed by: FasterXML (http://fasterxml.com/)
+  Version used: 2.4.5
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.fasterxml.jackson.jaxrs
   Available at: http://wiki.fasterxml.com/JacksonHome
   Developed by: FasterXML (http://fasterxml.com/)
-  Version used: 2.4.2
+  Version used: 2.4.5
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.fasterxml.jackson.module
   Available at: http://wiki.fasterxml.com/JacksonJAXBAnnotations
   Developed by: FasterXML (http://fasterxml.com/)
-  Version used: 2.4.2
+  Version used: 2.4.5
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: com.google.code.findbugs
@@ -329,13 +341,13 @@ This project includes the software: com.squareup.okio
 This project includes the software: com.sun.jersey
   Available at: https://jersey.java.net/
   Developed by: Oracle Corporation (http://www.oracle.com/)
-  Version used: 1.18.1
+  Version used: 1.19
   Used under the following license: Common Development and Distribution License, version 1.1 (http://glassfish.java.net/public/CDDL+GPL_1_1.html)
 
 This project includes the software: com.sun.jersey.contribs
   Available at: https://jersey.java.net/
   Developed by: Oracle Corporation (http://www.oracle.com/)
-  Version used: 1.18.1
+  Version used: 1.19
   Used under the following license: Common Development and Distribution License, version 1.1 (http://glassfish.java.net/public/CDDL+GPL_1_1.html)
 
 This project includes the software: com.thoughtworks.xstream
@@ -343,11 +355,6 @@ This project includes the software: com.thoughtworks.xstream
   Developed by: XStream (http://xstream.codehaus.org)
   Version used: 1.4.7
   Used under the following license: BSD License (http://xstream.codehaus.org/license.html)
-
-This project includes the software: com.wordnik
-  Available at: https://github.com/wordnik/swagger-core
-  Version used: 1.0.1
-  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
 
 This project includes the software: commons-beanutils
   Available at: http://commons.apache.org/proper/commons-beanutils/
@@ -409,6 +416,11 @@ This project includes the software: io.cloudsoft.windows
   Version used: 0.1.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
+This project includes the software: io.swagger
+  Available at: https://github.com/swagger-api/swagger-core
+  Version used: 1.5.3
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.html)
+
 This project includes the software: javax.annotation
   Available at: https://jcp.org/en/jsr/detail?id=250
   Version used: 1.0
@@ -426,14 +438,21 @@ This project includes the software: javax.servlet
   Used under the following license: CDDL + GPLv2 with classpath exception (https://glassfish.dev.java.net/nonav/public/CDDL+GPL.html)
 
 This project includes the software: javax.validation
-  Version used: 1.0.0.GA
-  Used under the following license: Apache License, version 2.0 (in-project reference: license.txt)
+  Available at: http://beanvalidation.org
+  Version used: 1.1.0.Final
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: javax.ws.rs
   Available at: https://jsr311.java.net/
   Developed by: Sun Microsystems, Inc (http://www.sun.com/)
   Version used: 1.1.1
   Used under the following license: CDDL License (http://www.opensource.org/licenses/cddl1.php)
+
+This project includes the software: joda-time
+  Available at: http://joda-time.sourceforge.net
+  Developed by: Joda.org (http://www.joda.org)
+  Version used: 2.2
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: jQuery JavaScript Library
   Available at: http://jquery.com/
@@ -495,6 +514,13 @@ This project includes the software: js-yaml.js
   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
   Copyright (c) Vitaly Puzrin (2011-2015)
 
+This project includes the software: marked.js
+  Available at: https://github.com/chjj/marked
+  Developed by: Christopher Jeffrey (https://github.com/chjj)
+  Version used: 0.3.1
+  Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
+  Copyright (c) Christopher Jeffrey (2011-2014)
+
 This project includes the software: moment.js
   Available at: http://momentjs.com
   Developed by: Tim Wood (http://momentjs.com)
@@ -532,7 +558,7 @@ This project includes the software: org.99soft.guice
 This project includes the software: org.apache.commons
   Available at: http://commons.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
-  Version used: 3.1; 1.4
+  Version used: 3.3.2; 1.4
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.felix
@@ -604,10 +630,22 @@ This project includes the software: org.codehaus.jettison
   Version used: 1.1
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 
+This project includes the software: org.codehaus.woodstox
+  Available at: http://wiki.fasterxml.com/WoodstoxStax2
+  Developed by: fasterxml.com (http://fasterxml.com)
+  Version used: 3.1.4
+  Used under the following license: BSD License (http://www.opensource.org/licenses/bsd-license.php)
+
 This project includes the software: org.eclipse.jetty
   Available at: http://www.eclipse.org/jetty
   Developed by: Webtide (http://webtide.com)
   Version used: 9.2.13.v20150730
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+
+This project includes the software: org.eclipse.jetty.toolchain
+  Available at: http://www.eclipse.org/jetty
+  Developed by: Mort Bay Consulting (http://www.mortbay.com)
+  Version used: 3.1.M0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
 
 This project includes the software: org.freemarker
@@ -649,12 +687,6 @@ This project includes the software: org.reflections
   Available at: http://code.google.com/p/reflections/
   Version used: 0.9.9-RC1
   Used under the following license: WTFPL (http://www.wtfpl.net/)
-
-This project includes the software: org.scala-lang
-  Available at: http://www.scala-lang.org/
-  Developed by: LAMP/EPFL (http://lamp.epfl.ch/)
-  Version used: 2.9.1-1
-  Used under the following license: BSD License (http://www.scala-lang.org/downloads/license.html)
 
 This project includes the software: org.slf4j
   Available at: http://www.slf4j.org
@@ -706,19 +738,11 @@ This project includes the software: RequireJS (r.js maven plugin)
       Arpad Borsos (2012)
     Used under the BSD 2-Clause license.
 
-This project includes the software: Swagger JS
-  Available at: https://github.com/wordnik/swagger-js
-  Inclusive of: swagger.js
-  Version used: 1.0.1
-  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
-  Copyright (c) SmartBear Software (2011-2015)
+This project includes the software: swagger
+  Used under the following license: <no license info>
 
-This project includes the software: Swagger UI
-  Available at: https://github.com/wordnik/swagger-ui
-  Inclusive of: swagger-ui.js
-  Version used: 1.0.1
-  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
-  Copyright (c) SmartBear Software (2011-2015)
+This project includes the software: swagger-ui
+  Used under the following license: <no license info>
 
 This project includes the software: typeahead.js
   Available at: https://github.com/twitter/typeahead.js
