@@ -1,0 +1,78 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+     http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<location>
+  <brooklynVersion>0.9.0-20151120.1523</brooklynVersion>
+  <type>org.apache.brooklyn.location.jclouds.JcloudsLocation</type>
+  <id>lCYB3mTb</id>
+  <displayName>AWS Singapore (ap-southeast-1)</displayName>
+  <children>
+    <string>aKEcbxKN</string>
+  </children>
+  <locationConfig>
+    <provider>aws-ec2</provider>
+    <minRam>2048</minRam>
+    <useJcloudsSshInit>false</useJcloudsSshInit>
+    <identity>myidentity</identity>
+    <openIptables>true</openIptables>
+    <credential>mycredential</credential>
+    <machineCreateAttempts>2</machineCreateAttempts>
+    <latitude>1.3000</latitude>
+    <streetAddress>Singapore</streetAddress>
+    <defaultImageId>ap-southeast-1/ami-21c2bd73</defaultImageId>
+    <iso3166>
+      <com.google.common.collect.SingletonImmutableSet>
+        <string>SG</string>
+      </com.google.common.collect.SingletonImmutableSet>
+    </iso3166>
+    <displayName>AWS Singapore (ap-southeast-1)</displayName>
+    <longitude>103.8000</longitude>
+    <hardwareId>m1.medium</hardwareId>
+    <imageId>ap-southeast-1/ami-42bfe910</imageId>
+    <spec.named.name>AWS Singapore</spec.named.name>
+    <spec.original>AWS Singapore</spec.original>
+    <region>ap-southeast-1</region>
+    <spec.final>jclouds:aws-ec2:ap-southeast-1</spec.final>
+    <machineCreationSemaphore>
+      <java.util.concurrent.Semaphore>
+        <sync class="java.util.concurrent.Semaphore$FairSync">
+          <state>2147483647</state>
+        </sync>
+      </java.util.concurrent.Semaphore>
+    </machineCreationSemaphore>
+    <vmInstanceIds>
+      <map>
+        <entry>
+          <locationProxy>aKEcbxKN</locationProxy>
+          <string>ap-southeast-1/i-56fd53f2</string>
+        </entry>
+      </map>
+    </vmInstanceIds>
+    <tags>
+      <set/>
+    </tags>
+  </locationConfig>
+  <locationConfigUnused>
+    <string>latitude</string>
+    <string>streetAddress</string>
+    <string>iso3166</string>
+    <string>displayName</string>
+    <string>longitude</string>
+  </locationConfigUnused>
+  <locationConfigDescription>aws-ec2:ap-southeast-1</locationConfigDescription>
+</location>

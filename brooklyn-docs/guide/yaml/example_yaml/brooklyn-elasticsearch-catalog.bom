@@ -1,0 +1,124 @@
+brooklyn.catalog:
+  id: elasticsearch
+  version: 1.0
+  iconUrl: https://avatars0.githubusercontent.com/u/6764390?v=3&s=400
+  name: Elasticsearch
+  license: Apache-2.0
+  issues_url: https://github.com/Graeme-Miller/brooklyn-elasticsearch/issues
+  item:
+    type: brooklyn.entity.group.DynamicCluster
+    initialSize: 2
+    name: Elasticsearch Cluster
+    id: elasticsearch-cluster
+    description: A cluster of Elasticsearch nodes
+
+    brooklyn.config:
+      install.version: 1.7.1
+      elasticsearch.http.port: 9220
+      elasticsearch.tcp.port: 9330
+
+    brooklyn.enrichers:
+      - type: org.apache.brooklyn.enricher.stock.Aggregator
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("url.tcp")
+          enricher.targetSensor: $brooklyn:sensor("urls.tcp.list")
+          enricher.aggregating.fromMembers: true
+      - type: org.apache.brooklyn.enricher.stock.Joiner
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("urls.tcp.list")
+          enricher.targetSensor: $brooklyn:sensor("urls.tcp.string")
+          uniqueTag: urls.quoted.string
+      - type: org.apache.brooklyn.enricher.stock.Transformer
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("urls.tcp.string")
+          enricher.targetSensor: $brooklyn:sensor("urls.tcp.withBrackets")
+          enricher.targetValue: $brooklyn:formatString("[%s]", $brooklyn:attributeWhenReady("urls.tcp.string"))
+      - type: org.apache.brooklyn.enricher.stock.Aggregator
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("url.http")
+          enricher.targetSensor: $brooklyn:sensor("urls.http.list")
+          enricher.aggregating.fromMembers: true
+      - type: org.apache.brooklyn.enricher.stock.Joiner
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("urls.http.list")
+          enricher.targetSensor: $brooklyn:sensor("urls.http.string")
+          uniqueTag: urls.http.quoted.string
+      - type: org.apache.brooklyn.enricher.stock.Transformer
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("urls.http.string")
+          enricher.targetSensor: $brooklyn:sensor("urls.http.withBrackets")
+          enricher.targetValue: $brooklyn:formatString("[%s]", $brooklyn:attributeWhenReady("urls.http.string"))
+      - type: org.apache.brooklyn.enricher.stock.Aggregator
+        brooklyn.config:
+          enricher.sourceSensor: $brooklyn:sensor("host.address")
+          enricher.targetSensor: $brooklyn:sensor("host.address.first")
+          enricher.aggregating.fromMembers: true
+          enricher.transformation:
+           $brooklyn:object:
+             type: "org.apache.brooklyn.util.collections.CollectionFunctionals$FirstElementFunction"
+
+    memberSpec:
+      $brooklyn:entitySpec:
+        - type: brooklyn.entity.basic.VanillaSoftwareProcess
+          name: Elasticsearch Node
+
+          provisioning.properties:
+            osFamily: ubuntu
+            inboundPorts:
+              - $brooklyn:config("elasticsearch.http.port")
+              - $brooklyn:config("elasticsearch.tcp.port")
+
+          install.command: |
+            $brooklyn:formatString("
+            sudo apt-get update
+            sudo apt-get install -y openjdk-7-jdk wget
+
+            wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+            echo \"deb http://packages.elastic.co/elasticsearch/1.7/debian stable main\" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.7.list
+            echo \"deb http://packages.elastic.co/elasticsearch/1.6/debian stable main\" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.6.list
+            echo \"deb http://packages.elastic.co/elasticsearch/1.5/debian stable main\" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.5.list
+            echo \"deb http://packages.elastic.co/elasticsearch/1.4/debian stable main\" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.4.list
+            echo \"deb http://packages.elastic.co/elasticsearch/1.3/debian stable main\" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.3.list
+            echo \"deb http://packages.elastic.co/elasticsearch/1.2/debian stable main\" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.2.list
+            echo \"deb http://packages.elastic.co/elasticsearch/1.1/debian stable main\" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.1.list
+            echo \"deb http://packages.elastic.co/elasticsearch/1.0/debian stable main\" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.0.list
+            sudo apt-get update && sudo apt-get -y install elasticsearch=%s
+            ",
+            $brooklyn:config("install.version")
+            )
+
+          customize.command: |
+            $brooklyn:formatString("
+            sudo rm -fr sudo tee /etc/elasticsearch/elasticsearch.yml;
+            echo discovery.zen.ping.multicast.enabled: false | sudo tee -a /etc/elasticsearch/elasticsearch.yml;
+            echo discovery.zen.ping.unicast.enabled: true | sudo tee -a /etc/elasticsearch/elasticsearch.yml;
+            echo 'discovery.zen.ping.unicast.hosts: %s' | sudo tee -a /etc/elasticsearch/elasticsearch.yml;
+            echo http.port: %s | sudo tee -a /etc/elasticsearch/elasticsearch.yml;
+            echo transport.tcp.port: %s | sudo tee -a /etc/elasticsearch/elasticsearch.yml;
+            ",
+            $brooklyn:component("parent", "").attributeWhenReady("urls.tcp.withBrackets"),
+            $brooklyn:config("elasticsearch.http.port"),
+            $brooklyn:config("elasticsearch.tcp.port")
+            )
+
+
+          launch.command: sudo service elasticsearch start
+
+          stop.command: sudo service elasticsearch stop
+
+          checkRunning.command: |
+            $brooklyn:formatString("counter=`wget -T 15 -q -O- %s:%s | grep -c \"status. : 200\"`; if [ $counter -eq 0 ]; then exit 1; fi",
+            $brooklyn:attributeWhenReady("host.address"),
+            $brooklyn:config("elasticsearch.http.port"))
+
+          brooklyn.enrichers:
+            - type: org.apache.brooklyn.enricher.stock.Transformer
+              brooklyn.config:
+                enricher.sourceSensor: $brooklyn:sensor("host.address")
+                enricher.targetSensor: $brooklyn:sensor("url.tcp")
+                enricher.targetValue: $brooklyn:formatString("%s:%s", $brooklyn:attributeWhenReady("host.address"), $brooklyn:config("elasticsearch.tcp.port"))
+            - type: org.apache.brooklyn.enricher.stock.Transformer
+              brooklyn.config:
+                enricher.sourceSensor: $brooklyn:sensor("host.address")
+                enricher.targetSensor: $brooklyn:sensor("url.http")
+                enricher.targetValue: $brooklyn:formatString("%s:%s", $brooklyn:attributeWhenReady("host.address"), $brooklyn:config("elasticsearch.http.port"))

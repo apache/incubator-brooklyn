@@ -1,0 +1,75 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+     http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<location>
+  <brooklynVersion>0.9.0-P20151204.1943</brooklynVersion>
+  <type>org.apache.brooklyn.location.jclouds.JcloudsLocation</type>
+  <id>fKc0Ofyn</id>
+  <displayName>aws-ec2:eu-central-1</displayName>
+  <children>
+    <string>KYSryzW8</string>
+  </children>
+  <locationConfig>
+    <provider>aws-ec2</provider>
+    <minRam>2048</minRam>
+    <useJcloudsSshInit type="boolean">false</useJcloudsSshInit>
+    <identity>myidentity</identity>
+    <openIptables>true</openIptables>
+    <credential>mycredential</credential>
+    <machineCreateAttempts>2</machineCreateAttempts>
+    <imageNameRegex>Windows_Server-2012-R2_RTM-English-64Bit-Base</imageNameRegex>
+    <hardwareId>m3.large</hardwareId>
+    <templateOptions>
+      <com.google.common.collect.SingletonImmutableBiMap>
+        <entry>
+          <string>mapNewVolumeToDeviceName</string>
+          <ImmutableList>
+            <string>/dev/sda1</string>
+            <int>100</int>
+            <boolean>true</boolean>
+          </ImmutableList>
+        </entry>
+      </com.google.common.collect.SingletonImmutableBiMap>
+    </templateOptions>
+    <region>eu-central-1</region>
+    <spec.final>jclouds:aws-ec2:eu-central-1</spec.final>
+    <spec.original>jclouds:aws-ec2:eu-central-1</spec.original>
+    <machineCreationSemaphore>
+      <java.util.concurrent.Semaphore>
+        <sync class="java.util.concurrent.Semaphore$FairSync">
+          <state>2147483647</state>
+        </sync>
+      </java.util.concurrent.Semaphore>
+    </machineCreationSemaphore>
+    <vmInstanceIds>
+      <map>
+        <entry>
+          <locationProxy>KYSryzW8</locationProxy>
+          <string>eu-central-1/i-372eda8a</string>
+        </entry>
+      </map>
+    </vmInstanceIds>
+    <tags>
+      <set/>
+    </tags>
+  </locationConfig>
+  <locationConfigUnused>
+    <string>machineCreationSemaphore</string>
+  </locationConfigUnused>
+  <locationConfigDescription>aws-ec2:eu-central-1</locationConfigDescription>
+</location>

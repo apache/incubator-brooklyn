@@ -1,0 +1,24 @@
+- type: org.apache.brooklyn.test.framework.TestCase
+  name: testcase1
+  targetId: testprocess
+  brooklyn.children:
+    - type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+      id: testprocess
+
+    - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
+      command: ps -ef
+      assertStatus:
+        equals: 0
+      assertOut:
+        contains: tomcat
+      assertErr: 
+        isEmpty: true
+
+    - type: org.apache.brooklyn.test.framework.SimpleShellCommandTest
+      downloadUrl: https://raw.githubusercontent.com/apache/incubator-brooklyn/master/docs/guide/yaml/test/entities/script1.sh
+      assertStatus:
+        equals: 0
+      assertOut: 
+        equals: hello world
+      assertErr: 
+        isEmpty: true
