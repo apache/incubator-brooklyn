@@ -80,5 +80,23 @@ public class RebindSshMachineLocationTest extends RebindTestFixtureWithApp {
         
         assertEquals(newChildLoc.execScript(Collections.<String,Object>emptyMap(), "mysummary", ImmutableList.of("true")), 0);
     }
-    
+
+    // See https://issues.apache.org/jira/browse/BROOKLYN-215
+    @Test(groups="Integration")
+    public void testRebindWhenPortNull() throws Exception {
+        SshMachineLocation machine = origManagementContext.getLocationManager().createLocation(LocationSpec.create(SshMachineLocation.class)
+                .configure("address", "localhost")
+                .configure("port", null));
+        FixedListMachineProvisioningLocation<?> byon = origManagementContext.getLocationManager().createLocation(LocationSpec.create(FixedListMachineProvisioningLocation.class)
+                .configure("machines", ImmutableList.of(machine)));
+        origApp.start(ImmutableList.of(byon));
+        LOG.info("Before rebind, machine="+machine.toString());
+
+        newApp = (TestApplication) rebind();
+        
+        FixedListMachineProvisioningLocation<?> newByon = (FixedListMachineProvisioningLocation<?>) Iterables.getOnlyElement(newApp.getLocations(), 0);
+        SshMachineLocation newMachine = (SshMachineLocation) Iterables.get(newByon.getChildren(), 0);
+        
+        LOG.info("After rebind, machine="+newMachine.toString());
+    }
 }
