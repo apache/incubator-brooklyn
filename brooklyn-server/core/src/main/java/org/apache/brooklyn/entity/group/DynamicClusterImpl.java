@@ -38,6 +38,7 @@ import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.entity.Group;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.policy.Policy;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
@@ -50,6 +51,7 @@ import org.apache.brooklyn.core.entity.factory.EntityFactoryForLocation;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ServiceProblemsLogic;
+import org.apache.brooklyn.core.entity.trait.Resizable;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.entity.trait.StartableMethods;
 import org.apache.brooklyn.core.location.Locations;
@@ -80,6 +82,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -331,6 +334,19 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return getAttribute(QUARANTINE_GROUP);
     }
 
+    protected Predicate<? super Throwable> getQuarantineFilter() {
+        Predicate<? super Throwable> result = getConfig(QUARANTINE_FILTER);
+        if (result != null) {
+            return result;
+        } else {
+            return new Predicate<Throwable>() {
+                @Override public boolean apply(Throwable input) {
+                    return Exceptions.getFirstThrowableOfType(input, NoMachinesAvailableException.class) == null;
+                }
+            };
+        }
+    }
+
     protected int getInitialQuorumSize() {
         int initialSize = getConfig(INITIAL_SIZE).intValue();
         int initialQuorumSize = getConfig(INITIAL_QUORUM_SIZE).intValue();
@@ -518,7 +534,20 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             } else {
                 if (LOG.isDebugEnabled()) LOG.debug("Resize no-op {} from {} to {}", new Object[] {this, originalSize, desiredSize});
             }
-            resizeByDelta(delta);
+            // If we managed to grow at all, then expect no exception.
+            // Otherwise, if failed because NoMachinesAvailable, then propagate as InsufficientCapacityException.
+            // This tells things like the AutoScalerPolicy to not keep retrying.
+            try {
+                resizeByDelta(delta);
+            } catch (Exception e) {
+                Exceptions.propagateIfFatal(e);
+                NoMachinesAvailableException nmae = Exceptions.getFirstThrowableOfType(e, NoMachinesAvailableException.class);
+                if (nmae != null) {
+                    throw new Resizable.InsufficientCapacityException("Failed to resize", e);
+                } else {
+                    throw Exceptions.propagate(e);
+                }
+            }
         }
         return getCurrentSize();
     }
@@ -669,7 +698,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
 
-    /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
+    /** <strong>Note</strong> for sub-classes; this method can be called while synchronized on {@link #mutex}. */
     protected Collection<Entity> grow(int delta) {
         Preconditions.checkArgument(delta > 0, "Must call grow with positive delta.");
 
@@ -696,8 +725,10 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             chosenLocations = Collections.nCopies(delta, getLocation());
         }
 
-        // create and start the entities
-        return addInEachLocation(chosenLocations, ImmutableMap.of()).getWithError();
+        // create and start the entities.
+        // if any fail, then propagate the error.
+        ReferenceWithError<Collection<Entity>> result = addInEachLocation(chosenLocations, ImmutableMap.of());
+        return result.getWithError();
     }
 
     /** <strong>Note</strong> for sub-clases; this method can be called while synchronized on {@link #mutex}. */
@@ -786,7 +817,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         // quarantine/cleanup as necessary
         if (!errors.isEmpty()) {
             if (isQuarantineEnabled()) {
-                quarantineFailedNodes(errors.keySet());
+                quarantineFailedNodes(errors);
             } else {
                 cleanupFailedNodes(errors.keySet());
             }
@@ -796,11 +827,18 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         return ReferenceWithError.newInstanceWithoutError(result);
     }
 
-    protected void quarantineFailedNodes(Collection<Entity> failedEntities) {
-        for (Entity entity : failedEntities) {
-            sensors().emit(ENTITY_QUARANTINED, entity);
-            getQuarantineGroup().addMember(entity);
-            removeMember(entity);
+    protected void quarantineFailedNodes(Map<Entity, Throwable> failedEntities) {
+        for (Map.Entry<Entity, Throwable> entry : failedEntities.entrySet()) {
+            Entity entity = entry.getKey();
+            Throwable cause = entry.getValue();
+            if (cause == null || getQuarantineFilter().apply(cause)) {
+                sensors().emit(ENTITY_QUARANTINED, entity);
+                getQuarantineGroup().addMember(entity);
+                removeMember(entity);
+            } else {
+                LOG.info("Cluster {} discarding failed node {}, rather than quarantining", this, entity);
+                discardNode(entity);
+            }
         }
     }
 

@@ -20,7 +20,6 @@ package org.apache.brooklyn.policy.autoscaling;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static org.apache.brooklyn.util.JavaGroovyEquivalents.groovyTruth;
-import groovy.lang.Closure;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -30,8 +29,6 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -55,12 +52,16 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import groovy.lang.Closure;
 
 
 /**
@@ -290,6 +291,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             .defaultValue(1)
             .reconfigurable(true)
             .build();
+    
     @SetFromFlag("resizeUpIterationMax")
     public static final ConfigKey<Integer> RESIZE_UP_ITERATION_MAX = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.resizeUpIterationMax")
@@ -297,6 +299,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             .description("Maximum change to the size on a single iteration when scaling up")
             .reconfigurable(true)
             .build();
+    
     @SetFromFlag("resizeDownIterationIncrement")
     public static final ConfigKey<Integer> RESIZE_DOWN_ITERATION_INCREMENT = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.resizeDownIterationIncrement")
@@ -304,6 +307,7 @@ public class AutoScalerPolicy extends AbstractPolicy {
             .defaultValue(1)
             .reconfigurable(true)
             .build();
+    
     @SetFromFlag("resizeDownIterationMax")
     public static final ConfigKey<Integer> RESIZE_DOWN_ITERATION_MAX = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.resizeDownIterationMax")
@@ -343,6 +347,12 @@ public class AutoScalerPolicy extends AbstractPolicy {
     public static final ConfigKey<Integer> MAX_POOL_SIZE = BasicConfigKey.builder(Integer.class)
             .name("autoscaler.maxPoolSize")
             .defaultValue(Integer.MAX_VALUE)
+            .reconfigurable(true)
+            .build();
+
+    public static final ConfigKey<Integer> INSUFFICIENT_CAPACITY_HIGH_WATER_MARK = BasicConfigKey.builder(Integer.class)
+            .name("autoscaler.insufficientCapacityHighWaterMark")
+            .defaultValue(null)
             .reconfigurable(true)
             .build();
 
@@ -564,6 +574,10 @@ public class AutoScalerPolicy extends AbstractPolicy {
         return getConfig(MAX_POOL_SIZE);
     }
     
+    private Integer getInsufficientCapacityHighWaterMark() {
+        return getConfig(INSUFFICIENT_CAPACITY_HIGH_WATER_MARK);
+    }
+    
     private ResizeOperator getResizeOperator() {
         return getConfig(RESIZE_OPERATOR);
     }
@@ -620,6 +634,14 @@ public class AutoScalerPolicy extends AbstractPolicy {
                 throw new IllegalArgumentException("Min pool size "+val+" must not be greater than max pool size "+getConfig(MAX_POOL_SIZE));
             }
             onPoolSizeLimitsChanged(getConfig(MIN_POOL_SIZE), newMax);
+        } else if (key.equals(INSUFFICIENT_CAPACITY_HIGH_WATER_MARK)) {
+            Integer newVal = (Integer) val;
+            Integer oldVal = config().get(INSUFFICIENT_CAPACITY_HIGH_WATER_MARK);
+            if (oldVal != null && (newVal == null || newVal > oldVal)) {
+                LOG.info("{} resetting {} to {}, which will enable resizing above previous level of {}",
+                        new Object[] {AutoScalerPolicy.this, INSUFFICIENT_CAPACITY_HIGH_WATER_MARK.getName(), newVal, oldVal});
+                // TODO see above about changing metricLowerBound; not triggering resize now
+            }
         } else {
             throw new UnsupportedOperationException("reconfiguring "+key+" unsupported for "+this);
         }
@@ -848,9 +870,17 @@ public class AutoScalerPolicy extends AbstractPolicy {
         onNewUnboundedPoolSize(desiredSizeUnconstrained);
     }
 
+    private int applyMinMaxConstraints(long desiredSize) {
+        return applyMinMaxConstraints(desiredSize > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int)desiredSize);
+    }
+    
     private int applyMinMaxConstraints(int desiredSize) {
-        desiredSize = Math.max(getMinPoolSize(), desiredSize);
-        desiredSize = Math.min(getMaxPoolSize(), desiredSize);
+        int minSize = getMinPoolSize();
+        int maxSize = getMaxPoolSize();
+        Integer insufficientCapacityHighWaterMark = getInsufficientCapacityHighWaterMark();
+        desiredSize = Math.max(minSize, desiredSize);
+        desiredSize = Math.min(maxSize, desiredSize);
+        if (insufficientCapacityHighWaterMark != null) desiredSize = Math.min(insufficientCapacityHighWaterMark, desiredSize);
         return desiredSize;
     }
 
@@ -989,36 +1019,47 @@ public class AutoScalerPolicy extends AbstractPolicy {
     }
 
     private void resizeNow() {
-        long currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
+        final int currentPoolSize = getCurrentSizeOperator().apply(poolEntity);
         CalculatedDesiredPoolSize calculatedDesiredPoolSize = calculateDesiredPoolSize(currentPoolSize);
-        final long desiredPoolSize = calculatedDesiredPoolSize.size;
+        long desiredPoolSize = calculatedDesiredPoolSize.size;
         boolean stable = calculatedDesiredPoolSize.stable;
+        
+        final int targetPoolSize = applyMinMaxConstraints(desiredPoolSize);
         
         if (!stable) {
             // the desired size fluctuations are not stable; ensure we check again later (due to time-window)
             // even if no additional events have been received
             // (note we continue now with as "good" a resize as we can given the instability)
             if (LOG.isTraceEnabled()) LOG.trace("{} re-scheduling resize check for {}, as desired size not stable (current {}, desired {}); continuing with resize...", 
-                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
+                    new Object[] {this, poolEntity, currentPoolSize, targetPoolSize});
             scheduleResize();
         }
-        if (currentPoolSize == desiredPoolSize) {
+        if (currentPoolSize == targetPoolSize) {
             if (LOG.isTraceEnabled()) LOG.trace("{} not resizing pool {} from {} to {}", 
-                    new Object[] {this, poolEntity, currentPoolSize, desiredPoolSize});
+                    new Object[] {this, poolEntity, currentPoolSize, targetPoolSize});
             return;
         }
         
         if (LOG.isDebugEnabled()) LOG.debug("{} requesting resize to {}; current {}, min {}, max {}", 
-                new Object[] {this, desiredPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
+                new Object[] {this, targetPoolSize, currentPoolSize, getMinPoolSize(), getMaxPoolSize()});
         
         Entities.submit(entity, Tasks.<Void>builder().displayName("Auto-scaler")
-            .description("Auto-scaler recommending resize from "+currentPoolSize+" to "+desiredPoolSize)
+            .description("Auto-scaler recommending resize from "+currentPoolSize+" to "+targetPoolSize)
             .tag(BrooklynTaskTags.NON_TRANSIENT_TASK_TAG)
             .body(new Callable<Void>() {
                 @Override
                 public Void call() throws Exception {
                     // TODO Should we use int throughout, rather than casting here?
-                    getResizeOperator().resize(poolEntity, (int) desiredPoolSize);
+                    try {
+                        getResizeOperator().resize(poolEntity, (int) targetPoolSize);
+                    } catch (Resizable.InsufficientCapacityException e) {
+                        // cannot resize beyond this; set the high-water mark
+                        int insufficientCapacityHighWaterMark = getCurrentSizeOperator().apply(poolEntity);
+                        LOG.warn("{} failed to resize {} due to insufficient capacity; setting high-water mark to {}, "
+                                + "and will not attempt to resize above that level again", 
+                                new Object[] {AutoScalerPolicy.this, poolEntity, insufficientCapacityHighWaterMark});
+                        config().set(INSUFFICIENT_CAPACITY_HIGH_WATER_MARK, insufficientCapacityHighWaterMark);
+                    }
                     return null;
                 }
             }).build())

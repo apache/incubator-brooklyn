@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
+import org.apache.brooklyn.api.location.NoMachinesAvailableException;
 import org.apache.brooklyn.api.mgmt.Task;
 import org.apache.brooklyn.api.sensor.SensorEvent;
 import org.apache.brooklyn.core.entity.Attributes;
@@ -54,6 +55,7 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.trait.Changeable;
 import org.apache.brooklyn.core.entity.trait.FailingEntity;
+import org.apache.brooklyn.core.entity.trait.Resizable;
 import org.apache.brooklyn.core.location.SimulatedLocation;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
@@ -72,13 +74,13 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Atomics;
 
 
@@ -202,6 +204,65 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertEquals(entity.getApplication(), app);
     }
 
+    @Test
+    public void testResizeWhereChildThrowsNoMachineAvailableExceptionIsPropagatedAsInsufficientCapacityException() throws Exception {
+        final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+            .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
+                    .configure(FailingEntity.FAIL_ON_START, true)
+                    .configure(FailingEntity.EXCEPTION_CLAZZ, NoMachinesAvailableException.class))
+            .configure(DynamicCluster.INITIAL_SIZE, 0));
+        cluster.start(ImmutableList.of(loc));
+        
+        try {
+            cluster.resize(1);
+            Asserts.shouldHaveFailedPreviously();
+        } catch (Exception e) {
+            Asserts.expectedFailureOfType(e, Resizable.InsufficientCapacityException.class);
+        }
+    }
+
+    @Test
+    public void testResizeWhereSubsetOfChildrenThrowsNoMachineAvailableExceptionIsPropagatedAsInsuffientCapacityException() throws Exception {
+        final DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+            .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(FailingEntity.class)
+                    .configure(FailingEntity.FAIL_ON_START_CONDITION, new Predicate<FailingEntity>() {
+                        final AtomicInteger counter = new AtomicInteger();
+                        @Override public boolean apply(FailingEntity input) {
+                            // Only second and subsequent entities fail
+                            int index = counter.getAndIncrement();
+                            return (index >= 1);
+                        }})
+                    .configure(FailingEntity.EXCEPTION_CLAZZ, NoMachinesAvailableException.class))
+            .configure(DynamicCluster.INITIAL_SIZE, 0));
+        cluster.start(ImmutableList.of(loc));
+
+        // Managed to partially resize, but will still throw exception.
+        // The getCurrentSize will report how big we managed to get.
+        // The children that failed due to NoMachinesAvailableException will have been unmanaged automatically.
+        try {
+            cluster.resize(2);
+            Asserts.shouldHaveFailedPreviously();
+        } catch (Exception e) {
+            Asserts.expectedFailureOfType(e, Resizable.InsufficientCapacityException.class);
+        }
+        assertEquals(cluster.getCurrentSize(), (Integer)1);
+        Iterable<FailingEntity> children1 = Iterables.filter(cluster.getChildren(), FailingEntity.class);
+        assertEquals(Iterables.size(children1), 1);
+        assertEquals(Iterables.getOnlyElement(children1).sensors().get(TestEntity.SERVICE_UP), Boolean.TRUE);
+        
+        // This attempt will also fail, because all new children will fail
+        try {
+            cluster.resize(2);
+            Asserts.shouldHaveFailedPreviously();
+        } catch (Exception e) {
+            Asserts.expectedFailureOfType(e, Resizable.InsufficientCapacityException.class);
+        }
+        assertEquals(cluster.getCurrentSize(), (Integer)1);
+        Iterable<FailingEntity> children2 = Iterables.filter(cluster.getChildren(), FailingEntity.class);
+        assertEquals(Iterables.size(children2), 1);
+        assertEquals(Iterables.getOnlyElement(children2), Iterables.getOnlyElement(children1));
+    }
+
     /** This can be sensitive to order, e.g. if TestEntity set expected RUNNING before setting SERVICE_UP, 
      * there would be a point when TestEntity is ON_FIRE.
      * <p>
@@ -249,6 +310,7 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         assertEquals(Iterables.size(Entities.descendants(cluster, TestEntity.class)), 0);
     }
 
+    
     @Test
     public void currentSizePropertyReflectsActualClusterSize() throws Exception {
         DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
@@ -580,6 +642,62 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         for (Entity member : cluster.getMembers()) {
             assertFalse(((FailingEntity)member).getConfig(FailingEntity.FAIL_ON_START));
         }
+    }
+
+    @Test
+    public void testQuarantineFailedEntitiesRespectsCustomFilter() throws Exception {
+        Predicate<Throwable> filter = new Predicate<Throwable>() {
+            @Override public boolean apply(Throwable input) {
+                return Exceptions.getFirstThrowableOfType(input, AllowedException.class) != null;
+            }
+        };
+        runQuarantineFailedEntitiesRespectsFilter(AllowedException.class, DisallowedException.class, filter);
+    }
+    @SuppressWarnings("serial")
+    public static class AllowedException extends RuntimeException {
+        public AllowedException(String message) {
+            super(message);
+        }
+    }
+    @SuppressWarnings("serial")
+    public static class DisallowedException extends RuntimeException {
+        public DisallowedException(String message) {
+            super(message);
+        }
+    }
+
+    @Test
+    public void testQuarantineFailedEntitiesRespectsDefaultFilter() throws Exception {
+        Predicate<Throwable> filter = null;
+        runQuarantineFailedEntitiesRespectsFilter(AllowedException.class, NoMachinesAvailableException.class, filter);
+    }
+    
+    protected void runQuarantineFailedEntitiesRespectsFilter(Class<? extends Exception> allowedException, 
+            Class<? extends Exception> disallowedException, Predicate<Throwable> quarantineFilter) throws Exception {
+        final List<Class<? extends Exception>> failureCauses = ImmutableList.<Class<? extends Exception>>of(allowedException, disallowedException);
+        final AtomicInteger counter = new AtomicInteger(0);
+        DynamicCluster cluster = app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
+                .configure("quarantineFailedEntities", true)
+                .configure("initialSize", 0)
+                .configure("quarantineFilter", quarantineFilter)
+                .configure("factory", new EntityFactory() {
+                    @Override public Entity newEntity(Map flags, Entity parent) {
+                        int num = counter.getAndIncrement();
+                        return app.getManagementContext().getEntityManager().createEntity(EntitySpec.create(FailingEntity.class)
+                                .configure(flags)
+                                .configure(FailingEntity.FAIL_ON_START, true)
+                                .configure(FailingEntity.EXCEPTION_CLAZZ, failureCauses.get(num))
+                                .parent(parent));
+                    }}));
+
+        cluster.start(ImmutableList.of(loc));
+        resizeExpectingError(cluster, 2);
+        Iterable<FailingEntity> children = Iterables.filter(cluster.getChildren(), FailingEntity.class);
+        Collection<Entity> quarantineMembers = cluster.sensors().get(DynamicCluster.QUARANTINE_GROUP).getMembers();
+        
+        assertEquals(cluster.getCurrentSize(), (Integer)0);
+        assertEquals(Iterables.getOnlyElement(children).config().get(FailingEntity.EXCEPTION_CLAZZ), allowedException);
+        assertEquals(Iterables.getOnlyElement(quarantineMembers), Iterables.getOnlyElement(children));
     }
 
     @Test

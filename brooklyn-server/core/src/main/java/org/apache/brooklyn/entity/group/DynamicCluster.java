@@ -48,6 +48,7 @@ import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimap;
 import com.google.common.reflect.TypeToken;
@@ -100,6 +101,15 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
     @SetFromFlag("quarantineFailedEntities")
     ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = ConfigKeys.newBooleanConfigKey(
             "dynamiccluster.quarantineFailedEntities", "If true, will quarantine entities that fail to start; if false, will get rid of them (i.e. delete them)", true);
+
+    @SetFromFlag("quarantineFilter")
+    ConfigKey<Predicate<? super Throwable>> QUARANTINE_FILTER = ConfigKeys.newConfigKey(
+            new TypeToken<Predicate<? super Throwable>>() {},
+            "dynamiccluster.quarantineFilter", 
+            "Quarantine the failed nodes that pass this filter (given the exception thrown by the node). "
+                    + "Default is those that did not fail with NoMachinesAvailableException "
+                    + "(Config ignored if quarantineFailedEntities is false)", 
+            null);
 
     AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
 

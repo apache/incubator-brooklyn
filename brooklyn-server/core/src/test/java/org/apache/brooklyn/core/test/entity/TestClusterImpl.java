@@ -18,9 +18,15 @@
  */
 package org.apache.brooklyn.core.test.entity;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.entity.group.DynamicClusterImpl;
 import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
+
+import com.google.common.collect.ImmutableList;
 
 /**
 * Mock cluster entity for testing.
@@ -28,12 +34,16 @@ import org.apache.brooklyn.util.collections.QuorumCheck.QuorumChecks;
 public class TestClusterImpl extends DynamicClusterImpl implements TestCluster {
     private volatile int size;
 
+    private final List<Integer> desiredSizeHistory = Collections.synchronizedList(new ArrayList<Integer>());
+    private final List<Integer> sizeHistory = Collections.synchronizedList(new ArrayList<Integer>());
+    
     public TestClusterImpl() {
     }
     
     @Override
     public void init() {
         super.init();
+        sizeHistory.add(size);
         size = getConfig(INITIAL_SIZE);
         sensors().set(Startable.SERVICE_UP, true);
     }
@@ -48,8 +58,33 @@ public class TestClusterImpl extends DynamicClusterImpl implements TestCluster {
     
     @Override
     public Integer resize(Integer desiredSize) {
-        this.size = desiredSize;
+        desiredSizeHistory.add(desiredSize);
+        int achievableSize = Math.min(desiredSize, getConfig(MAX_SIZE));
+        
+        if (achievableSize != size) {
+            this.sizeHistory.add(achievableSize);
+            this.size = achievableSize;
+        }
+        
+        if (desiredSize > achievableSize) {
+            throw new InsufficientCapacityException("Simulating insufficient capacity (desiredSize="+desiredSize+"; maxSize="+getConfig(MAX_SIZE)+"; newSize="+size+")");
+        }
+
         return size;
+    }
+    
+    @Override
+    public List<Integer> getSizeHistory() {
+        synchronized (sizeHistory) {
+            return ImmutableList.copyOf(sizeHistory);
+        }
+    }
+    
+    @Override
+    public List<Integer> getDesiredSizeHistory() {
+        synchronized (desiredSizeHistory) {
+            return ImmutableList.copyOf(desiredSizeHistory);
+        }
     }
     
     @Override
