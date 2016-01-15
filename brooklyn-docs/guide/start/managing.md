@@ -16,28 +16,6 @@ children:
 So far we have touched on Brooklyn's ability to *deploy* an application blueprint to a cloud provider, but this just 
 the beginning. The sections below outline how to manage the application that has been deployed.
 
-
-## Scopes in CLI commands
-Many commands require a "scope" expression to indicate the target on which they operate. The scope expressions are
-as follows (values in brackets are aliases for the scope):
-
-- ```application``` APP-ID   (app, a)  
- Selects an application, e.g. "br app myapp"  
-- ```entity```      ENT-ID   (ent, e)  
- Selects an entity within an application scope, e.g. ```br app myapp ent myserver```  
-- ```effector```    EFF-ID   (eff, f)  
- Selects an effector of an entity or application, e.g. ```br a myapp e myserver eff xyz```  
-- ```config```      CONF-KEY (conf, con, c)  
- Selects a configuration key of an entity e.g. ```br a myapp e myserver config jmx.agent.mode```  
-- ```activity```    ACT-ID   (act, v)  
- Selects an activity of an entity e.g. ```br a myapp e myserver act iHG7sq1```  
-
-For example
-{% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r config
-{% endhighlight %}
-runs the ```config``` command with application scope of ```Tomcat``` and entity scope of ```TomcatServer:Wx7r```.
-
 ## Applications
 
 Having created the application we can query its status.  We can find a summary of all deployed apps:
@@ -351,6 +329,28 @@ command may provide information about what happened in any activities that have 
 {% highlight bash %}
 $ br app Tomcat ent TomcatServer:Wx7r act KLTxDkoa stderr
 {% endhighlight %}
+
+
+## Scopes in CLI commands
+Many commands require a "scope" expression to indicate the target on which they operate. The scope expressions are
+as follows (values in brackets are aliases for the scope):
+
+- ```application``` APP-ID   (app, a)  
+ Selects an application, e.g. "br app myapp"  
+- ```entity```      ENT-ID   (ent, e)  
+ Selects an entity within an application scope, e.g. ```br app myapp ent myserver```  
+- ```effector```    EFF-ID   (eff, f)  
+ Selects an effector of an entity or application, e.g. ```br a myapp e myserver eff xyz```  
+- ```config```      CONF-KEY (conf, con, c)  
+ Selects a configuration key of an entity e.g. ```br a myapp e myserver config jmx.agent.mode```  
+- ```activity```    ACT-ID   (act, v)  
+ Selects an activity of an entity e.g. ```br a myapp e myserver act iHG7sq1```  
+
+For example
+{% highlight bash %}
+$ br app Tomcat ent TomcatServer:Wx7r config
+{% endhighlight %}
+runs the ```config``` command with application scope of ```Tomcat``` and entity scope of ```TomcatServer:Wx7r```.
 
 
 ## Next

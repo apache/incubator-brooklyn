@@ -7,7 +7,7 @@ menu_parent: index.md
 
 This guide will walk you through deploying an example 3-tier web application to a public cloud, and demonstrate the autoscaling capabilities of the Brooklyn platform.
 
-An overview of core [Brooklyn concepts](./concept-quickstart.html) is available for reference.
+An overview of core [Brooklyn concepts](./concept-quickstart.html){:target="_blank"} is available for reference.
 
 Two methods of deployment are detailed in this tutorial, using virtualisation with Vagrant and a local install. Both assume that you are using Linux or Mac OS X.
 
@@ -128,7 +128,7 @@ By default it can be accessed by opening [127.0.0.1:8081](http://127.0.0.1:8081)
 
 The rest of this getting started guide uses the Apache Brooklyn command line interface (CLI). To use this, download and install the tool as described on the [CLI GitHub page](https://github.com/brooklyncentral/brooklyn-cli){:target="_blank"}.
 
-The CLI provides the command `br`, it's full usage is described in the user manual which can be found [here](../ops/cli/)
+The CLI provides the command `br`, it's full usage is described in the user manual which can be found [here](../ops/cli/){:target="_blank"}
 
 ## Next
 

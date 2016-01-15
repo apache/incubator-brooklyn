@@ -37,6 +37,7 @@ Timeouts on child entities should be set relative to the start of the `ParallelT
 The `LoopOverGroupMembersTestCase` entity is configured with a target group and a test specification. For each member of the targeted group, the test case will create a TargetableTestComponent entity from the supplied test specification and set the components target to be the group member.
 
 {% highlight yaml %}
+{% readj example_yaml/entities/loopovergroupmembers-entity.yaml %}
 {% endhighlight %}
 
 #### Parameters
@@ -49,6 +50,7 @@ The `LoopOverGroupMembersTestCase` entity is configured with a target group and 
 The `InfrastructureDeploymentTestCase` will first create and deploy an infrastructure from the `infrastructure.deployment.spec` config. It will then retrieve a deployment location by getting the value of the infrastructures `infrastructure.deployment.location.sensor` sensor. It will then create and deploy all entities from the `infrastructure.deployment.spec` config to the deployment location.
 
 {% highlight yaml %}
+{% readj example_yaml/entities/infrastructuredeploymenttestcase-entity.yaml %}
 {% endhighlight %}
 
 #### Parameters
