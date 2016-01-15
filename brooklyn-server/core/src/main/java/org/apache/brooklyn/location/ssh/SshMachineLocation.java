@@ -89,6 +89,7 @@ import org.apache.brooklyn.util.core.task.system.internal.ExecWithLoggingHelpers
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 import org.apache.brooklyn.util.guava.KeyTransformingLoadingCache.KeyTransformingSameTypeLoadingCache;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.pool.BasicPool;
 import org.apache.brooklyn.util.pool.Pool;
 import org.apache.brooklyn.util.ssh.BashCommands;
@@ -389,7 +390,7 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
     private BasicPool<SshTool> buildPool(final Map<String, ?> properties) {
         return BasicPool.<SshTool>builder()
                 .name(getDisplayName()+"@"+address+":"+getPort()+
-                        (config().getRaw(SSH_HOST).isPresent() ? "("+getConfig(SSH_HOST)+":"+getConfig(SSH_PORT)+")" : "")+
+                        (config().getRaw(SSH_HOST).isPresent() ? "("+getConfig(SSH_HOST)+":"+getPort()+")" : "")+
                         ":hash"+System.identityHashCode(this))
                 .supplier(new Supplier<SshTool>() {
                         @Override public SshTool get() {
@@ -550,7 +551,21 @@ public class SshMachineLocation extends AbstractLocation implements MachineLocat
 
     /** port for SSHing */
     public int getPort() {
-        return getConfig(SshTool.PROP_PORT);
+        // Prefer PROP_PORT (i.e. "port"). However if that is explicitly null or is not set, then see if
+        // SSH_PORT (i.e. "brooklyn.ssh.config.port") has been set and use that.
+        // If neither is set (or is explicitly set to null), then use the default PROP_PORT value.
+        //
+        // Note we don't just rely on config().get(PROP_PORT) returning the default, because we hit a rebind
+        // error where the location's port configuration had been explicitly set to null.
+        // See https://issues.apache.org/jira/browse/BROOKLYN-215
+        
+        Maybe<Object> raw = config().getRaw(SshTool.PROP_PORT);
+        if (raw.orNull() == null && config().getRaw(SSH_PORT).orNull() != null) {
+            return config().get(SSH_PORT);
+        } else {
+            Integer result = config().get(SshTool.PROP_PORT);
+            return (result != null) ? result : SshTool.PROP_PORT.getDefaultValue();
+        }
     }
 
     protected <T> T execSsh(final Map<String, ?> props, final Function<ShellTool, T> task) {
