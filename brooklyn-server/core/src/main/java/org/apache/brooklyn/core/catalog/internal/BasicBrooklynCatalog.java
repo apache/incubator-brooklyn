@@ -41,12 +41,14 @@ import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.core.catalog.CatalogPredicates;
 import org.apache.brooklyn.core.catalog.internal.CatalogClasspathDo.CatalogScanningModes;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
+import org.apache.brooklyn.core.mgmt.internal.CampYamlParser;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.typereg.BrooklynTypePlanTransformer;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.AggregateClassLoader;
@@ -395,14 +397,39 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
 
         if (sourceYaml==null) sourceYaml = new Yaml().dump(itemMetadata);
 
-        Map<Object,Object> catalogMetadata = MutableMap.builder().putAll(parentMetadata).putAll(itemMetadata).build();
+        Map<?, ?> itemMetadataWithoutItemDef = MutableMap.builder()
+                .putAll(itemMetadata)
+                .remove("item")
+                .remove("items")
+                .build();
         
+        // Parse CAMP-YAML DSL in item metadata (but not in item or items - those will be parsed only when used). 
+        CampYamlParser parser = mgmt.getConfig().getConfig(CampYamlParser.YAML_PARSER_KEY);
+        if (parser != null) {
+            itemMetadataWithoutItemDef = parser.parse((Map<String, Object>) itemMetadataWithoutItemDef);
+            try {
+                itemMetadataWithoutItemDef = (Map<String, Object>) Tasks.resolveDeepValue(itemMetadataWithoutItemDef, Object.class, mgmt.getServerExecutionContext());
+            } catch (Exception e) {
+                throw Exceptions.propagate(e);
+            }
+            
+        } else {
+            log.info("No Camp-YAML parser regsitered for parsing catalog item DSL; skipping DSL-parsing");
+        }
+
+        Map<Object,Object> catalogMetadata = MutableMap.<Object, Object>builder()
+                .putAll(parentMetadata)
+                .putAll(itemMetadataWithoutItemDef)
+                .putIfNotNull("item", itemMetadata.get("item"))
+                .putIfNotNull("items", itemMetadata.get("items"))
+                .build();
+
         // brooklyn.libraries we treat specially, to append the list, with the child's list preferred in classloading order
         // `libraries` is supported in some places as a legacy syntax; it should always be `brooklyn.libraries` for new apps
         // TODO in 0.8.0 require brooklyn.libraries, don't allow "libraries" on its own
-        List<?> librariesNew = MutableList.copyOf(getFirstAs(itemMetadata, List.class, "brooklyn.libraries", "libraries").orNull());
+        List<?> librariesNew = MutableList.copyOf(getFirstAs(itemMetadataWithoutItemDef, List.class, "brooklyn.libraries", "libraries").orNull());
         Collection<CatalogBundle> libraryBundlesNew = CatalogItemDtoAbstract.parseLibraries(librariesNew);
-        
+
         List<?> librariesCombined = MutableList.copyOf(librariesNew)
             .appendAll(getFirstAs(parentMetadata, List.class, "brooklyn.libraries", "libraries").orNull());
         if (!librariesCombined.isEmpty())
@@ -413,7 +440,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         // (this load is required for the scan below and I think also for yaml resolution)
         CatalogUtils.installLibraries(mgmt, libraryBundlesNew);
 
-        Boolean scanJavaAnnotations = getFirstAs(itemMetadata, Boolean.class, "scanJavaAnnotations", "scan_java_annotations").orNull();
+        Boolean scanJavaAnnotations = getFirstAs(itemMetadataWithoutItemDef, Boolean.class, "scanJavaAnnotations", "scan_java_annotations").orNull();
         if (scanJavaAnnotations==null || !scanJavaAnnotations) {
             // don't scan
         } else {
@@ -433,8 +460,8 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         if (items!=null) {
             int count = 0;
             for (Map<?,?> i: ((List<Map<?,?>>)items)) {
-                collectCatalogItems(Yamls.getTextOfYamlAtPath(sourceYaml, "items", count).getMatchedYamlTextOrWarn(), 
-                    i, result, catalogMetadata);
+                collectCatalogItems(Yamls.getTextOfYamlAtPath(sourceYaml, "items", count).getMatchedYamlTextOrWarn(),
+                        i, result, catalogMetadata);
                 count++;
             }
         }
@@ -584,12 +611,12 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return oldValue;
     }
 
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromLocal(ManagementContext mgmt, Map<Object, Object> catalogMetadata) {
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromLocal(ManagementContext mgmt, Map<?, ?> catalogMetadata) {
         CatalogDto dto = CatalogDto.newNamedInstance("Local Scanned Catalog", "All annotated Brooklyn entities detected in the classpath", "scanning-local-classpath");
         return scanAnnotationsInternal(mgmt, new CatalogDo(dto), catalogMetadata);
     }
     
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromBundles(ManagementContext mgmt, Collection<CatalogBundle> libraries, Map<Object, Object> catalogMetadata) {
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsFromBundles(ManagementContext mgmt, Collection<CatalogBundle> libraries, Map<?, ?> catalogMetadata) {
         CatalogDto dto = CatalogDto.newNamedInstance("Bundles Scanned Catalog", "All annotated Brooklyn entities detected in bundles", "scanning-bundles-classpath-"+libraries.hashCode());
         List<String> urls = MutableList.of();
         for (CatalogBundle b: libraries) {
@@ -610,7 +637,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         return scanAnnotationsInternal(mgmt, subCatalog, catalogMetadata);
     }
     
-    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsInternal(ManagementContext mgmt, CatalogDo subCatalog, Map<Object, Object> catalogMetadata) {
+    private Collection<CatalogItemDtoAbstract<?, ?>> scanAnnotationsInternal(ManagementContext mgmt, CatalogDo subCatalog, Map<?, ?> catalogMetadata) {
         // TODO this does java-scanning only;
         // the call when scanning bundles should use the CatalogItem instead and use OSGi when loading for scanning
         // (or another scanning mechanism).  see comments on CatalogClasspathDo.load
@@ -991,7 +1018,7 @@ public class BasicBrooklynCatalog implements BrooklynCatalog {
         };
     }
     
-    private static <T,SpecT> Function<CatalogItemDo<T, SpecT>, CatalogItem<T,SpecT>> itemDoToDtoAddingSelectedMetadataDuringScan(final Map<Object, Object> catalogMetadata) {
+    private static <T,SpecT> Function<CatalogItemDo<T, SpecT>, CatalogItem<T,SpecT>> itemDoToDtoAddingSelectedMetadataDuringScan(final Map<?, ?> catalogMetadata) {
         return new Function<CatalogItemDo<T,SpecT>, CatalogItem<T,SpecT>>() {
             @Override
             public CatalogItem<T,SpecT> apply(@Nullable CatalogItemDo<T,SpecT> item) {
