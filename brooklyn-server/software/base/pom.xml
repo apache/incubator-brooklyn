@@ -163,6 +163,10 @@
                 <configuration>
                     <instructions>
                         <Include-Resource>{maven-resources}, target/classes/brooklyn-jmxmp-agent-shaded-${project.version}.jar, target/classes/brooklyn-jmxrmi-agent-${project.version}.jar</Include-Resource>
+                        <Import-Package>
+                            !org.python.core,
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

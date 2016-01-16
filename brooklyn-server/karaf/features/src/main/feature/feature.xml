@@ -197,4 +197,22 @@
         <!--<feature version="${project.version}">brooklyn-core</feature>-->
     </feature>
   
+    <feature name="brooklyn-software-winrm" version="${project.version}" description="Brooklyn WinRM Software Entities">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-software-winrm/${project.version}</bundle>
+        <feature>brooklyn-core</feature>
+        <bundle dependency="true">wrap:mvn:io.cloudsoft.windows/winrm4j/${winrm4j.version}</bundle>
+    </feature>
+
+    <feature name="brooklyn-policy"  version="${project.version}" description="Brooklyn Policies">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-policy/${project.version}</bundle>
+        <feature>brooklyn-core</feature>
+    </feature>
+
+    <feature name="brooklyn-software-base"  version="${project.version}"  description="Brooklyn Software Base">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-software-base/${project.version}</bundle>
+        <feature>brooklyn-software-winrm</feature>
+        <feature>brooklyn-policy</feature>
+        <!-- python dependency required but not supported since karaf cannot handle its runtime bindings -->
+    </feature>
+
 </features>
