@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,7 +27,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -65,7 +63,6 @@ import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
-import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
@@ -96,11 +93,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         };
     };
 
-    @Override
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response createFromMultipart(InputStream uploadedInputStream) {
-      return create(Streams.readFullyString(uploadedInputStream));
-    }
+//    @Override
+//    @Consumes(MediaType.MULTIPART_FORM_DATA)
+//    public Response createFromMultipart(InputStream uploadedInputStream) {
+//      return create(Streams.readFullyString(uploadedInputStream));
+//    }
 
     static Set<String> missingIcons = MutableSet.of();
     

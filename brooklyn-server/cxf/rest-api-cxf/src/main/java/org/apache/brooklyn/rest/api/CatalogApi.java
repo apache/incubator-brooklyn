@@ -43,8 +43,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import java.io.InputStream;
-import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 
 @Path("/catalog")
 @Api("Catalog")
@@ -52,13 +50,13 @@ import org.apache.cxf.jaxrs.ext.multipart.Multipart;
 @Produces(MediaType.APPLICATION_JSON)
 public interface CatalogApi {
 
-    @POST
-    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor from browser using multipart/form-data",
-        response = String.class)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response createFromMultipart(
-        @ApiParam(name = "yaml", value = "multipart/form-data file input field")
-        @Multipart(value = "yaml", type = "application/x-yaml") InputStream uploadedInputStream);
+//    @POST
+//    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor from browser using multipart/form-data",
+//        response = String.class)
+//    @Consumes(MediaType.MULTIPART_FORM_DATA)
+//    public Response createFromMultipart(
+//        @ApiParam(name = "yaml", value = "multipart/form-data file input field")
+//        @Multipart(value = "yaml", type = "application/x-yaml") InputStream uploadedInputStream);
 
     @Consumes
     @POST

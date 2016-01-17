@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,7 +27,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -66,7 +64,6 @@ import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
-import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
@@ -79,7 +76,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-import com.sun.jersey.core.header.FormDataContentDisposition;
 
 @HaHotStateRequired
 public class CatalogResource extends AbstractBrooklynRestResource implements CatalogApi {
@@ -94,11 +90,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         }
     };
 
-    @Override
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response createFromMultipart(InputStream uploadedInputStream, FormDataContentDisposition fileDetail) {
-      return create(Streams.readFullyString(uploadedInputStream));
-    }
+//    @Override
+//    @Consumes(MediaType.MULTIPART_FORM_DATA)
+//    public Response createFromMultipart(InputStream uploadedInputStream, FormDataContentDisposition fileDetail) {
+//      return create(Streams.readFullyString(uploadedInputStream));
+//    }
 
     static Set<String> missingIcons = MutableSet.of();
     

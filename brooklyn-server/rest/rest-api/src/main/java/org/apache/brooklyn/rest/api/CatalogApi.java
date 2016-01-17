@@ -39,8 +39,6 @@ import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.domain.CatalogPolicySummary;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -53,14 +51,14 @@ import io.swagger.annotations.ApiParam;
 @Produces(MediaType.APPLICATION_JSON)
 public interface CatalogApi {
 
-    @POST
-    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor from browser using multipart/form-data",
-        response = String.class)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response createFromMultipart(
-        @ApiParam(name = "yaml", value = "multipart/form-data file input field")
-        @FormDataParam("yaml") InputStream uploadedInputStream,
-        @FormDataParam("yaml") FormDataContentDisposition fileDetail);
+//    @POST
+//    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor from browser using multipart/form-data",
+//        response = String.class)
+//    @Consumes(MediaType.MULTIPART_FORM_DATA)
+//    public Response createFromMultipart(
+//        @ApiParam(name = "yaml", value = "multipart/form-data file input field")
+//        @FormDataParam("yaml") InputStream uploadedInputStream,
+//        @FormDataParam("yaml") FormDataContentDisposition fileDetail);
 
     @Consumes
     @POST
