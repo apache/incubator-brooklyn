@@ -378,6 +378,12 @@ several times) before the VM is usable.
 This could cause the WinRM connection attempts to timeout. The location configuration option 
 `waitForWinRmAvailable` defaults to `30m` (i.e. 30 minutes). This can be increased if required.
 
+Incorrectly prepared Windows template can cause the deployment to time-out expecting an interaction by the user.
+You can verify if this is the case by RDP to the deployment which is taking to much time to complete. 
+It is recommended to manually deploy a single VM for every newly created Windows template to verify that it can be
+used for unattended installations and it doesn't wait and/or require an input by the user.
+See [Windows template settings for an Unattended Installation](#windows-template-settings-for-an-unattended-installation) under Known Limitations below. 
+
 ### Windows log files
 
 Details of the commands executed, and their results, can be found in the Brooklyn log and in the Brooklyn 
@@ -499,3 +505,12 @@ entities are installed.
 
 Blueprint authors are strongly encourages to explicitly specific directories for file
 uploads and in their Powershell scripts.
+
+### Windows template settings for an Unattended Installation
+
+Windows template needs certain configuration to be applied to prevent windows setup UI from being displayed.
+The default behavior is to display it if there are incorrect or empty settings. Showing Setup UI will prevent the proper
+deployment, because it will expect interaction by the user such as agreeing on the license agreement or some of the setup dialogs.
+
+Detailed instruction how to prepare an Unattended installation are provided at [https://technet.microsoft.com/en-us/library/cc722411%28v=ws.10%29.aspx](https://technet.microsoft.com/en-us/library/cc722411%28v=ws.10%29.aspx).
+
