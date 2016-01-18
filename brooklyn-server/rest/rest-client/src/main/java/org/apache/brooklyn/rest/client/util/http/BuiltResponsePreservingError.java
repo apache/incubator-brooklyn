@@ -70,7 +70,9 @@ public class BuiltResponsePreservingError extends BuiltResponse {
     
     @Override
     public Object getEntity() {
-        if (error!=null) Exceptions.propagate(error);
+        if (error!=null) {
+            throw new IllegalStateException("getEntity called on BuiltResponsePreservingError, where an Error had been preserved", error);
+        }
         return super.getEntity();
     }
 
