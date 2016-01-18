@@ -57,7 +57,7 @@
     <jclouds.groupId>org.apache.jclouds</jclouds.groupId> <!-- JCLOUDS_GROUPID_VERSION -->
 
     <!-- versions should match those used by Brooklyn, to avoid conflicts -->
-    <jclouds.version>1.9.1</jclouds.version> <!-- JCLOUDS_VERSION -->
+    <jclouds.version>1.9.2</jclouds.version> <!-- JCLOUDS_VERSION -->
     <logback.version>1.0.7</logback.version>
     <slf4j.version>1.6.6</slf4j.version>  <!-- used for java.util.logging jul-to-slf4j interception -->
     <guava.version>17.0</guava.version>
