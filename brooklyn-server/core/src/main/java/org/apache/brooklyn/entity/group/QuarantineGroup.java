@@ -27,8 +27,6 @@ import org.apache.brooklyn.core.config.ConfigKeys;
 @ImplementedBy(QuarantineGroupImpl.class)
 public interface QuarantineGroup extends AbstractGroup {
 
-    ConfigKey<Boolean> MEMBER_DELEGATE_CHILDREN = ConfigKeys.newConfigKeyWithDefault(AbstractGroup.MEMBER_DELEGATE_CHILDREN, Boolean.TRUE);
-
     @Effector(description="Removes all members of the quarantined group, unmanaging them")
     void expungeMembers(
             @EffectorParam(name="firstStop", description="Whether to first call stop() on those members that are stoppable") boolean stopFirst);

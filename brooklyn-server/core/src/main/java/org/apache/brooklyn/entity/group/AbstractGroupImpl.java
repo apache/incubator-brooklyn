@@ -146,6 +146,7 @@ public abstract class AbstractGroupImpl extends AbstractEntity implements Abstra
                 sensors().emit(MEMBER_ADDED, member);
 
                 if (Boolean.TRUE.equals(getConfig(MEMBER_DELEGATE_CHILDREN))) {
+                    log.warn("Use of deprecated ConfigKey {} in {} (as of 0.9.0)", MEMBER_DELEGATE_CHILDREN.getName(), this);
                     Optional<Entity> result = Iterables.tryFind(getChildren(), Predicates.equalTo(member));
                     if (!result.isPresent()) {
                         String nameFormat = Optional.fromNullable(getConfig(MEMBER_DELEGATE_NAME_FORMAT)).or("%s");
