@@ -44,7 +44,7 @@ import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.core.internal.ssh.SshTool;
 import org.apache.brooklyn.util.core.internal.winrm.WinRmTool;
 import org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse;
-import org.apache.brooklyn.util.core.internal.winrm.pywinrm.Winrm4jTool;
+import org.apache.brooklyn.util.core.internal.winrm.winrm4j.Winrm4jTool;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
@@ -212,17 +212,50 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         return (result == null) ? ImmutableSet.<String>of() : ImmutableSet.copyOf(result);
     }
 
+    /**
+     * @deprecated since 0.9.0; use {@link #executeCommand(String)}
+     */
+    @Deprecated
     public WinRmToolResponse executeScript(String script) {
-        return executeScript(ImmutableList.of(script));
+        return executeCommand(script);
     }
 
+    /**
+     * @deprecated since 0.9.0; use {@link #executeCommand(List)}
+     */
+    @Deprecated
     public WinRmToolResponse executeScript(List<String> script) {
-        return executeScript(ImmutableMap.of(), script);
+        return executeCommand(script);
     }
     
+    /**
+     * @deprecated since 0.9.0; use {@link #executeCommand(Map, List)}
+     */
+    @Deprecated
     public WinRmToolResponse executeScript(Map<?,?> props, List<String> script) {
+        return executeCommand(props, script);
+    }
+
+    /**
+     * @since 0.9.0 (previously was {@code executeScript(String)}
+     */
+    public WinRmToolResponse executeCommand(String script) {
+        return executeCommand(ImmutableList.of(script));
+    }
+
+    /**
+     * @since 0.9.0 (previously was {@code executeScript(List)}
+     */
+    public WinRmToolResponse executeCommand(List<String> script) {
+        return executeCommand(ImmutableMap.of(), script);
+    }
+    
+    /**
+     * @since 0.9.0 (previously was {@code executeScript(Map, List)}
+     */
+    public WinRmToolResponse executeCommand(Map<?,?> props, List<String> script) {
         WinRmTool tool = newWinRmTool(props);
-        return tool.executeScript(script);
+        return tool.executeCommand(script);
     }
 
     public WinRmToolResponse executePsScript(String psScript) {

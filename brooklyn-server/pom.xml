@@ -146,7 +146,7 @@
         <jsr311-api.version>1.1.1</jsr311-api.version>
         <maxmind.version>0.8.1</maxmind.version>
         <jna.version>4.0.0</jna.version>
-        <winrm4j.version>0.1.0</winrm4j.version>
+        <winrm4j.version>0.2.0</winrm4j.version>
         
         <!-- Transitive dependencies, declared explicitly to avoid version mismatch -->
         <clojure.version>1.4.0</clojure.version>

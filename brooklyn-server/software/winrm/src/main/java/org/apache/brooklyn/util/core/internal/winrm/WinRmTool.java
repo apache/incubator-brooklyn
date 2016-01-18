@@ -66,7 +66,16 @@ public interface WinRmTool {
             "Size of file chunks (in bytes) to be used when copying a file to the remote server", 
             1024);
 
+    /**
+     * @deprecated since 0.9.0; use {@link #executeCommand(List)} to avoid ambiguity between native command and power shell.
+     */
+    @Deprecated
     WinRmToolResponse executeScript(List<String> commands);
+
+    /**
+     * @since 0.9.0
+     */
+    WinRmToolResponse executeCommand(List<String> commands);
 
     WinRmToolResponse executePs(List<String> commands);
     

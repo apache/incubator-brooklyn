@@ -63,7 +63,7 @@ import com.google.common.util.concurrent.MoreExecutors;
  * Tests execution of commands (batch and powershell) on Windows over WinRM, and of
  * file upload.
  * 
- * There are limitations with what is supported by PyWinRM. These are highlighted in
+ * There are limitations with what is supported by winrm4j. These are highlighted in
  * tests marked as "WIP" (see individual tests).
  * 
  * These limitations are documented in docs/guide/yaml/winrm/index.md.
@@ -146,7 +146,7 @@ public class WinRmMachineLocationLiveTest {
         String remotePath = "C:\\myfile-"+Identifiers.makeRandomId(4)+".txt";
         machine.copyTo(new ByteArrayInputStream(contents.getBytes()), remotePath);
         
-        WinRmToolResponse response = machine.executeScript("type "+remotePath);
+        WinRmToolResponse response = machine.executeCommand("type "+remotePath);
         String msg = "statusCode="+response.getStatusCode()+"; out="+response.getStdOut()+"; err="+response.getStdErr();
         assertEquals(response.getStatusCode(), 0, msg);
         assertEquals(response.getStdOut().trim(), contents, msg);
@@ -159,7 +159,7 @@ public class WinRmMachineLocationLiveTest {
             String remotePath = "C:\\myfile-"+Identifiers.makeRandomId(4)+".txt";
             machine.copyTo(localFile, remotePath);
             
-            WinRmToolResponse response = machine.executeScript("type "+remotePath);
+            WinRmToolResponse response = machine.executeCommand("type "+remotePath);
             String msg = "statusCode="+response.getStatusCode()+"; out="+response.getStdOut()+"; err="+response.getStdErr();
             assertEquals(response.getStatusCode(), 0, msg);
             assertEquals(response.getStdOut().trim(), contents, msg);
@@ -174,26 +174,18 @@ public class WinRmMachineLocationLiveTest {
     }
     
     /*
-     * TODO Not supported in PyWinRM.
+     * TODO Not supported in winrm4j (or PyWinRM).
      * 
-     * Executing (in python):
-     *     import winrm
-     *     s = winrm.Session('52.12.211.247', auth=('Administrator', 'pa55w0rd'))
-     *     r = s.run_cmd("echo first \r\n echo second")
-     * gives just "first".
+     * Just gives "first", and exit code 1.
      */
-    @Test(groups={"Live", "WIP"})
+    @Test(groups={"Live", "WIP"}, enabled=false)
     public void testExecMultiLineScript() throws Exception {
         assertExecSucceeds("echo first" + "\r\n" + "echo second", "first"+"\r\n"+"second", "");
     }
     
-    /*
-     * TODO Not supported in PyWinRM. Under the covers, we just concatenate the commands.
-     * See {@link #testExecMultiLineScript()}.
-     */
-    @Test(groups={"Live", "WIP"})
+    @Test(groups={"Live"})
     public void testExecMultiPartScript() throws Exception {
-        assertExecSucceeds(ImmutableList.of("echo first", "echo second"), "first"+"\r\n"+"second", "");
+        assertExecSucceeds(ImmutableList.of("echo first", "echo second"), "first "+"\r\n"+"second", "");
     }
     
     @Test(groups="Live")
@@ -212,7 +204,7 @@ public class WinRmMachineLocationLiveTest {
     }
 
     /*
-     * TODO Not supported in PyWinRM.
+     * TODO Not supported in winrm4j (or PyWinRM).
      * 
      * Executing (in python):
      *     import winrm
@@ -443,7 +435,7 @@ public class WinRmMachineLocationLiveTest {
     }
 
     /*
-     * TODO Not supported in PyWinRM - single line .ps1 file with "exit 1" gives an
+     * TODO Not supported in winrm4j - single line .ps1 file with "exit 1" gives an
      * exit code 0 over PyWinRM, but an exit code 1 when executed locally!
      * 
      * Executing (in python):
@@ -554,12 +546,12 @@ public class WinRmMachineLocationLiveTest {
 
     private void assertExecFails(String cmd) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        assertFailed(cmd, machine.executeScript(cmd), stopwatch);
+        assertFailed(cmd, machine.executeCommand(cmd), stopwatch);
     }
 
     private void assertExecFails(List<String> cmds) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        assertFailed(cmds, machine.executeScript(cmds), stopwatch);
+        assertFailed(cmds, machine.executeCommand(cmds), stopwatch);
     }
     
     private void assertExecPsFails(String cmd) {
@@ -574,12 +566,12 @@ public class WinRmMachineLocationLiveTest {
 
     private void assertExecSucceeds(String cmd, String stdout, String stderr) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        assertSucceeded(cmd, machine.executeScript(cmd), stdout, stderr, stopwatch);
+        assertSucceeded(cmd, machine.executeCommand(cmd), stdout, stderr, stopwatch);
     }
 
     private void assertExecSucceeds(List<String> cmds, String stdout, String stderr) {
         Stopwatch stopwatch = Stopwatch.createStarted();
-        assertSucceeded(cmds, machine.executeScript(cmds), stdout, stderr, stopwatch);
+        assertSucceeded(cmds, machine.executeCommand(cmds), stdout, stderr, stopwatch);
     }
 
     private void assertExecPsSucceeds(String cmd, String stdout, String stderr) {
