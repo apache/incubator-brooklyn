@@ -18,13 +18,11 @@
  */
 package org.apache.brooklyn.entity.group;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -112,16 +110,11 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
     
     @Override
     public void start(Collection<? extends Location> locsO) {
-        if (locsO!=null) {
-            addLocations(locsO);
-        }
-        Collection<Location> locs = Collections.unmodifiableCollection(Locations.getLocationsCheckingAncestors(getLocations(), this));
-
-        List<Location> newLocations = MutableList.copyOf(locsO);
-        if (newLocations.isEmpty()) newLocations.addAll(locs);
+        addLocations(locsO);
+        List<Location> locationsToStart = MutableList.copyOf(Locations.getLocationsCheckingAncestors(locsO, this));
         
-        Preconditions.checkNotNull(newLocations, "locations must be supplied");
-        Preconditions.checkArgument(newLocations.size() >= 1, "One or more locations must be supplied");
+        Preconditions.checkNotNull(locationsToStart, "locations must be supplied");
+        Preconditions.checkArgument(locationsToStart.size() >= 1, "One or more locations must be supplied");
         
         int locIndex = 0;
         
@@ -137,8 +130,8 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
                     Location it = null;
                     if (child.getLocations().isEmpty())
                         // give him any of these locations if he has none, allowing round robin here
-                        if (!newLocations.isEmpty()) {
-                            it = newLocations.get(locIndex++ % newLocations.size());
+                        if (!locationsToStart.isEmpty()) {
+                            it = locationsToStart.get(locIndex++ % locationsToStart.size());
                             ((EntityInternal)child).addLocations(Arrays.asList(it));
                         }
                     
@@ -148,12 +141,12 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
                 }
             }
             // remove all the locations we applied to existing nodes
-            while (locIndex-->0 && !newLocations.isEmpty())
-                newLocations.remove(0);
+            while (locIndex-->0 && !locationsToStart.isEmpty())
+                locationsToStart.remove(0);
 
             // finally (and usually) we create new entities for locations passed in
             // (unless they were consumed by pre-existing children which didn't have locations)
-            for (Location it : newLocations) {
+            for (Location it : locationsToStart) {
                 Entity e = addCluster(it);
                 
                 ((EntityInternal)e).addLocations(Arrays.asList(it));
