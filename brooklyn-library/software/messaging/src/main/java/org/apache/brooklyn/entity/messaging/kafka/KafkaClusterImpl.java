@@ -28,6 +28,7 @@ import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.feed.ConfigToAttributes;
+import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,11 +105,14 @@ public class KafkaClusterImpl extends AbstractEntity implements KafkaCluster {
     @Override
     public void start(Collection<? extends Location> locations) {
         if (isLegacyConstruction()) {
+            // TODO should no longer be needed?
             init();
         }
 
-        if (locations.isEmpty()) locations = getLocations();
+        locations = MutableList.copyOf(Locations.getLocationsCheckingAncestors(locations, this));
+
         Iterables.getOnlyElement(locations); // Assert just one
+        // set it; here we don't allow changing locations
         addLocations(locations);
 
         List<Entity> childrenToStart = MutableList.<Entity>of(getCluster());

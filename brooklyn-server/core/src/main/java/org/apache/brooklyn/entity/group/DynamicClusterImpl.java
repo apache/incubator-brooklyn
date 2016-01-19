@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.group;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -311,15 +312,16 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         setConfigEvenIfOwned(FACTORY, factory);
     }
 
-    private Location getLocation() {
+    private Location getLocation(boolean required) {
         Collection<? extends Location> ll = Locations.getLocationsCheckingAncestors(getLocations(), this);
-        try {
-            return Iterables.getOnlyElement(ll);
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            if (ll.isEmpty()) throw new IllegalStateException("No location available for "+this);
-            else throw new IllegalStateException("Ambiguous location for "+this+"; expected one but had "+ll);
+        if (ll.isEmpty()) {
+            if (!required) return null;
+            throw new IllegalStateException("No location available for "+this);
         }
+        if (ll.size()>1) {
+            throw new IllegalStateException("Ambiguous location for "+this+"; expected one but had "+ll);
+        }
+        return Iterables.getOnlyElement(ll);
     }
 
     protected boolean isAvailabilityZoneEnabled() {
@@ -360,18 +362,17 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     @Override
     public void start(Collection<? extends Location> locsO) {
-        if (locsO!=null) {
-            checkArgument(locsO.size() <= 1, "Wrong number of locations supplied to start %s: %s", this, locsO);
-            addLocations(locsO);
-        }
-        Location loc = getLocation();
+        addLocations(locsO);
+        Location loc = getLocation(false);
 
         EntitySpec<?> spec = getConfig(MEMBER_SPEC);
         if (spec!=null) {
-            setDefaultDisplayName("Cluster of "+JavaClassNames.simpleClassName(spec.getType()) +" ("+loc+")");
+            setDefaultDisplayName("Cluster of "+JavaClassNames.simpleClassName(spec.getType()) +
+                (loc!=null ? " ("+loc+")" : ""));
         }
 
         if (isAvailabilityZoneEnabled()) {
+            if (loc==null) throw new IllegalStateException("When using availability zones, a location must be specified on the cluster");
             sensors().set(SUB_LOCATIONS, findSubLocations(loc));
         }
 
@@ -574,7 +575,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
             Location memberLoc = null;
             if (isAvailabilityZoneEnabled()) {
                 // this member's location could be a machine provisioned by a sub-location, or the actual sub-location
-                List<Location> subLocations = findSubLocations(getLocation());
+                List<Location> subLocations = findSubLocations(getLocation(true));
                 Collection<Location> actualMemberLocs = member.getLocations();
                 boolean foundMatch = false;
                 for (Iterator<Location> iter = actualMemberLocs.iterator(); !foundMatch && iter.hasNext();) {
@@ -605,7 +606,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                 // Replacing member, so new member should be in the same location as that being replaced.
                 // Expect this to agree with `getMemberSpec().getLocations()` (if set). If not, then 
                 // presumably there was a reason this specific member was started somewhere else!
-                memberLoc = getLocation();
+                memberLoc = getLocation(false);
             }
 
             Entity replacement = replaceMember(member, memberLoc, ImmutableMap.of());
@@ -616,7 +617,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     /**
      * @throws StopFailedRuntimeException If stop failed, after successfully starting replacement
      */
-    protected Entity replaceMember(Entity member, Location memberLoc, Map<?, ?> extraFlags) {
+    protected Entity replaceMember(Entity member, @Nullable Location memberLoc, Map<?, ?> extraFlags) {
         synchronized (mutex) {
             ReferenceWithError<Optional<Entity>> added = addInSingleLocation(memberLoc, extraFlags);
 
@@ -653,7 +654,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     protected List<Location> getNonFailedSubLocations() {
         List<Location> result = Lists.newArrayList();
         Set<Location> failed = Sets.newLinkedHashSet();
-        List<Location> subLocations = findSubLocations(getLocation());
+        List<Location> subLocations = findSubLocations(getLocation(true));
         Set<Location> oldFailedSubLocations = getAttribute(FAILED_SUB_LOCATIONS);
         if (oldFailedSubLocations == null)
             oldFailedSubLocations = ImmutableSet.<Location> of();
@@ -722,7 +723,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
                         + ", when expected delta " + delta + " in " + this);
             }
         } else {
-            chosenLocations = Collections.nCopies(delta, getLocation());
+            chosenLocations = Collections.nCopies(delta, getLocation(false));
         }
 
         // create and start the entities.
@@ -759,8 +760,8 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         }
     }
 
-    protected ReferenceWithError<Optional<Entity>> addInSingleLocation(Location location, Map<?,?> flags) {
-        ReferenceWithError<Collection<Entity>> added = addInEachLocation(ImmutableList.of(location), flags);
+    protected ReferenceWithError<Optional<Entity>> addInSingleLocation(@Nullable Location location, Map<?,?> flags) {
+        ReferenceWithError<Collection<Entity>> added = addInEachLocation(Arrays.asList(location), flags);
         
         Optional<Entity> result = Iterables.isEmpty(added.getWithoutError()) ? Optional.<Entity>absent() : Optional.of(Iterables.getOnlyElement(added.get()));
         if (!added.hasError()) {
@@ -885,7 +886,7 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
     }
 
     @Override
-    public Entity addNode(Location loc, Map<?, ?> extraFlags) {
+    public Entity addNode(@Nullable Location loc, Map<?, ?> extraFlags) {
         // In case subclasses are foolish and do not call super.init() when overriding.
         initialiseMemberId();
         Map<?, ?> createFlags = MutableMap.builder()
@@ -917,7 +918,9 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
         if (memberSpec == null) memberSpec = getMemberSpec();
         
         if (memberSpec != null) {
-            return addChild(EntitySpec.create(memberSpec).configure(flags).location(loc));
+            EntitySpec<?> specConfigured = EntitySpec.create(memberSpec).configure(flags);
+            if (loc!=null) specConfigured.location(loc);
+            return addChild(specConfigured);
         }
 
         EntityFactory<?> factory = getFactory();

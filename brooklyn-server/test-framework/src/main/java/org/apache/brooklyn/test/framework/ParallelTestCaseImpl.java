@@ -49,7 +49,7 @@ public class ParallelTestCaseImpl extends TargetableTestComponentImpl implements
         try {
             // Get an unsubmitted task for starting all the children of this entity in parallel,
             // at the same location as this entity.
-            final TaskAdaptable<?> taskAdaptable = StartableMethods.startingChildren(this);
+            final TaskAdaptable<?> taskAdaptable = StartableMethods.startingChildren(this, locations);
             logger.trace("{}, TaskAdaptable: {}", this, taskAdaptable);
 
             // Submit the task to the ExecutionManager so that they actually get started

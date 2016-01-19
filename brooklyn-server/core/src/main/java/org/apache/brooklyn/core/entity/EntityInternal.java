@@ -21,6 +21,8 @@ package org.apache.brooklyn.core.entity;
 import java.util.Collection;
 import java.util.Map;
 
+import javax.annotation.Nullable;
+
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntityLocal;
@@ -48,7 +50,7 @@ import com.google.common.annotations.Beta;
 @Beta
 public interface EntityInternal extends BrooklynObjectInternal, EntityLocal, Rebindable {
     
-    void addLocations(Collection<? extends Location> locations);
+    void addLocations(@Nullable Collection<? extends Location> locations);
 
     void removeLocations(Collection<? extends Location> locations);
 

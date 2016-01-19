@@ -110,9 +110,9 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         try {
             app.createAndManageChild(EntitySpec.create(DynamicCluster.class)
                     .configure("factory", "error"));
-            fail();
+            Asserts.shouldHaveFailedPreviously();
         } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
+            Asserts.expectedFailure(e);
         }
     }
 
@@ -121,9 +121,9 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
         DynamicCluster c = app.createAndManageChild(EntitySpec.create(DynamicCluster.class));
         try {
             c.start(ImmutableList.of(loc));
-            fail();
+            Asserts.shouldHaveFailedPreviously();
         } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            Asserts.expectedFailureOfType(e, IllegalStateException.class);
         }
     }
     
@@ -135,9 +135,9 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
             cluster.start(ImmutableList.of(loc));
             cluster.stop();
             cluster.start(ImmutableList.of(loc2));
-            fail();
+            Asserts.shouldHaveFailedPreviously();
         } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalStateException.class) == null) throw e;
+            Asserts.expectedFailureOfType(e, IllegalStateException.class);
         }
     }
 
@@ -147,9 +147,9 @@ public class DynamicClusterTest extends BrooklynAppUnitTestSupport {
                 .configure(DynamicCluster.MEMBER_SPEC, EntitySpec.create(TestEntity.class)));
         try {
             cluster.start(ImmutableList.of(loc, loc2));
-            fail();
+            Asserts.shouldHaveFailedPreviously();
         } catch (Exception e) {
-            if (Exceptions.getFirstThrowableOfType(e, IllegalArgumentException.class) == null) throw e;
+            Asserts.expectedFailureContainsIgnoreCase(e, "ambiguous");
         }
     }
 

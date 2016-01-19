@@ -874,15 +874,18 @@ public abstract class AbstractEntity extends AbstractBrooklynObject implements E
 
     @Override
     public void addLocations(Collection<? extends Location> newLocations) {
+        if (newLocations==null || newLocations.isEmpty()) {
+            return;
+        }
         synchronized (locations) {
             List<Location> oldLocations = locations.get();
-            Set<Location> truelyNewLocations = Sets.newLinkedHashSet(newLocations);
-            truelyNewLocations.removeAll(oldLocations);
-            if (truelyNewLocations.size() > 0) {
-                locations.set(ImmutableList.<Location>builder().addAll(oldLocations).addAll(truelyNewLocations).build());
+            Set<Location> trulyNewLocations = Sets.newLinkedHashSet(newLocations);
+            trulyNewLocations.removeAll(oldLocations);
+            if (trulyNewLocations.size() > 0) {
+                locations.set(ImmutableList.<Location>builder().addAll(oldLocations).addAll(trulyNewLocations).build());
             }
             
-            for (Location loc : truelyNewLocations) {
+            for (Location loc : trulyNewLocations) {
                 sensors().emit(AbstractEntity.LOCATION_ADDED, loc);
             }
         }

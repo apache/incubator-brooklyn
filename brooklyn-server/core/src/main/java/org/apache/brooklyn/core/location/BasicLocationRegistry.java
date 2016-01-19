@@ -430,7 +430,9 @@ public class BasicLocationRegistry implements LocationRegistry {
     public List<Location> resolve(Iterable<?> spec) {
         List<Location> result = new ArrayList<Location>();
         for (Object id : spec) {
-            if (id instanceof String) {
+            if (id==null) {
+                // drop a null entry
+            } if (id instanceof String) {
                 result.add(resolve((String) id));
             } else if (id instanceof Location) {
                 result.add((Location) id);

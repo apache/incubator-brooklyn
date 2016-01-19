@@ -38,6 +38,7 @@ public class DataEntityImpl extends AbstractEntity implements DataEntity {
 
     @Override
     public void start(Collection<? extends Location> locations) {
+        addLocations(locations);
         connectSensors();
         sensors().set(SERVICE_UP, Boolean.TRUE);
     }
