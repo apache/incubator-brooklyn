@@ -25,12 +25,12 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
+import org.apache.brooklyn.location.ssh.SshMachineLocation;
+import org.apache.brooklyn.util.collections.Jsonya;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.location.ssh.SshMachineLocation;
-import org.apache.brooklyn.util.collections.Jsonya;
 
 @Test
 public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {
@@ -97,6 +97,6 @@ public class EmptySoftwareProcessYamlTest extends AbstractYamlTest {
         Location actualMachine = entityLocationIterator.next();
         Assert.assertTrue(actualMachine instanceof SshMachineLocation, "wrong location: "+actualMachine);
         // TODO this, below, probably should be 'localhost on entity', see #1377
-        Assert.assertEquals(actualMachine.getParent().getDisplayName(), "loopback on app");
+        Assert.assertEquals(actualMachine.getParent().getDisplayName(), "localhost on entity");
     }
 }
