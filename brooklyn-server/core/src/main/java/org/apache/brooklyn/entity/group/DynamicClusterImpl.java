@@ -314,14 +314,14 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     private Location getLocation(boolean required) {
         Collection<? extends Location> ll = Locations.getLocationsCheckingAncestors(getLocations(), this);
-        try {
-            if (!required && ll.isEmpty()) return null;
-            return Iterables.getOnlyElement(ll);
-        } catch (Exception e) {
-            Exceptions.propagateIfFatal(e);
-            if (ll.isEmpty()) throw new IllegalStateException("No location available for "+this);
-            else throw new IllegalStateException("Ambiguous location for "+this+"; expected one but had "+ll);
+        if (ll.isEmpty()) {
+            if (!required) return null;
+            throw new IllegalStateException("No location available for "+this);
         }
+        if (ll.size()>1) {
+            throw new IllegalStateException("Ambiguous location for "+this+"; expected one but had "+ll);
+        }
+        return Iterables.getOnlyElement(ll);
     }
 
     protected boolean isAvailabilityZoneEnabled() {

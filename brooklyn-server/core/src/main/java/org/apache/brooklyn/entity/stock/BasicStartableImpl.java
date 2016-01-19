@@ -48,11 +48,12 @@ public class BasicStartableImpl extends AbstractEntity implements BasicStartable
 
     @Override
     public void start(Collection<? extends Location> locations) {
-        log.info("Starting entity "+this+" at "+locations);
         try {
             ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
 
             addLocations(locations);
+            locations = Locations.getLocationsCheckingAncestors(locations, this);
+            log.info("Starting entity "+this+" at "+locations);
 
             // essentially does StartableMethods.start(this, locations),
             // but optionally filters locations for each child

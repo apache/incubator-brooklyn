@@ -21,6 +21,7 @@ package org.apache.brooklyn.entity.software.base;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -28,6 +29,7 @@ import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic.ComputeServiceIndicatorsFromChildrenAndMembers;
+import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.entity.software.base.lifecycle.MachineLifecycleEffectorTasks;
 import org.apache.brooklyn.util.collections.QuorumCheck;
 import org.apache.brooklyn.util.core.config.ConfigBag;
@@ -68,7 +70,10 @@ public class SameServerEntityImpl extends AbstractEntity implements SameServerEn
      * Subclasses should override {@link #doStart} to customise behaviour.
      */
     @Override
-    public final void start(final Collection<? extends Location> locations) {
+    public final void start(Collection<? extends Location> locsO) {
+        addLocations(locsO);
+        final Collection<? extends Location> locations = Locations.getLocationsCheckingAncestors(locsO, this);
+        
         checkNotNull(locations, "locations");
         if (DynamicTasks.getTaskQueuingContext() != null) {
             doStart(locations);

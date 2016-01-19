@@ -38,6 +38,7 @@ import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.entity.trait.StartableMethods;
 import org.apache.brooklyn.core.feed.ConfigToAttributes;
+import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.entity.group.DynamicGroupImpl;
 import org.apache.brooklyn.entity.proxy.LoadBalancer;
@@ -207,7 +208,8 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
                 init();
             }
 
-            if (locations.isEmpty()) locations = getLocations();
+            locations = Locations.getLocationsCheckingAncestors(locations, this);
+            // store inherited locations
             addLocations(locations);
 
             LoadBalancer loadBalancer = getController();
@@ -229,7 +231,8 @@ public class ControlledDynamicWebAppClusterImpl extends DynamicGroupImpl impleme
                 }
             }
 
-            Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", locations)).get();
+            // don't propagate start locations
+            Entities.invokeEffectorList(this, childrenToStart, Startable.START, ImmutableMap.of("locations", MutableList.of())).get();
             if (startControllerTask != null) {
                 startControllerTask.get();
             }
