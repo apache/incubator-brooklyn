@@ -158,27 +158,44 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
     }
 
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        return cancel(mayInterruptIfRunning, mayInterruptIfRunning, true);
-    }
-    public boolean cancel(boolean mayInterruptTask, boolean interruptPrimaryThread, boolean alsoCancelChildren) {
-        if (isDone()) return false;
-        if (log.isTraceEnabled()) log.trace("cancelling {}", this);
-        boolean cancel = super.cancel(mayInterruptTask);
-        if (alsoCancelChildren) {
+    protected boolean doCancel(TaskCancellationMode mode) {
+        boolean result = false;
+        if (mode.isAllowedToInterruptDependentSubmittedTasks() || mode.isAllowedToInterruptAllSubmittedTasks()) {
             for (Task<?> t: secondaryJobsAll)
-                cancel |= t.cancel(mayInterruptTask);
+                result = ((TaskInternal<?>)t).cancel(mode) || result;
         }
+        return super.doCancel(mode) || result;
+        // returns true if anything is successfully cancelled
+    }
+    
+    public boolean cancel(TaskCancellationMode mode) {
+        return cancel(mode, null);
+    }
+    
+    protected boolean cancel(TaskCancellationMode mode, Boolean interruptPrimaryThreadOverride) {
+        if (isDone()) return false;
+        if (log.isTraceEnabled()) log.trace("cancelling DST {}", this);
+        
+        // first do the super's cancel, setting cancelled, and calling doCancel to cancel children
+        boolean result = super.cancel(mode);
+        // then come back and ensure our primary thread is cancelled if needed
+        
+        if (interruptPrimaryThreadOverride==null) interruptPrimaryThreadOverride = mode.isAllowedToInterruptTask();
+        if (log.isTraceEnabled()) {
+            log.trace("DST cancelling "+this+" mode "+mode+", interruptPrimary "+interruptPrimaryThreadOverride);
+        }
+
         synchronized (jobTransitionLock) {
             if (primaryThread!=null) {
-                if (interruptPrimaryThread) {
+                if (interruptPrimaryThreadOverride) {
                     if (log.isTraceEnabled()) log.trace("cancelling {} - interrupting", this);
                     primaryThread.interrupt();
                 }
-                cancel = true;
+                result = true;
             }
         }
-        return cancel;
+        
+        return result;
     }
     
     @Override
@@ -309,7 +326,7 @@ public class DynamicSequentialTask<T> extends BasicTask<T> implements HasTaskChi
                                         }
 
                                         if (!primaryFinished && failureHandlingConfig.cancelPrimaryOnSecondaryFailure) {
-                                            cancel(true, false, false);
+                                            cancel(TaskCancellationMode.INTERRUPT_TASK_BUT_NOT_SUBMITTED_TASKS, false);
                                         }
                                         
                                         result.add(Tasks.getError(secondaryJob));

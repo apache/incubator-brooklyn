@@ -22,6 +22,7 @@ import static com.google.common.collect.Iterables.transform;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.config.ConfigKey;
@@ -35,6 +36,7 @@ import org.apache.brooklyn.rest.filter.HaHotStateRequired;
 import org.apache.brooklyn.rest.transform.EntityTransformer;
 import org.apache.brooklyn.rest.util.WebResourceUtils;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.core.task.ValueResolver;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
@@ -71,14 +73,32 @@ public class EntityConfigResource extends AbstractBrooklynRestResource implement
     public Map<String, Object> batchConfigRead(String application, String entityToken, Boolean raw) {
         // TODO: add test
         Entity entity = brooklyn().getEntity(application, entityToken);
-        Map<ConfigKey<?>, ?> source = ((EntityInternal) entity).config().getBag().getAllConfigAsConfigKeyMap();
-        Map<String, Object> result = Maps.newLinkedHashMap();
-        for (Map.Entry<ConfigKey<?>, ?> ek : source.entrySet()) {
-            Object value = ek.getValue();
-            result.put(ek.getKey().getName(), 
-                resolving(value).preferJson(true).asJerseyOutermostReturnValue(false).raw(raw).context(entity).timeout(Duration.ZERO).renderAs(ek.getKey()).resolve());
+        // wrap in a task for better runtime view
+        return Entities.submit(entity, Tasks.<Map<String,Object>>builder().displayName("REST API batch config read").body(new BatchConfigRead(this, entity, raw)).build()).getUnchecked();
+    }
+    
+    private static class BatchConfigRead implements Callable<Map<String,Object>> {
+        private EntityConfigResource resource;
+        private Entity entity;
+        private Boolean raw;
+
+        public BatchConfigRead(EntityConfigResource resource, Entity entity, Boolean raw) {
+            this.resource = resource;
+            this.entity = entity;
+            this.raw = raw;
         }
-        return result;
+
+        @Override
+        public Map<String, Object> call() throws Exception {
+            Map<ConfigKey<?>, ?> source = ((EntityInternal) entity).config().getBag().getAllConfigAsConfigKeyMap();
+            Map<String, Object> result = Maps.newLinkedHashMap();
+            for (Map.Entry<ConfigKey<?>, ?> ek : source.entrySet()) {
+                Object value = ek.getValue();
+                result.put(ek.getKey().getName(), 
+                    resource.resolving(value).preferJson(true).asJerseyOutermostReturnValue(false).raw(raw).context(entity).timeout(Duration.ZERO).renderAs(ek.getKey()).resolve());
+            }
+            return result;
+        }
     }
 
     @Override

@@ -29,6 +29,7 @@ import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.util.concurrent.ExecutionList;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -95,6 +96,8 @@ public interface TaskInternal<T> extends Task<T> {
     
     Object getExtraStatusText();
 
+    /** On task completion (or cancellation) runs the listeners which have been registered using 
+     * {@link #addListener(Runnable, java.util.concurrent.Executor)}. */
     void runListeners();
 
     void setEndTimeUtc(long val);
@@ -120,5 +123,41 @@ public interface TaskInternal<T> extends Task<T> {
     /** if a task is a proxy for another one (used mainly for internal tasks),
      * this returns the "real" task represented by this one */
     Task<?> getProxyTarget();
+
+    /** clearer semantics around cancellation; may be promoted to {@link Task} if we  */
+    @Beta
+    public boolean cancel(TaskCancellationMode mode);
+    
+    @Beta
+    public static class TaskCancellationMode {
+        public static final TaskCancellationMode DO_NOT_INTERRUPT = new TaskCancellationMode(false, false, false);
+        public static final TaskCancellationMode INTERRUPT_TASK_BUT_NOT_SUBMITTED_TASKS = new TaskCancellationMode(true, false, false);
+        public static final TaskCancellationMode INTERRUPT_TASK_AND_DEPENDENT_SUBMITTED_TASKS = new TaskCancellationMode(true, true, false);
+        public static final TaskCancellationMode INTERRUPT_TASK_AND_ALL_SUBMITTED_TASKS = new TaskCancellationMode(true, true, true);
+        
+        private final boolean allowedToInterruptTask, 
+            allowedToInterruptDependentSubmittedTasks, 
+            allowedToInterruptAllSubmittedTasks;
+        
+        private TaskCancellationMode(boolean mayInterruptIfRunning, boolean interruptSubmittedTransients, boolean interruptAllSubmitted) {
+            this.allowedToInterruptTask = mayInterruptIfRunning;
+            this.allowedToInterruptDependentSubmittedTasks = interruptSubmittedTransients;
+            this.allowedToInterruptAllSubmittedTasks = interruptAllSubmitted;
+        }
+        
+        public boolean isAllowedToInterruptTask() { return allowedToInterruptTask; }
+        /** Implementation-dependent what "dependent" means in this context, 
+         * e.g. may be linked to a "transient" tag (that's what Brooklyn does) */ 
+        public boolean isAllowedToInterruptDependentSubmittedTasks() { return allowedToInterruptDependentSubmittedTasks; }
+        public boolean isAllowedToInterruptAllSubmittedTasks() { return allowedToInterruptAllSubmittedTasks; }
+        
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("interruptTask", allowedToInterruptTask)
+                .add("interruptDependentSubmitted", allowedToInterruptDependentSubmittedTasks)
+                .add("interruptAllSubmitted", allowedToInterruptAllSubmittedTasks)
+                .toString();
+        }
+    }
     
 }

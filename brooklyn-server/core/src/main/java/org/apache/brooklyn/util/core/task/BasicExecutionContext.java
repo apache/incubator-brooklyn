@@ -175,18 +175,18 @@ public class BasicExecutionContext extends AbstractExecutionContext {
         }
         
         final Object startCallback = properties.get("newTaskStartCallback");
-        properties.put("newTaskStartCallback", new Function<Object,Void>() {
-            public Void apply(Object it) {
+        properties.put("newTaskStartCallback", new Function<Task<?>,Void>() {
+            public Void apply(Task<?> it) {
                 registerPerThreadExecutionContext();
-                if (startCallback!=null) ExecutionUtils.invoke(startCallback, it);
+                if (startCallback!=null) BasicExecutionManager.invokeCallback(startCallback, it);
                 return null;
             }});
         
         final Object endCallback = properties.get("newTaskEndCallback");
-        properties.put("newTaskEndCallback", new Function<Object,Void>() {
-            public Void apply(Object it) {
+        properties.put("newTaskEndCallback", new Function<Task<?>,Void>() {
+            public Void apply(Task<?> it) {
                 try {
-                    if (endCallback!=null) ExecutionUtils.invoke(endCallback, it);
+                    if (endCallback!=null) BasicExecutionManager.invokeCallback(endCallback, it);
                 } finally {
                     clearPerThreadExecutionContext();
                 }

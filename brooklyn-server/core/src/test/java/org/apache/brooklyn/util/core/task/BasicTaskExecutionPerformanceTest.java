@@ -70,7 +70,6 @@ public class BasicTaskExecutionPerformanceTest {
         if (em != null) em.shutdownNow();
     }
     
-    @SuppressWarnings("unchecked")
     @Test
     public void testScheduledTaskExecutedAfterDelay() throws Exception {
         int delay = 100;
@@ -95,7 +94,6 @@ public class BasicTaskExecutionPerformanceTest {
         assertTrue(actualDelay < (delay+MAX_OVERHEAD_MS), "actualDelay="+actualDelay+"; delay="+delay);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testScheduledTaskExecutedAtRegularPeriod() throws Exception {
         final int period = 100;
@@ -127,7 +125,6 @@ public class BasicTaskExecutionPerformanceTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testCanCancelScheduledTask() throws Exception {
         final int period = 1;

@@ -49,3 +49,8 @@ parent or application root in YAML.
 
 For changes in prior versions, please refer to the release notes for 
 [0.8.0](/v/0.8.0-incubating/misc/release-notes.html).
+
+3. Task cancellation is now propagated to dependent submitted tasks, including backgrounded tasks if they are transient.
+Previously when a task was cancelled the API did not guarantee semantics but the behaviour was to cancel sub-tasks only 
+in very limited cases. Now the semantics are more precise and controllable, and more sub-tasks are cancelled.
+This can prevent some leaked waits on `attributeWhenReady`.
