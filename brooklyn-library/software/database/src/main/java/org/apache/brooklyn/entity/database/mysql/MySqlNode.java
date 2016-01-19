@@ -75,6 +75,9 @@ public interface MySqlNode extends SoftwareProcess, HasShortName, DatastoreCommo
     @SetFromFlag("socketUid")
     StringAttributeSensorAndConfigKey SOCKET_UID = new StringAttributeSensorAndConfigKey(
             "mysql.socketUid", "Socket uid, for use in file /tmp/mysql.sock.<uid>.3306 (or randomly generated if not set)", null);
+
+    @SetFromFlag("generalLog")
+    ConfigKey GENERAL_LOG = ConfigKeys.newBooleanConfigKey("mysql.general_log", "Enable general log", false);
     
     /** @deprecated since 0.7.0 use DATASTORE_URL */ @Deprecated
     AttributeSensor<String> MYSQL_URL = DATASTORE_URL;
