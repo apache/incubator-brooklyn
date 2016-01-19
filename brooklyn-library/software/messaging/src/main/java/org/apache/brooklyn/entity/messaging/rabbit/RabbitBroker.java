@@ -44,14 +44,19 @@ import org.apache.brooklyn.util.core.flags.SetFromFlag;
 public interface RabbitBroker extends SoftwareProcess, MessageBroker, AmqpServer {
 
     @SetFromFlag("version")
-    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "2.8.7");
+    public static final ConfigKey<String> SUGGESTED_VERSION = ConfigKeys.newConfigKeyWithDefault(SoftwareProcess.SUGGESTED_VERSION, "3.6.0");
 
     @SetFromFlag("downloadUrl")
     public static final BasicAttributeSensorAndConfigKey<String> DOWNLOAD_URL = new BasicAttributeSensorAndConfigKey<String>(
-            SoftwareProcess.DOWNLOAD_URL, "http://www.rabbitmq.com/releases/rabbitmq-server/v${version}/rabbitmq-server-generic-unix-${version}.tar.gz");
+            SoftwareProcess.DOWNLOAD_URL, "http://www.rabbitmq.com/releases/rabbitmq-server/v${version}/rabbitmq-server-generic-unix-${version}.tar.xz");
     
     @SetFromFlag("erlangVersion")
-    public static final BasicConfigKey<String> ERLANG_VERSION = new BasicConfigKey<String>(String.class, "erlang.version", "Erlang runtime version", "R15B");
+    public static final BasicConfigKey<String> ERLANG_VERSION = new BasicConfigKey<String>(String.class, "erlang.version", "Erlang runtime version", "18.2");
+
+    @SetFromFlag("erlangDebRepoUrl")
+    public static final BasicConfigKey<String> ERLANG_DEB_REPO_URL = new BasicConfigKey<String>(String.class, "erlang.deb.repo.url", 
+            "Deb file used to configure an external Erlang repository which provides up to date packages for Ubuntu/Debian", 
+            "http://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb");
 
     @SetFromFlag("rabbitmqConfigTemplateUrl")
     ConfigKey<String> CONFIG_TEMPLATE_URL = ConfigKeys.newStringConfigKey(
