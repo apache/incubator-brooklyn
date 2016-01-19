@@ -49,6 +49,8 @@ public class SameServerDriverLifecycleEffectorTasksTest extends BrooklynAppUnitT
                 "test.double", "double", 2.0);
         ConfigKey<String> STRING = ConfigKeys.newStringConfigKey(
                 "test.string", "string", "3");
+        ConfigKey<Integer> REGEX_PORT = ConfigKeys.newIntegerConfigKey(
+                "my.port", "int", null);
     }
 
     public static class EntityWithConfigImpl extends AbstractEntity implements EntityWithConfig {
@@ -69,4 +71,54 @@ public class SameServerDriverLifecycleEffectorTasksTest extends BrooklynAppUnitT
                 "expected=" + Iterables.toString(expected) + ", actual=" + Iterables.toString(requiredPorts));
     }
 
+    @Test
+    public void testGetRequiredOpenPortsByConfigName() {
+        SameServerEntity entity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class).child(
+                EntitySpec.create(EntityWithConfig.class)
+                        // Previously SSDLET coerced everything TypeCoercions could handle to a port!
+                        .configure(EntityWithConfig.INTEGER, 1)
+                        .configure(EntityWithConfig.DOUBLE, 2.0)
+                        .configure(EntityWithConfig.STRING, "3")
+                        .configure(EntityWithConfig.REGEX_PORT, 4321)));
+        SameServerDriverLifecycleEffectorTasks effectorTasks = new SameServerDriverLifecycleEffectorTasks();
+        Collection<Integer> requiredPorts = effectorTasks.getRequiredOpenPorts(entity);
+        final ImmutableSet<Integer> expected = ImmutableSet.of(22, 1234, 4321);
+        assertEquals(requiredPorts, expected,
+                "expected=" + Iterables.toString(expected) + ", actual=" + Iterables.toString(requiredPorts));
+    }
+
+    @Test
+    public void testGetRequiredOpenPortsNoAutoInfer() {
+        SameServerEntity entity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class)
+                .child(
+                        EntitySpec.create(EntityWithConfig.class)
+                                // Previously SSDLET coerced everything TypeCoercions could handle to a port!
+                                .configure(EntityWithConfig.INTEGER, 1)
+                                .configure(EntityWithConfig.DOUBLE, 2.0)
+                                .configure(EntityWithConfig.STRING, "3")
+                                .configure(EntityWithConfig.REGEX_PORT, 4321)
+                                .configure(SameServerEntity.INBOUND_PORTS_AUTO_INFER, false)));
+        SameServerDriverLifecycleEffectorTasks effectorTasks = new SameServerDriverLifecycleEffectorTasks();
+        Collection<Integer> requiredPorts = effectorTasks.getRequiredOpenPorts(entity);
+        final ImmutableSet<Integer> expected = ImmutableSet.of(22);
+        assertEquals(requiredPorts, expected,
+                "expected=" + Iterables.toString(expected) + ", actual=" + Iterables.toString(requiredPorts));
+    }
+
+    @Test
+    public void testGetRequiredOpenPortsWithCustomLoginPort() {
+        SameServerEntity entity = app.createAndManageChild(EntitySpec.create(SameServerEntity.class)
+                .configure(SameServerEntity.REQUIRED_OPEN_LOGIN_PORTS, ImmutableSet.of(2022))
+                .child(
+                        EntitySpec.create(EntityWithConfig.class)
+                                // Previously SSDLET coerced everything TypeCoercions could handle to a port!
+                                .configure(EntityWithConfig.INTEGER, 1)
+                                .configure(EntityWithConfig.DOUBLE, 2.0)
+                                .configure(EntityWithConfig.STRING, "3")));
+        SameServerDriverLifecycleEffectorTasks effectorTasks = new SameServerDriverLifecycleEffectorTasks();
+        Collection<Integer> requiredPorts = effectorTasks.getRequiredOpenPorts(entity);
+        final ImmutableSet<Integer> expected = ImmutableSet.of(2022, 1234);
+        assertEquals(requiredPorts, expected,
+                "expected=" + Iterables.toString(expected) + ", actual=" + Iterables.toString(requiredPorts));
+    }
 }

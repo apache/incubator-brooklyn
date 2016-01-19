@@ -66,7 +66,7 @@ public interface SoftwareProcess extends Entity, Startable {
             ImmutableSet.of(22));
 
     ConfigKey<String> INBOUND_PORTS_CONFIG_REGEX = ConfigKeys.newStringConfigKey("inboundPorts.configRegex",
-            "Regex governing the opening of ports based on sensor names",
+            "Regex governing the opening of ports based on config names",
             ".*\\.port");
 
     ConfigKey<Boolean> INBOUND_PORTS_AUTO_INFER = ConfigKeys.newBooleanConfigKey("inboundPorts.autoInfer",
