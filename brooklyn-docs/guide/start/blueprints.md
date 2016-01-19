@@ -6,7 +6,7 @@ children:
 - { section: Launching from a Blueprint, title: Blueprint } 
 ---
 
-Blueprints are descriptors or patterns which describe how Apache Brooklyn should deploy applications. Blueprints are written in [YAML](https://en.wikipedia.org/wiki/YAML){:target="_blank"} and all of the entities available are defined in the __[Brooklyn Catalog](../../learnmore/catalog/)__.
+Blueprints are descriptors or patterns which describe how Apache Brooklyn should deploy applications. Blueprints are written in [YAML](https://en.wikipedia.org/wiki/YAML){:target="_blank"} and all of the entities available are defined in the __[Brooklyn Catalog](../../website/learnmore/catalog/)__.
 
 ## Launching from a Blueprint
 
@@ -17,9 +17,9 @@ hover your mouse over the right side of the text box below to get a Javascript "
 
 {% highlight yaml %}
 name: Tomcat
-location:
 services:
-- serviceType: brooklyn.entity.webapp.tomcat.TomcatServer
+- type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+location: <your-location-definition-goes-here>
 {% endhighlight %}
 
 
@@ -48,7 +48,7 @@ These can be launched by entering the following command into the terminal in the
  $ vagrant up byon1 byon2 byon3 byon4
 {% endhighlight %}
 
-The location in "myapp.yaml" can then be replaced with the following YAML to launch using these.
+The location in "myapp.yaml" can now be replaced with the following YAML to launch using these vagrant servers.
 
 {% highlight yaml %}
 location:
@@ -110,7 +110,7 @@ $ br login http://localhost:8081/
 {% endhighlight %}
 
 To secure the Apache Brooklyn instance, you can add a username and password to Brooklyn's properties file, as described in the User Guide [here](../ops/brooklyn_properties.html){:target="_blank"}. 
-If this is configured, the login command will then require additional parameters for the userid and password.
+If this is configured, the login command will require an additional parameter for the userid and will then prompt for a password.
 
 Now you can create the application with the command below:
 

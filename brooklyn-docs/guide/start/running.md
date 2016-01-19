@@ -97,7 +97,7 @@ $ vagrant up brooklyn
 You can see if Apache Brooklyn launched OK by viewing the log files with the command
 
 {% highlight bash %}
-$ ssh brooklyn --command 'sudo journalctl -n15 -f -u brooklyn'
+$ vagrant ssh brooklyn --command 'sudo journalctl -n15 -f -u brooklyn'
 {% endhighlight %}
 
 </div>
