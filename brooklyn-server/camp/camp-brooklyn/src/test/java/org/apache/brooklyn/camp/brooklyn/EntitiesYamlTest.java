@@ -53,6 +53,7 @@ import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.entity.group.DynamicCluster;
+import org.apache.brooklyn.entity.group.DynamicFabric;
 import org.apache.brooklyn.entity.software.base.SameServerEntity;
 import org.apache.brooklyn.entity.stock.BasicEntity;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -69,6 +70,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.testng.collections.Lists;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -723,6 +725,48 @@ public class EntitiesYamlTest extends AbstractYamlTest {
             assertTrue(member instanceof TestEntity, "member="+member);
             assertEquals(member.getConfig(TestEntity.CONF_NAME), "yamlTest");
         }
+    }
+
+    @Test
+    public void testCreateFabricWithLocationsAtTopLevel() throws Exception {
+        String yaml = Joiner.on("\n").join(
+                "services:",
+                "- type: org.apache.brooklyn.entity.group.DynamicFabric",
+                "  memberSpec:",
+                "    $brooklyn:entitySpec:",
+                "      type: org.apache.brooklyn.core.test.entity.TestEntity",
+                "locations:",
+                "- byon(hosts=\"1.1.1.1\")",
+                "- byon(hosts=\"1.1.1.2\")"
+                );
+
+        Entity app = createAndStartApplication(yaml);
+        waitForApplicationTasks(app);
+        DynamicFabric fabric = Iterables.getOnlyElement(Entities.descendants(app, DynamicFabric.class));
+        Iterable<TestEntity> members = Entities.descendants(fabric, TestEntity.class);
+        
+        assertEquals(Iterables.size(members), 2);
+    }
+
+    @Test
+    public void testCreateFabricWithLocationsInline() throws Exception {
+        String yaml = Joiner.on("\n").join(
+                "services:",
+                "- type: org.apache.brooklyn.entity.group.DynamicFabric",
+                "  memberSpec:",
+                "    $brooklyn:entitySpec:",
+                "      type: org.apache.brooklyn.core.test.entity.TestEntity",
+                "  locations:",
+                "  - byon(hosts=\"1.1.1.1\")",
+                "  - byon(hosts=\"1.1.1.2\")"
+                );
+
+        Entity app = createAndStartApplication(yaml);
+        waitForApplicationTasks(app);
+        DynamicFabric fabric = Iterables.getOnlyElement(Entities.descendants(app, DynamicFabric.class));
+        Iterable<TestEntity> members = Entities.descendants(fabric, TestEntity.class);
+        
+        assertEquals(Iterables.size(members), 2);
     }
 
     @Test
