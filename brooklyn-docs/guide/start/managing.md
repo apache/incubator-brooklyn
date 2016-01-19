@@ -265,14 +265,11 @@ $ br app Tomcat ent TomcatServer:Wx7r effector deploy invoke -P url=https://tomc
 $ webapp=$(br app Tomcat ent TomcatServer:Wx7r sensor webapp.url | tr -d '"')
 $ curl $webapp/sample/
 {% endhighlight %}
-<pre>
-<html>
-<head>
-<title>Sample "Hello, World" Application</title>
-</head>
+    <html>
+    <head>
+    <title>Sample "Hello, World" Application</title>
+    </head>
 # etc. etc.
-</pre>
-
 
 ## Activities
 
