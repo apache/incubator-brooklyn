@@ -18,11 +18,13 @@
  */
 package org.apache.brooklyn.entity.group;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.elvis;
 import static org.apache.brooklyn.util.groovy.GroovyJavaMethods.truth;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -41,6 +43,7 @@ import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
 import org.apache.brooklyn.core.entity.lifecycle.ServiceStateLogic;
 import org.apache.brooklyn.core.entity.trait.Changeable;
 import org.apache.brooklyn.core.entity.trait.Startable;
+import org.apache.brooklyn.core.location.Locations;
 import org.apache.brooklyn.enricher.stock.Enrichers;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.exceptions.Exceptions;
@@ -112,9 +115,10 @@ public class DynamicFabricImpl extends AbstractGroupImpl implements DynamicFabri
         if (locsO!=null) {
             addLocations(locsO);
         }
-        
+        Collection<Location> locs = Collections.unmodifiableCollection(Locations.getLocationsCheckingAncestors(getLocations(), this));
+
         List<Location> newLocations = MutableList.copyOf(locsO);
-        if (newLocations.isEmpty()) newLocations.addAll(getLocations());
+        if (newLocations.isEmpty()) newLocations.addAll(locs);
         
         Preconditions.checkNotNull(newLocations, "locations must be supplied");
         Preconditions.checkArgument(newLocations.size() >= 1, "One or more locations must be supplied");
