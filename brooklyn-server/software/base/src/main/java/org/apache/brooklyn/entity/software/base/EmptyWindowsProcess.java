@@ -18,15 +18,21 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
+import java.util.Collection;
+
 import org.apache.brooklyn.api.entity.ImplementedBy;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 
-@ImplementedBy(EmptySoftwareProcessImpl.class)
-public interface EmptySoftwareProcess extends SoftwareProcess {
+import com.google.common.collect.ImmutableSet;
 
-    ConfigKey<Boolean> USE_SSH_MONITORING = ConfigKeys.newConfigKey("sshMonitoring.enabled", "SSH monitoring enabled", Boolean.TRUE);
+@ImplementedBy(EmptyWindowsProcessImpl.class)
+public interface EmptyWindowsProcess extends SoftwareProcess {
 
-    public SoftwareProcessDriver getDriver();
+    // 3389 is RDP; 5985 is WinRM (3389 isn't used by Brooklyn, but useful for the end-user subsequently)
+    ConfigKey<Collection<Integer>> REQUIRED_OPEN_LOGIN_PORTS = ConfigKeys.newConfigKeyWithDefault(
+            SoftwareProcess.REQUIRED_OPEN_LOGIN_PORTS,
+            ImmutableSet.of(5985, 3389));
     
+    ConfigKey<Boolean> USE_WINRM_MONITORING = ConfigKeys.newConfigKey("winrmMonitoring.enabled", "WinRM monitoring enabled", Boolean.TRUE);
 }

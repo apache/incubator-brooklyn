@@ -18,15 +18,32 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import org.apache.brooklyn.api.entity.ImplementedBy;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.entity.Attributes;
 
-@ImplementedBy(EmptySoftwareProcessImpl.class)
-public interface EmptySoftwareProcess extends SoftwareProcess {
+public class EmptyWindowsProcessImpl extends SoftwareProcessImpl implements EmptyWindowsProcess {
 
-    ConfigKey<Boolean> USE_SSH_MONITORING = ConfigKeys.newConfigKey("sshMonitoring.enabled", "SSH monitoring enabled", Boolean.TRUE);
+    @Override
+    public Class<?> getDriverInterface() {
+        return EmptyWindowsProcessDriver.class;
+    }
 
-    public SoftwareProcessDriver getDriver();
+    @Override
+    protected void connectSensors() {
+        super.connectSensors();
+        if (isWinrmMonitoringEnabled()) {
+            connectServiceUpIsRunning();
+        } else {
+            sensors().set(Attributes.SERVICE_UP, true);
+        }
+    }
+
+    @Override
+    protected void disconnectSensors() {
+        disconnectServiceUpIsRunning();
+        super.disconnectSensors();
+    }
     
+    protected boolean isWinrmMonitoringEnabled() {
+        return Boolean.TRUE.equals(getConfig(USE_WINRM_MONITORING));
+    }
 }

@@ -18,15 +18,5 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
-import org.apache.brooklyn.api.entity.ImplementedBy;
-import org.apache.brooklyn.config.ConfigKey;
-import org.apache.brooklyn.core.config.ConfigKeys;
-
-@ImplementedBy(EmptySoftwareProcessImpl.class)
-public interface EmptySoftwareProcess extends SoftwareProcess {
-
-    ConfigKey<Boolean> USE_SSH_MONITORING = ConfigKeys.newConfigKey("sshMonitoring.enabled", "SSH monitoring enabled", Boolean.TRUE);
-
-    public SoftwareProcessDriver getDriver();
-    
+public interface EmptyWindowsProcessDriver extends SoftwareProcessDriver {
 }
