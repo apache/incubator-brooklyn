@@ -107,23 +107,22 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             skipStart = entityStarted.or(false);
         }
         if (!skipStart) {
-            DynamicTasks.queue("copy-pre-install-resources", new Runnable() { public void run() {
-                waitForConfigKey(BrooklynConfigKeys.PRE_INSTALL_RESOURCES_LATCH);
-                copyPreInstallResources();
-            }});
-
-            DynamicTasks.queue("pre-install", new Runnable() { public void run() {
-                preInstall();
-            }});
-
-            DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
-                runPreInstallCommand();
-            }});
-
             Optional<Boolean> locationInstalled = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
             Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
             boolean skipInstall = locationInstalled.or(entityInstalled).or(false);
             if (!skipInstall) {
+                DynamicTasks.queue("copy-pre-install-resources", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.PRE_INSTALL_RESOURCES_LATCH);
+                    copyPreInstallResources();
+                }});
+
+                DynamicTasks.queue("pre-install", new Runnable() { public void run() {
+                    preInstall();
+                }});
+
+                DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
+                    runPreInstallCommand();
+                }});
                 DynamicTasks.queue("setup", new Runnable() { public void run() {
                     waitForConfigKey(BrooklynConfigKeys.SETUP_LATCH);
                     setup();
