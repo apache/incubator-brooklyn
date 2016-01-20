@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.util.core.internal.winrm.pywinrm;
+package org.apache.brooklyn.util.core.internal.winrm.winrm4j;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -84,14 +84,20 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
     }
     
     @Override
-    public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executeScript(final List<String> commands) {
+    public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executeCommand(final List<String> commands) {
         return exec(new Function<io.cloudsoft.winrm4j.winrm.WinRmTool, io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {
             @Override public WinRmToolResponse apply(io.cloudsoft.winrm4j.winrm.WinRmTool tool) {
-                return tool.executeScript(commands);
+                return tool.executeCommand(commands);
             }
         });
     }
 
+    @Override
+    @Deprecated
+    public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executeScript(final List<String> commands) {
+        return executeCommand(commands);
+    }
+    
     @Override
     public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executePs(final List<String> commands) {
         return exec(new Function<io.cloudsoft.winrm4j.winrm.WinRmTool, io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {

@@ -20,16 +20,15 @@ package org.apache.brooklyn.feed.windows;
 
 import java.util.Map;
 
-import org.apache.brooklyn.api.entity.EntityLocal;
+import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
-import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
+import org.apache.brooklyn.core.entity.EntityAsserts;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.core.test.BrooklynAppLiveTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
-import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -51,8 +50,8 @@ import com.google.common.collect.ImmutableMap;
  * <pre>
  * {@code brooklyn.location.named.WindowsLiveTest=byon:(hosts="ec2-xx-xxx-xxx-xx.eu-west-1.compute.amazonaws.com")
  * brooklyn.location.named.WindowsLiveTest.user=Administrator
- * brooklyn.location.named.WindowsLiveTest.privateKeyFile = ~/.ssh/id_rsa
- * brooklyn.location.named.WindowsLiveTest.publicKeyFile = ~/.ssh/id_rsa.pub
+ * brooklyn.location.named.WindowsLiveTest.password=pa55word
+ * brooklyn.location.named.WindowsLiveTest.osFamily=windows
  * }</pre>
  * The location must by {@code byon} or another primitive type. Unfortunately, it's not possible to
  * use a jclouds location, as adding a dependency on brooklyn-locations-jclouds would cause a
@@ -66,7 +65,7 @@ public class WindowsPerformanceCounterFeedLiveTest extends BrooklynAppLiveTestSu
     private static final String LOCATION_SPEC = "named:WindowsLiveTest";
 
     private Location loc;
-    private EntityLocal entity;
+    private Entity entity;
 
     @BeforeMethod(alwaysRun=true)
     public void setUp() throws Exception {
@@ -75,16 +74,15 @@ public class WindowsPerformanceCounterFeedLiveTest extends BrooklynAppLiveTestSu
         Map<String,?> allFlags = MutableMap.<String,Object>builder()
                 .put("tags", ImmutableList.of(getClass().getName()))
                 .build();
-        MachineProvisioningLocation<? extends MachineLocation> provisioningLocation =
-                (MachineProvisioningLocation<? extends MachineLocation>)
-                        mgmt.getLocationRegistry().resolve(LOCATION_SPEC, allFlags);
+        MachineProvisioningLocation<?> provisioningLocation = (MachineProvisioningLocation<?>) 
+                mgmt.getLocationRegistry().resolve(LOCATION_SPEC, allFlags);
         loc = provisioningLocation.obtain(ImmutableMap.of());
 
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class));
         app.start(ImmutableList.of(loc));
     }
 
-    @Test(groups={"Live","Disabled"}, enabled=false)
+    @Test(groups={"Live","Disabled"})
     public void testRetrievesPerformanceCounters() throws Exception {
         // We can be pretty sure that a Windows instance in the cloud will have zero telephone lines...
         entity.sensors().set(TELEPHONE_LINES, 42);
@@ -94,7 +92,7 @@ public class WindowsPerformanceCounterFeedLiveTest extends BrooklynAppLiveTestSu
                 .addSensor("\\Telephony\\Lines", TELEPHONE_LINES)
                 .build();
         try {
-            EntityTestUtils.assertAttributeEqualsEventually(entity, TELEPHONE_LINES, 0);
+            EntityAsserts.assertAttributeEqualsEventually(entity, TELEPHONE_LINES, 0);
         } finally {
             feed.stop();
         }

@@ -862,7 +862,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         String scriptContent = ResourceUtils.create(this).getResourceAsString(setupScriptItem);
                         String script = TemplateProcessor.processTemplateContents(scriptContent, getManagementContext(), substitutions);
                         if (windows) {
-                            ((WinRmMachineLocation)machineLocation).executeScript(ImmutableList.copyOf((script.replace("\r", "").split("\n"))));
+                            ((WinRmMachineLocation)machineLocation).executeCommand(ImmutableList.copyOf((script.replace("\r", "").split("\n"))));
                         } else {
                             ((SshMachineLocation)machineLocation).execCommands("Customizing node " + this, ImmutableList.of(script));
                         }
@@ -2664,7 +2664,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                 public Boolean call() {
                     for (Map.Entry<WinRmMachineLocation, LoginCredentials> entry : machinesToTry.entrySet()) {
                         WinRmMachineLocation machine = entry.getKey();
-                        WinRmToolResponse response = machine.executeScript(
+                        WinRmToolResponse response = machine.executeCommand(
                                 ImmutableMap.of(WinRmTool.PROP_EXEC_TRIES.getName(), 1),
                                 ImmutableList.of("echo testing"));
                         boolean success = (response.getStatusCode() == 0);

@@ -48,7 +48,6 @@ import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
-import org.python.core.PyException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -239,7 +238,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
         if (Strings.isBlank(regularCommand)) {
             response = getLocation().executePsScript(ImmutableList.of(powerShellCommand));
         } else {
-            response = getLocation().executeScript(ImmutableList.of(regularCommand));
+            response = getLocation().executeCommand(ImmutableList.of(regularCommand));
         }
 
         if (currentTask != null) {
@@ -259,7 +258,7 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     }
 
     public int execute(List<String> script) {
-        return getLocation().executeScript(script).getStatusCode();
+        return getLocation().executeCommand(script).getStatusCode();
     }
 
     public int executePsScriptNoRetry(List<String> psScript) {
@@ -281,8 +280,9 @@ public abstract class AbstractSoftwareProcessWinRmDriver extends AbstractSoftwar
     public void rebootAndWait() {
         try {
             executePsScriptNoRetry(ImmutableList.of("Restart-Computer -Force"));
-        } catch (PyException e) {
+        } catch (Exception e) {
             // Restarting the computer will cause the command to fail; ignore the exception and continue
+            Exceptions.propagateIfFatal(e);
         }
         waitForWinRmStatus(false, entity.getConfig(VanillaWindowsProcess.REBOOT_BEGUN_TIMEOUT));
         waitForWinRmStatus(true, entity.getConfig(VanillaWindowsProcess.REBOOT_COMPLETED_TIMEOUT)).getWithError();

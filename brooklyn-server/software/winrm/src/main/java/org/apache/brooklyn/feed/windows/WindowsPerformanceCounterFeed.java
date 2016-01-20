@@ -116,8 +116,8 @@ public class WindowsPerformanceCounterFeed extends AbstractFeed {
         private String uniqueTag;
         private volatile boolean built;
 
-        public Builder entity(EntityLocal val) {
-            this.entity = checkNotNull(val, "entity");
+        public Builder entity(Entity val) {
+            this.entity = (EntityLocal) checkNotNull(val, "entity");
             return this;
         }
         public Builder addSensor(WindowsPerformanceCounterPollConfig<?> config) {

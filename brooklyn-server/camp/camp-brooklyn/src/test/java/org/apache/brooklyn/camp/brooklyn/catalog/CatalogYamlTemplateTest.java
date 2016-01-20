@@ -41,11 +41,12 @@ import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
 import org.apache.brooklyn.util.osgi.OsgiTestResources;
-import org.python.google.common.collect.Iterables;
 import org.testng.Assert;
 import org.testng.TestListenerAdapter;
 import org.testng.TestNG;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.Iterables;
 
 
 public class CatalogYamlTemplateTest extends AbstractYamlTest {
