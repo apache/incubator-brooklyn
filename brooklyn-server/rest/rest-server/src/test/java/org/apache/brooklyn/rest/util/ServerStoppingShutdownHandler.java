@@ -20,6 +20,8 @@ package org.apache.brooklyn.rest.util;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
+import org.apache.brooklyn.util.time.Duration;
+import org.apache.brooklyn.util.time.Time;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,23 +42,29 @@ public class ServerStoppingShutdownHandler implements ShutdownHandler {
 
     @Override
     public void onShutdownRequest() {
-        log.info("Shutting down (when running in rest-api dev mode)...");
+        log.info("Shutting down server (when running in rest-api dev mode, using background thread)");
 
-        // essentially same as BrooklynLauncher.terminate() but cut down as this is only used in dev mode
-        
-        if (server!=null) {
-            try {
-                server.stop();
-                server.join();
-            } catch (Exception e) {
-                log.debug("Stopping server gave an error (not usually a concern): "+e);
-                /* NPE may be thrown e.g. if threadpool not started */
+        // essentially same as BrooklynLauncher.terminate() but cut down ...
+        // NB: this is only used in dev mode use of BrooklynJavascriptGuiLauncher
+        new Thread(new Runnable() {
+            public void run() {
+                Time.sleep(Duration.millis(250));
+                log.debug("Shutting down server in background thread, closing "+server+" and "+mgmt);
+                if (server!=null) {
+                    try {
+                        server.stop();
+                        server.join();
+                    } catch (Exception e) {
+                        log.debug("Stopping server gave an error (not usually a concern): "+e);
+                        /* NPE may be thrown e.g. if threadpool not started */
+                    }
+                }
+
+                if (mgmt instanceof ManagementContextInternal) {
+                    ((ManagementContextInternal)mgmt).terminate();
+                }
             }
-        }
-
-        if (mgmt instanceof ManagementContextInternal) {
-            ((ManagementContextInternal)mgmt).terminate();
-        }
+        }).start();
     }
 
     /** Expect this to be injeted; typically it is not known when this is created, but we need it to trigger shutdown. */
