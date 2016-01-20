@@ -267,14 +267,14 @@ public class DynamicSequentialTaskTest {
         waitForMessages(Predicates.compose(MathPredicates.greaterThanOrEqual(2), CollectionFunctionals.sizeFunction()), TIMEOUT);
         Asserts.assertEquals(MutableSet.copyOf(messages), MutableSet.of("1-wait", "2-wait"));
 
-        Time.sleep(Duration.millis(400));
-        
         if (cancellationMode==null) {
             ((TaskInternal<?>)t).cancel();
         } else if (cancellationMode instanceof Boolean) {
             t.cancel((Boolean)cancellationMode);
         } else if (cancellationMode instanceof TaskCancellationMode) {
             ((TaskInternal<?>)t).cancel((TaskCancellationMode)cancellationMode);
+        } else {
+            throw new IllegalStateException("Invalid cancellationMode: "+cancellationMode);
         }
 
         // the cancelled task always reports cancelled and done

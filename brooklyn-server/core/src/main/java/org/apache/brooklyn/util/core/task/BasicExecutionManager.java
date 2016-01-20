@@ -576,6 +576,7 @@ public class BasicExecutionManager implements ExecutionManager {
                         }
                     }
                 }
+                // TODO this is inefficient; might want to keep an index on submitted-by
                 for (Task<?> t: execMgmt.getAllTasks()) {
                     if (task.equals(t.getSubmittedByTask())) {
                         if (mode.isAllowedToInterruptAllSubmittedTasks() || BrooklynTaskTags.isTransient(t)) {
@@ -740,7 +741,7 @@ public class BasicExecutionManager implements ExecutionManager {
             try {
                 return ((Callable<?>)callable).call();
             } catch (Throwable t) {
-                throw Throwables.propagate(t);
+                throw Exceptions.propagate(t);
             }
         }
         if (callable instanceof Runnable) { ((Runnable)callable).run(); return null; }

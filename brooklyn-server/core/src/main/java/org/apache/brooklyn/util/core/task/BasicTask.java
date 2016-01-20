@@ -294,6 +294,7 @@ public class BasicTask<T> implements TaskInternal<T> {
             : TaskCancellationMode.DO_NOT_INTERRUPT);
     }
     
+    @Override @Beta
     public synchronized boolean cancel(TaskCancellationMode mode) {
         if (isDone()) return false;
         if (log.isTraceEnabled()) {
