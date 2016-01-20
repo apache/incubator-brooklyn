@@ -482,11 +482,12 @@ public class Main extends AbstractMain {
                 waitAfterLaunch(mgmt, shutdownHandler);
             }
 
-            // BrooklynShutdownHookJob will invoke terminate() to do mgmt.terminate() and BrooklynWebServer.stop();
-            // and System.exit is invoked immediately after ...
-            // but seems better to do it explicitly here. 
-            // ('launcher' is local to us so the caller *cannot* do it, and no harm in doing it twice.) 
-            launcher.terminate();
+            // do not shutdown servers here here -- 
+            // the BrooklynShutdownHookJob will invoke that and others on System.exit()
+            // which happens immediately after.
+            // might be nice to do it explicitly here, 
+            // but the server shutdown process has some special "shutdown apps" options
+            // so we'd want to refactor BrooklynShutdownHookJob to share code
             
             return null;
         }
