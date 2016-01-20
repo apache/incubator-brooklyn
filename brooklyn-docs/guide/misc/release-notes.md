@@ -45,7 +45,9 @@ can be used to traverse the hierarchy.  It also means that when a type in the re
 and a caller references it, that location will now take priority over a location defined in a parent.
 Additionally, any locations specified in YAML extending the registered type will now *replace* locations on the referenced type;
 this means in many cases an explicit `locations: []` when extending a type will cause locations to be taken from the
-parent or application root in YAML.      
+parent or application root in YAML. Related to this, tags from referencing specs now preceed tags in the referenced types,
+and the referencing catalog item ID also takes priority; this has no effect in most cases, but if you have a chain of
+referenced types blueprint plan source code and the catalog item ID are now set correctly. 
 
 For changes in prior versions, please refer to the release notes for 
 [0.8.0](/v/0.8.0-incubating/misc/release-notes.html).

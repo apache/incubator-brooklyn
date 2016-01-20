@@ -83,7 +83,7 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("type", getType()).toString();
+        return Objects.toStringHelper(this).add("type", getType()).toString()+"@"+Integer.toHexString(System.identityHashCode(this));
     }
 
     protected abstract void checkValidType(Class<? extends T> type);
@@ -97,6 +97,19 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
         catalogItemId = val;
         return self();
     }
+    // TODO in many places (callers to this method) we prefer a wrapper item ID;
+    // that is right, because the wrapper's defn will refer to the wrapped,
+    // but we might need also to collect the item ID's so that *all* can be searched.
+    // e.g. if R3 references R2 which references R1 any one of these might supply config keys 
+    // referencing resources or types in their local bundles. 
+    @Beta
+    public SpecT catalogItemIdIfNotNull(String val) {
+        if (val!=null) {
+            catalogItemId = val;
+        }
+        return self();
+    }
+
     
     public SpecT tag(Object tag) {
         tags.add(tag);
@@ -105,7 +118,17 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
 
     /** adds the given tags */
     public SpecT tags(Iterable<Object> tagsToAdd) {
+        return tagsAdd(tagsToAdd);
+    }
+    /** adds the given tags */
+    public SpecT tagsAdd(Iterable<Object> tagsToAdd) {
         Iterables.addAll(this.tags, tagsToAdd);
+        return self();
+    }
+    /** replaces tags with the given */
+    public SpecT tagsReplace(Iterable<Object> tagsToReplace) {
+        this.tags.clear();
+        Iterables.addAll(this.tags, tagsToReplace);
         return self();
     }
     

@@ -64,6 +64,7 @@ public class BasicRegisteredType implements RegisteredType {
 
     @Override
     public String getId() {
+        if (symbolicName==null) return null;
         return symbolicName + (version!=null ? ":"+version : "");
     }
     

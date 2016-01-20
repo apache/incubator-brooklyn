@@ -253,10 +253,9 @@ public class EntityManagementUtils {
         
         if (!wrapperParent.getParameters().isEmpty())
             wrappedChild.parametersReplace(wrapperParent.getParameters());
-        
-        if (wrappedChild.getCatalogItemId()==null) {
-            wrappedChild.catalogItemId(wrapperParent.getCatalogItemId());
-        }
+
+        // prefer the wrapper ID (change in 2016-01); see notes on the catalogItemIdIfNotNull method
+        wrappedChild.catalogItemIdIfNotNull(wrapperParent.getCatalogItemId());
 
         // NB: this clobber's child config wherever they conflict; might prefer to deeply merge maps etc
         // (or maybe even prevent the merge in these cases; 
@@ -266,11 +265,12 @@ public class EntityManagementUtils {
         wrappedChild.configure(wrapperParent.getFlags());
         
         // copying tags to all entities may be something the caller wants to control,
-        // e.g. if we're creating a list of entities which will be added,
-        // ignoring the parent Application holder; 
-        // in that case each child's BrooklynTags.YAML_SPEC tag will show all entities;
-        // but in the normal case where we're unwrapping one, it's probably right.
-        wrappedChild.tags(wrapperParent.getTags());
+        // e.g. if we're adding multiple, the caller might not want to copy the parent
+        // (the BrooklynTags.YAML_SPEC tag will include the parents source including siblings),
+        // but OTOH they might because otherwise the parent's tags might get lost.
+        // also if we are unwrapping multiple registry references we will get the YAML_SPEC for each;
+        // putting the parent's tags first however causes the preferred (outer) one to be retrieved first.
+        wrappedChild.tagsReplace(MutableList.copyOf(wrapperParent.getTags()).appendAll(wrappedChild.getTags()));
     }
 
     public static EntitySpec<? extends Application> newWrapperApp() {

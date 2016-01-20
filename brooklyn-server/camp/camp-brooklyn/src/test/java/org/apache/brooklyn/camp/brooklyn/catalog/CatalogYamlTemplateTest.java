@@ -40,6 +40,7 @@ import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.stock.BasicApplication;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.test.support.TestResourceUnavailableException;
+import org.apache.brooklyn.util.core.config.ConfigBag;
 import org.apache.brooklyn.util.osgi.OsgiTestResources;
 import org.testng.Assert;
 import org.testng.TestListenerAdapter;
@@ -208,6 +209,45 @@ public class CatalogYamlTemplateTest extends AbstractYamlTest {
         EntitySpec<?> child = Iterables.getOnlyElement( spec.getChildren() );
         Assert.assertEquals(child.getType().getName(), SIMPLE_ENTITY_TYPE);
         Assert.assertEquals(child.getCatalogItemId(), "t1:"+TEST_VERSION);
+    }
+    
+    @Test
+    public void testMetadataOnSpecCreatedFromItemReferencingAnApp() throws Exception {
+        // this nested ref to an app caused nested plan contents also to be recorded,
+        // due to how tags are merged. the *first* one is the most important, however,
+        // and ordering of tags should guarantee that.
+        // similarly ensure we get the right outermost non-null catalog item id.
+        addCatalogItems(
+              "brooklyn.catalog:",
+              "  version: '1'",
+              "  items:",
+              "  - id: app1",
+              "    name: myApp1",
+              "    item:",
+              "      type: org.apache.brooklyn.entity.stock.BasicApplication",
+              "      brooklyn.config: { foo: bar }",
+              "  - id: app1r",
+              "    item_type: template",
+              "    item:",
+              "      services:",
+              "      - type: app1",
+              "        brooklyn.config:",
+              "          foo: boo"
+            );
+        
+        EntitySpec<? extends Application> spec = EntityManagementUtils.createEntitySpecForApplication(mgmt(),
+            "services: [ { type: app1r } ]\n" +
+            "location: localhost");
+        
+        List<NamedStringTag> yamls = BrooklynTags.findAll(BrooklynTags.YAML_SPEC_KIND, spec.getTags());
+        Assert.assertTrue(yamls.size() >= 1, "Expected at least 1 yaml tag; instead had: "+yamls);
+        String yaml = yamls.iterator().next().getContents();
+        Asserts.assertStringContains(yaml, "services:", "type: app1r", "localhost");
+        
+        Assert.assertEquals(spec.getChildren().size(), 0);
+        Assert.assertEquals(spec.getType(), BasicApplication.class);
+        Assert.assertEquals(ConfigBag.newInstance(spec.getConfig()).getStringKey("foo"), "boo");
+        Assert.assertEquals(spec.getCatalogItemId(), "app1r:1");
     }
     
     private RegisteredType makeItem() {
