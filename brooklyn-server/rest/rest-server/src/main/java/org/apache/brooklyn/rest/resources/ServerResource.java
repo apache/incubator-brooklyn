@@ -218,6 +218,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                         if (shutdownHandler != null) {
                             shutdownHandler.onShutdownRequest();
                         } else {
+                            // should always be set as it is required by jersey injection?
                             log.warn("ShutdownHandler not set, exiting process");
                             System.exit(0);
                         }
