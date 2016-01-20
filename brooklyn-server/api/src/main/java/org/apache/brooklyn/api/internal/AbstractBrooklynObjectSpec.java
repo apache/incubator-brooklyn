@@ -125,7 +125,7 @@ public abstract class AbstractBrooklynObjectSpec<T,SpecT extends AbstractBrookly
         Iterables.addAll(this.tags, tagsToAdd);
         return self();
     }
-    /** replaces the given tags */
+    /** replaces tags with the given */
     public SpecT tagsReplace(Iterable<Object> tagsToReplace) {
         this.tags.clear();
         Iterables.addAll(this.tags, tagsToReplace);
