@@ -103,7 +103,8 @@ public abstract class AbstractTypePlanTransformer implements BrooklynTypePlanTra
                 @Override protected Object visitSpec() {
                     try { 
                         AbstractBrooklynObjectSpec<?, ?> result = createSpec(type, context);
-                        result.catalogItemId(type.getId());
+                        // see notes in CampResolver setting catalogItemId; we might need to keep both
+                        result.catalogItemIdIfNotNull(type.getId());
                         return result;
                     } catch (Exception e) { throw Exceptions.propagate(e); }
                 }

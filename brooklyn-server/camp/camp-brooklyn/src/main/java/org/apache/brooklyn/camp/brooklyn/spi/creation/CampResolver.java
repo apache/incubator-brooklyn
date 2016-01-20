@@ -114,7 +114,7 @@ class CampResolver {
             throw new IllegalStateException("Creating spec from "+item+", got "+spec.getType()+" which is incompatible with expected "+expectedType);                
         }
 
-        ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemId(item.getId());
+        ((AbstractBrooklynObjectSpec<?, ?>)spec).catalogItemIdIfNotNull(item.getId());
 
         if (Strings.isBlank( ((AbstractBrooklynObjectSpec<?, ?>)spec).getDisplayName() ))
             ((AbstractBrooklynObjectSpec<?, ?>)spec).displayName(item.getDisplayName());
