@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.entity.software.base;
 
+import org.apache.brooklyn.core.entity.Attributes;
+
 public class EmptySoftwareProcessImpl extends SoftwareProcessImpl implements EmptySoftwareProcess {
 
     @Override
@@ -28,12 +30,20 @@ public class EmptySoftwareProcessImpl extends SoftwareProcessImpl implements Emp
     @Override
     protected void connectSensors() {
         super.connectSensors();
-        connectServiceUpIsRunning();
+        if (isSshMonitoringEnabled()) {
+            connectServiceUpIsRunning();
+        } else {
+            sensors().set(Attributes.SERVICE_UP, true);
+        }
     }
 
     @Override
     protected void disconnectSensors() {
         disconnectServiceUpIsRunning();
         super.disconnectSensors();
+    }
+    
+    protected boolean isSshMonitoringEnabled() {
+        return Boolean.TRUE.equals(getConfig(USE_SSH_MONITORING));
     }
 }
