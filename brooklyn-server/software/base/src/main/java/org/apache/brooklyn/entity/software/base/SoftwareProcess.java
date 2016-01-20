@@ -309,6 +309,13 @@ public interface SoftwareProcess extends Entity, Startable {
     AttributeSensor<String> PID_FILE = Sensors.newStringSensor("softwareprocess.pid.file", "PID file");
 
     @Beta
+    public static class StartSoftwareParameters {
+        @Beta /** @since 0.9.0 */
+        public static final ConfigKey<Boolean> SKIP_INSTALLATION = ConfigKeys.newConfigKey(Boolean.class, "skipInstallation",
+            "Just launch the process without installation and customization, if stopped; default false", false);
+    }
+
+    @Beta
     public static class RestartSoftwareParameters {
         @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
         public static final ConfigKey<Boolean> RESTART_CHILDREN = ConfigKeys.newConfigKey(Boolean.class, "restartChildren",

@@ -62,6 +62,7 @@ import org.apache.brooklyn.entity.machine.MachineInitTasks;
 import org.apache.brooklyn.entity.machine.ProvidesProvisioningFlags;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.RestartSoftwareParameters;
+import org.apache.brooklyn.entity.software.base.SoftwareProcess.StartSoftwareParameters;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwareParameters;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.RestartSoftwareParameters.RestartMachineMode;
 import org.apache.brooklyn.entity.software.base.SoftwareProcess.StopSoftwareParameters.StopMode;
@@ -140,7 +141,10 @@ public abstract class MachineLifecycleEffectorTasks {
      * the behaviour in this lifecycle class instance.
      */
     public Effector<Void> newStartEffector() {
-        return Effectors.effector(Startable.START).impl(newStartEffectorTask()).build();
+        return Effectors.effector(Startable.START)
+                .parameter(StartSoftwareParameters.SKIP_INSTALLATION)
+                .impl(newStartEffectorTask())
+                .build();
     }
 
     /** @see {@link #newStartEffector()} */
@@ -183,6 +187,12 @@ public abstract class MachineLifecycleEffectorTasks {
             public Void call(ConfigBag parameters) {
                 Collection<? extends Location> locations  = null;
 
+                Boolean isSkipInstallation = parameters.get(StartSoftwareParameters.SKIP_INSTALLATION);
+                if (isSkipInstallation != null && isSkipInstallation) {
+                    entity().config().set(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION, isSkipInstallation);
+                    entity().config().set(BrooklynConfigKeys.SKIP_ENTITY_CUSTOMIZATION, isSkipInstallation);
+                }
+
                 Object locationsRaw = parameters.getStringKey(LOCATIONS.getName());
                 locations = Locations.coerceToCollection(entity().getManagementContext(), locationsRaw);
 
@@ -202,6 +212,12 @@ public abstract class MachineLifecycleEffectorTasks {
         @Override
         public Void call(ConfigBag parameters) {
             Collection<? extends Location> locations = null;
+
+            Boolean isSkipInstallation = parameters.get(StartSoftwareParameters.SKIP_INSTALLATION);
+            if (isSkipInstallation != null && isSkipInstallation) {
+                entity().config().set(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION, isSkipInstallation);
+                entity().config().set(BrooklynConfigKeys.SKIP_ENTITY_CUSTOMIZATION, isSkipInstallation);
+            }
 
             Object locationsRaw = parameters.getStringKey(LOCATIONS.getName());
             locations = Locations.coerceToCollection(entity().getManagementContext(), locationsRaw);

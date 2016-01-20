@@ -97,6 +97,11 @@ public class BrooklynConfigKeys {
      */
     public static final ConfigKey<Boolean> SKIP_ENTITY_INSTALLATION = newBooleanConfigKey("install.skip", "Skip the driver install commands entirely, for pre-installed software");
 
+    /**
+    * This will skip only the customize phase of the lifecycle and then continue with the launching of the entity.
+    */
+    public static final ConfigKey<Boolean> SKIP_ENTITY_CUSTOMIZATION = newBooleanConfigKey("customize.skip", "Skip the driver customize commands entirely");
+
     // The implementation in AbstractSoftwareSshDriver runs this command as an SSH command 
     public static final ConfigKey<String> PRE_INSTALL_COMMAND = ConfigKeys.newStringConfigKey("pre.install.command",
             "Command to be run prior to the install method being called on the driver");
