@@ -115,7 +115,7 @@ public abstract class BrooklynDslDeferredSupplier<T> implements DeferredSupplier
         
         try {
             if (log.isDebugEnabled())
-                log.debug("Queuing task to resolve "+dsl);
+                log.debug("Queuing task to resolve "+dsl+", called by "+Tasks.current());
 
             EntityInternal entity = (EntityInternal) BrooklynTaskTags.getTargetOrContextEntity(Tasks.current());
             ExecutionContext exec =

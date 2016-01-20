@@ -64,6 +64,11 @@ public class NonBasicTaskExecutionTest {
         protected TaskInternal<T> delegate() {
             return delegate;
         }
+
+        @Override
+        public boolean cancel(TaskCancellationMode mode) {
+            return delegate.cancel(mode);
+        }
     }
     
     private BasicExecutionManager em;

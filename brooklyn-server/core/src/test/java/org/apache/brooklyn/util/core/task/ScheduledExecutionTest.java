@@ -45,7 +45,7 @@ import org.testng.annotations.Test;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 
-@SuppressWarnings({"unchecked","rawtypes"})
+@SuppressWarnings({"rawtypes"})
 public class ScheduledExecutionTest {
 
     public static final Logger log = LoggerFactory.getLogger(ScheduledExecutionTest.class);

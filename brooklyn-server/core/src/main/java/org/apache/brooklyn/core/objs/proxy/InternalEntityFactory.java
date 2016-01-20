@@ -307,12 +307,16 @@ public class InternalEntityFactory extends InternalFactory {
 
         /* Marked transient so that the task is not needlessly kept around at the highest level.
          * Note that the task is not normally visible in the GUI, because 
-         * (a) while it is running, the entity is parentless (and so not in the tree);
+         * (a) while it is running, the entity is often parentless (and so not in the tree);
          * and (b) when it is completed it is GC'd, as it is transient.
          * However task info is available via the API if you know its ID,
          * and if better subtask querying is available it will be picked up as a background task 
          * of the parent entity creating this child entity
          * (note however such subtasks are currently filtered based on parent entity so is excluded).
+         * <p>
+         * Some of these (initializers and enrichers) submit background scheduled tasks,
+         * which currently show up at the top level once the initializer task completes.
+         * TODO It would be nice if these schedule tasks were grouped in a bucket! 
          */
         ((EntityInternal)entity).getExecutionContext().submit(Tasks.builder().dynamic(false).displayName("Entity initialization")
                 .tag(BrooklynTaskTags.tagForContextEntity(entity))

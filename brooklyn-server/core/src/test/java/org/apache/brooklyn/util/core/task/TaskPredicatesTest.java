@@ -57,8 +57,8 @@ public class TaskPredicatesTest extends BrooklynAppUnitTestSupport {
                 .body(Callables.<Object>returning("val"))
                 .displayName("myname")
                 .build());
-        assertTrue(TaskPredicates.displayNameMatches(Predicates.equalTo("myname")).apply(task));
-        assertFalse(TaskPredicates.displayNameMatches(Predicates.equalTo("wrong")).apply(task));
+        assertTrue(TaskPredicates.displayNameSatisfies(Predicates.equalTo("myname")).apply(task));
+        assertFalse(TaskPredicates.displayNameSatisfies(Predicates.equalTo("wrong")).apply(task));
     }
     
     @Test

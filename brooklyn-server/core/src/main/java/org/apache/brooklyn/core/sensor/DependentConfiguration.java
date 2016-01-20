@@ -248,7 +248,7 @@ public class DependentConfiguration {
 
             // return immediately if either the ready predicate or the abort conditions hold
             if (ready(value)) return postProcess(value);
-
+            
             final List<Exception> abortionExceptions = Lists.newCopyOnWriteArrayList();
             long start = System.currentTimeMillis();
             
@@ -790,6 +790,7 @@ public class DependentConfiguration {
                 .displayName("waiting on "+sensor.getName())
                 .description("Waiting on sensor "+sensor.getName()+" from "+source)
                 .tag("attributeWhenReady")
+                .tag(BrooklynTaskTags.TRANSIENT_TASK_TAG)
                 .body(new WaitInTaskForAttributeReady<T,V>(this))
                 .build();
         }

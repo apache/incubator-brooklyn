@@ -43,7 +43,7 @@ import com.google.common.base.Throwables;
  */
 // TODO ScheduledTask is a very pragmatic implementation; would be nice to tighten, 
 // reduce external assumptions about internal structure, and clarify "done" semantics
-public class ScheduledTask extends BasicTask {
+public class ScheduledTask extends BasicTask<Object> {
     
     final Callable<Task<?>> taskFactory;
 
@@ -84,7 +84,7 @@ public class ScheduledTask extends BasicTask {
         this(MutableMap.of(), task);
     }
 
-    public ScheduledTask(Map flags, final Task<?> task){
+    public ScheduledTask(Map<?,?> flags, final Task<?> task){
         this(flags, new Callable<Task<?>>(){
             @Override
             public Task<?> call() throws Exception {
@@ -92,7 +92,7 @@ public class ScheduledTask extends BasicTask {
             }});
     }
 
-    public ScheduledTask(Map flags, Callable<Task<?>> taskFactory) {
+    public ScheduledTask(Map<?,?> flags, Callable<Task<?>> taskFactory) {
         super(flags);
         this.taskFactory = taskFactory;
         
@@ -194,13 +194,11 @@ public class ScheduledTask extends BasicTask {
     }
     
     @Override
-    public synchronized boolean cancel(boolean mayInterrupt) {
-        boolean result = super.cancel(mayInterrupt);
+    protected boolean doCancel(org.apache.brooklyn.util.core.task.TaskInternal.TaskCancellationMode mode) {
         if (nextRun!=null) {
-            nextRun.cancel(mayInterrupt);
-            notifyAll();
+            ((TaskInternal<?>)nextRun).cancel(mode);
         }
-        return result;
+        return super.doCancel(mode);
     }
     
     /**

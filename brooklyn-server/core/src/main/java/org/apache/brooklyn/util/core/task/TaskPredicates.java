@@ -60,4 +60,20 @@ public class TaskPredicates {
             return "displayNameMatches("+matcher+")";
         }
     }
+    
+    public static Predicate<Task<?>> isDone() {
+        return new IsDone();
+    }
+    
+    private static class IsDone implements Predicate<Task<?>> {
+        @Override
+        public boolean apply(Task<?> input) {
+            return input.isDone();
+        }
+        @Override
+        public String toString() {
+            return "isDone()";
+        }
+    }
+    
 }

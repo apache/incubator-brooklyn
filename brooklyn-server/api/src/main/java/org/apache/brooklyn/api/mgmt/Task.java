@@ -81,6 +81,24 @@ public interface Task<T> extends ListenableFuture<T>, TaskAdaptable<T> {
     public boolean isError();
 
     /**
+     * As {@link Future#isDone()}. In particular if cancelled, this will return true
+     * as soon as it is cancelled. The thread for this task may still be running,
+     * if the cancellation (often an interruption, but may be weaker) has not applied,
+     * and submitted threads may also be running depending on cancellation parameters.
+     * <p>
+     * {@link #get()} is guaranteed to return immediately, throwing in the case of cancellation
+     * prior to completion (and including the case above where a thread may still be running).
+     * <p>
+     * To check whether cancelled threads for this task have completed, 
+     * inspect {@link #getEndTimeUtc()}, which is guaranteed to be set when threads complete
+     * if the thread is started (as determinable by whether {@link #getStartTimeUtc()} is set).
+     * (The threads of submitted/child tasks will usually be independent; to determine their
+     * completion requires inspecting the {@link ExecutionManager}.)  
+     */
+    @Override
+    public boolean isDone();
+    
+    /**
      * Causes calling thread to block until the task is started.
      */
     public void blockUntilStarted();

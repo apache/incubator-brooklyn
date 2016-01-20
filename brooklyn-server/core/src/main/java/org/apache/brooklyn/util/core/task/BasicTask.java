@@ -155,7 +155,7 @@ public class BasicTask<T> implements TaskInternal<T> {
             (Strings.isNonEmpty(displayName) ? 
                 displayName : 
                 (job + (tags!=null && !tags.isEmpty() ? ";"+tags : "")) ) +
-            ":"+getId()+"]";
+            "]@"+getId();
     }
 
     @Override
@@ -196,7 +196,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     protected Maybe<Task<?>> submittedByTask;
 
     protected volatile Thread thread = null;
-    private volatile boolean cancelled = false;
+    protected volatile boolean cancelled = false;
     /** normally a {@link ListenableFuture}, except for scheduled tasks when it may be a {@link ScheduledFuture} */
     protected volatile Future<T> internalFuture = null;
     
@@ -288,15 +288,34 @@ public class BasicTask<T> implements TaskInternal<T> {
     }
     
     @Override
-    public synchronized boolean cancel(boolean mayInterruptIfRunning) {
+    public final synchronized boolean cancel(boolean mayInterruptIfRunning) {
+        // semantics changed in 2016-01, previously "true" was INTERRUPT_TASK_BUT_NOT_SUBMITTED_TASKS
+        return cancel(mayInterruptIfRunning ? TaskCancellationMode.INTERRUPT_TASK_AND_DEPENDENT_SUBMITTED_TASKS
+            : TaskCancellationMode.DO_NOT_INTERRUPT);
+    }
+    
+    @Override @Beta
+    public synchronized boolean cancel(TaskCancellationMode mode) {
         if (isDone()) return false;
-        boolean cancel = true;
-        cancelled = true;
-        if (internalFuture!=null) { 
-            cancel = internalFuture.cancel(mayInterruptIfRunning);
+        if (log.isTraceEnabled()) {
+            log.trace("BT cancelling "+this+" mode "+mode);
         }
+        cancelled = true;
+        doCancel(mode);
         notifyAll();
-        return cancel;
+        return true;
+    }
+    
+    @SuppressWarnings("deprecation")
+    protected boolean doCancel(TaskCancellationMode mode) {
+        if (internalFuture!=null) { 
+            if (internalFuture instanceof ListenableForwardingFuture) {
+                return ((ListenableForwardingFuture<?>)internalFuture).cancel(mode);
+            } else {
+                return internalFuture.cancel(mode.isAllowedToInterruptTask());
+            }
+        }
+        return true;
     }
 
     @Override

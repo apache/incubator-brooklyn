@@ -30,10 +30,13 @@ import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.api.mgmt.HasTaskChildren;
 import org.apache.brooklyn.api.mgmt.Task;
+import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
+import org.apache.brooklyn.util.core.task.TaskInternal.TaskCancellationMode;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.math.MathPredicates;
 import org.apache.brooklyn.util.time.CountdownTimer;
@@ -49,6 +52,8 @@ import org.testng.annotations.Test;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Stopwatch;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -154,7 +159,17 @@ public class DynamicSequentialTaskTest {
     }
     
     public Task<String> sayTask(String message, Duration duration, String message2) {
-        return Tasks.<String>builder().body(sayCallable(message, duration, message2)).build();
+        return Tasks.<String>builder().displayName("say:"+message).body(sayCallable(message, duration, message2)).build();
+    }
+    
+    public <T> Task<T> submitting(final Task<T> task) {
+        return Tasks.<T>builder().displayName("submitting:"+task.getId()).body(new Callable<T>() {
+            @Override
+            public T call() throws Exception {
+                ec.submit(task);
+                return task.get();
+            }
+        }).build();
     }
     
     @Test
@@ -206,6 +221,85 @@ public class DynamicSequentialTaskTest {
         
         // but we do _not_ get a mutex from task3 as it does not run (is not interrupted)
         Assert.assertEquals(cancellations.availablePermits(), 0);
+    }
+    
+    @Test
+    public void testCancellationModeAndSubmitted() throws Exception {
+        doTestCancellationModeAndSubmitted(true, TaskCancellationMode.DO_NOT_INTERRUPT, false, false);
+        
+        doTestCancellationModeAndSubmitted(true, TaskCancellationMode.INTERRUPT_TASK_AND_ALL_SUBMITTED_TASKS, true, true);
+        doTestCancellationModeAndSubmitted(true, TaskCancellationMode.INTERRUPT_TASK_AND_DEPENDENT_SUBMITTED_TASKS, true, true);
+        doTestCancellationModeAndSubmitted(true, TaskCancellationMode.INTERRUPT_TASK_BUT_NOT_SUBMITTED_TASKS, true, false);
+        
+        // if it's not transient, it should only be cancelled on "all submitted"
+        doTestCancellationModeAndSubmitted(false, TaskCancellationMode.INTERRUPT_TASK_AND_DEPENDENT_SUBMITTED_TASKS, true, false);
+        doTestCancellationModeAndSubmitted(false, TaskCancellationMode.INTERRUPT_TASK_AND_ALL_SUBMITTED_TASKS, true, true);
+        
+        // cancellation mode left off should be the same as TASK_AND_DEPENDENT, i.e. don't cancel non-transient bg submitted
+        doTestCancellationModeAndSubmitted(true, null, true, true);
+        doTestCancellationModeAndSubmitted(false, null, true, false);
+        // and 'true' should be the same
+        doTestCancellationModeAndSubmitted(true, true, true, true);
+        doTestCancellationModeAndSubmitted(false, true, true, false);
+        
+        // cancellation mode false should be the same as DO_NOT_INTERRUPT
+        doTestCancellationModeAndSubmitted(true, false, false, false);
+    }
+    
+    public void doTestCancellationModeAndSubmitted(
+            boolean isSubtaskTransient,
+            Object cancellationMode,
+            boolean expectedTaskInterrupted,
+            boolean expectedSubtaskCancelled
+            ) throws Exception {
+        tearDown(); setUp();
+        
+        final Task<String> t1 = sayTask("1-wait", Duration.minutes(10), "1-done");
+        if (isSubtaskTransient) {
+            BrooklynTaskTags.addTagDynamically(t1, BrooklynTaskTags.TRANSIENT_TASK_TAG);
+        }
+        
+        final Task<List<?>> t = Tasks.parallel(
+                submitting(t1),
+                sayTask("2-wait", Duration.minutes(10), "2-done"));
+        ec.submit(t);
+        
+        waitForMessages(Predicates.compose(MathPredicates.greaterThanOrEqual(2), CollectionFunctionals.sizeFunction()), TIMEOUT);
+        Asserts.assertEquals(MutableSet.copyOf(messages), MutableSet.of("1-wait", "2-wait"));
+
+        if (cancellationMode==null) {
+            ((TaskInternal<?>)t).cancel();
+        } else if (cancellationMode instanceof Boolean) {
+            t.cancel((Boolean)cancellationMode);
+        } else if (cancellationMode instanceof TaskCancellationMode) {
+            ((TaskInternal<?>)t).cancel((TaskCancellationMode)cancellationMode);
+        } else {
+            throw new IllegalStateException("Invalid cancellationMode: "+cancellationMode);
+        }
+
+        // the cancelled task always reports cancelled and done
+        Assert.assertEquals(t.isDone(), true);
+        Assert.assertEquals(t.isCancelled(), true);
+        // end time might not be set for another fraction of a second
+        if (expectedTaskInterrupted) { 
+            Asserts.eventually(new Supplier<Number>() {
+                @Override public Number get() { return t.getEndTimeUtc(); }}, 
+                MathPredicates.<Number>greaterThanOrEqual(0));
+        } else {
+            Assert.assertTrue(t.getEndTimeUtc() < 0, "Wrong end time: "+t.getEndTimeUtc());
+        }
+        
+        if (expectedSubtaskCancelled) {
+            Asserts.eventually(Suppliers.ofInstance(t1), TaskPredicates.isDone());
+            Assert.assertTrue(t1.isCancelled());
+            Asserts.eventually(new Supplier<Number>() {
+                @Override public Number get() { return t1.getEndTimeUtc(); }}, 
+                MathPredicates.<Number>greaterThanOrEqual(0));
+        } else {
+            Time.sleep(Duration.millis(5));
+            Assert.assertFalse(t1.isCancelled());
+            Assert.assertFalse(t1.isDone());
+        }
     }
 
     protected void waitForMessages(Predicate<? super List<String>> predicate, Duration timeout) throws Exception {
