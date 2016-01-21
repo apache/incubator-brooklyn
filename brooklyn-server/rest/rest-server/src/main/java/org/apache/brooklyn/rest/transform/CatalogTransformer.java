@@ -68,15 +68,17 @@ public class CatalogTransformer {
         Set<EffectorSummary> effectors = Sets.newTreeSet(SummaryComparators.nameComparator());
 
         EntitySpec<?> spec = null;
-
         try {
-            spec = (EntitySpec<?>) b.getCatalog().createSpec((CatalogItem) item);
+            spec = (EntitySpec<?>) b.getCatalog().createSpec(item);
             EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
             EntityType type = typeMap.getSnapshot();
 
             AtomicInteger paramPriorityCnt = new AtomicInteger();
-            for (SpecParameter<?> input: spec.getParameters())
+            for (SpecParameter<?> input: spec.getParameters()) {
                 config.add(EntityTransformer.entityConfigSummary(input, paramPriorityCnt));
+                if (input.getSensor()!=null)
+                    sensors.add(SensorTransformer.sensorSummaryForCatalog(input.getSensor()));
+            }
             for (Sensor<?> x: type.getSensors())
                 sensors.add(SensorTransformer.sensorSummaryForCatalog(x));
             for (Effector<?> x: type.getEffectors())

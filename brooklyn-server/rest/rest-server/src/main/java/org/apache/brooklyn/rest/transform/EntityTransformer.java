@@ -159,7 +159,7 @@ public class EntityTransformer {
         // which results in correctly ordered items on the wire (as a list). Clients which use the java bindings
         // though will push the items in an unordered set - so give them means to recover the correct order.
         Double priority = input.isPinned() ? Double.valueOf(paramPriorityCnt.incrementAndGet()) : null;
-        return entityConfigSummary(input.getType(), input.getLabel(), priority, null);
+        return entityConfigSummary(input.getConfigKey(), input.getLabel(), priority, null);
     }
 
 }

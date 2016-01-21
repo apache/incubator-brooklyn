@@ -49,7 +49,6 @@ import com.google.common.reflect.TypeToken;
 
 public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializable {
     
-    @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(BasicConfigKey.class);
     private static final long serialVersionUID = -1762014059150215376L;
     
@@ -119,6 +118,13 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         public BasicConfigKey<T> build() {
             return new BasicConfigKey<T>(this);
         }
+        
+        public String getName() {
+            return name;
+        }
+        public String getDescription() {
+            return description;
+        }
     }
     
     private String name;
@@ -165,7 +171,7 @@ public class BasicConfigKey<T> implements ConfigKeySelfExtracting<T>, Serializab
         this.constraint = Predicates.alwaysTrue();
     }
 
-    protected BasicConfigKey(Builder<T> builder) {
+    public BasicConfigKey(Builder<T> builder) {
         this.name = checkNotNull(builder.name, "name");
         this.type = TypeTokens.getRawTypeIfRaw(checkNotNull(builder.type, "type"));
         this.typeToken = TypeTokens.getTypeTokenIfNotRaw(builder.type);

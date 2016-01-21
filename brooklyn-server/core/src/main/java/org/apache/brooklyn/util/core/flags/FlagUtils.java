@@ -234,7 +234,7 @@ public class FlagUtils {
     public static List<FlagConfigKeyAndValueRecord> findAllParameterConfigKeys(List<SpecParameter<?>> parameters, ConfigBag input) {
         List<FlagConfigKeyAndValueRecord> output = new ArrayList<FlagUtils.FlagConfigKeyAndValueRecord>();
         for (SpecParameter<?> param : parameters) {
-            FlagConfigKeyAndValueRecord record = getFlagConfigKeyRecord(null, param.getType(), input);
+            FlagConfigKeyAndValueRecord record = getFlagConfigKeyRecord(null, param.getConfigKey(), input);
             if (record.isValuePresent())
                 output.add(record);
         }

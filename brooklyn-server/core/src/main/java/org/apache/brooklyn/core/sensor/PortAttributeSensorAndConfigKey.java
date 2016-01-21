@@ -29,6 +29,7 @@ import org.apache.brooklyn.api.location.PortSupplier;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.core.config.BasicConfigKey;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.internal.BrooklynInitialization;
 import org.apache.brooklyn.core.location.Locations;
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 
 /**
  * A {@link Sensor} describing a port on a system,
@@ -68,6 +70,10 @@ public class PortAttributeSensorAndConfigKey extends AttributeSensorAndConfigKey
     public PortAttributeSensorAndConfigKey(PortAttributeSensorAndConfigKey orig, Object defaultValue) {
         super(orig, TypeCoercions.coerce(defaultValue, PortRange.class));
     }
+    public PortAttributeSensorAndConfigKey(BasicConfigKey.Builder<PortRange> builder) {
+        super(builder, TypeToken.of(Integer.class));
+    }
+    
     @Override
     protected Integer convertConfigToSensor(PortRange value, Entity entity) {
         if (value==null) return null;

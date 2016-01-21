@@ -20,13 +20,23 @@ package org.apache.brooklyn.api.objs;
 
 import java.io.Serializable;
 
+import javax.annotation.Nullable;
+
+import org.apache.brooklyn.api.entity.Entity;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 
+/** A wrapper around a {@link ConfigKey} which will be added to an {@link Entity},
+ * providing additional information for rendering in a UI */
 public interface SpecParameter<T> extends Serializable {
     /** Short name, to be used in UI */
     String getLabel();
-    /** Visible by default in UI, not all inputs may be visible at once */
+    /** Whether visible by default in UI, not all inputs may be visible at once */
     boolean isPinned();
-    /** Type information for the input */
-    ConfigKey<T> getType();
+    /** All config key info for this spec parameter;
+     * this is the config key which is added to the defined type */
+    ConfigKey<T> getConfigKey();
+    /** An optional sensor which may also be added to the defined type */
+    @Nullable AttributeSensor<?> getSensor();
+
 }

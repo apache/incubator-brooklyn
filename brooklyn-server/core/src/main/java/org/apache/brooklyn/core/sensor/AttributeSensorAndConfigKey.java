@@ -19,11 +19,11 @@
 package org.apache.brooklyn.core.sensor;
 
 import org.apache.brooklyn.api.entity.Entity;
-import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.sensor.Sensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.core.config.BasicConfigKey.Builder;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
@@ -45,6 +45,7 @@ import com.google.common.reflect.TypeToken;
 */
 public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends BasicAttributeSensor<SensorType> 
         implements ConfigKey.HasConfigKey<ConfigType> {
+    
     private static final long serialVersionUID = -3103809215973264600L;
     private static final Logger log = LoggerFactory.getLogger(AttributeSensorAndConfigKey.class);
 
@@ -87,6 +88,10 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
         configKey = ConfigKeys.newConfigKeyWithDefault(orig.configKey, 
                 TypeCoercions.coerce(defaultValue, orig.configKey.getTypeToken()));
     }
+    public AttributeSensorAndConfigKey(Builder<ConfigType> configKeyBuilder, TypeToken<SensorType> sensorType) {
+        super(sensorType, configKeyBuilder.getName(), configKeyBuilder.getDescription());
+        configKey = new BasicConfigKey<ConfigType>(configKeyBuilder);
+    }
 
     public ConfigKey<ConfigType> getConfigKey() { return configKey; }
     
@@ -106,7 +111,7 @@ public abstract class AttributeSensorAndConfigKey<ConfigType,SensorType> extends
         SensorType sensorValue = e.getAttribute(this);
         if (sensorValue!=null) return sensorValue;
         
-        ConfigType v = ((EntityLocal)e).getConfig(this);
+        ConfigType v = e.config().get(this);
         try {
             return convertConfigToSensor(v, e);
         } catch (Throwable t) {
