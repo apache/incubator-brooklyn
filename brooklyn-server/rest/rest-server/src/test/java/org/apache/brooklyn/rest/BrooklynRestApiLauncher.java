@@ -48,8 +48,8 @@ import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
 import org.apache.brooklyn.rest.security.provider.SecurityProvider;
 import org.apache.brooklyn.rest.util.ManagementContextProvider;
 import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.apache.brooklyn.rest.util.ServerStoppingShutdownHandler;
 import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
-import org.apache.brooklyn.rest.util.TestShutdownHandler;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.net.Networking;
@@ -94,7 +94,7 @@ public class BrooklynRestApiLauncher {
     public static final String SCANNING_CATALOG_BOM_URL = "classpath://brooklyn/scanning.catalog.bom";
 
     enum StartMode {
-        FILTER, SERVLET, WEB_XML
+        FILTER, SERVLET, /** web-xml is not fully supported */ @Beta WEB_XML
     }
 
     public static final List<Class<? extends Filter>> DEFAULT_FILTERS = ImmutableList.of(
@@ -112,7 +112,7 @@ public class BrooklynRestApiLauncher {
     private ContextHandler customContext;
     private boolean deployJsgui = true;
     private boolean disableHighAvailability = true;
-    private final TestShutdownHandler shutdownListener = new TestShutdownHandler();
+    private ServerStoppingShutdownHandler shutdownListener;
 
     protected BrooklynRestApiLauncher() {}
 
@@ -215,7 +215,12 @@ public class BrooklynRestApiLauncher {
             ((BrooklynProperties) mgmt.getConfig()).put(BrooklynServerConfig.BROOKLYN_CATALOG_URL, ManagementContextInternal.EMPTY_CATALOG_URL);
         }
 
-        return startServer(mgmt, context, summary, disableHighAvailability);
+        Server server = startServer(mgmt, context, summary, disableHighAvailability);
+        if (shutdownListener!=null) {
+            // not available in some modes, eg webapp
+            shutdownListener.setServer(server);
+        }
+        return server;
     }
 
     private ContextHandler filterContextHandler(ManagementContext mgmt) {
@@ -241,7 +246,7 @@ public class BrooklynRestApiLauncher {
         ResourceConfig config = new DefaultResourceConfig();
         for (Object r: BrooklynRestApi.getAllResources())
             config.getSingletons().add(r);
-        config.getSingletons().add(new ShutdownHandlerProvider(shutdownListener));
+        addShutdownListener(config, mgmt);
 
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
@@ -253,6 +258,7 @@ public class BrooklynRestApiLauncher {
         return context;
     }
 
+    /** NB: not fully supported; use one of the other {@link StartMode}s */
     private ContextHandler webXmlContextHandler(ManagementContext mgmt) {
         // TODO add security to web.xml
         WebAppContext context;
@@ -266,12 +272,15 @@ public class BrooklynRestApiLauncher {
             throw new IllegalStateException("Cannot find WAR for REST API. Expected in target/*.war, Maven repo, or in source directories.");
         }
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, mgmt);
-
+        // TODO shutdown hook
+        
         return context;
     }
 
     /** starts a server, on all NICs if security is configured,
-     * otherwise (no security) only on loopback interface */
+     * otherwise (no security) only on loopback interface 
+     * @deprecated since 0.9.0 becoming private */
+    @Deprecated
     public static Server startServer(ManagementContext mgmt, ContextHandler context, String summary, boolean disableHighAvailability) {
         // TODO this repeats code in BrooklynLauncher / WebServer. should merge the two paths.
         boolean secure = mgmt != null && !BrooklynWebConfig.hasNoSecurityOptions(mgmt.getConfig());
@@ -292,8 +301,11 @@ public class BrooklynRestApiLauncher {
         return startServer(context, summary, bindLocation);
     }
 
+    /** @deprecated since 0.9.0 becoming private */
+    @Deprecated
     public static Server startServer(ContextHandler context, String summary, InetSocketAddress bindLocation) {
         Server server = new Server(bindLocation);
+        
         server.setHandler(context);
         try {
             server.start();
@@ -361,6 +373,12 @@ public class BrooklynRestApiLauncher {
 
         ManagementContext mgmt = OsgiCompat.getManagementContext(context);
         config.getSingletons().add(new ManagementContextProvider(mgmt));
+        addShutdownListener(config, mgmt);
+    }
+
+    protected synchronized void addShutdownListener(ResourceConfig config, ManagementContext mgmt) {
+        if (shutdownListener!=null) throw new IllegalStateException("Can only retrieve one shutdown listener");
+        shutdownListener = new ServerStoppingShutdownHandler(mgmt);
         config.getSingletons().add(new ShutdownHandlerProvider(shutdownListener));
     }
 

@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.brooklyn.api.effector.Effector;
 import org.apache.brooklyn.api.entity.Application;
@@ -116,6 +117,7 @@ public class LocalManagementContext extends AbstractManagementContext {
         return closed;
     }
 
+    private AtomicBoolean terminated = new AtomicBoolean(false);
     private String managementPlaneId;
     private String managementNodeId;
     private BasicExecutionManager execution;
@@ -316,15 +318,26 @@ public class LocalManagementContext extends AbstractManagementContext {
     
     @Override
     public void terminate() {
-        INSTANCES.remove(this);
-        super.terminate();
-        if (osgiManager!=null) {
-            osgiManager.stop();
-            osgiManager = null;
+        synchronized (terminated) {
+            if (terminated.getAndSet(true)) {
+                log.trace("Already terminated management context "+this);
+                // no harm in doing it twice, but it makes logs ugly!
+                return;
+            }
+            log.debug("Terminating management context "+this);
+            
+            INSTANCES.remove(this);
+            super.terminate();
+            if (osgiManager!=null) {
+                osgiManager.stop();
+                osgiManager = null;
+            }
+            if (usageManager != null) usageManager.terminate();
+            if (execution != null) execution.shutdownNow();
+            if (gc != null) gc.shutdownNow();
+            
+            log.debug("Terminated management context "+this);
         }
-        if (usageManager != null) usageManager.terminate();
-        if (execution != null) execution.shutdownNow();
-        if (gc != null) gc.shutdownNow();
     }
 
     @Override

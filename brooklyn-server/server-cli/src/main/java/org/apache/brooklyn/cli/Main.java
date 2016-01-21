@@ -19,6 +19,12 @@
 package org.apache.brooklyn.cli;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyShell;
+import io.airlift.command.Cli;
+import io.airlift.command.Cli.CliBuilder;
+import io.airlift.command.Command;
+import io.airlift.command.Option;
 
 import java.io.Console;
 import java.io.IOException;
@@ -31,17 +37,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.Beta;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Objects.ToStringHelper;
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 import org.apache.brooklyn.api.catalog.BrooklynCatalog;
 import org.apache.brooklyn.api.catalog.CatalogItem;
@@ -89,16 +84,19 @@ import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.Enums;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.text.Identifiers;
-import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.text.StringEscapes.JavaStringEscapes;
+import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyShell;
-import io.airlift.command.Cli;
-import io.airlift.command.Cli.CliBuilder;
-import io.airlift.command.Command;
-import io.airlift.command.Option;
+import com.google.common.annotations.Beta;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Function;
+import com.google.common.base.Objects.ToStringHelper;
+import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 
 /**
  * This class is the primary CLI for brooklyn.
@@ -474,17 +472,23 @@ public class Main extends AbstractMain {
             }
             
             BrooklynServerDetails server = launcher.getServerDetails();
-            ManagementContext ctx = server.getManagementContext();
+            ManagementContext mgmt = server.getManagementContext();
             
             if (verbose) {
                 Entities.dumpInfo(launcher.getApplications());
             }
             
             if (!exitAndLeaveAppsRunningAfterStarting) {
-                waitAfterLaunch(ctx, shutdownHandler);
+                waitAfterLaunch(mgmt, shutdownHandler);
             }
 
-            // will call mgmt.terminate() in BrooklynShutdownHookJob
+            // do not shutdown servers here here -- 
+            // the BrooklynShutdownHookJob will invoke that and others on System.exit()
+            // which happens immediately after.
+            // might be nice to do it explicitly here, 
+            // but the server shutdown process has some special "shutdown apps" options
+            // so we'd want to refactor BrooklynShutdownHookJob to share code
+            
             return null;
         }
 

@@ -20,7 +20,7 @@ package org.apache.brooklyn.rest.util;
 
 import org.apache.brooklyn.rest.util.ShutdownHandler;
 
-public class TestShutdownHandler implements ShutdownHandler {
+public class NoOpRecordingShutdownHandler implements ShutdownHandler {
     private volatile boolean isRequested;
 
     @Override

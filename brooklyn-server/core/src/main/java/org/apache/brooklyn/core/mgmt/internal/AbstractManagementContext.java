@@ -372,10 +372,15 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return configMap;
     }
 
+    private final Object locationRegistrySemaphore = new Object();
+    
     @Override
-    public synchronized LocationRegistry getLocationRegistry() {
-        if (locationRegistry==null) locationRegistry = new BasicLocationRegistry(this);
-        return locationRegistry;
+    public LocationRegistry getLocationRegistry() {
+        // NB: can deadlock if synched on whole LMC
+        synchronized (locationRegistrySemaphore) {
+            if (locationRegistry==null) locationRegistry = new BasicLocationRegistry(this);
+            return locationRegistry;
+        }
     }
 
     @Override

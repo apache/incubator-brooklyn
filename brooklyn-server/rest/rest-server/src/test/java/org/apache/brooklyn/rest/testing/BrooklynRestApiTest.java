@@ -47,7 +47,7 @@ import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
 import org.apache.brooklyn.rest.util.NullHttpServletRequestProvider;
 import org.apache.brooklyn.rest.util.NullServletConfigProvider;
 import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
-import org.apache.brooklyn.rest.util.TestShutdownHandler;
+import org.apache.brooklyn.rest.util.NoOpRecordingShutdownHandler;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 
@@ -56,7 +56,7 @@ public abstract class BrooklynRestApiTest {
     protected ManagementContext manager;
     
     protected boolean useLocalScannedCatalog = false;
-    protected TestShutdownHandler shutdownListener = createShutdownHandler();
+    protected NoOpRecordingShutdownHandler shutdownListener = createShutdownHandler();
 
     @BeforeMethod(alwaysRun = true)
     public void setUpMethod() {
@@ -69,8 +69,8 @@ public abstract class BrooklynRestApiTest {
         useLocalScannedCatalog = true;
     }
     
-    private TestShutdownHandler createShutdownHandler() {
-        return new TestShutdownHandler();
+    private NoOpRecordingShutdownHandler createShutdownHandler() {
+        return new NoOpRecordingShutdownHandler();
     }
 
     protected synchronized ManagementContext getManagementContext() {

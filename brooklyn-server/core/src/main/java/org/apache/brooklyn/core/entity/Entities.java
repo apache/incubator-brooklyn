@@ -805,10 +805,15 @@ public class Entities {
                 ((ManagementContextInternal)mgmt).terminate();
             }
             if (error.get() != null) throw Exceptions.propagate(error.get());
-        } catch (InterruptedException e) {
-            throw Exceptions.propagate(e);
-        } catch (ExecutionException e) {
-            throw Exceptions.propagate(e);
+        } catch (Exception e) {
+            if (!mgmt.isRunning()) {
+                // we've checked this above so it would only happen if a different thread stopped it;
+                // this does happen sometimes e.g. in CliTest where the server shutdown occurs concurrently
+                log.debug("Destroying apps gave an error, but mgmt context was concurrently stopped so not really a problem; swallowing (unless fatal): "+e);
+                Exceptions.propagateIfFatal(e);
+            } else {
+                throw Exceptions.propagate(e);
+            }
         } finally {
             executor.shutdownNow();
         }

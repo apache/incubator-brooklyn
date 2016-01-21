@@ -187,7 +187,9 @@ public class BrooklynShutdownHooks {
             }
             entitiesToStop.addAll(entitiesToStopOnShutdown);
             for (ManagementContext mgmt: managementContextsToStopAppsOnShutdown) {
-                entitiesToStop.addAll(mgmt.getApplications());
+                if (mgmt.isRunning()) {
+                    entitiesToStop.addAll(mgmt.getApplications());
+                }
             }
             
             if (entitiesToStop.isEmpty()) {
