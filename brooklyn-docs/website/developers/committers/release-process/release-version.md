@@ -32,10 +32,10 @@ git checkout -b $VERSION_NAME
 git push -u apache $VERSION_NAME
 {% endhighlight %}
 
-Now change the version numbers in this branch throughout the project using the script `release/change-version.sh` and commit it:
+Now change the version numbers in this branch throughout the project using the script `brooklyn-dist/release/change-version.sh` and commit it:
 
 {% highlight bash %}
-./release/change-version.sh BROOKLYN $OLD_MASTER_VERSION $VERSION_NAME
+./brooklyn-dist/release/change-version.sh BROOKLYN $OLD_MASTER_VERSION $VERSION_NAME
 git add .
 # Now inspect the staged changes and ensure there are no surprises
 git commit -m "Change version to $VERSION_NAME"
@@ -56,12 +56,12 @@ Example:
 
 {% highlight bash %}
 git checkout master
-./release/change-version.sh BROOKLYN $OLD_MASTER_VERSION $NEW_MASTER_VERSION
+./brooklyn-dist/release/change-version.sh BROOKLYN $OLD_MASTER_VERSION $NEW_MASTER_VERSION
 git add .
 # Now inspect the staged changes and ensure there are no surprises
 {% endhighlight %}
 
-Open `docs/guide/misc/release-notes.md` and `docs/website/meta/versions.md` in your favourite editor and amend.
+Open `brooklyn-docs/guide/misc/release-notes.md` and `brooklyn-docs/website/meta/versions.md` in your favourite editor and amend.
 For release notes this means bumping the reference to the previous version in the "Backwards Compatibility" section
 and putting some placeholder text elsewhere.
 
