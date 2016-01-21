@@ -20,14 +20,20 @@ package org.apache.brooklyn.entity.software.base;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
 
+import com.google.common.collect.Sets;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.MachineProvisioningLocation;
+import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.annotation.Effector;
 import org.apache.brooklyn.core.config.ConfigKeys;
+import org.apache.brooklyn.core.config.ConfigUtils;
 import org.apache.brooklyn.core.config.MapConfigKey;
+import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
@@ -36,7 +42,10 @@ import org.apache.brooklyn.core.entity.trait.Startable;
 import org.apache.brooklyn.core.sensor.AttributeSensorAndConfigKey;
 import org.apache.brooklyn.core.sensor.Sensors;
 import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.flags.SetFromFlag;
+import org.apache.brooklyn.util.core.flags.TypeCoercions;
+import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Duration;
 
 import com.google.common.annotations.Beta;
@@ -50,12 +59,19 @@ public interface SoftwareProcess extends Entity, Startable {
     AttributeSensor<String> SUBNET_HOSTNAME = Attributes.SUBNET_HOSTNAME;
     AttributeSensor<String> SUBNET_ADDRESS = Attributes.SUBNET_ADDRESS;
 
-    @SuppressWarnings("serial")
     ConfigKey<Collection<Integer>> REQUIRED_OPEN_LOGIN_PORTS = ConfigKeys.newConfigKey(
             new TypeToken<Collection<Integer>>() {},
             "requiredOpenLoginPorts",
             "The port(s) to be opened, to allow login",
             ImmutableSet.of(22));
+
+    ConfigKey<String> INBOUND_PORTS_CONFIG_REGEX = ConfigKeys.newStringConfigKey("inboundPorts.configRegex",
+            "Regex governing the opening of ports based on config names",
+            ".*\\.port");
+
+    ConfigKey<Boolean> INBOUND_PORTS_AUTO_INFER = ConfigKeys.newBooleanConfigKey("inboundPorts.autoInfer",
+            "If set to false turns off the opening of ports based on naming convention, and also those that are of type PortRange in Java entities",
+            true);
 
     @SetFromFlag("startTimeout")
     ConfigKey<Duration> START_TIMEOUT = BrooklynConfigKeys.START_TIMEOUT;
@@ -300,12 +316,12 @@ public interface SoftwareProcess extends Entity, Startable {
     AttributeSensor<MachineProvisioningLocation> PROVISIONING_LOCATION = Sensors.newSensor(
             MachineProvisioningLocation.class, "softwareservice.provisioningLocation", "Location used to provision a machine where this is running");
 
-    AttributeSensor<Boolean> SERVICE_PROCESS_IS_RUNNING = Sensors.newBooleanSensor("service.process.isRunning", 
+    AttributeSensor<Boolean> SERVICE_PROCESS_IS_RUNNING = Sensors.newBooleanSensor("service.process.isRunning",
             "Whether the process for the service is confirmed as running");
-    
+
     AttributeSensor<Lifecycle> SERVICE_STATE_ACTUAL = Attributes.SERVICE_STATE_ACTUAL;
     AttributeSensor<Transition> SERVICE_STATE_EXPECTED = Attributes.SERVICE_STATE_EXPECTED;
- 
+
     AttributeSensor<String> PID_FILE = Sensors.newStringSensor("softwareprocess.pid.file", "PID file");
 
     @Beta
@@ -319,14 +335,14 @@ public interface SoftwareProcess extends Entity, Startable {
             "Whether to restart/replace the machine provisioned for this entity:  'true', 'false', or 'auto' are supported, "
             + "with the default being 'auto' which means to restart or reprovision the machine if there is no simpler way known to restart the entity "
             + "(for example, if the machine is unhealthy, it would not be possible to restart the process, not even via a stop-then-start sequence); "
-            + "if the machine was not provisioned for this entity, this parameter has no effect", 
+            + "if the machine was not provisioned for this entity, this parameter has no effect",
             RestartMachineMode.AUTO.toString().toLowerCase());
-        
+
         // we supply a typed variant for retrieval; we want the untyped (above) to use lower case as the default in the GUI
-        // (very hard if using enum, since enum takes the name, and RendererHints do not apply to parameters) 
+        // (very hard if using enum, since enum takes the name, and RendererHints do not apply to parameters)
         @Beta /** @since 0.7.0 semantics of parameters to restart being explored */
         public static final ConfigKey<RestartMachineMode> RESTART_MACHINE_TYPED = ConfigKeys.newConfigKey(RestartMachineMode.class, "restartMachine");
-            
+
         public enum RestartMachineMode { TRUE, FALSE, AUTO }
     }
 
@@ -349,7 +365,7 @@ public interface SoftwareProcess extends Entity, Startable {
                 "IF_NOT_STOPPED stops the machine only if the entity is not marked as stopped, " +
                 "NEVER doesn't stop the machine.", StopMode.IF_NOT_STOPPED);
     }
-    
+
     // NB: the START, STOP, and RESTART effectors themselves are (re)defined by MachineLifecycleEffectorTasks
 
     /**
