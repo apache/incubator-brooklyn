@@ -312,7 +312,7 @@ public abstract class AbstractControllerImpl extends SoftwareProcessImpl impleme
         ConfigToAttributes.apply(this);
 
         sensors().set(PROTOCOL, inferProtocol());
-        sensors().set(MAIN_URI, URI.create(inferUrl()));
+        sensors().set(MAIN_URI, URI.create(inferUrl(true)));
         sensors().set(ROOT_URL, inferUrl());
  
         checkNotNull(getPortNumberSensor(), "no sensor configured to infer port number");
