@@ -19,7 +19,6 @@
 
 package org.apache.brooklyn.core.objs;
 
-import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.api.mgmt.ExecutionContext;
@@ -28,8 +27,8 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.util.core.flags.TypeCoercions;
 import org.apache.brooklyn.util.core.task.Tasks;
+import org.apache.brooklyn.util.core.task.ValueResolver;
 import org.apache.brooklyn.util.guava.Maybe;
-import org.apache.brooklyn.util.time.Duration;
 
 public abstract class AbstractConfigurationSupportInternal implements BrooklynObjectInternal.ConfigurationSupportInternal {
 
@@ -63,7 +62,7 @@ public abstract class AbstractConfigurationSupportInternal implements BrooklynOb
         Object resolved = Tasks.resolving(unresolved)
                 .as(Object.class)
                 .defaultValue(marker)
-                .timeout(Duration.of(5, TimeUnit.MILLISECONDS))
+                .timeout(ValueResolver.REAL_REAL_QUICK_WAIT)
                 .context(getContext())
                 .swallowExceptions()
                 .get();

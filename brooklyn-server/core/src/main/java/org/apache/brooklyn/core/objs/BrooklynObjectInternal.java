@@ -69,6 +69,9 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
         /**
          * Returns the uncoerced value for this config key, if available, not taking any default.
          * If there is no local value and there is an explicit inherited value, will return the inherited.
+         * Returns {@link Maybe#absent()} if the key is not explicitly set on this object or an ancestor.
+         * <p>
+         * See also {@link #getLocalRaw(ConfigKey).
          */
         @Beta
         Maybe<Object> getRaw(ConfigKey<?> key);
@@ -82,6 +85,9 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
         /**
          * Returns the uncoerced value for this config key, if available,
          * not following any inheritance chains and not taking any default.
+         * Returns {@link Maybe#absent()} if the key is not explicitly set on this object.
+         * <p>
+         * See also {@link #getRaw(ConfigKey).
          */
         @Beta
         Maybe<Object> getLocalRaw(ConfigKey<?> key);
@@ -96,6 +102,11 @@ public interface BrooklynObjectInternal extends BrooklynObject, Rebindable {
          * Attempts to coerce the value for this config key, if available,
          * taking a default and {@link Maybe#absent absent} if the uncoerced
          * cannot be resolved within a short timeframe.
+         * <p>
+         * Note: if no value for the key is available, not even as a default,
+         * this returns a {@link Maybe#isPresent()} containing <code>null</code>
+         * (following the semantics of {@link #get(ConfigKey)} 
+         * rather than {@link #getRaw(ConfigKey)}).
          */
         @Beta
         <T> Maybe<T> getNonBlocking(ConfigKey<T> key);

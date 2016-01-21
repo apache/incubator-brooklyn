@@ -118,7 +118,8 @@ public class SoftwareProcessDriverLifecycleEffectorTasks extends MachineLifecycl
         entity().initDriver(machine);
 
         // Note: must only apply config-sensors after adding to locations and creating driver; 
-        // otherwise can't do things like acquire free port from location, or allowing driver to set up ports
+        // otherwise can't do things like acquire free port from location
+        // or allowing driver to set up ports; but must be careful in init not to block on these!
         super.preStartCustom(machine);
         
         entity().preStart();
