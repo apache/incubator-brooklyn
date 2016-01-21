@@ -107,40 +107,43 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
             skipStart = entityStarted.or(false);
         }
         if (!skipStart) {
-            Optional<Boolean> locationInstalled = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
-            Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
-            boolean skipInstall = locationInstalled.or(entityInstalled).or(false);
-            if (!skipInstall) {
-                DynamicTasks.queue("copy-pre-install-resources", new Runnable() { public void run() {
-                    waitForConfigKey(BrooklynConfigKeys.PRE_INSTALL_RESOURCES_LATCH);
-                    copyPreInstallResources();
-                }});
+            DynamicTasks.queue("install", new Runnable() { public void run() {
 
-                DynamicTasks.queue("pre-install", new Runnable() { public void run() {
-                    preInstall();
-                }});
+                Optional<Boolean> locationInstalled = Optional.fromNullable(getLocation().getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+                Optional<Boolean> entityInstalled = Optional.fromNullable(entity.getConfig(BrooklynConfigKeys.SKIP_ENTITY_INSTALLATION));
+                boolean skipInstall = locationInstalled.or(entityInstalled).or(false);
+                if (!skipInstall) {
+                    DynamicTasks.queue("copy-pre-install-resources", new Runnable() { public void run() {
+                        waitForConfigKey(BrooklynConfigKeys.PRE_INSTALL_RESOURCES_LATCH);
+                        copyPreInstallResources();
+                    }});
 
-                DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
-                    runPreInstallCommand();
-                }});
-                DynamicTasks.queue("setup", new Runnable() { public void run() {
-                    waitForConfigKey(BrooklynConfigKeys.SETUP_LATCH);
-                    setup();
-                }});
+                    DynamicTasks.queue("pre-install", new Runnable() { public void run() {
+                        preInstall();
+                    }});
 
-                DynamicTasks.queue("copy-install-resources", new Runnable() { public void run() {
-                    waitForConfigKey(BrooklynConfigKeys.INSTALL_RESOURCES_LATCH);
-                    copyInstallResources();
-                }});
+                    DynamicTasks.queue("pre-install-command", new Runnable() { public void run() {
+                        runPreInstallCommand();
+                    }});
+                    DynamicTasks.queue("setup", new Runnable() { public void run() {
+                        waitForConfigKey(BrooklynConfigKeys.SETUP_LATCH);
+                        setup();
+                    }});
 
-                DynamicTasks.queue("install", new Runnable() { public void run() {
-                    waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
-                    install();
-                }});
-            }
+                    DynamicTasks.queue("copy-install-resources", new Runnable() { public void run() {
+                        waitForConfigKey(BrooklynConfigKeys.INSTALL_RESOURCES_LATCH);
+                        copyInstallResources();
+                    }});
 
-            DynamicTasks.queue("post-install-command", new Runnable() { public void run() {
-                runPostInstallCommand();
+                    DynamicTasks.queue("install (main)", new Runnable() { public void run() {
+                        waitForConfigKey(BrooklynConfigKeys.INSTALL_LATCH);
+                        install();
+                    }});
+                }
+
+                DynamicTasks.queue("post-install-command", new Runnable() { public void run() {
+                    runPostInstallCommand();
+                }});
             }});
 
             DynamicTasks.queue("customize", new Runnable() { public void run() {
@@ -148,22 +151,24 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
                 customize();
             }});
 
-            DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
-                waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
-                copyRuntimeResources();
-            }});
-
-            DynamicTasks.queue("pre-launch-command", new Runnable() { public void run() {
-                runPreLaunchCommand();
-            }});
-
             DynamicTasks.queue("launch", new Runnable() { public void run() {
-                waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
-                launch();
-            }});
+                DynamicTasks.queue("copy-runtime-resources", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.RUNTIME_RESOURCES_LATCH);
+                    copyRuntimeResources();
+                }});
 
-            DynamicTasks.queue("post-launch-command", new Runnable() { public void run() {
-                runPostLaunchCommand();
+                DynamicTasks.queue("pre-launch-command", new Runnable() { public void run() {
+                    runPreLaunchCommand();
+                }});
+
+                DynamicTasks.queue("launch (main)", new Runnable() { public void run() {
+                    waitForConfigKey(BrooklynConfigKeys.LAUNCH_LATCH);
+                    launch();
+                }});
+
+                DynamicTasks.queue("post-launch-command", new Runnable() { public void run() {
+                    runPostLaunchCommand();
+                }});
             }});
         }
 
@@ -187,6 +192,7 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     public abstract void customize();
     public abstract void runPreLaunchCommand();
     public abstract void launch();
+    /** Only run if launch is run (if start is not skipped). */
     public abstract void runPostLaunchCommand();
 
     @Override
@@ -195,7 +201,8 @@ public abstract class AbstractSoftwareProcessDriver implements SoftwareProcessDr
     }
 
     /**
-     * Implement this method in child classes to add some post-launch behavior
+     * Implement this method in child classes to add some post-launch behavior.
+     * This is run even if start is skipped and launch is not run.
      */
     public void postLaunch() {}
 
