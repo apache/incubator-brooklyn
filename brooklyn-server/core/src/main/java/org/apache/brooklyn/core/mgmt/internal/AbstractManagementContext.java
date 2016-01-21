@@ -372,7 +372,7 @@ public abstract class AbstractManagementContext implements ManagementContextInte
         return configMap;
     }
 
-    private Object locationRegistrySemaphore = new Object();
+    private final Object locationRegistrySemaphore = new Object();
     
     @Override
     public LocationRegistry getLocationRegistry() {

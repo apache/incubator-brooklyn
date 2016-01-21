@@ -67,7 +67,7 @@ public class ServerStoppingShutdownHandler implements ShutdownHandler {
         }).start();
     }
 
-    /** Expect this to be injeted; typically it is not known when this is created, but we need it to trigger shutdown. */
+    /** Expect this to be injected; typically it is not known when this is created, but we need it to trigger shutdown. */
     public void setServer(Server server) {
         this.server = server;
     }
