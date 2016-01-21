@@ -21,6 +21,7 @@
 # Creates the following releases with archives (.tar.gz/.zip), signatures and checksums:
 #   binary  (-bin)     - contains the brooklyn dist binary release
 #   source  (-src)     - contains all the source code files that are permitted to be released
+#   vagrant (-vagrant) - contains a Vagrantfile/scripts to start a Brooklyn getting started environment
 
 set -e
 
@@ -220,6 +221,19 @@ mv ${bin_staging_dir}/brooklyn-dist-${current_version} ${bin_staging_dir}/${rele
 
 ( cd ${bin_staging_dir} && tar czf ${artifact_dir}/${artifact_name}-bin.tar.gz ${release_name}-bin )
 ( cd ${bin_staging_dir} && zip -qr ${artifact_dir}/${artifact_name}-bin.zip ${release_name}-bin )
+
+###############################################################################
+# Vagrant release
+set +x
+echo "Proceeding to rename and repackage vagrant environment release"
+set -x
+
+# Re-pack the archive with the correct names
+tar xzf ${src_staging_dir}/brooklyn-dist/vagrant/target/brooklyn-vagrant-${current_version}-dist.tar.gz -C ${bin_staging_dir}
+mv ${bin_staging_dir}/brooklyn-vagrant-${current_version} ${bin_staging_dir}/${release_name}-vagrant
+
+( cd ${bin_staging_dir} && tar czf ${artifact_dir}/${artifact_name}-vagrant.tar.gz ${release_name}-vagrant )
+( cd ${bin_staging_dir} && zip -qr ${artifact_dir}/${artifact_name}-vagrant.zip ${release_name}-vagrant )
 
 ###############################################################################
 # Signatures and checksums
