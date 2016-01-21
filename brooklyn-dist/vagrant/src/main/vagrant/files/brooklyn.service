@@ -1,0 +1,13 @@
+[Unit]
+Description=Apache Brooklyn service
+Documentation=http://brooklyn.apache.org/documentation/index.html
+
+[Service]
+ExecStart=/home/vagrant/apache-brooklyn/bin/brooklyn launch --persist auto --persistenceDir /vagrant/brooklyn-persisted-state
+WorkingDirectory=/home/vagrant/apache-brooklyn
+Restart=on-abort
+User=vagrant
+Group=vagrant
+
+[Install]
+WantedBy=multi-user.target

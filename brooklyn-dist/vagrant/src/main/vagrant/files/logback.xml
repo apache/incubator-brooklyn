@@ -1,0 +1,12 @@
+<configuration scan="true">
+
+    <!-- to supply custom logging, either change this file, supply your own logback-main.xml
+         (overriding the default provided on the classpath) or any of the files it references;
+         see the Logging section of the Brooklyn web site for more information -->
+
+    <property name="logging.basename" scope="context" value="brooklyn" />
+    <property name="logging.dir" scope="context" value="/var/log/brooklyn/" />
+
+    <include resource="logback-main.xml"/>
+
+</configuration>

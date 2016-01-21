@@ -1,0 +1,47 @@
+---
+default_config:
+    check_newer_vagrant_box: true
+    run_os_update: true
+servers:
+  - name: brooklyn
+    box: ubuntu/vivid64
+    ram: 2048
+    cpus: 4
+    ip: 10.10.10.100
+    shell:
+      env:
+        BROOKLYN_VERSION: 0.9.0-SNAPSHOT
+      cmd:
+        - sudo sh -c 'export DEBIAN_FRONTEND=noninteractive; apt-get install --yes openjdk-8-jre-headless'
+        - curl -s -S -J -O -L "https://www.apache.org/dyn/closer.cgi?action=download&filename=brooklyn/apache-brooklyn-${BROOKLYN_VERSION}/apache-brooklyn-${BROOKLYN_VERSION}-bin.tar.gz"
+        - tar zxf apache-brooklyn-${BROOKLYN_VERSION}-bin.tar.gz
+        - ln -s apache-brooklyn-${BROOKLYN_VERSION}-bin apache-brooklyn
+        - sudo mkdir -p /var/log/brooklyn
+        - sudo chown -R vagrant:vagrant /var/log/brooklyn
+        - sudo cp /vagrant/files/brooklyn.service /etc/systemd/system/brooklyn.service
+        - mkdir -p /home/vagrant/.brooklyn
+        - cp /vagrant/files/brooklyn.properties /home/vagrant/.brooklyn/
+        - chmod 600 /home/vagrant/.brooklyn/brooklyn.properties
+        - sudo systemctl start brooklyn
+        - sudo systemctl enable brooklyn
+  - name: byon1
+    box: ubuntu/vivid64
+    ram: 512
+    cpus: 2
+    ip: 10.10.10.101
+  - name: byon2
+    box: ubuntu/vivid64
+    ram: 512
+    cpus: 2
+    ip: 10.10.10.102
+  - name: byon3
+    box: ubuntu/vivid64
+    ram: 512
+    cpus: 2
+    ip: 10.10.10.103
+  - name: byon4
+    box: ubuntu/vivid64
+    ram: 512
+    cpus: 2
+    ip: 10.10.10.104
+...
