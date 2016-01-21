@@ -173,12 +173,24 @@ public class Effectors {
         return ConfigKeys.newConfigKey(paramType.getParameterClass(), paramType.getName(), paramType.getDescription(), paramType.getDefaultValue());
     }
 
-    /** returns an unsubmitted task which will invoke the given effector on the given entities;
-     * return type is Task<List<T>> (but haven't put in the blood sweat toil and tears to make the generics work) */
+    /** convenience for {@link #invocationParallel(Effector, Map, Iterable)} */
     public static TaskAdaptable<List<?>> invocation(Effector<?> eff, Map<?,?> params, Iterable<? extends Entity> entities) {
+        return invocationParallel(eff, params, entities);
+    }
+    
+    /** returns an unsubmitted task which will invoke the given effector on the given entities in parallel;
+     * return type is Task<List<T>> (but haven't put in the blood sweat toil and tears to make the generics work) */
+    public static TaskAdaptable<List<?>> invocationParallel(Effector<?> eff, Map<?,?> params, Iterable<? extends Entity> entities) {
         List<TaskAdaptable<?>> tasks = new ArrayList<TaskAdaptable<?>>();
         for (Entity e: entities) tasks.add(invocation(e, eff, params));
         return Tasks.parallel("invoking "+eff+" on "+tasks.size()+" node"+(Strings.s(tasks.size())), tasks.toArray(new TaskAdaptable[tasks.size()]));
+    }
+
+    /** as {@link #invocationParallel(Effector, Map, Iterable)} but executing sequentially */
+    public static TaskAdaptable<List<?>> invocationSequential(Effector<?> eff, Map<?,?> params, Iterable<? extends Entity> entities) {
+        List<TaskAdaptable<?>> tasks = new ArrayList<TaskAdaptable<?>>();
+        for (Entity e: entities) tasks.add(invocation(e, eff, params));
+        return Tasks.sequential("invoking "+eff+" on "+tasks.size()+" node"+(Strings.s(tasks.size())), tasks.toArray(new TaskAdaptable[tasks.size()]));
     }
 
     /** returns an unsubmitted task which will invoke the given effector on the given entities

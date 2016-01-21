@@ -47,6 +47,7 @@ import org.apache.brooklyn.core.config.Sanitizer;
 import org.apache.brooklyn.core.config.render.RendererHints;
 import org.apache.brooklyn.core.effector.Effectors;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityPredicates;
 import org.apache.brooklyn.core.entity.factory.EntityFactory;
 import org.apache.brooklyn.core.entity.factory.EntityFactoryForLocation;
 import org.apache.brooklyn.core.entity.lifecycle.Lifecycle;
@@ -522,7 +523,28 @@ public class DynamicClusterImpl extends AbstractGroupImpl implements DynamicClus
 
     @Override
     public void restart() {
-        throw new UnsupportedOperationException();
+        String mode = getConfig(RESTART_MODE);
+        if (mode==null) {
+            throw new UnsupportedOperationException("Restart not supported for this cluster: "+RESTART_MODE.getName()+" is not configured.");
+        }
+        if ("off".equalsIgnoreCase(mode)) {
+            throw new UnsupportedOperationException("Restart not supported for this cluster.");
+        }
+        
+        if ("sequential".equalsIgnoreCase(mode)) {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
+            DynamicTasks.queue(Effectors.invocationSequential(Startable.RESTART, null, 
+                Iterables.filter(getChildren(), Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.isManaged()))));
+        } else if ("parallel".equalsIgnoreCase(mode)) {
+            ServiceStateLogic.setExpectedState(this, Lifecycle.STARTING);
+            DynamicTasks.queue(Effectors.invocationParallel(Startable.RESTART, null, 
+                Iterables.filter(getChildren(), Predicates.and(Predicates.instanceOf(Startable.class), EntityPredicates.isManaged()))));
+        } else {
+            throw new IllegalArgumentException("Unknown "+RESTART_MODE.getName()+" '"+mode+"'");
+        }
+        
+        DynamicTasks.waitForLast();
+        ServiceStateLogic.setExpectedState(this, Lifecycle.RUNNING);
     }
 
     @Override
