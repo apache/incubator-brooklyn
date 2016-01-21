@@ -9,7 +9,7 @@ It is written to account for several Apache requirements, so you are strongly ad
 
 The release script will:
 
-- **Create source code and binary distribution artifacts** and place them in a temporary staging directory on your workstation, usually `/tmp/`.
+- **Create source code and binary distribution artifacts** and place them in a temporary staging directory on your workstation, usually `brooklyn-dist/release/tmp/`.
 - **Create Maven artifacts and upload them to a staging repository** located on the Apache Nexus server.
 
 The script has a single required parameter `-r` which is given the release candidate number - so `-r1` will create
