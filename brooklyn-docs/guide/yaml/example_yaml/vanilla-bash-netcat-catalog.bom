@@ -1,0 +1,35 @@
+brooklyn.catalog:
+  id: netcat-example
+  version: "1.0"
+  item:
+    type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
+    name: Simple Netcat Server
+
+    launch.command: |
+      echo $MESSAGE | nc -l $NETCAT_PORT &
+      echo $! > $PID_FILE
+        
+    env:
+      MESSAGE: $brooklyn:config("message")
+      NETCAT_PORT: $brooklyn:attributeWhenReady("netcat.port")
+      
+    brooklyn.parameters:
+    - name: message
+      description: a message to send to the caller
+      default: hello
+    - name: netcat.port
+      type: port
+      description: the port netcat should run on
+      default: 4321+
+
+    brooklyn.enrichers:
+    - type: org.apache.brooklyn.enricher.stock.Transformer
+      brooklyn.config:
+        uniqueTag: main-uri-generator
+        enricher.sourceSensor: $brooklyn:sensor("host.address")
+        enricher.targetSensor: $brooklyn:sensor("main.uri")
+        enricher.targetValue:
+          $brooklyn:formatString:
+          - "http://%s:%s/"
+          - $brooklyn:attributeWhenReady("host.address")
+          - $brooklyn:attributeWhenReady("netcat.port")

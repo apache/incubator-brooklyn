@@ -1,0 +1,13 @@
+name: Netcat Example with Port Opened
+location: localhost
+services:
+- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
+  name: Simple Netcat Server
+  launch.command: |
+    echo hello | nc -l 4321 &
+    echo $! > $PID_FILE
+    
+  brooklyn.config:
+    # matching the regex `.*\.port` will cause the port to be opened
+    # if in a cloud where configurable security groups are available
+    netcat.port: 4321

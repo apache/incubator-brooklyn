@@ -1,4 +1,4 @@
-name: Simple Netcat Example with Restarter Policy
+name: Netcat Example with Restarter Policy
 location: localhost
 services:
 - type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
