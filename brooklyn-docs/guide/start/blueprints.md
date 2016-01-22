@@ -19,6 +19,7 @@ hover your mouse over the right side of the text box below to get a Javascript "
 name: Tomcat
 services:
 - type: org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
+  name: tomcatServer
 location: <your-location-definition-goes-here>
 {% endhighlight %}
 

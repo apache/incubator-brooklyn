@@ -41,8 +41,20 @@ A full list of abbreviations such as this can be found in the [CLI reference gui
 
 In the above example the Id `hTPAF19s` and the Name `Tomcat` are shown. You can use either of these handles to monitor and control the application. The Id shown for your application will be different to this but the name should be the same, note that if you are running multiple applications the Name may not be unique.
 
-Using the name `Tomcat` we can get the application details:
+#### Things we might want to do
 
+<div class="panel-group" id="accordion">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Get the application details</a>
+                </h4>
+            </div>
+            <div id="collapseOne" class="panel-collapse collapse in">
+                <div class="panel-body">
+<p>     
+Using the name `Tomcat` we can get the application details:
+</p>
 {% highlight bash %}
 $ br app Tomcat
 {% endhighlight %}
@@ -57,28 +69,63 @@ $ br app Tomcat
   LocationName:    FixedListMachineProvisioningLocation:ajVV   
   LocationSpec:    vagrantbyon   
   LocationType:    org.apache.brooklyn.location.byon.FixedListMachineProvisioningLocation  
-</pre>
-
+</pre>        
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">Explore the hierarchy of all applications</a>
+                </h4>
+            </div>
+            <div id="collapseTwo" class="panel-collapse collapse">
+                <div class="panel-body">
+<p>              
 We can explore the management hierarchy of all applications, which will show us the entities they are composed of.
+</p>
 {% highlight bash %}
 $ br tree
 {% endhighlight %}
 <pre>
 |- Tomcat
 +- org.apache.brooklyn.entity.stock.BasicApplication
-  |- TomcatServer:Wx7r
+  |- tomcatServer
   +- org.apache.brooklyn.entity.webapp.tomcat.TomcatServer
 </pre>
-
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">View our application's blueprint</a>
+                </h4>
+            </div>
+            <div id="collapseThree" class="panel-collapse collapse">
+                <div class="panel-body">
+<p>
 You can view the blueprint for the application again:
+</p>
 {% highlight bash %}
 $ br app tomcat spec
 {% endhighlight %}
 <pre>
 "name: Tomcat\nlocation:\n  mylocation\nservices:\n- serviceType: brooklyn.entity.webapp.tomcat.TomcatServer\n"
-</pre>
-
-You can view the config of the application:
+</pre>                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseFour">View our application's configuration</a>
+                </h4>
+            </div>
+            <div id="collapseFour" class="panel-collapse collapse">
+                <div class="panel-body">
+<p>
+You can view the configuration of the application:
+</p>
 {% highlight bash %}
 $ br app tomcat config
 {% endhighlight %}
@@ -87,6 +134,10 @@ Key                    Value
 camp.template.id       l67i25CM   
 brooklyn.wrapper_app   true   
 </pre>
+                </div>
+            </div>
+        </div>
+    </div>
 
 ## Entities
 
@@ -99,27 +150,29 @@ $ br app Tomcat entity
 {% endhighlight %}
 <pre>
 Id         Name                Type   
-Wx7r1C4e   TomcatServer:Wx7r   org.apache.brooklyn.entity.webapp.tomcat.TomcatServer      
+Wx7r1C4e   tomcatServer   org.apache.brooklyn.entity.webapp.tomcat.TomcatServer      
 </pre>
 
-You can get summary information for an entity by providing its name (or ID).
+This shows one entity is available: `tomcatServer`. Note that this is the name we gave the entity in the YAML in [Launching from a Blueprint](./blueprints.html#launching-from-a-blueprint) on the previous page.
+
+You can get summary information for this entity by providing its name (or ID).
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r
+$ br app Tomcat ent tomcatServer
 {% endhighlight %}
 <pre>
 Id:              Wx7r1C4e   
-Name:            TomcatServer:Wx7r   
+Name:            tomcatServer   
 Status:          RUNNING   
 ServiceUp:       true   
 Type:            org.apache.brooklyn.entity.webapp.tomcat.TomcatServer   
 CatalogItemId:   null   
 </pre>
 
-Also you can see the config of the entity with the ```config``` command.
+Also you can see the configuration of this entity with the ```config``` command.
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r config
+$ br app Tomcat ent tomcatServer config
 {% endhighlight %}
 <pre>
 Key                       Value   
@@ -130,12 +183,6 @@ onbox.base.dir            /home/vagrant/brooklyn-managed-processes
 onbox.base.dir.resolved   true   
 install.unique_label      TomcatServer_7.0.65   
 </pre>
-
-If an entity name is annoyingly long to type, the entity can be renamed:
-
-{% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r rename server
-{% endhighlight %}
 
 ## Sensors
 
@@ -155,11 +202,11 @@ service.state              Actual lifecycle state of the service                
 service.state.expected     Last controlled change to service state, indicating what the expected state should be   "running @ 1450356994928 / Thu Dec 17 12:56:34 GMT 2015"
 </pre>
 
-To explore all sensors available on an entity use the sensor command with an entity scope.
+To explore all sensors available on an entity use the `sensor` command with an entity scope.
 Note, again, the name of the application or entity can be used or the ID:
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r sensor
+$ br app Tomcat ent tomcatServer sensor
 {% endhighlight %}
 <pre>
 Name                                            Description                                                                                                      Value   
@@ -178,7 +225,7 @@ host.subnet.hostname                            Host name as known internally in
 To study selected sensors, give the command the sensor name as an argument
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r sensor webapp.url  
+$ br app Tomcat ent tomcatServer sensor webapp.url  
 {% endhighlight %}
 <pre>
 "http://10.10.10.101:8080/"
@@ -203,7 +250,7 @@ stop            Stop the process/service represented by an entity
 For an entity supply the entity scope:
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r effector
+$ br app Tomcat ent tomcatServer effector
 {% endhighlight %}
 <pre>
 Name                              Description                                                                               Parameters   
@@ -218,7 +265,7 @@ undeploy                          Undeploys the given context/artifact          
 To view just one effector's documentation, supply its name to the show command:
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r effector deploy
+$ br app Tomcat ent tomcatServer effector deploy
 {% endhighlight %}
 <pre>
 Name            Description                                                                                                                                                                            Parameters   
@@ -233,7 +280,7 @@ application and return any cloud machines that were being used. Do the invocatio
 the scope, and using the command ```invoke```. 
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r eff stop invoke
+$ br app Tomcat ent tomcatServer eff stop invoke
 {% endhighlight %}
 
 Note that the three "lifecycle" related effectors, ```start```, ```stop```, and ```restart```, are common to all software process 
@@ -241,13 +288,13 @@ entities in Brooklyn. They are so commonly used that they have their own aliases
 by:
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r stop
+$ br app Tomcat ent tomcatServer stop
 {% endhighlight %}
 
 Some effectors require parameters for their invocation, as in the example of ```deploy``` above.  
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r effector deploy
+$ br app Tomcat ent tomcatServer effector deploy
 {% endhighlight %}
 <pre>
 Name     Description                                                                             Parameters   
@@ -261,8 +308,8 @@ sensor, and the index page is fetched. Note that at present a ```tr``` command i
 quotation characters from the returned sensor value. 
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r effector deploy invoke -P url=https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war -P targetName=sample
-$ webapp=$(br app Tomcat ent TomcatServer:Wx7r sensor webapp.url | tr -d '"')
+$ br app Tomcat ent tomcatServer effector deploy invoke -P url=https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war -P targetName=sample
+$ webapp=$(br app Tomcat ent tomcatServer sensor webapp.url | tr -d '"')
 $ curl $webapp/sample/
 {% endhighlight %}
     <html>
@@ -278,7 +325,7 @@ The ```activity``` command allows us to investigate the activities of an entity.
 To view a list of all activities associated with an entity simply use
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r activity
+$ br app Tomcat ent tomcatServer activity
 {% endhighlight %}
 <pre>
 Id         Task                                       Submitted                      Status      Streams   
@@ -293,7 +340,7 @@ jwwcJWmF   start (processes)                          Thu Dec 17 15:04:43 GMT 20
 To view the details of an individual activity provide its ID:
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r activity jwwcJWmF
+$ br app Tomcat ent tomcatServer activity jwwcJWmF
 {% endhighlight %}
 <pre>
 Id:                  jwwcJWmF   
@@ -320,7 +367,7 @@ Adding the ```--children``` or ```-c``` parameter will show the activity's child
 of the activities to be investigated:
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r activity -c jwwcJWmF
+$ br app Tomcat ent tomcatServer activity -c jwwcJWmF
 {% endhighlight %}
 <pre>
 Id         Task                         Submitted                      Status   
@@ -344,7 +391,7 @@ using the commands, ```env```, ```stdin```, ```stdout```, and ```stderr```.  For
 activity from the result of the earlier example,
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r act KLTxDkoa stdout
+$ br app Tomcat ent tomcatServer act KLTxDkoa stdout
 BASE_DIR_RESULT:/home/vagrant/brooklyn-managed-processes:BASE_DIR_RESULT
 {% endhighlight %}
 
@@ -352,7 +399,7 @@ BASE_DIR_RESULT:/home/vagrant/brooklyn-managed-processes:BASE_DIR_RESULT
 To monitor progress on an application as it deploys, for example, one could use a shell loop:
 
 {% highlight bash %}
-$ while br app Tomcat ent TomcatServer:Wx7r activity | grep 'In progress' ; do 
+$ while br app Tomcat ent tomcatServer activity | grep 'In progress' ; do 
   sleep 1; echo ; date; 
 done
 {% endhighlight %}
@@ -360,7 +407,7 @@ This loop will exit when the application has deployed successfully or has failed
 command may provide information about what happened in any activities that have associated streams:
 
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r act KLTxDkoa stderr
+$ br app Tomcat ent tomcatServer act KLTxDkoa stderr
 {% endhighlight %}
 
 
@@ -381,9 +428,9 @@ as follows (values in brackets are aliases for the scope):
 
 For example
 {% highlight bash %}
-$ br app Tomcat ent TomcatServer:Wx7r config
+$ br app Tomcat ent tomcatServer config
 {% endhighlight %}
-runs the ```config``` command with application scope of ```Tomcat``` and entity scope of ```TomcatServer:Wx7r```.
+runs the ```config``` command with application scope of ```Tomcat``` and entity scope of ```tomcatServer```.
 
 
 ## Next
