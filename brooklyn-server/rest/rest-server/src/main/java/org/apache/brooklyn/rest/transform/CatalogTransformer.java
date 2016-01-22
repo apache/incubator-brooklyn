@@ -69,7 +69,11 @@ public class CatalogTransformer {
 
         EntitySpec<?> spec = null;
         try {
-            spec = (EntitySpec<?>) b.getCatalog().createSpec(item);
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            // the raw type isn't needed according to eclipse IDE, but jenkins maven fails without it;
+            // must be a java version or compiler thing. don't remove even though it looks okay without it!
+            EntitySpec<?> specRaw = (EntitySpec<?>) b.getCatalog().createSpec((CatalogItem) item);
+            spec = specRaw;
             EntityDynamicType typeMap = BrooklynTypes.getDefinedEntityType(spec.getType());
             EntityType type = typeMap.getSnapshot();
 
