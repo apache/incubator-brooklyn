@@ -122,6 +122,23 @@ brooklyn.location.jclouds.aws-ec2.credential=$brooklyn:external("mysupplier", "a
 {% endhighlight %}
 
 
+## Referring to External Configuration in Catalog Items
+
+The same blueprint language DSL can be used within YAML catalog items. For example:
+
+    brooklyn.catalog:
+      id: com.example.myblueprint
+      version: 1.2.3
+      brooklyn.libraries:
+      - >
+        $brooklyn:formatString("https://%s:%s@repo.example.com/libs/myblueprint-1.2.3.jar", 
+        external("mysuppier", "username"), external("mysupplier", "password"))
+      item:
+        type: com.example.MyBlueprint
+
+Note the `>` in the example above is used to split across multiple lines.
+
+
 ## Suppliers available with Brooklyn
 
 Brooklyn ships with a number of external configuration suppliers ready to use.
