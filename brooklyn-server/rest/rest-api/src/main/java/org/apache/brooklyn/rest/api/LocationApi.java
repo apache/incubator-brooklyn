@@ -48,16 +48,6 @@ import io.swagger.annotations.ApiParam;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface LocationApi {
 
-    /**
-     * @deprecated since 0.7.0; use {@link CatalogApi#listLocations(String, String)}
-     */
-    @GET
-    @ApiOperation(value = "Fetch the list of location definitions",
-            response = org.apache.brooklyn.rest.domain.LocationSummary.class,
-            responseContainer = "List")
-    @Deprecated
-    public List<LocationSummary> list();
-
     // this is here to support the web GUI's circles
     @GET
     @Path("/usage/LocatedLocations")
@@ -88,14 +78,4 @@ public interface LocationApi {
             @ApiParam(name = "locationSpec", value = "Location specification object", required = true)
             @Valid LocationSpec locationSpec);
 
-    /**
-     * @deprecated since 0.7.0; use {@link CatalogApi#deleteLocation(String, String)}
-     */
-    @DELETE
-    @Path("/{locationId}")
-    @ApiOperation(value = "Deletes a location definition by id")
-    @Deprecated
-    public void delete(
-            @ApiParam(value = "Location id to delete", required = true)
-            @PathParam("locationId") String locationId);
 }

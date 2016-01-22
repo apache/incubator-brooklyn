@@ -21,18 +21,15 @@ package org.apache.brooklyn.rest.domain;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 public class LocationConfigSummary extends ConfigSummary {
 
     private static final long serialVersionUID = 2232321501735217002L;
-    
-    @JsonSerialize(include = Inclusion.NON_NULL)
+
     private final Map<String, URI> links;
 
     public LocationConfigSummary(
@@ -55,10 +52,23 @@ public class LocationConfigSummary extends ConfigSummary {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        LocationConfigSummary that = (LocationConfigSummary) o;
+        return Objects.equals(links, that.links);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), links);
+    }
+
+    @Override
     public String toString() {
-        return "LocationConfigSummary{"
-                + "name='" + getName() + '\''
-                + ", type='" + getType() + '\''
-                + '}';
+        return "LocationConfigSummary{" +
+                "links=" + links +
+                '}';
     }
 }

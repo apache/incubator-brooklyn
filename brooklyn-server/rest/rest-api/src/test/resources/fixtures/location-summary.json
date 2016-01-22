@@ -1,8 +1,9 @@
 {
-    "id":"123",
-    "name":"localhost",
-    "spec":"localhost",
-    "links":{
-        "self":"/v1/locations/123"
-    }
+  "id": "123",
+  "name": "localhost",
+  "spec": "localhost",
+  "config": {},
+  "links": {
+    "self": "/v1/locations/123"
+  }
 }

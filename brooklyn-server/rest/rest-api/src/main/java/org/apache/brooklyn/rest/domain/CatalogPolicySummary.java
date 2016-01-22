@@ -20,19 +20,16 @@ package org.apache.brooklyn.rest.domain;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
 
 public class CatalogPolicySummary extends CatalogItemSummary {
 
     private static final long serialVersionUID = -588856488327394445L;
-    
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
+
     private final Set<PolicyConfigSummary> config;
 
     public CatalogPolicySummary(
@@ -52,14 +49,29 @@ public class CatalogPolicySummary extends CatalogItemSummary {
         // TODO expose config from policies
         this.config = (config == null) ? ImmutableSet.<PolicyConfigSummary>of() : config;
     }
-    
+
     public Set<PolicyConfigSummary> getConfig() {
         return config;
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CatalogPolicySummary that = (CatalogPolicySummary) o;
+        return Objects.equals(config, that.config);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), config);
+    }
+
+    @Override
     public String toString() {
-        return super.toString()+"["+
-                "config="+getConfig()+"]";
+        return "CatalogPolicySummary{" +
+                "config=" + config +
+                '}';
     }
 }

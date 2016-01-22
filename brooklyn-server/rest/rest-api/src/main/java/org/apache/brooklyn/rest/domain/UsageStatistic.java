@@ -22,19 +22,18 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 /**
  * @author Adam Lowe
  */
 public class UsageStatistic implements HasId, Serializable {
-    
+
     private static final long serialVersionUID = 5701414937003064442L;
-    
+
     private final Status status;
     private final String id;
     private final String applicationId;
@@ -44,12 +43,12 @@ public class UsageStatistic implements HasId, Serializable {
     private final Map<String,String> metadata;
 
     public UsageStatistic(
-            @JsonProperty("status") Status status, 
-            @JsonProperty("id") String id, 
+            @JsonProperty("status") Status status,
+            @JsonProperty("id") String id,
             @JsonProperty("applicationId") String applicationId,
             @JsonProperty("start") String start,
             @JsonProperty("end") String end,
-            @JsonProperty("duration") long duration, 
+            @JsonProperty("duration") long duration,
             @JsonProperty("metadata") Map<String, String> metadata) {
         this.status = checkNotNull(status, "status");
         this.id = checkNotNull(id, "id");
@@ -92,20 +91,20 @@ public class UsageStatistic implements HasId, Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        UsageStatistic statistic = (UsageStatistic) o;
-
-        return Objects.equal(status, statistic.status) &&
-                Objects.equal(id, statistic.id) &&
-                Objects.equal(applicationId, statistic.applicationId) &&
-                Objects.equal(start, statistic.start) &&
-                Objects.equal(end, statistic.end) &&
-                Objects.equal(metadata, statistic.metadata);
+        if (!(o instanceof UsageStatistic)) return false;
+        UsageStatistic that = (UsageStatistic) o;
+        return duration == that.duration &&
+                status == that.status &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(applicationId, that.applicationId) &&
+                Objects.equals(start, that.start) &&
+                Objects.equals(end, that.end) &&
+                Objects.equals(metadata, that.metadata);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(status, id, applicationId, start, end, metadata);
+        return Objects.hash(status, id, applicationId, start, end, duration, metadata);
     }
 
     @Override

@@ -23,15 +23,14 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.util.collections.Jsonya;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
@@ -39,20 +38,14 @@ import com.google.common.collect.ImmutableMap;
 public abstract class ConfigSummary implements HasName, Serializable {
 
     private static final long serialVersionUID = -2831796487073496730L;
-    
+
     private final String name;
     private final String type;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final Object defaultValue;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final String description;
-    @JsonSerialize
     private final boolean reconfigurable;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final String label;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final Double priority;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final List<Map<String, String>> possibleValues;
 
     protected ConfigSummary(
@@ -151,21 +144,33 @@ public abstract class ConfigSummary implements HasName, Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         ConfigSummary that = (ConfigSummary) o;
-
-        if (name != null ? !name.equals(that.name) : that.name != null)
-            return false;
-
-        return true;
+        return reconfigurable == that.reconfigurable &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(defaultValue, that.defaultValue) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(label, that.label) &&
+                Objects.equals(priority, that.priority) &&
+                Objects.equals(possibleValues, that.possibleValues);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        return result;
+        return Objects.hash(name, type, defaultValue, description, reconfigurable, label, priority, possibleValues);
     }
 
     @Override
-    public abstract String toString();
+    public String toString() {
+        return "ConfigSummary{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", defaultValue=" + defaultValue +
+                ", description='" + description + '\'' +
+                ", reconfigurable=" + reconfigurable +
+                ", label='" + label + '\'' +
+                ", priority=" + priority +
+                ", possibleValues=" + possibleValues +
+                '}';
+    }
 }

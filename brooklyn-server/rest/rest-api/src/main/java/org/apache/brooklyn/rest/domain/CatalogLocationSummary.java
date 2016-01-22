@@ -20,16 +20,16 @@ package org.apache.brooklyn.rest.domain;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableSet;
 
 public class CatalogLocationSummary extends CatalogItemSummary {
 
     private static final long serialVersionUID = 8420991584336514673L;
-    
+
     private final Set<LocationConfigSummary> config;
 
     public CatalogLocationSummary(
@@ -49,9 +49,23 @@ public class CatalogLocationSummary extends CatalogItemSummary {
         // TODO expose config from policies
         this.config = (config == null) ? ImmutableSet.<LocationConfigSummary>of() : config;
     }
-    
+
     public Set<LocationConfigSummary> getConfig() {
         return config;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        CatalogLocationSummary that = (CatalogLocationSummary) o;
+        return Objects.equals(config, that.config);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), config);
     }
 
     @Override

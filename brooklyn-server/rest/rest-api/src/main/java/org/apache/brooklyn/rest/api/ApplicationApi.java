@@ -35,8 +35,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.codehaus.jackson.JsonNode;
-
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
 import org.apache.brooklyn.rest.domain.EntitySummary;
@@ -53,20 +51,11 @@ import io.swagger.annotations.ApiParam;
 public interface ApplicationApi {
 
     @GET
-    @Path("/tree")
-    @ApiOperation(
-            value = "Fetch applications and entities tree hierarchy"
-    )
-    /** @deprecated since 0.6.0 use {@link #fetch(String)} (with slightly different, but better semantics) */
-    @Deprecated
-    public JsonNode applicationTree();
-
-    @GET
     @Path("/fetch")
     @ApiOperation(
             value = "Fetch display details for all applications and optionally selected additional entities"
     )
-    public JsonNode fetch(
+    public List<EntitySummary> fetch(
             @ApiParam(value="Selected additional entity ID's to include, comma-separated", required=false)
             @DefaultValue("")
             @QueryParam("items") String items);

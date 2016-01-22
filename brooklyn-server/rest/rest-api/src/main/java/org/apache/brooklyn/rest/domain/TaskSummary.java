@@ -24,21 +24,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.brooklyn.util.collections.Jsonya;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class TaskSummary implements HasId, Serializable {
 
     private static final long serialVersionUID = 4637850742127078158L;
-    
+
     private final String id;
     private final String displayName;
     private final String entityId;
@@ -58,32 +57,29 @@ public class TaskSummary implements HasId, Serializable {
     private final List<LinkWithMetadata> children;
     private final LinkWithMetadata submittedByTask;
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final LinkWithMetadata blockingTask;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final String blockingDetails;
 
     private final String detailedStatus;
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final Map<String, LinkWithMetadata> streams;
 
     private final Map<String, URI> links;
 
     public TaskSummary(
-            @JsonProperty("id") String id, 
-            @JsonProperty("displayName") String displayName, 
-            @JsonProperty("description") String description, 
-            @JsonProperty("entityId") String entityId, 
-            @JsonProperty("entityDisplayName") String entityDisplayName, 
+            @JsonProperty("id") String id,
+            @JsonProperty("displayName") String displayName,
+            @JsonProperty("description") String description,
+            @JsonProperty("entityId") String entityId,
+            @JsonProperty("entityDisplayName") String entityDisplayName,
             @JsonProperty("tags") Set<Object> tags,
-            @JsonProperty("submitTimeUtc") Long submitTimeUtc, 
-            @JsonProperty("startTimeUtc") Long startTimeUtc, 
-            @JsonProperty("endTimeUtc") Long endTimeUtc, 
-            @JsonProperty("currentStatus") String currentStatus, 
-            @JsonProperty("result") Object result, 
-            @JsonProperty("isError") boolean isError, 
-            @JsonProperty("isCancelled") boolean isCancelled, 
+            @JsonProperty("submitTimeUtc") Long submitTimeUtc,
+            @JsonProperty("startTimeUtc") Long startTimeUtc,
+            @JsonProperty("endTimeUtc") Long endTimeUtc,
+            @JsonProperty("currentStatus") String currentStatus,
+            @JsonProperty("result") Object result,
+            @JsonProperty("isError") boolean isError,
+            @JsonProperty("isCancelled") boolean isCancelled,
             @JsonProperty("children") List<LinkWithMetadata> children,
             @JsonProperty("submittedByTask") LinkWithMetadata submittedByTask,
             @JsonProperty("blockingTask") LinkWithMetadata blockingTask,
@@ -168,20 +164,6 @@ public class TaskSummary implements HasId, Serializable {
         return result;
     }
 
-    /** @deprecated since 0.7.0 use {@link #isError} instead. */
-    @Deprecated
-    @JsonIgnore
-    public boolean getIsError() {
-        return isError;
-    }
-
-    /** @deprecated since 0.7.0 use {@link #isCancelled} instead. */
-    @Deprecated
-    @JsonIgnore
-    public boolean getIsCancelled() {
-        return isCancelled;
-    }
-
     public boolean isError() {
         return isError;
     }
@@ -216,6 +198,38 @@ public class TaskSummary implements HasId, Serializable {
 
     public Map<String, URI> getLinks() {
         return links;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TaskSummary)) return false;
+        TaskSummary that = (TaskSummary) o;
+        return isError == that.isError &&
+                isCancelled == that.isCancelled &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(displayName, that.displayName) &&
+                Objects.equals(entityId, that.entityId) &&
+                Objects.equals(entityDisplayName, that.entityDisplayName) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(tags, that.tags) &&
+                Objects.equals(submitTimeUtc, that.submitTimeUtc) &&
+                Objects.equals(startTimeUtc, that.startTimeUtc) &&
+                Objects.equals(endTimeUtc, that.endTimeUtc) &&
+                Objects.equals(currentStatus, that.currentStatus) &&
+                Objects.equals(result, that.result) &&
+                Objects.equals(children, that.children) &&
+                Objects.equals(submittedByTask, that.submittedByTask) &&
+                Objects.equals(blockingTask, that.blockingTask) &&
+                Objects.equals(blockingDetails, that.blockingDetails) &&
+                Objects.equals(detailedStatus, that.detailedStatus) &&
+                Objects.equals(streams, that.streams) &&
+                Objects.equals(links, that.links);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, displayName, entityId, entityDisplayName, description, tags, submitTimeUtc, startTimeUtc, endTimeUtc, currentStatus, result, isError, isCancelled, children, submittedByTask, blockingTask, blockingDetails, detailedStatus, streams, links);
     }
 
     @Override

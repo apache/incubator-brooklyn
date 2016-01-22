@@ -19,28 +19,23 @@
 package org.apache.brooklyn.rest.domain;
 
 import java.io.Serializable;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ScriptExecutionSummary implements Serializable {
 
     private static final long serialVersionUID = -7707936602991185960L;
-    
-    @JsonSerialize(include = Inclusion.NON_NULL)
+
     private final Object result;
-    @JsonSerialize(include = Inclusion.NON_EMPTY)
     private final String problem;
-    @JsonSerialize(include = Inclusion.NON_EMPTY)
     private final String stdout;
-    @JsonSerialize(include = Inclusion.NON_EMPTY)
     private final String stderr;
 
     public ScriptExecutionSummary(
-            @JsonProperty("result") Object result, 
-            @JsonProperty("problem") String problem, 
-            @JsonProperty("stdout") String stdout, 
+            @JsonProperty("result") Object result,
+            @JsonProperty("problem") String problem,
+            @JsonProperty("stdout") String stdout,
             @JsonProperty("stderr") String stderr) {
         super();
         this.result = result;
@@ -63,5 +58,31 @@ public class ScriptExecutionSummary implements Serializable {
 
     public String getStdout() {
         return stdout;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ScriptExecutionSummary)) return false;
+        ScriptExecutionSummary that = (ScriptExecutionSummary) o;
+        return Objects.equals(result, that.result) &&
+                Objects.equals(problem, that.problem) &&
+                Objects.equals(stdout, that.stdout) &&
+                Objects.equals(stderr, that.stderr);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(result, problem, stdout, stderr);
+    }
+
+    @Override
+    public String toString() {
+        return "ScriptExecutionSummary{" +
+                "result=" + result +
+                ", problem='" + problem + '\'' +
+                ", stdout='" + stdout + '\'' +
+                ", stderr='" + stderr + '\'' +
+                '}';
     }
 }
