@@ -65,6 +65,7 @@ import org.apache.brooklyn.entity.software.base.test.jmx.GeneralisedDynamicMBean
 import org.apache.brooklyn.entity.software.base.test.jmx.JmxService;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.test.NetworkingTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterMethod;
@@ -114,7 +115,13 @@ public class JmxFeedTest {
         @Override public void init() {
             sensors().set(Attributes.HOSTNAME, "localhost");
             sensors().set(UsesJmx.JMX_PORT, 
-                    LocalhostMachineProvisioningLocation.obtainPort(PortRanges.fromString("40123+")));
+                    LocalhostMachineProvisioningLocation.obtainPort(PortRanges.fromString(
+                        // just doing "40123+" was not enough to avoid collisions (on 40125),
+                        // observed on jenkins, not sure why but 
+                        // maybe something else had a UDP connection we weren't detected,
+                        // or the static lock our localhost uses was being bypassed;
+                        // this should improve things (2016-01)
+                        NetworkingTestUtils.randomPortAround(40000)+"+")));
             // only supports no-agent, at the moment
             config().set(UsesJmx.JMX_AGENT_MODE, JmxAgentModes.NONE);
             sensors().set(UsesJmx.RMI_REGISTRY_PORT, -1);  // -1 means to use the JMX_PORT only
