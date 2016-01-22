@@ -298,7 +298,7 @@ public class BasicTask<T> implements TaskInternal<T> {
     public synchronized boolean cancel(TaskCancellationMode mode) {
         if (isDone()) return false;
         if (log.isTraceEnabled()) {
-            log.trace("BT cancelling "+this+" mode "+mode);
+            log.trace("BT cancelling "+this+" mode "+mode+", from thread "+Thread.currentThread());
         }
         cancelled = true;
         doCancel(mode);
