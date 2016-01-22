@@ -18,31 +18,24 @@
  */
 package org.apache.brooklyn.rest.domain;
 
-import static org.apache.brooklyn.rest.util.RestApiTestUtils.fromJson;
-import static org.apache.brooklyn.rest.util.RestApiTestUtils.jsonFixture;
-import static org.testng.Assert.assertEquals;
+import java.net.URI;
+import java.util.Map;
 
-import java.io.IOException;
+import com.google.common.collect.Maps;
 
-import org.testng.annotations.Test;
-
-public class EntitySpecTest extends AbstractDomainTest {
+public class LocationSummaryTest extends AbstractDomainTest {
 
     @Override
     protected String getPath() {
-        return "fixtures/entity.json";
+        return "fixtures/location-summary.json";
     }
 
     @Override
     protected Object getDomainObject() {
-        EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "org.apache.brooklyn.entity.java.VanillaJavaApp");
-        return new EntitySpec[] { entitySpec };
+        Map<String, URI> links = Maps.newLinkedHashMap();
+        links.put("self", URI.create("/v1/locations/123"));
+
+        return new LocationSummary("123", "localhost", "localhost", null, null, links);
     }
 
-    @Test
-    public void testDeserializeFromJSONOnlyWithType() throws IOException {
-        EntitySpec actual = fromJson(jsonFixture("fixtures/entity-only-type.json"), EntitySpec.class);
-        assertEquals(actual.getType(), "org.apache.brooklyn.entity.java.VanillaJavaApp");
-        assertEquals(actual.getConfig().size(), 0);
-    }
 }

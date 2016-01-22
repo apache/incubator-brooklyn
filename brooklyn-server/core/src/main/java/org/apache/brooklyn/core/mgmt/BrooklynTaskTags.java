@@ -42,10 +42,10 @@ import org.apache.brooklyn.util.javalang.MemoryUsageTracker;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.StringEscapes.BashStringEscapes;
 import org.apache.brooklyn.util.text.Strings;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;

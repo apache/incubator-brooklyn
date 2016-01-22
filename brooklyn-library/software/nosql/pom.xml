@@ -116,7 +116,7 @@
         <!-- for cassandra testing -->
         <dependency>
             <groupId>com.netflix.astyanax</groupId>
-            <artifactId>astyanax</artifactId>
+            <artifactId>astyanax-thrift</artifactId>
             <version>${astyanax.version}</version>
             <scope>test</scope>
             <exclusions>

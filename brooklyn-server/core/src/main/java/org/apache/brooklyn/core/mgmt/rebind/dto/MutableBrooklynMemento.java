@@ -31,9 +31,8 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.EntityMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.FeedMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.LocationMemento;
 import org.apache.brooklyn.api.mgmt.rebind.mementos.PolicyMemento;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,7 +43,7 @@ import com.google.common.collect.Sets;
 /**
  * @deprecated since 0.7.0; this code will move to src/tests/java
  */
-@JsonAutoDetect(fieldVisibility=Visibility.ANY, getterVisibility=Visibility.NONE)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class MutableBrooklynMemento implements BrooklynMemento {
 
     // TODO Is this class pulling its weight? Do we really need it?

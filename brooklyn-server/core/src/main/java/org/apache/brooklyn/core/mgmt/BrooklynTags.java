@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.brooklyn.util.collections.MutableList;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -40,7 +40,8 @@ public class BrooklynTags {
     
     public static class NamedStringTag implements Serializable {
         private static final long serialVersionUID = 7932098757009051348L;
-        @JsonProperty final String kind;
+        @JsonProperty
+        final String kind;
         @JsonProperty final String contents;
         public NamedStringTag(@JsonProperty("kind") String kind, @JsonProperty("contents") String contents) {
             this.kind = kind;

@@ -20,18 +20,17 @@ package org.apache.brooklyn.rest.domain;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
 public class PolicyConfigSummary extends ConfigSummary {
 
     private static final long serialVersionUID = 4339330833863794513L;
-    
-    @JsonSerialize(include = Inclusion.NON_NULL)
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private final Map<String, URI> links;
 
     public PolicyConfigSummary(
@@ -51,10 +50,23 @@ public class PolicyConfigSummary extends ConfigSummary {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof PolicyConfigSummary)) return false;
+        if (!super.equals(o)) return false;
+        PolicyConfigSummary that = (PolicyConfigSummary) o;
+        return Objects.equals(links, that.links);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), links);
+    }
+
+    @Override
     public String toString() {
-        return "PolicyConfigSummary{"
-                + "name='" + getName() + '\''
-                + ", type='" + getType() + '\''
-                + '}';
-  }
+        return "PolicyConfigSummary{" +
+                "links=" + links +
+                '}';
+    }
 }

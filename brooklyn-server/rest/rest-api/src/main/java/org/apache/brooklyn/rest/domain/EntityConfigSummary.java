@@ -18,22 +18,22 @@
  */
 package org.apache.brooklyn.rest.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.brooklyn.config.ConfigKey;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class EntityConfigSummary extends ConfigSummary {
 
     private static final long serialVersionUID = -1336134336883426030L;
-    
-    @JsonSerialize(include = Inclusion.NON_NULL)
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private final Map<String, URI> links;
 
     public EntityConfigSummary(
@@ -61,10 +61,23 @@ public class EntityConfigSummary extends ConfigSummary {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof EntityConfigSummary)) return false;
+        if (!super.equals(o)) return false;
+        EntityConfigSummary that = (EntityConfigSummary) o;
+        return Objects.equals(links, that.links);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), links);
+    }
+
+    @Override
     public String toString() {
-        return "EntityConfigSummary{"
-                + "name='" + getName() + '\''
-                + ", type='" + getType() + '\''
-                + '}';
+        return "EntityConfigSummary{" +
+                "links=" + links +
+                '}';
     }
 }

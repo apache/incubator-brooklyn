@@ -23,9 +23,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 public class ApplicationSummary implements HasId, Serializable {
@@ -63,7 +63,7 @@ public class ApplicationSummary implements HasId, Serializable {
     public String getId() {
         return id;
     }
-    
+
     public ApplicationSpec getSpec() {
         return spec;
     }
@@ -87,31 +87,26 @@ public class ApplicationSummary implements HasId, Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof ApplicationSummary)) return false;
         ApplicationSummary that = (ApplicationSummary) o;
-
-        if (spec != null ? !spec.equals(that.spec) : that.spec != null)
-            return false;
-        if (status != that.status) return false;
-
-        return true;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(spec, that.spec) &&
+                status == that.status &&
+                Objects.equals(links, that.links);
     }
 
     @Override
     public int hashCode() {
-        int result = spec != null ? spec.hashCode() : 0;
-        result = 31 * result + (status != null ? status.hashCode() : 0);
-        return result;
+        return Objects.hash(id, spec, status, links);
     }
 
     @Override
     public String toString() {
-        return "Application{" +
-                "id=" + id +
+        return "ApplicationSummary{" +
+                "id='" + id + '\'' +
                 ", spec=" + spec +
                 ", status=" + status +
+                ", links=" + links +
                 '}';
     }
-
 }

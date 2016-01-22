@@ -43,7 +43,6 @@ public interface ActivityApi {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Could not find task")
     })
-//  @Produces("text/json")
     public TaskSummary get(
             @ApiParam(value = "Task ID", required = true) @PathParam("task") String taskId
             );

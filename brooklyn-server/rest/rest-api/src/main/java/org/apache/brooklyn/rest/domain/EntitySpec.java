@@ -20,18 +20,18 @@ package org.apache.brooklyn.rest.domain;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
-
-import org.codehaus.jackson.annotate.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 public class EntitySpec implements HasName, Serializable {
 
     private static final long serialVersionUID = -3882575609132757188L;
-    
+
     private final String name;
     private final String type;
     private final Map<String, String> config;
@@ -69,34 +69,24 @@ public class EntitySpec implements HasName, Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        EntitySpec entitySpec = (EntitySpec) o;
-
-        if (config != null ? !config.equals(entitySpec.config) : entitySpec.config != null)
-            return false;
-        if (name != null ? !name.equals(entitySpec.name) : entitySpec.name != null)
-            return false;
-        if (type != null ? !type.equals(entitySpec.type) : entitySpec.type != null)
-            return false;
-
-        return true;
+        if (!(o instanceof EntitySpec)) return false;
+        EntitySpec that = (EntitySpec) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(config, that.config);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (type != null ? type.hashCode() : 0);
-        result = 31 * result + (config != null ? config.hashCode() : 0);
-        return result;
+        return Objects.hash(name, type, config);
     }
 
     @Override
     public String toString() {
-        return "EntitySpec{"
-                + "name='" + name + '\''
-                + ", type='" + type + '\''
-                + ", config=" + config
-                + '}';
+        return "EntitySpec{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", config=" + config +
+                '}';
     }
 }

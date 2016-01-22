@@ -25,19 +25,27 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
 import java.io.IOException;
+import java.net.URI;
 
 import org.testng.annotations.Test;
 import org.testng.util.Strings;
 
-public class ApiErrorTest {
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
-    @Test
-    public void testSerializeApiError() throws IOException {
-        ApiError error = ApiError.builder()
+public class ApiErrorTest extends AbstractDomainTest {
+
+    @Override
+    protected String getPath() {
+        return "fixtures/api-error-basic.json";
+    }
+
+    @Override
+    protected Object getDomainObject() {
+        return ApiError.builder()
                 .message("explanatory message")
                 .details("accompanying details")
                 .build();
-        assertEquals(asJson(error), jsonFixture("fixtures/api-error-basic.json"));
     }
 
     @Test

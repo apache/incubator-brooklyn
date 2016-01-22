@@ -25,15 +25,14 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.DeserializationContext;
-import org.codehaus.jackson.map.JsonDeserializer;
-import org.codehaus.jackson.map.JsonSerializer;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.module.SimpleModule;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 public class BidiSerialization {
 
@@ -65,14 +64,14 @@ public class BidiSerialization {
 
         protected class Serializer extends JsonSerializer<T> {
             @Override
-            public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+            public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
                 AbstractWithManagementContextSerialization.this.serialize(value, jgen, provider);
             }
         }
         
         protected class Deserializer extends JsonDeserializer<T> {
             @Override
-            public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+            public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
                 return AbstractWithManagementContextSerialization.this.deserialize(jp, ctxt);
             }
         }
@@ -95,27 +94,27 @@ public class BidiSerialization {
             return deserializer;
         }
 
-        public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        public void serialize(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
             jgen.writeStartObject();
             writeBody(value, jgen, provider);
             jgen.writeEndObject();
         }
 
-        protected void writeBody(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException, JsonProcessingException {
+        protected void writeBody(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
             jgen.writeStringField("type", value.getClass().getCanonicalName());
             customWriteBody(value, jgen, provider);
         }
 
-        public abstract void customWriteBody(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException;
+        public abstract void customWriteBody(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException;
 
-        public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        public T deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
             @SuppressWarnings("unchecked")
             Map<Object,Object> values = jp.readValueAs(Map.class);
             String type = (String) values.get("type");
             return customReadBody(type, values, jp, ctxt);
         }
 
-        protected abstract T customReadBody(String type, Map<Object, Object> values, JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException;
+        protected abstract T customReadBody(String type, Map<Object, Object> values, JsonParser jp, DeserializationContext ctxt) throws IOException;
 
         public void install(SimpleModule module) {
             module.addSerializer(type, serializer);
@@ -126,9 +125,9 @@ public class BidiSerialization {
     public static class ManagementContextSerialization extends AbstractWithManagementContextSerialization<ManagementContext> {
         public ManagementContextSerialization(ManagementContext mgmt) { super(ManagementContext.class, mgmt); }
         @Override
-        public void customWriteBody(ManagementContext value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {}
+        public void customWriteBody(ManagementContext value, JsonGenerator jgen, SerializerProvider provider) throws IOException {}
         @Override
-        protected ManagementContext customReadBody(String type, Map<Object, Object> values, JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        protected ManagementContext customReadBody(String type, Map<Object, Object> values, JsonParser jp, DeserializationContext ctxt) throws IOException {
             return mgmt;
         }
     }
@@ -138,16 +137,16 @@ public class BidiSerialization {
             super(type, mgmt);
         }
         @Override
-        protected void writeBody(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonGenerationException, JsonProcessingException {
+        protected void writeBody(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
             jgen.writeStringField("type", type.getCanonicalName());
             customWriteBody(value, jgen, provider);
         }
         @Override
-        public void customWriteBody(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+        public void customWriteBody(T value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
             jgen.writeStringField("id", value.getId());
         }
         @Override
-        protected T customReadBody(String type, Map<Object, Object> values, JsonParser jp, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        protected T customReadBody(String type, Map<Object, Object> values, JsonParser jp, DeserializationContext ctxt) throws IOException {
             return getInstanceFromId((String) values.get("id"));
         }
         protected abstract T getInstanceFromId(String id);

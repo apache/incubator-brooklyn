@@ -27,43 +27,42 @@ import javax.annotation.Nullable;
 
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.javalang.Reflections;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.JsonStreamContext;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.SerializerProvider;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.ser.impl.UnknownSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonStreamContext;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.impl.UnknownSerializer;
+
 /**
  * for non-json-serializable classes (quite a lot of them!) simply provide a sensible error message and a toString.
- * TODO maybe we want to attempt to serialize fields instead?  (but being careful not to be self-referential!) 
+ * TODO maybe we want to attempt to serialize fields instead?  (but being careful not to be self-referential!)
  */
 public class ErrorAndToStringUnknownTypeSerializer extends UnknownSerializer {
-    
+
     private static final Logger log = LoggerFactory.getLogger(ErrorAndToStringUnknownTypeSerializer.class);
     private static Set<String> WARNED_CLASSES = Collections.synchronizedSet(MutableSet.<String>of());
-    
+
     @Override
-    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException, JsonProcessingException {
+    public void serialize(Object value, JsonGenerator jgen, SerializerProvider provider) throws IOException {
         if (BidiSerialization.isStrictSerialization())
             throw new JsonMappingException("Cannot serialize object containing "+value.getClass().getName()+" when strict serialization requested");
 
         serializeFromError(jgen.getOutputContext(), null, value, jgen, provider);
     }
 
-    public void serializeFromError(JsonStreamContext ctxt, @Nullable Exception error, Object value, JsonGenerator jgen, SerializerProvider configurableSerializerProvider) throws JsonGenerationException, IOException {
+    public void serializeFromError(JsonStreamContext ctxt, @Nullable Exception error, Object value, JsonGenerator jgen, SerializerProvider configurableSerializerProvider) throws IOException {
         if (log.isDebugEnabled())
             log.debug("Recovering from json serialization error, serializing "+value+": "+error);
-        
+
         if (BidiSerialization.isStrictSerialization())
             throw new JsonMappingException("Cannot serialize "
                 + (ctxt!=null && !ctxt.inRoot() ? "object containing " : "")
                 + value.getClass().getName()+" when strict serialization requested");
-        
+
         if (WARNED_CLASSES.add(value.getClass().getCanonicalName())) {
             log.warn("Standard serialization not possible for "+value.getClass()+" ("+value+")", error);
         }
@@ -73,12 +72,12 @@ public class ErrorAndToStringUnknownTypeSerializer extends UnknownSerializer {
         // without this, when serializing the large (1.5M) Server json object from BrooklynJacksonSerializerTest creates invalid json,
         // containing:  "foo":false,"{"error":true,...
         jgen.flush();
-        
+
         boolean createObject = !newCtxt.inObject() || newCtxt.getCurrentName()!=null;
         if (createObject) {
             jgen.writeStartObject();
         }
-        
+
         if (allowEmpty(value.getClass())) {
             // write nothing
         } else {
@@ -99,16 +98,16 @@ public class ErrorAndToStringUnknownTypeSerializer extends UnknownSerializer {
                 jgen.writeFieldName("causedByError");
                 jgen.writeString(error.toString());
             }
-            
+
         }
-        
+
         if (createObject) {
             jgen.writeEndObject();
         }
-        
+
         while (newCtxt!=null && !newCtxt.equals(ctxt)) {
             if (jgen.getOutputContext().inArray()) { jgen.writeEndArray(); continue; }
-            if (jgen.getOutputContext().inObject()) { jgen.writeEndObject(); continue; } 
+            if (jgen.getOutputContext().inObject()) { jgen.writeEndObject(); continue; }
             break;
         }
 

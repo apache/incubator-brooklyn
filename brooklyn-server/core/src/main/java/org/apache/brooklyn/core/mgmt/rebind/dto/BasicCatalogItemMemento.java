@@ -29,8 +29,8 @@ import org.apache.brooklyn.api.mgmt.rebind.mementos.CatalogItemMemento;
 import org.apache.brooklyn.api.objs.SpecParameter;
 import org.apache.brooklyn.core.catalog.internal.BasicBrooklynCatalog;
 import org.apache.brooklyn.core.catalog.internal.CatalogUtils;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
