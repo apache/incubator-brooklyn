@@ -66,5 +66,5 @@ if [ ${FILES_COUNT} -ne 0 ]; then
     sed -i.bak -e "/${VERSION_MARKER_NL}/{n;s/${CURRENT_VERSION}/${NEW_VERSION}/g;}" $FILES
 fi
 
-echo "Changed ${CURRENT_VERSION} to ${NEW_VERSION} for "${FILES_COUNT}" files"
+echo "Changed ${VERSION_MARKER} from ${CURRENT_VERSION} to ${NEW_VERSION} for "${FILES_COUNT}" files"
 echo "(Do a \`find . -name \"*.bak\" -delete\`  to delete the backup files.)"
