@@ -14,5 +14,9 @@
   {
     "term": "sensor, !<code>sensor",
     "description": "A sensor is a property of an Apache Brooklyn entity, updated in real-time"
+  },
+  {
+    "term": "effector",
+    "description": "Effectors are tools Apache Brooklyn provides, that allow you to manipulate the live entities within an application"
   }
 ]
