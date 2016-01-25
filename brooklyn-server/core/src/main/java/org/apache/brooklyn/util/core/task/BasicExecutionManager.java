@@ -67,7 +67,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ExecutionList;
@@ -565,7 +564,15 @@ public class BasicExecutionManager implements ExecutionManager {
                 int subtasksReallyCancelled=0;
                 
                 if (task instanceof HasTaskChildren) {
-                    for (Task<?> child: ((HasTaskChildren)task).getChildren()) {
+                    // cancel tasks in reverse order --
+                    // it should be the case that if child1 is cancelled,
+                    // a parentTask should NOT call a subsequent child2,
+                    // but just in case, we cancel child2 first
+                    // NB: DST and others may apply their own recursive cancel behaviour
+                    MutableList<Task<?>> childrenReversed = MutableList.copyOf( ((HasTaskChildren)task).getChildren() );
+                    Collections.reverse(childrenReversed);
+                    
+                    for (Task<?> child: childrenReversed) {
                         if (log.isTraceEnabled()) {
                             log.trace("Cancelling "+child+" on recursive cancellation of "+task);
                         }

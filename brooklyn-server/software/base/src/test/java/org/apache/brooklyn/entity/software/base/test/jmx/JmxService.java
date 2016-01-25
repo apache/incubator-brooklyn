@@ -21,7 +21,6 @@ package org.apache.brooklyn.entity.software.base.test.jmx;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
 import javax.management.InstanceAlreadyExistsException;
 import javax.management.MBeanNotificationInfo;
@@ -47,6 +46,7 @@ import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.core.entity.Attributes;
 import org.apache.brooklyn.entity.java.UsesJmx;
 import org.apache.brooklyn.feed.jmx.JmxHelper;
+import org.apache.brooklyn.test.NetworkingTestUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,8 +68,10 @@ public class JmxService {
     private String url;
 
     public JmxService() throws Exception {
-        this("localhost", 28000 + (int)Math.floor(new Random().nextDouble() * 1000));
-        logger.warn("use of deprecated default host and port in JmxService");
+        this("localhost", NetworkingTestUtils.randomPortAround(28000));
+        
+        // TODO why this message if the constructor is not actually deprecated, and it seems useful?
+        //logger.warn("use of deprecated default host and port in JmxService");
     }
     
     /**
@@ -151,10 +153,12 @@ public class JmxService {
      * @throws MBeanRegistrationException 
      * @throws InstanceAlreadyExistsException 
      */
+    @SuppressWarnings({ "rawtypes" })
     public GeneralisedDynamicMBean registerMBean(Map initialAttributes, String name) throws InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, MalformedObjectNameException, NullPointerException {
         return registerMBean(initialAttributes, ImmutableMap.of(), name);
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public GeneralisedDynamicMBean registerMBean(Map initialAttributes, Map operations, String name) throws InstanceAlreadyExistsException, MBeanRegistrationException, NotCompliantMBeanException, MalformedObjectNameException, NullPointerException {
         GeneralisedDynamicMBean mbean = new GeneralisedDynamicMBean(initialAttributes, operations);
         server.registerMBean(mbean, new ObjectName(name));

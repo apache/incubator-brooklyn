@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.util.net;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -26,7 +28,6 @@ import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -47,8 +48,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.base.Throwables;
 import com.google.common.net.HostAndPort;
 import com.google.common.primitives.UnsignedBytes;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 public class Networking {
 

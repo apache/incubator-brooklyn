@@ -22,13 +22,13 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.Map;
 
-import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
 public class NetworkingTestUtils {
@@ -64,5 +64,15 @@ public class NetworkingTestUtils {
             String errmsg = "port "+entry.getValue()+" not available for "+entry.getKey();
             assertTrue(Networking.isPortAvailable(entry.getValue()), errmsg);
         }
+    }
+    
+    /** Returns a port not in use somewhere around the seed;
+     * this is not a foolproof way to prevent collisions, 
+     * but strikes a good balance of traceability (different callers will use different ranges)
+     * and collision avoidance, esp when combined with <code>Localhost...obtain(thisResult+"+");</code>.
+     */
+    @Beta
+    public static int randomPortAround(int seed) {
+        return Networking.nextAvailablePort( seed + (int)Math.floor(Math.random() * 1000) );
     }
 }
