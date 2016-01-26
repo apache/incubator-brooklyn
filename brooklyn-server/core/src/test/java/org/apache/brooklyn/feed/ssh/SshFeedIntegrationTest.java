@@ -26,7 +26,7 @@ import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.core.entity.Attributes;
-import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityAsserts;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.entity.EntityInternal.FeedSupport;
 import org.apache.brooklyn.core.sensor.Sensors;
@@ -37,14 +37,11 @@ import org.apache.brooklyn.feed.ssh.SshFeedIntegrationTest;
 import org.apache.brooklyn.feed.ssh.SshPollConfig;
 import org.apache.brooklyn.feed.ssh.SshPollValue;
 import org.apache.brooklyn.feed.ssh.SshValueFunctions;
-import org.apache.brooklyn.test.EntityTestUtils;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.StringFunctions;
 import org.apache.brooklyn.util.text.StringPredicates;
-import org.apache.brooklyn.util.time.Duration;
-import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -68,7 +65,7 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
 
     private LocalhostMachineProvisioningLocation loc;
     private SshMachineLocation machine;
-    private EntityLocal entity;
+    private TestEntity entity;
     private SshFeed feed;
     
     @BeforeMethod(alwaysRun=true)
@@ -104,7 +101,7 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        EntityTestUtils.assertAttributeEventuallyNonNull(entity2, SENSOR_STRING);
+        EntityAsserts.assertAttributeEventuallyNonNull(entity2, SENSOR_STRING);
         String val = entity2.getAttribute(SENSOR_STRING);
         Assert.assertTrue(val.contains("hello"), "val="+val);
         Assert.assertEquals(val.trim(), "hello");
@@ -135,7 +132,7 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
                         .onSuccess(SshValueFunctions.exitStatus()))
                 .build();
 
-        EntityTestUtils.assertAttributeEqualsEventually(entity, SENSOR_INT, 123);
+        EntityAsserts.assertAttributeEqualsEventually(entity, SENSOR_INT, 123);
     }
     
     @Test(groups="Integration")
@@ -148,7 +145,7 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        EntityTestUtils.assertAttributeEventually(entity, SENSOR_STRING, 
+        EntityAsserts.assertAttributeEventually(entity, SENSOR_STRING, 
             Predicates.compose(Predicates.equalTo("hello"), StringFunctions.trim()));
     }
 
@@ -164,7 +161,7 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
                         .onFailure(SshValueFunctions.stderr()))
                 .build();
         
-        EntityTestUtils.assertAttributeEventually(entity, SENSOR_STRING, StringPredicates.containsLiteral(cmd));
+        EntityAsserts.assertAttributeEventually(entity, SENSOR_STRING, StringPredicates.containsLiteral(cmd));
     }
     
     @Test(groups="Integration")
@@ -181,7 +178,7 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
                             }}))
                 .build();
         
-        EntityTestUtils.assertAttributeEventually(entity, SENSOR_STRING, StringPredicates.containsLiteral("Exit status 123"));
+        EntityAsserts.assertAttributeEventually(entity, SENSOR_STRING, StringPredicates.containsLiteral("Exit status 123"));
     }
     
     @Test(groups="Integration")
@@ -202,10 +199,10 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
             }));
 
         // TODO would be nice to hook in and assert no errors
-        EntityTestUtils.assertAttributeEqualsContinually(entity2, SENSOR_STRING, null);
+        EntityAsserts.assertAttributeEqualsContinually(entity2, SENSOR_STRING, null);
 
         entity2.sensors().set(Attributes.SERVICE_UP, true);
-        EntityTestUtils.assertAttributeEventually(entity2, SENSOR_STRING, StringPredicates.containsLiteral("hello"));
+        EntityAsserts.assertAttributeEventually(entity2, SENSOR_STRING, StringPredicates.containsLiteral("hello"));
     }
 
     
@@ -235,10 +232,10 @@ public class SshFeedIntegrationTest extends BrooklynAppUnitTestSupport {
                         .onSuccess(SshValueFunctions.stdout()))
                 .build();
         
-        EntityTestUtils.assertAttributeEventuallyNonNull(entity2, SENSOR_STRING);        
+        EntityAsserts.assertAttributeEventuallyNonNull(entity2, SENSOR_STRING);
         final String val1 = assertDifferentOneInOutput(entity2);
         
-        EntityTestUtils.assertAttributeEventually(entity2, SENSOR_STRING, Predicates.not(Predicates.equalTo(val1)));        
+        EntityAsserts.assertAttributeEventually(entity2, SENSOR_STRING, Predicates.not(Predicates.equalTo(val1)));        
         final String val2 = assertDifferentOneInOutput(entity2);
         log.info("vals from dynamic sensors are: "+val1.trim()+" and "+val2.trim());
     }

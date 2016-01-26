@@ -18,6 +18,8 @@
  */
 package org.apache.brooklyn.feed.ssh;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +31,7 @@ import org.apache.brooklyn.core.feed.PollConfig;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableMap;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
@@ -67,7 +70,12 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
     public Map<String, String> getEnv() {
         return getEnvSupplier().get();
     }
+    
+    @SuppressWarnings("unused")
     public Supplier<Map<String,String>> getEnvSupplier() {
+        if (true) return new CombiningEnvSupplier(dynamicEnvironmentSupplier);
+        
+        // TODO Kept in case it's persisted; new code will not use this.
         return new Supplier<Map<String,String>>() {
             @Override
             public Map<String, String> get() {
@@ -82,13 +90,53 @@ public class SshPollConfig<T> extends PollConfig<SshPollValue, T, SshPollConfig<
                 }
                 return result;
             }
+            private void mergeEnvMaps(Map<String,String> supplied, Map<String,String> target) {
+                if (supplied==null) return;
+                // as the value is a string there is no need to look at deep merge behaviour
+                target.putAll(supplied);
+            }
         };
     }
     
-    protected void mergeEnvMaps(Map<String,String> supplied, Map<String,String> target) {
-        if (supplied==null) return;
-        // as the value is a string there is no need to look at deep merge behaviour
-        target.putAll(supplied);
+    private static class CombiningEnvSupplier implements Supplier<Map<String,String>> {
+        private final List<Supplier<Map<String, String>>> dynamicEnvironmentSupplier;
+        
+        public CombiningEnvSupplier(List<Supplier<Map<String,String>>> dynamicEnvironmentSupplier) {
+            this.dynamicEnvironmentSupplier = checkNotNull(dynamicEnvironmentSupplier, "dynamicEnvironmentSupplier");
+        }
+        @Override
+        public Map<String, String> get() {
+            Map<String,String> result = MutableMap.of();
+            for (Supplier<Map<String, String>> envS: dynamicEnvironmentSupplier) {
+                if (envS!=null) {
+                    Map<String, String> envM = envS.get();
+                    if (envM!=null) {
+                        mergeEnvMaps(envM, result);
+                    }
+                }
+            }
+            return result;
+        }
+        protected void mergeEnvMaps(Map<String,String> supplied, Map<String,String> target) {
+            if (supplied==null) return;
+            // as the value is a string there is no need to look at deep merge behaviour
+            target.putAll(supplied);
+        }
+        @Override
+        public int hashCode() {
+            return dynamicEnvironmentSupplier.hashCode();
+        }
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof CombiningEnvSupplier)) return false;
+            CombiningEnvSupplier o = (CombiningEnvSupplier) obj;
+            
+            return Objects.equal(dynamicEnvironmentSupplier, o.dynamicEnvironmentSupplier);
+        }
+        @Override
+        public String toString() {
+            return "CombiningEnvSupplier("+dynamicEnvironmentSupplier+")";
+        }
     }
 
     public SshPollConfig<T> command(String val) { return command(Suppliers.ofInstance(val)); }
