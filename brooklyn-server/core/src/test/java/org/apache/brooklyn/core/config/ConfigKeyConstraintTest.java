@@ -35,21 +35,23 @@ import org.apache.brooklyn.api.policy.PolicySpec;
 import org.apache.brooklyn.api.sensor.EnricherSpec;
 import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.enricher.AbstractEnricher;
-import org.apache.brooklyn.core.entity.Entities;
-import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
+import org.apache.brooklyn.core.entity.BrooklynConfigKeys;
 import org.apache.brooklyn.core.objs.BrooklynObjectPredicate;
 import org.apache.brooklyn.core.policy.AbstractPolicy;
 import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
-import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.core.test.entity.TestEntityImpl;
 import org.apache.brooklyn.core.test.policy.TestPolicy;
+import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.exceptions.Exceptions;
+import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.net.Networking;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -61,6 +63,8 @@ import com.google.common.collect.Range;
 
 public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
 
+    private static final Logger log = LoggerFactory.getLogger(ConfigKeyConstraintTest.class);
+    
     // ----------- Setup -----------------------------------------------------------------------------------------------
 
     @ImplementedBy(EntityWithNonNullConstraintImpl.class)
@@ -208,9 +212,8 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
         app.start(ImmutableList.of(app.newSimulatedLocation()));
         TestEntity testEntity = app.addChild(EntitySpec.create(TestEntity.class));
         try {
-        testEntity.addChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
+            testEntity.addChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
                 .configure(EntityRequiringConfigKeyInRange.RANGE, -1));
-            Entities.manage(testEntity);
             fail("Expected exception when managing child with invalid config");
         } catch (Exception e) {
             Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
@@ -288,8 +291,7 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
                     .configure("must-be-display-name", "Mr. Bag"));
             fail("Expected exception when managing entity with incorrect config");
         } catch (Exception e) {
-            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
+            Asserts.expectedFailureOfType(e, ConstraintViolationException.class);
         }
     }
 
@@ -297,12 +299,17 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
     public void testQuickFutureResolved() {
         // Result of task is -1, outside of the range specified by the config key.
         try {
-            app.createAndManageChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
+            EntityRequiringConfigKeyInRange child = app.createAndManageChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
                     .configure(EntityRequiringConfigKeyInRange.RANGE, sleepingTask(Duration.ZERO, -1)));
-            fail("Expected exception when managing entity with incorrect config");
+            // may or may not fail above, depending on speed, but should fail if assert after forcing resolution
+            Object value = child.getConfig(EntityRequiringConfigKeyInRange.RANGE);
+            // NB the call above does not currently/necessarily apply validation
+            log.debug(JavaClassNames.niceClassAndMethod()+" got "+value+" for "+EntityRequiringConfigKeyInRange.RANGE+", now explicitly validating");
+            ConfigConstraints.assertValid(child);
+            fail("Expected exception when managing entity with incorrect config; instead passed assertion and got: "+value);
         } catch (Exception e) {
-            Throwable t = Exceptions.getFirstThrowableOfType(e, ConstraintViolationException.class);
-            assertNotNull(t, "Original exception was: " + Exceptions.collapseText(e));
+            e.printStackTrace();
+            Asserts.expectedFailureOfType(e, ConstraintViolationException.class);
         }
     }
 
@@ -326,8 +333,12 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
 
     // Supplies an entity, a policy and a location.
     @DataProvider(name = "brooklynObjects")
-    public Object[][] createBrooklynObjects() {
-        TestApplication app = ApplicationBuilder.newManagedApp(EntitySpec.create(TestApplication.class), LocalManagementContextForTests.newInstance());
+    public Object[][] createBrooklynObjects() throws Exception {
+        EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class)
+            .configure(BrooklynConfigKeys.SKIP_ON_BOX_BASE_DIR_RESOLUTION, shouldSkipOnBoxBaseDirResolution());
+        setUp();
+        TestApplication app = mgmt.getEntityManager().createEntity(appSpec);
+
         EntityRequiringConfigKeyInRange entity = app.createAndManageChild(EntitySpec.create(EntityRequiringConfigKeyInRange.class)
                 .configure(EntityRequiringConfigKeyInRange.RANGE, 5));
         Policy policy = entity.policies().add(PolicySpec.create(TestPolicy.class));
