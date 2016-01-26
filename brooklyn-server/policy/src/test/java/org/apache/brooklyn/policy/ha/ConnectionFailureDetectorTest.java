@@ -37,19 +37,24 @@ import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.factory.ApplicationBuilder;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
 import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.policy.ha.HASensors.FailureDescriptor;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.collections.MutableMap;
 import org.apache.brooklyn.util.time.Duration;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.apache.brooklyn.policy.ha.HASensors.FailureDescriptor;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HostAndPort;
 
+@Test(groups="Integration")
+// can fail if a firewall is in place on high-numbered ephemeral ports;
+// at least one report of *test* failures, as in no events coming in;
+// log unavailable but the test has been passing everywhere else so we
+// suspect some environments don't support this test
 public class ConnectionFailureDetectorTest {
 
     private static final int TIMEOUT_MS = 30*1000;
