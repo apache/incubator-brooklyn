@@ -98,7 +98,7 @@ public class EntityTransformer {
             }));
     }
 
-    protected static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {
+    public static EntityConfigSummary entityConfigSummary(ConfigKey<?> config, String label, Double priority, Map<String, URI> links) {
         Map<String, URI> mapOfLinks =  links==null ? null : ImmutableMap.copyOf(links);
         return new EntityConfigSummary(config, label, priority, mapOfLinks);
     }

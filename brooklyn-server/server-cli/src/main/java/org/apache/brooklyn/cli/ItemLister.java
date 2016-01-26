@@ -24,14 +24,30 @@ import io.airlift.command.Option;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import org.apache.brooklyn.api.catalog.BrooklynCatalog;
+import org.apache.brooklyn.api.catalog.CatalogItem;
+import org.apache.brooklyn.api.internal.AbstractBrooklynObjectSpec;
+import org.apache.brooklyn.api.objs.SpecParameter;
+import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatform;
+import org.apache.brooklyn.camp.spi.PlatformRootSummary;
+import org.apache.brooklyn.core.internal.BrooklynProperties;
+import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
+import org.apache.brooklyn.rest.domain.EntityConfigSummary;
+import org.apache.brooklyn.rest.transform.EntityTransformer;
+import org.apache.brooklyn.util.collections.MutableMap;
+import org.apache.brooklyn.util.stream.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.apache.brooklyn.api.catalog.Catalog;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.entity.ImplementedBy;
@@ -77,6 +93,9 @@ public class ItemLister {
         @Option(name = { "--jars" }, title = "Jars", description = "Jars to scan. If a file (not a url) pointing at a directory, will include all files in that directory")
         public List<String> jars = Lists.newLinkedList();
 
+        @Option(name = { "--yaml" }, title = "Yaml", description = "Yaml file to parse. If a file is pointing at a directory, will include all files in that directory.")
+        public String yaml = "";
+
         @Option(name = { "--type-regex" }, title = "Regex for types to list")
         public String typeRegex;
 
@@ -92,94 +111,188 @@ public class ItemLister {
         @Option(name = { "--output-folder" }, title = "Folder to save output")
         public String outputFolder;
 
+        /**
+         * Used for multiple result when documentation is generated for more than one catalog at time
+         */
+        private String outputSubFolder;
+
         @SuppressWarnings("unchecked")
         @Override
         public Void call() throws Exception {
             List<URL> urls = getUrls();
             LOG.info("Retrieving objects from "+urls);
 
-            // TODO Remove duplication from separate ListPolicyCommand etc
-            List<Class<? extends Entity>> entityTypes = getTypes(urls, Entity.class);
-            List<Class<? extends Policy>> policyTypes = getTypes(urls, Policy.class);
-            List<Class<? extends Enricher>> enricherTypes = getTypes(urls, Enricher.class);
-            List<Class<? extends Location>> locationTypes = getTypes(urls, Location.class, Boolean.FALSE);
+            Map<String, Object> result = MutableMap.of();
+            List<String> jsonList = new ArrayList<>();
 
-            Map<String, Object> result = ImmutableMap.<String, Object>builder()
-                    .put("entities", ItemDescriptors.toItemDescriptors(entityTypes, headingsOnly, "name"))
-                    .put("policies", ItemDescriptors.toItemDescriptors(policyTypes, headingsOnly, "name"))
-                    .put("enrichers", ItemDescriptors.toItemDescriptors(enricherTypes, headingsOnly, "name"))
-                    .put("locations", ItemDescriptors.toItemDescriptors(locationTypes, headingsOnly, "type"))
-                    .put("locationResolvers", ItemDescriptors.toItemDescriptors(ImmutableList.copyOf(ServiceLoader.load(LocationResolver.class)), true))
-                    .build();
+            if (!jars.isEmpty()) {
+                // TODO Remove duplication from separate ListPolicyCommand etc
+                List<Class<? extends Entity>> entityTypes = getTypes(urls, Entity.class);
+                List<Class<? extends Policy>> policyTypes = getTypes(urls, Policy.class);
+                List<Class<? extends Enricher>> enricherTypes = getTypes(urls, Enricher.class);
+                List<Class<? extends Location>> locationTypes = getTypes(urls, Location.class, Boolean.FALSE);
 
-            String json = toJson(result);
+                result = ImmutableMap.<String, Object>builder()
+                        .put("entities", ItemDescriptors.toItemDescriptors(entityTypes, headingsOnly, "name"))
+                        .put("policies", ItemDescriptors.toItemDescriptors(policyTypes, headingsOnly, "name"))
+                        .put("enrichers", ItemDescriptors.toItemDescriptors(enricherTypes, headingsOnly, "name"))
+                        .put("locations", ItemDescriptors.toItemDescriptors(locationTypes, headingsOnly, "type"))
+                        .put("locationResolvers", ItemDescriptors.toItemDescriptors(ImmutableList.copyOf(ServiceLoader.load(LocationResolver.class)), true))
+                        .build();
+                jsonList.add(toJson(result));
+            } else if (!yaml.isEmpty()) {
+                LocalManagementContext lmgmt = new LocalManagementContext(BrooklynProperties.Factory.newEmpty());
+                BrooklynCampPlatform platform = new BrooklynCampPlatform(
+                        PlatformRootSummary.builder().name("Brooklyn CAMP Platform").build(),lmgmt)
+                        .setConfigKeyAtManagmentContext();
+                BrooklynCatalog catalog = lmgmt.getCatalog();
 
-            if (outputFolder == null) {
-                System.out.println(json);
-            } else {
-                LOG.info("Outputting item list (size "+itemCount+") to " + outputFolder);
-                String outputPath = Os.mergePaths(outputFolder, "index.html");
-                String parentDir = (new File(outputPath).getParentFile()).getAbsolutePath();
-                mkdir(parentDir, "entities");
-                mkdir(parentDir, "policies");
-                mkdir(parentDir, "enrichers");
-                mkdir(parentDir, "locations");
-                mkdir(parentDir, "locationResolvers"); //TODO nothing written here yet...
-                
-                mkdir(parentDir, "style");
-                mkdir(Os.mergePaths(parentDir, "style"), "js");
-                mkdir(Os.mergePaths(parentDir, "style", "js"), "catalog");
-                
-                Files.write("var items = " + json, new File(Os.mergePaths(outputFolder, "items.js")), Charsets.UTF_8);
-                ResourceUtils resourceUtils = ResourceUtils.create(this);
-                
-                // root - just loads the above JSON
-                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "brooklyn-object-list.html", "index.html");
-                
-                // statics - structure mirrors docs (not for any real reason however... the json is usually enough for our docs)
-                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "common.js");
-                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "items.css");
-                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/underscore-min.js");
-                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/underscore-min.map");
-                copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/catalog/typeahead.js");
+                for (URL url: urls) {
+                    List<Map<?,?>> entities = new ArrayList<>();
+                    List<Map<?,?>> policies = new ArrayList<>();
+                    List<Map<?,?>> enrichers = new ArrayList<>();
+                    List<Map<?,?>> locations = new ArrayList<>();
+                    List<Map<?,?>> locationResolvers = new ArrayList<>();
 
-                // now make pages for each item
-                
-                List<Map<String, Object>> entities = (List<Map<String, Object>>) result.get("entities");
-                String entityTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "entity.html"));
-                for (Map<String, Object> entity : entities) {
-                    String type = (String) entity.get("type");
-                    String name = (String) entity.get("name");
-                    String entityHtml = TemplateProcessor.processTemplateContents(entityTemplateHtml, ImmutableMap.of("type", type, "name", name));
-                    Files.write(entityHtml, new File(Os.mergePaths(outputFolder, "entities", type + ".html")), Charsets.UTF_8);
+                    String yamlContent = Streams.readFullyString(url.openStream());
+
+                    catalog.addItems(yamlContent);
+                    for (CatalogItem item: catalog.getCatalogItems()) {
+                        AbstractBrooklynObjectSpec<?,?> spec = catalog.createSpec(item);
+                        Map<String,Object> itemDescriptor = ItemDescriptors.toItemDescriptor((Class<? extends BrooklynObject>) spec.getType(), false);
+                        List<EntityConfigSummary> config = new ArrayList<>();
+
+                        if (item.getDisplayName() != null) {
+                            itemDescriptor.put("name", item.getDisplayName());
+                        } else if (!itemDescriptor.containsKey("name") || itemDescriptor.containsKey("name") && itemDescriptor.get("name") == null) {
+                            itemDescriptor.put("name", "");
+                        }
+                        if (!itemDescriptor.containsKey("type") || itemDescriptor.containsKey("type") && itemDescriptor.get("type") == null) {
+                            itemDescriptor.put("type", "");
+                        }
+                        if (item.getDescription() != null) {
+                            itemDescriptor.put("description", item.getDescription());
+                        }
+                        if (item.getIconUrl() != null) {
+                            itemDescriptor.put("iconUrl", item.getIconUrl());
+                        }
+
+                        double priorityCounter = 0.0d;
+                        for (SpecParameter<?> param: spec.getParameters()) {
+                            Double priority;
+                            if (param.isPinned()) {
+                                priority = priorityCounter;
+                                priorityCounter++;
+                            } else {
+                                priority = null;
+                            }
+
+                            EntityConfigSummary entityConfigSummary = EntityTransformer.entityConfigSummary(param.getConfigKey(),
+                                    param.getLabel(), priority, MutableMap.<String,URI>of());
+                            config.add(entityConfigSummary);
+                        }
+                        itemDescriptor.put("config", config);
+
+                        if (item.getCatalogItemType() == CatalogItem.CatalogItemType.ENTITY || item.getCatalogItemType() == CatalogItem.CatalogItemType.TEMPLATE) {
+                            entities.add(itemDescriptor);
+                        } else if (item.getCatalogItemType() == CatalogItem.CatalogItemType.POLICY) {
+                            policies.add(itemDescriptor);
+                        } else if (item.getCatalogItemType() == CatalogItem.CatalogItemType.LOCATION) {
+                            locations.add(itemDescriptor);
+                        }
+                    }
+                    for (CatalogItem item: catalog.getCatalogItems()){
+                        catalog.deleteCatalogItem(item.getSymbolicName(), item.getVersion());
+                    }
+                    result = ImmutableMap.<String, Object>builder()
+                            .put("entities", entities)
+                            .put("policies", policies)
+                            .put("enrichers", enrichers)
+                            .put("locations", locations)
+                            .put("locationResolvers", locationResolvers)
+                            .build();
+
+                    jsonList.add(toJson(result));
                 }
-                
-                List<Map<String, Object>> policies = (List<Map<String, Object>>) result.get("policies");
-                String policyTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "policy.html"));
-                for (Map<String, Object> policy : policies) {
-                    String type = (String) policy.get("type");
-                    String name = (String) policy.get("name");
-                    String policyHtml = TemplateProcessor.processTemplateContents(policyTemplateHtml, ImmutableMap.of("type", type, "name", name));
-                    Files.write(policyHtml, new File(Os.mergePaths(outputFolder, "policies", type + ".html")), Charsets.UTF_8);
+            }
+
+            int catalogCounter = 0;
+            for (String json: jsonList) {
+
+                if (outputFolder == null) {
+                    System.out.println(json);
+                } else {
+                    outputSubFolder = outputFolder;
+                    if (jsonList.size() > 1) {
+                        catalogCounter++;
+                        String subfolder = "catalog"+catalogCounter;
+                        outputSubFolder += "/" + subfolder;
+                    }
+                    LOG.info("Outputting item list (size "+itemCount+") to " + outputSubFolder);
+                    String outputPath = Os.mergePaths(outputSubFolder, "index.html");
+                    String parentDir = (new File(outputPath).getParentFile()).getAbsolutePath();
+                    mkdir(parentDir, "entities");
+                    mkdir(parentDir, "policies");
+                    mkdir(parentDir, "enrichers");
+                    mkdir(parentDir, "locations");
+                    mkdir(parentDir, "locationResolvers"); //TODO nothing written here yet...
+
+                    mkdir(parentDir, "style");
+                    mkdir(Os.mergePaths(parentDir, "style"), "js");
+                    mkdir(Os.mergePaths(parentDir, "style", "js"), "catalog");
+
+                    Files.write("var items = " + json, new File(Os.mergePaths(outputSubFolder, "items.js")), Charsets.UTF_8);
+                    Files.write(json, new File(Os.mergePaths(outputSubFolder, "items.json")), Charsets.UTF_8);
+                    ResourceUtils resourceUtils = ResourceUtils.create(this);
+
+                    // root - just loads the above JSON
+                    copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "brooklyn-object-list.html", "index.html");
+
+                    // statics - structure mirrors docs (not for any real reason however... the json is usually enough for our docs)
+                    copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "common.js");
+                    copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "items.css");
+                    copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/underscore-min.js");
+                    copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/underscore-min.map");
+                    copyFromItemListerClasspathBaseStaticsToOutputDir(resourceUtils, "style/js/catalog/typeahead.js");
+
+                    // now make pages for each item
+
+                    List<Map<String, Object>> entities = (List<Map<String, Object>>) result.get("entities");
+                    String entityTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "entity.html"));
+                    for (Map<String, Object> entity : entities) {
+                        String type = (String) entity.get("type");
+                        String name = (String) entity.get("name");
+                        String entityHtml = TemplateProcessor.processTemplateContents(entityTemplateHtml, ImmutableMap.of("type", type, "name", name));
+                        Files.write(entityHtml, new File(Os.mergePaths(outputSubFolder, "entities", type + ".html")), Charsets.UTF_8);
+                    }
+
+                    List<Map<String, Object>> policies = (List<Map<String, Object>>) result.get("policies");
+                    String policyTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "policy.html"));
+                    for (Map<String, Object> policy : policies) {
+                        String type = (String) policy.get("type");
+                        String name = (String) policy.get("name");
+                        String policyHtml = TemplateProcessor.processTemplateContents(policyTemplateHtml, ImmutableMap.of("type", type, "name", name));
+                        Files.write(policyHtml, new File(Os.mergePaths(outputSubFolder, "policies", type + ".html")), Charsets.UTF_8);
+                    }
+
+                    List<Map<String, Object>> enrichers = (List<Map<String, Object>>) result.get("enrichers");
+                    String enricherTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "enricher.html"));
+                    for (Map<String, Object> enricher : enrichers) {
+                        String type = (String) enricher.get("type");
+                        String name = (String) enricher.get("name");
+                        String enricherHtml = TemplateProcessor.processTemplateContents(enricherTemplateHtml, ImmutableMap.of("type", type, "name", name));
+                        Files.write(enricherHtml, new File(Os.mergePaths(outputSubFolder, "enrichers", type + ".html")), Charsets.UTF_8);
+                    }
+
+                    List<Map<String, Object>> locations = (List<Map<String, Object>>) result.get("locations");
+                    String locationTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "location.html"));
+                    for (Map<String, Object> location : locations) {
+                        String type = (String) location.get("type");
+                        String locationHtml = TemplateProcessor.processTemplateContents(locationTemplateHtml, ImmutableMap.of("type", type));
+                        Files.write(locationHtml, new File(Os.mergePaths(outputSubFolder, "locations", type + ".html")), Charsets.UTF_8);
+                    }
+                    LOG.info("Finished outputting item list to " + outputSubFolder);
                 }
-                
-                List<Map<String, Object>> enrichers = (List<Map<String, Object>>) result.get("enrichers");
-                String enricherTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "enricher.html"));
-                for (Map<String, Object> enricher : enrichers) {
-                    String type = (String) enricher.get("type");
-                    String name = (String) enricher.get("name");
-                    String enricherHtml = TemplateProcessor.processTemplateContents(enricherTemplateHtml, ImmutableMap.of("type", type, "name", name));
-                    Files.write(enricherHtml, new File(Os.mergePaths(outputFolder, "enrichers", type + ".html")), Charsets.UTF_8);
-                }
-                
-                List<Map<String, Object>> locations = (List<Map<String, Object>>) result.get("locations");
-                String locationTemplateHtml = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_TEMPLATES, "location.html"));
-                for (Map<String, Object> location : locations) {
-                    String type = (String) location.get("type");
-                    String locationHtml = TemplateProcessor.processTemplateContents(locationTemplateHtml, ImmutableMap.of("type", type));
-                    Files.write(locationHtml, new File(Os.mergePaths(outputFolder, "locations", type + ".html")), Charsets.UTF_8);
-                }
-                LOG.info("Finished outputting item list to " + outputFolder);
             }
             return null;
         }
@@ -189,26 +302,41 @@ public class ItemLister {
         }
         private void copyFromItemListerClasspathBaseStaticsToOutputDir(ResourceUtils resourceUtils, String item, String dest) throws IOException {
             String js = resourceUtils.getResourceAsString(Urls.mergePaths(BASE_STATICS, item));
-            Files.write(js, new File(Os.mergePaths(outputFolder, dest)), Charsets.UTF_8);
+            Files.write(js, new File(Os.mergePaths(outputSubFolder, dest)), Charsets.UTF_8);
         }
 
         private void mkdir(String rootDir, String dirName) {
             (new File(Os.mergePaths(rootDir, dirName))).mkdirs();
         }
 
-        protected List<URL> getUrls() throws MalformedURLException {
+        protected List<URL> getUrls() throws MalformedURLException, IOException {
             List<URL> urls = Lists.newArrayList();
             if (jars.isEmpty()) {
-                String classpath = System.getenv("INITIAL_CLASSPATH");
-                if (Strings.isNonBlank(classpath)) {
-                    List<String> entries = Splitter.on(":").omitEmptyStrings().trimResults().splitToList(classpath);
-                    for (String entry : entries) {
-                        if (entry.endsWith(".jar") || entry.endsWith("/*")) {
-                            urls.addAll(ClassFinder.toJarUrls(entry.replace("/*", "")));
+                if (!yaml.isEmpty()) {
+                    File yamlFolder = new File(yaml);
+                    if (yamlFolder.isDirectory()) {
+                        File[] fileList = yamlFolder.listFiles();
+
+                        for (File file : fileList) {
+                            if (file.isFile() && (file.getName().contains(".yaml") || file.getName().contains(".bom"))) {
+                                urls.add(file.toURI().toURL());
+                            }
                         }
+                    } else {
+                        urls.add(new File(yaml).toURI().toURL());
                     }
                 } else {
-                    throw new IllegalArgumentException("No Jars to process");
+                    String classpath = System.getenv("INITIAL_CLASSPATH");
+                    if (Strings.isNonBlank(classpath)) {
+                        List<String> entries = Splitter.on(":").omitEmptyStrings().trimResults().splitToList(classpath);
+                        for (String entry : entries) {
+                            if (entry.endsWith(".jar") || entry.endsWith("/*")) {
+                                urls.addAll(ClassFinder.toJarUrls(entry.replace("/*", "")));
+                            }
+                        }
+                    } else {
+                        throw new IllegalArgumentException("No Jars to process");
+                    }
                 }
             } else {
                 for (String jar : jars) {
