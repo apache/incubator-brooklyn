@@ -308,7 +308,6 @@ public class ConfigKeyConstraintTest extends BrooklynAppUnitTestSupport {
             ConfigConstraints.assertValid(child);
             fail("Expected exception when managing entity with incorrect config; instead passed assertion and got: "+value);
         } catch (Exception e) {
-            e.printStackTrace();
             Asserts.expectedFailureOfType(e, ConstraintViolationException.class);
         }
     }
