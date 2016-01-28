@@ -39,10 +39,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   yaml_cfg["servers"].each do |server|
     config.vm.define server["name"] do |server_config|
 
-      if server["shell"] && server["shell"]["env"]["BROOKLYN_VERSION"] =~ /SNAPSHOT/i
-        raise Vagrant::Errors::VagrantError.new, "Deploying Brooklyn SNAPSHOTS is not supported without a manual update to servers.yaml. See README for instructions."
-      end
-
       server_config.vm.box = server["box"]
 
       server_config.vm.box_check_update = yaml_cfg["default_config"]["check_newer_vagrant_box"]
