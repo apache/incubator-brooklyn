@@ -34,7 +34,7 @@ public class CreatePasswordSensor extends AddSensor<String> {
     public static final ConfigKey<String> ACCEPTABLE_CHARS = ConfigKeys.newStringConfigKey("password.chars", "The characters allowed in password");
 
     private Integer passwordLength;
-    private String accecptableChars;
+    private String acceptableChars;
 
     public CreatePasswordSensor(Map<String, String> params) {
         this(ConfigBag.newInstance(params));
@@ -43,16 +43,16 @@ public class CreatePasswordSensor extends AddSensor<String> {
     public CreatePasswordSensor(ConfigBag params) {
         super(params);
         passwordLength = params.get(PASSWORD_LENGTH);
-        accecptableChars = params.get(ACCEPTABLE_CHARS);
+        acceptableChars = params.get(ACCEPTABLE_CHARS);
     }
 
     @Override
     public void apply(EntityLocal entity) {
         super.apply(entity);
 
-        String password = accecptableChars == null
+        String password = acceptableChars == null
                 ? Identifiers.makeRandomPassword(passwordLength)
-                : Identifiers.makeRandomPassword(passwordLength, accecptableChars);
+                : Identifiers.makeRandomPassword(passwordLength, acceptableChars);
         
         entity.sensors().set(sensor, password);
     }

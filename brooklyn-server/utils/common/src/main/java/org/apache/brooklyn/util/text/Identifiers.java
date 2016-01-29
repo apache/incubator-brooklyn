@@ -19,8 +19,14 @@
 package org.apache.brooklyn.util.text;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 public class Identifiers {
@@ -30,7 +36,7 @@ public class Identifiers {
     public static final String UPPER_CASE_ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     public static final String LOWER_CASE_ALPHA = "abcdefghijklmnopqrstuvwxyz";
     public static final String NUMERIC = "1234567890";
-    public static final String NON_ALPHA_NUMERIC = "!$%@#";
+    public static final String NON_ALPHA_NUMERIC = "!@$%^&*()-_=+[]{};:\\|/?,.<>~";
 
     /** @see #JAVA_GOOD_PACKAGE_OR_CLASS_REGEX */
     public static final String JAVA_GOOD_START_CHARS = UPPER_CASE_ALPHA + LOWER_CASE_ALPHA +"_";
@@ -129,18 +135,30 @@ public class Identifiers {
         Preconditions.checkState(length >= passwordValidCharsPool.length);
         int l = 0;
 
-        char[] id = new char[length];
+        Character[] password = new Character[length];
 
         for(int i = 0; i < passwordValidCharsPool.length; i++){
-            id[l++] = pickRandomCharFrom(passwordValidCharsPool[i]);
+            password[l++] = pickRandomCharFrom(passwordValidCharsPool[i]);
         }
 
-        String remainingValidChars = passwordValidCharsPool[passwordValidCharsPool.length - 1];
+        String remainingValidChars = mergeCharacterSets(passwordValidCharsPool);
 
         while(l < length) {
-            id[l++] = pickRandomCharFrom(remainingValidChars);
+            password[l++] = pickRandomCharFrom(remainingValidChars);
         }
-        return new String(id);
+
+        List<Character> list = Arrays.asList(password);
+        Collections.shuffle(list);
+        return Joiner.on("").join(list);
+    }
+
+    protected static String mergeCharacterSets(String... s) {
+        Set characters = new HashSet<Character>();
+        for (String characterSet : s) {
+            characters.addAll(Arrays.asList(characterSet.split("")));
+        }
+
+        return Joiner.on("").join(characters);
     }
 
     /** creates a short identifier comfortable in java and OS's, given an input hash code

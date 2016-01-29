@@ -102,11 +102,17 @@ public class IdentifiersTest {
         String upper = "ABC";
         String numbers = "123";
         String symbols = "!£$";
-        String id1 = Identifiers.makeRandomPassword(4, upper, numbers, symbols, Identifiers.PASSWORD_VALID_CHARS);
+        String password = Identifiers.makeRandomPassword(4, upper, numbers, symbols, Identifiers.PASSWORD_VALID_CHARS);
 
-        Assert.assertTrue(upper.contains(id1.substring(0,1)));
-        Assert.assertTrue(numbers.contains(id1.substring(1,2)));
-        Assert.assertTrue(symbols.contains(id1.substring(2,3)));
+        Assert.assertTrue(password.matches(".*[" + upper + "].*"));
+        Assert.assertTrue(password.matches(".*[" + numbers + "].*"));
+        Assert.assertTrue(password.matches(".*[" + symbols + "].*"));
+    }
+
+    @Test
+    public void testCharMerge() {
+        String characters = Identifiers.mergeCharacterSets("abc", "bcd", "ghjj");
+        Assert.assertEquals(characters.indexOf('b'), characters.lastIndexOf('b'));
     }
     
 }

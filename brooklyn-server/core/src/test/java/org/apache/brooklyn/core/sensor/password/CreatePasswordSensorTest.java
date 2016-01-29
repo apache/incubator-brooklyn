@@ -21,37 +21,29 @@ package org.apache.brooklyn.core.sensor.password;
 import org.apache.brooklyn.api.entity.EntitySpec;
 import org.apache.brooklyn.api.location.Location;
 import org.apache.brooklyn.api.sensor.AttributeSensor;
-import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.sensor.Sensors;
-import org.apache.brooklyn.core.test.entity.TestApplication;
+import org.apache.brooklyn.core.test.BrooklynAppUnitTestSupport;
 import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.core.config.ConfigBag;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class CreatePasswordSensorTest {
+public class CreatePasswordSensorTest extends BrooklynAppUnitTestSupport{
 
     final static AttributeSensor<String> SENSOR_STRING = Sensors.newStringSensor("aString");
     private EntityInternal entity;
-    private TestApplication app;
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void setup() throws Exception {
-        app = TestApplication.Factory.newManagedInstanceForTests();
+        super.setUp();
 
         entity = app.createAndManageChild(EntitySpec.create(TestEntity.class)
                 .location(app.newLocalhostProvisioningLocation().obtain()));
         app.start(ImmutableList.<Location>of());
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void tearDown() throws Exception {
-        if (app != null) Entities.destroyAll(app.getManagementContext());
     }
 
     @Test
