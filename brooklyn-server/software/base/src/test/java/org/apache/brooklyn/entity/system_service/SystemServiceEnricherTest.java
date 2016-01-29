@@ -86,10 +86,10 @@ public class SystemServiceEnricherTest extends BrooklynAppLiveTestSupport {
     }
 
     private void waitFailed(VanillaSoftwareProcess proc) {
-        Asserts.eventually(ImmutableMap.of("timeout", Duration.FIVE_MINUTES), Suppliers.ofInstance(proc), EntityPredicates.attributeEqualTo(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE));
+        Asserts.eventually(Suppliers.ofInstance(proc), EntityPredicates.attributeEqualTo(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE), Duration.FIVE_MINUTES);
     }
 
     private void waitHealthy(VanillaSoftwareProcess proc) {
-        Asserts.eventually(ImmutableMap.of("timeout", Duration.FIVE_MINUTES), Suppliers.ofInstance(proc), EntityPredicates.attributeEqualTo(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING));
+        Asserts.eventually(Suppliers.ofInstance(proc), EntityPredicates.attributeEqualTo(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.RUNNING), Duration.FIVE_MINUTES);
     }
 }

@@ -37,7 +37,9 @@ import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
+import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +48,7 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -68,11 +71,24 @@ import com.google.common.collect.Sets;
 @Beta
 public class Asserts {
 
-    /**
-     * The default timeout for assertions - 30s.
-     * Alter in individual tests by giving a "timeout" entry in method flags.
+    /** 
+     * Timeout for use when something should happen within several seconds,
+     * but there might be network calls or computation so {@link #DEFAULT_SHORT_TIMEOUT} is not applicable.
      */
-    public static final Duration DEFAULT_TIMEOUT = Duration.THIRTY_SECONDS;
+    public static final Duration DEFAULT_LONG_TIMEOUT = Duration.THIRTY_SECONDS;
+    
+    /** 
+     * Timeout for use when waiting for other threads to finish.
+     * <p>
+     * Long enough for parallel execution to catch up, 
+     * even on overloaded mediocre test boxes most of the time,
+     * but short enough not to irritate you when your test is failing. */
+    public static final Duration DEFAULT_SHORT_TIMEOUT = Duration.ONE_SECOND;
+    
+    /** @deprecated since 0.9.0 use {@link #DEFAULT_LONG_TIMEOUT} */ @Deprecated
+    public static final Duration DEFAULT_TIMEOUT = DEFAULT_LONG_TIMEOUT;
+    
+    private static final Duration DEFAULT_SHORT_PERIOD = Repeater.DEFAULT_REAL_QUICK_PERIOD;
 
     private static final Logger log = LoggerFactory.getLogger(Asserts.class);
 
@@ -730,58 +746,99 @@ public class Asserts {
 
     // --- new routines
     
+    /**  As {@link #eventually(Supplier, Predicate, Duration, Duration, String)} with defaults. */
     public static <T> void eventually(Supplier<? extends T> supplier, Predicate<T> predicate) {
-        eventually(ImmutableMap.<String,Object>of(), supplier, predicate);
+        eventually(supplier, predicate, null, null, null);
     }
     
+    /** @deprecated since 0.9.0 use {@link #eventually(Supplier, Predicate, Duration, Duration, String)} */ @Deprecated
     public static <T> void eventually(Map<String,?> flags, Supplier<? extends T> supplier, Predicate<T> predicate) {
         eventually(flags, supplier, predicate, (String)null);
     }
-    
+    /** @deprecated since 0.9.0 use {@link #eventually(Supplier, Predicate, Duration, Duration, String)} */ @Deprecated
     public static <T> void eventually(Map<String,?> flags, Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
-        Duration timeout = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
-        Duration period = toDuration(flags.get("period"), Duration.millis(10));
-        long periodMs = period.toMilliseconds();
-        long startTime = System.currentTimeMillis();
-        long expireTime = startTime+timeout.toMilliseconds();
-        
-        boolean first = true;
-        T supplied = supplier.get();
-        while (first || System.currentTimeMillis() <= expireTime) {
-            supplied = supplier.get();
-            if (predicate.apply(supplied)) {
-                return;
-            }
-            first = false;
-            if (periodMs > 0) sleep(periodMs);
-        }
-        fail("supplied="+supplied+"; predicate="+predicate+(errMsg!=null?"; "+errMsg:""));
+        eventually(supplier, predicate, toDuration(flags.get("timeout"), null), toDuration(flags.get("period"), null), errMsg);
     }
     
-    // TODO improve here -- these methods aren't very useful without timeouts
+    /**  As {@link #eventually(Supplier, Predicate, Duration, Duration, String)} with default. */
+    public static <T> void eventually(Supplier<? extends T> supplier, Predicate<T> predicate, Duration timeout) {
+        eventually(supplier, predicate, timeout, null, null);
+    }
+    
+    /** Asserts that eventually the supplier gives a value accepted by the predicate. 
+     * Tests periodically and succeeds as soon as the supplier gives an allowed value.
+     * Other arguments can be null.
+     * 
+     * @param supplier supplies the value to test, such as {@link Suppliers#ofInstance(Object)} for a constant 
+     * @param predicate the {@link Predicate} to apply to each value given by the supplier
+     * @param timeout how long to wait, default {@link #DEFAULT_SHORT_TIMEOUT}
+     * @param period how often to check, default quite often so you won't notice but letting the CPU do work
+     * @param errMsg an error message to display if not satisfied, in addition to the last-tested supplied value and the predicate
+     */
+    public static <T> void eventually(Supplier<? extends T> supplier, Predicate<T> predicate, Duration timeout, Duration period, String errMsg) {
+        if (timeout==null) timeout = DEFAULT_SHORT_TIMEOUT;
+        if (period==null) period = DEFAULT_SHORT_PERIOD;
+        CountdownTimer timeleft = timeout.countdownTimer();
+        
+        T supplied;
+        int count = 0;
+        do {
+            if (count++ > 0) Duration.sleep(period);
+            supplied = supplier.get();
+            if (predicate.apply(supplied)) return;
+        } while (timeleft.isNotExpired());
+
+        fail("Expected: eventually "+predicate+"; got most recently: "+supplied
+            +" (waited "+timeleft.getDurationElapsed()+", checked "+count+")"
+            +(errMsg!=null?"; "+errMsg:""));
+    }
+    
+    /**  As {@link #continually(Supplier, Predicate, Duration, Duration, String)} with defaults. */
     public static <T> void continually(Supplier<? extends T> supplier, Predicate<T> predicate) {
         continually(ImmutableMap.<String,Object>of(), supplier, predicate);
     }
 
+    /** @deprecated since 0.9.0 use {@link #eventually(Supplier, Predicate, Duration, Duration, String)} */ @Deprecated
     public static <T> void continually(Map<String,?> flags, Supplier<? extends T> supplier, Predicate<? super T> predicate) {
-        continually(flags, supplier, predicate, (String)null);
+        continually(flags, supplier, predicate, null);
     }
 
+    /** @deprecated since 0.9.0 use {@link #eventually(Supplier, Predicate, Duration, Duration, String)} */ @Deprecated
     public static <T> void continually(Map<String,?> flags, Supplier<? extends T> supplier, Predicate<T> predicate, String errMsg) {
-        Duration duration = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
-        Duration period = toDuration(flags.get("period"), Duration.millis(10));
-        long periodMs = period.toMilliseconds();
-        long startTime = System.currentTimeMillis();
-        long expireTime = startTime+duration.toMilliseconds();
-        
-        boolean first = true;
-        while (first || System.currentTimeMillis() <= expireTime) {
-            assertTrue(predicate.apply(supplier.get()), "supplied="+supplier.get()+"; predicate="+predicate+(errMsg!=null?"; "+errMsg:""));
-            if (periodMs > 0) sleep(periodMs);
-            first = false;
-        }
+        continually(supplier, predicate, toDuration(flags.get("timeout"), toDuration(flags.get("duration"), null)), 
+            toDuration(flags.get("period"), null), null);
     }
+    /** 
+     * Asserts that continually the supplier gives a value accepted by the predicate. 
+     * Tests periodically and fails if the supplier gives a disallowed value.
+     * Other arguments can be null.
+     * 
+     * @param supplier supplies the value to test, such as {@link Suppliers#ofInstance(Object)} for a constant 
+     * @param predicate the {@link Predicate} to apply to each value given by the supplier
+     * @param duration how long to test for, default {@link #DEFAULT_SHORT_TIMEOUT}
+     * @param period how often to check, default quite often to minimise chance of missing a flashing violation but letting the CPU do work
+     * @param errMsg an error message to display if not satisfied, in addition to the last-tested supplied value and the predicate
+     */
+    public static <T> void continually(Supplier<? extends T> supplier, Predicate<T> predicate, Duration duration, Duration period, String errMsg) {
+        if (duration==null) duration = DEFAULT_SHORT_TIMEOUT;
+        if (period==null) period = DEFAULT_SHORT_PERIOD;
 
+        CountdownTimer timeleft = duration.countdownTimer();
+        
+        T supplied;
+        int count = 0;
+        do {
+            if (count > 0) Duration.sleep(period);
+            supplied = supplier.get();
+            if (!predicate.apply(supplied)) {
+                fail("Expected: continually "+predicate+"; got violation: "+supplied
+                    // tell timing if it worked the first time and then failed
+                    +(count > 0 ? " (after "+timeleft.getDurationElapsed()+", successfully checked "+count+")" : "")
+                    +(errMsg!=null?"; "+errMsg:""));
+            }
+            count++;
+        } while (timeleft.isNotExpired());
+    }
     
     /**
      * @see #succeedsContinually(Map, Callable)
@@ -818,6 +875,9 @@ public class Asserts {
         }
     }
 
+    // TODO flags are ugly; remove this in favour of something strongly typed,
+    // e.g. extending Repeater and taking the extra semantics.
+    // TODO remove the #succeedsEventually in favour of #eventually (and same for continually)
     /**
      * Convenience method for cases where we need to test until something is true.
      *
@@ -827,7 +887,7 @@ public class Asserts {
      * <ul>
      * <li>abortOnError (boolean, default true)
      * <li>abortOnException - (boolean, default false)
-     * <li>timeout - (a Duration or an integer in millis, defaults to {@link Asserts#DEFAULT_TIMEOUT})
+     * <li>timeout - (a Duration or an integer in millis, defaults to {@link Asserts#DEFAULT_LONG_TIMEOUT})
      * <li>period - (a Duration or an integer in millis, for fixed retry time; if not set, defaults to exponentially increasing from 1 to 500ms)
      * <li>minPeriod - (a Duration or an integer in millis; only used if period not explicitly set; the minimum period when exponentially increasing; defaults to 1ms)
      * <li>maxPeriod - (a Duration or an integer in millis; only used if period not explicitly set; the maximum period when exponentially increasing; defaults to 500ms)
@@ -849,7 +909,7 @@ public class Asserts {
         boolean logException = get(flags, "logException", true);
 
         // To speed up tests, default is for the period to start small and increase...
-        Duration duration = toDuration(flags.get("timeout"), DEFAULT_TIMEOUT);
+        Duration duration = toDuration(flags.get("timeout"), DEFAULT_LONG_TIMEOUT);
         Duration fixedPeriod = toDuration(flags.get("period"), null);
         Duration minPeriod = (fixedPeriod != null) ? fixedPeriod : toDuration(flags.get("minPeriod"), Duration.millis(1));
         Duration maxPeriod = (fixedPeriod != null) ? fixedPeriod : toDuration(flags.get("maxPeriod"), Duration.millis(500));
@@ -915,7 +975,8 @@ public class Asserts {
     public static <T> T succeedsContinually(Callable<T> c) {
         return succeedsContinually(ImmutableMap.<String,Object>of(), c);
     }
-    
+
+    // TODO unify with "continually"; see also eventually, some of those options might be useful
     public static <T> T succeedsContinually(Map<?,?> flags, Callable<T> job) {
         Duration duration = toDuration(flags.get("timeout"), Duration.ONE_SECOND);
         Duration period = toDuration(flags.get("period"), Duration.millis(10));
@@ -1238,6 +1299,52 @@ public class Asserts {
         if (t instanceof RuntimeException) throw (RuntimeException)t;
         if (t instanceof Error) throw (Error)t;
         throw new RuntimeException(t);
+    }
+
+    /** As {@link #eventuallyOnNotify(Object, Supplier, Predicate, Duration, boolean)} with default timeout. */
+    public static <T> void eventuallyOnNotify(Object notifyTarget, Supplier<T> supplier, Predicate<T> predicate) {
+        eventuallyOnNotify(notifyTarget, supplier, predicate, null);
+    }
+    
+    /** as {@link #eventually(Supplier, Predicate)} for cases where an object is notified;
+     * more efficient as it waits on the notify target object. 
+     * See also the simpler {@link #eventuallyOnNotify(Object, Predicate)} when looking at a collection which is getting notified.
+     * Timeout defaults to {@link #DEFAULT_SHORT_TIMEOUT}. 
+     * <p>
+     * This synchronizes on the notify target for the duration of the wait, 
+     * including while getting and checking the value, so as not to miss any notification. */
+    public static <T> void eventuallyOnNotify(Object notifyTarget, Supplier<T> supplier, Predicate<T> predicate, Duration timeout) {
+        T supplied = null;
+        if (timeout==null) timeout = DEFAULT_SHORT_TIMEOUT;
+        CountdownTimer remaining = timeout.countdownTimer();
+        int checks = 0;
+        synchronized (notifyTarget) {
+            do {
+                if (checks>0) {
+                    remaining.waitOnForExpiryUnchecked(notifyTarget);
+                }
+                supplied = supplier.get();
+                if (predicate.apply(supplied)) return;
+                checks++;
+            } while (remaining.isNotExpired());
+        }
+        
+        // should get 2 checks, 1 before and 1 after, if no notifications; if more, tell the user
+        fail("Expected: eventually "+predicate+"; got most recently: "+supplied+
+            " (waited "+remaining.getDurationElapsed()+
+                (checks>2 ? "; notification count "+(checks-2) : "")+
+            ")");
+    }
+
+    /** Convenience for {@link #eventuallyOnNotify(Object, Supplier, Predicate, Duration, boolean)} 
+     * when the notify target and the value under test are the same. */
+    public static <T> void eventuallyOnNotify(T object, Predicate<T> predicate, Duration timeout) {
+        eventuallyOnNotify(object, Suppliers.ofInstance(object), predicate, timeout);
+    }
+
+    /** As {@link #eventuallyOnNotify(Object, Predicate, Duration)} with the default duration of {@link #eventuallyOnNotify(Object, Supplier, Predicate)}. */
+    public static <T> void eventuallyOnNotify(T object, Predicate<T> predicate) {
+        eventuallyOnNotify(object, Suppliers.ofInstance(object), predicate, null);
     }
 
 }

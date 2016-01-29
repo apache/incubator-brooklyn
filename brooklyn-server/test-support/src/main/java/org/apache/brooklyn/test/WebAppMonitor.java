@@ -184,7 +184,7 @@ public class WebAppMonitor implements Runnable {
         return this;
     }
     public WebAppMonitor waitForAtLeastOneAttempt() {
-        return waitForAtLeastOneAttempt(Asserts.DEFAULT_TIMEOUT);
+        return waitForAtLeastOneAttempt(Asserts.DEFAULT_LONG_TIMEOUT);
     }
     public WebAppMonitor waitForAtLeastOneAttempt(Duration timeout) {
         Asserts.succeedsEventually(MutableMap.of("timeout", timeout), new Runnable() {

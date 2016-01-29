@@ -50,6 +50,9 @@ public class CountdownTimerTest {
         
         CountdownTimer timer = SIMPLE_DURATION.countdownTimer();
         assertFalse(timer.isExpired());
+        assertTrue(timer.isNotExpired());
+        assertTrue(timer.isLive());
+        assertTrue(timer.isNotPaused());
         assertTrue(timer.getDurationElapsed().toMilliseconds() <= OVERHEAD_MS, "elapsed="+timer.getDurationElapsed().toMilliseconds());
         assertTrue(timer.getDurationRemaining().toMilliseconds() >= TOTAL_TIME_MS - OVERHEAD_MS, "remaining="+timer.getDurationElapsed().toMilliseconds());
         
@@ -60,6 +63,10 @@ public class CountdownTimerTest {
         
         Time.sleep(Duration.millis(SECOND_SLEEP_TIME_MS));
         assertTrue(timer.isExpired());
+        assertFalse(timer.isNotExpired());
+        assertFalse(timer.isLive());
+        assertTrue(timer.isNotPaused());
+
     }
     
     public void testNotify() throws InterruptedException {

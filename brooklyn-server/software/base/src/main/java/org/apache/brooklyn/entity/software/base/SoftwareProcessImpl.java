@@ -548,7 +548,7 @@ public abstract class SoftwareProcessImpl extends AbstractEntity implements Soft
         boolean isRunningResult = false;
         long delay = 100;
         Exception firstFailure = null;
-        while (!isRunningResult && !timer.isExpired()) {
+        while (!isRunningResult && timer.isNotExpired()) {
             Time.sleep(delay);
             try {
                 isRunningResult = driver.isRunning();
