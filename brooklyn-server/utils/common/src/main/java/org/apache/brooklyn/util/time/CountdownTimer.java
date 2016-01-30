@@ -55,7 +55,7 @@ public class CountdownTimer {
         return limit;
     }
 
-    /** return how long the timer has been running (longer than limit if {@link #isExpired()}) */
+    /** return how long the timer has been running (may be longer than {@link #getLimit()} if {@link #isExpired()}) */
     public Duration getDurationElapsed() {
         return Duration.nanos(stopwatch.elapsed(TimeUnit.NANOSECONDS));
     }
@@ -65,15 +65,28 @@ public class CountdownTimer {
         return Duration.millis(limit.toMilliseconds() - stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
-    /** true iff the timer has been running for the duration specified at creation time */
+    /** true iff the timer has run for more than the duration specified at creation time */
     public boolean isExpired() {
         return stopwatch.elapsed(TimeUnit.MILLISECONDS) > limit.toMilliseconds();
     }
-    
-    /** true iff timer is running (even if it is expired) */
-    public boolean isRunning() {
+
+    /** true iff {@link #isNotPaused()} and not {@link #isExpired()} */
+    public boolean isLive() {
+        return isNotPaused() && isNotExpired();
+    }
+
+    /** true iff not {@link #isExpired()} */
+    public boolean isNotExpired() {
+        return !isExpired();
+    }
+
+    /** false if started or paused, true otherwise (ie the timer is counting down, even if it is expired) */
+    public boolean isNotPaused() {
         return stopwatch.isRunning();
     }
+
+    /** @deprecated since 0.9.0 use better named {@link #isNotPaused()} */ @Deprecated
+    public boolean isRunning() { return isNotPaused(); }
     
     // --- constructor methods
     

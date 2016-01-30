@@ -38,6 +38,7 @@ import org.apache.brooklyn.entity.group.DynamicCluster;
 import org.apache.brooklyn.entity.software.base.EmptySoftwareProcess;
 import org.apache.brooklyn.policy.autoscaling.AutoScalerPolicy;
 import org.apache.brooklyn.test.Asserts;
+import org.apache.brooklyn.util.collections.CollectionFunctionals;
 import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,12 +76,14 @@ public class AutoScalerPolicyNoMoreMachinesTest extends BrooklynAppUnitTestSuppo
         entitiesAdded = Sets.newLinkedHashSet();
         entitiesRemoved = Sets.newLinkedHashSet();
         mgmt.addEntitySetListener(new CollectionChangeListener<Entity>() {
-            @Override public void onItemAdded(Entity item) {
-                entitiesAdded.add(item);
-            }
-            @Override public void onItemRemoved(Entity item) {
-                entitiesRemoved.add(item);
-            }});
+            @Override public void onItemAdded(Entity item) { addToSetAndNotify(entitiesAdded, item); }
+            @Override public void onItemRemoved(Entity item) { addToSetAndNotify(entitiesRemoved, item); }});
+    }
+    private static <T> void addToSetAndNotify(Set<T> items, T item) {
+        synchronized (items) {
+            items.add(item);
+            items.notifyAll();
+        }
     }
 
     @Test
@@ -179,7 +182,7 @@ public class AutoScalerPolicyNoMoreMachinesTest extends BrooklynAppUnitTestSuppo
 
     protected void assertSize(int targetSize, int quarantineSize, final int deletedSize) {
         assertSize(targetSize, quarantineSize);
-        assertEquals(entitiesRemoved.size(), deletedSize, "removed="+entitiesRemoved);
+        Asserts.eventuallyOnNotify(entitiesRemoved, CollectionFunctionals.sizeEquals(deletedSize));
     }
     
     protected void assertSize(int targetSize, int quarantineSize) {

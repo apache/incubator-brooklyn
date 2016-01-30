@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.brooklyn.api.mgmt.HasTaskChildren;
 import org.apache.brooklyn.api.mgmt.Task;
@@ -39,7 +38,6 @@ import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.task.TaskInternal.TaskCancellationMode;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.math.MathPredicates;
-import org.apache.brooklyn.util.time.CountdownTimer;
 import org.apache.brooklyn.util.time.Duration;
 import org.apache.brooklyn.util.time.Time;
 import org.slf4j.Logger;
@@ -64,7 +62,7 @@ public class DynamicSequentialTaskTest {
     private static final Logger log = LoggerFactory.getLogger(DynamicSequentialTaskTest.class);
     
     public static final Duration TIMEOUT = Duration.TEN_SECONDS;
-    public static final Duration TINY_TIME = Duration.millis(20);
+    public static final Duration TINY_TIME = Duration.millis(1);
     
     BasicExecutionManager em;
     BasicExecutionContext ec;
@@ -246,6 +244,8 @@ public class DynamicSequentialTaskTest {
     
     @Test
     public void testCancellationModeAndSubmitted() throws Exception {
+        // seems actually to be the logging which causes this to take ~50ms ?
+        
         doTestCancellationModeAndSubmitted(true, TaskCancellationMode.DO_NOT_INTERRUPT, false, false);
         
         doTestCancellationModeAndSubmitted(true, TaskCancellationMode.INTERRUPT_TASK_AND_ALL_SUBMITTED_TASKS, true, true);
@@ -317,27 +317,14 @@ public class DynamicSequentialTaskTest {
                 @Override public Number get() { return t1.getEndTimeUtc(); }}, 
                 MathPredicates.<Number>greaterThanOrEqual(0));
         } else {
-            Time.sleep(Duration.millis(5));
+            Time.sleep(TINY_TIME);
             Assert.assertFalse(t1.isCancelled());
             Assert.assertFalse(t1.isDone());
         }
     }
 
     protected void waitForMessages(Predicate<? super List<String>> predicate, Duration timeout) throws Exception {
-        long endtime = System.currentTimeMillis() + timeout.toMilliseconds();
-        synchronized (messages) {
-            while (true) {
-                if (predicate.apply(messages)) {
-                    return;
-                }
-                long waittime = endtime - System.currentTimeMillis();
-                if (waittime > 0) {
-                    messages.wait(waittime);
-                } else {
-                    throw new TimeoutException("Timeout after "+timeout+"; messages="+messages+"; predicate="+predicate);
-                }
-            }
-        }
+        Asserts.eventuallyOnNotify(messages, predicate, timeout);
     }
     
     protected Task<String> monitorableTask(final String id) {
@@ -373,14 +360,7 @@ public class DynamicSequentialTaskTest {
         monitorableJobSemaphoreMap.get(id).release();
     }
     protected void waitForMessage(final String id) {
-        CountdownTimer timer = CountdownTimer.newInstanceStarted(TIMEOUT);
-        synchronized (messages) {
-            while (!timer.isExpired()) {
-                if (messages.contains(id)) return;
-                timer.waitOnForExpiryUnchecked(messages);
-            }
-        }
-        Assert.fail("Did not see message "+id);
+        Asserts.eventuallyOnNotify(messages, CollectionFunctionals.contains(id), TIMEOUT);
     }
     protected void releaseAndWaitForMonitorableJob(final String id) {
         releaseMonitorableJob(id);
