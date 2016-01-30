@@ -330,11 +330,12 @@ This project includes the software: RequireJS (r.js maven plugin)
       Arpad Borsos (2012)
     Used under the BSD 2-Clause license.
 
-This project includes the software: swagger
-  Used under the following license: <no license info>
-
-This project includes the software: swagger-ui
-  Used under the following license: <no license info>
+This project includes the software: Swagger UI
+  Available at: https://github.com/swagger-api/swagger-ui
+  Inclusive of: swagger*.{js,css,html}
+  Version used: 2.1.4
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+  Copyright (c) SmartBear Software (2011-2015)
 
 This project includes the software: underscore.js
   Available at: http://underscorejs.org

@@ -413,7 +413,7 @@ This project includes the software: io.airlift
 
 This project includes the software: io.cloudsoft.windows
   Available at: http://github.com/cloudsoft/winrm4j
-  Version used: 0.1.0
+  Version used: 0.2.0
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: io.swagger
@@ -576,37 +576,37 @@ This project includes the software: org.apache.httpcomponents
 This project includes the software: org.apache.jclouds
   Available at: http://jclouds.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
-  Version used: 1.9.1
+  Version used: 1.9.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.jclouds.api
   Available at: http://jclouds.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
-  Version used: 1.9.1
+  Version used: 1.9.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.jclouds.common
   Available at: http://jclouds.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
-  Version used: 1.9.1
+  Version used: 1.9.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.jclouds.driver
   Available at: http://jclouds.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
-  Version used: 1.9.1
+  Version used: 1.9.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.jclouds.labs
   Available at: http://jclouds.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
-  Version used: 1.9.1
+  Version used: 1.9.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.apache.jclouds.provider
   Available at: http://jclouds.apache.org/
   Developed by: The Apache Software Foundation (http://www.apache.org/)
-  Version used: 1.9.1
+  Version used: 1.9.2
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
 This project includes the software: org.bouncycastle
@@ -678,11 +678,6 @@ This project includes the software: org.mongodb
   Version used: 3.0.3
   Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
 
-This project includes the software: org.python
-  Available at: http://www.jython.org/
-  Version used: 2.7-b3
-  Used under the following license: Jython Software License (http://www.jython.org/license.html)
-
 This project includes the software: org.reflections
   Available at: http://code.google.com/p/reflections/
   Version used: 0.9.9-RC1
@@ -738,11 +733,12 @@ This project includes the software: RequireJS (r.js maven plugin)
       Arpad Borsos (2012)
     Used under the BSD 2-Clause license.
 
-This project includes the software: swagger
-  Used under the following license: <no license info>
-
-This project includes the software: swagger-ui
-  Used under the following license: <no license info>
+This project includes the software: Swagger UI
+  Available at: https://github.com/swagger-api/swagger-ui
+  Inclusive of: swagger*.{js,css,html}
+  Version used: 2.1.4
+  Used under the following license: Apache License, version 2.0 (http://www.apache.org/licenses/LICENSE-2.0)
+  Copyright (c) SmartBear Software (2011-2015)
 
 This project includes the software: typeahead.js
   Available at: https://github.com/twitter/typeahead.js
