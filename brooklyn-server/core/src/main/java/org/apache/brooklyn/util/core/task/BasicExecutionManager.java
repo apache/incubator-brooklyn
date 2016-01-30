@@ -59,6 +59,8 @@ import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.RuntimeInterruptedException;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
+import org.apache.brooklyn.util.time.CountdownTimer;
+import org.apache.brooklyn.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -165,8 +167,26 @@ public class BasicExecutionManager implements ExecutionManager {
     }
     
     public void shutdownNow() {
+        shutdownNow(null);
+    }
+    
+    /** shuts down the executor, and if a duration is supplied awaits termination for that long.
+     * @return whether everything is terminated
+     */
+    @Beta
+    public boolean shutdownNow(Duration howLongToWaitForTermination) {
         runner.shutdownNow();
         delayedRunner.shutdownNow();
+        if (howLongToWaitForTermination!=null) {
+            CountdownTimer timer = howLongToWaitForTermination.countdownTimer();
+            try {
+                runner.awaitTermination(timer.getDurationRemaining().toMilliseconds(), TimeUnit.MILLISECONDS);
+                if (timer.isLive()) delayedRunner.awaitTermination(timer.getDurationRemaining().toMilliseconds(), TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                throw Exceptions.propagate(e);
+            }
+        }
+        return runner.isTerminated() && delayedRunner.isTerminated();
     }
     
     public void addListener(ExecutionListener listener) {
