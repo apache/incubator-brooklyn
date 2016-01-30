@@ -1,0 +1,73 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#  http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+#
+# Default Config
+#   check_newer_vagrant_box
+#     enable/disable the vagrant check for an updated box
+#   run_os_update
+#     enable/disable running a yum/apt-get update on box start
+#
+# Brooklyn Server Config
+#   shell:env:BROOKLYN_VERSION
+#     specifies the version of Brooklyn to install, be aware that for SNAPSHOTS you
+#     may wish to download a local -dist.tar.gz for the latest version.
+#   shell:env:INSTALL_FROM_LOCAL_DIST
+#     if set to `true` Vagrant will install from a local -dist.tar.gz stored in /vagrant
+#     on the guest VM (which is mounted from the Vagrantfile directory). You must
+#     ensure that a -dist.tar.gz archive has been copied to this directory on your host.
+
+---
+default_config:
+    check_newer_vagrant_box: true
+    run_os_update: true
+servers:
+  - name: brooklyn
+    box: ubuntu/vivid64
+    ram: 2048
+    cpus: 4
+    ip: 10.10.10.100
+    shell:
+      env:
+        BROOKLYN_VERSION: 0.9.0-SNAPSHOT
+        INSTALL_FROM_LOCAL_DIST: false
+      cmd:
+        - /vagrant/files/install_brooklyn.sh -v ${BROOKLYN_VERSION} -l ${INSTALL_FROM_LOCAL_DIST}
+        - sudo systemctl start brooklyn
+        - sudo systemctl enable brooklyn
+  - name: byon1
+    box: ubuntu/vivid64
+    ram: 512
+    cpus: 2
+    ip: 10.10.10.101
+  - name: byon2
+    box: ubuntu/vivid64
+    ram: 512
+    cpus: 2
+    ip: 10.10.10.102
+  - name: byon3
+    box: ubuntu/vivid64
+    ram: 512
+    cpus: 2
+    ip: 10.10.10.103
+  - name: byon4
+    box: ubuntu/vivid64
+    ram: 512
+    cpus: 2
+    ip: 10.10.10.104
+...

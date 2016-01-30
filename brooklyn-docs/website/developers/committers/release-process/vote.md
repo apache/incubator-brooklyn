@@ -7,10 +7,10 @@ navgroup: developers
 Start the vote
 --------------
 
-A script to generate the voting email can be found in `release/print-vote-email.sh`,
+A script to generate the voting email can be found in `brooklyn-dist/release/print-vote-email.sh`,
 taking a single argument being the staging repo link. For example:
 
-    release/print-vote-email.sh orgapachebrooklyn-1234 | pbcopy 
+    brooklyn-dist/release/print-vote-email.sh orgapachebrooklyn-1234 | pbcopy
 
 You should move the subject and put your name at the end, and simply eyeball the rest. This should be sent to **dev@brooklyn.incubator.apache.org**.
 

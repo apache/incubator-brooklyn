@@ -83,7 +83,7 @@ Update the website
 ------------------
 
 *Instructions on uploading to the website are beyond the scope of these instructions. Refer to the 
-[appropriate instructions](https://github.com/apache/incubator-brooklyn/tree/master/docs).*
+[appropriate instructions](https://github.com/apache/incubator-brooklyn/tree/master/brooklyn-docs).*
 
 ### Publish documentation for the new release
 
@@ -105,7 +105,7 @@ cd -
 Generate the permalink docs for the release:
 
 {% highlight bash %}
-cd docs
+cd brooklyn-docs
 ./_build/build.sh guide-version --install
 {% endhighlight %}
 
@@ -135,11 +135,11 @@ This should be done on the `master` branch:
 git checkout master
 {% endhighlight %}
 
-1. Edit the file `docs/_config.yml` - change `brooklyn-stable-version` to be the newly-release version, and
+1. Edit the file `brooklyn-docs/_config.yml` - change `brooklyn-stable-version` to be the newly-release version, and
    `brooklyn-version` to be the current SNAPSHOT version on the master branch.
-2. Edit the file `docs/website/download/verify.md` to add links to the MD5/SHA1/SHA256 hashes and PGP signatures for the
+2. Edit the file `brooklyn-docs/website/download/verify.md` to add links to the MD5/SHA1/SHA256 hashes and PGP signatures for the
    new version.
-3. Edit the file `docs/website/meta/versions.md` to add the new version.
+3. Edit the file `brooklyn-docs/website/meta/versions.md` to add the new version.
 4. Build the updated site with `./_build/build.sh website-root --install`.
 5. Publish to the public website.
 6. Commit your changes to master, e.g. with a message like "Update latest docs to 0.8.0-incubating"

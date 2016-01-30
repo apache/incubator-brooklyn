@@ -4,12 +4,12 @@ title: Make the release artifacts
 navgroup: developers
 ---
 
-A release script is provided in `release/make-release-artifacts.sh`. This script will prepare all the release artifacts.
+A release script is provided in `brooklyn-dist/release/make-release-artifacts.sh`. This script will prepare all the release artifacts.
 It is written to account for several Apache requirements, so you are strongly advised to use it rather than "rolling your own".
 
 The release script will:
 
-- **Create source code and binary distribution artifacts** and place them in a temporary staging directory on your workstation, usually `releases/`.
+- **Create source code and binary distribution artifacts** and place them in a temporary staging directory on your workstation, usually `brooklyn-dist/release/tmp/`.
 - **Create Maven artifacts and upload them to a staging repository** located on the Apache Nexus server.
 
 The script has a single required parameter `-r` which is given the release candidate number - so `-r1` will create
@@ -25,7 +25,7 @@ mvn clean install -Papache-release
 To run the script:
 
 {% highlight bash %}
-./release/make-release-artifacts.sh -r$RC_NUMBER
+./brooklyn-dist/release/make-release-artifacts.sh -r$RC_NUMBER
 {% endhighlight %}
 
 It will show you the release information it has deduced, and ask yes-or-no if it can proceed. Please note that the

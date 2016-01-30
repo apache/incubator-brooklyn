@@ -18,7 +18,10 @@
 # under the License.
 #
 
-# creates a source release - this is a .tar.gz file containing all the source code files that are permitted to be released.
+# Creates the following releases with archives (.tar.gz/.zip), signatures and checksums:
+#   binary  (-bin)     - contains the brooklyn dist binary release
+#   source  (-src)     - contains all the source code files that are permitted to be released
+#   vagrant (-vagrant) - contains a Vagrantfile/scripts to start a Brooklyn getting started environment
 
 set -e
 
@@ -179,7 +182,7 @@ mkdir -p ${bin_staging_dir}
 # * release (where this is running, and people who *have* the release don't need to make it)
 # * jars and friends (these are sometimes included for tests, but those are marked as skippable,
 #     and apache convention does not allow them in source builds; see PR #365
-rsync -rtp --exclude .git\* --exclude docs/ --exclude sandbox/ --exclude release/ --exclude '**/*.[ejw]ar' . ${staging_dir}/${release_name}-src
+rsync -rtp --exclude .git\* --exclude brooklyn-docs/ --exclude brooklyn-library/sandbox/ --exclude brooklyn-dist/release/ --exclude '**/*.[ejw]ar' . ${staging_dir}/${release_name}-src
 
 rm -rf ${artifact_dir}
 mkdir -p ${artifact_dir}
@@ -210,14 +213,27 @@ fi
 # Perform the build and deploy to Nexus staging repository
 ( cd ${src_staging_dir} && mvn deploy -Papache-release )
 ## To test the script without a big deploy, use the line below instead of above
-#( cd ${src_staging_dir} && cd usage/dist && mvn clean install )
+#( cd ${src_staging_dir} && mvn clean install )
 
 # Re-pack the archive with the correct names
-tar xzf ${src_staging_dir}/usage/dist/target/brooklyn-dist-${current_version}-dist.tar.gz -C ${bin_staging_dir}
+tar xzf ${src_staging_dir}/brooklyn-dist/dist/target/brooklyn-dist-${current_version}-dist.tar.gz -C ${bin_staging_dir}
 mv ${bin_staging_dir}/brooklyn-dist-${current_version} ${bin_staging_dir}/${release_name}-bin
 
 ( cd ${bin_staging_dir} && tar czf ${artifact_dir}/${artifact_name}-bin.tar.gz ${release_name}-bin )
 ( cd ${bin_staging_dir} && zip -qr ${artifact_dir}/${artifact_name}-bin.zip ${release_name}-bin )
+
+###############################################################################
+# Vagrant release
+set +x
+echo "Proceeding to rename and repackage vagrant environment release"
+set -x
+
+# Re-pack the archive with the correct names
+tar xzf ${src_staging_dir}/brooklyn-dist/vagrant/target/brooklyn-vagrant-${current_version}-dist.tar.gz -C ${bin_staging_dir}
+mv ${bin_staging_dir}/brooklyn-vagrant-${current_version} ${bin_staging_dir}/${release_name}-vagrant
+
+( cd ${bin_staging_dir} && tar czf ${artifact_dir}/${artifact_name}-vagrant.tar.gz ${release_name}-vagrant )
+( cd ${bin_staging_dir} && zip -qr ${artifact_dir}/${artifact_name}-vagrant.zip ${release_name}-vagrant )
 
 ###############################################################################
 # Signatures and checksums
