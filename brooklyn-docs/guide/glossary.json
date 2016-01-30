@@ -1,0 +1,22 @@
+[
+  {
+    "term": "location, !location:",
+    "description": "A server or resource to which Apache Brooklyn can deploy applications"
+  },
+  {
+    "term": "blueprint",
+    "description": "A descriptor or pattern which describes how Apache Brooklyn should deploy applications"
+  },
+  {
+    "term": "entity",
+    "description": "A software package or service Apache Brooklyn can interact with"
+  },
+  {
+    "term": "sensor, !<code>sensor",
+    "description": "A sensor is a property of an Apache Brooklyn entity, updated in real-time"
+  },
+  {
+    "term": "effector",
+    "description": "Effectors are tools Apache Brooklyn provides, that allow you to manipulate the live entities within an application"
+  }
+]

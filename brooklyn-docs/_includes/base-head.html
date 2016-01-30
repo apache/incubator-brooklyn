@@ -7,11 +7,24 @@
 <link href="{% dependency_url bootstrap.css %}" rel="stylesheet">
 <link href="{{site.path.style}}/deps/octicons/octicons.css" rel="stylesheet">
 <link href="{{site.path.style}}/deps/bootstrap-theme.css" rel="stylesheet">
+<link href="{{site.path.style}}/deps/tooltip.css" rel="stylesheet">
 
 <link rel="stylesheet" href="{{ site.path.style }}/css/code.css" type="text/css" media="screen" />
 
 <link href="{{site.path.style}}/css/website.css" rel="stylesheet">
 
 <script src="{% dependency_url jquery.js %}"></script>
+<script src="{% dependency_url glossarizer.js %}"></script>
 <script src="{% dependency_url bootstrap.js %}"></script>
+<script src="{% dependency_url tooltip.js %}"></script>
 <script type="text/javascript" src="{{ site.path.style }}/deps/jquery.cookie.js"></script>
+<script>
+$(function(){
+  $('body').glossarizer({
+    sourceURL: '/guide/glossary.json?'+Math.random(),
+    caseSensitive : true,
+    lookupTagName : 'p, ul',
+    callback: function(){ new tooltip(); }
+  });
+});
+</script>
