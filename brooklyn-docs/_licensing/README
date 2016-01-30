@@ -1,0 +1,24 @@
+
+We don't distribute docs as part of the source build so we're not obliged to report the JS we include
+or generate a special LICENSE file as brooklyn-dist/dist/licensing does for the distributed projects.
+
+(This project just gets the usual brooklyn license.)
+
+However we might consider recording the licenses used in the docs.  So we note
+that third-party software bundled by the docs include:
+
+* bloodhound (aka typeahead)
+* glossarizer
+
+And other things used by brooklyn, in style/{deps,js}.
+
+---
+
+This project includes the software: glossarizer
+   Available at: https://github.com/PebbleRoad/glossarizer
+   Developed by: Vinay M, PebbleRoad Pte Ltd (http://www.pebbleroad.com)
+   Version used: 1.5
+   Used under the following license: The MIT License (http://opensource.org/licenses/MIT)
+   Copyright (c) Vinay M, PebbleRoad Pte Ltd (2004-2016)
+ 
+

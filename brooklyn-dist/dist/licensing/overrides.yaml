@@ -99,7 +99,8 @@
 
 # info on non-maven projects
 
-- id: jquery-core
+# used in UI
+- id: jquery-core:1.7.2
   url: http://jquery.com/
   description: JS library for manipulating HTML and eventing
   name: jQuery JavaScript Library
@@ -146,6 +147,7 @@
   - "  Available at http://sizzlejs.com"
   - "  Used under the MIT license"
 
+# not used anymore? swagger-ui includes what it needs, it seems.
 - id: swagger:2.1.6
   name: Swagger JS
   files: swagger-client.js
@@ -154,10 +156,10 @@
   license: ASL2
   notice: Copyright (c) SmartBear Software (2011-2015)
 
-- id: swagger-ui:2.1.3
-  files: swagger-ui.js
+- id: swagger-ui:2.1.4
+  files: swagger*.{js,css,html}
   name: Swagger UI
-  version: 2.1.3
+  version: 2.1.4
   url: https://github.com/swagger-api/swagger-ui
   license: ASL2
   notice: Copyright (c) SmartBear Software (2011-2015)
