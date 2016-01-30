@@ -88,7 +88,11 @@ public class DynamicSequentialTaskTest {
     
     @AfterMethod(alwaysRun=true)
     public void tearDown() throws Exception {
-        if (em != null) em.shutdownNow();
+        if (em != null) {
+            // need to await termination, otherwise interrupted-but-still-running threads 
+            // may update the cancellations/messages and interfere with subsequent tests
+            Assert.assertTrue(em.shutdownNow(Duration.FIVE_SECONDS));
+        }
     }
 
     @Test
