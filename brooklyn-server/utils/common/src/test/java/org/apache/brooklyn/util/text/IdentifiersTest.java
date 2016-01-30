@@ -21,8 +21,6 @@ package org.apache.brooklyn.util.text;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.brooklyn.util.text.Identifiers;
-import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -97,6 +95,24 @@ public class IdentifiersTest {
         
         Assert.assertTrue("foo".matches(Identifiers.JAVA_GOOD_BINARY_REGEX));
         Assert.assertTrue("foo.bar.Baz$1".matches(Identifiers.JAVA_GOOD_BINARY_REGEX));
+    }
+
+    @Test
+    public void testPassword() {
+        String upper = "ABC";
+        String numbers = "123";
+        String symbols = "!£$";
+        String password = Identifiers.makeRandomPassword(4, upper, numbers, symbols, Identifiers.PASSWORD_VALID_CHARS);
+
+        Assert.assertTrue(password.matches(".*[" + upper + "].*"));
+        Assert.assertTrue(password.matches(".*[" + numbers + "].*"));
+        Assert.assertTrue(password.matches(".*[" + symbols + "].*"));
+    }
+
+    @Test
+    public void testCharMerge() {
+        String characters = Identifiers.mergeCharacterSets("abc", "bcd", "ghjj");
+        Assert.assertEquals(characters.indexOf('b'), characters.lastIndexOf('b'));
     }
     
 }
