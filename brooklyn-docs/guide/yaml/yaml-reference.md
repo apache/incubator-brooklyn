@@ -67,22 +67,32 @@ the entity being defined, with these being the most common:
   * `description`: short text describing the parameter behaviour/usage, presented
     to the user
   * `type`: the type of the parameter, one of `string`, `integer`, `long`, `float`,
-    `double`, `timestamp`, `port`, a fully qualified Java type name. Default is `string`.
-  * `default`: a default value, converted to the type above
-  * `constraints`: a list of constraints the parameter should meet, currently
-    `required` is supported
+    `double`, `timestamp`, `duration`, `port`, or a fully qualified Java type name;
+    the default is `string`;
+    obvious coercion is supported so 
+    `timestamp` accepts most common ISO date formats, `duration` accepts `5m`, and port accepts `8080+`
+  * `default`: a default value; this will be coerced to the declared `type`
+  * `constraints`: a list of constraints the parameter should meet;
+    currently `required` is supported, with the default being not required
 
-  A shorthand notation is also supported where the name of the parameter is directly
-  passed as an item in the list. For example:
+  A shorthand notation is also supported where just the name of the parameter is supplied
+  as an item in the list, with the other values being unset or the default.
+  See `displayName` in the following example for an illustration of this:
 
 ~~~ yaml
 brooklyn.parameters:
-- displayName
-- name: user.name
-  constraints:
-  - required
+# user.age parameter is required, and fully specified
 - name: user.age
   type: integer
+  label: Age
+  description: the age of the user
+  constraints:
+  - required
+# user.name is optional, and has a default
+- name: user.name
+  default: You
+# shorthand notation: displayName will be an optional config of type string with no default
+- displayName
 ~~~
 
 Entities, policies, and initializers may accept additional key-value pairs,

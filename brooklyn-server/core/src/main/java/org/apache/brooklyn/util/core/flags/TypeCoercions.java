@@ -122,10 +122,10 @@ public class TypeCoercions {
         return coerce(value, TypeToken.of(targetType));
     }
 
-    /** @see #coerce(Object, Class) */
+    /** @see #coerce(Object, Class); allows a null value in the contents of the Maybe */
     public static <T> Maybe<T> tryCoerce(Object value, TypeToken<T> targetTypeToken) {
         try {
-            return Maybe.of( coerce(value, targetTypeToken) );
+            return Maybe.ofAllowingNull( coerce(value, targetTypeToken) );
         } catch (Throwable t) {
             Exceptions.propagateIfFatal(t);
             return Maybe.absent(t); 

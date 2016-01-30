@@ -42,6 +42,7 @@ import org.apache.brooklyn.util.time.Durations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.Beta;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -57,13 +58,24 @@ import com.google.common.reflect.TypeToken;
  */
 public class ValueResolver<T> implements DeferredSupplier<T> {
 
+    // TODO most of these usages should be removed when we have
+    // an ability to run resolution in a non-blocking mode
+    // (i.e. running resolution tasks in the same thread,
+    // or in a context where they can only wait on subtasks
+    // which are guaranteed to have the same constraint)
     /** 
      * Period to wait if we're expected to return real quick 
      * but we want fast things to have time to finish.
      * <p>
      * Timings are always somewhat arbitrary but this at least
      * allows some intention to be captured in code rather than arbitrary values. */
+    @Beta
     public static Duration REAL_QUICK_WAIT = Duration.millis(50);
+    /** 
+     * Like {@link #REAL_QUICK_WAIT} but even smaller, for use when potentially
+     * resolving multiple items in sequence. */
+    @Beta
+    public static Duration REAL_REAL_QUICK_WAIT = Duration.millis(5);
     /** 
      * Period to wait if we're expected to return quickly 
      * but we want to be a bit more generous for things to finish,

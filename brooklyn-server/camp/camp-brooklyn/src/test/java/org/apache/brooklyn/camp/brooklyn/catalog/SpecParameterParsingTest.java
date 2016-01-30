@@ -62,20 +62,20 @@ public class SpecParameterParsingTest  extends AbstractYamlTest {
         SpecParameter<?> firstInput = inputs.get(0);
         assertEquals(firstInput.getLabel(), "simple");
         assertEquals(firstInput.isPinned(), true);
-        assertEquals(firstInput.getType().getName(), "simple");
-        assertEquals(firstInput.getType().getTypeToken(), TypeToken.of(String.class));
+        assertEquals(firstInput.getConfigKey().getName(), "simple");
+        assertEquals(firstInput.getConfigKey().getTypeToken(), TypeToken.of(String.class));
         
         SpecParameter<?> secondInput = inputs.get(1);
         assertEquals(secondInput.getLabel(), "explicit_name");
         assertEquals(secondInput.isPinned(), true);
-        assertEquals(secondInput.getType().getName(), "explicit_name");
-        assertEquals(secondInput.getType().getTypeToken(), TypeToken.of(String.class));
+        assertEquals(secondInput.getConfigKey().getName(), "explicit_name");
+        assertEquals(secondInput.getConfigKey().getTypeToken(), TypeToken.of(String.class));
         
         SpecParameter<?> thirdInput = inputs.get(2);
         assertEquals(thirdInput.getLabel(), "third_input");
         assertEquals(thirdInput.isPinned(), true);
-        assertEquals(thirdInput.getType().getName(), "third_input");
-        assertEquals(thirdInput.getType().getTypeToken(), TypeToken.of(Integer.class));
+        assertEquals(thirdInput.getConfigKey().getName(), "third_input");
+        assertEquals(thirdInput.getConfigKey().getTypeToken(), TypeToken.of(Integer.class));
     }
 
     @Test
@@ -99,8 +99,8 @@ public class SpecParameterParsingTest  extends AbstractYamlTest {
         SpecParameter<?> firstInput = inputs.get(0);
         assertEquals(firstInput.getLabel(), "simple");
         assertTrue(firstInput.isPinned());
-        assertEquals(firstInput.getType().getName(), "simple");
-        assertEquals(firstInput.getType().getTypeToken().getRawType().getName(), OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY);
+        assertEquals(firstInput.getConfigKey().getName(), "simple");
+        assertEquals(firstInput.getConfigKey().getTypeToken().getRawType().getName(), OsgiTestResources.BROOKLYN_TEST_OSGI_ENTITIES_SIMPLE_ENTITY);
     }
 
     @Test
@@ -126,7 +126,7 @@ public class SpecParameterParsingTest  extends AbstractYamlTest {
         SpecParameter<?> input = inputs.get(0);
         assertEquals(input.getLabel(), "more_config");
         assertFalse(input.isPinned());
-        assertEquals(input.getType().getName(), "more_config");
+        assertEquals(input.getConfigKey().getName(), "more_config");
     }
 
     private String add(String... def) {

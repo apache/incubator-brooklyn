@@ -1,0 +1,5 @@
+name: Netcat Type Reference Example
+location: localhost
+services:
+- type: netcat-example
+  message: hello from netcat using a registered type

@@ -103,7 +103,7 @@ public class BasicSpecParameterFromClassTest {
     private void assertInput(SpecParameter<?> input, String label, boolean pinned, ConfigKey<?> type) {
         assertEquals(input.getLabel(), label);
         assertEquals(input.isPinned(), pinned);
-        assertEquals(input.getType(), type);
+        assertEquals(input.getConfigKey(), type);
     }
 
 }

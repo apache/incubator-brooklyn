@@ -98,6 +98,14 @@ public interface DynamicCluster extends AbstractGroup, Cluster, MemberReplaceabl
 
     MethodEffector<Collection<Entity>> RESIZE_BY_DELTA = new MethodEffector<Collection<Entity>>(DynamicCluster.class, "resizeByDelta");
 
+    @SetFromFlag("restartMode")
+    ConfigKey<String> RESTART_MODE = ConfigKeys.newStringConfigKey(
+            "dynamiccluster.restartMode", 
+            "How this cluster should handle restarts; "
+            + "by default it is disallowed, but this key can specify a different mode. "
+            + "Modes supported by dynamic cluster are 'off', 'sequqential', or 'parallel'. "
+            + "However subclasses can define their own modes or may ignore this.", null);
+
     @SetFromFlag("quarantineFailedEntities")
     ConfigKey<Boolean> QUARANTINE_FAILED_ENTITIES = ConfigKeys.newBooleanConfigKey(
             "dynamiccluster.quarantineFailedEntities", "If true, will quarantine entities that fail to start; if false, will get rid of them (i.e. delete them)", true);

@@ -44,6 +44,7 @@ import org.apache.brooklyn.core.config.ConfigConstraints;
 import org.apache.brooklyn.core.entity.AbstractApplication;
 import org.apache.brooklyn.core.entity.AbstractEntity;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.entity.EntityDynamicType;
 import org.apache.brooklyn.core.entity.EntityInternal;
 import org.apache.brooklyn.core.mgmt.BrooklynTaskTags;
 import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
@@ -248,13 +249,13 @@ public class InternalEntityFactory extends InternalFactory {
             }
             
             entity.tags().addTags(spec.getTags());
-            ((AbstractEntity)entity).configure(getConfigKeysFromSpecParameters(spec));
-            ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
+            addSpecParameters(spec, ((AbstractEntity)entity).getMutableEntityType());
             
+            ((AbstractEntity)entity).configure(MutableMap.copyOf(spec.getFlags()));
             for (Map.Entry<ConfigKey<?>, Object> entry : spec.getConfig().entrySet()) {
                 entity.config().set((ConfigKey)entry.getKey(), entry.getValue());
             }
-
+            
             Entity parent = spec.getParent();
             if (parent != null) {
                 parent = (parent instanceof AbstractEntity) ? ((AbstractEntity)parent).getProxyIfAvailable() : parent;
@@ -268,12 +269,11 @@ public class InternalEntityFactory extends InternalFactory {
         }
     }
 
-    private <T extends Entity> List<ConfigKey<?>> getConfigKeysFromSpecParameters(EntitySpec<T> spec) {
-        List<ConfigKey<?>> configKeys = MutableList.of();
+    private void addSpecParameters(EntitySpec<?> spec, EntityDynamicType edType) {
         for (SpecParameter<?> param : spec.getParameters()) {
-            configKeys.add(param.getType());
+            edType.addConfigKey(param.getConfigKey());
+            if (param.getSensor()!=null) edType.addSensor(param.getSensor());
         }
-        return configKeys;
     }
 
     /**

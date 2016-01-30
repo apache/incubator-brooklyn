@@ -1,0 +1,11 @@
+name: Netcat Cluster Example
+location: localhost
+services:
+- type: org.apache.brooklyn.entity.group.DynamicCluster
+  memberSpec:
+    $brooklyn:entitySpec:
+      type: netcat-example
+      message: hello from cluster member
+      netcat.port: 8000+
+  initialSize: 3
+  restartMode: parallel

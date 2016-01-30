@@ -56,7 +56,7 @@ public class BasicSpecParameterFromListTest {
         SpecParameter<?> input = parse(name);
         assertEquals(input.getLabel(), name);
         assertTrue(input.isPinned());
-        ConfigKey<?> type = input.getType();
+        ConfigKey<?> type = input.getConfigKey();
         assertEquals(type.getName(), name);
         assertEquals(type.getTypeToken(), TypeToken.of(String.class));
         assertNull(type.getDefaultValue());
@@ -70,8 +70,8 @@ public class BasicSpecParameterFromListTest {
         String name = "minRam";
         SpecParameter<?> input = parse(ImmutableMap.of("name", name));
         assertEquals(input.getLabel(), name);
-        assertEquals(input.getType().getName(), name);
-        assertEquals(input.getType().getTypeToken(), TypeToken.of(String.class));
+        assertEquals(input.getConfigKey().getName(), name);
+        assertEquals(input.getConfigKey().getTypeToken(), TypeToken.of(String.class));
     }
 
     @Test
@@ -99,7 +99,7 @@ public class BasicSpecParameterFromListTest {
         assertEquals(input.getLabel(), label);
         assertTrue(input.isPinned());
 
-        ConfigKey<?> type = input.getType();
+        ConfigKey<?> type = input.getConfigKey();
         assertEquals(type.getName(), name);
         assertEquals(type.getTypeToken(), TypeToken.of(String.class));
         assertEquals(type.getDefaultValue(), defaultValue);
@@ -123,7 +123,7 @@ public class BasicSpecParameterFromListTest {
         assertEquals(input.getLabel(), name);
         assertTrue(input.isPinned());
 
-        ConfigKey<?> type = input.getType();
+        ConfigKey<?> type = input.getConfigKey();
         assertEquals(type.getName(), name);
         assertEquals(type.getDefaultValue(), defaultValue);
         assertEquals(type.getDescription(), description);
@@ -137,7 +137,7 @@ public class BasicSpecParameterFromListTest {
         SpecParameter<?> input = parse(ImmutableMap.of(
                 "name", name,
                 "constraints", ImmutableList.of(constraint)));
-        ConfigKey<?> type = input.getType();
+        ConfigKey<?> type = input.getConfigKey();
         assertConstraint(type.getConstraint(), StringPredicates.isNonBlank());
     }
 
@@ -153,7 +153,7 @@ public class BasicSpecParameterFromListTest {
         SpecParameter<?> input = parse(ImmutableMap.of(
                 "name", name,
                 "type", BasicSpecParameterFromListTest.class.getName()));
-        assertEquals(input.getType().getTypeToken(), TypeToken.of(BasicSpecParameterFromListTest.class));
+        assertEquals(input.getConfigKey().getTypeToken(), TypeToken.of(BasicSpecParameterFromListTest.class));
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)

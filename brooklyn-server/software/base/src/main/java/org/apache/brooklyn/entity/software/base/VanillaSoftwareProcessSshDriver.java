@@ -21,11 +21,12 @@ package org.apache.brooklyn.entity.software.base;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.apache.brooklyn.api.entity.EntityLocal;
 import org.apache.brooklyn.api.entity.drivers.downloads.DownloadResolver;
+import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.objs.BrooklynObjectInternal.ConfigurationSupportInternal;
 import org.apache.brooklyn.entity.software.base.lifecycle.ScriptHelper;
 import org.apache.brooklyn.location.ssh.SshMachineLocation;
 import org.apache.brooklyn.util.collections.MutableMap;
@@ -54,15 +55,30 @@ public class VanillaSoftwareProcessSshDriver extends AbstractSoftwareProcessSshD
      */
     @Override
     protected String getInstallLabelExtraSalt() {
+        // run non-blocking in case a value set later is used (e.g. a port)
+        Integer hash = hashCodeIfResolved(SoftwareProcess.DOWNLOAD_URL.getConfigKey(), 
+            VanillaSoftwareProcess.INSTALL_COMMAND, SoftwareProcess.SHELL_ENVIRONMENT);
         
-        Maybe<Object> url = getEntity().getConfigRaw(SoftwareProcess.DOWNLOAD_URL, true);
-        String installCommand = getEntity().getConfig(VanillaSoftwareProcess.INSTALL_COMMAND);
-        Map<String, Object> shellEnv = getEntity().getConfig(VanillaSoftwareProcess.SHELL_ENVIRONMENT);
+        // if any of the above blocked then we must make a unique install label,
+        // as other yet-unknown config is involved 
+        if (hash==null) return Identifiers.makeRandomId(8);
         
-        // TODO a user-friendly hash would be nice, but tricky since we don't want it to be too long or contain path chars
-        return Identifiers.makeIdFromHash(Objects.hash(url.or(null), installCommand, shellEnv));
+        // a user-friendly hash is nice, but tricky since it would have to be short; 
+        // go with a random one unless it's totally blank
+        if (hash==0) return "default";
+        return Identifiers.makeIdFromHash(hash);
     }
     
+    private Integer hashCodeIfResolved(ConfigKey<?> ...keys) {
+        int hash = 0;
+        for (ConfigKey<?> k: keys) {
+            Maybe<?> value = ((ConfigurationSupportInternal)getEntity().config()).getNonBlocking(k);
+            if (value.isAbsent()) return null;
+            hash = hash*31 + (value.get()==null ? 0 : value.get().hashCode());
+        }
+        return hash;
+    }
+
     @Override
     public void install() {
         Maybe<Object> url = getEntity().getConfigRaw(SoftwareProcess.DOWNLOAD_URL, true);

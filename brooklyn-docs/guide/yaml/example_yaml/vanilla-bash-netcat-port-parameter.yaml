@@ -1,0 +1,21 @@
+name: Netcat Example with Parameter
+location: localhost
+services:
+- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess
+  name: Simple Netcat Server
+  launch.command: |
+    echo $MESSAGE | nc -l $NETCAT_PORT &
+    echo $! > $PID_FILE
+    
+  env:
+    MESSAGE: $brooklyn:config("message")
+    NETCAT_PORT: $brooklyn:attributeWhenReady("netcat.port")
+  
+  brooklyn.parameters:
+  - name: message
+    description: a message to send to the caller
+    default: hello
+  - name: netcat.port
+    type: port
+    description: the port netcat should run on
+    default: 4321+

@@ -36,12 +36,18 @@ import org.apache.brooklyn.api.mgmt.classloading.BrooklynClassLoadingContext;
 import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.api.objs.BrooklynType;
 import org.apache.brooklyn.api.objs.SpecParameter;
+import org.apache.brooklyn.api.sensor.AttributeSensor;
 import org.apache.brooklyn.config.ConfigKey;
+import org.apache.brooklyn.config.ConfigKey.HasConfigKey;
 import org.apache.brooklyn.core.config.BasicConfigKey;
+import org.apache.brooklyn.core.config.BasicConfigKey.Builder;
+import org.apache.brooklyn.core.sensor.PortAttributeSensorAndConfigKey;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.text.StringPredicates;
+import org.apache.brooklyn.util.time.Duration;
 
+import com.google.common.annotations.Beta;
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
@@ -54,14 +60,26 @@ import com.google.common.reflect.TypeToken;
 public class BasicSpecParameter<T> implements SpecParameter<T>{
     private static final long serialVersionUID = -4728186276307619778L;
 
-    private String label;
-    private boolean pinned;
-    private ConfigKey<T> type;
+    private final String label;
+    
+    /** pinning may become a priority or other more expansive indicator */
+    @Beta
+    private final boolean pinned;
+    
+    private final ConfigKey<T> configKey;
+    private final AttributeSensor<?> sensor;
 
-    public BasicSpecParameter(String label, boolean pinned, ConfigKey<T> type) {
+    @Beta // TBD whether "pinned" stays
+    public BasicSpecParameter(String label, boolean pinned, ConfigKey<T> config) {
+        this(label, pinned, config, null);
+    }
+
+    @Beta // TBD whether "pinned" and "sensor" stay
+    public <SensorType> BasicSpecParameter(String label, boolean pinned, ConfigKey<T> config, AttributeSensor<SensorType> sensor) {
         this.label = label;
         this.pinned = pinned;
-        this.type = type;
+        this.configKey = config;
+        this.sensor = sensor;
     }
 
     @Override
@@ -73,15 +91,20 @@ public class BasicSpecParameter<T> implements SpecParameter<T>{
     public boolean isPinned() {
         return pinned;
     }
+    
+    @Override
+    public ConfigKey<T> getConfigKey() {
+        return configKey;
+    }
 
     @Override
-    public ConfigKey<T> getType() {
-        return type;
+    public AttributeSensor<?> getSensor() {
+        return sensor;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(label, pinned, type);
+        return Objects.hashCode(label, pinned, configKey);
     }
 
     @Override
@@ -95,7 +118,7 @@ public class BasicSpecParameter<T> implements SpecParameter<T>{
         BasicSpecParameter<?> other = (BasicSpecParameter<?>) obj;
         return Objects.equal(label,  other.label) &&
                 pinned == other.pinned &&
-                Objects.equal(type, other.type);
+                Objects.equal(configKey, other.configKey);
     }
 
     @Override
@@ -103,7 +126,7 @@ public class BasicSpecParameter<T> implements SpecParameter<T>{
         return Objects.toStringHelper(this)
                 .add("label", label)
                 .add("pinned", pinned)
-                .add("type", type)
+                .add("type", configKey)
                 .toString();
     }
 
@@ -154,6 +177,7 @@ public class BasicSpecParameter<T> implements SpecParameter<T>{
                 .put("long", Long.class)
                 .put("float", Float.class)
                 .put("double", Double.class)
+                .put("duration", Duration.class)
                 .put("timestamp", Date.class)
                 .put("port", PortRange.class)
                 .build();
@@ -191,13 +215,23 @@ public class BasicSpecParameter<T> implements SpecParameter<T>{
                 throw new IllegalArgumentException("'name' value missing from input definition " + obj + " but is required. Check for typos.");
             }
 
-            ConfigKey inputType = BasicConfigKey.builder(inferType(type, loader))
-                    .name(name)
-                    .description(description)
-                    .defaultValue(defaultValue)
-                    .constraint(constraints)
-                    .build();
-            return new BasicSpecParameter(Objects.firstNonNull(label, name), true, inputType);
+            ConfigKey configType;
+            AttributeSensor sensorType = null;
+            
+            TypeToken typeToken = inferType(type, loader);
+            Builder builder = BasicConfigKey.builder(typeToken)
+                .name(name)
+                .description(description)
+                .defaultValue(defaultValue)
+                .constraint(constraints);
+            
+            if (PortRange.class.equals(typeToken.getRawType())) {
+                sensorType = new PortAttributeSensorAndConfigKey(builder);
+                configType = ((HasConfigKey)sensorType).getConfigKey();
+            } else {
+                configType = builder.build();
+            }
+            return new BasicSpecParameter(Objects.firstNonNull(label, name), true, configType, sensorType);
         }
 
         @SuppressWarnings({ "rawtypes" })
