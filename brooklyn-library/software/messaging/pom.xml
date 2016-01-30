@@ -181,7 +181,7 @@
         <!-- for storm -->
 		<dependency>
 			<groupId>storm</groupId>
-			<artifactId>storm</artifactId>
+			<artifactId>storm-core</artifactId>
 			<version>${storm.version}</version>
 			<!-- keep storm out of the jar-with-dependencies -->
             <scope>test</scope>
@@ -214,6 +214,10 @@
                 <exclusion>
                     <groupId>commons-codec</groupId>
                     <artifactId>commons-codec</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>storm</groupId>
+                    <artifactId>carbonite</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
