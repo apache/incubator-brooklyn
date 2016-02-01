@@ -35,7 +35,6 @@ import org.testng.annotations.Test;
 
 public class LocationSummaryTest {
 
-    @SuppressWarnings("deprecation")
     LocationSummary summary;
 
     @BeforeClass

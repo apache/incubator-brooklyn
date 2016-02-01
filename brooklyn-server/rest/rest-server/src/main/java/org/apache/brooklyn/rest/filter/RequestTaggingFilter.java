@@ -33,6 +33,7 @@ import org.apache.brooklyn.util.text.Identifiers;
  * Tags each request with a probabilistically unique id. Should be included before other
  * filters to make sense.
  */
+//TODO Re-implement as JAX-RS filter
 public class RequestTaggingFilter implements Filter {
 
     private static ThreadLocal<String> tag = new ThreadLocal<String>();

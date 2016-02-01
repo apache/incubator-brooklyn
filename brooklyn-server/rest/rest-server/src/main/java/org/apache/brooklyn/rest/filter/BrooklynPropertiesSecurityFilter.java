@@ -31,16 +31,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.mgmt.entitlement.Entitlements;
 import org.apache.brooklyn.core.mgmt.entitlement.WebEntitlementContext;
+import org.apache.brooklyn.rest.BrooklynWebConfig;
 import org.apache.brooklyn.rest.security.provider.DelegatingSecurityProvider;
-import org.apache.brooklyn.util.text.Strings;
-
-import com.sun.jersey.core.util.Base64;
 import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.apache.brooklyn.util.text.Strings;
+import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Provides basic HTTP authentication.
@@ -58,8 +58,11 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
     /**
      * The session attribute set to indicate the remote address of the HTTP request.
      * Corresponds to {@link javax.servlet.http.HttpServletRequest#getRemoteAddr()}.
+     * 
+     * @deprecated since 0.9.0, use {@link BrooklynWebConfig#REMOTE_ADDRESS_SESSION_ATTRIBUTE}
      */
-    public static final String REMOTE_ADDRESS_SESSION_ATTRIBUTE = "request.remoteAddress";
+    @Deprecated
+    public static final String REMOTE_ADDRESS_SESSION_ATTRIBUTE = BrooklynWebConfig.REMOTE_ADDRESS_SESSION_ATTRIBUTE;
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynPropertiesSecurityFilter.class);
 
@@ -135,11 +138,11 @@ public class BrooklynPropertiesSecurityFilter implements Filter {
         if (provider.isAuthenticated(session)) {
             return true;
         }
-        session.setAttribute(REMOTE_ADDRESS_SESSION_ATTRIBUTE, request.getRemoteAddr());
+        session.setAttribute(BrooklynWebConfig.REMOTE_ADDRESS_SESSION_ATTRIBUTE, request.getRemoteAddr());
         String user = null, pass = null;
         String authorization = request.getHeader("Authorization");
         if (authorization != null) {
-            String userpass = Base64.base64Decode(authorization.substring(6));
+            String userpass = new String(Base64.decodeBase64(authorization.substring(6)));
             user = userpass.substring(0, userpass.indexOf(":"));
             pass = userpass.substring(userpass.indexOf(":") + 1);
         }

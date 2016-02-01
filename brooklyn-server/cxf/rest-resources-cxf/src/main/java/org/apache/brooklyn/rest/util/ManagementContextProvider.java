@@ -16,26 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.launcher;
+package org.apache.brooklyn.rest.util;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.ws.rs.ext.ContextResolver;
+import javax.ws.rs.ext.Provider;
 
-public class Activator implements BundleActivator {
+import org.apache.brooklyn.api.mgmt.ManagementContext;
 
-    public static final Logger log = LoggerFactory.getLogger(Activator.class);
+@Provider
+// Needed by tests in rest-resources module and by main code in rest-server
+public class ManagementContextProvider implements ContextResolver<ManagementContext> {
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        //does nothing on startup, just makes resources available
-        //TODO maybe it wants to register a service that others could use?
-        log.info("Starting brooklyn-launcher OSGi bundle");
+    private ManagementContext mgmt;
+
+    public ManagementContextProvider(ManagementContext mgmt) {
+        this.mgmt = mgmt;
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        log.info("Stopping brooklyn-launcher OSGi bundle");
+    public ManagementContext getContext(Class<?> type) {
+        return mgmt;
     }
+
 }

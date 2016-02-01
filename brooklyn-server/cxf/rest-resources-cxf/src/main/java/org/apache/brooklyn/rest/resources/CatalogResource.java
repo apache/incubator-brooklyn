@@ -93,12 +93,6 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         };
     };
 
-//    @Override
-//    @Consumes(MediaType.MULTIPART_FORM_DATA)
-//    public Response createFromMultipart(InputStream uploadedInputStream) {
-//      return create(Streams.readFullyString(uploadedInputStream));
-//    }
-
     static Set<String> missingIcons = MutableSet.of();
     
     @Override

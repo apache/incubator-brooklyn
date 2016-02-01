@@ -25,6 +25,8 @@ import static org.testng.Assert.assertTrue;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 
 import org.apache.brooklyn.api.entity.EntitySpec;
@@ -43,29 +45,19 @@ import org.apache.brooklyn.test.Asserts;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
 
 @Test( // by using a different suite name we disallow interleaving other tests between the methods of this test class, which wrecks the test fixtures
         suiteName = "ServerShutdownTest")
 public class ServerShutdownTest extends BrooklynRestResourceTest {
     private static final Logger log = LoggerFactory.getLogger(ServerResourceTest.class);
 
-    @BeforeMethod(alwaysRun = true)
-    public void setUp() throws Exception {
-        startServer();
-    }
-
-    @AfterMethod(alwaysRun = true)
-    public void tearDown() throws Exception {
-        stopServer();
-        destroyManagementContext();
+    @Override
+    protected boolean isMethodInit() {
+        return true;
     }
 
     @Test
@@ -100,7 +92,6 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
         EntityManager emgr = getManagementContext().getEntityManager();
         EntitySpec<TestApplication> appSpec = EntitySpec.create(TestApplication.class);
         TestApplication app = emgr.createEntity(appSpec);
-        emgr.manage(app);
         EntitySpec<StopLatchEntity> latchEntitySpec = EntitySpec.create(StopLatchEntity.class);
         final StopLatchEntity entity = app.createAndManageChild(latchEntitySpec);
         app.start(ImmutableSet.of(app.newLocalhostProvisioningLocation()));

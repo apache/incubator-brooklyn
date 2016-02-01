@@ -45,12 +45,14 @@ final class ConfigurableSerializerProvider extends StdSerializerProvider {
         unknownTypeSerializer = src.unknownTypeSerializer;
     }
     
+    @Override
     protected StdSerializerProvider createInstance(SerializationConfig config, SerializerFactory jsf) {
         return new ConfigurableSerializerProvider(config, this, jsf);
     }
 
     protected JsonSerializer<Object> unknownTypeSerializer;
     
+    @Override
     public JsonSerializer<Object> getUnknownTypeSerializer(Class<?> unknownType) {
         if (unknownTypeSerializer!=null) return unknownTypeSerializer;
         return super.getUnknownTypeSerializer(unknownType);

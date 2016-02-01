@@ -16,26 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.launcher;
+package org.apache.brooklyn.camp.server;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.brooklyn.rest.apidoc.RestApiResourceScanner;
+import org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 
-public class Activator implements BundleActivator {
+import io.swagger.config.ScannerFactory;
 
-    public static final Logger log = LoggerFactory.getLogger(Activator.class);
+public class RestApiSetup {
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        //does nothing on startup, just makes resources available
-        //TODO maybe it wants to register a service that others could use?
-        log.info("Starting brooklyn-launcher OSGi bundle");
+    public static ContextHandler installRestServlet(ServletContextHandler context) {
+        ScannerFactory.setScanner(new RestApiResourceScanner());
+
+        CampRestApp app = new CampRestApp();
+
+        CXFNonSpringJaxrsServlet servlet = new CXFNonSpringJaxrsServlet(app);
+        final ServletHolder servletHolder = new ServletHolder(servlet);
+
+        context.addServlet(servletHolder, "/*");
+        return context;
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        log.info("Stopping brooklyn-launcher OSGi bundle");
-    }
 }

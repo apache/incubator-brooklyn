@@ -16,26 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.launcher;
+package org.apache.brooklyn.rest.resources;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class Activator implements BundleActivator {
+import javax.ws.rs.Path;
 
-    public static final Logger log = LoggerFactory.getLogger(Activator.class);
+import org.apache.brooklyn.rest.apidoc.ApiListingResource;
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        //does nothing on startup, just makes resources available
-        //TODO maybe it wants to register a service that others could use?
-        log.info("Starting brooklyn-launcher OSGi bundle");
-    }
+import io.swagger.annotations.Api;
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        log.info("Stopping brooklyn-launcher OSGi bundle");
-    }
+/**
+ * @author Ciprian Ciubotariu <cheepeero@gmx.net>
+ */
+@Api("API Documentation")
+@Path("/apidoc")
+public class ApidocResource extends ApiListingResource {
+
 }

@@ -61,6 +61,7 @@ public class FormMapProvider implements MessageBodyReader<Map<String, Object>> {
                 parameterized.getActualTypeArguments()[1] == Object.class;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Map<String, Object> readFrom(Class<Map<String, Object>> type, Type genericType, Annotation[] annotations,
             MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream)

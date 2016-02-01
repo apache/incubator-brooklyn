@@ -33,6 +33,12 @@ public class BrooklynWebConfig {
     public final static String BASE_NAME_SECURITY = BASE_NAME+".security";
 
     /**
+     * The session attribute set to indicate the remote address of the HTTP request.
+     * Corresponds to {@link javax.servlet.http.HttpServletRequest#getRemoteAddr()}.
+     */
+    public static final String REMOTE_ADDRESS_SESSION_ATTRIBUTE = "request.remoteAddress";
+
+    /**
      * The security provider to be loaded by {@link DelegatingSecurityProvider}.
      * e.g. <code>brooklyn.webconsole.security.provider=org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider</code>
      * will allow anyone to log in.

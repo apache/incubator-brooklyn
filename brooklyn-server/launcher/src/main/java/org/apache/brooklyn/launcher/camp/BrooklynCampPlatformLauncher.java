@@ -63,6 +63,7 @@ public class BrooklynCampPlatformLauncher extends BrooklynCampPlatformLauncherAb
         new BrooklynCampPlatformLauncher().launch();
     }
 
+    @Override
     public void stopServers() throws Exception {
         brooklynLauncher.getServerDetails().getWebServer().stop();
         campServer.stop();
