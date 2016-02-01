@@ -18,9 +18,11 @@
  */
 package org.apache.brooklyn.location.winrm;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Function;
 import org.apache.brooklyn.api.location.MachineDetails;
 import org.apache.brooklyn.api.location.MachineLocation;
 import org.apache.brooklyn.api.location.OsDetails;
@@ -53,7 +56,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -62,6 +64,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.net.HostAndPort;
 import com.google.common.reflect.TypeToken;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class WinRmMachineLocation extends AbstractLocation implements MachineLocation {
 
@@ -167,7 +171,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             }
         }
     }
-    
+
     public String getUser() {
         return config().get(USER);
     }
@@ -227,7 +231,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     public WinRmToolResponse executeScript(List<String> script) {
         return executeCommand(script);
     }
-    
+
     /**
      * @deprecated since 0.9.0; use {@link #executeCommand(Map, List)}
      */
@@ -249,7 +253,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     public WinRmToolResponse executeCommand(List<String> script) {
         return executeCommand(ImmutableMap.of(), script);
     }
-    
+
     /**
      * @since 0.9.0 (previously was {@code executeScript(Map, List)}
      */
@@ -265,7 +269,7 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     public WinRmToolResponse executePsScript(List<String> psScript) {
         return executePsScript(ImmutableMap.of(), psScript);
     }
-    
+
     public WinRmToolResponse executePsScript(Map<?,?> props, List<String> psScript) {
         WinRmTool tool = newWinRmTool(props);
         return tool.executePs(psScript);
@@ -277,22 +281,22 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
             ConfigBag args = new ConfigBag();
 
             for (Map.Entry<String,Object> entry: config().getBag().getAllConfig().entrySet()) {
-    
+
                 boolean include = false;
                 String key = entry.getKey();
                 if (key.startsWith(WinRmTool.BROOKLYN_CONFIG_KEY_PREFIX)) {
                     key = Strings.removeFromStart(key, WinRmTool.BROOKLYN_CONFIG_KEY_PREFIX);
                     include = true;
                 }
-                
+
                 if (key.startsWith(WINRM_TOOL_CLASS_PROPERTIES_PREFIX)) {
                     key = Strings.removeFromStart(key, WINRM_TOOL_CLASS_PROPERTIES_PREFIX);
                     include = true;
                 }
-                
+
                 if (ALL_WINRM_CONFIG_KEY_NAMES.contains(entry.getKey())) {
                     // key should be included, and does not need to be changed
-    
+
                     // TODO make this config-setting mechanism more universal
                     // currently e.g. it will not admit a tool-specific property.
                     // thinking either we know about the tool here,
@@ -300,13 +304,13 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
                     // (require use of BROOKLYN_CONFIG_KEY_PREFIX)
                     include = true;
                 }
-                
-    
+
+
                 if (include) {
                     args.putStringKey(key, entry.getValue());
                 }
             }
-            
+
             args.putAll(props);
             args.configure(SshTool.PROP_HOST, getAddress().getHostAddress());
 
@@ -325,6 +329,14 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
         }
     }
 
+    private void writeToStream(ByteArrayOutputStream stream, String string) {
+        try {
+            stream.write(string.getBytes());
+        } catch (IOException e) {
+            LOG.warn("Problem populating one of the std streams for task of entity ", e);
+        }
+    }
+            
     public int copyTo(File source, String destination) {
         FileInputStream sourceStream = null;
         try {
@@ -342,11 +354,15 @@ public class WinRmMachineLocation extends AbstractLocation implements MachineLoc
     public int copyTo(InputStream source, String destination) {
         return copyTo(ImmutableMap.of(), source, destination);
     }
-    
+
     public int copyTo(Map<?,?> props, InputStream source, String destination) {
         WinRmTool tool = newWinRmTool(props);
         WinRmToolResponse response = tool.copyToServer(source, destination);
         return response.getStatusCode();
+    }
+
+    private <T> T getRequiredConfig(ConfigKey<T> key) {
+        return checkNotNull(getConfig(key), "key %s must be set", key);
     }
 
     public static String getDefaultUserMetadataString() {

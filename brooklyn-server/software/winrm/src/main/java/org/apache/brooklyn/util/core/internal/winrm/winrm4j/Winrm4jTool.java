@@ -82,7 +82,25 @@ public class Winrm4jTool implements org.apache.brooklyn.util.core.internal.winrm
         execRetryDelay = getRequiredConfig(config, PROP_EXEC_RETRY_DELAY);
         logCredentials = getRequiredConfig(config, LOG_CREDENTIALS);
     }
-    
+
+    @Override
+    public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executeCommand(final String command) {
+        return exec(new Function<io.cloudsoft.winrm4j.winrm.WinRmTool, io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {
+            @Override public WinRmToolResponse apply(io.cloudsoft.winrm4j.winrm.WinRmTool tool) {
+                return tool.executeCommand(command);
+            }
+        });
+    }
+
+    @Override
+    public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executePsCommand(final String psCommand) {
+        return exec(new Function<io.cloudsoft.winrm4j.winrm.WinRmTool, io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {
+            @Override public WinRmToolResponse apply(io.cloudsoft.winrm4j.winrm.WinRmTool tool) {
+                return tool.executePs(psCommand);
+            }
+        });
+    }
+
     @Override
     public org.apache.brooklyn.util.core.internal.winrm.WinRmToolResponse executeCommand(final List<String> commands) {
         return exec(new Function<io.cloudsoft.winrm4j.winrm.WinRmTool, io.cloudsoft.winrm4j.winrm.WinRmToolResponse>() {

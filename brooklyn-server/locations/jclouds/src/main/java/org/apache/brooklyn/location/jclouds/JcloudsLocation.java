@@ -862,7 +862,7 @@ public class JcloudsLocation extends AbstractCloudMachineProvisioningLocation im
                         String scriptContent = ResourceUtils.create(this).getResourceAsString(setupScriptItem);
                         String script = TemplateProcessor.processTemplateContents(scriptContent, getManagementContext(), substitutions);
                         if (windows) {
-                            ((WinRmMachineLocation)machineLocation).executeCommand(ImmutableList.copyOf((script.replace("\r", "").split("\n"))));
+                            ((WinRmMachineLocation)machineLocation).executeCommand(script);
                         } else {
                             ((SshMachineLocation)machineLocation).execCommands("Customizing node " + this, ImmutableList.of(script));
                         }
