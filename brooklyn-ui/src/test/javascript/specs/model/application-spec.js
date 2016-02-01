@@ -31,7 +31,7 @@ define([
 
         it('loads all model properties defined in fixtures/application.json', function () {
             expect(application.get("status")).toEqual('STARTING')
-            expect(application.getLinkByName('self')).toEqual('/v1/applications/myapp')
+            expect(application.getLinkByName('self')).toEqual('/applications/myapp')
             expect(application.getLinkByName('entities')).toEqual('fixtures/entity-summary-list.json')
         })
 
@@ -40,7 +40,7 @@ define([
                 entity = new Entity.Model(applicationSpec.get("entities")[0])
 
             expect(applicationSpec.get("name")).toEqual('myapp')
-            expect(applicationSpec.get("locations")[0]).toEqual('/v1/locations/1')
+            expect(applicationSpec.get("locations")[0]).toEqual('/locations/1')
             expect(entity.get("name")).toEqual('Vanilla Java App')
         })
 
@@ -55,7 +55,7 @@ define([
 
         beforeEach(function () {
             spec = new Application.Spec
-            location = "/v1/locations/2"
+            location = "/locations/2"
             entity = new Entity.Model({name:'test'})
 
             spec.url = 'fixtures/application-spec.json'
@@ -64,7 +64,7 @@ define([
 
         it('loads the properties from fixtures/application-spec.json', function () {
             expect(spec.get("name")).toEqual('myapp')
-            expect(spec.get("locations")[0]).toEqual('/v1/locations/1')
+            expect(spec.get("locations")[0]).toEqual('/locations/1')
             expect(spec.get("entities").length).toBe(1)
         })
 
@@ -87,7 +87,7 @@ define([
             spec.addLocation(location)
             spyOn(spec, "trigger").andCallThrough()
 
-            spec.removeLocation('/v1/invalid/location')
+            spec.removeLocation('/invalid/location')
             expect(spec.trigger).not.toHaveBeenCalled()
             spec.removeLocation(location)
             expect(spec.trigger).toHaveBeenCalled()

@@ -72,29 +72,29 @@ public class DescendantsTest extends BrooklynRestResourceTest {
         assertEquals(entities.size(), 2);
         
         Set<EntitySummary> descs;
-        descs = client().resource("/v1/applications/"+application.getApplicationId()+"/descendants")
+        descs = client().resource("/applications/"+application.getApplicationId()+"/descendants")
             .get(new GenericType<Set<EntitySummary>>() {});
         // includes itself
         assertEquals(descs.size(), 3);
         
-        descs = client().resource("/v1/applications/"+application.getApplicationId()+"/descendants"
+        descs = client().resource("/applications/"+application.getApplicationId()+"/descendants"
             + "?typeRegex="+StringEscapes.escapeUrlParam(".*\\.RestMockSimpleEntity"))
             .get(new GenericType<Set<EntitySummary>>() {});
         assertEquals(descs.size(), 2);
         
-        descs = client().resource("/v1/applications/"+application.getApplicationId()+"/descendants"
+        descs = client().resource("/applications/"+application.getApplicationId()+"/descendants"
             + "?typeRegex="+StringEscapes.escapeUrlParam(".*\\.BestBockSimpleEntity"))
             .get(new GenericType<Set<EntitySummary>>() {});
         assertEquals(descs.size(), 0);
 
-        descs = client().resource("/v1/applications/"+application.getApplicationId()
+        descs = client().resource("/applications/"+application.getApplicationId()
             + "/entities/"+entities.get(1).getId()
             + "/descendants"
             + "?typeRegex="+StringEscapes.escapeUrlParam(".*\\.RestMockSimpleEntity"))
             .get(new GenericType<Set<EntitySummary>>() {});
         assertEquals(descs.size(), 1);
         
-        Map<String,Object> sensors = client().resource("/v1/applications/"+application.getApplicationId()+"/descendants/sensor/foo"
+        Map<String,Object> sensors = client().resource("/applications/"+application.getApplicationId()+"/descendants/sensor/foo"
             + "?typeRegex="+StringEscapes.escapeUrlParam(".*\\.RestMockSimpleEntity"))
             .get(new GenericType<Map<String,Object>>() {});
         assertEquals(sensors.size(), 0);
@@ -104,24 +104,24 @@ public class DescendantsTest extends BrooklynRestResourceTest {
         for (Entity e: entities)
             e.sensors().set(Sensors.newLongSensor("foo"), v+=123);
         
-        sensors = client().resource("/v1/applications/"+application.getApplicationId()+"/descendants/sensor/foo")
+        sensors = client().resource("/applications/"+application.getApplicationId()+"/descendants/sensor/foo")
             .get(new GenericType<Map<String,Object>>() {});
         assertEquals(sensors.size(), 3);
         assertEquals(sensors.get(entities.get(1).getId()), 246);
         
-        sensors = client().resource("/v1/applications/"+application.getApplicationId()+"/descendants/sensor/foo"
+        sensors = client().resource("/applications/"+application.getApplicationId()+"/descendants/sensor/foo"
             + "?typeRegex="+StringEscapes.escapeUrlParam(".*\\.RestMockSimpleEntity"))
             .get(new GenericType<Map<String,Object>>() {});
         assertEquals(sensors.size(), 2);
         
-        sensors = client().resource("/v1/applications/"+application.getApplicationId()+"/"
+        sensors = client().resource("/applications/"+application.getApplicationId()+"/"
             + "entities/"+entities.get(1).getId()+"/"
             + "descendants/sensor/foo"
             + "?typeRegex="+StringEscapes.escapeUrlParam(".*\\.RestMockSimpleEntity"))
             .get(new GenericType<Map<String,Object>>() {});
         assertEquals(sensors.size(), 1);
 
-        sensors = client().resource("/v1/applications/"+application.getApplicationId()+"/"
+        sensors = client().resource("/applications/"+application.getApplicationId()+"/"
             + "entities/"+entities.get(1).getId()+"/"
             + "descendants/sensor/foo"
             + "?typeRegex="+StringEscapes.escapeUrlParam(".*\\.FestPockSimpleEntity"))

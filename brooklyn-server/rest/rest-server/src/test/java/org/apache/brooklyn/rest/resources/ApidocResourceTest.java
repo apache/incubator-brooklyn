@@ -110,46 +110,46 @@ public class ApidocResourceTest extends BrooklynRestResourceTest {
     
     @Test(enabled = false)
     public void testRootSerializesSensibly() throws Exception {
-        String data = resource("/v1/apidoc/swagger.json").get(String.class);
+        String data = resource("/apidoc/swagger.json").get(String.class);
         log.info("apidoc gives: "+data);
         // make sure no scala gets in
         assertFalse(data.contains("$"));
         assertFalse(data.contains("scala"));
         // make sure it's an appropriate swagger 2.0 json
-        Swagger swagger = resource("/v1/apidoc/swagger.json").get(Swagger.class);
+        Swagger swagger = resource("/apidoc/swagger.json").get(Swagger.class);
         assertEquals(swagger.getSwagger(), "2.0");
     }
     
     @Test(enabled = false)
     public void testCountRestResources() throws Exception {
-        Swagger swagger = resource("/v1/apidoc/swagger.json").get(Swagger.class);
+        Swagger swagger = resource("/apidoc/swagger.json").get(Swagger.class);
         assertEquals(swagger.getTags().size(), 1 + Iterables.size(BrooklynRestApi.getBrooklynRestResources()));
     }
 
     @Test(enabled = false)
     public void testApiDocDetails() throws Exception {
-        Swagger swagger = resource("/v1/apidoc/swagger.json").get(Swagger.class);
+        Swagger swagger = resource("/apidoc/swagger.json").get(Swagger.class);
         Collection<Operation> operations = getTaggedOperations(swagger, ApidocResource.class.getAnnotation(Api.class).value());
         assertEquals(operations.size(), 2, "ops="+operations);
     }
 
     @Test(enabled = false)
     public void testEffectorDetails() throws Exception {
-        Swagger swagger = resource("/v1/apidoc/swagger.json").get(Swagger.class);
+        Swagger swagger = resource("/apidoc/swagger.json").get(Swagger.class);
         Collection<Operation> operations = getTaggedOperations(swagger, EffectorApi.class.getAnnotation(Api.class).value());
         assertEquals(operations.size(), 2, "ops="+operations);
     }
 
     @Test(enabled = false)
     public void testEntityDetails() throws Exception {
-        Swagger swagger = resource("/v1/apidoc/swagger.json").get(Swagger.class);
+        Swagger swagger = resource("/apidoc/swagger.json").get(Swagger.class);
         Collection<Operation> operations = getTaggedOperations(swagger, EntityApi.class.getAnnotation(Api.class).value());
         assertEquals(operations.size(), 14, "ops="+operations);
     }
 
     @Test(enabled = false)
     public void testCatalogDetails() throws Exception {
-        Swagger swagger = resource("/v1/apidoc/swagger.json").get(Swagger.class);
+        Swagger swagger = resource("/apidoc/swagger.json").get(Swagger.class);
         Collection<Operation> operations = getTaggedOperations(swagger, CatalogApi.class.getAnnotation(Api.class).value());
         assertEquals(operations.size(), 22, "ops="+operations);
     }

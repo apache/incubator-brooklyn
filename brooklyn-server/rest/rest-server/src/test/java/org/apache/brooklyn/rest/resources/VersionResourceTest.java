@@ -33,7 +33,7 @@ public class VersionResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testGetVersion() {
-        ClientResponse response = client().resource("/v1/version")
+        ClientResponse response = client().resource("/version")
                 .get(ClientResponse.class);
 
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());

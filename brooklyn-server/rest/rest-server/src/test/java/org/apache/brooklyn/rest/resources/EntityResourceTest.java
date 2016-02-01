@@ -64,7 +64,7 @@ public class EntityResourceTest extends BrooklynRestResourceTest {
 
     private EntityInternal entity;
 
-    private static final String entityEndpoint = "/v1/applications/simple-app/entities/simple-ent";
+    private static final String entityEndpoint = "/applications/simple-app/entities/simple-ent";
 
     @BeforeClass(alwaysRun = true)
     @Override

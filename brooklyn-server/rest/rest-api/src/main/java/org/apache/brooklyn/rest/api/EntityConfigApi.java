@@ -39,7 +39,7 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-@Path("/v1/applications/{application}/entities/{entity}/config")
+@Path("/applications/{application}/entities/{entity}/config")
 @Api("Entity Config")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

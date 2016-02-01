@@ -25,7 +25,7 @@ import javax.ws.rs.Path;
  * @author Ciprian Ciubotariu <cheepeero@gmx.net>
  */
 @Api("API Documentation")
-@Path("/v1/apidoc")
+@Path("/apidoc")
 public class ApidocResource extends org.apache.brooklyn.rest.apidoc.ApiListingResource {
 
 }

@@ -1,0 +1,29 @@
+[
+    {
+        "id": "com.example.app:1.1",
+        "type": "com.example.app",
+        "name": "My example application",
+        "version": "1.1",
+        "description": "My awesome example application, as a catalog item",
+        "planYaml": "services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"",
+        "iconUrl": "http://my.example.com/icon.png"
+    },
+    {
+        "id": "com.example.app:2.0",
+        "type": "com.example.app",
+        "name": "My example application",
+        "version": "2.0",
+        "description": "My awesome example application, as a catalog item",
+        "planYaml": "services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"",
+        "iconUrl": "http://my.example.com/icon.png"
+    },
+    {
+        "id": "com.example.other.app:1.0",
+        "type": "com.example.other.app",
+        "name": "Another example application",
+        "version": "1.0",
+        "description": "Another awesome example application, as a catalog item",
+        "planYaml": "services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch other application\"\n  checkRunning.command: echo \"Check running other application\"",
+        "iconUrl": "http://my.other.example.com/icon.png"
+    }
+]

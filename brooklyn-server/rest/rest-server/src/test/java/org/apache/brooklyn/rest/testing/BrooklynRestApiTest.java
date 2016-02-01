@@ -40,6 +40,7 @@ import com.sun.jersey.test.framework.LowLevelAppDescriptor;
 import com.sun.jersey.test.framework.spi.container.TestContainerException;
 import com.sun.jersey.test.framework.spi.container.TestContainerFactory;
 import com.sun.jersey.test.framework.spi.container.inmemory.InMemoryTestContainerFactory;
+import java.net.URI;
 
 import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTest;
@@ -171,7 +172,7 @@ public abstract class BrooklynRestApiTest {
         return new JerseyTest() {
             @Override
             protected AppDescriptor configure() {
-                return new LowLevelAppDescriptor.Builder(config).build();
+                return new LowLevelAppDescriptor.Builder(config).contextPath("/v1").build();
             }
 
             @Override
@@ -201,4 +202,13 @@ public abstract class BrooklynRestApiTest {
         Preconditions.checkNotNull(jerseyTest, "Must run setUpJersey first");
         return jerseyTest.resource().path(uri);
     }
+
+    public static String removeV1Prefix(String resourceLink) {
+        return resourceLink.replaceFirst("/v1", "");
+    }
+
+    public static String removeV1Prefixes(String text) {
+        return text.replaceAll("/v1", "");
+    }
+
 }

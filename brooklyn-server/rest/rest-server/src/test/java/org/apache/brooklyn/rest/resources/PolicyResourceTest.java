@@ -54,7 +54,7 @@ public class PolicyResourceTest extends BrooklynRestResourceTest {
     @SuppressWarnings("unused")
     private static final Logger log = LoggerFactory.getLogger(PolicyResourceTest.class);
 
-    private static final String ENDPOINT = "/v1/applications/simple-app/entities/simple-ent/policies/";
+    private static final String ENDPOINT = "/applications/simple-app/entities/simple-ent/policies/";
 
     private final ApplicationSpec simpleSpec = ApplicationSpec.builder().name("simple-app").entities(
             ImmutableSet.of(new EntitySpec("simple-ent", RestMockSimpleEntity.class.getName()))).locations(

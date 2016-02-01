@@ -64,14 +64,14 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
 
         assertEquals(response.getStatus(), 201);
         assertEquals(getManagementContext().getApplications().size(), 1);
-        assertTrue(response.getLocation().getPath().startsWith("/v1/applications/"), "path="+response.getLocation().getPath()); // path uses id, rather than app name
+        assertTrue(response.getLocation().getPath().startsWith("/applications/"), "path="+response.getLocation().getPath()); // path uses id, rather than app name
 
         waitForApplicationToBeRunning(response.getLocation());
     }
 
     @Test(groups="Integration", dependsOnMethods = "testDeployRedisApplication")
     public void testListEntities() {
-        Set<EntitySummary> entities = client().resource("/v1/applications/redis-app/entities")
+        Set<EntitySummary> entities = client().resource("/applications/redis-app/entities")
                 .get(new GenericType<Set<EntitySummary>>() {});
 
         for (EntitySummary entity : entities) {
@@ -86,7 +86,7 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
 
     @Test(groups="Integration", dependsOnMethods = "testDeployRedisApplication")
     public void testListSensorsRedis() {
-        Set<SensorSummary> sensors = client().resource("/v1/applications/redis-app/entities/redis-ent/sensors")
+        Set<SensorSummary> sensors = client().resource("/applications/redis-app/entities/redis-ent/sensors")
                 .get(new GenericType<Set<SensorSummary>>() {});
         assertTrue(sensors.size() > 0);
         SensorSummary uptime = Iterables.find(sensors, new Predicate<SensorSummary>() {
@@ -100,12 +100,12 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
 
     @Test(groups="Integration", dependsOnMethods = { "testListSensorsRedis", "testListEntities" })
     public void testTriggerRedisStopEffector() throws Exception {
-        ClientResponse response = client().resource("/v1/applications/redis-app/entities/redis-ent/effectors/stop")
+        ClientResponse response = client().resource("/applications/redis-app/entities/redis-ent/effectors/stop")
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(ClientResponse.class, ImmutableMap.of());
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
 
-        final URI stateSensor = URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/service.state");
+        final URI stateSensor = URI.create("/applications/redis-app/entities/redis-ent/sensors/service.state");
         final String expectedStatus = Lifecycle.STOPPED.toString();
         Asserts.succeedsEventually(MutableMap.of("timeout", 60 * 1000), new Runnable() {
             public void run() {
@@ -121,10 +121,10 @@ public class ApplicationResourceIntegrationTest extends BrooklynRestResourceTest
     @Test(groups="Integration", dependsOnMethods = "testTriggerRedisStopEffector" )
     public void testDeleteRedisApplication() throws Exception {
         int size = getManagementContext().getApplications().size();
-        ClientResponse response = client().resource("/v1/applications/redis-app")
+        ClientResponse response = client().resource("/applications/redis-app")
                 .delete(ClientResponse.class);
 
-        waitForPageNotFoundResponse("/v1/applications/redis-app", ApplicationSummary.class);
+        waitForPageNotFoundResponse("/applications/redis-app", ApplicationSummary.class);
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
         assertEquals(getManagementContext().getApplications().size(), size-1);

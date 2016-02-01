@@ -109,7 +109,7 @@ public class BrooklynPropertiesSecurityFilterTest extends BrooklynRestApiLaunche
                     .build();
             List<? extends NameValuePair> nvps = Lists.newArrayList(
                     new BasicNameValuePair("arg", "bar"));
-            String effector = String.format("/v1/applications/%s/entities/%s/effectors/identityEffector", appId, entityId);
+            String effector = String.format("/applications/%s/entities/%s/effectors/identityEffector", appId, entityId);
             HttpToolResponse response = HttpTool.httpPost(client, URI.create(getBaseUri() + effector),
                     ImmutableMap.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_FORM_URLENCODED.getMimeType()),
                     URLEncodedUtils.format(nvps, Charsets.UTF_8).getBytes());
@@ -129,7 +129,7 @@ public class BrooklynPropertiesSecurityFilterTest extends BrooklynRestApiLaunche
         HttpClient client = HttpTool.httpClientBuilder()
                 .uri(getBaseUri(server))
                 .build();
-        HttpToolResponse response = HttpTool.httpPost(client, URI.create(getBaseUri() + "/v1/applications"),
+        HttpToolResponse response = HttpTool.httpPost(client, URI.create(getBaseUri() + "/applications"),
                 ImmutableMap.of(HttpHeaders.CONTENT_TYPE, "application/x-yaml"),
                 blueprint.getBytes());
         assertTrue(HttpTool.isStatusCodeHealthy(response.getResponseCode()), "error creating app. response code=" + response.getResponseCode());
@@ -144,7 +144,7 @@ public class BrooklynPropertiesSecurityFilterTest extends BrooklynRestApiLaunche
                 .uri(getBaseUri(server))
                 .build();
         List entities = new ObjectMapper().readValue(
-                HttpTool.httpGet(client, URI.create(getBaseUri() + "/v1/applications/" + appId + "/entities"), MutableMap.<String, String>of()).getContent(), List.class);
+                HttpTool.httpGet(client, URI.create(getBaseUri() + "/applications/" + appId + "/entities"), MutableMap.<String, String>of()).getContent(), List.class);
         LOG.info((String) ((Map) entities.get(0)).get("id"));
         return (String) ((Map) entities.get(0)).get("id");
     }

@@ -121,7 +121,8 @@ public class HaMasterCheckFilter implements Filter {
             // explicitly allow calls to shutdown
             // (if stopAllApps is specified, the method itself will fail; but we do not want to consume parameters here, that breaks things!)
             // TODO combine with HaHotCheckResourceFilter and use an annotation HaAnyStateAllowed or similar
-            if ("/v1/server/shutdown".equals(httpRequest.getRequestURI())) return false;
+            if ("/v1/server/shutdown".equals(httpRequest.getRequestURI()) ||
+                    "/server/shutdown".equals(httpRequest.getRequestURI())) return false;
             
             // master required for everything else
             return true;

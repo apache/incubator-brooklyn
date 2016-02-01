@@ -141,7 +141,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testGetUndefinedApplication() {
         try {
-            client().resource("/v1/applications/dummy-not-found").get(ApplicationSummary.class);
+            client().resource("/applications/dummy-not-found").get(ApplicationSummary.class);
         } catch (UniformInterfaceException e) {
             assertEquals(e.getResponse().getStatus(), 404);
         }
@@ -160,7 +160,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
         HttpAsserts.assertHealthyStatusCode(response.getStatus());
         assertEquals(getManagementContext().getApplications().size(), 1);
-        assertRegexMatches(response.getLocation().getPath(), "/v1/applications/.*");
+        assertRegexMatches(response.getLocation().getPath(), "/applications/.*");
         // Object taskO = response.getEntity(Object.class);
         TaskSummary task = response.getEntity(TaskSummary.class);
         log.info("deployed, got " + task);
@@ -232,7 +232,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     public void testDeployApplicationYaml() throws Exception {
         String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { serviceType: "+BasicApplication.class.getCanonicalName()+" } ] }";
 
-        ClientResponse response = client().resource("/v1/applications")
+        ClientResponse response = client().resource("/applications")
                 .entity(yaml, "application/x-yaml")
                 .post(ClientResponse.class);
         assertTrue(response.getStatus()/100 == 2, "response is "+response);
@@ -250,7 +250,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
         String yaml = "{ name: simple-app-yaml, location: localhost, services: [ { type: " + BasicEntity.class.getName() + " } ] }";
 
-        ClientResponse response = client().resource("/v1/applications")
+        ClientResponse response = client().resource("/applications")
                 .entity(yaml, "application/x-yaml")
                 .post(ClientResponse.class);
         assertTrue(response.getStatus()/100 == 2, "response is "+response);
@@ -297,7 +297,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = "testDeployApplication")
     public void testListEntities() {
-        Set<EntitySummary> entities = client().resource("/v1/applications/simple-app/entities")
+        Set<EntitySummary> entities = client().resource("/applications/simple-app/entities")
                 .get(new GenericType<Set<EntitySummary>>() {});
 
         assertEquals(entities.size(), 2);
@@ -309,14 +309,15 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
         client().resource(entity.getLinks().get("self")).get(ClientResponse.class);
 
-        Set<EntitySummary> children = client().resource(entity.getLinks().get("children"))
+        String childrenUrl = removeV1Prefix(entity.getLinks().get("children").toString());
+        Set<EntitySummary> children = client().resource(childrenUrl)
                 .get(new GenericType<Set<EntitySummary>>() {});
         assertEquals(children.size(), 0);
     }
 
     @Test(dependsOnMethods = "testDeployApplication")
     public void testListApplications() {
-        Set<ApplicationSummary> applications = client().resource("/v1/applications")
+        Set<ApplicationSummary> applications = client().resource("/applications")
                 .get(new GenericType<Set<ApplicationSummary>>() { });
         log.info("Applications listed are: " + applications);
         for (ApplicationSummary app : applications) {
@@ -330,13 +331,13 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         Application app = Iterables.find(manager.getApplications(), EntityPredicates.displayNameEqualTo(simpleSpec.getName()));
         Lifecycle origState = app.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
         
-        ApplicationSummary summary = client().resource("/v1/applications/"+app.getId())
+        ApplicationSummary summary = client().resource("/applications/"+app.getId())
                 .get(ApplicationSummary.class);
         assertEquals(summary.getStatus(), Status.RUNNING);
 
         app.sensors().set(Attributes.SERVICE_STATE_ACTUAL, Lifecycle.ON_FIRE);
         try {
-            ApplicationSummary summary2 = client().resource("/v1/applications/"+app.getId())
+            ApplicationSummary summary2 = client().resource("/applications/"+app.getId())
                     .get(ApplicationSummary.class);
             log.info("Application: " + summary2);
             assertEquals(summary2.getStatus(), Status.ERROR);
@@ -349,7 +350,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test(dependsOnMethods = "testDeployApplication")
     public void testFetchApplicationsAndEntity() {
-        Collection apps = client().resource("/v1/applications/fetch").get(Collection.class);
+        Collection apps = client().resource("/applications/fetch").get(Collection.class);
         log.info("Applications fetched are: " + apps);
 
         Map app = null;
@@ -372,7 +373,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         Assert.assertNotNull(groupSummary);
 
         String itemIds = app.get("id") + "," + entitySummary.get("id") + "," + groupSummary.get("id");
-        Collection entities = client().resource("/v1/applications/fetch?items="+itemIds)
+        Collection entities = client().resource("/applications/fetch?items="+itemIds)
                 .get(Collection.class);
         log.info("Applications+Entities fetched are: " + entities);
 
@@ -408,7 +409,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = "testDeployApplication")
     public void testListSensors() {
-        Set<SensorSummary> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors")
+        Set<SensorSummary> sensors = client().resource("/applications/simple-app/entities/simple-ent/sensors")
                 .get(new GenericType<Set<SensorSummary>>() { });
         assertTrue(sensors.size() > 0);
         SensorSummary sample = Iterables.find(sensors, new Predicate<SensorSummary>() {
@@ -422,7 +423,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = "testDeployApplication")
     public void testListConfig() {
-        Set<EntityConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/config")
+        Set<EntityConfigSummary> config = client().resource("/applications/simple-app/entities/simple-ent/config")
                 .get(new GenericType<Set<EntityConfigSummary>>() { });
         assertTrue(config.size() > 0);
         System.out.println(("CONFIG: " + config));
@@ -430,7 +431,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = "testListConfig")
     public void testListConfig2() {
-        Set<EntityConfigSummary> config = client().resource("/v1/applications/simple-app/entities/simple-ent/config")
+        Set<EntityConfigSummary> config = client().resource("/applications/simple-app/entities/simple-ent/config")
                 .get(new GenericType<Set<EntityConfigSummary>>() {});
         assertTrue(config.size() > 0);
         System.out.println(("CONFIG: " + config));
@@ -438,7 +439,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = "testDeployApplication")
     public void testListEffectors() {
-        Set<EffectorSummary> effectors = client().resource("/v1/applications/simple-app/entities/simple-ent/effectors")
+        Set<EffectorSummary> effectors = client().resource("/applications/simple-app/entities/simple-ent/effectors")
                 .get(new GenericType<Set<EffectorSummary>>() {});
 
         assertTrue(effectors.size() > 0);
@@ -455,7 +456,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     @Test(dependsOnMethods = "testListSensors")
     public void testTriggerSampleEffector() throws InterruptedException, IOException {
         ClientResponse response = client()
-                .resource("/v1/applications/simple-app/entities/simple-ent/effectors/"+RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
+                .resource("/applications/simple-app/entities/simple-ent/effectors/"+RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
                 .type(MediaType.APPLICATION_JSON_TYPE)
                 .post(ClientResponse.class, ImmutableMap.of("param1", "foo", "param2", 4));
 
@@ -471,7 +472,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         data.add("param1", "foo");
         data.add("param2", "4");
         ClientResponse response = client()
-                .resource("/v1/applications/simple-app/entities/simple-ent/effectors/"+RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
+                .resource("/applications/simple-app/entities/simple-ent/effectors/"+RestMockSimpleEntity.SAMPLE_EFFECTOR.getName())
                 .type(MediaType.APPLICATION_FORM_URLENCODED_TYPE)
                 .post(ClientResponse.class, data);
 
@@ -483,7 +484,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = "testTriggerSampleEffector")
     public void testBatchSensorValues() {
-        WebResource resource = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors/current-state");
+        WebResource resource = client().resource("/applications/simple-app/entities/simple-ent/sensors/current-state");
         Map<String, Object> sensors = resource.get(new GenericType<Map<String, Object>>() {});
         assertTrue(sensors.size() > 0);
         assertEquals(sensors.get(RestMockSimpleEntity.SAMPLE_SENSOR.getName()), "foo4");
@@ -491,13 +492,14 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = "testBatchSensorValues")
     public void testReadEachSensor() {
-    Set<SensorSummary> sensors = client().resource("/v1/applications/simple-app/entities/simple-ent/sensors")
+    Set<SensorSummary> sensors = client().resource("/applications/simple-app/entities/simple-ent/sensors")
             .get(new GenericType<Set<SensorSummary>>() {});
 
         Map<String, String> readings = Maps.newHashMap();
         for (SensorSummary sensor : sensors) {
             try {
-                readings.put(sensor.getName(), client().resource(sensor.getLinks().get("self")).accept(MediaType.TEXT_PLAIN).get(String.class));
+                String sensorUrl = removeV1Prefix(sensor.getLinks().get("self").toString());
+                readings.put(sensor.getName(), client().resource(sensorUrl).accept(MediaType.TEXT_PLAIN).get(String.class));
             } catch (UniformInterfaceException uie) {
                 if (uie.getResponse().getStatus() == 204) { // no content
                     readings.put(sensor.getName(), null);
@@ -512,7 +514,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = "testTriggerSampleEffector")
     public void testPolicyWhichCapitalizes() {
-        String policiesEndpoint = "/v1/applications/simple-app/entities/simple-ent/policies";
+        String policiesEndpoint = "/applications/simple-app/entities/simple-ent/policies";
         Set<PolicySummary> policies = client().resource(policiesEndpoint).get(new GenericType<Set<PolicySummary>>(){});
         assertEquals(policies.size(), 0);
 
@@ -566,7 +568,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
             log.info("Supplying fake locations for localhost because could not be autodetected");
             ((AbstractLocation) l).setHostGeoInfo(new HostGeoInfo("localhost", "localhost", 50, 0));
         }
-        Map result = client().resource("/v1/locations/usage/LocatedLocations")
+        Map result = client().resource("/locations/usage/LocatedLocations")
                 .get(Map.class);
         log.info("LOCATIONS: " + result);
         Assert.assertEquals(result.size(), 1);
@@ -576,12 +578,12 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
 
     @Test(dependsOnMethods = {"testListEffectors", "testFetchApplicationsAndEntity", "testTriggerSampleEffector", "testListApplications","testReadEachSensor","testPolicyWhichCapitalizes","testLocatedLocation"})
     public void testDeleteApplication() throws TimeoutException, InterruptedException {
-        waitForPageFoundResponse("/v1/applications/simple-app", ApplicationSummary.class);
+        waitForPageFoundResponse("/applications/simple-app", ApplicationSummary.class);
         Collection<Application> apps = getManagementContext().getApplications();
         log.info("Deleting simple-app from " + apps);
         int size = apps.size();
 
-        ClientResponse response = client().resource("/v1/applications/simple-app")
+        ClientResponse response = client().resource("/applications/simple-app")
                 .delete(ClientResponse.class);
 
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
@@ -589,7 +591,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         assertTrue(task.getDescription().toLowerCase().contains("destroy"), task.getDescription());
         assertTrue(task.getDescription().toLowerCase().contains("simple-app"), task.getDescription());
 
-        waitForPageNotFoundResponse("/v1/applications/simple-app", ApplicationSummary.class);
+        waitForPageNotFoundResponse("/applications/simple-app", ApplicationSummary.class);
 
         log.info("App appears gone, apps are: " + getManagementContext().getApplications());
         // more logging above, for failure in the check below
@@ -607,7 +609,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         
         // Deploy the catalog item
         addTestCatalogItem(itemSymbolicName, "template", itemVersion, serviceType);
-        List<CatalogEntitySummary> itemSummaries = client().resource("/v1/catalog/applications")
+        List<CatalogEntitySummary> itemSummaries = client().resource("/catalog/applications")
                 .queryParam("fragment", itemSymbolicName).queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
         CatalogItemSummary itemSummary = Iterables.getOnlyElement(itemSummaries);
         String itemVersionedId = String.format("%s:%s", itemSummary.getSymbolicName(), itemSummary.getVersion());
@@ -616,53 +618,53 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
         try {
             // Create an app before disabling: this should work
             String yaml = "{ name: my-app, location: localhost, services: [ { type: \""+itemVersionedId+"\" } ] }";
-            ClientResponse response = client().resource("/v1/applications")
+            ClientResponse response = client().resource("/applications")
                     .entity(yaml, "application/x-yaml")
                     .post(ClientResponse.class);
             HttpAsserts.assertHealthyStatusCode(response.getStatus());
-            waitForPageFoundResponse("/v1/applications/my-app", ApplicationSummary.class);
+            waitForPageFoundResponse("/applications/my-app", ApplicationSummary.class);
     
             // Deprecate
             deprecateCatalogItem(itemSymbolicName, itemVersion, true);
 
             // Create an app when deprecated: this should work
             String yaml2 = "{ name: my-app2, location: localhost, services: [ { type: \""+itemVersionedId+"\" } ] }";
-            ClientResponse response2 = client().resource("/v1/applications")
+            ClientResponse response2 = client().resource("/applications")
                     .entity(yaml2, "application/x-yaml")
                     .post(ClientResponse.class);
             HttpAsserts.assertHealthyStatusCode(response2.getStatus());
-            waitForPageFoundResponse("/v1/applications/my-app2", ApplicationSummary.class);
+            waitForPageFoundResponse("/applications/my-app2", ApplicationSummary.class);
     
             // Disable
             disableCatalogItem(itemSymbolicName, itemVersion, true);
 
             // Now try creating an app; this should fail because app is disabled
             String yaml3 = "{ name: my-app3, location: localhost, services: [ { type: \""+itemVersionedId+"\" } ] }";
-            ClientResponse response3 = client().resource("/v1/applications")
+            ClientResponse response3 = client().resource("/applications")
                     .entity(yaml3, "application/x-yaml")
                     .post(ClientResponse.class);
             HttpAsserts.assertClientErrorStatusCode(response3.getStatus());
             assertTrue(response3.getEntity(String.class).contains("cannot be matched"));
-            waitForPageNotFoundResponse("/v1/applications/my-app3", ApplicationSummary.class);
+            waitForPageNotFoundResponse("/applications/my-app3", ApplicationSummary.class);
             
         } finally {
-            client().resource("/v1/applications/my-app")
+            client().resource("/applications/my-app")
                     .delete(ClientResponse.class);
 
-            client().resource("/v1/applications/my-app2")
+            client().resource("/applications/my-app2")
                     .delete(ClientResponse.class);
 
-            client().resource("/v1/applications/my-app3")
+            client().resource("/applications/my-app3")
                     .delete(ClientResponse.class);
 
-            client().resource("/v1/catalog/entities/"+itemVersionedId+"/"+itemVersion)
+            client().resource("/catalog/entities/"+itemVersionedId+"/"+itemVersion)
                     .delete(ClientResponse.class);
         }
     }
 
     private void deprecateCatalogItem(String symbolicName, String version, boolean deprecated) {
         String id = String.format("%s:%s", symbolicName, version);
-        ClientResponse response = client().resource(String.format("/v1/catalog/entities/%s/deprecated", id))
+        ClientResponse response = client().resource(String.format("/catalog/entities/%s/deprecated", id))
                     .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)
                     .post(ClientResponse.class, deprecated);
         assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
@@ -670,7 +672,7 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
     
     private void disableCatalogItem(String symbolicName, String version, boolean disabled) {
         String id = String.format("%s:%s", symbolicName, version);
-        ClientResponse response = client().resource(String.format("/v1/catalog/entities/%s/disabled", id))
+        ClientResponse response = client().resource(String.format("/catalog/entities/%s/disabled", id))
                 .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)
                 .post(ClientResponse.class, disabled);
         assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
@@ -689,6 +691,6 @@ public class ApplicationResourceTest extends BrooklynRestResourceTest {
                 "services:\n"+
                 "- type: " + service + "\n";
 
-        client().resource("/v1/catalog").post(yaml);
+        client().resource("/catalog").post(yaml);
     }
 }

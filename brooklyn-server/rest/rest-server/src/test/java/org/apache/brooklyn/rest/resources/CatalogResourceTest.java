@@ -98,12 +98,12 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "services:\n"+
                 "- type: org.apache.brooklyn.core.test.entity.TestEntity\n";
 
-        ClientResponse response = client().resource("/v1/catalog")
+        ClientResponse response = client().resource("/catalog")
                 .post(ClientResponse.class, yaml);
 
         assertEquals(response.getStatus(), Response.Status.CREATED.getStatusCode());
 
-        CatalogEntitySummary entityItem = client().resource("/v1/catalog/entities/"+symbolicName + "/" + TEST_VERSION)
+        CatalogEntitySummary entityItem = client().resource("/catalog/entities/"+symbolicName + "/" + TEST_VERSION)
                 .get(CatalogEntitySummary.class);
 
         Assert.assertNotNull(entityItem.getPlanYaml());
@@ -136,7 +136,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
             assertTrue(actualInterfaces.contains(expectedInterface.getName()));
         }
 
-        byte[] iconData = client().resource("/v1/catalog/icon/" + symbolicName + "/" + TEST_VERSION).get(byte[].class);
+        byte[] iconData = client().resource("/catalog/icon/" + symbolicName + "/" + TEST_VERSION).get(byte[].class);
         assertEquals(iconData.length, 43);
     }
 
@@ -160,7 +160,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "brooklyn.policies:\n"+
                 "- type: " + policyType;
 
-        CatalogPolicySummary entityItem = Iterables.getOnlyElement( client().resource("/v1/catalog")
+        CatalogPolicySummary entityItem = Iterables.getOnlyElement( client().resource("/catalog")
                 .post(new GenericType<Map<String,CatalogPolicySummary>>() {}, yaml).values() );
 
         Assert.assertNotNull(entityItem.getPlanYaml());
@@ -172,7 +172,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testListAllEntities() {
-        List<CatalogEntitySummary> entities = client().resource("/v1/catalog/entities")
+        List<CatalogEntitySummary> entities = client().resource("/catalog/entities")
                 .get(new GenericType<List<CatalogEntitySummary>>() {});
         assertTrue(entities.size() > 0);
     }
@@ -180,30 +180,30 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testListAllEntitiesAsItem() {
         // ensure things are happily downcasted and unknown properties ignored (e.g. sensors, effectors)
-        List<CatalogItemSummary> entities = client().resource("/v1/catalog/entities")
+        List<CatalogItemSummary> entities = client().resource("/catalog/entities")
                 .get(new GenericType<List<CatalogItemSummary>>() {});
         assertTrue(entities.size() > 0);
     }
 
     @Test
     public void testFilterListOfEntitiesByName() {
-        List<CatalogEntitySummary> entities = client().resource("/v1/catalog/entities")
+        List<CatalogEntitySummary> entities = client().resource("/catalog/entities")
                 .queryParam("fragment", "brOOkLynENTITYmiRrOr").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities.size(), 1);
 
         log.info("BrooklynEntityMirror-like entities are: " + entities);
 
-        List<CatalogEntitySummary> entities2 = client().resource("/v1/catalog/entities")
+        List<CatalogEntitySummary> entities2 = client().resource("/catalog/entities")
                 .queryParam("regex", "[Bb]ro+klynEntityMi[ro]+").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities2.size(), 1);
 
         assertEquals(entities, entities2);
     
-        List<CatalogEntitySummary> entities3 = client().resource("/v1/catalog/entities")
+        List<CatalogEntitySummary> entities3 = client().resource("/catalog/entities")
                 .queryParam("fragment", "bweqQzZ").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities3.size(), 0);
 
-        List<CatalogEntitySummary> entities4 = client().resource("/v1/catalog/entities")
+        List<CatalogEntitySummary> entities4 = client().resource("/catalog/entities")
                 .queryParam("regex", "bweq+z+").get(new GenericType<List<CatalogEntitySummary>>() {});
         assertEquals(entities4.size(), 0);
     }
@@ -214,7 +214,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     // not of the entity itself, so the test won't make sense any more.
     public void testGetCatalogEntityDetails() {
         CatalogEntitySummary details = client()
-                .resource(URI.create("/v1/catalog/entities/org.apache.brooklyn.entity.brooklynnode.BrooklynNode"))
+                .resource(URI.create("/catalog/entities/org.apache.brooklyn.entity.brooklynnode.BrooklynNode"))
                 .get(CatalogEntitySummary.class);
         assertTrue(details.toString().contains("download.url"), "expected more config, only got: "+details);
     }
@@ -225,7 +225,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     // not of the entity itself, so the test won't make sense any more.
     public void testGetCatalogEntityPlusVersionDetails() {
         CatalogEntitySummary details = client()
-                .resource(URI.create("/v1/catalog/entities/org.apache.brooklyn.entity.brooklynnode.BrooklynNode:0.0.0.SNAPSHOT"))
+                .resource(URI.create("/catalog/entities/org.apache.brooklyn.entity.brooklynnode.BrooklynNode:0.0.0.SNAPSHOT"))
                 .get(CatalogEntitySummary.class);
         assertTrue(details.toString().contains("download.url"), "expected more config, only got: "+details);
     }
@@ -234,7 +234,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
     public void testGetCatalogEntityIconDetails() throws IOException {
         String catalogItemId = "testGetCatalogEntityIconDetails";
         addTestCatalogItemBrooklynNodeAsEntity(catalogItemId);
-        ClientResponse response = client().resource(URI.create("/v1/catalog/icon/" + catalogItemId + "/" + TEST_VERSION))
+        ClientResponse response = client().resource(URI.create("/catalog/icon/" + catalogItemId + "/" + TEST_VERSION))
                 .get(ClientResponse.class);
         response.bufferEntity();
         Assert.assertEquals(response.getStatus(), 200);
@@ -260,7 +260,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "services:\n"+
                 "- type: " + service + "\n";
 
-        client().resource("/v1/catalog").post(yaml);
+        client().resource("/catalog").post(yaml);
     }
 
     private enum DeprecateStyle {
@@ -271,11 +271,11 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         String id = String.format("%s:%s", symbolicName, version);
         ClientResponse response;
         if (style == DeprecateStyle.NEW_STYLE) {
-            response = client().resource(String.format("/v1/catalog/entities/%s/deprecated", id))
+            response = client().resource(String.format("/catalog/entities/%s/deprecated", id))
                     .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)
                     .post(ClientResponse.class, deprecated);
         } else {
-            response = client().resource(String.format("/v1/catalog/entities/%s/deprecated/%s", id, deprecated))
+            response = client().resource(String.format("/catalog/entities/%s/deprecated/%s", id, deprecated))
                     .post(ClientResponse.class);
         }
         assertEquals(response.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
@@ -283,7 +283,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     private void disableCatalogItem(String symbolicName, String version, boolean disabled) {
         String id = String.format("%s:%s", symbolicName, version);
-        ClientResponse getDisableResponse = client().resource(String.format("/v1/catalog/entities/%s/disabled", id))
+        ClientResponse getDisableResponse = client().resource(String.format("/catalog/entities/%s/disabled", id))
                 .header(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON)
                 .post(ClientResponse.class, disabled);
         assertEquals(getDisableResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
@@ -291,7 +291,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testListPolicies() {
-        Set<CatalogPolicySummary> policies = client().resource("/v1/catalog/policies")
+        Set<CatalogPolicySummary> policies = client().resource("/catalog/policies")
                 .get(new GenericType<Set<CatalogPolicySummary>>() {});
 
         assertTrue(policies.size() > 0);
@@ -318,7 +318,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "- type: " + locationType);
 
         // Create location item
-        Map<String, CatalogLocationSummary> items = client().resource("/v1/catalog")
+        Map<String, CatalogLocationSummary> items = client().resource("/catalog")
                 .post(new GenericType<Map<String,CatalogLocationSummary>>() {}, yaml);
         CatalogLocationSummary locationItem = Iterables.getOnlyElement(items.values());
 
@@ -329,12 +329,12 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         assertEquals(locationItem.getVersion(), TEST_VERSION);
 
         // Retrieve location item
-        CatalogLocationSummary location = client().resource("/v1/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
+        CatalogLocationSummary location = client().resource("/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
                 .get(CatalogLocationSummary.class);
         assertEquals(location.getSymbolicName(), symbolicName);
 
         // Retrieve all locations
-        Set<CatalogLocationSummary> locations = client().resource("/v1/catalog/locations")
+        Set<CatalogLocationSummary> locations = client().resource("/catalog/locations")
                 .get(new GenericType<Set<CatalogLocationSummary>>() {});
         boolean found = false;
         for (CatalogLocationSummary contender : locations) {
@@ -346,11 +346,11 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         Assert.assertTrue(found, "contenders="+locations);
         
         // Delete
-        ClientResponse deleteResponse = client().resource("/v1/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
+        ClientResponse deleteResponse = client().resource("/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
                 .delete(ClientResponse.class);
         assertEquals(deleteResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
 
-        ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
+        ClientResponse getPostDeleteResponse = client().resource("/catalog/locations/"+symbolicName+"/"+TEST_VERSION)
                 .get(ClientResponse.class);
         assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
     }
@@ -370,15 +370,15 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "services:\n"+
                 "- type: org.apache.brooklyn.core.test.entity.TestEntity\n";
 
-        client().resource("/v1/catalog")
+        client().resource("/catalog")
                 .post(ClientResponse.class, yaml);
 
-        ClientResponse deleteResponse = client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
+        ClientResponse deleteResponse = client().resource("/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
                 .delete(ClientResponse.class);
 
         assertEquals(deleteResponse.getStatus(), Response.Status.NO_CONTENT.getStatusCode());
 
-        ClientResponse getPostDeleteResponse = client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
+        ClientResponse getPostDeleteResponse = client().resource("/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
                 .get(ClientResponse.class);
         assertEquals(getPostDeleteResponse.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
     }
@@ -388,7 +388,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         runSetDeprecated(DeprecateStyle.NEW_STYLE);
     }
     
-    // Uses old-style "/v1/catalog/{itemId}/deprecated/true", rather than the "true" in the request body.
+    // Uses old-style "/catalog/{itemId}/deprecated/true", rather than the "true" in the request body.
     @Test
     @Deprecated
     public void testSetDeprecatedLegacy() {
@@ -401,7 +401,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         addTestCatalogItem(symbolicName, "template", TEST_VERSION, serviceType);
         addTestCatalogItem(symbolicName, "template", "2.0", serviceType);
         try {
-            List<CatalogEntitySummary> applications = client().resource("/v1/catalog/applications")
+            List<CatalogEntitySummary> applications = client().resource("/catalog/applications")
                     .queryParam("fragment", symbolicName).queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
             assertEquals(applications.size(), 2);
             CatalogItemSummary summary0 = applications.get(0);
@@ -410,7 +410,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
             // Deprecate: that app should be excluded
             deprecateCatalogItem(style, summary0.getSymbolicName(), summary0.getVersion(), true);
     
-            List<CatalogEntitySummary> applicationsAfterDeprecation = client().resource("/v1/catalog/applications")
+            List<CatalogEntitySummary> applicationsAfterDeprecation = client().resource("/catalog/applications")
                     .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
     
             assertEquals(applicationsAfterDeprecation.size(), 1);
@@ -419,14 +419,14 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
             // Un-deprecate: that app should be included again
             deprecateCatalogItem(style, summary0.getSymbolicName(), summary0.getVersion(), false);
     
-            List<CatalogEntitySummary> applicationsAfterUnDeprecation = client().resource("/v1/catalog/applications")
+            List<CatalogEntitySummary> applicationsAfterUnDeprecation = client().resource("/catalog/applications")
                     .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
     
             assertEquals(applications, applicationsAfterUnDeprecation);
         } finally {
-            client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
+            client().resource("/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
                     .delete(ClientResponse.class);
-            client().resource("/v1/catalog/entities/"+symbolicName+"/"+"2.0")
+            client().resource("/catalog/entities/"+symbolicName+"/"+"2.0")
                     .delete(ClientResponse.class);
         }
     }
@@ -438,7 +438,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
         addTestCatalogItem(symbolicName, "template", TEST_VERSION, serviceType);
         addTestCatalogItem(symbolicName, "template", "2.0", serviceType);
         try {
-            List<CatalogEntitySummary> applications = client().resource("/v1/catalog/applications")
+            List<CatalogEntitySummary> applications = client().resource("/catalog/applications")
                     .queryParam("fragment", symbolicName).queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
             assertEquals(applications.size(), 2);
             CatalogItemSummary summary0 = applications.get(0);
@@ -447,7 +447,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
             // Disable: that app should be excluded
             disableCatalogItem(summary0.getSymbolicName(), summary0.getVersion(), true);
     
-            List<CatalogEntitySummary> applicationsAfterDisabled = client().resource("/v1/catalog/applications")
+            List<CatalogEntitySummary> applicationsAfterDisabled = client().resource("/catalog/applications")
                     .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
     
             assertEquals(applicationsAfterDisabled.size(), 1);
@@ -456,14 +456,14 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
             // Un-disable: that app should be included again
             disableCatalogItem(summary0.getSymbolicName(), summary0.getVersion(), false);
     
-            List<CatalogEntitySummary> applicationsAfterUnDisabled = client().resource("/v1/catalog/applications")
+            List<CatalogEntitySummary> applicationsAfterUnDisabled = client().resource("/catalog/applications")
                     .queryParam("fragment", "basicapp").queryParam("allVersions", "true").get(new GenericType<List<CatalogEntitySummary>>() {});
     
             assertEquals(applications, applicationsAfterUnDisabled);
         } finally {
-            client().resource("/v1/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
+            client().resource("/catalog/entities/"+symbolicName+"/"+TEST_VERSION)
                     .delete(ClientResponse.class);
-            client().resource("/v1/catalog/entities/"+symbolicName+"/"+"2.0")
+            client().resource("/catalog/entities/"+symbolicName+"/"+"2.0")
                     .delete(ClientResponse.class);
         }
     }
@@ -500,7 +500,7 @@ public class CatalogResourceTest extends BrooklynRestResourceTest {
                 "services:\n"+
                 "- type: org.apache.brooklyn.core.test.entity.TestEntity\n";
 
-        ClientResponse response = client().resource("/v1/catalog")
+        ClientResponse response = client().resource("/catalog")
                 .post(ClientResponse.class, yaml);
 
         assertEquals(response.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR_500);

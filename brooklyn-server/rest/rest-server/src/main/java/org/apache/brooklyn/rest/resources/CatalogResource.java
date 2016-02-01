@@ -424,8 +424,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     public void setDeprecatedLegacy(String itemId, boolean deprecated) {
-        log.warn("Use of deprecated \"/v1/catalog/entities/{itemId}/deprecated/{deprecated}\" for "+itemId
-                +"; use \"/v1/catalog/entities/{itemId}/deprecated\" with request body");
+        log.warn("Use of deprecated \"/catalog/entities/{itemId}/deprecated/{deprecated}\" for "+itemId
+                +"; use \"/catalog/entities/{itemId}/deprecated\" with request body");
         setDeprecated(itemId, deprecated);
     }
     

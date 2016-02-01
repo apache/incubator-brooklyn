@@ -51,13 +51,13 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
     
     @Test
     public void testGetVersion() throws Exception {
-        VersionSummary version = client().resource("/v1/server/version").get(VersionSummary.class);
+        VersionSummary version = client().resource("/server/version").get(VersionSummary.class);
         assertEquals(version.getVersion(), BrooklynVersion.get());
     }
 
     @Test
     public void testGetStatus() throws Exception {
-        String status = client().resource("/v1/server/status").get(String.class);
+        String status = client().resource("/server/status").get(String.class);
         assertEquals(status, "MASTER");
     }
 
@@ -65,7 +65,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
     public void testGetHighAvailability() throws Exception {
         // Note by default management context from super is started without HA enabled.
         // Therefore can only assert a minimal amount of stuff.
-        HighAvailabilitySummary summary = client().resource("/v1/server/highAvailability").get(HighAvailabilitySummary.class);
+        HighAvailabilitySummary summary = client().resource("/server/highAvailability").get(HighAvailabilitySummary.class);
         log.info("HA summary is: "+summary);
         
         String ownNodeId = getManagementContext().getManagementNodeId();
@@ -88,7 +88,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
             @Override public void reloaded() {
                 reloadCount.incrementAndGet();
             }});
-        client().resource("/v1/server/properties/reload").post();
+        client().resource("/server/properties/reload").post();
         assertEquals(reloadCount.get(), 1);
     }
 
@@ -96,7 +96,7 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
     void testGetConfig() throws Exception {
         ((ManagementContextInternal)getManagementContext()).getBrooklynProperties().put("foo.bar.baz", "quux");
         try {
-            assertEquals(client().resource("/v1/server/config/foo.bar.baz").get(String.class), "quux");
+            assertEquals(client().resource("/server/config/foo.bar.baz").get(String.class), "quux");
         } finally {
             ((ManagementContextInternal)getManagementContext()).getBrooklynProperties().remove("foo.bar.baz");
         }
@@ -114,8 +114,8 @@ public class ServerResourceTest extends BrooklynRestResourceTest {
             keyAlreadyPresent = true;
         }
         try {
-            response = client().resource("/v1/server/config/" + key).get(String.class);
-            Asserts.fail("Expected call to /v1/server/config/" + key + " to fail with status 404, instead server returned " + response);
+            response = client().resource("/server/config/" + key).get(String.class);
+            Asserts.fail("Expected call to /server/config/" + key + " to fail with status 404, instead server returned " + response);
         } catch (UniformInterfaceException e) {
             assertEquals(e.getResponse().getStatus(), 204);
         } finally {

@@ -67,7 +67,7 @@ public class SensorResourceTest extends BrooklynRestResourceTest {
             .locations(ImmutableSet.of("localhost"))
             .build();
 
-    static final String SENSORS_ENDPOINT = "/v1/applications/simple-app/entities/simple-ent/sensors";
+    static final String SENSORS_ENDPOINT = "/applications/simple-app/entities/simple-ent/sensors";
     static final String SENSOR_NAME = "amphibian.count";
     static final AttributeSensor<Integer> SENSOR = Sensors.newIntegerSensor(SENSOR_NAME);
 

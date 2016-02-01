@@ -26,6 +26,8 @@ import static org.testng.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import org.apache.brooklyn.rest.testing.BrooklynRestApiTest;
+import static org.apache.brooklyn.rest.testing.BrooklynRestApiTest.removeV1Prefixes;
 
 import org.codehaus.jackson.type.TypeReference;
 import org.testng.annotations.Test;
@@ -39,7 +41,7 @@ public class LocationSummaryTest {
 
     @Test
     public void testSerializeToJSON() throws IOException {
-        assertEquals(asJson(summary), jsonFixture("fixtures/location-summary.json"));
+        assertEquals(removeV1Prefixes(asJson(summary)), jsonFixture("fixtures/location-summary.json"));
     }
 
     @Test

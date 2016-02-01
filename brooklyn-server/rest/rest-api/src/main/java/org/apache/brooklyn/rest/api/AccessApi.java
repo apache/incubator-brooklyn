@@ -35,7 +35,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @Beta
-@Path("/v1/access")
+@Path("/access")
 @Api("Access Control")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

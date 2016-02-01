@@ -21,7 +21,7 @@ package org.apache.brooklyn.rest.resources;
 import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.rest.api.VersionApi;
 
-/** @deprecated since 0.7.0; use /v1/server/version */
+/** @deprecated since 0.7.0; use /server/version */
 @Deprecated
 public class VersionResource extends AbstractBrooklynRestResource implements VersionApi {
 

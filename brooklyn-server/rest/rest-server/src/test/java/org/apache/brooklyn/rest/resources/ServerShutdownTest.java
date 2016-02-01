@@ -88,7 +88,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
         MultivaluedMap<String, String> formData = new MultivaluedMapImpl();
         formData.add("requestTimeout", "0");
         formData.add("delayForHttpReturn", "0");
-        client().resource("/v1/server/shutdown").entity(formData).post();
+        client().resource("/server/shutdown").entity(formData).post();
 
         Asserts.succeedsEventually(new Runnable() {
             @Override
@@ -138,7 +138,7 @@ public class ServerShutdownTest extends BrooklynRestResourceTest {
                         formData.add("shutdownTimeout", "0");
                         formData.add("requestTimeout", "0");
                         formData.add("delayForHttpReturn", "0");
-                        client().resource("/v1/server/shutdown").entity(formData).post();
+                        client().resource("/server/shutdown").entity(formData).post();
                     } catch (Exception e) {
                         log.error("Shutdown request error", e);
                         shutdownError.set(e);

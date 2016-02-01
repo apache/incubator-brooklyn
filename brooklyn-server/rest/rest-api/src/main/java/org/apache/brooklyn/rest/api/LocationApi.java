@@ -42,7 +42,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 @SuppressWarnings("deprecation")
-@Path("/v1/locations")
+@Path("/locations")
 @Api("Locations")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
