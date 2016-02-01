@@ -1,0 +1,44 @@
+[
+    {
+        "spec":{
+            "name":"tesr",
+            "entities":[
+                {
+                    "name":"tomcat",
+                    "type":"org.apache.brooklyn.entity.webapp.tomcat.TomcatServer",
+                    "config":{ }
+                }
+            ],
+            "locations":[
+                "/locations/0"
+            ]
+        },
+        "status":"STARTING",
+        "links":{
+            "self":"/applications/tesr",
+            "entities":"fixtures/entity-summary-list.json"
+        }
+    },
+    {
+        "spec":{
+            "name":"myapp",
+            "entities":[
+                {
+                    "name":"Vanilla Java App",
+                    "type":"org.apache.brooklyn.entity.java.VanillaJavaApp",
+                    "config":{
+                        "initialSize":"1",
+                        "creationScriptUrl":"http://my.brooklyn.io/storage/foo.sql"
+                    }
+                }
+            ],
+            "locations":["/locations/1"]
+        },
+        "status":"STARTING",
+        "links":{
+            "self":"/applications/myapp",
+            "entities":"fixtures/entity-summary-list.json"
+        }
+    }
+]
+

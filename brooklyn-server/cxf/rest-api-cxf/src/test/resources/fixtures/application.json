@@ -1,0 +1,22 @@
+{
+    "id":"myapp_id",
+    "spec":{
+        "name":"myapp",
+        "entities":[
+            {
+                "name":"Vanilla Java App",
+                "type":"org.apache.brooklyn.entity.java.VanillaJavaApp",
+                "config":{
+                    "initialSize":"1",
+                    "creationScriptUrl":"http://my.brooklyn.io/storage/foo.sql"
+                }
+            }
+        ],
+        "locations":["/locations/1"]
+    },
+    "status":"STARTING",
+    "links":{
+        "self":"/applications/myapp",
+        "entities":"fixtures/entity-summary-list.json"
+    }
+}

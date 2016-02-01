@@ -1,0 +1,8 @@
+{
+    "name":"redis.uptime",
+    "type":"Integer",
+    "description":"Description",
+    "links":{
+        "self":"/applications/redis-app/entities/redis-ent/sensors/redis.uptime"
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "links": {},
+    "masterId": "kDp39gAv",
+    "nodes": {
+        "kDp39gAv": {
+            "nodeId": "kDp39gAv",
+            "nodeUri": "http://10.30.40.50:8081/",
+            "status": "MASTER",
+            "timestampUtc": 1400257858796
+        },
+        "lHNCTtZ4": {
+            "nodeId": "lHNCTtZ4",
+            "nodeUri": "http://10.30.40.60:8081/",
+            "status": "STANDBY",
+            "timestampUtc": 1400257858796
+        }
+    },
+    "ownId": "kDp39gAv"
+}

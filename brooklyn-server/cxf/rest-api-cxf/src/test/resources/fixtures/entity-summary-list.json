@@ -1,0 +1,14 @@
+[
+    {
+        "type":"org.apache.brooklyn.entity.webapp.tomcat.TomcatServer",
+        "links":{
+            "self":"/applications/tesr/entities/zQsqdXzi",
+            "catalog":"/catalog/entities/org.apache.brooklyn.entity.webapp.tomcat.TomcatServer",
+            "application":"/applications/tesr",
+            "children":"/applications/tesr/entities/zQsqdXzi/entities",
+            "effectors":"fixtures/effector-summary-list.json",
+            "sensors":"fixtures/sensor-summary-list.json",
+            "activities":"fixtures/task-summary-list.json"
+        }
+    }
+]
