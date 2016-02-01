@@ -21,6 +21,7 @@ package org.apache.brooklyn.core.entity;
 import java.util.Collection;
 import java.util.Map;
 
+import com.google.common.collect.Iterables;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.entity.Entity;
 import org.apache.brooklyn.api.location.Location;
@@ -223,11 +224,35 @@ public abstract class AbstractApplication extends AbstractEntity implements Star
                 //but that could be handled by the impl at management
                 //(keeping recently unmanaged things)  
                 //  however unmanaging must be done last, _after_ we stop children and set attributes 
+                Location machineProvisioningLocation = Iterables.getFirst(getLocations(), null);
                 getEntityManager().unmanage(this);
+                if (machineProvisioningLocation != null) {
+                    unmanageProvisionerIfNotUsed(machineProvisioningLocation);
+                }
             }
         }
 
         logApplicationLifecycle("Stopped");
+    }
+
+    //TODO Think of general approach for expunging location provisioners.
+    // I left a code which could be a possible general approach. However it needs tests.
+    protected boolean unmanageProvisionerIfNotUsed(/*MachineProvisioningLocation<MachineLocation>*/Location machineProvisioningLocation) {
+        if (machineProvisioningLocation.getChildren().isEmpty()) {
+            Entity parentEntity = getParent();
+            if (parentEntity == null) {
+                getManagementContext().getLocationManager().unmanage(machineProvisioningLocation);
+                return true;
+            } else {
+                /*
+                MachineProvisioningLocation<MachineLocation> parentProvisioner = parentEntity.getAttribute(SoftwareProcess.PROVISIONING_LOCATION);
+                if (!provisioner.equals(parentProvisioner) && !parentEntity.getLocations().contains(provisioner)) {
+                    getManagementContext().getLocationManager().unmanage(provisioner);
+                    return true;
+                }*/
+            }
+        }
+        return false;
     }
 
     protected void doStop() {
