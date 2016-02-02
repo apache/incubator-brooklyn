@@ -172,29 +172,14 @@
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
     </feature>
 
-    <feature name="brooklyn-rest-server" version="${project.version}" description="Brooklyn REST Server">
-        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-server/${project.version}</bundle>
+    <feature name="brooklyn-rest-resources" version="${project.version}" description="Brooklyn REST Resources (CXF)">
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-resources/${project.version}</bundle>
         <feature>brooklyn-core</feature>
         <feature>brooklyn-rest-api</feature>
         <feature>brooklyn-camp-brooklyn</feature>
         <feature>brooklyn-camp-base</feature>
 
-        <feature>war</feature>
-
-        <!--<feature>jersey</feature>-->
-        <bundle dependency="true">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
-        <bundle dependency="true">mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
-        <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
-    </feature>
-
-    <feature name="brooklyn-rest-resources-cxf" version="${project.version}" description="Brooklyn REST Resources (CXF)">
-        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-resources-cxf/${project.version}</bundle>
-        <feature>brooklyn-core</feature>
-        <feature>brooklyn-rest-api</feature>
-        <feature>brooklyn-camp-brooklyn</feature>
-        <feature>brooklyn-camp-base</feature>
-
-        <feature version="${cxf.version}">cxf-jaxrs</feature>
+        <feature>cxf-jaxrs</feature>
 
         <!-- should be deps of jax-rs-2.0 rest-api project -->
         <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>

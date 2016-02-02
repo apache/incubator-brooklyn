@@ -6,13 +6,9 @@
         <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
         <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
         <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
-        <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
-        <feature prerequisite="false" dependency="false">brooklyn-camp-brooklyn</feature>
         <feature prerequisite="false" dependency="false">brooklyn-camp-brooklyn</feature>
         <feature prerequisite="false" dependency="false">brooklyn-core</feature>
         <feature prerequisite="false" dependency="false">brooklyn-core</feature>
-        <feature prerequisite="false" dependency="false">brooklyn-core</feature>
-        <feature prerequisite="false" dependency="false">brooklyn-rest-api</feature>
         <feature prerequisite="false" dependency="false">brooklyn-rest-api</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
@@ -23,7 +19,6 @@
         <feature prerequisite="false" dependency="false">cxf-jaxrs</feature>
         <feature prerequisite="false" dependency="false">jetty</feature>
         <feature prerequisite="false" dependency="false">swagger-crippled</feature>
-        <feature prerequisite="false" dependency="false">war</feature>
         <feature prerequisite="false" dependency="false">war</feature>
         <bundle>mvn:ch.qos.logback/logback-classic/1.0.7</bundle>
         <bundle>mvn:ch.qos.logback/logback-core/1.0.7</bundle>
@@ -41,10 +36,7 @@
         <bundle>mvn:com.jayway.jsonpath/json-path/2.0.0</bundle>
         <bundle>mvn:com.sun.jersey.contribs/jersey-multipart/1.19</bundle>
         <bundle>mvn:com.sun.jersey/jersey-core/1.19</bundle>
-        <bundle>mvn:com.sun.jersey/jersey-core/1.19</bundle>
         <bundle>mvn:com.sun.jersey/jersey-server/1.19</bundle>
-        <bundle>mvn:com.sun.jersey/jersey-server/1.19</bundle>
-        <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
         <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
         <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
         <bundle>mvn:com.thoughtworks.xstream/xstream/1.4.7</bundle>
@@ -73,8 +65,7 @@
         <bundle>mvn:org.apache.brooklyn/brooklyn-jsgui/0.9.0-SNAPSHOT/war</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-logback-includes/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-rest-api/0.9.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-resources-cxf/0.9.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-server/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-resources/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-rt-osgi/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/0.9.0-SNAPSHOT</bundle>
