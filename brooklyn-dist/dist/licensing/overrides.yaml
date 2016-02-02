@@ -348,6 +348,16 @@
   notice: Copyright (c) Twitter, Inc. and other contributors (2013-2014)
   license: MIT
 
+# CodeMirror: used by jsGUI to provide edit in place for any textarea
+- id: codemirror.js
+  name: CodeMirror
+  version: "5.7.0"
+  files: codemirror*.{js,css}
+  url: https://codemirror.net/
+  organization: { name: "CodeMirror", url:"https://codemirror.net" }
+  notice: Copyright (c) Marijn Haverbeke (2015)
+  license: MIT
+
 # used for CLI to build catalog
 - id: marked.js
   version: 0.3.1
@@ -381,5 +391,3 @@
   url: https://github.com/carhartl/jquery-cookie
   notice: Copyright (c) 2013 Klaus Hartl
   license: MIT
-
-

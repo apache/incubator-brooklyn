@@ -21,14 +21,49 @@ under the License.
     <h2>Add to Catalog</h2>
     <br/>
 
-    <div data-toggle="buttons-radio">
-        <button class="btn btn-large show-context" data-context="yaml">YAML</button>
-        <button class="btn btn-large show-context" data-context="location">Location</button>
-    </div>
+    <ul id="buttons-radio">    
+        <li class="btn btn-large show-context" data-context="yaml">YAML</li>
+        <li class="btn btn-large show-context" data-context="location">Location</li>
+    </ul>
 
-    <hr/>
+    <div id="catalog-add-form" >
+        <!-- yaml tab -->
+        <form style="display:none" class="context">
+            <label for="new-blueprint">Enter blueprint:</label>
+            <textarea id='new-blueprint' name='yaml' rows='5' cols='15'></textarea>
+        
+            <button class='catalog-submit-button btn' data-loading-text='Saving...'>Submit</button>
+            <p class="catalog-save-error hide">
+                <span class="alert-error">
+                    <span class="catalog-error-message"><strong>Error</strong></span>
+                </span>
+            </p>
+        </form>
+        
+        <!-- location tab -->
+        <div id="context-location" class="context" style="display:none">
+            <form>
+                <label for="name" class="control-label">Name</label>
+                <input id="name" name="name" type="text" placeholder="e.g. My Cloud Region #3" class="input-xlarge">
 
-    <div id="catalog-add-form">
+                <label for="spec" class="control-label">Spec</label>
+                <input id="spec" name="spec" type="text" placeholder="e.g. jclouds:cloud:region" class="input-xlarge">
+
+                <h4>Configuration</h4>
+                <div id="new-location-config"></div>
+
+                <button class='catalog-submit-button btn' data-loading-text='Saving...'>Submit</button>
+
+                <p class="catalog-save-error hide">
+                    <span class="alert-error">
+                        <strong>Error:</strong><br/>
+                        <span class="catalog-error-message"></span>
+                    </span>
+                </p>
+            </form>
+        </div>
+
+
         <div class="context">Select the type you wish to add</div>
     </div>
 </div>

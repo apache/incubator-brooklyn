@@ -43,6 +43,8 @@
         "zeroclipboard":"js/libs/ZeroClipboard",
         "js-yaml":"js/libs/js-yaml",
 
+        "codemirror":"js/lib/codemirror",
+
         "model":"js/model",
         "view":"js/view",
         "router":"js/router"
@@ -60,6 +62,9 @@
         },
         "datatables-extensions":{
             deps:[ "jquery", "jquery-datatables" ]
+        },
+        "codemirror":{
+            exports:"CodeMirror"
         },
         "jquery-form": { deps: [ "jquery" ] },
         "jquery-slideto": { deps: [ "jquery" ] },

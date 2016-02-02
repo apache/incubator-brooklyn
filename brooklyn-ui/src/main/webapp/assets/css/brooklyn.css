@@ -25,7 +25,6 @@ BODY {
 textarea {
     white-space: pre;
     word-wrap: normal;
-    overflow-x: scroll;
 }
 
 /* HEADER  */
@@ -268,4 +267,16 @@ textarea {
     // used in viewutils.js fade/cancelFade methods (and should be only those!)
     content: 'Not Available';
     */
+}
+
+button.catalog-submit-button.btn {
+	margin-top: 10px;
+}
+
+.CodeMirror .cm-s-default {
+	height: 560px;
+}
+
+.CodeMirror .CodeMirror-placeholder {
+    color: #999;
 }

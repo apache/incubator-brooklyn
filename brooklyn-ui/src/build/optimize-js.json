@@ -16,3 +16,4 @@
     // Set to "none" to skip minification
     optimize: "uglify"
 })
+

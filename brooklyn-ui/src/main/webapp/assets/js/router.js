@@ -20,12 +20,12 @@ define([
     "brooklyn", "underscore", "jquery", "backbone",
     "model/application", "model/app-tree", "model/location", 
     "model/server-extended-status",
-    "view/home", "view/application-explorer", "view/catalog", "view/script-groovy",
+    "view/home", "view/editor", "view/application-explorer", "view/catalog", "view/script-groovy",
     "text!tpl/help/page.html","text!tpl/labs/page.html", "text!tpl/home/server-caution.html"
 ], function (Brooklyn, _, $, Backbone,
         Application, AppTree, Location, 
         serverStatus,
-        HomeView, ExplorerView, CatalogView, ScriptGroovyView,
+        HomeView, EditorView, ExplorerView, CatalogView, ScriptGroovyView,
         HelpHtml, LabsHtml, ServerCautionHtml) {
 
     var ServerCautionOverlay = Backbone.View.extend({
@@ -122,6 +122,8 @@ define([
     var Router = Backbone.Router.extend({
         routes:{
             'v1/home/*trail':'homePage',
+            'v1/editor/*trail':'editorPage',
+            'v1/editor':'editorPage',
             'v1/applications/:app/entities/*trail':'applicationsPage',
             'v1/applications/*trail':'applicationsPage',
             'v1/applications':'applicationsPage',
@@ -135,6 +137,7 @@ define([
         },
 
         showView: function(selector, view) {
+            console.log("showView");
             // close the previous view - does binding clean-up and avoids memory leaks
             if (this.currentView) {
                 this.currentView.close();
@@ -176,6 +179,16 @@ define([
                     }
                 }
             }, error: render});
+        },
+        editorPage: function (trail) {
+            console.log("editorPage");
+            var editorView = new EditorView({
+                collection: this.applications,
+                appRouter: this
+            });
+            this.showView("#application-content", editorView);
+            $(".nav1").removeClass("active");
+            $(".nav1_editor").addClass("active");
         },
         applicationsPage:function (app, trail, tab) {
             if (trail === undefined) trail = app
