@@ -140,7 +140,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     
     @Override
     @Deprecated
-    public void deleteEntity(String entityId) throws Exception {
+    public void deleteEntity_0_7_0(String entityId) throws Exception {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(entityId, "delete"))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
                 Entitlements.getEntitlementContext().user());
@@ -242,7 +242,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogEntitySummary getEntity(String entityId) {
+    public CatalogEntitySummary getEntity_0_7_0(String entityId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, entityId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -280,8 +280,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogEntitySummary getApplication(String applicationId) throws Exception {
-        return getEntity(applicationId);
+    public CatalogEntitySummary getApplication_0_7_0(String applicationId) throws Exception {
+        return getEntity_0_7_0(applicationId);
     }
 
     @Override
@@ -301,7 +301,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogPolicySummary getPolicy(String policyId) {
+    public CatalogPolicySummary getPolicy_0_7_0(String policyId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, policyId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -347,7 +347,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogLocationSummary getLocation(String locationId) {
+    public CatalogLocationSummary getLocation_0_7_0(String locationId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, locationId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -403,7 +403,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public Response getIcon(String itemId) {
+    public Response getIcon_0_7_0(String itemId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, itemId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());

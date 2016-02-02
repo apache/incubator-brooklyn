@@ -147,6 +147,12 @@
                             io.swagger.jaxrs.*,
                             !*
                         </Export-Package>
+                        <Import-Package>
+                            javax.ws.rs;version="[1.1,2.0]",
+                            javax.ws.rs.core;version="[1.1,2.0]",
+                            javax.ws.rs.ext;version="[1.1,2.0]",
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>

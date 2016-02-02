@@ -3,7 +3,6 @@
     <feature version="0.0.0">
         <feature prerequisite="false" dependency="false">brooklyn-api</feature>
         <feature prerequisite="false" dependency="false">brooklyn-api</feature>
-        <feature prerequisite="false" dependency="false">brooklyn-api</feature>
         <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
         <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
         <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
@@ -14,15 +13,13 @@
         <feature prerequisite="false" dependency="false">brooklyn-core</feature>
         <feature prerequisite="false" dependency="false">brooklyn-core</feature>
         <feature prerequisite="false" dependency="false">brooklyn-rest-api</feature>
-        <feature prerequisite="false" dependency="false">brooklyn-rest-api-cxf</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-rest-api</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-rest-swagger</feature>
         <feature prerequisite="false" dependency="false">brooklyn-utils-rest-swagger</feature>
-        <feature prerequisite="false" dependency="false">brooklyn-utils-rest-swagger</feature>
-        <feature prerequisite="false" dependency="false">cxf-jaxrs</feature>
         <feature prerequisite="false" dependency="false">cxf-jaxrs</feature>
         <feature prerequisite="false" dependency="false">jetty</feature>
         <feature prerequisite="false" dependency="false">swagger-crippled</feature>
@@ -57,14 +54,13 @@
         <bundle>mvn:commons-collections/commons-collections/3.2.1</bundle>
         <bundle>mvn:commons-io/commons-io/2.4</bundle>
         <bundle>mvn:commons-lang/commons-lang/2.4</bundle>
-        <bundle>mvn:commons-lang/commons-lang/2.4</bundle>
         <bundle>mvn:io.swagger/swagger-annotations/1.5.3</bundle>
         <bundle>mvn:io.swagger/swagger-models/1.5.3</bundle>
         <bundle>mvn:javax.servlet/javax.servlet-api/3.1.0</bundle>
         <bundle>mvn:javax.servlet/javax.servlet-api/3.1.0</bundle>
         <bundle>mvn:javax.servlet/javax.servlet-api/3.1.0</bundle>
         <bundle>mvn:javax.ws.rs/javax.ws.rs-api/2.0.1</bundle>
-        <bundle>mvn:javax.ws.rs/jsr311-api/1.1.1</bundle>
+        <bundle>mvn:javax.ws.rs/javax.ws.rs-api/2.0.1</bundle>
         <bundle>mvn:net.minidev/asm/1.0.2</bundle>
         <bundle>mvn:net.minidev/json-smart/2.1.1</bundle>
         <bundle>mvn:net.schmizz/sshj/0.8.1</bundle>
@@ -76,7 +72,6 @@
         <bundle>mvn:org.apache.brooklyn/brooklyn-core/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-jsgui/0.9.0-SNAPSHOT/war</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-logback-includes/0.9.0-SNAPSHOT</bundle>
-        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-api-cxf/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-rest-api/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-rest-resources-cxf/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-rest-server/0.9.0-SNAPSHOT</bundle>
@@ -86,7 +81,6 @@
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-groovy/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.brooklyn/brooklyn-utils-rest-swagger/0.9.0-SNAPSHOT</bundle>
         <bundle>mvn:org.apache.commons/commons-compress/1.4</bundle>
-        <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
         <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
         <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
         <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
@@ -102,19 +96,15 @@
         <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
-        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-jaxrs/1.9.13</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
         <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
-        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
         <bundle>mvn:org.freemarker/freemarker/2.3.22</bundle>
-        <bundle>mvn:org.jvnet.mimepull/mimepull/1.9.3</bundle>
         <bundle>mvn:org.jvnet.mimepull/mimepull/1.9.3</bundle>
         <bundle>mvn:org.slf4j/jul-to-slf4j/1.6.6</bundle>
         <bundle>mvn:org.yaml/snakeyaml/1.11</bundle>
         <bundle>wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle>
         <bundle>wrap:mvn:com.maxmind.geoip2/geoip2/0.8.1</bundle>
-        <bundle>wrap:mvn:javax.validation/validation-api/1.1.0.Final</bundle>
         <bundle>wrap:mvn:javax.validation/validation-api/1.1.0.Final</bundle>
         <bundle>wrap:mvn:javax.validation/validation-api/1.1.0.Final</bundle>
         <bundle>wrap:mvn:org.tukaani/xz/1.4</bundle>

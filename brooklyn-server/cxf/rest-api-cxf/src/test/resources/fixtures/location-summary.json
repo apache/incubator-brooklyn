@@ -1,8 +1,0 @@
-{
-    "id":"123",
-    "name":"localhost",
-    "spec":"localhost",
-    "links":{
-        "self":"/locations/123"
-    }
-}

@@ -1,9 +1,0 @@
-{
-    "name":"stop",
-    "returnType":"void",
-    "parameters":[],
-    "description":"Effector description",
-    "links":{
-        "self":"/applications/redis-app/entities/redis-ent/effectors/stop"
-    }
-}

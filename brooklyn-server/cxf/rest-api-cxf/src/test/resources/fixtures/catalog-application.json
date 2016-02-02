@@ -1,9 +1,0 @@
-{
-    "id": "com.example.app:1.1",
-    "type": "com.example.app",
-    "name": "My example application",
-    "version": "1.1",
-    "description": "My awesome example application, as a catalog item",
-    "planYaml": "services:\n- type: org.apache.brooklyn.entity.software.base.VanillaSoftwareProcess\n  launch.command: echo \"Launch application\"\n  checkRunning.command: echo \"Check running application\"",
-    "iconUrl": "http://my.example.com/icon.png"
-}

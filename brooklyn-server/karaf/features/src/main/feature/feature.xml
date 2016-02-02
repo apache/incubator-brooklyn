@@ -24,11 +24,6 @@
 
     <repository>mvn:org.apache.cxf.karaf/apache-cxf/${cxf.version}/xml/features</repository>
 
-    <!-- all these are about jax-rs, and will need some love later on -->
-    <!--<bundle dependency="true">mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jsr339-api-2.0/2.4.0</bundle>-->
-    <!--<bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>-->
-    <!--<bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax.ws.rs-api}</bundle>-->
-
     <!-- temporary feature until we migrate to swagger-1.5.4, which is properly bundled -->
     <feature name="swagger-crippled" version="${swagger.version}" description="Swagger Annotations+Core+JAXRS+Models">
         <bundle>mvn:io.swagger/swagger-annotations/${swagger.version}</bundle>
@@ -81,7 +76,7 @@
         <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
 
         <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
-        <bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>
+        <bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax-ws-rs-api.version}</bundle>
 
         <!-- TODO: version 1.1.0.Final has OSGi manifest; check if upgrade doesn't get rid of wrap -->
         <bundle dependency="true">wrap:mvn:javax.validation/validation-api/${validation-api.version}</bundle>
@@ -107,7 +102,6 @@
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
         <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
 
-        <!--<bundle dependency="true">mvn:javax.ws.rs/jsr311-api/${jsr311-api.version}</bundle>-->
         <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
     </feature>
 
@@ -193,42 +187,18 @@
         <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>
     </feature>
 
-    <feature name="brooklyn-rest-api-cxf" version="${project.version}" description="Brooklyn REST API">
-        <feature>brooklyn-utils-rest-swagger</feature>
-        <feature>brooklyn-api</feature>
-
-        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-api-cxf/${project.version}</bundle>
-
-        <bundle dependency="true">mvn:org.jvnet.mimepull/mimepull/1.9.3</bundle>
-        <bundle dependency="true">mvn:commons-lang/commons-lang/${commons-lang.version}</bundle>
-
-        <!-- TODO: version 1.1.0.Final has OSGi manifest; check if upgrade doesn't get rid of wrap -->
-        <bundle dependency="true">wrap:mvn:javax.validation/validation-api/${validation-api.version}</bundle>
-
-        <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
-        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-core-asl/${jackson.version}</bundle>
-        <bundle dependency="true">mvn:org.codehaus.jackson/jackson-mapper-asl/${jackson.version}</bundle>
-
-        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
-        <bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax-ws-rs-api.version}</bundle>
-
-        <!-- for the Multipart annotation - such a shame :( -->
-        <feature version="${cxf.version}">cxf-jaxrs</feature>
-   </feature>
-
     <feature name="brooklyn-rest-resources-cxf" version="${project.version}" description="Brooklyn REST Resources (CXF)">
         <bundle>mvn:org.apache.brooklyn/brooklyn-rest-resources-cxf/${project.version}</bundle>
         <feature>brooklyn-core</feature>
-        <feature>brooklyn-rest-api-cxf</feature>
+        <feature>brooklyn-rest-api</feature>
         <feature>brooklyn-camp-brooklyn</feature>
         <feature>brooklyn-camp-base</feature>
 
         <feature version="${cxf.version}">cxf-jaxrs</feature>
 
-        <!--<feature>jersey</feature>-->
-<!--        <bundle dependency="true">mvn:com.sun.jersey/jersey-server/${jersey.version}</bundle>
-        <bundle dependency="true">mvn:com.sun.jersey/jersey-core/${jersey.version}</bundle>
-        <bundle dependency="true">mvn:com.sun.jersey/jersey-servlet/${jersey.version}</bundle>-->
+        <!-- should be deps of jax-rs-2.0 rest-api project -->
+        <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
+        <bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax-ws-rs-api.version}</bundle>
     </feature>
 
     <feature name="brooklyn-jsgui" version="${project.version}" description="Brooklyn REST JavaScript Web GUI">

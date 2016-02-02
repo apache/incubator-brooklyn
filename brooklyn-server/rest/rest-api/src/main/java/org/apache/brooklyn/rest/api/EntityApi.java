@@ -50,7 +50,7 @@ public interface EntityApi {
     })
     public List<EntitySummary> list(
             @ApiParam(value = "Application ID or name", required = true)
-            @PathParam("application") final String application) ;
+            @PathParam("application") final String application);
 
     @GET
     @Path("/{entity}")
