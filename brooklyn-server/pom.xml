@@ -208,11 +208,11 @@
         <module>logging/logback-xml</module>
         <module>rest/rest-api</module>
         <module>rest/rest-client</module>
+	<module>rest/rest-resources</module>
         <module>rest/rest-server</module>
         <module>test-framework</module>
         <module>test-support</module>
 
-	<module>cxf/rest-resources-cxf</module>
 
         <module>utils/common</module>
         <module>utils/groovy</module>
