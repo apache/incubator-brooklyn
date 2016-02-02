@@ -66,8 +66,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <!-- TODO rename project to brooklyn-rest-resources -->
-            <artifactId>brooklyn-rest-resources-cxf</artifactId>
+            <artifactId>brooklyn-rest-resources</artifactId>
             <version>${project.version}</version>
         </dependency>
 
@@ -163,8 +162,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <!-- TODO rename project to brooklyn-rest-resources -->
-            <artifactId>brooklyn-rest-resources-cxf</artifactId>
+            <artifactId>brooklyn-rest-resources</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>

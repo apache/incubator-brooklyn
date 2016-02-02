@@ -116,7 +116,7 @@
             <bootFeature>wrap</bootFeature>
             <!-- brooklyn features -->
             <bootFeature>brooklyn-jsgui</bootFeature>
-	    <bootFeature>brooklyn-rest-resources-cxf</bootFeature>
+            <bootFeature>brooklyn-rest-resources</bootFeature>
           </bootFeatures>
         </configuration>
       </plugin>
