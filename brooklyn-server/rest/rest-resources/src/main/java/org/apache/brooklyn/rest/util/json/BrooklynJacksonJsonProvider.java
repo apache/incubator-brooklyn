@@ -41,8 +41,8 @@ import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// CXF only looks at the interfaces of this class to determine if the Provider is a MessageBodyWriter/Reader
 public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements
+        //CXF only looks at the interfaces of this class to determine if the Provider is a MessageBodyWriter/Reader
         MessageBodyWriter<Object>, MessageBodyReader<Object> {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynJacksonJsonProvider.class);
@@ -100,18 +100,24 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements
      * returns null if a shared instance cannot be created.
      */
     public static ObjectMapper findSharedObjectMapper(ServletContext servletContext, ManagementContext mgmt) {
-        // CXF always injects a ThreadLocalServletContext that may return null later on
-        // so we need to test against the contained value instead of the injected one
-        // this allows this provider to be used outside the REST server, such as the CXF client during tests
         checkNotNull(mgmt, "mgmt");
         if (servletContext != null) {
             synchronized (servletContext) {
-                ObjectMapper mapper = (ObjectMapper) servletContext.getAttribute(BROOKLYN_REST_OBJECT_MAPPER);
-                if (mapper != null) return mapper;
+                boolean isServletContextNull = false;
+                try {
+                    ObjectMapper mapper = (ObjectMapper) servletContext.getAttribute(BROOKLYN_REST_OBJECT_MAPPER);
+                    if (mapper != null) return mapper;
+                } catch (NullPointerException e) {
+                    // CXF always injects a ThreadLocalServletContext that may return null later on.
+                    // Ignore this case so this provider can be used outside the REST server, such as the CXF client during tests.
+                    isServletContextNull = true;
+                }
 
-                mapper = newPrivateObjectMapper(mgmt);
-                servletContext.setAttribute(BROOKLYN_REST_OBJECT_MAPPER, mapper);
-                return mapper;
+                if (!isServletContextNull) {
+                    ObjectMapper mapper = newPrivateObjectMapper(mgmt);
+                    servletContext.setAttribute(BROOKLYN_REST_OBJECT_MAPPER, mapper);
+                    return mapper;
+                }
             }
         }
         synchronized (mgmt) {

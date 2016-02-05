@@ -166,7 +166,8 @@ public class WebResourceUtils {
      * @return A new {@link UriBuilder} that targets the specified REST resource.
      */
     public static UriBuilder resourceUriBuilder(UriBuilder baseUriBuilder, Class<?> resourceClass) {
-        return baseUriBuilder.clone().path(resourceClass);
+        return UriBuilder.fromPath(baseUriBuilder.build().getPath())
+                .path(resourceClass);
     }
 
     /**
@@ -177,7 +178,7 @@ public class WebResourceUtils {
      * @return A new {@link UriBuilder} that targets the specified service of the REST resource.
      */
     public static UriBuilder serviceUriBuilder(UriBuilder baseUriBuilder, Class<?> resourceClass, String method) {
-        return baseUriBuilder.clone().path(resourceClass).path(resourceClass, method);
+        return resourceUriBuilder(baseUriBuilder, resourceClass).path(resourceClass, method);
     }
 
 }

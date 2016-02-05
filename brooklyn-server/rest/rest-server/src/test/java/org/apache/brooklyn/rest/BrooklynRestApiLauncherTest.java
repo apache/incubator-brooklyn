@@ -56,7 +56,7 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
         int code = Asserts.succeedsEventually(new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
-                int code = HttpTool.getHttpStatusCode(rootUrl+"/catalog/entities");
+                int code = HttpTool.getHttpStatusCode(rootUrl+"/v1/catalog/entities");
                 if (code == HttpStatus.SC_FORBIDDEN) {
                     throw new RuntimeException("Retry request");
                 } else {
@@ -65,7 +65,7 @@ public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixt
             }
         });
         HttpAsserts.assertHealthyStatusCode(code);
-        HttpAsserts.assertContentContainsText(rootUrl+"/catalog/entities", BrooklynNode.class.getSimpleName());
+        HttpAsserts.assertContentContainsText(rootUrl+"/v1/catalog/entities", BrooklynNode.class.getSimpleName());
     }
     
 }

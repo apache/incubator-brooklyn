@@ -18,10 +18,12 @@
  */
 package org.apache.brooklyn.rest;
 
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.Application;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 
 public class BrooklynRestApp extends Application {
@@ -39,6 +41,13 @@ public class BrooklynRestApp extends Application {
     @Override
     public Set<Object> getSingletons() {
         return singletons;
+    }
+
+    @Override
+    public Map<String, Object> getProperties() {
+        return ImmutableMap.<String, Object>of(
+                // Makes sure that all exceptions are handled by our custom DefaultExceptionMapper
+                "default.wae.mapper.least.specific", Boolean.TRUE);
     }
 
 }

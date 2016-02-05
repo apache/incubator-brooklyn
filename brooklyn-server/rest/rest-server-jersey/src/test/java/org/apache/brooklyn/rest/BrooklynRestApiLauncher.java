@@ -228,6 +228,12 @@ public class BrooklynRestApiLauncher {
         WebAppContext context = new WebAppContext();
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, mgmt);
         context.setContextPath("/");
+        installWar(context);
+        installAsServletFilter(context, this.filters);
+        return context;
+    }
+
+    private void installWar(WebAppContext context) {
         // here we run with the JS GUI, for convenience, if we can find it, else set up an empty dir
         // TODO pretty sure there is an option to monitor this dir and load changes to static content
         // NOTE: When running Brooklyn from an IDE (i.e. by launching BrooklynJavascriptGuiLauncher.main())
@@ -239,8 +245,6 @@ public class BrooklynRestApiLauncher {
         context.setWar(this.deployJsgui && findJsguiWebappInSource().isPresent()
                        ? findJsguiWebappInSource().get()
                        : createTempWebDirWithIndexHtml("Brooklyn REST API <p> (gui not available)"));
-        installAsServletFilter(context, this.filters);
-        return context;
     }
 
     private ContextHandler servletContextHandler(ManagementContext managementContext) {
@@ -250,12 +254,14 @@ public class BrooklynRestApiLauncher {
         config.getSingletons().add(new ManagementContextProvider(mgmt));
         addShutdownListener(config, mgmt);
 
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+
+        WebAppContext context = new WebAppContext();
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
         ServletHolder servletHolder = new ServletHolder(new ServletContainer(config));
         context.addServlet(servletHolder, "/v1/*");
         context.setContextPath("/");
 
+        installWar(context);
         installBrooklynFilters(context, this.filters);
         return context;
     }
