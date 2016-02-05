@@ -76,6 +76,7 @@ public interface SensorApi {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Could not find application, entity or sensor")
     })
+    @Produces({MediaType.APPLICATION_JSON})
     public Object get(
             @ApiParam(value = "Application ID or name", required = true)
             @PathParam("application") final String application,
@@ -93,7 +94,7 @@ public interface SensorApi {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Could not find application, entity or sensor")
     })
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN + ";qs=0.9")
     public String getPlain(
             @ApiParam(value = "Application ID or name", required = true)
             @PathParam("application") final String application,

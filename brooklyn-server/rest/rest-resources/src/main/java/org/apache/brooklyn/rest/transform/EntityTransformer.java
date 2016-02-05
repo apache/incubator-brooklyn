@@ -98,7 +98,7 @@ public class EntityTransformer {
                 String version = CatalogUtils.getVersionFromVersionedId(versionedId);
                 catalogUri = serviceUriBuilder(ub, CatalogApi.class, "getEntity").build(symbolicName, version);
             } else {
-                catalogUri = serviceUriBuilder(ub, CatalogApi.class, "getEntity").build(versionedId);
+                catalogUri = serviceUriBuilder(ub, CatalogApi.class, "getEntity_0_7_0").build(versionedId);
             }
             lb.put("catalog", catalogUri);
         }

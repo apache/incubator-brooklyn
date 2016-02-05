@@ -58,7 +58,7 @@ public class BrooklynJavascriptGuiLauncherTest {
         BrooklynRestApiLauncherTestFixture.enableAnyoneLogin(server);
         checkEventuallyHealthy();
         checkUrlContains("/index.html", "Brooklyn");
-        checkUrlContains("/catalog/entities", "BrooklynNode");
+        checkUrlContains("/v1/catalog/entities", "BrooklynNode");
     }
 
     protected void checkUrlContains(final String path, final String text) {

@@ -38,6 +38,7 @@ import org.apache.brooklyn.util.core.flags.ClassCoercionException;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.exceptions.UserFacingException;
 import org.apache.brooklyn.util.text.Strings;
+import org.eclipse.jetty.io.EofException;
 
 @Provider
 public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
@@ -55,6 +56,15 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
      */
     @Override
     public Response toResponse(Throwable throwable1) {
+        // EofException is thrown when the connection is reset,
+        // for example when refreshing the browser window.
+        if (throwable1 instanceof EofException) {
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("REST request running as {} threw: {}", Entitlements.getEntitlementContext(), 
+                        Exceptions.collapse(throwable1));
+            }
+            return null;
+        }
 
         LOG.debug("REST request running as {} threw: {}", Entitlements.getEntitlementContext(), 
             Exceptions.collapse(throwable1));

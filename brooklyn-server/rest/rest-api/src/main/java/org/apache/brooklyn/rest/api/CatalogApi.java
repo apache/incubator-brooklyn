@@ -252,7 +252,7 @@ public interface CatalogApi {
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Entity not found")
     })
-    public CatalogItemSummary getPolicy(
+    public CatalogPolicySummary getPolicy(
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
         @PathParam("policyId") String policyId,
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
