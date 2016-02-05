@@ -34,7 +34,11 @@ public class ShutdownHandlerProvider implements ContextResolver<ShutdownHandler>
 
     @Override
     public ShutdownHandler getContext(Class<?> type) {
-        return shutdownHandler;
+        if (type == ShutdownHandler.class) {
+            return shutdownHandler;
+        } else {
+            return null;
+        }
     }
 
 }

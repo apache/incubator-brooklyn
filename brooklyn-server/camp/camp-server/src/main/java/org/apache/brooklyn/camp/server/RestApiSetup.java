@@ -20,7 +20,6 @@ package org.apache.brooklyn.camp.server;
 
 import org.apache.brooklyn.rest.apidoc.RestApiResourceScanner;
 import org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet;
-import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -28,7 +27,7 @@ import io.swagger.config.ScannerFactory;
 
 public class RestApiSetup {
 
-    public static ContextHandler installRestServlet(ServletContextHandler context) {
+    public static void install(ServletContextHandler context) {
         ScannerFactory.setScanner(new RestApiResourceScanner());
 
         CampRestApp app = new CampRestApp();
@@ -37,7 +36,6 @@ public class RestApiSetup {
         final ServletHolder servletHolder = new ServletHolder(servlet);
 
         context.addServlet(servletHolder, "/*");
-        return context;
     }
 
 }

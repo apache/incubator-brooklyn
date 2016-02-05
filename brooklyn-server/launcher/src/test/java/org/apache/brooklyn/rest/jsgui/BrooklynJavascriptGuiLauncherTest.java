@@ -84,7 +84,7 @@ public class BrooklynJavascriptGuiLauncherTest {
      *
      * @todo Remove after transition to karaf launcher.
      */
-    private static ManagementContext getManagementContext(ContextHandler jettyServerHandler) {
+    public static ManagementContext getManagementContext(ContextHandler jettyServerHandler) {
         ManagementContext managementContext = Compat.getInstance().getManagementContext();
         if (managementContext == null && jettyServerHandler != null) {
             managementContext = (ManagementContext) jettyServerHandler.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);

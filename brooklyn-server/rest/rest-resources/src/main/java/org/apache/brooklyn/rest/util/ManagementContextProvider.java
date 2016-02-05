@@ -35,7 +35,11 @@ public class ManagementContextProvider implements ContextResolver<ManagementCont
 
     @Override
     public ManagementContext getContext(Class<?> type) {
-        return mgmt;
+        if (type == ManagementContext.class) {
+            return mgmt;
+        } else {
+            return null;
+        }
     }
 
 }

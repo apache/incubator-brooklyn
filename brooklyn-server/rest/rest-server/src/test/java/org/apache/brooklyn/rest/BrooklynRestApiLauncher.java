@@ -215,7 +215,7 @@ public class BrooklynRestApiLauncher {
         context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
 
         installWar(context);
-        RestApiSetup.installRestServlet(context,
+        RestApiSetup.installRest(context,
                 new ManagementContextProvider(managementContext),
                 new ShutdownHandlerProvider(shutdownListener));
         RestApiSetup.installServletFilters(context, this.filters);

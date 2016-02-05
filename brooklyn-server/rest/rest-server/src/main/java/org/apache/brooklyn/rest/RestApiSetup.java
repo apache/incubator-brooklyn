@@ -26,8 +26,10 @@ import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
 
 import org.apache.brooklyn.rest.apidoc.RestApiResourceScanner;
+import org.apache.cxf.BusFactory;
 import org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet;
-import org.eclipse.jetty.server.handler.ContextHandler;
+import org.apache.cxf.transport.common.gzip.GZIPInInterceptor;
+import org.apache.cxf.transport.common.gzip.GZIPOutInterceptor;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
@@ -35,19 +37,21 @@ import io.swagger.config.ScannerFactory;
 
 public class RestApiSetup {
 
-    public static ContextHandler installRestServlet(ServletContextHandler context, Object... providers) {
+    public static void installRest(ServletContextHandler context, Object... providers) {
         ScannerFactory.setScanner(new RestApiResourceScanner());
 
         BrooklynRestApp app = new BrooklynRestApp();
         for (Object o : providers) {
             app.singleton(o);
         }
-
         CXFNonSpringJaxrsServlet servlet = new CXFNonSpringJaxrsServlet(app);
+        servlet.setBus(BusFactory.newInstance().createBus());
+        servlet.getBus().getInInterceptors().add(new GZIPInInterceptor());
+        servlet.getBus().getInFaultInterceptors().add(new GZIPInInterceptor());
+        servlet.getBus().getOutInterceptors().add(new GZIPOutInterceptor());
         final ServletHolder servletHolder = new ServletHolder(servlet);
 
         context.addServlet(servletHolder, "/v1/*");
-        return context;
     }
 
     @SafeVarargs

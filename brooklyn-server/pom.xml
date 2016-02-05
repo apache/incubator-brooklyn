@@ -208,8 +208,9 @@
         <module>logging/logback-xml</module>
         <module>rest/rest-api</module>
         <module>rest/rest-client</module>
-	<module>rest/rest-resources</module>
+        <module>rest/rest-resources</module>
         <module>rest/rest-server</module>
+        <module>rest/rest-server-jersey</module>
         <module>test-framework</module>
         <module>test-support</module>
 

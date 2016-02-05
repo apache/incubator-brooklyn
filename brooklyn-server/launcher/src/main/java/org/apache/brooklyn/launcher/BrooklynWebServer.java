@@ -74,8 +74,6 @@ import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.web.ContextHandlerCollectionHotSwappable;
-import org.apache.cxf.transport.common.gzip.GZIPInInterceptor;
-import org.apache.cxf.transport.common.gzip.GZIPOutInterceptor;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -394,9 +392,6 @@ public class BrooklynWebServer {
             webapp.setTempDirectory(Os.mkdirs(new File(webappTempDir, newTimestampedDirName("war", 8))));
         }
         rootContext = deployWithREST("/", rootWar);
-        // deploy rest resources at /v1 only for the rest resources
-        // TODO: we don't actually need a war
-        deployWithREST("/v1", rootWar);
 
         server.setHandler(handlers);
         server.start();
@@ -414,13 +409,11 @@ public class BrooklynWebServer {
         WebAppContext context = deploy(contextPath, warUrl);
         context.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
 
-        RestApiSetup.installRestServlet(context,
+        RestApiSetup.installRest(context,
                 new ManagementContextProvider(managementContext),
                 new ShutdownHandlerProvider(shutdownHandler),
                 new NoCacheFilter(),
-                new HaHotCheckResourceFilter(),
-                new GZIPInInterceptor(),
-                new GZIPOutInterceptor());
+                new HaHotCheckResourceFilter());
         RestApiSetup.installServletFilters(context,
                 RequestTaggingFilter.class,
                 LoggingFilter.class,
