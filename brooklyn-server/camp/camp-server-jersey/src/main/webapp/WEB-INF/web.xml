@@ -1,0 +1,142 @@
+<!DOCTYPE web-app PUBLIC
+        "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+        "http://java.sun.com/dtd/web-app_2_3.dtd" >
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+    
+     http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<web-app>
+    <display-name>Brooklyn REST API v1</display-name>
+
+    <filter>
+        <filter-name>Brooklyn Request Tagging Filter</filter-name>
+        <filter-class>org.apache.brooklyn.rest.filter.RequestTaggingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn Request Tagging Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>Brooklyn Properties Authentication Filter</filter-name>
+        <filter-class>org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn Properties Authentication Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>Brooklyn Logging Filter</filter-name>
+        <filter-class>org.apache.brooklyn.rest.filter.LoggingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn Logging Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>Brooklyn HA Master Filter</filter-name>
+        <filter-class>org.apache.brooklyn.rest.filter.HaMasterCheckFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn HA Master Filter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <filter>
+        <filter-name>Brooklyn Swagger Bootstrap</filter-name>
+        <filter-class>org.apache.brooklyn.rest.filter.SwaggerFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn Swagger Bootstrap</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <!-- Brooklyn REST is usually run as a filter so static content can be placed in a webapp
+         to which this is added; to run as a servlet directly, replace the filter tags 
+         below (after the comment) with the servlet tags (commented out immediately below),
+         (and do the same for the matching tags at the bottom)
+        <servlet>
+            <servlet-name>Brooklyn REST API v1 Servlet</servlet-name>
+            <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+     -->
+    <filter>
+        <filter-name>Brooklyn REST API v1 Filter</filter-name>
+        <filter-class>com.sun.jersey.spi.container.servlet.ServletContainer</filter-class>
+
+        <!-- load our REST API jersey resources explicitly 
+            (the package scanner will only pick up classes with @Path annotations - doesn't look at implemented interfaces) 
+        -->
+        <init-param>
+            <param-name>com.sun.jersey.config.property.resourceConfigClass</param-name>
+            <param-value>com.sun.jersey.api.core.ClassNamesResourceConfig</param-value>
+        </init-param>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.classnames</param-name>
+            <param-value>
+                io.swagger.jaxrs.listing.SwaggerSerializers;
+                org.apache.brooklyn.rest.util.FormMapProvider;
+                org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+                org.apache.brooklyn.rest.resources.ActivityResource;
+                org.apache.brooklyn.rest.resources.ApidocResource;
+                org.apache.brooklyn.rest.resources.ApplicationResource;
+                org.apache.brooklyn.rest.resources.CatalogResource;
+                org.apache.brooklyn.rest.resources.EffectorResource;
+                org.apache.brooklyn.rest.resources.EntityConfigResource;
+                org.apache.brooklyn.rest.resources.EntityResource;
+                org.apache.brooklyn.rest.resources.LocationResource;
+                org.apache.brooklyn.rest.resources.PolicyConfigResource;
+                org.apache.brooklyn.rest.resources.PolicyResource;
+                org.apache.brooklyn.rest.resources.ScriptResource;
+                org.apache.brooklyn.rest.resources.SensorResource;
+                org.apache.brooklyn.rest.resources.UsageResource;
+                org.apache.brooklyn.rest.resources.VersionResource;
+            </param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+            <param-value>true</param-value>
+        </init-param>
+
+        <!-- no need for WADL. of course you can turn it back on it you want. -->
+        <init-param>
+            <param-name>com.sun.jersey.config.feature.DisableWADL</param-name>
+            <param-value>true</param-value>
+        </init-param>
+
+        <init-param>
+            <param-name>com.sun.jersey.config.feature.FilterContextPath</param-name>
+            <param-value>/v1</param-value>
+        </init-param>
+
+    </filter>
+    <filter-mapping>
+        <filter-name>Brooklyn REST API v1 Filter</filter-name>
+        <url-pattern>/v1/*</url-pattern>
+    </filter-mapping>
+    <!-- Brooklyn REST as a filter above; replace above 5 lines with those commented out below,
+         to run it as a servlet (see note above) 
+            <load-on-startup>1</load-on-startup>
+        </servlet>
+        <servlet-mapping>
+            <servlet-name>Brooklyn REST API v1 Servlet</servlet-name>
+            <url-pattern>/*</url-pattern>
+        </servlet-mapping>
+    -->
+</web-app>

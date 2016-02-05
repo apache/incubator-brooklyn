@@ -52,6 +52,10 @@
       http://stackoverflow.com/questions/5309379/how-to-keep-maven-profiles-which-are-activebydefault-active-even-if-another-prof )
     -->
 
+    <properties>
+        <rest-server-classifier />
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -1846,6 +1850,18 @@
               </pluginManagement>
             </build>
         </profile>
-    </profiles>
 
+        <profile>
+            <id>jersey-deps</id>
+            <activation>
+              <property>
+                  <name>jax-rs</name>
+                  <value>jersey</value>
+              </property>
+            </activation>
+            <properties>
+              <rest-server-classifier>-jersey</rest-server-classifier>
+            </properties>
+        </profile>
+    </profiles>
 </project>

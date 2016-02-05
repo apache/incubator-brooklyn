@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-rest-server</artifactId>
+            <artifactId>brooklyn-rest-server${rest-server-classifier}</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -63,7 +63,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn.camp</groupId>
-            <artifactId>camp-server</artifactId>
+            <artifactId>camp-server${rest-server-classifier}</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -132,10 +132,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
@@ -186,14 +182,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-rest-resources</artifactId>
-            <version>${project.version}</version>
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-rest-server</artifactId>
+            <artifactId>brooklyn-rest-server${rest-server-classifier}</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>

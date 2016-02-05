@@ -121,7 +121,7 @@ public class CampServer {
     public static class CampServerUtils {
 
         public static void installAsServletFilter(ServletContextHandler context) {
-            RestApiSetup.installRestServlet(context);
+            RestApiSetup.install(context);
         }
 
         public static Server startServer(ContextHandler context, String summary) {

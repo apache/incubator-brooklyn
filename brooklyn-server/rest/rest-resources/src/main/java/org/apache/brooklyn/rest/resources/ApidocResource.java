@@ -21,9 +21,8 @@ package org.apache.brooklyn.rest.resources;
 
 import javax.ws.rs.Path;
 
-import org.apache.brooklyn.rest.apidoc.ApiListingResource;
-
 import io.swagger.annotations.Api;
+import io.swagger.jaxrs.listing.ApiListingResource;
 
 /**
  * @author Ciprian Ciubotariu <cheepeero@gmx.net>
