@@ -96,7 +96,7 @@ public class CatalogResetTest extends BrooklynRestResourceTest {
 
     private void reset(String bundleLocation, boolean ignoreErrors) throws Exception {
         String xml = ResourceUtils.create(this).getResourceAsString("classpath://reset-catalog.xml");
-        client().resource("/v1/catalog/reset")
+        client().resource("/catalog/reset")
             .queryParam("ignoreErrors", Boolean.toString(ignoreErrors))
             .header("Content-type", MediaType.APPLICATION_XML)
             .post(xml.replace("${bundle-location}", bundleLocation));

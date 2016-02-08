@@ -95,14 +95,14 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Calendar afterPostStart = Time.newCalendarFromMillisSinceEpochUtc(postStart.getTime().getTime()+1);
         
         // Check that app's usage is returned
-        ClientResponse response = client().resource("/v1/usage/applications").get(ClientResponse.class);
+        ClientResponse response = client().resource("/usage/applications").get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         Iterable<UsageStatistics> usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         UsageStatistics usage = Iterables.getOnlyElement(usages);
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
 
         // check app ignored if endCalendar before app started
-        response = client().resource("/v1/usage/applications?start="+0+"&end="+(preStart.getTime().getTime()-1)).get(ClientResponse.class);
+        response = client().resource("/usage/applications?start="+0+"&end="+(preStart.getTime().getTime()-1)).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
@@ -118,7 +118,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         // The comparison does use the milliseconds passed in the REST call though.
         // The rounding down result should be the same as roundDown(afterPostStart), because that is the time-window
         // we asked for.
-        response = client().resource("/v1/usage/applications?start="+afterPostStart.getTime().getTime()+"&end="+afterPostStart.getTime().getTime()).get(ClientResponse.class);
+        response = client().resource("/usage/applications?start="+afterPostStart.getTime().getTime()+"&end="+afterPostStart.getTime().getTime()).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         usage = Iterables.getOnlyElement(usages);
@@ -131,7 +131,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Calendar postDelete = new GregorianCalendar();
 
         // Deleted app still returned, if in time range
-        response = client().resource("/v1/usage/applications").get(ClientResponse.class);
+        response = client().resource("/usage/applications").get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         usage = Iterables.getOnlyElement(usages);
@@ -141,7 +141,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         long afterPostDelete = postDelete.getTime().getTime()+1;
         waitForFuture(afterPostDelete);
         
-        response = client().resource("/v1/usage/applications?start=" + afterPostDelete).get(ClientResponse.class);
+        response = client().resource("/usage/applications?start=" + afterPostDelete).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
@@ -149,7 +149,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testGetApplicationUsagesForNonExistantApp() throws Exception {
-        ClientResponse response = client().resource("/v1/usage/applications/wrongid").get(ClientResponse.class);
+        ClientResponse response = client().resource("/usage/applications/wrongid").get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
     }
     
@@ -161,36 +161,36 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Calendar postStart = new GregorianCalendar();
         
         // Normal request returns all
-        ClientResponse response = client().resource("/v1/usage/applications/" + appId).get(ClientResponse.class);
+        ClientResponse response = client().resource("/usage/applications/" + appId).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         UsageStatistics usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
 
         // Time-constrained requests
-        response = client().resource("/v1/usage/applications/" + appId + "?start=1970-01-01T00:00:00-0100").get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId + "?start=1970-01-01T00:00:00-0100").get(ClientResponse.class);
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
         
-        response = client().resource("/v1/usage/applications/" + appId + "?start=9999-01-01T00:00:00+0100").get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId + "?start=9999-01-01T00:00:00+0100").get(ClientResponse.class);
         assertTrue(response.getStatus() >= 400, "end defaults to NOW, so future start should fail, instead got code "+response.getStatus());
         
-        response = client().resource("/v1/usage/applications/" + appId + "?start=9999-01-01T00:00:00%2B0100&end=9999-01-02T00:00:00%2B0100").get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId + "?start=9999-01-01T00:00:00%2B0100&end=9999-01-02T00:00:00%2B0100").get(ClientResponse.class);
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty());
 
-        response = client().resource("/v1/usage/applications/" + appId + "?end=9999-01-01T00:00:00+0100").get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId + "?end=9999-01-01T00:00:00+0100").get(ClientResponse.class);
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
 
-        response = client().resource("/v1/usage/applications/" + appId + "?start=9999-01-01T00:00:00+0100&end=9999-02-01T00:00:00+0100").get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId + "?start=9999-01-01T00:00:00+0100&end=9999-02-01T00:00:00+0100").get(ClientResponse.class);
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty());
 
-        response = client().resource("/v1/usage/applications/" + appId + "?start=1970-01-01T00:00:00-0100&end=9999-01-01T00:00:00+0100").get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId + "?start=1970-01-01T00:00:00-0100&end=9999-01-01T00:00:00+0100").get(ClientResponse.class);
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING), roundDown(preStart), postStart);
         
-        response = client().resource("/v1/usage/applications/" + appId + "?end=1970-01-01T00:00:00-0100").get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId + "?end=1970-01-01T00:00:00-0100").get(ClientResponse.class);
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty());
         
@@ -200,7 +200,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Calendar postDelete = new GregorianCalendar();
 
         // Deleted app still returned, if in time range
-        response = client().resource("/v1/usage/applications/" + appId).get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertAppUsage(usage, appId, ImmutableList.of(Status.STARTING, Status.RUNNING, Status.DESTROYED), roundDown(preStart), postDelete);
@@ -209,7 +209,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         // Deleted app not returned if terminated before time range begins
         long afterPostDelete = postDelete.getTime().getTime()+1;
         waitForFuture(afterPostDelete);
-        response = client().resource("/v1/usage/applications/" + appId +"?start=" + afterPostDelete).get(ClientResponse.class);
+        response = client().resource("/usage/applications/" + appId +"?start=" + afterPostDelete).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
         assertTrue(usage.getStatistics().isEmpty(), "usages="+usage);
@@ -217,20 +217,20 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
 
     @Test
     public void testGetMachineUsagesForNonExistantMachine() throws Exception {
-        ClientResponse response = client().resource("/v1/usage/machines/wrongid").get(ClientResponse.class);
+        ClientResponse response = client().resource("/usage/machines/wrongid").get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
     }
 
     @Test
     public void testGetMachineUsagesInitiallyEmpty() throws Exception {
         // All machines: empty
-        ClientResponse response = client().resource("/v1/usage/machines").get(ClientResponse.class);
+        ClientResponse response = client().resource("/usage/machines").get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         Iterable<UsageStatistics> usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages));
         
         // Specific machine that does not exist: get 404
-        response = client().resource("/v1/usage/machines/machineIdThatDoesNotExist").get(ClientResponse.class);
+        response = client().resource("/usage/machines/machineIdThatDoesNotExist").get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
     }
 
@@ -246,14 +246,14 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Location machine = Iterables.getOnlyElement(entity.getLocations());
 
         // All machines
-        ClientResponse response = client().resource("/v1/usage/machines").get(ClientResponse.class);
+        ClientResponse response = client().resource("/usage/machines").get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         Iterable<UsageStatistics> usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         UsageStatistics usage = Iterables.getOnlyElement(usages);
         assertMachineUsage(usage, app.getId(), machine.getId(), ImmutableList.of(Status.ACCEPTED), roundDown(preStart), postStart);
 
         // Specific machine
-        response = client().resource("/v1/usage/machines/"+machine.getId()).get(ClientResponse.class);
+        response = client().resource("/usage/machines/"+machine.getId()).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usage = response.getEntity(new GenericType<UsageStatistics>() {});
@@ -273,7 +273,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Location machine = Iterables.getOnlyElement(entity.getLocations());
 
         // For running machine
-        ClientResponse response = client().resource("/v1/usage/machines?application="+appId).get(ClientResponse.class);
+        ClientResponse response = client().resource("/usage/machines?application="+appId).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         Iterable<UsageStatistics> usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         UsageStatistics usage = Iterables.getOnlyElement(usages);
@@ -285,7 +285,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         Calendar postStop = new GregorianCalendar();
         
         // Deleted machine still returned, if in time range
-        response = client().resource("/v1/usage/machines?application=" + appId).get(ClientResponse.class);
+        response = client().resource("/usage/machines?application=" + appId).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         usage = Iterables.getOnlyElement(usages);
@@ -295,7 +295,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
         // Terminated machines ignored if terminated since start-time
         long futureTime = postStop.getTime().getTime()+1;
         waitForFuture(futureTime);
-        response = client().resource("/v1/usage/applications?start=" + futureTime).get(ClientResponse.class);
+        response = client().resource("/usage/applications?start=" + futureTime).get(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
         usages = response.getEntity(new GenericType<List<UsageStatistics>>() {});
         assertTrue(Iterables.isEmpty(usages), "usages="+usages);
@@ -310,7 +310,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
     }
     
     private void deleteApp(String appId) {
-        ClientResponse response = client().resource("/v1/applications/"+appId)
+        ClientResponse response = client().resource("/applications/"+appId)
                 .delete(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.ACCEPTED.getStatusCode());
         TaskSummary deletionTask = response.getEntity(TaskSummary.class);
@@ -337,7 +337,7 @@ public class UsageResourceTest extends BrooklynRestResourceTest {
                 .repeat(new Runnable() { public void run() {}})
                 .until(new Callable<Boolean>() {
                     @Override public Boolean call() {
-                        ClientResponse response = client().resource("/v1/activities/"+taskId).get(ClientResponse.class);
+                        ClientResponse response = client().resource("/activities/"+taskId).get(ClientResponse.class);
                         if (response.getStatus() == Response.Status.NOT_FOUND.getStatusCode()) {
                             return true;
                         }

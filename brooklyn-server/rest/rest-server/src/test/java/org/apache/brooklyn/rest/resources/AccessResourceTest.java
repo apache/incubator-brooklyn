@@ -42,27 +42,27 @@ public class AccessResourceTest extends BrooklynRestResourceTest {
     @Test
     public void testGetAndSetAccessControl() throws Exception {
         // Default is everything allowed
-        AccessSummary summary = client().resource("/v1/access").get(AccessSummary.class);
+        AccessSummary summary = client().resource("/access").get(AccessSummary.class);
         assertTrue(summary.isLocationProvisioningAllowed());
 
         // Forbid location provisioning
         ClientResponse response = client().resource(
-                "/v1/access/locationProvisioningAllowed")
+                "/access/locationProvisioningAllowed")
                 .queryParam("allowed", "false")
                 .post(ClientResponse.class);
         assertEquals(response.getStatus(), Response.Status.OK.getStatusCode());
 
-        AccessSummary summary2 = client().resource("/v1/access").get(AccessSummary.class);
+        AccessSummary summary2 = client().resource("/access").get(AccessSummary.class);
         assertFalse(summary2.isLocationProvisioningAllowed());
         
         // Allow location provisioning
         ClientResponse response2 = client().resource(
-                "/v1/access/locationProvisioningAllowed")
+                "/access/locationProvisioningAllowed")
                 .queryParam("allowed", "true")
                 .post(ClientResponse.class);
         assertEquals(response2.getStatus(), Response.Status.OK.getStatusCode());
 
-        AccessSummary summary3 = client().resource("/v1/access").get(AccessSummary.class);
+        AccessSummary summary3 = client().resource("/access").get(AccessSummary.class);
         assertTrue(summary3.isLocationProvisioningAllowed());
     }
 }

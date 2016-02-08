@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.rest.resources;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -28,7 +27,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -66,7 +64,6 @@ import org.apache.brooklyn.util.collections.MutableSet;
 import org.apache.brooklyn.util.core.ResourceUtils;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.guava.Maybe;
-import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.StringPredicates;
 import org.apache.brooklyn.util.text.Strings;
 import org.slf4j.Logger;
@@ -79,7 +76,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-import com.sun.jersey.core.header.FormDataContentDisposition;
 
 @HaHotStateRequired
 public class CatalogResource extends AbstractBrooklynRestResource implements CatalogApi {
@@ -94,11 +90,11 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
         }
     };
 
-    @Override
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response createFromMultipart(InputStream uploadedInputStream, FormDataContentDisposition fileDetail) {
-      return create(Streams.readFullyString(uploadedInputStream));
-    }
+//    @Override
+//    @Consumes(MediaType.MULTIPART_FORM_DATA)
+//    public Response createFromMultipart(InputStream uploadedInputStream, FormDataContentDisposition fileDetail) {
+//      return create(Streams.readFullyString(uploadedInputStream));
+//    }
 
     static Set<String> missingIcons = MutableSet.of();
     
@@ -149,7 +145,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
     
     @Override
     @Deprecated
-    public void deleteEntity(String entityId) throws Exception {
+    public void deleteEntity_0_7_0(String entityId) throws Exception {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.MODIFY_CATALOG_ITEM, StringAndArgument.of(entityId, "delete"))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to modify catalog",
                 Entitlements.getEntitlementContext().user());
@@ -251,7 +247,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogEntitySummary getEntity(String entityId) {
+    public CatalogEntitySummary getEntity_0_7_0(String entityId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, entityId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -289,8 +285,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogEntitySummary getApplication(String applicationId) throws Exception {
-        return getEntity(applicationId);
+    public CatalogEntitySummary getApplication_0_7_0(String applicationId) throws Exception {
+        return getEntity_0_7_0(applicationId);
     }
 
     @Override
@@ -310,7 +306,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogPolicySummary getPolicy(String policyId) {
+    public CatalogPolicySummary getPolicy_0_7_0(String policyId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, policyId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -356,7 +352,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public CatalogLocationSummary getLocation(String locationId) {
+    public CatalogLocationSummary getLocation_0_7_0(String locationId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, locationId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -412,7 +408,7 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     @Deprecated
-    public Response getIcon(String itemId) {
+    public Response getIcon_0_7_0(String itemId) {
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_CATALOG_ITEM, itemId)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to see catalog entry",
                 Entitlements.getEntitlementContext().user());
@@ -433,8 +429,8 @@ public class CatalogResource extends AbstractBrooklynRestResource implements Cat
 
     @Override
     public void setDeprecatedLegacy(String itemId, boolean deprecated) {
-        log.warn("Use of deprecated \"/v1/catalog/entities/{itemId}/deprecated/{deprecated}\" for "+itemId
-                +"; use \"/v1/catalog/entities/{itemId}/deprecated\" with request body");
+        log.warn("Use of deprecated \"/catalog/entities/{itemId}/deprecated/{deprecated}\" for "+itemId
+                +"; use \"/catalog/entities/{itemId}/deprecated\" with request body");
         setDeprecated(itemId, deprecated);
     }
     

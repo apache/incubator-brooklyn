@@ -39,7 +39,7 @@ public class EffectorSummaryTest {
             ImmutableSet.<EffectorSummary.ParameterSummary<?>>of(),
             "Effector description",
             ImmutableMap.of(
-                    "self", URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")));
+                    "self", URI.create("/applications/redis-app/entities/redis-ent/effectors/stop")));
 
     @Test
     public void testSerializeToJSON() throws IOException {

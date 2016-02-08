@@ -98,6 +98,7 @@
         <jackson.version>1.9.13</jackson.version>  <!-- codehaus jackson, used by brooklyn rest server -->
         <fasterxml.jackson.version>2.4.5</fasterxml.jackson.version>  <!-- more recent jackson, but not compatible with old annotations! -->
         <jersey.version>1.19</jersey.version>
+	<cxf.version>3.1.4</cxf.version>
         <httpclient.version>4.4.1</httpclient.version>
         <commons-lang3.version>3.3.2</commons-lang3.version>
         <groovy.version>2.3.7</groovy.version> <!-- Version supported by https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-2.9.1-Release-Notes -->
@@ -134,6 +135,7 @@
         <jopt.version>4.3</jopt.version>
         <concurrentlinkedhashmap.version>1.0_jdk5</concurrentlinkedhashmap.version>
         <javax-servlet.version>3.1.0</javax-servlet.version>
+        <javax-servlet-jsp.version>2.0</javax-servlet-jsp.version>
         <jcommander.version>1.27</jcommander.version>
         <xml-apis.version>1.0.b2</xml-apis.version>
         <jsr250-api.version>1.0</jsr250-api.version>
@@ -144,6 +146,7 @@
         <commons-lang.version>2.4</commons-lang.version>
         <hamcrest.version>1.1</hamcrest.version>
         <jsr311-api.version>1.1.1</jsr311-api.version>
+        <javax-ws-rs-api.version>2.0.1</javax-ws-rs-api.version>
         <maxmind.version>0.8.1</maxmind.version>
         <jna.version>4.0.0</jna.version>
         <winrm4j.version>0.2.0</winrm4j.version>
@@ -208,6 +211,8 @@
         <module>test-framework</module>
         <module>test-support</module>
 
+	<module>cxf/rest-resources-cxf</module>
+
         <module>utils/common</module>
         <module>utils/groovy</module>
         <module>utils/jmx/jmxmp-ssl-agent</module>
@@ -219,6 +224,9 @@
 
         <module>utils/rt-osgi</module>
         <module>utils/rt-felix</module>
+
+	<module>cxf/rest-api-cxf</module>
+	<module>cxf/rest-server-cxf</module>
 
     </modules>
 

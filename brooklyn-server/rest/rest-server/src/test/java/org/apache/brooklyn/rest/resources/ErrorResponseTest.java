@@ -55,7 +55,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
         ClientResponse aResponse = clientDeploy(simpleSpec);
         waitForApplicationToBeRunning(aResponse.getLocation());
 
-        String policiesEndpoint = "/v1/applications/simple-app/entities/simple-ent/policies";
+        String policiesEndpoint = "/applications/simple-app/entities/simple-ent/policies";
 
         ClientResponse pResponse = client().resource(policiesEndpoint)
                 .queryParam("type", RestMockSimplePolicy.class.getCanonicalName())
@@ -68,7 +68,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
 
     @Test
     public void testResponseToBadRequest() {
-        String resource = "/v1/applications/simple-app/entities/simple-ent/policies/"+policyId+"/config/"
+        String resource = "/applications/simple-app/entities/simple-ent/policies/"+policyId+"/config/"
                 + RestMockSimplePolicy.INTEGER_CONFIG.getName() + "/set";
 
         ClientResponse response = client().resource(resource)
@@ -84,7 +84,7 @@ public class ErrorResponseTest extends BrooklynRestResourceTest {
 
     @Test
     public void testResponseToWrongMethod() {
-        String resource = "/v1/applications/simple-app/entities/simple-ent/policies/"+policyId+"/config/"
+        String resource = "/applications/simple-app/entities/simple-ent/policies/"+policyId+"/config/"
                 + RestMockSimplePolicy.INTEGER_CONFIG.getName() + "/set";
 
         // Should be POST, not GET

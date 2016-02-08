@@ -429,17 +429,11 @@ public class BrooklynWebServer {
             WebAppContext webapp = deploy(pathSpec, warUrl);
             webapp.setTempDirectory(Os.mkdirs(new File(webappTempDir, newTimestampedDirName("war", 8))));
         }
-        rootContext = deploy("/", rootWar);
-        rootContext.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
-
-        rootContext.addFilter(RequestTaggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        if (securityFilterClazz != null) {
-            rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
-        }
-        rootContext.addFilter(LoggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        rootContext.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        rootContext.addFilter(SwaggerFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        installAsServletFilter(rootContext);
+        // deploy GUI war at /
+        deploy("/", rootWar);
+        // deploy rest resources at /v1 only for the rest resources
+        // TODO: we don't actually need a war
+        deployRESTResources("/v1", rootWar);
 
         server.setHandler(handlers);
         server.start();
@@ -451,6 +445,20 @@ public class BrooklynWebServer {
         }
 
         log.info("Started Brooklyn console at "+getRootUrl()+", running " + rootWar + (allWars!=null && !allWars.isEmpty() ? " and " + wars.values() : ""));
+    }
+
+    private void deployRESTResources(String contextPath, String rootWarUrl) {
+        rootContext = deploy(contextPath, rootWarUrl);
+        rootContext.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
+
+        rootContext.addFilter(RequestTaggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+        if (securityFilterClazz != null) {
+            rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
+        }
+        rootContext.addFilter(LoggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+        rootContext.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+        rootContext.addFilter(SwaggerFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+        installAsServletFilter(rootContext);
     }
 
     private SslContextFactory createContextFactory() throws KeyStoreException {

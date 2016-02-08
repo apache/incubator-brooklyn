@@ -114,7 +114,7 @@ System.err.println("TEAR DOWN");
 
     private int getAppResponseCode() {
         HttpToolResponse response = HttpTool.httpGet(
-                client, URI.create(getBaseUri(server) + "/v1/applications/" + appId),
+                client, URI.create(getBaseUri(server) + "/applications/" + appId),
                 ImmutableMap.<String,String>of());
         return response.getResponseCode();
     }

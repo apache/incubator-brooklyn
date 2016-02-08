@@ -71,7 +71,7 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         try {
             // dropwizard TestClient won't skip deserialization of trivial things like string and byte[] and inputstream
             // if we pass in an object it serializes, so we have to serialize things ourselves
-            return client().resource("/v1/applications")
+            return client().resource("/applications")
                 .entity(new ObjectMapper().writer().writeValueAsBytes(spec), MediaType.APPLICATION_OCTET_STREAM)
                 .post(ClientResponse.class);
         } catch (Exception e) {

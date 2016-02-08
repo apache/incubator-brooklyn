@@ -90,7 +90,7 @@
                             <resources>
                                 <resource>
                                     <!-- copy rest-api fixtures from brooklyn-server submodule repo -->
-                                    <directory>${project.basedir}/../brooklyn-server/rest/rest-api/src/test/resources/fixtures</directory>
+                                    <directory>${project.basedir}/src/test/fixtures</directory>
                                 </resource>
                             </resources>
                         </configuration>

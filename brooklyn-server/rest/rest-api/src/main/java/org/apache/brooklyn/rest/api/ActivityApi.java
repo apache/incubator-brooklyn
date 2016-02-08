@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiResponses;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-@Path("/v1/activities")
+@Path("/activities")
 @Api("Activities")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

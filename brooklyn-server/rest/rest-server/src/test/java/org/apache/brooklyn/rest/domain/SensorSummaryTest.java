@@ -41,12 +41,15 @@ import org.apache.brooklyn.core.test.entity.TestEntity;
 import org.apache.brooklyn.rest.transform.SensorTransformer;
 
 import com.google.common.collect.ImmutableMap;
+import java.net.URISyntaxException;
+import org.apache.brooklyn.rest.testing.BrooklynRestApiTest;
+import static org.apache.brooklyn.rest.testing.BrooklynRestApiTest.removeV1Prefix;
 
 public class SensorSummaryTest {
 
     private SensorSummary sensorSummary = new SensorSummary("redis.uptime", "Integer",
             "Description", ImmutableMap.of(
-            "self", URI.create("/v1/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
+            "self", URI.create("/applications/redis-app/entities/redis-ent/sensors/redis.uptime")));
 
     private TestApplication app;
     private TestEntity entity;
@@ -75,12 +78,12 @@ public class SensorSummaryTest {
     }
 
     @Test
-    public void testEscapesUriForSensorName() throws IOException {
+    public void testEscapesUriForSensorName() throws IOException, URISyntaxException {
         Sensor<String> sensor = Sensors.newStringSensor("name with space");
         SensorSummary summary = SensorTransformer.sensorSummary(entity, sensor);
-        URI selfUri = summary.getLinks().get("self");
+        URI selfUri = new URI(removeV1Prefix(summary.getLinks().get("self").toString()));
 
-        String expectedUri = "/v1/applications/" + entity.getApplicationId() + "/entities/" + entity.getId() + "/sensors/" + "name%20with%20space";
+        String expectedUri = "/applications/" + entity.getApplicationId() + "/entities/" + entity.getId() + "/sensors/" + "name%20with%20space";
 
         assertEquals(selfUri, URI.create(expectedUri));
     }
