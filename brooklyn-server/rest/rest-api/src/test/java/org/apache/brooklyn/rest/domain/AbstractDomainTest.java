@@ -18,38 +18,27 @@
  */
 package org.apache.brooklyn.rest.domain;
 
+import java.io.IOException;
+
+import org.testng.annotations.Test;
+
 import static org.apache.brooklyn.rest.util.RestApiTestUtils.asJson;
 import static org.apache.brooklyn.rest.util.RestApiTestUtils.fromJson;
 import static org.apache.brooklyn.rest.util.RestApiTestUtils.jsonFixture;
 import static org.testng.Assert.assertEquals;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+public abstract class AbstractDomainTest {
 
-import org.codehaus.jackson.type.TypeReference;
-import org.testng.annotations.Test;
-
-import org.apache.brooklyn.rest.transform.LocationTransformer;
-
-public class LocationSummaryTest {
-
-    @SuppressWarnings("deprecation")
-    final LocationSummary summary = LocationTransformer.newInstance("123", LocationSpec.localhost());
+    protected abstract String getPath();
+    protected abstract Object getDomainObject();
 
     @Test
     public void testSerializeToJSON() throws IOException {
-        assertEquals(asJson(summary), jsonFixture("fixtures/location-summary.json"));
+        assertEquals(asJson(getDomainObject()), jsonFixture(getPath()));
     }
 
     @Test
     public void testDeserializeFromJSON() throws IOException {
-        assertEquals(fromJson(jsonFixture("fixtures/location-summary.json"), LocationSummary.class), summary);
-    }
-
-    @Test
-    public void testDeserializeListFromJSON() throws IOException {
-        assertEquals(fromJson(jsonFixture("fixtures/location-list.json"), new TypeReference<List<LocationSummary>>() {}), 
-                Collections.singletonList(summary));
+        assertEquals(fromJson(jsonFixture(getPath()), getDomainObject().getClass()), getDomainObject());
     }
 }

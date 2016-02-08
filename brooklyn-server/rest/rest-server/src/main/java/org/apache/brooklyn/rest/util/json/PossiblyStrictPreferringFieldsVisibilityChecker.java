@@ -22,13 +22,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
-import org.codehaus.jackson.annotate.JsonMethod;
-import org.codehaus.jackson.map.introspect.AnnotatedField;
-import org.codehaus.jackson.map.introspect.AnnotatedMember;
-import org.codehaus.jackson.map.introspect.AnnotatedMethod;
-import org.codehaus.jackson.map.introspect.VisibilityChecker;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.introspect.AnnotatedField;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
+import com.fasterxml.jackson.databind.introspect.AnnotatedMethod;
+import com.fasterxml.jackson.databind.introspect.VisibilityChecker;
+
+import static com.fasterxml.jackson.annotation.JsonAutoDetect.*;
 
 /** a visibility checker which disables getters, but allows private access,
  * unless {@link BidiSerialization#isStrictSerialization()} is enabled in which case public fields or annotations must be used.
@@ -39,13 +40,13 @@ import org.codehaus.jackson.map.introspect.VisibilityChecker;
  * causes infinite recursion)
  **/
 public class PossiblyStrictPreferringFieldsVisibilityChecker implements VisibilityChecker<PossiblyStrictPreferringFieldsVisibilityChecker> {
-    VisibilityChecker<?> 
+    VisibilityChecker<?>
         vizDefault = new VisibilityChecker.Std(Visibility.NONE, Visibility.NONE, Visibility.NONE, Visibility.ANY, Visibility.ANY),
         vizStrict = new VisibilityChecker.Std(Visibility.NONE, Visibility.NONE, Visibility.NONE, Visibility.PUBLIC_ONLY, Visibility.PUBLIC_ONLY);
     
     @Override public PossiblyStrictPreferringFieldsVisibilityChecker with(JsonAutoDetect ann) { throw new UnsupportedOperationException(); }
     @Override public PossiblyStrictPreferringFieldsVisibilityChecker with(Visibility v) { throw new UnsupportedOperationException(); }
-    @Override public PossiblyStrictPreferringFieldsVisibilityChecker withVisibility(JsonMethod method, Visibility v) { throw new UnsupportedOperationException(); }
+    @Override public PossiblyStrictPreferringFieldsVisibilityChecker withVisibility(PropertyAccessor method, Visibility v) { throw new UnsupportedOperationException(); }
     @Override public PossiblyStrictPreferringFieldsVisibilityChecker withGetterVisibility(Visibility v) { throw new UnsupportedOperationException(); }
     @Override public PossiblyStrictPreferringFieldsVisibilityChecker withIsGetterVisibility(Visibility v) { throw new UnsupportedOperationException(); }
     @Override public PossiblyStrictPreferringFieldsVisibilityChecker withSetterVisibility(Visibility v) { throw new UnsupportedOperationException(); }

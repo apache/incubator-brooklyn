@@ -26,10 +26,10 @@ import org.apache.brooklyn.core.location.BasicLocationRegistry;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeMethod;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;

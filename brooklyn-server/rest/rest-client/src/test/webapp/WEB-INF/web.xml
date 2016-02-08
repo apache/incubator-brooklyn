@@ -84,7 +84,7 @@
             <param-value>
                 org.apache.brooklyn.rest.apidoc.ApidocHelpMessageBodyWriter;
                 org.apache.brooklyn.rest.util.FormMapProvider;
-                org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+                com.fasterxml.jackson.jaxrs.JacksonJsonProvider;
                 org.apache.brooklyn.rest.resources.ActivityResource;
                 org.apache.brooklyn.rest.resources.ApidocResource;
                 org.apache.brooklyn.rest.resources.ApplicationResource;

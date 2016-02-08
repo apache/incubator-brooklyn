@@ -41,7 +41,7 @@ import com.google.common.collect.ImmutableSet;
 public class ApplicationTest {
 
     final EntitySpec entitySpec = new EntitySpec("Vanilla Java App", "org.apache.brooklyn.entity.java.VanillaJavaApp",
-            ImmutableMap.<String, String>of(
+            ImmutableMap.of(
                     "initialSize", "1",
                     "creationScriptUrl", "http://my.brooklyn.io/storage/foo.sql"));
 
@@ -50,20 +50,15 @@ public class ApplicationTest {
             .locations(ImmutableSet.of("/v1/locations/1"))
             .build();
 
-    final ApplicationSummary application = new ApplicationSummary(null, applicationSpec, Status.STARTING, null);
+    final Map<String, URI> links = ImmutableMap.of(
+            "self", URI.create("/v1/applications/" + applicationSpec.getName()),
+            "entities", URI.create("fixtures/entity-summary-list.json"));
+    final ApplicationSummary application = new ApplicationSummary("myapp_id", applicationSpec, Status.STARTING, links);
 
     @SuppressWarnings("serial")
     @Test
     public void testSerializeToJSON() throws IOException {
-        ApplicationSummary application1 = new ApplicationSummary("myapp_id", applicationSpec, Status.STARTING, null) {
-            @Override
-            public Map<String, URI> getLinks() {
-                return ImmutableMap.of(
-                        "self", URI.create("/v1/applications/" + applicationSpec.getName()),
-                        "entities", URI.create("fixtures/entity-summary-list.json"));
-            }
-        };
-        assertEquals(asJson(application1), jsonFixture("fixtures/application.json"));
+        assertEquals(asJson(application), jsonFixture("fixtures/application.json"));
     }
 
     @Test

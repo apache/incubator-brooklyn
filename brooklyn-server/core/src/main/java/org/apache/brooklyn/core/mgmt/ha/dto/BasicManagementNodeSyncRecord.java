@@ -25,9 +25,8 @@ import org.apache.brooklyn.api.mgmt.ha.ManagementNodeState;
 import org.apache.brooklyn.api.mgmt.ha.ManagementNodeSyncRecord;
 import org.apache.brooklyn.core.BrooklynVersion;
 import org.apache.brooklyn.util.time.Time;
-import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.google.common.base.Objects;
 
 /**
@@ -36,7 +35,7 @@ import com.google.common.base.Objects;
  * 
  * @author aled
  */
-@JsonAutoDetect(fieldVisibility=Visibility.ANY, getterVisibility=Visibility.NONE)
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE)
 public class BasicManagementNodeSyncRecord implements ManagementNodeSyncRecord, Serializable {
 
     private static final long serialVersionUID = 4918161834047884244L;

@@ -33,7 +33,8 @@ import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import org.apache.brooklyn.util.core.task.Tasks;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.time.Duration;
-import org.codehaus.jackson.map.ObjectMapper;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public abstract class AbstractBrooklynRestResource implements ManagementContextInjectable {
 

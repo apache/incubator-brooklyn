@@ -27,17 +27,16 @@ import org.apache.brooklyn.config.ConfigKey;
 import org.apache.brooklyn.core.config.ConfigKeys;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
-import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.util.OsgiCompat;
-import org.codehaus.jackson.Version;
-import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-import org.codehaus.jackson.map.module.SimpleModule;
-import org.codehaus.jackson.map.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
 public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements ManagementContextInjectable {
 
@@ -107,7 +106,7 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
 
                 mapper = newPrivateObjectMapper(mgmt);
                 log.debug("Storing new ObjectMapper against "+mgmt+" because no ServletContext available: "+mapper);
-                ((ManagementContextInternal)mgmt).getBrooklynProperties().put(key, mapper);
+                ((BrooklynProperties)mgmt.getConfig()).put(key, mapper);
                 return mapper;
             }
         }
@@ -137,25 +136,21 @@ public class BrooklynJacksonJsonProvider extends JacksonJsonProvider implements 
             throw new IllegalStateException("No management context available for creating ObjectMapper");
         }
 
-        SerializationConfig defaultConfig = new ObjectMapper().getSerializationConfig();
-        SerializationConfig sc = new SerializationConfig(
-            defaultConfig.getClassIntrospector() /* ObjectMapper.DEFAULT_INTROSPECTOR */,
-            defaultConfig.getAnnotationIntrospector() /* ObjectMapper.DEFAULT_ANNOTATION_INTROSPECTOR */,
-            new PossiblyStrictPreferringFieldsVisibilityChecker(),
-            null, null, TypeFactory.defaultInstance(), null);
-
         ConfigurableSerializerProvider sp = new ConfigurableSerializerProvider();
         sp.setUnknownTypeSerializer(new ErrorAndToStringUnknownTypeSerializer());
 
-        ObjectMapper mapper = new ObjectMapper(null, sp, null, sc, null);
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializerProvider(sp);
+        mapper.setVisibility(new PossiblyStrictPreferringFieldsVisibilityChecker());
+
         SimpleModule mapperModule = new SimpleModule("Brooklyn", new Version(0, 0, 0, "ignored"));
 
         new BidiSerialization.ManagementContextSerialization(mgmt).install(mapperModule);
         new BidiSerialization.EntitySerialization(mgmt).install(mapperModule);
         new BidiSerialization.LocationSerialization(mgmt).install(mapperModule);
-        mapperModule.addSerializer(new MultimapSerializer());
 
-        mapper.registerModule(mapperModule);
+        mapper.registerModule(new GuavaModule()).registerModule(mapperModule);
+
         return mapper;
     }
 

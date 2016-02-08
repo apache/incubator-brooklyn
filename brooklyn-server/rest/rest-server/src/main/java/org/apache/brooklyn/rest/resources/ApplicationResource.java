@@ -64,6 +64,7 @@ import org.apache.brooklyn.entity.group.AbstractGroup;
 import org.apache.brooklyn.rest.api.ApplicationApi;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
 import org.apache.brooklyn.rest.domain.ApplicationSummary;
+import org.apache.brooklyn.rest.domain.EntityDetail;
 import org.apache.brooklyn.rest.domain.EntitySummary;
 import org.apache.brooklyn.rest.domain.TaskSummary;
 import org.apache.brooklyn.rest.filter.HaHotStateRequired;
@@ -79,15 +80,14 @@ import org.apache.brooklyn.util.exceptions.UserFacingException;
 import org.apache.brooklyn.util.guava.Maybe;
 import org.apache.brooklyn.util.javalang.JavaClassNames;
 import org.apache.brooklyn.util.text.Strings;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.ArrayNode;
-import org.codehaus.jackson.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 
 @HaHotStateRequired
 public class ApplicationResource extends AbstractBrooklynRestResource implements ApplicationApi {
@@ -97,127 +97,88 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     @Context
     private UriInfo uriInfo;
 
-    /** @deprecated since 0.6.0 use {@link #fetch(String)} (with slightly different, but better semantics) */
-    @Deprecated
-    @Override
-    public JsonNode applicationTree() {
-        ArrayNode apps = mapper().createArrayNode();
-        for (Application application : mgmt().getApplications())
-            apps.add(recursiveTreeFromEntity(application));
-        return apps;
-    }
-
-    private ObjectNode entityBase(Entity entity) {
-        ObjectNode aRoot = mapper().createObjectNode();
-        aRoot.put("name", entity.getDisplayName());
-        aRoot.put("id", entity.getId());
-        aRoot.put("type", entity.getEntityType().getName());
-
+    private EntityDetail fromEntity(Entity entity) {
         Boolean serviceUp = entity.getAttribute(Attributes.SERVICE_UP);
-        if (serviceUp!=null) aRoot.put("serviceUp", serviceUp);
 
         Lifecycle serviceState = entity.getAttribute(Attributes.SERVICE_STATE_ACTUAL);
-        if (serviceState!=null) aRoot.put("serviceState", serviceState.toString());
 
         String iconUrl = entity.getIconUrl();
         if (iconUrl!=null) {
             if (brooklyn().isUrlServerSideAndSafe(iconUrl))
                 // route to server if it is a server-side url
                 iconUrl = EntityTransformer.entityUri(entity)+"/icon";
-            aRoot.put("iconUrl", iconUrl);
         }
 
-        return aRoot;
-    }
-
-    private JsonNode recursiveTreeFromEntity(Entity entity) {
-        ObjectNode aRoot = entityBase(entity);
-
-        if (!entity.getChildren().isEmpty())
-            aRoot.put("children", childEntitiesRecursiveAsArray(entity));
-
-        return aRoot;
-    }
-
-    // TODO when applicationTree can be removed, replace this with an extension to EntitySummary (without links)
-    private JsonNode fromEntity(Entity entity) {
-        ObjectNode aRoot = entityBase(entity);
-
-        aRoot.put("applicationId", entity.getApplicationId());
-
-        if (entity.getParent()!=null) {
-            aRoot.put("parentId", entity.getParent().getId());
+        List<EntitySummary> children = Lists.newArrayList();
+        if (!entity.getChildren().isEmpty()) {
+            for (Entity child : entity.getChildren()) {
+                children.add(fromEntity(child));
+            }
         }
 
-        if (!entity.groups().isEmpty())
-            aRoot.put("groupIds", entitiesIdAsArray(entity.groups()));
+        String parentId = null;
+        if (entity.getParent()!= null) {
+            parentId = entity.getParent().getId();
+        }
 
-        if (!entity.getChildren().isEmpty())
-            aRoot.put("children", entitiesIdAndNameAsArray(entity.getChildren()));
+        List<String> groupIds = Lists.newArrayList();
+        if (!entity.groups().isEmpty()) {
+            groupIds.addAll(entitiesIdAsArray(entity.groups()));
+        }
 
+        List<Map<String, String>> members = Lists.newArrayList();
         if (entity instanceof Group) {
             // use attribute instead of method in case it is read-only
-            Collection<Entity> members = entity.getAttribute(AbstractGroup.GROUP_MEMBERS);
-            if (members!=null && !members.isEmpty())
-                aRoot.put("members", entitiesIdAndNameAsArray(members));
+            Collection<Entity> memberEntities = entity.getAttribute(AbstractGroup.GROUP_MEMBERS);
+            if (memberEntities != null && !memberEntities.isEmpty())
+                members.addAll(entitiesIdAndNameAsList(memberEntities));
         }
 
-        return aRoot;
+        return new EntityDetail(entity.getId(), parentId, entity.getDisplayName(),
+                entity.getEntityType().getName(), serviceUp, serviceState, iconUrl, entity.getCatalogItemId(),
+                children, groupIds, members);
     }
 
-    private ArrayNode childEntitiesRecursiveAsArray(Entity entity) {
-        ArrayNode node = mapper().createArrayNode();
-        for (Entity e : entity.getChildren()) {
-            if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
-                node.add(recursiveTreeFromEntity(e));
-            }
-        }
-        return node;
-    }
-
-    private ArrayNode entitiesIdAndNameAsArray(Collection<? extends Entity> entities) {
-        ArrayNode node = mapper().createArrayNode();
+    private List<Map<String, String>> entitiesIdAndNameAsList(Collection<? extends Entity> entities) {
+        List<Map<String, String>> members = Lists.newArrayList();
         for (Entity entity : entities) {
             if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
-                ObjectNode holder = mapper().createObjectNode();
-                holder.put("id", entity.getId());
-                holder.put("name", entity.getDisplayName());
-                node.add(holder);
+                members.add(ImmutableMap.of("id", entity.getId(), "name", entity.getDisplayName()));
             }
         }
-        return node;
+        return members;
     }
 
-    private ArrayNode entitiesIdAsArray(Iterable<? extends Entity> entities) {
-        ArrayNode node = mapper().createArrayNode();
+    private List<String> entitiesIdAsArray(Iterable<? extends Entity> entities) {
+        List<String> ids = Lists.newArrayList();
         for (Entity entity : entities) {
             if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
-                node.add(entity.getId());
+                ids.add(entity.getId());
             }
         }
-        return node;
+        return ids;
     }
 
     @Override
-    public JsonNode fetch(String entityIds) {
-        Map<String, JsonNode> jsonEntitiesById = MutableMap.of();
-        for (Application application : mgmt().getApplications())
-            jsonEntitiesById.put(application.getId(), fromEntity(application));
+    public List<EntityDetail> fetch(String entityIds) {
+
+        List<EntityDetail> entitySummaries = Lists.newArrayList();
+        for (Entity application : mgmt().getApplications()) {
+            entitySummaries.add(fromEntity(application));
+        }
+
         if (entityIds != null) {
             for (String entityId: entityIds.split(",")) {
                 Entity entity = mgmt().getEntityManager().getEntity(entityId.trim());
                 while (entity != null && entity.getParent() != null) {
                     if (Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.SEE_ENTITY, entity)) {
-                        jsonEntitiesById.put(entity.getId(), fromEntity(entity));
+                        entitySummaries.add(fromEntity(entity));
                     }
                     entity = entity.getParent();
                 }
             }
         }
-
-        ArrayNode result = mapper().createArrayNode();
-        for (JsonNode n: jsonEntitiesById.values()) result.add(n);
-        return result;
+        return entitySummaries;
     }
 
     @Override
@@ -280,7 +241,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
 
         log.debug("Creating app from yaml:\n{}", yaml);
         EntitySpec<? extends Application> spec = createEntitySpecForApplication(yaml);
-        
+
         if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.DEPLOY_APPLICATION, spec)) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to start application %s",
                 Entitlements.getEntitlementContext().user(), yaml);
@@ -361,7 +322,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
     @Override
     public Response delete(String application) {
         Application app = brooklyn().getApplication(application);
-        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app, 
+        if (!Entitlements.isEntitled(mgmt().getEntitlementManager(), Entitlements.INVOKE_EFFECTOR, Entitlements.EntityAndItem.of(app,
             StringAndArgument.of(Entitlements.LifecycleEffectors.DELETE, null)))) {
             throw WebResourceUtils.unauthorized("User '%s' is not authorized to delete application %s",
                 Entitlements.getEntitlementContext().user(), app);
@@ -385,7 +346,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             }
         }
     }
-    
+
     private void checkApplicationTypesAreValid(ApplicationSpec applicationSpec) {
         String appType = applicationSpec.getType();
         if (appType != null) {
@@ -410,7 +371,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
             typeV.get();
             return;
         }
-        
+
         // not found, try classloading
         try {
             brooklyn().getCatalogClassLoader().loadClass(type);
@@ -420,7 +381,7 @@ public class ApplicationResource extends AbstractBrooklynRestResource implements
         }
         log.info(JavaClassNames.simpleClassName(subType)+" type '{}' not defined in catalog but is on classpath; continuing", type);
     }
-    
+
     private void checkEntityTypeIsValid(String type) {
         checkSpecTypeIsValid(type, Entity.class);
     }

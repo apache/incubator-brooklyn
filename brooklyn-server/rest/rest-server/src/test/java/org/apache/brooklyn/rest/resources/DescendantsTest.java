@@ -37,8 +37,6 @@ import org.apache.brooklyn.rest.testing.BrooklynRestResourceTest;
 import org.apache.brooklyn.rest.testing.mocks.RestMockSimpleEntity;
 import org.apache.brooklyn.util.collections.MutableList;
 import org.apache.brooklyn.util.text.StringEscapes;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -63,7 +61,7 @@ public class DescendantsTest extends BrooklynRestResourceTest {
         build();
 
     @Test
-    public void testDescendantsInSimpleDeployedApplication() throws InterruptedException, TimeoutException, JsonGenerationException, JsonMappingException, UniformInterfaceException, ClientHandlerException, IOException {
+    public void testDescendantsInSimpleDeployedApplication() throws InterruptedException, TimeoutException, UniformInterfaceException, ClientHandlerException, IOException {
         ClientResponse response = clientDeploy(simpleSpec);
         assertTrue(response.getStatus()/100 == 2, "response is "+response);
         Application application = Iterables.getOnlyElement( getManagementContext().getApplications() );

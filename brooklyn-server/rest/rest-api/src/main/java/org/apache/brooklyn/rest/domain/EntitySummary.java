@@ -18,24 +18,23 @@
  */
 package org.apache.brooklyn.rest.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
-
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 
 public class EntitySummary implements HasId, HasName, Serializable {
 
     private static final long serialVersionUID = 100490507982229165L;
-    
+
     private final String id;
     private final String name;
     private final String type;
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private final String catalogItemId;
     private final Map<String, URI> links;
 
@@ -76,22 +75,29 @@ public class EntitySummary implements HasId, HasName, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof EntitySummary) && id.equals(((EntitySummary) o).getId());
+        if (this == o) return true;
+        if (!(o instanceof EntitySummary)) return false;
+        EntitySummary that = (EntitySummary) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(catalogItemId, that.catalogItemId) &&
+                Objects.equals(links, that.links);
     }
 
     @Override
     public int hashCode() {
-        return id != null ? id.hashCode() : 0;
+        return Objects.hash(id, name, type, catalogItemId, links);
     }
 
     @Override
     public String toString() {
-        return "EntitySummary{"
-                + "id='" + id + '\''
-                + ", name=" + name
-                + ", type=" + type
-                + ", catalogItemId=" + catalogItemId
-                + ", links=" + links
-                + '}';
-  }
+        return "EntitySummary{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", catalogItemId='" + catalogItemId + '\'' +
+                ", links=" + links +
+                '}';
+    }
 }

@@ -24,21 +24,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.brooklyn.util.collections.Jsonya;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class TaskSummary implements HasId, Serializable {
 
     private static final long serialVersionUID = 4637850742127078158L;
-    
+
     private final String id;
     private final String displayName;
     private final String entityId;
@@ -52,38 +52,38 @@ public class TaskSummary implements HasId, Serializable {
 
     private final String currentStatus;
     private final Object result;
-    private final boolean isError;
-    private final boolean isCancelled;
+    private final boolean error;
+    private final boolean cancelled;
 
     private final List<LinkWithMetadata> children;
     private final LinkWithMetadata submittedByTask;
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private final LinkWithMetadata blockingTask;
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private final String blockingDetails;
 
     private final String detailedStatus;
 
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private final Map<String, LinkWithMetadata> streams;
 
     private final Map<String, URI> links;
 
     public TaskSummary(
-            @JsonProperty("id") String id, 
-            @JsonProperty("displayName") String displayName, 
-            @JsonProperty("description") String description, 
-            @JsonProperty("entityId") String entityId, 
-            @JsonProperty("entityDisplayName") String entityDisplayName, 
+            @JsonProperty("id") String id,
+            @JsonProperty("displayName") String displayName,
+            @JsonProperty("description") String description,
+            @JsonProperty("entityId") String entityId,
+            @JsonProperty("entityDisplayName") String entityDisplayName,
             @JsonProperty("tags") Set<Object> tags,
-            @JsonProperty("submitTimeUtc") Long submitTimeUtc, 
-            @JsonProperty("startTimeUtc") Long startTimeUtc, 
-            @JsonProperty("endTimeUtc") Long endTimeUtc, 
-            @JsonProperty("currentStatus") String currentStatus, 
-            @JsonProperty("result") Object result, 
-            @JsonProperty("isError") boolean isError, 
-            @JsonProperty("isCancelled") boolean isCancelled, 
+            @JsonProperty("submitTimeUtc") Long submitTimeUtc,
+            @JsonProperty("startTimeUtc") Long startTimeUtc,
+            @JsonProperty("endTimeUtc") Long endTimeUtc,
+            @JsonProperty("currentStatus") String currentStatus,
+            @JsonProperty("result") Object result,
+            @JsonProperty("error") boolean error,
+            @JsonProperty("cancelled") boolean cancelled,
             @JsonProperty("children") List<LinkWithMetadata> children,
             @JsonProperty("submittedByTask") LinkWithMetadata submittedByTask,
             @JsonProperty("blockingTask") LinkWithMetadata blockingTask,
@@ -102,8 +102,8 @@ public class TaskSummary implements HasId, Serializable {
         this.endTimeUtc = endTimeUtc;
         this.currentStatus = currentStatus;
         this.result = result;
-        this.isError = isError;
-        this.isCancelled = isCancelled;
+        this.error = error;
+        this.cancelled = cancelled;
         this.children = children;
         this.blockingDetails = blockingDetails;
         this.blockingTask = blockingTask;
@@ -168,26 +168,26 @@ public class TaskSummary implements HasId, Serializable {
         return result;
     }
 
-    /** @deprecated since 0.7.0 use {@link #isError} instead. */
+    /** @deprecated since 0.7.0 use {@link #error} instead. */
     @Deprecated
     @JsonIgnore
     public boolean getIsError() {
-        return isError;
+        return error;
     }
 
-    /** @deprecated since 0.7.0 use {@link #isCancelled} instead. */
+    /** @deprecated since 0.7.0 use {@link #cancelled} instead. */
     @Deprecated
     @JsonIgnore
     public boolean getIsCancelled() {
-        return isCancelled;
+        return cancelled;
     }
 
     public boolean isError() {
-        return isError;
+        return error;
     }
 
     public boolean isCancelled() {
-        return isCancelled;
+        return cancelled;
     }
 
     public List<LinkWithMetadata> getChildren() {
@@ -219,13 +219,60 @@ public class TaskSummary implements HasId, Serializable {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof TaskSummary)) return false;
+        TaskSummary that = (TaskSummary) o;
+        return error == that.error &&
+                cancelled == that.cancelled &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(displayName, that.displayName) &&
+                Objects.equals(entityId, that.entityId) &&
+                Objects.equals(entityDisplayName, that.entityDisplayName) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(tags, that.tags) &&
+                Objects.equals(submitTimeUtc, that.submitTimeUtc) &&
+                Objects.equals(startTimeUtc, that.startTimeUtc) &&
+                Objects.equals(endTimeUtc, that.endTimeUtc) &&
+                Objects.equals(currentStatus, that.currentStatus) &&
+                Objects.equals(result, that.result) &&
+                Objects.equals(children, that.children) &&
+                Objects.equals(submittedByTask, that.submittedByTask) &&
+                Objects.equals(blockingTask, that.blockingTask) &&
+                Objects.equals(blockingDetails, that.blockingDetails) &&
+                Objects.equals(detailedStatus, that.detailedStatus) &&
+                Objects.equals(streams, that.streams) &&
+                Objects.equals(links, that.links);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, displayName, entityId, entityDisplayName, description, tags, submitTimeUtc, startTimeUtc, endTimeUtc, currentStatus, result, error, cancelled, children, submittedByTask, blockingTask, blockingDetails, detailedStatus, streams, links);
+    }
+
+    @Override
     public String toString() {
-        return "TaskSummary{"
-                + "id='" + id + '\''
-                + ", displayName='" + displayName + '\''
-                + ", currentStatus='" + currentStatus + '\''
-                + ", startTimeUtc='" + startTimeUtc + '\''
-                + ", endTimeUtc='" + endTimeUtc + '\''
-                + '}';
-  }
+        return "TaskSummary{" +
+                "id='" + id + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", entityId='" + entityId + '\'' +
+                ", entityDisplayName='" + entityDisplayName + '\'' +
+                ", description='" + description + '\'' +
+                ", tags=" + tags +
+                ", submitTimeUtc=" + submitTimeUtc +
+                ", startTimeUtc=" + startTimeUtc +
+                ", endTimeUtc=" + endTimeUtc +
+                ", currentStatus='" + currentStatus + '\'' +
+                ", result=" + result +
+                ", error=" + error +
+                ", cancelled=" + cancelled +
+                ", children=" + children +
+                ", submittedByTask=" + submittedByTask +
+                ", blockingTask=" + blockingTask +
+                ", blockingDetails='" + blockingDetails + '\'' +
+                ", detailedStatus='" + detailedStatus + '\'' +
+                ", streams=" + streams +
+                ", links=" + links +
+                '}';
+    }
 }

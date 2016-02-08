@@ -21,14 +21,12 @@ package org.apache.brooklyn.rest.domain;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
 // FIXME change name, due to confusion with LocationSpec <- no need, as we can kill the class instead soon!
@@ -36,13 +34,13 @@ import com.google.common.collect.ImmutableMap;
 public class LocationSpec implements HasName, HasConfig, Serializable {
 
     private static final long serialVersionUID = -1562824224808185255L;
-    
-    @JsonSerialize(include = Inclusion.NON_NULL)
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private final String name;
-    @JsonSerialize(include = Inclusion.NON_NULL)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
     private final String spec;
 
-    @JsonSerialize(include = Inclusion.NON_EMPTY)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
     private final Map<String, ?> config;
 
     public static LocationSpec localhost() {
@@ -74,23 +72,24 @@ public class LocationSpec implements HasName, HasConfig, Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof LocationSpec)) return false;
         LocationSpec that = (LocationSpec) o;
-        return Objects.equal(name, that.name) && Objects.equal(spec, that.spec) && Objects.equal(config, that.config);
+        return Objects.equals(name, that.name) &&
+                Objects.equals(spec, that.spec) &&
+                Objects.equals(config, that.config);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(spec, name, config);
+        return Objects.hash(name, spec, config);
     }
 
     @Override
     public String toString() {
-        return "LocationSpec{"
-                + "name='" + name + '\''
-                + "spec='" + spec + '\''
-                + ", config=" + config
-                + '}';
+        return "LocationSpec{" +
+                "name='" + name + '\'' +
+                ", spec='" + spec + '\'' +
+                ", config=" + config +
+                '}';
     }
 }

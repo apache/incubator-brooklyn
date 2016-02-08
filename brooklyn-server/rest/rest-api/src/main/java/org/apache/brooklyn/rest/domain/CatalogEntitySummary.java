@@ -20,25 +20,27 @@ package org.apache.brooklyn.rest.domain;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 public class CatalogEntitySummary extends CatalogItemSummary {
 
     private static final long serialVersionUID = 1063908984191424539L;
 
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
     private final Set<EntityConfigSummary> config;
-    
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
+
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
     private final Set<SensorSummary> sensors;
 
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
+    @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
     private final Set<EffectorSummary> effectors;
 
+    @JsonCreator
     public CatalogEntitySummary(
             @JsonProperty("symbolicName") String symbolicName,
             @JsonProperty("version") String version,
@@ -48,8 +50,8 @@ public class CatalogEntitySummary extends CatalogItemSummary {
             @JsonProperty("description") String description,
             @JsonProperty("iconUrl") String iconUrl,
             @JsonProperty("tags") Set<Object> tags,
-            @JsonProperty("config") Set<EntityConfigSummary> config, 
-            @JsonProperty("sensors") Set<SensorSummary> sensors, 
+            @JsonProperty("config") Set<EntityConfigSummary> config,
+            @JsonProperty("sensors") Set<SensorSummary> sensors,
             @JsonProperty("effectors") Set<EffectorSummary> effectors,
             @JsonProperty("deprecated") boolean deprecated,
             @JsonProperty("links") Map<String, URI> links
@@ -63,21 +65,37 @@ public class CatalogEntitySummary extends CatalogItemSummary {
     public Set<EntityConfigSummary> getConfig() {
         return config;
     }
-    
+
     public Set<SensorSummary> getSensors() {
         return sensors;
     }
-    
+
     public Set<EffectorSummary> getEffectors() {
         return effectors;
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof CatalogEntitySummary)) return false;
+        if (!super.equals(o)) return false;
+        CatalogEntitySummary that = (CatalogEntitySummary) o;
+        return Objects.equals(config, that.config) &&
+                Objects.equals(sensors, that.sensors) &&
+                Objects.equals(effectors, that.effectors);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), config, sensors, effectors);
+    }
+
+    @Override
     public String toString() {
-        return super.toString()+"["+
-                "config="+getConfig()+"; " +
-                "sensors="+getSensors()+"; "+
-                "effectors="+getEffectors()+"; "+
-                "deprecated="+isDeprecated()+"]";
+        return "CatalogEntitySummary{" +
+                "config=" + config +
+                ", sensors=" + sensors +
+                ", effectors=" + effectors +
+                '}';
     }
 }
