@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ContextResolver;
 
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -80,7 +81,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import org.apache.cxf.jaxrs.impl.tl.ThreadLocalProxy;
 
 public class ServerResource extends AbstractBrooklynRestResource implements ServerApi {
 
@@ -92,7 +92,7 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
     private static final String BUILD_BRANCH_PROPERTY = "git-branch-name";
     
     @Context
-    private ShutdownHandler shutdownHandler;
+    private ContextResolver<ShutdownHandler> shutdownHandler;
 
     @Override
     public void reloadBrooklynProperties() {
@@ -133,11 +133,8 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
         final AtomicBoolean completed = new AtomicBoolean();
         final AtomicBoolean hasAppErrorsOrTimeout = new AtomicBoolean();
 
-        // CXF passes a ThreadLocalInvokableProxy towards the actual shutdownHandler,
-        // which won't behave well in the new Thread() created below
-        // FIXME: don't inject via @Context
-        shutdownHandler = (ShutdownHandler) ((ThreadLocalProxy)shutdownHandler).get();
-
+        //shutdownHandler is thread local
+        final ShutdownHandler handler = shutdownHandler.getContext(ShutdownHandler.class);
         new Thread("shutdown") {
             @Override
             public void run() {
@@ -221,8 +218,8 @@ public class ServerResource extends AbstractBrooklynRestResource implements Serv
                         //give the http request a chance to complete gracefully, the server will be stopped in a shutdown hook
                         Time.sleep(delayForHttpReturn);
 
-                        if (shutdownHandler != null) {
-                            shutdownHandler.onShutdownRequest();
+                        if (handler != null) {
+                            handler.onShutdownRequest();
                         } else {
                             log.warn("ShutdownHandler not set, exiting process");
                             System.exit(0);

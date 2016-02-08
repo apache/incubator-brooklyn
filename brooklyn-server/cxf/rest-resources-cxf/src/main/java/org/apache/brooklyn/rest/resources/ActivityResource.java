@@ -55,6 +55,7 @@ public class ActivityResource extends AbstractBrooklynRestResource implements Ac
                 TaskTransformer.fromTask(ui.getBaseUriBuilder())));
     }
 
+    @Override
     public String stream(String taskId, String streamId) {
         Task<?> t = mgmt().getExecutionManager().getTask(taskId);
         if (t == null)

@@ -18,27 +18,32 @@
  */
 package org.apache.brooklyn.rest.testing;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.brooklyn.api.location.LocationRegistry;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.camp.brooklyn.BrooklynCampPlatformLauncherNoServer;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.location.BasicLocationRegistry;
+import org.apache.brooklyn.core.mgmt.ManagementContextInjectable;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
 import org.apache.brooklyn.core.test.entity.LocalManagementContextForTests;
-import org.apache.brooklyn.rest.resources.AbstractBrooklynRestResource;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeMethod;
-
+import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.util.BrooklynRestResourceUtils;
+import org.apache.brooklyn.rest.util.ManagementContextProvider;
+import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
 import org.apache.brooklyn.rest.util.TestShutdownHandler;
 import org.apache.brooklyn.rest.util.json.BrooklynJacksonJsonProvider;
 import org.apache.cxf.jaxrs.client.JAXRSClientFactory;
-import org.apache.cxf.jaxrs.client.WebClient;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.reflections.util.ClasspathHelper;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 public abstract class BrooklynRestApiTest {
 
@@ -46,25 +51,79 @@ public abstract class BrooklynRestApiTest {
 
     protected ManagementContext manager;
     
+    
     protected TestShutdownHandler shutdownListener = createShutdownHandler();
-
     protected final static String ENDPOINT_ADDRESS_LOCAL = "local://";
     protected final static String ENDPOINT_ADDRESS_HTTP = "http://localhost:9998/";
 
-    protected List<AbstractBrooklynRestResource> resources = null;
-    protected List<Object> providers = null;
+    protected Set<Class<?>> resourceClasses;
+    protected Set<Object> resourceBeans;
+
+    @BeforeClass(alwaysRun = true)
+    public void setUpClass() throws Exception {
+        if (!isMethodInit()) {
+            initClass();
+        }
+    }
+
+    @AfterClass(alwaysRun = true)
+    public void tearDownClass() throws Exception {
+        if (!isMethodInit()) {
+            destroyClass();
+        }
+    }
 
     @BeforeMethod(alwaysRun = true)
-    public void resetShutdownListener() {
+    public void setUpMethod() throws Exception {
+        if (isMethodInit()) {
+            initClass();
+        }
+        initMethod();
+    }
+
+    @AfterMethod(alwaysRun = true)
+    public void tearDownMethod() throws Exception {
+        if (isMethodInit()) {
+            destroyClass();
+        }
+        destroyMethod();
+    }
+    
+    protected void initClass() throws Exception {
+        resourceClasses = new HashSet<>();
+        resourceBeans = new HashSet<>();
+    }
+
+    protected void destroyClass() throws Exception {
+        destroyManagementContext();
+        resourceClasses = null;
+        resourceBeans = null;
+    }
+
+    protected void initMethod() throws Exception {
+        resetShutdownListener();
+    }
+
+    protected void destroyMethod() throws Exception {
+    }
+    
+    /**
+     * @return true to start/destroy the test environment for each method.
+     *          Returns false by default to speed up testing.
+     */
+    protected boolean isMethodInit() {
+        return false;
+    }
+
+    protected void resetShutdownListener() {
         shutdownListener.reset();
     }
 
-    @AfterClass
-    public void destroyManagementContext() {
+    protected void destroyManagementContext() {
         if (manager!=null) {
             Entities.destroyAll(manager);
-            providers = null;
-            resources = null;
+            resourceClasses = null;
+            resourceBeans = null;
             manager = null;
         }
     }
@@ -102,13 +161,43 @@ public abstract class BrooklynRestApiTest {
     protected ObjectMapper mapper() {
         return BrooklynJacksonJsonProvider.findSharedObjectMapper(null, getManagementContext());
     }
-    
+
     public LocationRegistry getLocationRegistry() {
         return new BrooklynRestResourceUtils(getManagementContext()).getLocationRegistry();
     }
 
-    public WebClient client() {
-        return WebClient.create(getEndpointAddress(), providers);
+    protected final void addResource(Object resource) {
+        if (resource instanceof Class) {
+            resourceClasses.add((Class<?>)resource);
+        } else {
+            resourceBeans.add(resource);
+        }
+        if (resource instanceof ManagementContextInjectable) {
+            ((ManagementContextInjectable)resource).setManagementContext(getManagementContext());
+        }
+    }
+
+    protected final void addProvider(Class<?> provider) {
+        addResource(provider);
+    }
+
+    protected void addDefaultResources() {
+        addResource(new ShutdownHandlerProvider(shutdownListener));
+        addResource(new ManagementContextProvider(getManagementContext()));
+    }
+
+
+    /** intended for overriding if you only want certain resources added, or additional ones added */
+    protected void addBrooklynResources() {
+        for (Object r: BrooklynRestApi.getBrooklynRestResources())
+            addResource(r);
+    }
+
+    protected final void setUpResources() {
+        addDefaultResources();
+        addBrooklynResources();
+        for (Object r: BrooklynRestApi.getMiscResources())
+            addResource(r);
     }
 
     public <T> T resource(Class<T> clazz) {

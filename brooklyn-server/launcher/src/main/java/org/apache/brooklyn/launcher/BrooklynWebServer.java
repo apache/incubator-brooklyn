@@ -29,35 +29,11 @@ import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nullable;
-import javax.servlet.DispatcherType;
-
-import org.apache.brooklyn.rest.filter.SwaggerFilter;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.SessionManager;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.eclipse.jetty.webapp.WebAppContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.api.core.ResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
 
 import org.apache.brooklyn.api.location.PortRange;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
@@ -70,8 +46,8 @@ import org.apache.brooklyn.core.server.BrooklynServerPaths;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.launcher.config.CustomResourceLocator;
 import org.apache.brooklyn.location.localhost.LocalhostMachineProvisioningLocation;
-import org.apache.brooklyn.rest.BrooklynRestApi;
 import org.apache.brooklyn.rest.BrooklynWebConfig;
+import org.apache.brooklyn.rest.RestApiSetup;
 import org.apache.brooklyn.rest.filter.BrooklynPropertiesSecurityFilter;
 import org.apache.brooklyn.rest.filter.HaHotCheckResourceFilter;
 import org.apache.brooklyn.rest.filter.HaMasterCheckFilter;
@@ -98,11 +74,26 @@ import org.apache.brooklyn.util.stream.Streams;
 import org.apache.brooklyn.util.text.Identifiers;
 import org.apache.brooklyn.util.text.Strings;
 import org.apache.brooklyn.util.web.ContextHandlerCollectionHotSwappable;
+import org.apache.cxf.transport.common.gzip.GZIPInInterceptor;
+import org.apache.cxf.transport.common.gzip.GZIPOutInterceptor;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.SessionManager;
 import org.eclipse.jetty.server.SslConnectionFactory;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.eclipse.jetty.webapp.WebAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
+import com.google.common.collect.Maps;
 
 /**
  * Starts the web-app running, connected to the given management context
@@ -114,8 +105,8 @@ public class BrooklynWebServer {
     static {
         // support loading the WAR in dev mode from an alternate location 
         CustomResourceLocator.registerAlternateLocator(new CustomResourceLocator.SearchingClassPathInDevMode(
-                BROOKLYN_WAR_URL, "/usage/launcher/target", 
-                "/usage/jsgui/target/brooklyn-jsgui-"+BrooklynVersion.get()+".war"));
+                BROOKLYN_WAR_URL, "/brooklyn-server/launcher/target", 
+                "/brooklyn-ui/target/brooklyn-jsgui-"+BrooklynVersion.get()+".war"));
     }
     
     static {
@@ -338,33 +329,6 @@ public class BrooklynWebServer {
         return this;
     }
 
-    public void installAsServletFilter(ServletContextHandler context) {
-        ResourceConfig config = new DefaultResourceConfig();
-        // load all our REST API modules, JSON, and Swagger
-        for (Object r: BrooklynRestApi.getAllResources())
-            config.getSingletons().add(r);
-
-        // Accept gzipped requests and responses, disable caching for dynamic content
-        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_REQUEST_FILTERS, GZIPContentEncodingFilter.class.getName());
-        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, ImmutableList.of(GZIPContentEncodingFilter.class, NoCacheFilter.class));
-        // Checks if appropriate request given HA status
-        config.getProperties().put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, HaHotCheckResourceFilter.class.getName());
-        // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
-        // and treat that as static content
-        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
-        // and anything which is not matched as a servlet also falls through (but more expensive than a regex check?)
-        config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
-        // finally create this as a _filter_ which falls through to a web app or something (optionally)
-        FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
-
-        context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
-
-        ManagementContext mgmt = (ManagementContext) context.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
-        config.getSingletons().add(new ManagementContextProvider(mgmt));
-
-        config.getSingletons().add(new ShutdownHandlerProvider(shutdownHandler));
-    }
-
     ContextHandlerCollectionHotSwappable handlers = new ContextHandlerCollectionHotSwappable();
     
     /**
@@ -429,11 +393,10 @@ public class BrooklynWebServer {
             WebAppContext webapp = deploy(pathSpec, warUrl);
             webapp.setTempDirectory(Os.mkdirs(new File(webappTempDir, newTimestampedDirName("war", 8))));
         }
-        // deploy GUI war at /
-        deploy("/", rootWar);
+        rootContext = deployWithREST("/", rootWar);
         // deploy rest resources at /v1 only for the rest resources
         // TODO: we don't actually need a war
-        deployRESTResources("/v1", rootWar);
+        deployWithREST("/v1", rootWar);
 
         server.setHandler(handlers);
         server.start();
@@ -447,18 +410,25 @@ public class BrooklynWebServer {
         log.info("Started Brooklyn console at "+getRootUrl()+", running " + rootWar + (allWars!=null && !allWars.isEmpty() ? " and " + wars.values() : ""));
     }
 
-    private void deployRESTResources(String contextPath, String rootWarUrl) {
-        rootContext = deploy(contextPath, rootWarUrl);
-        rootContext.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
+    private WebAppContext deployWithREST(String contextPath, String warUrl) {
+        WebAppContext context = deploy(contextPath, warUrl);
+        context.setTempDirectory(Os.mkdirs(new File(webappTempDir, "war-root")));
 
-        rootContext.addFilter(RequestTaggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+        RestApiSetup.installRestServlet(context,
+                new ManagementContextProvider(managementContext),
+                new ShutdownHandlerProvider(shutdownHandler),
+                new NoCacheFilter(),
+                new HaHotCheckResourceFilter(),
+                new GZIPInInterceptor(),
+                new GZIPOutInterceptor());
+        RestApiSetup.installServletFilters(context,
+                RequestTaggingFilter.class,
+                LoggingFilter.class,
+                HaMasterCheckFilter.class);
         if (securityFilterClazz != null) {
-            rootContext.addFilter(securityFilterClazz, "/*", EnumSet.allOf(DispatcherType.class));
+            RestApiSetup.installServletFilters(context, securityFilterClazz);
         }
-        rootContext.addFilter(LoggingFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        rootContext.addFilter(HaMasterCheckFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        rootContext.addFilter(SwaggerFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
-        installAsServletFilter(rootContext);
+        return context;
     }
 
     private SslContextFactory createContextFactory() throws KeyStoreException {

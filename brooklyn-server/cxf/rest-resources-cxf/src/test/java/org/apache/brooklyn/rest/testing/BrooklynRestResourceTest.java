@@ -18,24 +18,21 @@
  */
 package org.apache.brooklyn.rest.testing;
 
-import com.google.common.collect.ImmutableList;
-import java.io.IOException;
 import static org.testng.Assert.assertTrue;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
 import javax.ws.rs.WebApplicationException;
-
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-import org.codehaus.jackson.map.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.apache.brooklyn.api.entity.Application;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.rest.domain.ApplicationSpec;
@@ -44,25 +41,56 @@ import org.apache.brooklyn.rest.domain.Status;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.repeat.Repeater;
 import org.apache.brooklyn.util.time.Duration;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
-import org.apache.brooklyn.rest.BrooklynRestApi;
-import org.apache.brooklyn.rest.util.ShutdownHandlerProvider;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
-import org.apache.cxf.jaxrs.lifecycle.SingletonResourceProvider;
+import org.apache.cxf.jaxrs.client.WebClient;
+import org.apache.cxf.jaxrs.utils.ResourceUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+
+import com.google.common.collect.ImmutableList;
 
 public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
 
     private static final Logger log = LoggerFactory.getLogger(BrooklynRestResourceTest.class);
 
     private static Server server;
+    protected List<?> clientProviders;
+    
+    class DefaultTestApp extends javax.ws.rs.core.Application {
+        @Override
+        public Set<Class<?>> getClasses() {
+            return resourceClasses;
+        }
 
-    @BeforeClass(alwaysRun = true)
-    public synchronized void startServer() throws Exception {
+        @Override
+        public Set<Object> getSingletons() {
+            return resourceBeans;
+        }
+
+    };
+
+    @Override
+    public void initClass() throws Exception {
+        super.initClass();
+        startServer();
+    }
+
+    @Override
+    public void destroyClass() throws Exception {
+        stopServer();
+        super.destroyClass();
+    }
+
+    protected synchronized void startServer() throws Exception {
         if (server == null) {
-            JAXRSServerFactoryBean sf = new JAXRSServerFactoryBean();
+            setUpResources();
+            JAXRSServerFactoryBean sf = ResourceUtils.createApplication(createRestApp(), true);
+            if (clientProviders == null) {
+                clientProviders = sf.getProviders();
+            }
             configureCXF(sf);
             sf.setAddress(getEndpointAddress());
             sf.setFeatures(ImmutableList.of(new org.apache.cxf.feature.LoggingFeature()));
@@ -70,27 +98,14 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         }
     }
 
+    private javax.ws.rs.core.Application createRestApp() {
+        return new DefaultTestApp();
+    }
+
     /** Allows subclasses to customize the CXF server bean. */
     protected void configureCXF(JAXRSServerFactoryBean sf) {
-        addDefaultRestApi(sf);
     }
 
-    protected void addDefaultRestApi(JAXRSServerFactoryBean sf) {
-        if (resources == null)
-            resources = BrooklynRestApi.getResources(getManagementContext());
-        for (Object resource : resources) {
-            sf.setResourceProvider(new SingletonResourceProvider(resource));
-        }
-
-        if (providers == null) {
-            providers = BrooklynRestApi.getProviders(getManagementContext());
-            providers.add(new ShutdownHandlerProvider(shutdownListener));
-        }
-        sf.setProviders(providers);
-    }
-
-
-    @AfterClass(alwaysRun = true)
     public synchronized void stopServer() throws Exception {
         if (server != null) {
             server.stop();
@@ -189,4 +204,9 @@ public abstract class BrooklynRestResourceTest extends BrooklynRestApiTest {
         // see cxf's AbstractClient.checkIfBodyEmpty
         return Entity.entity(new ObjectMapper().writer().writeValueAsBytes(obj), MediaType.APPLICATION_JSON);
     }
+
+    public WebClient client() {
+        return WebClient.create(getEndpointAddress(), clientProviders);
+    }
+
 }

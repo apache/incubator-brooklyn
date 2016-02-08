@@ -62,7 +62,7 @@ public class BrooklynJavascriptGuiLauncher {
     
     /** due to the relative path search in {@link BrooklynRestApiLauncher} we can just call that method */ 
     public static Server startJavascriptAndRest() throws Exception {
-        return BrooklynRestApiLauncher.startRestResourcesViaFilter();
+        return BrooklynRestApiLauncher.startRestResourcesViaServlet();
     }
 
     /** not much fun without a REST server. 

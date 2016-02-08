@@ -19,13 +19,12 @@
 package org.apache.brooklyn.rest.util;
 
 import javax.annotation.Nullable;
+import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
-import org.apache.cxf.jaxrs.ext.ContextProvider;
-import org.apache.cxf.message.Message;
 
 
 @Provider
-public class ShutdownHandlerProvider implements ContextProvider<ShutdownHandler> {
+public class ShutdownHandlerProvider implements ContextResolver<ShutdownHandler> {
 
     private ShutdownHandler shutdownHandler;
 
@@ -33,7 +32,8 @@ public class ShutdownHandlerProvider implements ContextProvider<ShutdownHandler>
         this.shutdownHandler = instance;
     }
 
-    public ShutdownHandler createContext(Message message) {
+    @Override
+    public ShutdownHandler getContext(Class<?> type) {
         return shutdownHandler;
     }
 

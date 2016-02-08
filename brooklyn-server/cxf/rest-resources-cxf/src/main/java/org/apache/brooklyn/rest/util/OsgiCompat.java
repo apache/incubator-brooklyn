@@ -16,10 +16,10 @@
 package org.apache.brooklyn.rest.util;
 
 import javax.servlet.ServletContext;
+
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.util.core.osgi.Compat;
-//import org.eclipse.jetty.server.handler.ContextHandler;
 
 /**
  * Compatibility methods between karaf launcher and monolithic launcher.
@@ -35,12 +35,6 @@ public class OsgiCompat {
         }
         return managementContext;
     }
-//
-//    public static ManagementContext getManagementContext(ContextHandler jettyServerHandler) {
-//        ManagementContext managementContext = Compat.getInstance().getManagementContext();
-//        if (managementContext == null && jettyServerHandler != null) {
-//            managementContext = (ManagementContext) jettyServerHandler.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
-//        }
-//        return managementContext;
-//    }
+
+
 }
