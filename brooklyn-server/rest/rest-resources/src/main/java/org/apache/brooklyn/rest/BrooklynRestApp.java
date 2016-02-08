@@ -43,7 +43,8 @@ public class BrooklynRestApp extends Application {
         return singletons;
     }
 
-    @Override
+    //Uncomment after removing jersey dependencies
+    //@Override
     public Map<String, Object> getProperties() {
         return ImmutableMap.<String, Object>of(
                 // Makes sure that all exceptions are handled by our custom DefaultExceptionMapper
