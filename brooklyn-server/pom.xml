@@ -146,7 +146,6 @@
         <commons-lang.version>2.4</commons-lang.version>
         <hamcrest.version>1.1</hamcrest.version>
         <jsr311-api.version>1.1.1</jsr311-api.version>
-        <javax-ws-rs-api.version>2.0.1</javax-ws-rs-api.version>
         <jax-rs-api.version>2.0.1</jax-rs-api.version>
         <maxmind.version>0.8.1</maxmind.version>
         <jna.version>4.0.0</jna.version>

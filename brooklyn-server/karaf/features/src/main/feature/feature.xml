@@ -76,7 +76,7 @@
         <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commons-lang3.version}</bundle>
 
         <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
-        <bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax-ws-rs-api.version}</bundle>
+        <bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${jax-rs-api.version}</bundle>
 
         <!-- TODO: version 1.1.0.Final has OSGi manifest; check if upgrade doesn't get rid of wrap -->
         <bundle dependency="true">wrap:mvn:javax.validation/validation-api/${validation-api.version}</bundle>
@@ -183,7 +183,7 @@
 
         <!-- should be deps of jax-rs-2.0 rest-api project -->
         <bundle dependency="true">mvn:javax.servlet/javax.servlet-api/${javax-servlet.version}</bundle>
-        <bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${javax-ws-rs-api.version}</bundle>
+        <bundle dependency="true">mvn:javax.ws.rs/javax.ws.rs-api/${jax-rs-api.version}</bundle>
     </feature>
 
     <feature name="brooklyn-jsgui" version="${project.version}" description="Brooklyn REST JavaScript Web GUI">
