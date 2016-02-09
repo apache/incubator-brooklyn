@@ -238,22 +238,6 @@ public class BrooklynRestApiLauncher {
                        : createTempWebDirWithIndexHtml("Brooklyn REST API <p> (gui not available)"));
     }
 
-    private ContextHandler servletContextHandler(ManagementContext managementContext) {
-        ResourceConfig config = new DefaultResourceConfig();
-        for (Object r: BrooklynRestApi.getAllResources())
-            config.getSingletons().add(r);
-        addShutdownListener(config, mgmt);
-
-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
-        context.setAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT, managementContext);
-        ServletHolder servletHolder = new ServletHolder(new ServletContainer(config));
-        context.addServlet(servletHolder, "/*");
-        context.setContextPath("/");
-
-        installBrooklynFilters(context, this.filters);
-        return context;
-    }
-
     /** NB: not fully supported; use one of the other {@link StartMode}s */
     private ContextHandler webXmlContextHandler(ManagementContext mgmt) {
         // TODO add security to web.xml
@@ -333,49 +317,6 @@ public class BrooklynRestApiLauncher {
         return new BrooklynRestApiLauncher()
                 .mode(StartMode.WEB_XML)
                 .start();
-    }
-
-    public void installAsServletFilter(ServletContextHandler context) {
-        installAsServletFilter(context, DEFAULT_FILTERS);
-    }
-
-    private void installAsServletFilter(ServletContextHandler context, List<Class<? extends Filter>> filters) {
-        installBrooklynFilters(context, filters);
-
-        // now set up the REST servlet resources
-        ResourceConfig config = new DefaultResourceConfig();
-        // load all our REST API modules, JSON, and Swagger
-        for (Object r: BrooklynRestApi.getAllResources())
-            config.getSingletons().add(r);
-
-        // disable caching for dynamic content
-        config.getProperties().put(ResourceConfig.PROPERTY_CONTAINER_RESPONSE_FILTERS, NoCacheFilter.class.getName());
-        // Checks if appropriate request given HA status
-        config.getProperties().put(ResourceConfig.PROPERTY_RESOURCE_FILTER_FACTORIES, org.apache.brooklyn.rest.filter.HaHotCheckResourceFilter.class.getName());
-        // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
-        // and treat that as static content
-        config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
-        // and anything which is not matched as a servlet also falls through (but more expensive than a regex check?)
-        config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
-        // finally create this as a _filter_ which falls through to a web app or something (optionally)
-        FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
-        context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
-
-        ManagementContext mgmt = OsgiCompat.getManagementContext(context);
-        config.getSingletons().add(new ManagementContextProvider(mgmt));
-        addShutdownListener(config, mgmt);
-    }
-
-    protected synchronized void addShutdownListener(ResourceConfig config, ManagementContext mgmt) {
-        if (shutdownListener!=null) throw new IllegalStateException("Can only retrieve one shutdown listener");
-        shutdownListener = new ServerStoppingShutdownHandler(mgmt);
-        config.getSingletons().add(new ShutdownHandlerProvider(shutdownListener));
-    }
-
-    private static void installBrooklynFilters(ServletContextHandler context, List<Class<? extends Filter>> filters) {
-        for (Class<? extends Filter> filter : filters) {
-            context.addFilter(filter, "/*", EnumSet.allOf(DispatcherType.class));
-        }
     }
 
     /**
