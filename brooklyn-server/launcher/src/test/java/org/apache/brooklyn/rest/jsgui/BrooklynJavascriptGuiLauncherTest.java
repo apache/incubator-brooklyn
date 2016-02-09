@@ -20,8 +20,9 @@ package org.apache.brooklyn.rest.jsgui;
 
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
+import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
-import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.apache.brooklyn.util.core.osgi.Compat;
 import org.apache.brooklyn.util.http.HttpAsserts;
 import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
@@ -75,7 +76,20 @@ public class BrooklynJavascriptGuiLauncherTest {
     }
 
     private ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
-        return OsgiCompat.getManagementContext((ContextHandler) server.getHandler());
+        return getManagementContext((ContextHandler) server.getHandler());
+    }
+
+    /**
+     * Compatibility methods between karaf launcher and monolithic launcher.
+     *
+     * @todo Remove after transition to karaf launcher.
+     */
+    public static ManagementContext getManagementContext(ContextHandler jettyServerHandler) {
+        ManagementContext managementContext = Compat.getInstance().getManagementContext();
+        if (managementContext == null && jettyServerHandler != null) {
+            managementContext = (ManagementContext) jettyServerHandler.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        }
+        return managementContext;
     }
 
 }

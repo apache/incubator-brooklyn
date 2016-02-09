@@ -18,20 +18,21 @@
  */
 package org.apache.brooklyn.rest;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.reflections.util.ClasspathHelper;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.apache.brooklyn.api.mgmt.ManagementContext;
 import org.apache.brooklyn.core.entity.Entities;
 import org.apache.brooklyn.core.internal.BrooklynProperties;
 import org.apache.brooklyn.core.mgmt.internal.LocalManagementContext;
 import org.apache.brooklyn.core.server.BrooklynServerConfig;
+import org.apache.brooklyn.core.server.BrooklynServiceAttributes;
 import org.apache.brooklyn.rest.security.provider.AnyoneSecurityProvider;
-import org.apache.brooklyn.rest.util.OsgiCompat;
+import org.apache.brooklyn.util.core.osgi.Compat;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.eclipse.jetty.server.NetworkConnector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.reflections.util.ClasspathHelper;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 
 public abstract class BrooklynRestApiLauncherTestFixture {
 
@@ -104,7 +105,14 @@ public abstract class BrooklynRestApiLauncherTestFixture {
     }
 
     public static ManagementContext getManagementContextFromJettyServerAttributes(Server server) {
-        return OsgiCompat.getManagementContext((ContextHandler) server.getHandler());
+        return getManagementContext((ContextHandler) server.getHandler());
     }
     
+    public static ManagementContext getManagementContext(ContextHandler jettyServerHandler) {
+        ManagementContext managementContext = Compat.getInstance().getManagementContext();
+        if (managementContext == null && jettyServerHandler != null) {
+            managementContext = (ManagementContext) jettyServerHandler.getAttribute(BrooklynServiceAttributes.BROOKLYN_MANAGEMENT_CONTEXT);
+        }
+        return managementContext;
+    }
 }

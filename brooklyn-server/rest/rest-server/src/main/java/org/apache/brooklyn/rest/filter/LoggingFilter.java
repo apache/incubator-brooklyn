@@ -45,6 +45,7 @@ import com.google.common.collect.Sets;
 /**
  * Handles logging of request information.
  */
+// TODO Re-implement as JAX-RS filter
 public class LoggingFilter implements Filter {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrooklynLogging.REST);
@@ -58,6 +59,7 @@ public class LoggingFilter implements Filter {
     /** Log all requests that take this time or longer to complete. */
     private static final Duration REQUEST_DURATION_LOG_POINT = Duration.FIVE_SECONDS;
 
+    @Override
     public void init(FilterConfig config) throws ServletException {
     }
 

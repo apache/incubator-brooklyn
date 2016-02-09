@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.rest;
 
-import static org.apache.brooklyn.rest.BrooklynRestApiLauncher.StartMode.FILTER;
 import static org.apache.brooklyn.rest.BrooklynRestApiLauncher.StartMode.SERVLET;
 import static org.apache.brooklyn.rest.BrooklynRestApiLauncher.StartMode.WEB_XML;
 
@@ -35,11 +34,6 @@ import org.eclipse.jetty.server.Server;
 import org.testng.annotations.Test;
 
 public class BrooklynRestApiLauncherTest extends BrooklynRestApiLauncherTestFixture {
-
-    @Test
-    public void testFilterStart() throws Exception {
-        checkRestCatalogEntities(useServerForTest(baseLauncher().mode(FILTER).start()));
-    }
 
     @Test
     public void testServletStart() throws Exception {

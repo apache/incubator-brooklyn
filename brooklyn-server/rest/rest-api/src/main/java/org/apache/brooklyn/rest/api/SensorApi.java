@@ -40,7 +40,7 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-@Path("/v1/applications/{application}/entities/{entity}/sensors")
+@Path("/applications/{application}/entities/{entity}/sensors")
 @Api("Entity Sensors")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -76,6 +76,7 @@ public interface SensorApi {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Could not find application, entity or sensor")
     })
+    @Produces({MediaType.APPLICATION_JSON})
     public Object get(
             @ApiParam(value = "Application ID or name", required = true)
             @PathParam("application") final String application,
@@ -93,7 +94,7 @@ public interface SensorApi {
     @ApiResponses(value = {
             @ApiResponse(code = 404, message = "Could not find application, entity or sensor")
     })
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.TEXT_PLAIN + ";qs=0.9")
     public String getPlain(
             @ApiParam(value = "Application ID or name", required = true)
             @PathParam("application") final String application,

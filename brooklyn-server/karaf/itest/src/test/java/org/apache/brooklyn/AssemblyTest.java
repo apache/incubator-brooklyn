@@ -82,7 +82,7 @@ public class AssemblyTest {
         };
     }
 
-    private static MavenArtifactUrlReference brooklynKarafDist() {
+    public static MavenArtifactUrlReference brooklynKarafDist() {
         return maven()
                 .groupId("org.apache.brooklyn")
                 .artifactId("apache-brooklyn")
@@ -90,7 +90,7 @@ public class AssemblyTest {
                 .version(asInProject());
     }
 
-    private static MavenUrlReference karafStandardFeaturesRepository() {
+    public static MavenUrlReference karafStandardFeaturesRepository() {
         return maven()
                 .groupId("org.apache.karaf.features")
                 .artifactId("standard")

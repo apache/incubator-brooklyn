@@ -115,8 +115,8 @@
             <bootFeature>system</bootFeature>
             <bootFeature>wrap</bootFeature>
             <!-- brooklyn features -->
-            <bootFeature>brooklyn-rest-server</bootFeature>
             <bootFeature>brooklyn-jsgui</bootFeature>
+            <bootFeature>brooklyn-rest-resources</bootFeature>
           </bootFeatures>
         </configuration>
       </plugin>

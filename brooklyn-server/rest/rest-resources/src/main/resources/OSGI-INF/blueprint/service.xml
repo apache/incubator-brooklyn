@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright 2015 The Apache Software Foundation.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.0.0"
+           xmlns:jaxws="http://cxf.apache.org/blueprint/jaxws"
+           xmlns:jaxrs="http://cxf.apache.org/blueprint/jaxrs"
+           xmlns:cxf="http://cxf.apache.org/blueprint/core"
+           xsi:schemaLocation="
+             http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+             http://cxf.apache.org/blueprint/jaxws http://cxf.apache.org/schemas/blueprint/jaxws.xsd
+             http://cxf.apache.org/blueprint/jaxrs http://cxf.apache.org/schemas/blueprint/jaxrs.xsd
+             http://cxf.apache.org/blueprint/core http://cxf.apache.org/schemas/blueprint/core.xsd
+             ">
+
+    <cxf:bus>
+        <cxf:features>
+            <cxf:logging/>
+        </cxf:features>
+    </cxf:bus>
+
+    <reference id="localManagementContext"
+               interface="org.apache.brooklyn.api.mgmt.ManagementContext" />
+
+    <bean id="accessResourceBean" class="org.apache.brooklyn.rest.resources.AccessResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="activityResourceBean" class="org.apache.brooklyn.rest.resources.ActivityResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <!--<bean id="apidocResourceBean" class="org.apache.brooklyn.rest.resources.ApidocResource" />-->
+    <bean id="applicationResourceBean" class="org.apache.brooklyn.rest.resources.ApplicationResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="catalogResourceBean" class="org.apache.brooklyn.rest.resources.CatalogResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="effectorResourceBean" class="org.apache.brooklyn.rest.resources.EffectorResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="entityConfigResourceBean" class="org.apache.brooklyn.rest.resources.EntityConfigResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="entityResourceBean" class="org.apache.brooklyn.rest.resources.EntityResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="locationResourceBean" class="org.apache.brooklyn.rest.resources.LocationResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="policyConfigResourceBean" class="org.apache.brooklyn.rest.resources.PolicyConfigResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="policyResourceBean" class="org.apache.brooklyn.rest.resources.PolicyResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="scriptResourceBean" class="org.apache.brooklyn.rest.resources.ScriptResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="sensorResourceBean" class="org.apache.brooklyn.rest.resources.SensorResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="serverResourceBean" class="org.apache.brooklyn.rest.resources.ServerResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="usageResourceBean" class="org.apache.brooklyn.rest.resources.UsageResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+    <bean id="versionResourceBean" class="org.apache.brooklyn.rest.resources.VersionResource">
+        <property name="managementContext" ref="localManagementContext" />
+    </bean>
+
+    <jaxrs:server id="brooklynRestApiV1" address="/">
+        <jaxrs:serviceBeans>
+            <ref component-id="accessResourceBean" />
+            <ref component-id="activityResourceBean" />
+            <!--<ref component-id="apidocResourceBean" />-->
+            <ref component-id="applicationResourceBean" />
+            <ref component-id="catalogResourceBean" />
+            <ref component-id="effectorResourceBean" />
+            <ref component-id="entityConfigResourceBean" />
+            <ref component-id="entityResourceBean" />
+            <ref component-id="locationResourceBean" />
+            <ref component-id="policyConfigResourceBean" />
+            <ref component-id="policyResourceBean" />
+            <ref component-id="scriptResourceBean" />
+            <ref component-id="sensorResourceBean" />
+            <ref component-id="serverResourceBean" />
+            <ref component-id="usageResourceBean" />
+            <ref component-id="versionResourceBean" />
+        </jaxrs:serviceBeans>
+
+        <jaxrs:providers>
+            <bean class="org.apache.brooklyn.rest.util.DefaultExceptionMapper"/>
+            <bean class="org.codehaus.jackson.jaxrs.JacksonJsonProvider"/>
+            <bean class="org.apache.brooklyn.rest.util.FormMapProvider"/>
+        </jaxrs:providers>
+    </jaxrs:server>
+</blueprint>

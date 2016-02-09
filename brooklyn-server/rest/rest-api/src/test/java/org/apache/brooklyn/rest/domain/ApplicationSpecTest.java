@@ -38,7 +38,7 @@ public class ApplicationSpecTest {
                     "creationScriptUrl", "http://my.brooklyn.io/storage/foo.sql"));
 
     final ApplicationSpec applicationSpec = ApplicationSpec.builder().name("myapp")
-            .entities(ImmutableSet.of(entitySpec)).locations(ImmutableSet.of("/v1/locations/1"))
+            .entities(ImmutableSet.of(entitySpec)).locations(ImmutableSet.of("/locations/1"))
             .build();
 
     @Test

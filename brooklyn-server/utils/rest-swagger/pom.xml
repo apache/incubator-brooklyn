@@ -36,25 +36,20 @@
     </parent>
 
     <dependencies>
-    
-        <!-- ATTN: this moves jersey-server from 1.7 to 1.12 -->
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-servlet</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-        </dependency>
-        
+
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
             <artifactId>brooklyn-utils-common</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
 
         <dependency>
@@ -85,6 +80,10 @@
                 <exclusion>
                     <groupId>com.sun.jersey</groupId>
                     <artifactId>jersey-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.ws.rs</groupId>
+                    <artifactId>jsr311-api</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -151,10 +150,15 @@
                             io.swagger.jaxrs.*,
                             !*
                         </Export-Package>
+                        <Import-Package>
+                            javax.ws.rs;version="[1.1,2.0]",
+                            javax.ws.rs.core;version="[1.1,2.0]",
+                            javax.ws.rs.ext;version="[1.1,2.0]",
+                            *
+                        </Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-    
 </project>

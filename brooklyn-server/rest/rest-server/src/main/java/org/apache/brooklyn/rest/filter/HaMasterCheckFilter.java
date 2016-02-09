@@ -49,11 +49,11 @@ import org.apache.brooklyn.rest.util.OsgiCompat;
  * Post POSTs and PUTs are assumed to need master state, with the exception of shutdown.
  * Requests with {@link #SKIP_CHECK_HEADER} set as a header skip this check.
  */
+// TODO Merge with HaHotCheckResourceFilter so the functionality is available in Karaf
 public class HaMasterCheckFilter implements Filter {
 
     private static final Logger log = LoggerFactory.getLogger(HaMasterCheckFilter.class);
     
-    public static final String SKIP_CHECK_HEADER = "Brooklyn-Allow-Non-Master-Access";
     private static final Set<String> SAFE_STANDBY_METHODS = Sets.newHashSet("GET", "HEAD");
 
     protected ServletContext servletContext;
@@ -65,13 +65,6 @@ public class HaMasterCheckFilter implements Filter {
         mgmt = OsgiCompat.getManagementContext(servletContext);
     }
 
-    static String lookForProblemIfServerNotRunning(ManagementContext mgmt) {
-        if (mgmt==null) return "no management context available";
-        if (!mgmt.isRunning()) return "server no longer running";
-        if (!mgmt.isStartupComplete()) return "server not in required startup-completed state";
-        return null;
-    }
-    
     private String lookForProblem(ServletRequest request) {
         if (isSkipCheckHeaderSet(request)) 
             return null;
@@ -79,7 +72,7 @@ public class HaMasterCheckFilter implements Filter {
         if (!isMasterRequiredForRequest(request))
             return null;
         
-        String problem = lookForProblemIfServerNotRunning(mgmt);
+        String problem = HaHotCheckResourceFilter.lookForProblemIfServerNotRunning(mgmt);
         if (Strings.isNonBlank(problem)) 
             return problem;
         
@@ -93,7 +86,7 @@ public class HaMasterCheckFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         String problem = lookForProblem(request);
         if (problem!=null) {
-            log.warn("Disallowing web request as "+problem+": "+request.getParameterMap()+" (caller should set '"+SKIP_CHECK_HEADER+"' to force)");
+            log.warn("Disallowing web request as "+problem+": "+request.getParameterMap()+" (caller should set '"+HaHotCheckResourceFilter.SKIP_CHECK_HEADER+"' to force)");
             WebResourceUtils.applyJsonResponse(servletContext, ApiError.builder()
                 .message("This request is only permitted against an active master Brooklyn server")
                 .errorCode(Response.Status.FORBIDDEN).build().asJsonResponse(), (HttpServletResponse)response);
@@ -121,7 +114,8 @@ public class HaMasterCheckFilter implements Filter {
             // explicitly allow calls to shutdown
             // (if stopAllApps is specified, the method itself will fail; but we do not want to consume parameters here, that breaks things!)
             // TODO combine with HaHotCheckResourceFilter and use an annotation HaAnyStateAllowed or similar
-            if ("/v1/server/shutdown".equals(httpRequest.getRequestURI())) return false;
+            if ("/v1/server/shutdown".equals(httpRequest.getRequestURI()) ||
+                    "/server/shutdown".equals(httpRequest.getRequestURI())) return false;
             
             // master required for everything else
             return true;
@@ -132,7 +126,7 @@ public class HaMasterCheckFilter implements Filter {
 
     private boolean isSkipCheckHeaderSet(ServletRequest httpRequest) {
         if (httpRequest instanceof HttpServletRequest)
-            return "true".equalsIgnoreCase(((HttpServletRequest)httpRequest).getHeader(SKIP_CHECK_HEADER));
+            return "true".equalsIgnoreCase(((HttpServletRequest)httpRequest).getHeader(HaHotCheckResourceFilter.SKIP_CHECK_HEADER));
         return false;
     }
 

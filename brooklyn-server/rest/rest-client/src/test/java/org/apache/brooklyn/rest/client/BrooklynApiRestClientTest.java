@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.rest.client;
 
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -76,7 +75,7 @@ public class BrooklynApiRestClientTest {
                 .securityProvider(TestSecurityProvider.class)
                 .start();
 
-        api = BrooklynApi.newInstance("http://localhost:" + ((NetworkConnector)server.getConnectors()[0]).getPort() + "/",
+        api = BrooklynApi.newInstance("http://localhost:" + ((NetworkConnector)server.getConnectors()[0]).getPort() + "/v1",
                 TestSecurityProvider.USER, TestSecurityProvider.PASSWORD);
     }
 

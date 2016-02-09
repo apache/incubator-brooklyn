@@ -1,0 +1,7 @@
+[
+    {
+        "name":"Vanilla Java App",
+        "type":"org.apache.brooklyn.entity.java.VanillaJavaApp",
+        "config":{}
+    }
+]

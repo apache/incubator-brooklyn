@@ -20,18 +20,17 @@ package org.apache.brooklyn.camp.server.rest;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.EnumSet;
-
-import javax.servlet.DispatcherType;
 
 import org.apache.brooklyn.camp.CampPlatform;
+import org.apache.brooklyn.camp.server.RestApiSetup;
 import org.apache.brooklyn.camp.server.rest.resource.PlatformRestResource;
 import org.apache.brooklyn.camp.server.rest.util.DtoFactory;
 import org.apache.brooklyn.util.exceptions.Exceptions;
 import org.apache.brooklyn.util.net.Networking;
+import org.eclipse.jetty.server.NetworkConnector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -40,11 +39,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-import com.sun.jersey.api.core.DefaultResourceConfig;
-import com.sun.jersey.api.core.ResourceConfig;
-import com.sun.jersey.spi.container.servlet.ServletContainer;
-import org.eclipse.jetty.server.NetworkConnector;
-import org.eclipse.jetty.server.ServerConnector;
 
 public class CampServer {
 
@@ -127,25 +121,7 @@ public class CampServer {
     public static class CampServerUtils {
 
         public static void installAsServletFilter(ServletContextHandler context) {
-            // TODO security
-            //        installBrooklynPropertiesSecurityFilter(context);
-
-            // now set up the REST servlet resources
-            ResourceConfig config = new DefaultResourceConfig();
-            // load all our REST API modules, JSON, and Swagger
-            for (Object r: CampRestResources.getAllResources())
-                config.getSingletons().add(r);
-
-            // configure to match empty path, or any thing which looks like a file path with /assets/ and extension html, css, js, or png
-            // and treat that as static content
-            config.getProperties().put(ServletContainer.PROPERTY_WEB_PAGE_CONTENT_REGEX, "(/?|[^?]*/assets/[^?]+\\.[A-Za-z0-9_]+)");
-
-            // and anything which is not matched as a servlet also falls through (but more expensive than a regex check?)
-            config.getFeatures().put(ServletContainer.FEATURE_FILTER_FORWARD_ON_404, true);
-
-            // finally create this as a _filter_ which falls through to a web app or something (optionally)
-            FilterHolder filterHolder = new FilterHolder(new ServletContainer(config));
-            context.addFilter(filterHolder, "/*", EnumSet.allOf(DispatcherType.class));
+            RestApiSetup.install(context);
         }
 
         public static Server startServer(ContextHandler context, String summary) {

@@ -18,7 +18,6 @@
  */
 package org.apache.brooklyn.rest.api;
 
-import java.io.InputStream;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -39,28 +38,17 @@ import org.apache.brooklyn.rest.domain.CatalogItemSummary;
 import org.apache.brooklyn.rest.domain.CatalogLocationSummary;
 import org.apache.brooklyn.rest.domain.CatalogPolicySummary;
 
-import com.sun.jersey.core.header.FormDataContentDisposition;
-import com.sun.jersey.multipart.FormDataParam;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-@Path("/v1/catalog")
+@Path("/catalog")
 @Api("Catalog")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public interface CatalogApi {
-
-    @POST
-    @ApiOperation(value = "Add a catalog item (e.g. new type of entity, policy or location) by uploading YAML descriptor from browser using multipart/form-data",
-        response = String.class)
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Response createFromMultipart(
-        @ApiParam(name = "yaml", value = "multipart/form-data file input field")
-        @FormDataParam("yaml") InputStream uploadedInputStream,
-        @FormDataParam("yaml") FormDataContentDisposition fileDetail);
 
     @Consumes
     @POST
@@ -89,7 +77,7 @@ public interface CatalogApi {
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Entity not found")
     })
-    public void deleteEntity(
+    public void deleteEntity_0_7_0(
         @ApiParam(name = "entityId", value = "The ID of the entity or template to delete", required = true)
         @PathParam("entityId") String entityId) throws Exception;
 
@@ -181,7 +169,7 @@ public interface CatalogApi {
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Entity not found")
     })
-    public CatalogEntitySummary getEntity(
+    public CatalogEntitySummary getEntity_0_7_0(
         @ApiParam(name = "entityId", value = "The ID of the entity or template to retrieve", required = true)
         @PathParam("entityId") String entityId) throws Exception;
 
@@ -210,7 +198,7 @@ public interface CatalogApi {
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Entity not found")
     })
-    public CatalogEntitySummary getApplication(
+    public CatalogEntitySummary getApplication_0_7_0(
         @ApiParam(name = "applicationId", value = "The ID of the application to retrieve", required = true)
         @PathParam("applicationId") String applicationId) throws Exception;
 
@@ -252,7 +240,7 @@ public interface CatalogApi {
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Entity not found")
     })
-    public CatalogItemSummary getPolicy(
+    public CatalogItemSummary getPolicy_0_7_0(
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
         @PathParam("policyId") String policyId) throws Exception;
 
@@ -264,7 +252,7 @@ public interface CatalogApi {
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Entity not found")
     })
-    public CatalogItemSummary getPolicy(
+    public CatalogPolicySummary getPolicy(
         @ApiParam(name = "policyId", value = "The ID of the policy to retrieve", required = true)
         @PathParam("policyId") String policyId,
         @ApiParam(name = "version", value = "The version identifier of the application to retrieve", required = true)
@@ -293,7 +281,7 @@ public interface CatalogApi {
     @ApiResponses(value = {
         @ApiResponse(code = 404, message = "Entity not found")
     })
-    public CatalogItemSummary getLocation(
+    public CatalogItemSummary getLocation_0_7_0(
         @ApiParam(name = "locationId", value = "The ID of the location to retrieve", required = true)
         @PathParam("locationId") String locationId) throws Exception;
 
@@ -320,7 +308,7 @@ public interface CatalogApi {
             @ApiResponse(code = 404, message = "Item not found")
         })
     @Produces("application/image")
-    public Response getIcon(
+    public Response getIcon_0_7_0(
         @ApiParam(name = "itemId", value = "ID of catalog item (application, entity, policy, location)")
         @PathParam("itemId") @DefaultValue("") String itemId);
 

@@ -28,7 +28,7 @@ define(
 
             it('the collection element must be of type TomcatServer and have expected properties', function () {
                 expect(eSummary.getLinkByName('catalog'))
-                    .toBe('/v1/catalog/entities/org.apache.brooklyn.entity.webapp.tomcat.TomcatServer')
+                    .toBe('/catalog/entities/org.apache.brooklyn.entity.webapp.tomcat.TomcatServer')
                 expect(eSummary.get("type")).toBe('org.apache.brooklyn.entity.webapp.tomcat.TomcatServer')
                 expect(eSummary.getLinkByName('sensors')).toBe('fixtures/sensor-summary-list.json')
                 expect(eSummary.getDisplayName()).toBe('TomcatServer:zQsqdXzi')

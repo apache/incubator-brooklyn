@@ -32,7 +32,7 @@ import org.apache.brooklyn.core.mgmt.internal.ManagementContextInternal;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncher;
 import org.apache.brooklyn.rest.BrooklynRestApiLauncherTestFixture;
 import org.apache.brooklyn.rest.security.provider.TestSecurityProvider;
-import org.apache.brooklyn.test.HttpTestUtils;
+import org.apache.brooklyn.util.http.HttpAsserts;
 import org.apache.brooklyn.util.http.HttpTool;
 import org.apache.brooklyn.util.http.HttpToolResponse;
 import org.apache.http.HttpStatus;
@@ -71,7 +71,7 @@ public class ServerResourceIntegrationTest extends BrooklynRestApiLauncherTestFi
             String baseUri = getBaseUri(server);
     
             HttpToolResponse response;
-            final URI uri = URI.create(getBaseUri() + "/v1/server/properties/reload");
+            final URI uri = URI.create(getBaseUri() + "/server/properties/reload");
             final Map<String, String> args = Collections.emptyMap();
     
             // Unauthorised when no credentials, and when default credentials.
@@ -85,12 +85,12 @@ public class ServerResourceIntegrationTest extends BrooklynRestApiLauncherTestFi
             // Accepts TestSecurityProvider credentials, and we reload.
             response = HttpTool.httpPost(httpClientBuilder().uri(baseUri).credentials(TestSecurityProvider.CREDENTIAL).build(),
                     uri, args, args);
-            HttpTestUtils.assertHealthyStatusCode(response.getResponseCode());
+            HttpAsserts.assertHealthyStatusCode(response.getResponseCode());
     
             // Has no gone back to credentials from brooklynProperties; TestSecurityProvider credentials no longer work
             response = HttpTool.httpPost(httpClientBuilder().uri(baseUri).credentials(defaultCredential).build(), 
                     uri, args, args);
-            HttpTestUtils.assertHealthyStatusCode(response.getResponseCode());
+            HttpAsserts.assertHealthyStatusCode(response.getResponseCode());
             
             response = HttpTool.httpPost(httpClientBuilder().uri(baseUri).credentials(TestSecurityProvider.CREDENTIAL).build(), 
                     uri, args, args);
@@ -116,9 +116,9 @@ public class ServerResourceIntegrationTest extends BrooklynRestApiLauncherTestFi
                 .credentials(TestSecurityProvider.CREDENTIAL)
                 .build();
         
-        HttpToolResponse response = HttpTool.httpGet(client, URI.create(getBaseUri(server) + "/v1/server/user"),
+        HttpToolResponse response = HttpTool.httpGet(client, URI.create(getBaseUri(server) + "/server/user"),
                 ImmutableMap.<String, String>of());
-        HttpTestUtils.assertHealthyStatusCode(response.getResponseCode());
+        HttpAsserts.assertHealthyStatusCode(response.getResponseCode());
         return response.getContentAsString();
     }
 

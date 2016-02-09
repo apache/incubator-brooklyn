@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-rest-server</artifactId>
+            <artifactId>brooklyn-rest-server${rest-server-classifier}</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -63,7 +63,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn.camp</groupId>
-            <artifactId>camp-server</artifactId>
+            <artifactId>camp-server${rest-server-classifier}</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -91,14 +91,6 @@
         <dependency>
             <groupId>com.googlecode.concurrentlinkedhashmap</groupId>
             <artifactId>concurrentlinkedhashmap-lru</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-server</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-servlet</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -190,7 +182,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.brooklyn</groupId>
-            <artifactId>brooklyn-rest-server</artifactId>
+            <artifactId>brooklyn-rest-server${rest-server-classifier}</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
@@ -280,4 +272,23 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>jax-rs-jersey</id>
+            <activation>
+                <property>
+                    <name>!jar-rs</name>
+                </property>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.brooklyn</groupId>
+                    <artifactId>brooklyn-rest-resources</artifactId>
+                    <version>${project.version}</version>
+                    <classifier>tests</classifier>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>
