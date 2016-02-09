@@ -176,7 +176,7 @@ public class EntityTransformer {
 
     public static EntityConfigSummary entityConfigSummary(SpecParameter<?> input) {
         Double priority = input.isPinned() ? Double.valueOf(1d) : null;
-        return entityConfigSummary(input.getType(), input.getLabel(), priority, null);
+        return entityConfigSummary(input.getConfigKey(), input.getLabel(), priority, null);
     }
 
 }
