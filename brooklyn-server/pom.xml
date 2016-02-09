@@ -227,9 +227,6 @@
         <module>utils/rt-osgi</module>
         <module>utils/rt-felix</module>
 
-	<module>cxf/rest-api-cxf</module>
-	<module>cxf/rest-server-cxf</module>
-
     </modules>
 
 </project>
