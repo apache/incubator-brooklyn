@@ -21,10 +21,9 @@ package org.apache.brooklyn.rest.domain;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 public class HighAvailabilitySummary implements Serializable {
@@ -33,13 +32,13 @@ public class HighAvailabilitySummary implements Serializable {
 
     public static class HaNodeSummary implements Serializable {
         private static final long serialVersionUID = 9205960988226816539L;
-        
+
         private final String nodeId;
         private final URI nodeUri;
         private final String status;
         private final Long localTimestamp;
         private final Long remoteTimestamp;
-        
+
         public HaNodeSummary(
                 @JsonProperty("nodeId") String nodeId,
                 @JsonProperty("nodeUri") URI nodeUri,
@@ -75,12 +74,19 @@ public class HighAvailabilitySummary implements Serializable {
 
         @Override
         public boolean equals(Object o) {
-            return (o instanceof HaNodeSummary) && Objects.equal(nodeId, ((HaNodeSummary) o).getNodeId());
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            HaNodeSummary that = (HaNodeSummary) o;
+            return Objects.equals(nodeId, that.nodeId) &&
+                    Objects.equals(nodeUri, that.nodeUri) &&
+                    Objects.equals(status, that.status) &&
+                    Objects.equals(localTimestamp, that.localTimestamp) &&
+                    Objects.equals(remoteTimestamp, that.remoteTimestamp);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(nodeId);
+            return Objects.hash(nodeId, nodeUri, status, localTimestamp, remoteTimestamp);
         }
 
         @Override
@@ -126,19 +132,34 @@ public class HighAvailabilitySummary implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        return (o instanceof HighAvailabilitySummary) && ownId.equals(((HighAvailabilitySummary) o).getOwnId());
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        HighAvailabilitySummary that = (HighAvailabilitySummary) o;
+
+        if (ownId != null ? !ownId.equals(that.ownId) : that.ownId != null) return false;
+        if (masterId != null ? !masterId.equals(that.masterId) : that.masterId != null) return false;
+        if (nodes != null ? !nodes.equals(that.nodes) : that.nodes != null) return false;
+        return links != null ? links.equals(that.links) : that.links == null;
+
     }
 
     @Override
     public int hashCode() {
-        return ownId != null ? ownId.hashCode() : 0;
+        int result = ownId != null ? ownId.hashCode() : 0;
+        result = 31 * result + (masterId != null ? masterId.hashCode() : 0);
+        result = 31 * result + (nodes != null ? nodes.hashCode() : 0);
+        result = 31 * result + (links != null ? links.hashCode() : 0);
+        return result;
     }
 
     @Override
     public String toString() {
-        return "HighAvailabilitySummary{"
-                + "ownId='" + ownId + '\''
-                + ", links=" + links
-                + '}';
+        return "HighAvailabilitySummary{" +
+                "ownId='" + ownId + '\'' +
+                ", masterId='" + masterId + '\'' +
+                ", nodes=" + nodes +
+                ", links=" + links +
+                '}';
     }
 }

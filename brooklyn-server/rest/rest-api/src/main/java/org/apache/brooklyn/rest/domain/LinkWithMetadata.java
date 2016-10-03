@@ -20,11 +20,11 @@ package org.apache.brooklyn.rest.domain;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.ImmutableMap;
 
@@ -34,55 +34,44 @@ public class LinkWithMetadata implements Serializable {
     // TODO remove 'metadata' and promote its contents to be top-level fields; then unmark as Beta
 
     private static final long serialVersionUID = 3146368899471495143L;
-    
+
     private final String link;
     private final Map<String,Object> metadata;
-    
+
     public LinkWithMetadata(
-            @JsonProperty("link") String link, 
+            @JsonProperty("link") String link,
             @Nullable @JsonProperty("metadata") Map<String,?> metadata) {
         this.link = link;
         this.metadata = (metadata == null) ? ImmutableMap.<String,Object>of() : ImmutableMap.<String,Object>copyOf(metadata);
     }
-    
+
     public String getLink() {
         return link;
     }
-    
+
     public Map<String, Object> getMetadata() {
         return metadata;
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((link == null) ? 0 : link.hashCode());
-        result = prime * result + ((metadata == null) ? 0 : metadata.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LinkWithMetadata that = (LinkWithMetadata) o;
+        return Objects.equals(link, that.link) &&
+                Objects.equals(metadata, that.metadata);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        LinkWithMetadata other = (LinkWithMetadata) obj;
-        if (link == null) {
-            if (other.link != null)
-                return false;
-        } else if (!link.equals(other.link))
-            return false;
-        if (metadata == null) {
-            if (other.metadata != null)
-                return false;
-        } else if (!metadata.equals(other.metadata))
-            return false;
-        return true;
+    public int hashCode() {
+        return Objects.hash(link, metadata);
     }
 
-    
+    @Override
+    public String toString() {
+        return "LinkWithMetadata{" +
+                "link='" + link + '\'' +
+                ", metadata=" + metadata +
+                '}';
+    }
 }

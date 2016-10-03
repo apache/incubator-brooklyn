@@ -20,61 +20,23 @@ package org.apache.brooklyn.rest.domain;
 
 import java.util.Comparator;
 
-import javax.annotation.Nonnull;
-
-import org.apache.brooklyn.api.objs.BrooklynObject;
 import org.apache.brooklyn.util.text.NaturalOrderComparator;
-import org.apache.brooklyn.util.text.Strings;
 
 /**
  * Useful comparators for domain objects
  */
 public class SummaryComparators {
-    
-    private SummaryComparators() {}
-    
+
+    private SummaryComparators() {
+    }
+
     private static NaturalOrderComparator COMPARATOR = new NaturalOrderComparator();
-    
-    @Nonnull
-    static String getDisplayNameOrName(HasName o1) {
-        String n1 = null;
-        if (o1 instanceof BrooklynObject)
-            n1 = ((BrooklynObject)o1).getDisplayName();
-        if (Strings.isEmpty(n1) && o1 instanceof HasConfig && ((HasConfig)o1).getConfig()!=null)
-            n1 = Strings.toString(((HasConfig)o1).getConfig().get("displayName"));
-        // prefer display name if set
-        if (Strings.isEmpty(n1))
-            n1 = o1.getName();
-        if (n1==null) {
-            // put last
-            return "~~~";
-        }
-        return n1;
-    }
-    
-    public static Comparator<HasName> displayNameComparator() {
-        return new Comparator<HasName>() {
-            @Override
-            public int compare(HasName o1, HasName o2) {
-                return COMPARATOR.compare(getDisplayNameOrName(o1).toLowerCase(), getDisplayNameOrName(o2).toLowerCase());
-            }
-        };
-    }
 
     public static Comparator<HasName> nameComparator() {
         return new Comparator<HasName>() {
             @Override
             public int compare(HasName o1, HasName o2) {
                 return COMPARATOR.compare(o1.getName(), o2.getName());
-            }
-        };
-    }
-
-    public static Comparator<HasId> idComparator() {
-        return new Comparator<HasId>() {
-            @Override
-            public int compare(HasId o1, HasId o2) {
-                return o1.getId().compareTo(o2.getId());
             }
         };
     }

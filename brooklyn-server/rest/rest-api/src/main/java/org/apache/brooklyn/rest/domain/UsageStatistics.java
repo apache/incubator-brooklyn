@@ -22,20 +22,16 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-/**
- * @author Aled Sage
- */
 public class UsageStatistics implements Serializable {
 
     private static final long serialVersionUID = -1842301852728290967L;
-    
+
     // TODO populate links with /apps endpoint to link to /usage/applications/{id}, to make it more
     // RESTy
 
@@ -58,19 +54,23 @@ public class UsageStatistics implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof UsageStatistics))
-            return false;
-        UsageStatistics other = (UsageStatistics) o;
-        return Objects.equal(statistics, other.statistics);
+        if (this == o) return true;
+        if (!(o instanceof UsageStatistics)) return false;
+        UsageStatistics that = (UsageStatistics) o;
+        return Objects.equals(statistics, that.statistics) &&
+                Objects.equals(links, that.links);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(statistics);
+        return Objects.hash(statistics, links);
     }
 
     @Override
     public String toString() {
-        return "UsageStatistics{" + "statistics=" + statistics + ", links=" + links + '}';
+        return "UsageStatistics{" +
+                "statistics=" + statistics +
+                ", links=" + links +
+                '}';
     }
 }

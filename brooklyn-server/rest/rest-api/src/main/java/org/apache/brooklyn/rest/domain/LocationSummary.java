@@ -22,14 +22,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 public class LocationSummary extends LocationSpec implements HasName, HasId {
@@ -39,7 +36,6 @@ public class LocationSummary extends LocationSpec implements HasName, HasId {
     private final String id;
 
     /** only intended for instantiated Locations, not definitions */
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final String type;
     private final Map<String, URI> links;
 
@@ -71,14 +67,18 @@ public class LocationSummary extends LocationSpec implements HasName, HasId {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         LocationSummary that = (LocationSummary) o;
-        return Objects.equal(id, that.id);
+        return Objects.equals(id, that.id) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(links, that.links);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id, links);
+        return Objects.hash(super.hashCode(), id, type, links);
     }
 
     @Override

@@ -23,10 +23,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Set;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
@@ -36,10 +33,9 @@ public class EffectorSummary implements HasName, Serializable {
 
     public static class ParameterSummary<T> implements HasName, Serializable {
         private static final long serialVersionUID = -6393686096290306153L;
-        
+
         private final String name;
         private final String type;
-        @JsonSerialize(include = Inclusion.NON_NULL)
         private final String description;
         private final T defaultValue;
 
@@ -75,9 +71,9 @@ public class EffectorSummary implements HasName, Serializable {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-    
+
           ParameterSummary<?> that = (ParameterSummary<?>) o;
-    
+
           return Objects.equal(this.name, that.name)
                   && Objects.equal(this.type, that.type)
                   && Objects.equal(this.description, that.description)
@@ -104,9 +100,7 @@ public class EffectorSummary implements HasName, Serializable {
     private final String name;
     private final String returnType;
     private final Set<ParameterSummary<?>> parameters;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final String description;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final Map<String, URI> links;
 
     public EffectorSummary(
@@ -147,31 +141,17 @@ public class EffectorSummary implements HasName, Serializable {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         EffectorSummary that = (EffectorSummary) o;
-
-        if (description != null ? !description.equals(that.description) : that.description != null)
-            return false;
-        if (links != null ? !links.equals(that.links) : that.links != null)
-            return false;
-        if (name != null ? !name.equals(that.name) : that.name != null)
-            return false;
-        if (parameters != null ? !parameters.equals(that.parameters) : that.parameters != null)
-            return false;
-        if (returnType != null ? !returnType.equals(that.returnType) : that.returnType != null)
-            return false;
-
-        return true;
+        return java.util.Objects.equals(name, that.name) &&
+                java.util.Objects.equals(returnType, that.returnType) &&
+                java.util.Objects.equals(parameters, that.parameters) &&
+                java.util.Objects.equals(description, that.description) &&
+                java.util.Objects.equals(links, that.links);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (returnType != null ? returnType.hashCode() : 0);
-        result = 31 * result + (parameters != null ? parameters.hashCode() : 0);
-        result = 31 * result + (links != null ? links.hashCode() : 0);
-        return result;
+        return java.util.Objects.hash(name, returnType, parameters, description, links);
     }
 
     @Override

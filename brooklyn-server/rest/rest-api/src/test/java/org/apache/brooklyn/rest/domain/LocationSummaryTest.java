@@ -16,28 +16,26 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.brooklyn.rest.api;
+package org.apache.brooklyn.rest.domain;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import java.net.URI;
+import java.util.Map;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import com.google.common.collect.Maps;
 
-@Path("/v1/version")
-@Api("Version")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-/** @deprecated since 0.7.0; use /v1/server/version */
-@Deprecated
-public interface VersionApi {
+public class LocationSummaryTest extends AbstractDomainTest {
 
-  @GET
-  @ApiOperation(value = "Return version identifier information for this Brooklyn instance; deprecated, use /server/version", 
-          response = String.class,
-          responseContainer = "List")
-  public String getVersion();
+    @Override
+    protected String getPath() {
+        return "fixtures/location-summary.json";
+    }
+
+    @Override
+    protected Object getDomainObject() {
+        Map<String, URI> links = Maps.newLinkedHashMap();
+        links.put("self", URI.create("/v1/locations/123"));
+
+        return new LocationSummary("123", "localhost", "localhost", null, null, links);
+    }
+
 }

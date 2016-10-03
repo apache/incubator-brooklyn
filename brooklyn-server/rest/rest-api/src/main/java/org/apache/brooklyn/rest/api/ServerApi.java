@@ -53,7 +53,7 @@ public interface ServerApi {
     public final String MIME_TYPE_ZIP = "application/zip";
     // TODO support TGZ, and check mime type
     public final String MIME_TYPE_TGZ = "application/gzip";
-    
+
     @POST
     @Path("/properties/reload")
     @ApiOperation(value = "Reload brooklyn.properties")
@@ -79,7 +79,7 @@ public interface ServerApi {
 
     @GET
     @Path("/version")
-    @ApiOperation(value = "Return version identifier information for this Brooklyn instance", 
+    @ApiOperation(value = "Return version identifier information for this Brooklyn instance",
             response = String.class,
             responseContainer = "List")
     public VersionSummary getVersion();
@@ -88,17 +88,17 @@ public interface ServerApi {
     @Path("/up")
     @ApiOperation(value = "Returns whether this server is up - fully started, and not stopping, though it may have errors")
     public boolean isUp();
-    
+
     @GET
     @Path("/shuttingDown")
     @ApiOperation(value = "Returns whether this server is shutting down")
     public boolean isShuttingDown();
-    
+
     @GET
     @Path("/healthy")
     @ApiOperation(value = "Returns whether this node is healthy - fully started, not stopping, and no errors")
     public boolean isHealthy();
-    
+
     @Deprecated /** @deprecated since 0.7.0 use /ha/node (which returns correct JSON) */
     @GET
     @Path("/status")
@@ -130,17 +130,17 @@ public interface ServerApi {
     @ApiOperation(value = "Returns the status of all Brooklyn instances in the management plane [DEPRECATED; see ../ha/states]",
             response = org.apache.brooklyn.rest.domain.HighAvailabilitySummary.class)
     public HighAvailabilitySummary getHighAvailability();
-    
+
     @GET
     @Path("/ha/state")
     @ApiOperation(value = "Returns the HA state of this management node")
     public ManagementNodeState getHighAvailabilityNodeState();
-    
+
     @GET
     @Path("/ha/metrics")
     @ApiOperation(value = "Returns a collection of HA metrics")
     public Map<String,Object> getHighAvailabilityMetrics();
-    
+
     @POST
     @Path("/ha/state")
     @ApiOperation(value = "Changes the HA state of this management node")
@@ -158,19 +158,19 @@ public interface ServerApi {
     @Path("/ha/states/clear")
     @ApiOperation(value = "Clears HA node information for non-master nodes; active nodes will repopulate and other records will be erased")
     public Response clearHighAvailabilityPlaneStates();
-    
+
     @GET
     @Path("/ha/priority")
     @ApiOperation(value = "Returns the HA node priority for MASTER failover")
     public long getHighAvailabitlityPriority();
-    
+
     @POST
     @Path("/ha/priority")
     @ApiOperation(value = "Sets the HA node priority for MASTER failover")
     public long setHighAvailabilityPriority(
             @ApiParam(name = "priority", value = "The priority to be set")
             @FormParam("priority") long priority);
-    
+
     @GET
     @Produces(MIME_TYPE_ZIP)
     @Path("/ha/persist/export")
@@ -198,9 +198,9 @@ public interface ServerApi {
 
     @GET
     @Path("/user")
-    @ApiOperation(value = "Return user information for this Brooklyn instance", 
+    @ApiOperation(value = "Return user information for this Brooklyn instance",
             response = String.class,
             responseContainer = "List")
-    public String getUser(); 
+    public String getUser();
 
 }

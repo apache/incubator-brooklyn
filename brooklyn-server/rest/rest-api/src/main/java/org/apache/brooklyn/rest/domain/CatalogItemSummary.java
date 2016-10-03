@@ -23,15 +23,11 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
-import com.google.common.base.Objects;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -42,7 +38,7 @@ import com.google.common.collect.ImmutableMap;
 public class CatalogItemSummary implements HasId, HasName, Serializable {
 
     private static final long serialVersionUID = -823483595879417681L;
-    
+
     private final String id;
     private final String symbolicName;
     private final String version;
@@ -50,19 +46,16 @@ public class CatalogItemSummary implements HasId, HasName, Serializable {
     //needed for backwards compatibility only (json serializer works on fields, not getters)
     @Deprecated
     private final String type;
-    
+
     private final String javaType;
-    
+
     private final String name;
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String description;
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final String iconUrl;
     private final String planYaml;
-    @JsonSerialize(include=Inclusion.NON_EMPTY)
     private final List<Object> tags;
     private final boolean deprecated;
-    
+
     private final Map<String, URI> links;
 
     public CatalogItemSummary(
@@ -142,22 +135,44 @@ public class CatalogItemSummary implements HasId, HasName, Serializable {
     }
 
     @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
-                .add("id", symbolicName)
-                .add("version", version)
-                .add("deprecated", deprecated)
-                .toString();
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CatalogItemSummary that = (CatalogItemSummary) o;
+        return deprecated == that.deprecated &&
+                Objects.equals(id, that.id) &&
+                Objects.equals(symbolicName, that.symbolicName) &&
+                Objects.equals(version, that.version) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(javaType, that.javaType) &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(iconUrl, that.iconUrl) &&
+                Objects.equals(planYaml, that.planYaml) &&
+                Objects.equals(tags, that.tags) &&
+                Objects.equals(links, that.links);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(symbolicName, version, name, javaType, tags, deprecated);
+        return Objects.hash(id, symbolicName, version, type, javaType, name, description, iconUrl, planYaml, tags, deprecated, links);
     }
-    
+
     @Override
-    public boolean equals(Object obj) {
-        return EqualsBuilder.reflectionEquals(this, obj);
+    public String toString() {
+        return "CatalogItemSummary{" +
+                "id='" + id + '\'' +
+                ", symbolicName='" + symbolicName + '\'' +
+                ", version='" + version + '\'' +
+                ", type='" + type + '\'' +
+                ", javaType='" + javaType + '\'' +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", iconUrl='" + iconUrl + '\'' +
+                ", planYaml='" + planYaml + '\'' +
+                ", tags=" + tags +
+                ", deprecated=" + deprecated +
+                ", links=" + links +
+                '}';
     }
-    
 }

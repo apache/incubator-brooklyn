@@ -18,41 +18,27 @@
  */
 package org.apache.brooklyn.rest.domain;
 
-import static org.apache.brooklyn.rest.util.RestApiTestUtils.asJson;
-import static org.apache.brooklyn.rest.util.RestApiTestUtils.fromJson;
-import static org.apache.brooklyn.rest.util.RestApiTestUtils.jsonFixture;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNull;
-
 import java.io.IOException;
 
 import org.testng.annotations.Test;
 
-@Deprecated
-public class LocationSpecTest {
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.asJson;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.fromJson;
+import static org.apache.brooklyn.rest.util.RestApiTestUtils.jsonFixture;
+import static org.testng.Assert.assertEquals;
 
-    // TODO when removing the deprecated class this tests, change the tests here to point at LocationSummary
-    
-    final LocationSpec locationSpec = LocationSpec.localhost();
+public abstract class AbstractDomainTest {
+
+    protected abstract String getPath();
+    protected abstract Object getDomainObject();
 
     @Test
     public void testSerializeToJSON() throws IOException {
-        assertEquals(asJson(locationSpec), jsonFixture("fixtures/location.json"));
+        assertEquals(asJson(getDomainObject()), jsonFixture(getPath()));
     }
 
     @Test
     public void testDeserializeFromJSON() throws IOException {
-        assertEquals(fromJson(jsonFixture("fixtures/location.json"), LocationSpec.class), locationSpec);
-    }
-
-    @Test
-    public void testDeserializeFromJSONWithNoCredential() throws IOException {
-        LocationSpec loaded = fromJson(jsonFixture("fixtures/location-without-credential.json"), LocationSpec.class);
-
-        assertEquals(loaded.getSpec(), locationSpec.getSpec());
-
-        assertEquals(loaded.getConfig().size(), 1);
-        assertEquals(loaded.getConfig().get("identity"), "bob");
-        assertNull(loaded.getConfig().get("credential"));
+        assertEquals(fromJson(jsonFixture(getPath()), getDomainObject().getClass()), getDomainObject());
     }
 }

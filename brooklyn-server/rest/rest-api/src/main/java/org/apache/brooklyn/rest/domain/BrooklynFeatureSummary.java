@@ -23,12 +23,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonAnyGetter;
-import org.codehaus.jackson.annotate.JsonAnySetter;
-import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Maps;
 
 public class BrooklynFeatureSummary implements Serializable {
@@ -88,4 +88,31 @@ public class BrooklynFeatureSummary implements Serializable {
         additionalData.put(name, value);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BrooklynFeatureSummary that = (BrooklynFeatureSummary) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(symbolicName, that.symbolicName) &&
+                Objects.equals(version, that.version) &&
+                Objects.equals(lastModified, that.lastModified) &&
+                Objects.equals(additionalData, that.additionalData);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, symbolicName, version, lastModified, additionalData);
+    }
+
+    @Override
+    public String toString() {
+        return "BrooklynFeatureSummary{" +
+                "name='" + name + '\'' +
+                ", symbolicName='" + symbolicName + '\'' +
+                ", version='" + version + '\'' +
+                ", lastModified='" + lastModified + '\'' +
+                ", additionalData=" + additionalData +
+                '}';
+    }
 }

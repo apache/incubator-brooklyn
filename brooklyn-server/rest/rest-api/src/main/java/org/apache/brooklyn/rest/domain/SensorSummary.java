@@ -21,22 +21,18 @@ package org.apache.brooklyn.rest.domain;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 
 public class SensorSummary implements HasName, Serializable {
 
     private static final long serialVersionUID = 1154308408351165426L;
-    
+
     private final String name;
     private final String type;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final String description;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final Map<String, URI> links;
 
     public SensorSummary(
@@ -70,29 +66,17 @@ public class SensorSummary implements HasName, Serializable {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof SensorSummary)) return false;
         SensorSummary that = (SensorSummary) o;
-
-        if (description != null ? !description.equals(that.description) : that.description != null)
-            return false;
-        if (links != null ? !links.equals(that.links) : that.links != null)
-            return false;
-        if (name != null ? !name.equals(that.name) : that.name != null)
-            return false;
-        if (type != null ? !type.equals(that.type) : that.type != null)
-            return false;
-
-        return true;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(description, that.description) &&
+                Objects.equals(links, that.links);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (type != null ? type.hashCode() : 0);
-        result = 31 * result + (description != null ? description.hashCode() : 0);
-        result = 31 * result + (links != null ? links.hashCode() : 0);
-        return result;
+        return Objects.hash(name, type, description, links);
     }
 
     @Override

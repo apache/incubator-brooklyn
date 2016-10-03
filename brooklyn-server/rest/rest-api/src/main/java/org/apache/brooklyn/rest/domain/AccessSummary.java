@@ -21,18 +21,17 @@ package org.apache.brooklyn.rest.domain;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.Beta;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 
 @Beta
 public class AccessSummary implements Serializable {
 
     private static final long serialVersionUID = 5097292906225042890L;
-    
+
     private final boolean locationProvisioningAllowed;
     private final Map<String, URI> links;
 
@@ -51,17 +50,19 @@ public class AccessSummary implements Serializable {
     public Map<String, URI> getLinks() {
         return links;
     }
-    
+
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AccessSummary)) return false;
-        AccessSummary other = (AccessSummary) o;
-        return locationProvisioningAllowed == other.isLocationProvisioningAllowed();
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AccessSummary that = (AccessSummary) o;
+        return locationProvisioningAllowed == that.locationProvisioningAllowed &&
+                Objects.equals(links, that.links);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(locationProvisioningAllowed);
+        return Objects.hash(locationProvisioningAllowed, links);
     }
 
     @Override

@@ -18,36 +18,27 @@
  */
 package org.apache.brooklyn.rest.domain;
 
-import static org.apache.brooklyn.rest.util.RestApiTestUtils.asJson;
-import static org.apache.brooklyn.rest.util.RestApiTestUtils.fromJson;
-import static org.apache.brooklyn.rest.util.RestApiTestUtils.jsonFixture;
-import static org.testng.Assert.assertEquals;
-
-import java.io.IOException;
 import java.net.URI;
-
-import org.testng.annotations.Test;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-public class EffectorSummaryTest {
+public class EffectorSummaryTest extends AbstractDomainTest {
 
-    final EffectorSummary effectorSummary = new EffectorSummary(
-            "stop",
-            "void",
-            ImmutableSet.<EffectorSummary.ParameterSummary<?>>of(),
-            "Effector description",
-            ImmutableMap.of(
-                    "self", URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")));
-
-    @Test
-    public void testSerializeToJSON() throws IOException {
-        assertEquals(asJson(effectorSummary), jsonFixture("fixtures/effector-summary.json"));
+    @Override
+    protected String getPath() {
+        return "fixtures/effector-summary.json";
     }
 
-    @Test
-    public void testDeserializeFromJSON() throws IOException {
-        assertEquals(fromJson(jsonFixture("fixtures/effector-summary.json"), EffectorSummary.class), effectorSummary);
+    @Override
+    protected Object getDomainObject() {
+        return new EffectorSummary(
+                "stop",
+                "void",
+                ImmutableSet.<EffectorSummary.ParameterSummary<?>>of(),
+                "Effector description",
+                ImmutableMap.of(
+                        "self", URI.create("/v1/applications/redis-app/entities/redis-ent/effectors/stop")));
     }
+
 }

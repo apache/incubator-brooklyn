@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.3.0" name="org.apache.brooklyn-0.9.0-SNAPSHOT">
+    <feature version="0.0.0">
+        <feature prerequisite="false" dependency="false">brooklyn-api</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-api</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-camp-base</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-camp-brooklyn</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-core</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-core</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-rest-api</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-utils-common</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-utils-rest-swagger</feature>
+        <feature prerequisite="false" dependency="false">brooklyn-utils-rest-swagger</feature>
+        <feature prerequisite="false" dependency="false">jetty</feature>
+        <feature prerequisite="false" dependency="false">swagger-crippled</feature>
+        <feature prerequisite="false" dependency="false">war</feature>
+        <feature prerequisite="false" dependency="false">war</feature>
+        <bundle>mvn:ch.qos.logback/logback-classic/1.0.7</bundle>
+        <bundle>mvn:ch.qos.logback/logback-core/1.0.7</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-annotations/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-core/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.core/jackson-databind/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.dataformat/jackson-dataformat-yaml/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.jaxrs/jackson-jaxrs-base/2.4.5</bundle>
+        <bundle>mvn:com.fasterxml.jackson.jaxrs/jackson-jaxrs-json-provider/2.4.5</bundle>
+        <bundle>mvn:com.google.code.gson/gson/2.3</bundle>
+        <bundle>mvn:com.google.guava/guava/17.0</bundle>
+        <bundle>mvn:com.jayway.jsonpath/json-path/2.0.0</bundle>
+        <bundle>mvn:com.sun.jersey.contribs/jersey-multipart/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-core/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-core/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-server/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-server/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
+        <bundle>mvn:com.sun.jersey/jersey-servlet/1.19</bundle>
+        <bundle>mvn:com.thoughtworks.xstream/xstream/1.4.7</bundle>
+        <bundle>mvn:commons-beanutils/commons-beanutils/1.9.1</bundle>
+        <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
+        <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
+        <bundle>mvn:commons-collections/commons-collections/3.2.1</bundle>
+        <bundle>mvn:commons-io/commons-io/2.4</bundle>
+        <bundle>mvn:commons-lang/commons-lang/2.4</bundle>
+        <bundle>mvn:io.swagger/swagger-annotations/1.5.3</bundle>
+        <bundle>mvn:io.swagger/swagger-models/1.5.3</bundle>
+        <bundle>mvn:javax.servlet/javax.servlet-api/3.1.0</bundle>
+        <bundle>mvn:javax.servlet/javax.servlet-api/3.1.0</bundle>
+        <bundle>mvn:javax.ws.rs/jsr311-api/1.1.1</bundle>
+        <bundle>mvn:net.minidev/asm/1.0.2</bundle>
+        <bundle>mvn:net.minidev/json-smart/2.1.1</bundle>
+        <bundle>mvn:net.schmizz/sshj/0.8.1</bundle>
+        <bundle>mvn:org.apache.brooklyn.camp/camp-base/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn.camp/camp-server/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-api/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-camp/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-commands/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-core/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-jsgui/0.9.0-SNAPSHOT/war</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-logback-includes/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-api/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rest-server/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-rt-osgi/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-common/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-groovy/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.brooklyn/brooklyn-utils-rest-swagger/0.9.0-SNAPSHOT</bundle>
+        <bundle>mvn:org.apache.commons/commons-compress/1.4</bundle>
+        <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
+        <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
+        <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
+        <bundle>mvn:org.apache.commons/commons-lang3/3.1</bundle>
+        <bundle>mvn:org.apache.httpcomponents/httpclient-osgi/4.4.1</bundle>
+        <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/4.4.1</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.jzlib/1.1.3_2</bundle>
+        <bundle>mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.reflections/0.9.9_1</bundle>
+        <bundle>mvn:org.bouncycastle/bcpkix-jdk15on/1.49</bundle>
+        <bundle>mvn:org.bouncycastle/bcprov-ext-jdk15on/1.49</bundle>
+        <bundle>mvn:org.codehaus.groovy/groovy-all/2.3.7</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-jaxrs/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
+        <bundle>mvn:org.freemarker/freemarker/2.3.22</bundle>
+        <bundle>mvn:org.jvnet.mimepull/mimepull/1.9.3</bundle>
+        <bundle>mvn:org.slf4j/jul-to-slf4j/1.6.6</bundle>
+        <bundle>mvn:org.yaml/snakeyaml/1.11</bundle>
+        <bundle>wrap:mvn:com.google.http-client/google-http-client/1.18.0-rc</bundle>
+        <bundle>wrap:mvn:com.maxmind.geoip2/geoip2/0.8.1</bundle>
+        <bundle>wrap:mvn:javax.validation/validation-api/1.1.0.Final</bundle>
+        <bundle>wrap:mvn:org.tukaani/xz/1.4</bundle>
+        <bundle>wrap:mvn:xpp3/xpp3_min/1.1.4c</bundle>
+    </feature>
+</features>

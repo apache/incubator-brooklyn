@@ -24,12 +24,10 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
@@ -86,12 +84,9 @@ public class ApplicationSpec implements HasName, Serializable {
     }
 
     private final String name;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final String type;
-    @JsonSerialize(include = Inclusion.NON_NULL)
     private final Set<EntitySpec> entities;
     private final Set<String> locations;
-    @JsonSerialize(include = Inclusion.NON_EMPTY)
     private final Map<String, String> config;
 
   public ApplicationSpec(
@@ -110,7 +105,7 @@ public class ApplicationSpec implements HasName, Serializable {
       this.locations = ImmutableSet.copyOf(checkNotNull(locations, "locations must be provided for an application spec"));
       this.config = config == null ? Collections.<String, String>emptyMap() : ImmutableMap.<String, String>copyOf(config);
       if (this.entities!=null && this.type!=null) throw new IllegalStateException("cannot supply both type and entities for an application spec");
-      // valid for both to be null, e.g. for an anonymous type 
+      // valid for both to be null, e.g. for an anonymous type
 //      if (this.entities==null && this.type==null) throw new IllegalStateException("must supply either type or entities for an application spec");
   }
 
@@ -137,35 +132,19 @@ public class ApplicationSpec implements HasName, Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         ApplicationSpec that = (ApplicationSpec) o;
-
-        if (name != null ? !name.equals(that.name) : that.name != null)
-            return false;
-        if (type != null ? !type.equals(that.type) : that.type != null)
-            return false;
-        if (entities != null ? !entities.equals(that.entities) : that.entities != null)
-            return false;
-        if (locations != null ? !locations.equals(that.locations) : that.locations != null)
-            return false;
-        if (config != null ? !config.equals(that.config) : that.config != null)
-            return false;
-
-        return true;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(entities, that.entities) &&
+                Objects.equals(locations, that.locations) &&
+                Objects.equals(config, that.config);
     }
 
     @Override
     public int hashCode() {
-        int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (type != null ? type.hashCode() : 0);
-        result = 31 * result + (entities != null ? entities.hashCode() : 0);
-        result = 31 * result + (locations != null ? locations.hashCode() : 0);
-        result = 31 * result + (config != null ? config.hashCode() : 0);
-        return result;
+        return Objects.hash(name, type, entities, locations, config);
     }
 
     @Override
