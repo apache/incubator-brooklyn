@@ -34,7 +34,7 @@
     </parent>
 
     <properties>
-        <hazelcast.version>3.5.4</hazelcast.version>
+        <hazelcast.version>3.12.13</hazelcast.version>
     </properties>
 	
     <dependencies>
