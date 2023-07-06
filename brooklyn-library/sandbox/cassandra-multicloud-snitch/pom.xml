@@ -34,7 +34,7 @@
     </parent>
 
     <properties>
-        <cassandra.version>1.2.2</cassandra.version>
+        <cassandra.version>4.0.10</cassandra.version>
     </properties>
 
     <dependencies>
